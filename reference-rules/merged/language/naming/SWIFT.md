@@ -1,0 +1,515 @@
+# Swift Naming
+
+Swift naming follows Apple API Design Guidelines, Google Swift file guidance
+where useful, and the local quality rules. Optimize for call-site clarity.
+
+## Swift Case Rules
+
+Rules:
+
+- Types, protocols, actors, enums, structs, classes, and generic type parameters
+  use `PascalCase`.
+- Variables, constants, functions, methods, properties, parameters, argument
+  labels, enum cases, and global constants use `lowerCamelCase`.
+- Swift file names match the primary type or extension target pattern.
+- Do not use Objective-C style app or company prefixes for Swift-only types.
+- Do not use Hungarian notation, `k` prefixes, `g` prefixes, or all-caps global
+  constants.
+- Do not use leading underscores, suffixes, or prefixes as access control. Use
+  Swift access modifiers instead.
+- Use US English spellings to match Apple APIs.
+- Treat common initialisms consistently and readably at call sites, such as
+  `URL`, `ID`, `API`, `HTTP`, and `JSON`.
+- Do not include `optional` or `maybe` in optional variable names.
+- Use Unicode identifiers only for legitimate domain notation understood by the
+  team.
+
+Bad:
+
+```swift
+class HTTPLoginViewModel { }
+struct user_profile { }
+let MAX_RETRY_COUNT = 3
+let maybeAvatarURL: URL?
+let userId: User.ID
+```
+
+Good:
+
+```swift
+final class LoginViewModel { }
+struct UserProfile { }
+let maxRetryCount = 3
+let avatarURL: URL?
+let userID: User.ID
+```
+
+## Swift Scoped Names
+
+Prefer language scoping over name prefixes when a relationship is structural.
+If a type is owned by another type and can be nested, nest it instead of
+inventing a longer top-level name.
+
+Rules:
+
+- Use access control for privacy; do not signal privacy with `_privateName`.
+- Nest owned errors, options, and helper types when Swift allows it.
+- Do not repeat the declaring type in static or class properties that return an
+  instance of that same type.
+- Use lower camel case for global constants.
+- Use `shared` or `default` for singleton-like values only when those words
+  actually describe the role.
+- Use an empty enum as a namespace only for tightly related constants or helper
+  functions that should never be instantiated.
+
+Bad:
+
+```swift
+private let _cachedProfile: Profile?
+
+enum ParseError: Error {
+    case invalidToken(String)
+}
+
+extension UIColor {
+    static let primaryColor: UIColor = .blue
+}
+
+let SecondsPerMinute = 60
+let kSecondsPerMinute = 60
+```
+
+Good:
+
+```swift
+private let cachedProfile: Profile?
+
+struct Parser {
+    enum Error: Swift.Error {
+        case invalidToken(String)
+    }
+}
+
+extension UIColor {
+    static let primary: UIColor = .blue
+}
+
+let secondsPerMinute = 60
+```
+
+## Swift Files
+
+Rules:
+
+- A file with one primary type is named after that type.
+- Related small helper types may live in the same file when they are private or
+  tightly owned by the primary type.
+- Split a file when there is no clear primary type.
+- Extension files use `TypeName+Capability.swift` or
+  `TypeName+ProtocolConformance.swift`.
+- Do not use `TypeName+Extensions.swift` when a narrower capability name exists.
+- Do not create broad extension dumping grounds.
+- Do not prefix files with the app name unless the file is the app entry point
+  or a framework collision makes the prefix unavoidable.
+
+Bad:
+
+```text
+Data.swift
+LoginStuff.swift
+String+Helpers.swift
+View+Utilities.swift
+Extensions.swift
+```
+
+Good:
+
+```text
+LoginView.swift
+LoginViewModel.swift
+LoginViewState.swift
+MessageTimestampFormatter.swift
+String+SearchQuery.swift
+UIViewController+ChildContainment.swift
+UserDefaults+SessionStorage.swift
+```
+
+## Swift MVVM Names
+
+For SwiftUI and MVVM, suffixes are deterministic.
+
+Use:
+
+```text
+FeatureView.swift
+FeatureViewModel.swift
+FeatureViewState.swift
+FeatureViewAction.swift
+FeatureRepository.swift
+FeatureClient.swift
+FeatureCoordinator.swift
+FeatureViewModelTests.swift
+```
+
+Rules:
+
+- `View` presents UI and forwards user intent.
+- `ViewModel` owns presentation state, async task orchestration for the
+  presentation surface, and user-intent methods.
+- `ViewState` is a value describing screen state.
+- `ViewAction` is a typed user or lifecycle event.
+- `Coordinator` owns navigation or flow state.
+- `Repository` owns domain-facing data access.
+- `Client` owns external API, SDK, HTTP, storage, or platform mechanics.
+- `UseCase` owns an application operation or business workflow.
+- `Formatter` owns domain-sensitive display formatting.
+- Avoid `Manager`, `Handler`, and `Data` for MVVM owner types.
+
+Bad:
+
+```swift
+final class LoginManager: ObservableObject { }
+final class LoginHandler: ObservableObject { }
+final class LoginData: ObservableObject { }
+struct LoginScreen: View { }
+```
+
+Good:
+
+```swift
+@MainActor
+final class LoginViewModel: ObservableObject { }
+
+struct LoginView: View { }
+
+struct LoginViewState {
+    var email: String
+    var password: String
+    var isSubmitButtonEnabled: Bool
+}
+
+enum LoginViewAction {
+    case emailChanged(String)
+    case passwordChanged(String)
+    case submitButtonTapped
+}
+```
+
+## Swift ViewModel Methods
+
+Use UI event names when a ViewModel method represents a direct UI event. Use
+domain verbs when the method does domain work.
+
+Direct UI event examples:
+
+```swift
+func submitButtonTapped()
+func cameraPermissionDenied()
+func fileImportStarted()
+func accountPickerSelectionChanged(to account: AccountOption)
+func retryButtonTapped()
+func selectedItemChanged(to itemID: Item.ID)
+```
+
+Domain work examples:
+
+```swift
+func enqueueFileUpload(_ file: PendingUploadFile)
+func refreshOrderHistory(for accountID: Account.ID) async
+func persistDraftReport(_ report: DraftReport) async throws
+func validateEmailAddress(_ emailAddress: String) -> EmailValidationResult
+```
+
+Bad:
+
+```swift
+func handle(_ action: LoginAction)
+func process(_ text: String)
+func update(_ value: String)
+func didTap()
+```
+
+Good:
+
+```swift
+func submitButtonTapped()
+func passwordFieldChanged(to password: String)
+func updateDraftMessageText(_ draftMessageText: String)
+func validateLoginForm(_ form: LoginForm) -> LoginValidationResult
+```
+
+UIKit target-action and notification handlers may use `handle...` when they are
+literal framework handlers:
+
+```swift
+@objc
+func handleConfirmButtonTapped(_ sender: UIButton) { }
+
+@objc
+func handleKeyboardDidShowNotification(_ notification: Notification) { }
+```
+
+Do not use `handle` for normal ViewModel intent methods.
+
+## Swift Function and Argument Labels
+
+Rules:
+
+- Function and method names should form grammatical English at the call site.
+- Omit the first argument label when the base name and first argument form a
+  clear phrase.
+- Include argument labels when they clarify weak types or avoid ambiguity.
+- Initializer arguments that directly set stored properties should use the
+  property names.
+- Use explicit `self.` in initializers when parameter and stored property names
+  match.
+- Factory methods that create new instances should use `make...` when that
+  improves clarity.
+- Nonmutating methods without side effects should read as noun phrases where
+  natural.
+- Mutating methods with side effects should use imperative verb phrases.
+- Use Swift mutating/nonmutating pairs where applicable, such as
+  `sort`/`sorted`, `append`/`appending`, and `formUnion`/`union`.
+
+Bad:
+
+```swift
+func addToDate(_ date: Date, _ value: Int) -> Date
+func make(_ profile: Profile) -> ProfileView
+func save(user: User)
+```
+
+Good:
+
+```swift
+func addMonthToDate(_ date: Date, monthCount: Int) -> Date
+func makeProfileView(for profile: Profile) -> ProfileView
+func saveUser(_ user: User)
+```
+
+Initializer example:
+
+```swift
+struct Person {
+    let name: String
+    let phoneNumber: String
+
+    init(name: String, phoneNumber: String) {
+        self.name = name
+        self.phoneNumber = phoneNumber
+    }
+}
+```
+
+## Swift Delegates
+
+Delegate methods put the delegate owner first, following Apple API patterns.
+
+Rules:
+
+- Pass the delegate source item as the first argument.
+- Leave the source item argument unlabeled.
+- For a source-only `Void` event, use the source type plus a past-tense or
+  future-tense event phrase.
+- For a source-only `Bool` assertion, use the source type plus `can`, `is`, or
+  another allowed predicate phrase that describes the returned answer.
+- Do not introduce `should` in delegate names. Preserve it only for external
+  framework requirements covered by an explicit quality exemption.
+- For a source-only non-Boolean value, use a noun phrase for the queried value
+  and label the source item with a natural preposition.
+- When there are extra arguments, use the source type as the base name, then
+  make the second argument label describe the event, question, or requested
+  value.
+- Do not omit the source item just because the delegate is currently owned by
+  one caller.
+
+Bad:
+
+```swift
+func didDeleteDraft()
+func didDeleteDraft(draft: Draft, store: DraftStore)
+func heightForMessage(_ message: Message) -> CGFloat
+```
+
+Good:
+
+```swift
+func draftStore(_ draftStore: DraftStore, didDeleteDraft draft: Draft)
+func draftStoreCanDeleteDraft(_ draftStore: DraftStore) -> Bool
+func messageListDataSource(_ dataSource: MessageListDataSource, didSelectMessage id: Message.ID)
+func numberOfSections(in dataSource: MessageListDataSource) -> Int
+func messageListDataSource(
+    _ dataSource: MessageListDataSource,
+    heightForMessageAt indexPath: IndexPath
+) -> CGFloat
+```
+
+## Swift Protocols
+
+Rules:
+
+- Do not prefix protocol names with `I`.
+- Do not suffix protocols with `Protocol`.
+- Protocols that describe what something is use nouns.
+- Capability protocols use natural capability names, often `-ing` when the
+  protocol describes behavior.
+- Use `Provider`, `Repository`, `Client`, or `Coordinating` only when that is the
+  actual role.
+- Avoid automatic `-able` names that do not describe a clear capability.
+- Do not create protocols for every ViewModel or use case just to make mocks.
+
+Bad:
+
+```swift
+protocol IFooEventHandler { }
+protocol LoginViewModelProtocol { }
+protocol DataLoadable { }
+protocol Colorable { }
+protocol LoginManaging { }
+```
+
+Better:
+
+```swift
+protocol AccountLoading { }
+protocol ThemeColorProviding { }
+protocol LoginCoordinating { }
+protocol ProfileRepository { }
+protocol FileUploadClient { }
+```
+
+Good noun protocol:
+
+```swift
+protocol Collection { }
+```
+
+Good capability protocol:
+
+```swift
+protocol ProgressReporting {
+    var progress: Double { get }
+}
+```
+
+## Swift Repositories, Clients, and Coordinators
+
+Rules:
+
+- Repository protocols speak domain language and return domain entities or
+  domain results.
+- Repository method names are domain operations.
+- Repository implementations may name their backing technology when useful.
+- Client types own external API or SDK mechanics.
+- Coordinators own route state, destination construction, stack mutations, and
+  presentation flow.
+- Route enums are feature-owned and named for the flow.
+- Route values must not hold ViewModels, SwiftUI views, repository
+  implementations, SDK clients, database records, or DTOs.
+
+Bad:
+
+```swift
+protocol DataRepository {
+    func fetchTable(_ name: String) async throws -> Data
+}
+
+final class ProfileCoordinator {
+    func present(_ string: String) { }
+}
+
+enum AppRoute {
+    case screen(AnyHashable)
+}
+```
+
+Good:
+
+```swift
+protocol ProfileRepository {
+    func getProfile(for userID: User.ID) async throws -> Profile
+}
+
+final class HTTPProfileRepository: ProfileRepository { }
+
+struct ProfileAPIClient {
+    func getProfileResponse(for userID: User.ID) async throws -> ProfileResponseDTO
+}
+
+@MainActor
+final class ProfileCoordinator {
+    func showEditProfile(userID: User.ID) { }
+    func dismissSheet() { }
+}
+
+enum ProfileDestination: Hashable {
+    case editProfile(User.ID)
+    case avatarPreview(ProfileAvatar.ID)
+}
+```
+
+## Swift Presentation Identifiers
+
+Presentation identifiers are stable contracts for UI identity, diffable data
+sources, navigation, persistence, and tests. Name them for the thing they
+identify, not for the framework that consumes them.
+
+Rules:
+
+- Snapshot item identifiers use stable presentation or domain IDs.
+- Do not use DTO item identity, array offsets, or index paths as long-lived
+  item identity.
+- Use `id` only when the enclosing type already supplies the domain context.
+- Use a role-qualified name such as `messageID`, `avatarID`, or
+  `conversationID` when the surrounding scope contains multiple identifiers.
+- Keep accessibility identifiers separate from model identifiers.
+
+Bad:
+
+```swift
+struct MessageRow {
+    let dto: MessageDTO
+    let indexPath: IndexPath
+}
+
+let selectedID = indexPath
+```
+
+Good:
+
+```swift
+struct MessageRow: Identifiable {
+    let id: Message.ID
+    let authorDisplayName: String
+    let previewText: String
+}
+
+let selectedMessageID = row.id
+```
+
+## Swift Accessibility Identifiers
+
+Accessibility identifiers are stable UI test hooks, not localized user-facing
+copy.
+
+Rules:
+
+- Use stable `camelCase` strings.
+- Name the interaction surface or important state.
+- Do not include localized text.
+- Do not include user content, IDs, tokens, provider names, or database names.
+
+Bad:
+
+```swift
+.accessibilityIdentifier("Submit Button")
+.accessibilityIdentifier("john@example.com-profile-button")
+```
+
+Good:
+
+```swift
+.accessibilityIdentifier("submitButton")
+.accessibilityIdentifier("profileAvatarButton")
+```
+
