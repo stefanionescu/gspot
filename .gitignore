@@ -1,6 +1,3 @@
 # Operating system and editor files
 .DS_Store
 Thumbs.db
-
-# Architecture related files
-architecture/
