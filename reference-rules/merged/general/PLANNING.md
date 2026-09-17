@@ -34,24 +34,24 @@ Update the settings screen copy and resize the hero image.
 Good:
 
 ```diff
-diff --git a/ios/App/SettingsView.swift b/ios/App/SettingsView.swift
---- a/ios/App/SettingsView.swift
-+++ b/ios/App/SettingsView.swift
+diff --git a/app/settings/page.tsx b/app/settings/page.tsx
+--- a/app/settings/page.tsx
++++ b/app/settings/page.tsx
 @@
--Text("Old title")
-+Text("Account settings")
+-<h1>Old title</h1>
++<h1>Account settings</h1>
 ```
 
 ```bash
-sips --resampleWidth 1200 ios/Assets/Hero.png --out ios/Assets/Hero.png
+convert assets/hero.png -resize 1200x assets/hero.png
 ```
 
 ```text
 Asset change:
-- Path: ios/Assets/Hero.png
+- Path: assets/hero.png
 - Operation: resize in place
 - Width: 1200 px
-- Command: sips --resampleWidth 1200 ios/Assets/Hero.png --out ios/Assets/Hero.png
+- Command: convert assets/hero.png -resize 1200x assets/hero.png
 ```
 
 ## No Unrequested Testing or Linting

@@ -1,6 +1,6 @@
 # SQL Naming
 
-SQL and Supabase names are durable infrastructure contracts. Rename them only
+SQL names are durable infrastructure contracts. Rename them only
 through migrations and contract-aware code changes.
 
 ## SQL Case Rules
@@ -198,35 +198,6 @@ CREATE POLICY users_can_view_own_messages
     FOR SELECT
     TO authenticated
     USING (userId = auth.uid());
-```
-
-## Supabase Edge Functions
-
-Rules:
-
-- Function folders use `kebab-case`.
-- The folder name, config entry, and deployable function name must match.
-- Shared function code belongs under approved shared function folders and
-  follows TypeScript naming.
-- Name Edge Functions by the externally callable operation.
-- Do not name Edge Functions after implementation technology.
-
-Bad:
-
-```text
-functions/SubmitOrder/
-functions/provider_handler/
-functions/functions/src/submit-order/
-```
-
-Good:
-
-```text
-functions/submit-order/
-functions/refresh-provider-token/
-functions/shared-code/
-functions/provider-config/
-functions/generated-types/
 ```
 
 ## Storage Names

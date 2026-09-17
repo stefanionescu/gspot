@@ -111,9 +111,9 @@ Rules:
 - Treat ownership checks as transport middleware only when the rule is a reusable HTTP boundary.
 - Use `crypto.timingSafeEqual()` for HMAC, webhook, or token comparisons where timing leaks matter.
 - Use `crypto.randomBytes()` or `crypto.randomUUID()` for security-sensitive random values. Do not use `Math.random()` for tokens, nonces, secrets, or reset codes.
-- Never use `eval()`, `new Function()`, string-based timers, or configured code generation.
+- Never use `eval()`, `new Function()`, string-based timers, or dynamic code generation.
 - Never resolve filesystem paths directly from user input.
-- Never build configured imports, module paths, shell commands, or child-process arguments from user input.
+- Never build dynamic imports, module paths, shell commands, or child-process arguments from user input.
 - Avoid `child_process` in request paths. When unavoidable, use fixed commands, argument arrays, least privilege, and no shell interpolation.
 - Do not trust provider callbacks or webhooks without signature, token, or ownership verification.
 - Do not redirect to user-supplied URLs unless the target is relative or explicitly allowlisted.
@@ -350,11 +350,11 @@ export const providerConfig = {
 
 Rules:
 
-- Event names and log item keys are operational contracts.
+- Event names and log object keys are operational contracts.
 - Keep event names stable.
-- Keep log item keys stable.
+- Keep log object keys stable.
 - Renaming log fields is an observability contract change.
-- Put searchable values in structured fields, not configured message strings.
+- Put searchable values in structured fields, not dynamic message strings.
 - Use stable names for request IDs, correlation IDs, provider request IDs,
   operation IDs, resource IDs, and safe user IDs.
 - Do not put provider messages, user text, serialized payloads, or raw IDs into

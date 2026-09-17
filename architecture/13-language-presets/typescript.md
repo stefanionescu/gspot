@@ -16,9 +16,9 @@ language:typescript   .ts .tsx .mts .cts .d.ts
 | Kind               | Tool                                                                     | Notes                                                                                                                                  |
 | ------------------------ | ------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------- |
 | format                   | Prettier                                                                 | The one formatter. `embeddedLanguageFormatting: "off"`, from the reference config.                                                     |
-| syntax, types            | tsc                                                                      | `--noEmit`, and `--listFiles` as the files a check reads                                                                                             |
+| syntax, types            | tsc                                                                      | `--noEmit`, and `--listFiles` as file listing                                                                                             |
 | style, structure, naming | ESLint 9 flat config with `typescript-eslint`                            | The rule set below                                                                                                                     |
-| schema                   | check-jsonschema against SchemaStore for `tsconfig.json`, `package.json` | Catches `eslint.entry: ["eslint-config.js"]`, a real typo in two `knip.json` files in the reference tree                               |
+| schema                   | v8r against SchemaStore for `tsconfig.json`, `package.json` | Catches `eslint.entry: ["eslint-config.js"]`, a real typo in two `knip.json` files in the reference tree                               |
 | deps                     | knip, syncpack, `bun audit` or `npm audit`, osv-scanner                  | knip for unused files, exports and dependencies; syncpack for version skew across a workspace                                          |
 | license                  | `license-checker-rseidelsohn`                                            | The reference set uses both `license-checker` 25.0.1 (unmaintained) and `license-checker-rseidelsohn` 5.0.1. The maintained fork wins. |
 | dead                     | knip                                                                     |                                                                                                                                        |
@@ -47,7 +47,7 @@ Grouped, with what each group owns:
 | JSON       | `@eslint/json`                                    | JSON linting inside ESLint                                                                              |
 | manifests  | `eslint-plugin-package-json`                      | Manifest ordering and validity                                                                          |
 | boundaries | `eslint-plugin-boundaries`                        | Emitted from the structure contracts                                                                    |
-| structure  | `@gspot/eslint-plugin`                            | The AST-local structure rules                                                                           |
+| structure  | ast-grep                                          | Structural rules run outside ESLint, one engine for every language                                                           |
 | Prettier   | `eslint-config-prettier`                          | Last, disables the stylistic overlap                                                                    |
 
 Compiler options the preset turns on, taken from the reference set's five added guards plus the
@@ -70,6 +70,14 @@ Rules the reference set defines locally that are dropped in favour of the plugin
 `reportUnusedDisableDirectives: "error"` everywhere, no exception, including on the distribution's
 own code.
 
+## Order within a module
+
+One structure rule from the shared engine, `private-before-public`: every non-exported top-level
+declaration sits above the first `export`. TypeScript hoists function declarations, so the order
+carries no runtime meaning; it is fixed so a reader meets the helpers before the code that uses
+them, and it is the same order the Python and Bash presets require. `yap-swift-app` follows it by
+habit and checks nothing; the rule is one ast-grep file.
+
 ## Version matrix
 
 The reference repositories are two major versions apart on the same plugins: ESLint 9.38 with
@@ -78,7 +86,7 @@ pins one matrix per gspot release, and a repository on a different major is told
 stay on an older gspot. There is no per-consumer matrix, because supporting two ESLint majors
 doubles the config surface for no gain.
 
-## Required kinds
+## Required inspections
 
 ```text
 .ts .tsx .mts .cts   format syntax style types structure naming prose spelling

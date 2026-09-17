@@ -1,6 +1,6 @@
 # `language:css`
 
-The smallest preset, and the one with the least reference evidence: only `slopshop` has CSS, and its
+The smallest preset, and the one with the least reference evidence: `slopshop` has CSS modules and `yap-landing` a single stylesheet, and its
 CSS checks are the most project-specific code in the reference set.
 
 ## Claims
@@ -58,10 +58,10 @@ contribution is:
 
 These are three checks that would have caught most of `CLEANUP.md` section 22 before it was written.
 
-## Required kinds
+## Required inspections
 
 ```text
-.css .pcss          format syntax style structure naming spelling dead
+.css .pcss          format syntax style structure naming spelling
 .module.css         the above, with exact usage resolution
 ```
 

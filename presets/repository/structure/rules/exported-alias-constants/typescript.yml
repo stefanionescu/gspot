@@ -1,0 +1,13 @@
+id: structure/exported-alias-constants
+language: TypeScript
+message: This export renames a value that already has a name.
+
+rule:
+  kind: export_statement
+  has:
+    kind: lexical_declaration
+    has:
+      kind: variable_declarator
+      has:
+        field: value
+        kind: identifier

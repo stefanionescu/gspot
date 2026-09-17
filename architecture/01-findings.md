@@ -1,13 +1,13 @@
 # Findings From the Reference Repositories
 
-Five trees were read. Everything below is evidence, followed by the design rule it produces. The
+The reference trees were read. Everything below is evidence, followed by the design rule it produces. The
 design rules are the contract the rest of this folder keeps.
 
 ## The trees
 
 | Repository           | Shape                                          | Languages                                       | Lint package                        | Rule corpus                                                   | Runner                            |
 | -------------------- | ---------------------------------------------- | ----------------------------------------------- | ----------------------------------- | ------------------------------------------------------------- | --------------------------------- |
-| `yap-swift-app`      | Monorepo: `api`, `supabase`, `ios`, `quality`  | TypeScript, Swift, SQL, Bash, Dockerfile, nginx | `quality/`, 159 files, 13,451 lines | `rules/`, 11 files, 13,940 lines                              | mise, 104 tasks                   |
+| `yap-swift-app`      | Monorepo: `api`, `supabase`, `ios`, `quality`  | TypeScript, Swift, SQL, Bash, Dockerfile, nginx | `quality/`, 159 files, 13,451 lines | `rules/`, 11 files, 13,940 lines                              | mise, 102 tasks                   |
 | `slopshop`           | Single Next.js app plus `quality` workspace    | TypeScript, TSX, CSS, Bash                      | `quality/`, 79 files                | `rules/general/` plus `rules/nextjs/`, 15 files, 10,542 lines | mise, 28 tasks                    |
 | `yap-text-inference` | Single Python service plus `quality` workspace | Python, Bash, Dockerfile                        | `quality/`, 139 files, Python       | `rules/`, 7 files, 13,721 lines                               | mise, 35 tasks                    |
 | `yap-landing`        | Single static site, plus `quality` workspace   | JavaScript, HTML, CSS, Bash                     | `quality/`, 118 files               | `rules/`, 5 files, 3,337 lines                                | mise, 15 tasks                    |
@@ -52,7 +52,7 @@ Each row is a defect read out of the tree. The design rule is binding.
 | `supabase/.sqlfluffignore:9` contains `sql/`, which in gitignore semantics also matches `tests/suites/sql/` and `src/remote/teardown/sql/`. sqlfluff lints 25 of 83 SQL files. The pre-commit command names three paths and two of them are silently ignored. | **Claims are reported by the tool, never asserted.** A preset states which files it claims by asking the tool which files it would process, and the coverage check compares that answer against the tracked file list. See [05-coverage.md](05-coverage.md). |
 | Nine `.pgsql` helper files match no sqlfluff pattern because `sql_file_exts` is not overridden.                                                                                                                                                               | **Extension ownership is a total function.** Every extension present in the tree maps to exactly one owning preset, or to a declared status. An unmapped extension fails the coverage check.                                                          |
 | `quality/security/codeql/api-false-positives.json` is never read, because `sarif-filter.sh:11` looks for `false-positives.json`.                                                                                                                              | **Every configuration file gspot writes is read back and asserted.** A config artifact with no reader fails the coverage check as an orphan.                                                                                                        |
-| 40 Semgrep rules, a pinned binary, a runner, a retry wrapper and an environment file exist, and nothing invokes the binary.                                                                                                                                   | **A check exists only when a task runs it.** The task graph is the single source of what runs; a rule file reachable from no task is an orphan and fails.                                                                                           |
+| 39 Semgrep rules, a pinned binary, a runner, a retry wrapper and an environment file exist, and nothing invokes the binary.                                                                                                                                   | **A check exists only when a task runs it.** The task graph is the single source of what runs; a rule file reachable from no task is an orphan and fails.                                                                                           |
 | `dotenv-linter` is configured through a qlty formatter driver, and the gate passes `--no-formatters`.                                                                                                                                                         | Same rule. Orphan detection covers plugin entries.                                                                                                                                                                                                  |
 | `quality/functions/swift.js` is dead: `functions/index.js` returns an empty list for Swift.                                                                                                                                                                   | Same rule, applied to gspot's own tree by self-hosting. See [03-repo-layout.md](03-repo-layout.md).                                                                                                                                                 |
 
@@ -104,7 +104,7 @@ Each row is a defect read out of the tree. The design rule is binding.
 | Pre-commit lints a project only when a file under its prefix is staged, so editing `quality/eslint/api/*` never re-lints `api/` until push.                                                                            | **Scope invalidation follows policy inputs, not only sources.** A change to a policy file invalidates every scope that policy governs.                           |
 | Squawk runs in pre-push only, so an unsafe migration is committed before it is checked.                                                                                                                                | **Stage follows from what a check requires, not from habit.** A check that needs no build runs at pre-commit.                                                        |
 | `ios:lint` runs in no hook, although `swiftlint lint --strict` needs no build.                                                                                                                                         | Same rule.                                                                                                                                                       |
-| markdownlint runs twice per push.                                                                                                                                                                                      | **The task graph is a graph.** A check runs once per invocation, deduplicated by node identity.                                                                  |
+| markdownlint runs twice per push.                                                                                                                                                                                      | **The task graph is a graph.** A check runs once per takes, deduplicated by node identity.                                                                  |
 
 ### Product logic changed by a quality branch
 
@@ -116,7 +116,7 @@ types during a type relocation.
 **Design rule:** a check that cannot pass without editing immutable or runtime files declares that,
 and gspot scopes it. Migration safety rules apply to migrations added after a recorded baseline
 version, which Squawk supports through `--exclude-path`. Scanner findings that need a runtime bump
-produce a exception with an owner, not an automatic edit.
+produce an exception with a reason, not an automatic edit.
 
 ### The blind spots, as a coverage target
 
@@ -145,7 +145,7 @@ the coverage check:
 1. The license check supports `ios` but pre-push calls only `api` and `supabase`; `quality/` and the
    root manifest are not selectable.
 
-[18-proof.md](18-proof.md) closes every one of these or declares it.
+Every one of these is closed by a preset check or declared.
 
 ## What to reject
 
@@ -218,7 +218,7 @@ Seven checks on output, none of them a linter, all of them reporting something t
 show. `html-validate` is not on the list, because HTML conformance is a property of the template and
 the data.
 
-**What the preset ships.** One HTML required kinds, over source only. There is no artifact required kinds, because
+**What the preset ships.** One HTML required inspections, over source only. There is no artifact required inspections, because
 there is no artifact rule set worth having.
 
 ### R-02 Formatting and style-checking generated files
@@ -244,7 +244,7 @@ these:
 | **Secrets.**                                                                  | A generator that embeds a credential is a real incident, and this check needs no edit to the file to be worth running.                                                    |
 | **Declared producer.** The `[[declare]]` entry names the task that writes it. | An orphan generated file is a file nobody can regenerate.                                                                                                                 |
 
-**The required kinds.** A generated file carries three kinds and no others:
+**The required inspections.** A generated file carries three inspections and no others:
 
 ```text
 generated   secrets freshness determinism
@@ -268,7 +268,7 @@ That is the rule against unfixable findings collecting its debt. An unactionable
 stay ignored; it eventually gets "fixed", and the fix is worse than the finding.
 
 **What gspot does.** A frozen file is declared frozen, with the baseline version that froze it, and
-its required kinds is:
+its required inspections is:
 
 ```text
 frozen   secrets immutability
@@ -324,8 +324,8 @@ resolver will eventually see something git does not track, and the fix is never 
 
 **What gspot does.** The tracked file list is `git ls-files`, per [05-coverage.md](05-coverage.md),
 and gspot passes tools an explicit file list rather than a glob wherever the tool supports one. The
-`invocation` field on each check, taken from MegaLinter's `cli_lint_mode`, records which tools
-accept a list and which insist on scanning. For the ones that insist, the files a check reads compares what the
+`takes` field on each check, taken from MegaLinter's `cli_lint_mode`, records which tools
+accept a list and which insist on scanning. For the ones that insist, file listing compares what the
 tool processed against the tracked set, and a file outside the tracked set appearing in a tool's
 output is a failure.
 
@@ -340,11 +340,11 @@ failure modes, not fewer. A test file wants a longer body and literal values in 
 wants things production code does not need: an assertion in every test, no skipped test committed,
 no conditional assertion, no shared mutable state between cases.
 
-**What gspot does.** A declared test required kinds, neither an exclusion nor a copy:
+**What gspot does.** A declared test required inspections, neither an exclusion nor a copy:
 
 | Rule                       | Production | Test                                     | Reason                                                                         |
 | -------------------------- | ---------- | ---------------------------------------- | ------------------------------------------------------------------------------ |
-| `types`                    | on         | **on**                                   | The omission in the reference set is the defect this required kinds exists to prevent |
+| `types`                    | on         | **on**                                   | The omission in the reference set is the defect this required inspections exists to prevent |
 | `file_lines`               | 300        | 500                                      | A table-driven test file is legitimately long                                  |
 | `function_lines`           | 60         | 100                                      | An arrange-act-assert body is longer                                           |
 | `magic numbers`            | on         | **off**                                  | Fixture values are the point of the test                                       |
@@ -356,7 +356,7 @@ no conditional assertion, no shared mutable state between cases.
 | `doc comment required`     | on         | off                                      | The test name is the documentation                                             |
 
 Ten rows. Four are stricter for tests than for production, three are looser, and three are the same.
-That is what a required kinds looks like, and "excluded" is what a missing required kinds looks like.
+That is what a required inspections looks like, and "excluded" is what a missing required inspections looks like.
 
 ### R-07 Enforcement by convention that a tool could enforce
 
@@ -487,16 +487,16 @@ adopted.
 
 | MegaLinter field                                                                                   | What it solves                                                                                                                                                                          | Adopted as                                                                                                                       |
 | -------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `cli_lint_mode`: `file`, `list_of_files`, `project`                                                | Whether a tool takes one path, a path list, or the whole tree. This determines both the invocation shape and the files a check reads strategy, and the preset manifest had no field for it.             | `check.invocation`                                                                                                               |
+| `cli_lint_mode`: `file`, `file-list`, `project`                                                | Whether a tool takes one path, a path list, or the whole tree. This determines both the takes shape and the file listing strategy, and the preset manifest had no field for it.             | `check.takes`                                                                                                               |
 | `supported_cli_lint_modes`                                                                         | Some tools support several, and the fast mode differs from the accurate mode                                                                                                            | `check.invocation_modes`                                                                                                         |
 | `cli_lint_errors_count`: `regex_count`, `total_lines`, `regex_number` plus `cli_lint_errors_regex` | How to count findings when the exit code is useless. This is exactly the `fails_on = "output"` case, and MegaLinter makes it a first-class declaration with a regex.                 | `check.fails_on.count_regex`                                                                                                         |
-| `common_linter_errors`: a list of `{identifier, regex, message}`                                   | When the **linter itself** fails (config parse error, plugin load failure, parser crash), match its output and print the remediation. MegaLinter ships three of these for pylint alone. | `check.tool_failures`                                                                                                            |
+| `common_linter_errors`: a list of `{identifier, regex, message}`                                   | When the **linter itself** fails (config parse error, plugin load failure, parser crash), match its output and print the remediation. MegaLinter ships three of these for pylint alone. | `check.tool_errors`                                                                                                            |
 | `cli_config_arg_name`                                                                              | The flag that passes the config explicitly, per tool                                                                                                                                    | Already required by [07-config-generation.md](07-config-generation.md); now declared per check rather than hand-written per task |
 
 `common_linter_errors` is the single best idea in the repository. A gate that fails because pylint
 could not parse its own config is indistinguishable, at the terminal, from a gate that fails because
 the code is bad. MegaLinter turns the first case into a message naming the fix. gspot adopts it, and
-extends it to the class of failure that matters most here: a the files a check reads that returns an empty set because
+extends it to the class of failure that matters most here: a file listing that returns an empty set because
 the tool ignored everything.
 
 Other structural ideas taken:
@@ -510,10 +510,10 @@ Other structural ideas taken:
 - **Multi-agent rules targets.** MegaLinter ships `.claude/rules/`, `.claude/skills/`,
   `.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`, `.agents/plugins/`,
   `gemini-extension.json` and `com.github.copilot/agents/`. That is the real target list for
-  [10-rules.md](10-rules.md), and it settles D-36: the renderer needs more than two outputs
+  [10-rules.md](10-rules.md), and it settles D-36: the emitter needs more than two outputs
   eventually, and the document model has to come first.
 - **Distribution surfaces.** Docker image, npm runner, GitHub Action, and a `pre-commit` hook
-  definition. gspot needs the npm package and the binary; the Action is what the GitHub CI emitter
+  definition. gspot needs the npm package and the binary; the Action is what the GitHub Actions emitter
   emits; a `pre-commit` hook definition is a cheap addition for repositories already on that
   framework.
 - **`PRE_COMMANDS` and `POST_COMMANDS`** with a `cwd` and a `continue_if_failed` flag. A generic
@@ -556,12 +556,12 @@ Also rejected:
 | **Docker-first execution**                    | A 4 GB image per flavor, and a pre-commit hook that shells into a container. The reference repositories run tools natively through mise in milliseconds. Docker is right for a CI aggregator and wrong for a git hook. |
 | **A Python engine**                           | MegaLinter is Python because it started in a Python-friendly CI context. gspot's structural engine needs one AST layer shared with an ESLint plugin, which forces JavaScript.                                          |
 | **`APPLY_FIXES: all` by default**             | A gate that rewrites the tree on every run hides what it changed. `gspot fix` is a separate command with a convergence assertion.                                                                                      |
-| **67 languages**                              | Breadth over depth. gspot covers nine languages completely, including the structural and naming rules that no aggregator ships, and adds a tenth only when a reference repository needs it.                            |
+| **67 languages**                              | Breadth over depth. gspot covers its languages completely, including the structural and naming rules that no aggregator ships, and adds a tenth only when a reference repository needs it.                            |
 | **`ENABLE`/`DISABLE` as the selection model** | Two mutually exclusive mechanisms where setting one inverts the default for everything. The preset model has one direction.                                                                                              |
 
 ### Tools discovered from the 136
 
-The descriptor list is a well-maintained tool coverage, and it surfaced eleven tools worth adopting
+The descriptor list is a well-maintained tool coverage, and it surfaced the tools worth adopting
 that no reference repository uses. They are carried into [20-tooling.md](20-tooling.md).
 
 Most valuable: **ls-lint** (file and directory naming, one config, every language), **v8r** (JSON
@@ -578,7 +578,7 @@ repository. See [12-structure-and-naming.md](12-structure-and-naming.md).
 
 ### Verdict
 
-Follow MegaLinter's **descriptor model**, its **failure-message discipline**, its **invocation-mode
+Follow MegaLinter's **descriptor model**, its **failure-message discipline**, its **takes-mode
 taxonomy** and its **tool coverage**. Reject its **gating model**, its **exclusion mechanisms**, its
 **Docker-first execution** and its **breadth-over-depth** scope.
 
@@ -619,4 +619,4 @@ Whether that is worth the double configuration is Q-13 in [19-decisions.md](19-d
   distribution must model: a Python project with variant dependency sets needs a per-variant type
   gate, and the files excluded from every variant are uncovered.
 - **`jscpd` for duplication, driven from two JSON configs.** Duplication detection is
-  language-agnostic and belongs in an aspect preset.
+  language-agnostic and belongs in a `repository:` preset.

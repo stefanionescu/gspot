@@ -51,7 +51,7 @@ configurations from one block, so a disagreement is impossible rather than comme
 | `md/heading-case`        | H1 title case, H2 and below sentence case, per the documentation rules. Vale's `gspot` rules own the text; this owns the structure.                                                                     |
 | `md/no-orphan-doc`       | Every tracked Markdown file is reachable: from `README.md`, from the assembled rules index, or from a declared entry list. Catches `rules/DOCUMENTATION.md`, 4,088 lines that nothing links to.               |
 | `md/code-fence-language` | Every fence declares a language, and the language is one the repository has a linter for, or `text`                                                                                                           |
-| `md/fenced-code-lints`   | A fenced block tagged with a language the repository lints is extracted and linted. A `bash` block with a syntax error in a README fails.                                                                     |
+| `md/fenced-code-lints`   | A fenced block tagged with a language the repository lints is extracted and linted. A `bash` block with a syntax error in a README fails. Fences under `rules/` are exempt: rule files hold deliberately wrong examples. |
 
 `md/fenced-code-lints` is the Markdown equivalent of the heredoc extraction in [bash.md](bash.md),
 and it is genuinely new coverage: the reference `rules/BASH.md` alone contains dozens of shell
@@ -73,7 +73,7 @@ The preset splits it:
 The online task is in the graph, so it is not optional and not forgotten. It is simply not in a
 hook.
 
-## Required kinds
+## Required inspections
 
 ```text
 .md .markdown   format style links prose spelling

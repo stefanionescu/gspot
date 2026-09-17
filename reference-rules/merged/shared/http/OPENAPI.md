@@ -53,7 +53,7 @@ export const ResourceParamsSchema = z
 Zod v4 rules:
 
 - Use `z.email()` for email strings.
-- Use `z.uuid()` for UUIDs, or domain ID helpers from `types/ids.ts` when
+- Use `z.uuid()` for UUIDs, or domain ID helpers from the project's shared identifier types when
   they express the domain.
 - Use `z.guid()` only for legacy GUID-compatible values.
 - Use `z.coerce.number()` for query params that arrive as strings.
@@ -63,7 +63,7 @@ Zod v4 rules:
 - Use `.meta()` for OpenAPI descriptions and examples.
 - Prefer Zod built-ins and vetted validators over project regex.
 - Keep project regex bounded, simple, anchored when appropriate, and away from large user-controlled strings.
-- Prefer contract-local schemas. Move a schema to `types/` or `openapi/common.ts` only when multiple endpoints genuinely share the same public shape.
+- Prefer contract-local schemas. Move a schema to the project's type roots or `openapi/common.ts` only when multiple endpoints genuinely share the same public shape.
 
 Unions are appropriate when the endpoint deliberately accepts distinct public
 request shapes.

@@ -1,0 +1,24 @@
+id: structure/trivial-file
+language: TypeScript
+message: This file holds one declaration and nothing else.
+
+rule:
+  kind: program
+  all:
+    - has:
+        stopBy: neighbor
+        kind: export_statement
+    - not:
+        has:
+          stopBy: neighbor
+          not:
+            any:
+              - kind: comment
+              - kind: export_statement
+    - not:
+        has:
+          stopBy: neighbor
+          kind: export_statement
+          follows:
+            stopBy: end
+            kind: export_statement

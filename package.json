@@ -1,0 +1,47 @@
+{
+  "name": "gspot",
+  "version": "0.1.0",
+  "description": "CLI to lint and enforce rules for LLM generated codebases",
+  "license": "Apache-2.0",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "bin": {
+    "gspot": "dist/gspot.js"
+  },
+  "exports": {
+    ".": "./dist/gspot.js"
+  },
+  "files": [
+    "dist",
+    "presets",
+    "ast-grep"
+  ],
+  "scripts": {
+    "build": "bun build src/gspot.ts --target=node --format=esm --outdir=dist",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@ast-grep/lang-bash": "^0.0.8",
+    "@ast-grep/lang-python": "^0.0.6",
+    "@ast-grep/lang-swift": "^0.0.8",
+    "@ast-grep/napi": "^0.45.3",
+    "@clack/prompts": "^1.8.1",
+    "commander": "^14.0.2",
+    "picomatch": "^4.0.3",
+    "smol-toml": "^1.4.2",
+    "yaml": "^2.9.1"
+  },
+  "devDependencies": {
+    "@types/bun": "^1.3.5",
+    "@types/picomatch": "^4.0.3",
+    "typescript": "^5.9.3"
+  },
+  "trustedDependencies": [
+    "@ast-grep/lang-bash",
+    "@ast-grep/lang-python",
+    "@ast-grep/lang-swift"
+  ]
+}

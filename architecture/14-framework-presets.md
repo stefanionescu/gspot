@@ -39,8 +39,8 @@ selected by dependency detection: `ZOD.md`, `DRIZZLE.md`, `TRPC.md`, `TANSTACKQU
 dependency is present, which is the preset model applied to prose.
 
 Deployment adapters (`@opennextjs/cloudflare`, `wrangler.jsonc`, `open-next.config.ts` in
-`slopshop`) are a separate optional preset, `framework:nextjs-cloudflare`, because they are a
-deployment choice rather than a framework fact.
+`slopshop`) belong to `platform:cloudflare`, below, because they are a deployment choice rather
+than a framework fact.
 
 ## `database:postgres`
 
@@ -65,13 +65,13 @@ RDS, or Supabase.
 Nine checks, none of which mentions Supabase. This is where a plain Postgres project gets almost
 everything, and it is the answer to how the SQL work avoids being too niche: **the general work
 lives in the general preset.** The same shape applies elsewhere: `library:drizzle` and
-`framework:prisma` require `database:postgres` and add only what their own tooling dictates.
+`library:drizzle` require `database:postgres` and add only what their own tooling dictates.
 
 ## `library:zod`
 
 Requires `language:typescript`. Selected when `zod` is a dependency.
 
-`eslint-plugin-zod`, which `slopshop` already runs with fourteen rules on:
+`eslint-plugin-zod`, which `slopshop` already runs with thirteen rules on:
 `no-any-schema`, `no-coerce-boolean`, `no-empty-custom-schema`, `no-native-enum`,
 `no-promise-schema`, `no-throw-in-refine`, `prefer-strict-object`,
 `prefer-top-level-string-formats`, `require-brand-type-parameter` and the rest.
@@ -97,17 +97,52 @@ project would also want.
 | `supabase/storage-policy`   | Every bucket referenced in code is declared in config, and has policies                                                                                                                                              |
 | `supabase/seed-determinism` | Seed SQL is idempotent, so a reset is repeatable                                                                                                                                                                     |
 
-Five checks. Everything else moved to `database:postgres`, which is the point: a Supabase project
-selects both and gets fourteen checks, and a Neon project selects one and gets nine.
+Nine checks. Everything else moved to `database:postgres`, which is the point: a Supabase project
+selects both and gets eighteen checks, and a Neon project selects one and gets nine.
 
 The immutability pressure the reference branch failed under now has exactly one outlet:
-`[sql.migrations] immutable_through`, a single value in a tracked file. Moving it is a visible
+`[sql] immutable_through`, a single value in a tracked file. Moving it is a visible
 commit. See [13-language-presets/sql.md](13-language-presets/sql.md).
 
 Rules: the framework layer `rules/platform/supabase/SUPABASE.md`, derived from the reference
 `rules/SUPABASE.md`, which at 450 lines is already the cleanest framework file in the corpus. Its
 "Ground Rules", "Change Workflow", "Migration Immutability" and "Review Checklist" sections survive
 nearly whole.
+
+## `platform:cloudflare`
+
+One preset for both Cloudflare targets. `yap-landing` is a Pages site with `functions/`;
+`slopshop` is a Next.js app built for Workers through OpenNext. Detection: `wrangler.jsonc` or
+`wrangler.toml`, or a `functions/` directory containing `_middleware.js` or `_worker.js`.
+
+### Claims
+
+| Path                                          | Kind                                                        |
+| --------------------------------------------- | ----------------------------------------------------------- |
+| `wrangler.jsonc`, `wrangler.toml`             | `format`, `syntax`, `schema` against the wrangler schema      |
+| `open-next.config.ts`                         | `language:typescript`, runtime `node`                        |
+| `cloudflare-env.d.ts`, `.open-next/**`        | `generated`, produced by the wrangler types task; `.open-next/` untracked |
+| `functions/**`, `_worker.js`, `_middleware.js` | `language:javascript` or `language:typescript`, runtime `worker` |
+| `_headers`                                    | `syntax`                                                    |
+| `_redirects`                                  | `syntax`                                                    |
+| `site.webmanifest`                            | `schema`, and every icon path resolves                       |
+
+### Runtime `worker`
+
+The Workers runtime is neither Node nor a browser. Files in the `worker` runtime get the Workers
+globals (`Request`, `Response`, `fetch`, `caches`, `crypto`, the `env` bindings), a ban on `node:`
+imports unless `nodejs_compat` is in the wrangler compatibility flags, and a ban on `process`.
+`eslint-plugin-n` does not run over them. Type checking uses `@cloudflare/workers-types`, so
+`context` in a Pages Function is not `any`.
+
+### Checks
+
+| Check                        | Asserts                                                                              |
+| ---------------------------- | ------------------------------------------------------------------------------------ |
+| `cloudflare/wrangler-config` | `wrangler.jsonc` validates, and `main` and `assets.directory` name paths the build produces |
+| `cloudflare/worker-build`    | The Worker builds, `requires = ["build"]`, so it runs at pre-push                    |
+
+Nothing here deploys. `wrangler deploy` stays the consumer's task.
 
 ## The shared `http` package
 
@@ -202,7 +237,7 @@ docker-compose.yml, docker-compose.*.yml, compose.yml, compose.*.yml
 | --------------------- | ------------------------------------------- | --------------------------------------------------------------------------------- |
 | style                 | `hadolint`                                  |                                                                                   |
 | syntax (compose)      | `docker compose config --quiet`             | Interpolation, service references, volume and network resolution                  |
-| schema (compose)      | `check-jsonschema` against the Compose spec | Runs without Docker, so it works when the daemon is down                          |
+| schema (compose)      | `v8r` against the Compose spec | Runs without Docker, so it works when the daemon is down                          |
 | image vulnerabilities | `trivy image`                               | Requires `build`                                                                      |
 | filesystem and config | `trivy config`                              | Runs without a daemon: reads the Dockerfile and compose file for misconfiguration |
 | secrets               | `trivy` plus gitleaks                       |                                                                                   |
@@ -224,7 +259,7 @@ Derived from the reference `rules/DOCKER.md`, which is 527 lines and mostly enfo
 
 ### Docker availability
 
-The preset's defining constraint: half its checks need a running daemon, and the reference
+The preset's defining constraint: several of its checks need a running daemon, and the reference
 repository's response was to exit zero when the daemon is down. That happened during the audit run,
 in both hooks, for both the nginx config check and the Trivy scan.
 
@@ -242,7 +277,7 @@ The preset's response:
 
 The split is deliberate: as much as possible moves to the no-daemon column, so that a laptop without
 Docker running still gets real coverage, and the remainder is loudly skipped rather than silently
-passed. A developer who does not run Docker adds those four checks to `gspot.local.toml` and sees
+passed. A developer who does not run Docker adds the daemon checks to `gspot.local.toml` and sees
 the skip in every run report.
 
 ### The nginx check, rebuilt
@@ -258,16 +293,16 @@ The gspot version runs the validation through the compose service, so the image,
 and the volumes come from the product definition:
 
 ```text
-docker compose -f {project.compose_file} run --rm --no-deps \
-  -v {certs}:/etc/nginx/ssl:ro {project.nginx_service} nginx -t
+docker compose -f {docker.compose_file} run --rm --no-deps \
+  -v {certs}:/etc/nginx/ssl:ro {docker.nginx_service} nginx -t
 ```
 
-The image is never named. `project.compose_file` and `project.nginx_service` come from `gspot.toml`,
+The image is never named. `docker.compose_file` comes from `gspot.toml`,
 and the certificate arguments are inline in the check because they are scaffolding, not
 configuration. Where compose cannot be used, the preset reads the image through a declared
-`[[project.value]]` with a `yaml-path` extraction, which fails loudly when the path is absent.
+the check reading `[docker] compose_file` directly, which fails loudly when the service is absent.
 
-### Required kinds
+### Required inspections
 
 ```text
 Dockerfile*         syntax style spelling secrets
@@ -393,6 +428,6 @@ next-intl, i18next, react-intl or
 @formatjs/intl in dependencies        -> rules/shared/i18n/I18N.md  (library:next-intl)
 ```
 
-Dropping the dependency removes the rule file on the next `gspot sync`, which is the property
+Dropping the dependency removes the rule file on the next `gspot generate`, which is the property
 no hand-maintained corpus has: `slopshop`'s `CLAUDE.md` table lists nine framework files, and
 nothing checks that the repository still uses all nine.

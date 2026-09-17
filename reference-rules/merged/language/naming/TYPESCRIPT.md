@@ -1,13 +1,13 @@
 # TypeScript Naming
 
 TypeScript naming follows the project rules here. Google TypeScript guidance is
-a strong default for many language choices, but this repo deliberately overrides
-some external guidance.
+a strong default for many language choices. The rules below deliberately override some of it, and
+say so where they do.
 
 Project decisions:
 
 - Use `kebab-case` filenames for TypeScript source files.
-- Use `type` aliases for item shapes by default.
+- Use `type` aliases for object shapes by default.
 - Do not adopt Google's blanket interface preference.
 - Do not adopt Basarat's camelCase filename preference.
 - Named exports are preferred for app code.
@@ -177,7 +177,7 @@ Rules:
 
 - Function names say what they do.
 - Prefer two or fewer parameters.
-- Use an options item for many arguments, multiple same-type arguments,
+- Use an options object for many arguments, multiple same-type arguments,
   optional groups, or boolean flags.
 - Do not use boolean flags to choose separate behaviors.
 - Prefer a positive predicate name plus `!` at the call site over a negative
@@ -237,7 +237,7 @@ function createMenu(options: MenuOptions) {
 
 Rules:
 
-- Use `type` aliases for item shapes by default in this repo.
+- Use `type` aliases for object shapes by default.
 - Use unions and discriminated unions for alternatives.
 - Use interfaces only when a framework contract, declaration merging, or
   `implements` relationship makes an interface the clearest tool.

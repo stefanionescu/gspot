@@ -1,6 +1,6 @@
 # Security and Supply Chain
 
-Four aspect presets: `repository:secrets`, `repository:vulnerabilities`, `repository:dependencies`,
+Four presets: `repository:secrets`, `repository:vulnerabilities`, `repository:dependencies`,
 `repository:licenses`. The reference set has all four and the audit's verdict on them is that the
 configuration is thorough and the wiring is not.
 
@@ -16,16 +16,14 @@ configuration is thorough and the wiring is not.
 
 The reference set has three parallel allowlist mechanisms: `.gitleaks.toml` with four entries,
 `quality/security/gitleaks/baseline.json` which grew from 34 to 36 entries, and `bearer.ignore`
-which grew from 3 to 8. None carries an owner or an expiry, and the baseline growth is recorded only
+which grew from 3 to 8. None carries a reason, and the baseline growth is recorded only
 in a Markdown table in a branch audit.
 
-Under gspot all three are `[[exception]]` entries with `check`, `finding`, `reason`, `owner` and
-`expires`, counted by `gspot exceptions`, and the generated tool configs are rendered from them. One
+Under gspot all three are `[[exception]]` entries with `check`, `finding` and `reason`, listed in every run report, and the generated tool configs are rendered from them. One
 mechanism, one list, one place to look.
 
-A historical-deleted-file baseline is a legitimate category and gets a kind of its own,
-`exception.kind = "history"`, exempt from the expiry requirement but still counted, because a history
-baseline can only shrink when history is rewritten.
+A historical-deleted-file baseline is an ordinary `[[exception]]` with a reason. It needs no
+special case: a history baseline can only shrink when history is rewritten.
 
 ## `repository:vulnerabilities`
 
@@ -33,11 +31,11 @@ baseline can only shrink when history is rewritten.
 | --------- | ------------------------------------------------------- | ---- | -------------------------- |
 | `semgrep` | TypeScript, JavaScript, Python, Swift, Bash, Dockerfile | slow | on                         |
 | Ruff `S`  | Python                                                  | fast | on, via `language:python`  |
-| `codeql`  | TypeScript, JavaScript, Python, Swift                   | slow | opt-in, CI and manual only |
+| `codeql`  | TypeScript, JavaScript, Python, Swift                   | slow | on, pre-push               |
 
 ### Semgrep, wired
 
-The reference repository's largest single piece of dead weight: 40 Semgrep rules, a pinned binary, a
+The reference repository's largest single piece of dead weight: 39 Semgrep rules, a pinned binary, a
 runner, a retry wrapper, an environment file, and zero invocations from any hook, task, package
 script or plugin. Dormant coverage the audit enumerates:
 
@@ -62,13 +60,14 @@ rule format, so the preset's rules work under either.
 
 ### CodeQL
 
-Opt-in, because a CodeQL database build is minutes, not seconds. The reference setup is manual by
+On, at pre-push. Every reference repository runs it at push and none has CI to run it anywhere
+else. A database build is minutes, so it never runs at pre-commit. The reference setup is manual by
 design and has no documented working command, plus a SARIF filter that reads `false-positives.json`
 while the file is named `api-false-positives.json`, so the filter has never filtered anything.
 
 The preset ships the scan configuration, a working command for each language, and SARIF output into
 the run report. The false-positive filter reads a single declared path, and a filter file with no
-matching findings fails as stale, which is the same class of assertion `gspot sync --check` makes about
+matching findings fails as stale, which is the same class of assertion `gspot generate --check` makes about
 globs.
 
 ## `repository:dependencies`
@@ -87,16 +86,16 @@ globs.
 ### Ignore entries
 
 `osv-scanner.toml` in the reference repository has two ignores, both with excellent multi-line
-reasons and neither with an expiry date. The audit's own note: "No expiry dates."
+reasons.
 
-Under gspot those become `[[exception]]` entries with the same reasons and a required `expires`. The
+Under gspot those become `[[exception]]` entries with the same reasons. The
 generated `osv-scanner.toml` carries the reason as a comment, so the tool output still explains
 itself.
 
 The Vitest case is instructive and the preset models it: the fix for `GHSA-82fw-gwwq-j7x9` needs
 Vitest 4, and Vitest 4 fails 49 tests across 10 files. That is a real blocker, and the right
-artefact is a exception with an owner and a date plus a tracked task, not an untracked ignore.
-`gspot exceptions` then surfaces it every time somebody looks.
+artefact is an exception with a reason plus a tracked task, not an untracked ignore. The run
+report then lists it every time somebody looks.
 
 ### Runtime bumps under scanner pressure
 
@@ -124,7 +123,7 @@ Policy lives in one settings block:
 add.allow = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD",
              "CC0-1.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
 add.exclude_packages = [
-  { package = "eslint-plugin-sonarjs@3.0.0", reason = "LGPL-3.0, dev-only, not distributed" },
+  { package = "eslint-plugin-sonarjs@4.2.0", reason = "LGPL-3.0, dev-only, not distributed" },
 ]
 ```
 
@@ -143,14 +142,13 @@ Two properties the reference set lacks:
 
 ## Staging by requirement
 
-| Preset                         | pre-commit                 | pre-push                              | check and CI      |
-| ---------------------------- | -------------------------- | ------------------------------------- | ----------------- |
-| `repository:secrets`         | gitleaks over staged paths | gitleaks and trufflehog over the tree | plus history scan |
-| `repository:vulnerabilities` | Semgrep over staged paths  | Semgrep over the tree, bearer         | plus CodeQL       |
-| `repository:dependencies`    | lockfile freshness         | osv-scanner, knip, deptry, syncpack   | plus trivy        |
-| `repository:licenses`        | none                       | full                                  | full              |
+| Preset                       | pre-commit                 | pre-push, and CI                                          |
+| ---------------------------- | -------------------------- | --------------------------------------------------------- |
+| `repository:secrets`         | gitleaks over staged paths | gitleaks and trufflehog over the tree, plus the history scan |
+| `repository:vulnerabilities` | Semgrep over staged paths  | Semgrep over the tree, bearer, CodeQL                     |
+| `repository:dependencies`    | lockfile freshness         | osv-scanner, knip, deptry, syncpack, trivy                |
+| `repository:licenses`        | none                       | full                                                      |
 
 The reference repository gates all four behind one variable, `SKIP_SECURITY_SCANS`, which is the
-single most consequential skip in the tree. Under gspot each check is individually skippable, skips
-need a exception, and a skip appears in the run report. Four switches with owners beat one switch with
-none.
+single most consequential skip in the tree. Under gspot each check is individually skippable from
+`gspot.local.toml`, and a skip appears in the run report. Four switches beat one.

@@ -1,6 +1,6 @@
 # Language Presets
 
-One document per `language:` preset. Each states the tool matrix, the required kinds per
+One document per `language:` preset. Each states the tool matrix, the required inspections per
 extension, the full coverage rule, and the settings.
 
 | Preset                                         | Doc                                |
@@ -22,9 +22,9 @@ Every language preset answers the same five questions.
 
 1. **Which extensions and filenames does it claim?** The claim set, which feeds the coverage check
    candidate list.
-1. **Which tool provides which kind?** The matrix. A kind with no provider is stated as
+1. **Which tool provides which inspection?** The matrix. An inspection with no provider is stated as
    a gap, not omitted.
-1. **What is the required kinds per extension?** Including the exceptions, such as `.d.ts` having no
+1. **What is the required inspections per extension?** Including the exceptions, such as `.d.ts` having no
    `style` requirement.
 1. **What does full coverage mean here?** The specific files that projects habitually exclude, and
    what gspot does instead.
@@ -34,8 +34,8 @@ Every language preset answers the same five questions.
 
 A summary, so the gaps are visible in one place. `native` means a mature tool. `preset` means a check
 the framework or language preset owns. `engine` means the gspot structure or naming engine. `none`
-means no provider, and the coverage check reflects that by leaving the kind out of the
-required kinds.
+means no provider, and the coverage check reflects that by leaving the inspection out of the
+required inspections.
 
 | Kind  | ts     | py     | swift  | Bash   | sql    | md     | css    | data   | html   |
 | ----------- | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ | ------ |
@@ -48,7 +48,7 @@ required kinds.
 | naming      | engine | engine | engine | engine | engine | none   | engine | preset   |
 | prose       | native | native | native | stdin  | stdin  | native | none   | none   |
 | spelling    | native | native | native | native | native | native | native | native |
-| secrets     | native | native | native | native | native | native | native | native |
+| security    | native | native | native | native | native | native | native | native |
 | sast        | native | native | native | native | none   | none   | none   | none   |
 | deps        | native | native | native | none   | none   | native | native | none   |
 | license     | native | native | native | none   | none   | none   | none   | none   |
@@ -61,7 +61,7 @@ Three gaps are worth naming because they are where a repository is most likely t
   reads TypeScript. `platform:supabase` compensates with RLS presence and grant checks, and Semgrep
   rules over the TypeScript that builds SQL.
 - **No `prose` for data formats or HTML.** Vale has no comment-only mode for either. Stated in
-  [11-prose.md](../11-prose.md) and reflected in the required kinds.
+  [11-prose.md](../11-prose.md) and reflected in the required inspections.
 - **No `types` for HTML, and no `structure`.** An inline script is extracted and handed to
   `language:javascript`; the HTML itself gets `syntax`, `style`, `accessibility` and the preset's own
   structural checks.

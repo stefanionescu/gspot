@@ -29,8 +29,8 @@
 
 ## Organize feature server code
 
-Keep a feature's server implementation beside the feature, normally under
-`features/<feature>/server`. Separate transport, reads, writes, validation, and transformation when
+Keep a feature's server implementation beside the feature, wherever the project keeps features.
+Separate transport, reads, writes, validation, and transformation when
 those responsibilities exist. The module names should let a reader find the owner of an operation
 without inspecting a giant router.
 

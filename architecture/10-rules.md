@@ -24,7 +24,7 @@ and clean the existing corpus.
 | Framework files (9)               |        absent |             absent |      absent |      3,595 |
 | **Total**                         |    **13,940** |         **13,721** |   **3,337** | **10,542** |
 
-41,540 lines across four repositories, of which the overlap is heavy: `BASH.md` exists four times at
+Tens of thousands of lines across four repositories, of which the overlap is heavy: `BASH.md` exists four times at
 2,143 to 2,559 lines, and `DOCUMENTATION.md` three times at 4,068 to 4,154.
 
 ### How the forks relate
@@ -35,7 +35,7 @@ Read by diff, not by assumption:
   substitutions.** The diff is: the H1 ("monorepo" / "repository" / "repo"), the example snippets (a
   WebSocket example against a model-checkpoint example), the enumerated sibling rule files, and one
   extra section. The rules themselves are identical.
-- **`GENERAL.md` in slopshop is a rewrite**, condensed from 349 lines to 177, with sentence-case
+- **`GENERAL.md` in slopshop is a rewrite**, 177 lines against 349 in the longest fork, with sentence-case
   headings and rules restated as imperatives. It is the most advanced fork, and it resolves two of
   the conflicts below.
 - **`NAMING.md` diverges by scale, not by content.** 2,574 lines in the monorepo covers five
@@ -53,7 +53,7 @@ rather than copied.
 | Layer | Path               | Contents                                                        | Architecture allowed                         | Shipped                     | Upgraded |
 | ----- | ------------------ | --------------------------------------------------------------- | -------------------------------------------- | --------------------------- | -------- |
 | 0     | `rules/general/`   | Craft. Language-agnostic, framework-agnostic.                   | None                                         | yes                         | yes      |
-| 1     | `rules/language/`  | What the language itself implies.                               | None                                         | yes                         | yes      |
+| 1     | `rules/language/`, `rules/runtime/` | What the language and the runtime imply.        | None                                         | yes                         | yes      |
 | 2     | `rules/framework/`, `rules/library/`, `rules/tool/`, `rules/database/`, `rules/platform/`, `rules/shared/` | Only what the framework, library, tool, database or platform itself dictates. | The thing's own default, and nothing beyond it | yes                         | yes      |
 | 3     | `rules/project/`   | This project's architecture, ownership, boundaries, vocabulary. | Anything                                     | no, starts empty            | never    |
 
@@ -84,7 +84,7 @@ rules/general/PLANNING.md       Complete change content, implementation order, d
 rules/general/TALKING.md        How to answer
 ```
 
-Nine files, roughly 2,500 lines, against 349 plus 157 plus 3 plus 4,088 today. The growth is real:
+The files above, against `GENERAL.md`, `PLANNING.md`, `TALKING.md` and `DOCUMENTATION.md` today. The growth is real:
 `DOCUMENTATION.md` at 4,088 lines is being cut to its enforceable core, and `GENERAL.md` is being
 kept nearly whole because it is the best file in the corpus.
 
@@ -174,11 +174,17 @@ Every rule file is a block, and every block belongs to exactly one preset:
 | `rules/library/<l>/*.md` | `library:<l>` |
 | `rules/tool/<t>/*.md` | `tool:<t>` |
 | `rules/database/<d>/*.md` | `database:<d>` |
+
+A `library:`, `framework:`, `tool:` or `database:` block installs only when the preset is selected,
+and a preset is selected only when its dependency is detected. A rule file present for a
+dependency that is absent fails `gspot generate --check`. `slopshop` ships tRPC, TanStack Query and
+Drizzle rules with none of the three in its `package.json`; under gspot those three files do not
+exist there.
 | `rules/platform/<p>/*.md` | `platform:<p>` |
 | `rules/shared/http/*.md`, `rules/shared/i18n/*.md` | every preset whose manifest lists the package in `shared` |
 
 Adding a language or a framework is adding its preset to `presets` in `gspot.toml`. Removing it is
-removing the preset. `gspot sync` installs the blocks for the presets that are present and deletes
+removing the preset. `gspot generate` installs the blocks for the presets that are present and deletes
 the blocks for the presets that are not, so `rules/` never holds a block for a language or a
 framework the repository does not use. `gspot init` selects presets by detection and asks; `gspot
 sync` never guesses.
@@ -202,12 +208,12 @@ Three rules keep blocks independent, and the rules lint enforces them on gspot's
 differ except in the header, because an agent that reads one must get the same rules as an agent
 that reads the other.
 
-`gspot sync` writes an index that **names no rule file**. The four reference `CLAUDE.md` files
+`gspot generate` writes an index that **names no rule file**. The four reference `CLAUDE.md` files
 do the opposite: three list their rule files as a prose sentence and one lists nine framework files
 in a table, and every one of them goes stale when a preset is added or a dependency is dropped.
 
 ```markdown
-<!-- Generated by gspot 0.1.0. Do not edit. Run: gspot sync -->
+<!-- Generated by gspot 0.1.0. Do not edit. Run: gspot generate -->
 
 # Engineering Guidelines
 
@@ -229,10 +235,10 @@ than a choice to make.
 
 Every file under `rules/` other than `rules/project/` is generated. Edit `rules/project/` freely. Do
 not edit any other file under `rules/`, `CLAUDE.md` or `AGENTS.md`; change `gspot.toml` and run
-`gspot sync`.
+`gspot generate`.
 
-The linters are authoritative for anything they check. Run `gspot check` before claiming a change is
-complete, and `gspot explain <rule>` to find the rule behind a finding. ``
+The linters are authoritative for anything they check. Do not run them unless asked. When a
+finding is reported to you, `gspot explain <rule>` names the rule behind it.
 
 Five properties, each closing a defect found in the reference set:
 
@@ -245,10 +251,10 @@ Five properties, each closing a defect found in the reference set:
 1. **Layer precedence is stated.** Four layers can disagree, and no reference `CLAUDE.md` says which
    wins. This one does, and it tells the agent that a same-layer contradiction is a bug to report
    rather than a judgement call.
-1. **`AGENTS.md` is the same body** with a different first line. One renderer, two outputs,
+1. **`AGENTS.md` is the same body** with a different first line. One emitter, two outputs,
    byte-comparable body, so the two files cannot drift the way two hand-maintained identical files
    did.
-1. **It survives `rules/` being absent.** Under `--no-rules` neither file is written at all, so
+1. **It survives `rules/` being absent.** Under `--rules none` neither file is written at all, so
    there is no version of this document that describes rules the repository does not have.
 
 ### Installing the halves separately
@@ -258,15 +264,15 @@ Five properties, each closing a defect found in the reference set:
 | Command                   | Writes                                                                            | Linting |
 | ------------------------- | --------------------------------------------------------------------------------- | ------- |
 | `gspot init`              | `gspot.toml`, generated configs, tasks, hooks, `CLAUDE.md`, `AGENTS.md`, `rules/` | yes     |
-| `gspot init --rules-only` | `gspot.toml` with `checks = false`, `CLAUDE.md`, `AGENTS.md`, `rules/`            | no      |
-| `gspot init --no-rules`   | `gspot.toml`, generated configs, tasks, hooks                                     | yes     |
+| `gspot init --rules install --presets ""` | `gspot.toml` with `checks = false`, `CLAUDE.md`, `AGENTS.md`, `rules/`            | no      |
+| `gspot init --rules none`                 | `gspot.toml`, generated configs, tasks, hooks                                     | yes     |
 
-`--rules-only` is the "repository of LLM rules" half of the product, usable with no tool pins, no
+Rules without checks is the "repository of LLM rules" half of the product, usable with no tool pins, no
 generated configuration and no hooks. That is requirement R1, and it is why the rules assembler
 reads the preset selection rather than the installed tools: a repository can select `language:swift`
 for its rules without installing SwiftLint.
 
-`gspot sync` is idempotent and can be run in a repository that has never run `gspot check`.
+`gspot generate` is idempotent and can be run in a repository that has never run `gspot check`.
 
 ### Front matter
 
@@ -311,18 +317,27 @@ The rules lint is a check like any other: in the graph, run by `gspot check`, ga
 | One statement in one block            | every generated layer           | Normalised sentences are hashed across the corpus; the same sentence in two blocks fails, naming both.                                                                                                                                                                                                         |
 | No empty pointer                      | every generated layer           | A bullet or sentence whose only content is "follow the X rules" fails. The naming rules already apply to every name; a reminder is noise, and the reference corpus had 23 of them.                                                                                                                              |
 | No repository-specific name           | every generated layer           | The banned-term lists plus a path list (`quality/`, `mise run`, function names such as `createApp()`) that hold for one repository only.                                                                                                                                                                       |
+| No runtime in a language file         | the language layer              | Runtime name list: Node, Deno, Bun, the browser, Workers. Module resolution, globals and available APIs are runtime facts and live in `rules/runtime/`. |
+| No tool in a language file            | the language layer              | The tool registry. A tool may be named where it is the subject (ShellCheck in the Bash rules) and not where it is configuration ("the ESLint config for `shared/`").          |
+| No library or platform in a framework file | the framework layer        | The preset id list for the `library:` and `platform:` kinds. A framework rule that names a library assumes a stack.                                                          |
+| No language-specific example in the general layer | the general layer   | Every fenced example in a general file has a sibling in each other language the corpus ships, or the rule moves down a layer.                                                 |
 | Every `enforced-by` id exists         | all                             | Cross-check against the check registry                                                                                                                                                                                                                                                                          |
-| Every file path in prose exists       | all                             | The same referent assertion `gspot sync --check` applies to configs                                                                                                                                                                                                                                                   |
+| Every file path in prose exists       | all                             | The same referent assertion `gspot generate --check` applies to configs                                                                                                                                                                                                                                                   |
 | Prose rules pass                      | all                             | `repository:prose`, which means the rule files obey the writing rules they state                                                                                                                                                                                                                                |
 | No duplicate statement across layers  | all                             | A near-duplicate paragraph between the general and language layers fails, because the corpus already forked three ways                                                                                                                                                                                          |
 
-The last rule is the one that keeps 13,940 lines from becoming 20,000. The reference corpus has
+The four layer-boundary rules exist because every one of them was violated in the merged corpus
+before anyone checked: a language file enumerating three runtimes, a database file giving one
+platform's instructions, a framework file naming four libraries. A word list per layer catches all
+of it mechanically, which is the only thing that makes it stick.
+
+The duplicate-statement rule is the one that keeps the corpus from doubling. The reference corpus has
 `NAMING.md` restating the general naming rules inside each language section, and `BASH.md`,
 `DOCUMENTATION.md` and `GENERAL.md` overlapping on comments, naming and present-state prose.
 
 ## Per-agent output
 
-`CLAUDE.md` and `AGENTS.md` are the two named in the requirement. The assembler is a renderer over
+`CLAUDE.md` and `AGENTS.md` are the two named in the requirement. The assembler is an emitter over
 one document model, so other targets are a config entry rather than a new corpus:
 
 ```toml
@@ -333,10 +348,10 @@ targets = ["CLAUDE.md", "AGENTS.md"]
 MegaLinter ships eight agent targets and is the best available evidence of what the real set is:
 `.claude/rules/`, `.claude/skills/`, `.claude-plugin/`, `.codex-plugin/`, `.cursor-plugin/`,
 `.agents/plugins/`, `gemini-extension.json` and `com.github.copilot/agents/`. That settles the shape
-of the question: the renderer needs more than two outputs eventually, so the document model has to
+of the question: the emitter needs more than two outputs eventually, so the document model has to
 come first and the targets are views over it.
 
-Candidates the renderer supports with no new content: `.cursor/rules/*.mdc`,
+Candidates the emitter supports with no new content: `.cursor/rules/*.mdc`,
 `.github/copilot-instructions.md`, `.windsurfrules`, `gemini-extension.json`, and a
 `.claude/skills/` directory for the task-shaped subset. Adding a target never duplicates prose,
 because the source of truth is `rules/` and the target is a view. Which targets ship in v0 is
@@ -364,7 +379,7 @@ Prettier, markdownlint `MD007`, `.editorconfig` and shfmt together.
 ### C-02 Prose line width: 100 against 120 against unwrapped
 
 - `DOCUMENTATION.md:1361` in two forks: "Wrap prose at approximately 100 characters."
-- `.prettierrc.json` in all four: `printWidth: 120`.
+- `.prettierrc.json` in three of four: `printWidth: 120`; `yap-landing` says 100.
 - `yap-swift-app` and `yap-text-inference` hard-wrap their Markdown at roughly 80; `yap-landing`
   does not wrap at all.
 - `slopshop/rules/general/DOCUMENTATION.md:1329`: "Follow the root Prettier configuration for prose
@@ -426,8 +441,8 @@ the validating regex are a one-time migration `gspot fix` performs.
 - `lint:justify reason: X -- ticket: Y` uses a spaced double hyphen, which the same corpus bans.
   Thirty uses.
 
-**Resolution: `reason: X. owner: Y.`** No ticket field, per [09-gates.md](09-gates.md), because
-twelve of 28 tickets in the reference tree say `N/A`.
+**Resolution: `reason: X.`** No ticket field, per [09-gates.md](09-gates.md), because
+nine of 23 tickets in the reference tree say `N/A`.
 
 ### C-09 `TODO` markers: banned against required-with-format
 
@@ -460,7 +475,7 @@ A mass replacement of `control` with `command` in yap-swift-app produced "invers
   when they exist for the touched scope."
 
 **Resolution: yap-swift-app's wording.** A rule file never names a directory that a refactor can
-move, which is the same assertion `gspot sync --check` makes about configuration.
+move, which is the same assertion `gspot generate --check` makes about configuration.
 
 ### C-12 Modal verbs banned, used 231 times
 
@@ -489,7 +504,7 @@ One contraction in each of three forks. Trivial, and it proves the rule was neve
 `values` is in the 94-term banned list, with eight exemptions for the SQL `VALUES` clause.
 
 **Resolution: the term moves out of the global list into the SQL language section as a reserved word
-with allowed kinds.** A global ban needing eight exemptions is a scoping error, not a policy.
+with allowed uses.** A global ban needing eight exemptions is a scoping error, not a policy.
 
 ### C-15 Coverage thresholds stated, not gated
 
@@ -597,9 +612,9 @@ a rule the linters can enforce today with nothing written down for the agent.
 | **Create a branch or a worktree only when the user asks for one.** Work on the current branch by default. | general | unenforced by design: an agent reads it, and no linter sees an agent's intent |
 | Never commit, push, or rewrite history unless the user asks                                               | general | unenforced, same reason                                                       |
 | Never create a branch or worktree as a workaround for a failing gate                                      | general | unenforced, same reason                                                       |
-| Every suppression carries an owner and, where loosening, an expiry                                        | 0       | `require-description`, Ruff `PGH`, the limit                                  |
+| Every suppression carries a reason                                                                        | 0       | `require-description`, Ruff `PGH`, the limit                                  |
 | A `TODO` carries an owner and an expiry date                                                              | 0       | `unicorn/expiring-todo-comments`, Ruff `TD`                                   |
-| Configuration is generated; never edit a generated file                                                   | 0       | `gspot sync --check`                                                                |
+| Configuration is generated; never edit a generated file                                                   | 0       | `gspot generate --check`                                                                |
 | Every tracked file is covered; a gap is declared, not ignored                                             | 0       | the coverage check                                                            |
 | A generated file declares its producer and is asserted fresh                                              | 0       | `[[declare]]`                                                                 |
 | No secret, credential or token in any tracked file, including assets and project files                    | 0       | `repository:secrets`                                                          |
@@ -660,7 +675,7 @@ rules/
     TESTING.md              behaviour not values, what a test asserts
     DOCS.md                 structure, contents lists, fences, what a document is for
     WRITING.md              plain language, dashes, modals, contractions, present state
-    SUPPRESSIONS.md         reasons, owners, expiry, limits
+    SUPPRESSIONS.md         reasons
     TOOLING.md              generated configuration, coverage, declarations
     CONFIGURATION.md        JSON, YAML, TOML, env files, plists
     GIT.md                  branches, worktrees, commits, history, uncommitted work
@@ -721,11 +736,11 @@ that match the repository. That removes the reason the forks diverged.
 
 | Layer     |  Files | Estimated lines | From                                                                                                                                                             |
 | --------- | -----: | --------------: | ---------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| 0         |     12 |          ~2,600 | `GENERAL.md` kept nearly whole, `PLANNING.md`, `TALKING.md`, the enforceable half of `DOCUMENTATION.md`, the general half of `NAMING.md`, plus four new files    |
+| 0         |     14 |          ~2,600 | `GENERAL.md` kept nearly whole, `PLANNING.md`, `TALKING.md`, the enforceable half of `DOCUMENTATION.md`, the general half of `NAMING.md`, plus four new files    |
 | 1         |     16 |          ~9,500 | `BASH.md` (~2,400), `PYTHON.md` (~3,000 after Category A and C cuts), `NAMING.md` language sections (~2,000), `TYPESCRIPT.md`, `DOCKER.md`, `SQL.md`, `SWIFT.md` |
 | 2         |     17 |          ~4,200 | slopshop's nine framework files, plus `SUPABASE.md`, `HTTP-API.md`, the framework layer halves of `IOS.md` and `API.md`                                          |
 | 3         |      4 |            ~400 | Templates, from Category C                                                                                                                                       |
-| **Total** | **49** |     **~16,700** | from 41,540 lines across four forks                                                                                                                              |
+| **Total** |        |                 | from the forks above                                                                                                                                              |
 
 Roughly 40 percent of the current line count, covering strictly more subjects, with one copy of each
 rule.
@@ -734,7 +749,7 @@ rule.
 
 The source files are in this repository under `reference-rules/<repository>/`,
 copied verbatim from all five forks. They are read, never edited; the merge
-writes into `packages/rules/` and leaves them as the record of what was
+writes into `presets/rules/` and leaves them as the record of what was
 reconciled.
 
 Every H2 in every unique rule file across the five forks, with its destination.
@@ -750,6 +765,16 @@ Two rules applied to every file:
 - **Anything naming one product, one host, one team's layout or one repository's
   task names is `project`.** A generic tool ships no rule that only one
   repository can obey.
+
+### A substitution defect in every fork
+
+Every fork carries the marks of a global word replacement that was never reviewed. `object` became
+`item` (`z.item({...})` is not a Zod call; "options item"; "log item keys"), `control` became
+`command` ("access command", "inversion of command", "command flow"), `dynamic` became
+`configured` ("configured SQL", "configured imports"), `package manager` became
+`package coordinator`, and `base64` became `encodedBytes`. The importer treats these as text
+defects to repair on the way in, with a list per fork, and the rules lint bans the five phrases so
+they cannot come back.
 
 ### `GENERAL.md` (349 lines, four forks)
 
@@ -803,7 +828,7 @@ Two rules applied to every file:
 | Goes to | Sections |
 | --- | --- |
 | `language/TYPESCRIPT.md` | Core TypeScript Philosophy, TypeScript Standard, Source Files, Modules Imports and Exports, Type Placement, Values Literals and Coercion, Objects Arrays and Destructuring, Functions and Parameters, Classes, Types and Inference, Null Undefined and Optional Values, Runtime Boundaries, Errors and Async Code, Comments and JSDoc, Tests and Mocks, Generated Code, Rules Not Adopted |
-| `language/JAVASCRIPT.md` | Core JavaScript Philosophy, Runtime Standard, Source Files, Modules Imports and Exports, Comments and JSDoc, Generated Code; the sections shared with TypeScript are stated once in the language layer |
+| `language/JAVASCRIPT.md` | Core JavaScript Philosophy, Runtime Standard, Source Files, Modules Imports and Exports, Comments and JSDoc, Generated Code, plus every section shared with TypeScript, rendered into both files from one source. A repository without `language:typescript` never installs `TYPESCRIPT.md`, so nothing may live only there. |
 | `repository/static-site/STATIC-SITE.md` | Static Site Boundaries, Templates and Browser Assets |
 | `language/naming/*.md` | Naming |
 | drop | Scope, Source Material Decisions (which upstream style guides were read: provenance, not a rule), Verification Commands |
@@ -857,7 +882,8 @@ because its headings are already sentence case.
 
 | Goes to | Sections |
 | --- | --- |
-| `tool/docker/DOCKER.md` | every section except two |
+| `tool/docker/DOCKER.md` | What Docker itself dictates: images, layers, build context, users, signals, secrets, scanning |
+| `project` | Image Stack Ownership, Dependency Inputs, CUDA, model and artefact handling, HF download, the TRT and vLLM stages: one project's pipeline, not the tool's |
 | `tool/nginx/NGINX.md` | nginx and Edge Containers |
 | drop | Security Scanning where it names the scanner invocations (gspot owns them) |
 
@@ -877,7 +903,7 @@ the prose rules from `DOCUMENTATION.md` above fill it.
 
 ### What ships, counted
 
-Twelve general files, sixteen language files, twenty framework files, four
+Fourteen general files, sixteen language files, twenty framework files, four
 project templates. Sections marked `project` total roughly 1,900 lines across
 the forks and never ship as rules. Sections marked `drop` total roughly 2,800
 lines, most of it the README template inside `DOCUMENTATION.md` and the
@@ -939,12 +965,12 @@ text through. The second pass fixed both:
 
 | Layer | Files | Lines |
 | --- | ---: | ---: |
-| `general/` | 11 | 5,530 |
+| `general/` | 14 | 5,530 |
 | `language/` | 6 | 5,813 |
 | `language/naming/` | 6 | 1,654 |
 | `framework/`, `library/`, `tool/`, `database/`, `platform/`, `repository/`, `shared/` | 20 | 7,397 |
 
-From 52,403 source lines to 20,394. No merged file links to another merged file.
+The merge roughly halves the line count. No merged file links to another merged file.
 
 ### What the two passes did not do
 
@@ -981,7 +1007,7 @@ what it does not:
 | Detect the Category A rules by matching against the tool-owned decision list | yes                                |
 | Rewrite modals to imperatives                                                | no                                 |
 | Re-case 164 Title Case headings and fix every contents anchor                | yes                                |
-| Resolve C-01 through C-15                                                    | decided here, applied by hand once |
+| Resolve C-01 through C-17                                                    | decided here, applied by hand once |
 | Split `NAMING.md` at its language headings                                   | yes                                |
 | Extract Category C sections into the project layer templates                 | yes                                |
 | Parameterize examples by language                                            | no                                 |

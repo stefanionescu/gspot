@@ -1,0 +1,14 @@
+id: structure/private-before-public
+language: TypeScript
+message: This internal declaration sits below an export. Internals go above the interface.
+
+rule:
+  any:
+    - kind: function_declaration
+    - kind: class_declaration
+    - kind: lexical_declaration
+  inside:
+    kind: program
+  follows:
+    stopBy: end
+    kind: export_statement

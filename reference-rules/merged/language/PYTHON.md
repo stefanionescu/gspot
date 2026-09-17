@@ -228,8 +228,8 @@ Order module contents this way:
 4. Imports.
 5. Module constants.
 6. Type aliases.
-7. Dataclasses and classes.
-8. Functions.
+7. Dataclasses and classes, internal ones first.
+8. Functions, internal ones first.
 9. `if __name__ == "__main__":` guard, when the module is executable.
 10. `__all__` at the bottom.
 
@@ -245,6 +245,11 @@ Rules:
   constants and deliberate local configuration.
 - Keep `__all__` explicit for modules with a public API.
 - Use `__all__ = []` when a module intentionally exports no public names.
+- Every top-level name not listed in `__all__` starts with one underscore. The list and the
+  prefix cannot disagree.
+- Every internal definition sits above the first public definition. Python resolves names at
+  call time, so the order has no runtime meaning; it is fixed so a reader meets the helpers
+  before the code that uses them, the same order the TypeScript and Bash rules require.
 
 Good:
 
@@ -258,9 +263,12 @@ from pathlib import Path
 MODELS_DIR = Path("/models")
 DEFAULT_ENGINE = "trt"
 
+def _model_dir_name(name: str) -> str:
+    return name.strip().lower()
+
 def resolve_model_dir(name: str) -> Path:
     """Return the model directory for a model name."""
-    return MODELS_DIR / name
+    return MODELS_DIR / _model_dir_name(name)
 
 __all__ = [
     "DEFAULT_ENGINE",
@@ -387,6 +395,8 @@ Rules:
 - Public attributes should not have leading underscores.
 - Internal modules, functions, constants, and attributes should have one leading
   underscore.
+- A module-level function, class, constant or type alias that is not in `__all__` starts with
+  one underscore, and every underscored definition comes before the first public one.
 
 Good:
 
@@ -412,9 +422,20 @@ def __normalize_label__(value):
     return int(value)
 ```
 
+Bad, public before internal:
+
+```python
+def build_model_settings(model: str, quantization: str) -> ModelSettings:
+    """Build model settings for one runtime."""
+    return ModelSettings(model=model, quantization=_normalize_quantization(quantization))
+
+def _normalize_quantization(value: str) -> str:
+    return value.strip().lower()
+```
+
 ## Formatting
 
-Use Ruff format as the source of truth for mechanical formatting.
+The project's formatter is the source of truth for mechanical formatting.
 
 Rules:
 
@@ -478,7 +499,7 @@ if (
 
 Rules:
 
-- Local Python code uses the Ruff limit of 120 characters.
+- Python code uses the formatter line length the project sets.
 - Prefer shorter lines when they are naturally readable.
 - Keep docstring summary lines concise and on one physical line.
 - Wrap long expressions with implicit continuation inside parentheses, brackets,
@@ -1336,8 +1357,8 @@ Rules:
 
 - Prefer `from __future__ import annotations` for forward references.
 - Do not remove `from __future__ import annotations` only because newer Python
-  versions defer annotation evaluation. This repository still targets Python
-  3.12 and keeps future annotations as the local convention.
+  versions defer annotation evaluation. A project on an earlier version keeps
+  future annotations as its convention.
 - Use string annotations only when future annotations are not available or when
   needed for a type-checking-only import pattern.
 - Avoid type-only circular imports. They are design pressure to move shared

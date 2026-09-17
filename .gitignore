@@ -1,3 +1,25 @@
 # Operating system and editor files
 .DS_Store
 Thumbs.db
+*.swp
+*~
+.idea/
+
+# Dependencies
+/node_modules/
+
+# Build output
+/dist/
+*.tsbuildinfo
+
+# Local environment
+.env.local
+*.local
+
+# Logs and crash output
+*.log
+npm-debug.log*
+bun-debug.log*
+
+# gspot writes its own entries here as a managed block, from `gspot init`.
+# Do not add /.gspot/ by hand.

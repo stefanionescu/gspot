@@ -48,22 +48,24 @@ and not one of them is type checked.
 
 A JavaScript file targets Node, a browser, or both, and the correct rules differ:
 Node files get `n` and Node globals; browser files get `compat`,
-`no-unsanitized`, DOM globals, and a ban on `node:` imports. Nothing in the file
+`no-unsanitized`, DOM globals, and a ban on `node:` imports; worker files get the Workers globals
+from `platform:cloudflare` and a ban on both `node:` imports and `process`. Nothing in the file
 says which it is, so the preset decides per glob and the consumer overrides:
 
 ```toml
 [javascript.runtime]
 "build/**"       = "node"
 "server.js"      = "node"
-"functions/**"   = "node"        # serverless functions run on a Node-compatible runtime
+"functions/**"   = "worker"      # Cloudflare Pages Functions run on the Workers runtime
 "pages/**/*.js"  = "browser"
 "web/scripts/**" = "browser"
 ```
 
 Detection proposes the map: a shebang or a `node:` import means Node; a file a
 tracked HTML page references, or a `document` or `window` access, means browser.
-A file that matches nothing is `both`, which gets the intersection of the two
-rule sets and both global sets denied. `yap-landing` maintains this split by hand
+A file that matches nothing is `both`, which gets the intersection of the node
+and browser rule sets and every global set denied. `worker` is never inferred; the platform
+preset assigns it. `yap-landing` maintains this split by hand
 in its ESLint config; the preset makes it one table.
 
 ### 2. Module system
@@ -120,7 +122,7 @@ The rendered `tsconfig`:
 
 `yap-landing` has 114 files and one with JSDoc types. Turning this on produces
 real findings on day one, and every one of them is a type error that ships
-today. They enter a baseline with an expiry like any other backlog.
+today. They enter a baseline like any other backlog.
 
 ### 4. Scripts
 
@@ -147,7 +149,11 @@ Everything the file shares with `TYPESCRIPT.md` (values, objects, functions,
 classes, null handling, errors and async) is stated once in the language layer
 and not twice.
 
-## Required kinds
+The structure rules are the TypeScript preset's, including `private-before-public`: non-exported
+declarations above the first `export`, and in a CommonJS file above the `module.exports`
+assignment.
+
+## Required inspections
 
 ```text
 .js .jsx .mjs .cjs   format syntax style types structure naming prose spelling
@@ -162,5 +168,5 @@ which is the correct report for every one of the 316 files above.
 | --- | --- | --- |
 | Tooling JavaScript is not code | 125 files under `quality/`, `.mise/tasks/` and `ios/dev_scripts` in one repository, with a weaker policy or none | One preset, one policy. The 130-line separate ESLint policy for two iOS scripts becomes two globs in the runtime map. |
 | Config files are not code | `eslint.config.js`, `*.config.cjs`, `madge.config.cjs` | Claimed. A config file is source. |
-| Serverless function directories are the platform's business | `functions/` under Cloudflare Pages | Claimed, runtime `node` |
+| Serverless function directories are the platform's business | `functions/` under Cloudflare Pages | Claimed, runtime `worker`, through `platform:cloudflare` |
 | Scripts are not programs | ten shebang files, no executable-bit check | `n/hashbang` |

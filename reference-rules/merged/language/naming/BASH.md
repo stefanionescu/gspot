@@ -1,15 +1,14 @@
 # Bash Naming
 
-Bash naming follows Google shell guidance where it fits this repo, with local
-project overrides for file stems and quality enforcement.
+Bash naming follows Google shell guidance, with the overrides below for file stems.
 
 ## Bash Case Rules
 
 Rules:
 
-- Shell source file stems use `kebab-case` in this repo unless an existing tool
-  or external command owns the name.
-- Executable scripts use `.sh` when invoked through mise tasks or build
+- Shell source file stems use `kebab-case` unless an existing tool or external
+  command owns the name.
+- Executable scripts use `.sh` when invoked through a task runner or build
   rules.
 - Executable scripts may omit the extension only when the file is intended to be
   a command on `PATH`.
@@ -129,7 +128,7 @@ deploy_staging_database() {
   ...
 }
 
-validate_supabase_project_ref() {
+validate_project_ref() {
   ...
 }
 ```
@@ -156,7 +155,7 @@ printf '%s\n' "${!name}"
 Good:
 
 ```bash
-export SUPABASE_ACCESS_TOKEN="${SUPABASE_ACCESS_TOKEN}"
+export DEPLOY_ACCESS_TOKEN="${DEPLOY_ACCESS_TOKEN}"
 
 env_name="$1"
 if [[ ! "${env_name}" =~ ^[A-Z_][A-Z0-9_]*$ ]]; then

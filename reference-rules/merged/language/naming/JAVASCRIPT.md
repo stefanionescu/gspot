@@ -8,8 +8,8 @@ Project decisions:
 
 - Prefer TypeScript for app code. Use JavaScript naming rules for tooling,
   config, migration support, quality scripts, and ecosystem-owned JavaScript.
-- Use `kebab-case` source filenames in this repo, even though some external
-  guides also allow underscores.
+- Use `kebab-case` source filenames, even though some external guides also allow
+  underscores.
 - Prefer named exports in hand-written modules.
 - Use default exports only for ecosystem files that require them or external
   packages that expose them.

@@ -1,0 +1,14 @@
+id: structure/header-comments-before-imports
+language: TypeScript
+message: A file comment sits above the imports. Below them it reads as a note on the next line.
+
+rule:
+  kind: comment
+  inside:
+    kind: program
+  follows:
+    stopBy: end
+    kind: import_statement
+  precedes:
+    stopBy: end
+    kind: import_statement

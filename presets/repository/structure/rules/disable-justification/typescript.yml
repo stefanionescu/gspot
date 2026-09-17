@@ -1,0 +1,9 @@
+id: structure/disable-justification
+language: TypeScript
+message: This suppression carries no reason. Write one after `--`.
+
+rule:
+  kind: comment
+  regex: "(eslint-disable|@ts-ignore|@ts-expect-error|ast-grep-ignore|biome-ignore)"
+  not:
+    regex: "--\\s*\\S|:\\s*\\S+\\s+\\S"

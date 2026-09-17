@@ -8,17 +8,17 @@ the generated file. Keep migration timestamps chronological.
 
 ## Migration Immutability
 
-- After a migration exists on the base branch or has been pushed to any remote
-  Supabase project, treat it as immutable.
+- After a migration exists on the base branch or has been applied to any remote
+  database, treat it as immutable.
 - Do not rename, reorder, squash, split, or edit applied migrations.
 - If production needs a correction, create a new forward-only migration.
 - If a migration has only existed in your local working branch and has not been
   pushed or reviewed, it can be edited before merge, but still keep its paired
   generated sources consistent.
-- Do not repair Supabase migration history manually unless the user explicitly
-  asks for a migration-history repair task.
-- Do not use Dashboard or SQL Editor changes on remote databases as a shortcut.
-  Capture every durable change in `migrations/`.
+- Do not repair migration history manually unless the user explicitly asks for a
+  migration-history repair task.
+- Do not use a web console or SQL editor on a remote database as a shortcut.
+  Capture every durable change as a migration.
 
 ## Migration Structure
 
@@ -85,8 +85,8 @@ Trigger creation must have a descriptive comment within five lines above the
     - policies for user-facing access
 - Use `TO authenticated`, `TO anon`, and `TO service_role` deliberately. Do not
   omit `TO` unless every role truly belongs in the policy.
-- For ownership checks, use `(SELECT auth.uid())` or `(SELECT auth.jwt())` style
-  helper calls in policies, following Supabase performance guidance.
+- For ownership checks, wrap the identity function in a scalar subquery so the
+  planner evaluates it once per statement rather than once per row.
 - `UPDATE` access usually needs both a `SELECT` policy and an `UPDATE` policy.
 - Use `USING` for row visibility and `WITH CHECK` for allowed new row state.
 - Do not create broad policies like `USING (true)` unless the table is genuinely
@@ -107,7 +107,7 @@ Trigger creation must have a descriptive comment within five lines above the
 - Revoke execute from `public`, `anon`, `authenticated`, and `service_role` by
   default, then grant execute only to the exact required roles.
 - Avoid direct execute grants on trigger functions.
-- Avoid configured SQL. When configured SQL is required, quote identifiers and values
+- Avoid dynamic SQL. When dynamic SQL is required, quote identifiers and values
   safely and keep the input domain constrained.
 - Raise exceptions with useful SQLSTATE categories when clients or tests depend
   on error classification.
@@ -124,8 +124,8 @@ Trigger creation must have a descriptive comment within five lines above the
 - Grant schema usage only to roles that need to resolve objects in that schema.
 - Grant table write access by column list where possible.
 - Grant `SELECT` only when the role has a real read path.
-- Keep `supabase_auth_admin`, cron, storage, and internal Supabase roles narrowly
-  scoped to the functions or schemas they need.
+- Keep service-owned roles, such as those a platform creates for auth, cron or
+  storage, narrowly scoped to the functions or schemas they need.
 - When granting function execute, include the full function signature.
 
 ## Durable Data Migrations
@@ -159,9 +159,10 @@ rules as hand-written SQL.
   migration-owned database behavior.
 - Use unit tests for pure TypeScript logic, Edge Function validation, parsing,
   and response behavior.
-- Use integration tests for Supabase client flows, auth behavior, RLS behavior,
-  storage behavior, and real function invocation paths.
-- Integration tests depend on the local Supabase stack and function server.
+- Use integration tests for client flows, auth behavior, RLS behavior, storage
+  behavior, and real function invocation paths.
+- Integration tests depend on a local database and, where one exists, a local
+  function server.
 - Do not mock away RLS or grants in integration tests. The point is to verify the
   database boundary.
 - When changing schema that another project consumes, regenerate types and

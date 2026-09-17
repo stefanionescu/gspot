@@ -11,13 +11,13 @@ split right is what stops the SQL work from being too narrow to reuse.
 | `database:postgres` | RLS, grants, `SECURITY DEFINER` search path, migration safety, migration order, migration immutability, object naming, index-covers-foreign-key, no blocking DDL | any Postgres project: raw SQL, Drizzle, Prisma, Neon, RDS, Supabase |
 | `platform:supabase` | the CLI filename contract, `config.toml`, edge functions, generated types freshness, storage policies, service-role key containment                              | Supabase only                                                       |
 
-Nine of the fourteen non-language checks sit in `database:postgres`, and none of them mentions
+Nine of the eighteen non-language checks sit in `database:postgres`, and none of them mentions
 Supabase. That is deliberate: **the general work lives in the general preset.** A Neon project selects
-two presets and gets nine checks. A Supabase project selects three and gets fourteen. Nothing is
+two presets and gets nine checks. A Supabase project selects three and gets eighteen. Nothing is
 duplicated, and nothing useful is trapped behind a product name.
 
 The same shape applies to every database preset that follows. `library:drizzle` and
-`framework:prisma` require `database:postgres` and add only what their own tooling dictates.
+`library:drizzle` require `database:postgres` and add only what their own tooling dictates.
 
 The language with the worst measured coverage in the reference set: 25 of 83 files linted, and the
 cause was one line in an ignore file.
@@ -30,7 +30,7 @@ cause was one line in an ignore file.
 
 `.pgsql` matters. The reference repository has nine `.pgsql` helper files that match nothing,
 because `sqlfluff`'s `sql_file_exts` was never overridden and defaults to `.sql` only. The preset sets
-`sql_file_exts = .sql,.pgsql,.psql` and the files a check reads proves it.
+`sql_file_exts = .sql,.pgsql,.psql` and file listing proves it.
 
 ## Tools
 
@@ -50,7 +50,7 @@ because `sqlfluff`'s `sql_file_exts` was never overridden and defaults to `.sql`
 Stated plainly: no maintained tool reads SQL for injection or privilege patterns.
 `platform:supabase` compensates with RLS presence checks and grant policy, and
 `repository:vulnerabilities` runs Semgrep over the TypeScript that builds SQL strings. A SQL file
-itself gets `syntax`, `style`, `structure` and `naming` and no `vulnerabilities`, and the required kinds says so
+itself gets `syntax`, `style`, `structure` and `naming` and no `vulnerabilities`, and the required inspections says so
 rather than pretending.
 
 ### The block comment ban
@@ -60,7 +60,7 @@ Vale reads `--` comments through the Lua grammar and does not read `/* */`. The 
 block comments, so the ban costs nothing. This is a case where a lint rule exists to make another
 lint rule complete, and that is a legitimate reason as long as it is written down.
 
-## Required kinds
+## Required inspections
 
 ```text
 .sql .pgsql .psql   format syntax style structure naming prose spelling
@@ -87,7 +87,7 @@ Three gspot mechanisms catch it independently:
 
 1. **Path selectors are not gitignore.** A bare `sql/` fails to parse, with the message naming this
    exact failure.
-1. **The files a check reads asks sqlfluff.** `sqlfluff lint --nofail` over the candidate set reports which files
+1. **File listing asks sqlfluff.** `sqlfluff lint --nofail` over the candidate set reports which files
    it ignored, and the coverage check attributes no claim to them.
 1. **Full coverage per language.** 58 unchecked `.sql` files fail the gate with the list.
 
@@ -95,9 +95,9 @@ Other habits:
 
 | Habit                                                    | Reference evidence                                                                                                    | gspot                                                                             |
 | -------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------- |
-| Tests written in SQL are not source                      | `tests/suites/sql/**` ignored                                                                                         | Claimed, with the required kinds relaxed for style rules that fight pgTAP idiom          |
+| Tests written in SQL are not source                      | `tests/suites/sql/**` ignored                                                                                         | Claimed, with the required inspections relaxed for style rules that fight pgTAP idiom          |
 | Teardown and ops scripts are not source                  | Two files in no path list                                                                                             | Claimed                                                                           |
-| Applied migrations are immutable, so they are not linted | The reference branch edited sixteen applied migrations to satisfy two Squawk rules, against the repository's own rule | `[sql.migrations] immutable_through`, below. One setting, asked once, no default. |
+| Applied migrations are immutable, so they are not linted | The reference branch edited sixteen applied migrations to satisfy two Squawk rules, against the repository's own rule | `[sql] immutable_through`, below. One setting, asked once, no default. |
 
 That last row is the important one. The reference branch inserted `SET lock_timeout` and
 `SET statement_timeout` into sixteen already-applied migration files to satisfy
@@ -109,7 +109,7 @@ guard.
 The preset's model:
 
 ```toml
-[sql.migrations]
+[sql]
 immutable_through = "20260415175157"
 ```
 
@@ -128,7 +128,7 @@ migrations.
 **One key. Three value shapes. No second key, no conditional.**
 
 ```toml
-[sql.migrations]
+[sql]
 immutable_through = "none"              # nothing is frozen
 immutable_through = "all"               # every migration that exists now is frozen
 immutable_through = "20260415175157"    # this version and earlier are frozen
@@ -143,7 +143,7 @@ branch, because that one is most likely deployed, and a proposal is a proposal.
 
 |                                                        | Frozen    | Not frozen     |
 | ------------------------------------------------------ | --------- | -------------- |
-| `secrets`                                              | yes       | yes            |
+| `security`                                             | yes       | yes            |
 | `immutability`: bytes match the commit that froze them | yes       | not applicable |
 | `format`, `style`, `naming`, `structure`, `prose`      | **no**    | yes            |
 | Migration safety: `squawk`                             | **no**    | yes            |
@@ -167,8 +167,7 @@ by one line.
 
 ### Why a version and not a list of files
 
-A per-file `[[declare]]` with `kind = "frozen"` would work, and it is the wrong shape here.
+A per-file `[[declare]]` for each frozen migration would work, and it is the wrong shape here.
 Migrations are ordered by version, freezing is monotonic, and a boundary is one fact where a list is
 dozens that go stale. So `immutable_through` expands into those declarations internally, and the
-coverage check sees frozen migrations exactly as it sees any other declared file. The general
-`[[declare]]` table still accepts `kind = "frozen"` for one-off files outside a migration directory.
+coverage check sees frozen migrations exactly as it sees any other declared file.

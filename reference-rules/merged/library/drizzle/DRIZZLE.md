@@ -1,5 +1,11 @@
 # Drizzle
 
+
+Some sections below name Supabase, because it is the Postgres platform these rules were written
+against and its pooler, auth and storage behaviour change what is correct. Those passages apply
+when the project is on that platform. On any other Postgres, read them as the shape of the problem
+and check your own platform's behaviour. Nothing here requires Supabase.
+
 ## Check versions and APIs
 
 Read the manifest and lockfile before choosing a driver, schema API, or migration command. Record
@@ -17,7 +23,7 @@ commit manifest and lockfile changes together.
   transaction support before selecting an HTTP driver or Edge runtime.
 - Keep generated migrations, snapshots, and the journal in the format expected by the selected
   runner. Update them together during a Kit upgrade. Run migration replay only when requested.
-- Use locally installed executables through Bun or mise tasks. Hooks use those installed tools and
+- Use locally installed executables through the project's task runner. Hooks use those tools and
   do not fetch a new CLI version while checking a change.
 
 ## Configure connections

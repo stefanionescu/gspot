@@ -44,7 +44,7 @@ deps        = ["lint:ts", "lint:sql", "lint:shell", "lint:prose", "coverage"]
 ```
 
 Node identity is the task name plus the scope. The resolver deduplicates, so a check reachable from
-two tasks runs once per invocation. `yap-swift-app` runs markdownlint twice per push, and
+two tasks runs once per takes. `yap-swift-app` runs markdownlint twice per push, and
 `repo:lint:quality` contains markdownlint while pre-push also calls it directly. A graph removes the
 class.
 
@@ -55,9 +55,9 @@ whatever the language.
 
 | Task              | Contents                                                    |
 | ----------------- | ----------------------------------------------------------- |
-| `setup`           | Install tools, fetch Vale styles, install hooks, run `sync` |
-| `sync`            | Render every generated config                               |
-| `sync --check`          | Drift check plus glob and referent assertions               |
+| `setup`           | Install tools, fetch Vale styles, install hooks, run `generate` |
+| `generate`            | Render every generated config                               |
+| `generate --check`          | Drift check plus glob and referent assertions               |
 | `coverage`        | Full coverage                                               |
 | `format`          | Every formatter, write mode                                 |
 | `format:check`    | Every formatter, check mode                                 |
@@ -76,7 +76,7 @@ whatever the language.
 | `hook:pre-push`   | Whole-tree subset                                           |
 | `hook:commit-msg` | commitlint                                                  |
 
-`yap-swift-app` has 104 tasks and `yap-text-inference` has 35, both with different naming schemes
+`yap-swift-app` has 102 tasks and `yap-text-inference` has 35, both with different naming schemes
 (`repo:lint:quality` against `lint:quality`, `api:test:e2e:standard` against `test:e2e:live`).
 Product tasks stay the consumer's, under their own names; gspot owns only the names above, and a
 collision fails at emit time with both definitions named.
@@ -87,13 +87,20 @@ collision fails at emit time with both definitions named.
 
 The closest to what three of the four repositories already do.
 
-- `mise.toml` `[tools]` gets every tool pin, rendered from the resolved toolchain. Other blocks are
-  preserved.
+- **Where mise keeps its config is a question for mise.** `mise config ls` prints the files it is
+  actually reading, in precedence order, and `mise tasks ls` prints what tasks exist. gspot writes
+  into what mise names. There are at least six valid locations for the config and four for file
+  tasks, so assuming `mise.toml` at the root is assuming a layout.
+- The `[tools]` block gets the pins for tools gspot introduced, recorded by name in the lock. Other
+  blocks are preserved. **A pin the person already set is never changed.** If their version is below
+  what a check needs, gspot says so and stops; it does not upgrade someone else's toolchain.
 - `[settings] not_found_auto_install = false` and `[settings.task] run_auto_install = false`,
   matching both reference repositories: a lint run must not install anything mid-run.
 - `.mise/tasks/<name>` per node, as a file task with a `#MISE description=` line. gspot writes these
-  as generated files with a provenance header, in a `.mise/tasks/gspot/` subtree, and `mise.toml`
-  aliases the canonical names to them so a consumer task of the same name is still possible.
+  as generated files with a provenance header, in a `gspot/` subtree of whichever task directory
+  mise reports, so they are named `gspot:check`, `gspot:fix` and cannot collide with anything the
+  repository already has. No aliasing: a consumer task called `lint` stays theirs and stays called
+  `lint`.
 - Tool backends used: direct pins, `pipx:` for Python-distributed tools, `github:` for release
   assets, `aqua:`/`ubi:` where mise resolves them. `yap-swift-app` already uses
   `github:Bearer/bearer`, `github:qltysh/qlty`, `pipx:semgrep`, `pipx:sqlfluff` and
@@ -119,11 +126,11 @@ npm runner, a decision has to be made per tool, because most of these binaries a
 | typos                                                                                                                                                                                                               | no      | download, checksummed (`typos-cli` exists on crates.io, not npm)               |
 | ShellCheck                                                                                                                                                                                                          | partial | download, checksummed. The npm wrappers are third-party and unpinned upstream. |
 | shfmt                                                                                                                                                                                                               | no      | download, checksummed                                                          |
-| gitleaks, trufflehog, osv-scanner, trivy, hadolint, taplo, Vale, Squawk, actionlint                                                                                                                                 | no      | download, checksummed                                                          |
-| Ruff, basedpyright, deptry, vulture, interrogate, pydoclint, bandit, pip-audit, pip-licenses, pyproject-fmt, validate-pyproject, `import-linter`, sqlfluff, yamllint, check-jsonschema, ansible-lint, dotenv-linter | no      | `uv tool run` against a pinned `uv.lock`. `uv` itself is downloaded.           |
-| SwiftLint, SwiftFormat, Periphery                                                                                                                                                                                   | no      | download for macOS; Homebrew is a fallback the consumer opts into              |
+| gitleaks, trufflehog, osv-scanner, trivy, hadolint, taplo, Vale, Squawk, actionlint, dotenv-linter, v8r | no      | download, checksummed                                                          |
+| Ruff, basedpyright, deptry, vulture, interrogate, pydoclint, bandit, pip-audit, pip-licenses, pyproject-fmt, validate-pyproject, `import-linter`, sqlfluff, yamllint, ansible-lint | no      | `uv run` inside the project environment, with the extra each variant declares. `uv` itself is downloaded.           |
+| SwiftLint, SwiftFormat, Periphery                                                                                                                                                                                   | no      | download for macOS              |
 | xcodebuild, plutil, xcstringstool                                                                                                                                                                                   | no      | Xcode. Present or the check is skipped, and skipped fails.                     |
-| Semgrep, CodeQL                                                                                                                                                                                                     | no      | download; CodeQL is opt-in and slow                                            |
+| Semgrep, CodeQL                                                                                                                                                                                                     | no      | download; CodeQL is slow and runs at pre-push                                            |
 | Docker, nginx                                                                                                                                                                                                       | no      | Docker. Present or the check is skipped, and skipped fails.                    |
 | Deno                                                                                                                                                                                                                | no      | download, for Supabase edge functions                                          |
 
@@ -134,15 +141,16 @@ from the same file.
 
 Three properties:
 
-- **No network access during a lint run.** Tool installation is its own task, and the lint tasks fail
-  with "run gspot install" rather than fetching.
+- **No network access during a lint run, except from checks that declare `requires = ["network"]`,
+  which run at pre-push.** Tool installation is its own task, and the lint tasks fail with
+  "run gspot install" rather than fetching.
 - **A tool that cannot be installed is named, with the checks it gates.** `gspot doctor` prints
   exactly which checks are unavailable and what coverage is lost:
 
 ```text
 tool      swiftlint 0.63.2        missing
           gates  swift/swiftlint, swift/swiftlint-analyze
-          effect 724 .swift files lose kind style
+          effect 724 .swift files lose the style inspection
           fix    gspot install, or install Xcode command line tools
 coverage  would report 724 paths as partial
 ```
@@ -163,8 +171,8 @@ pre-commit, where `yap-swift-app` has it in no hook at all although it needs no 
 | Requires         | Meaning                                | Default stage                                              |
 | ---------------- | -------------------------------------- | ---------------------------------------------------------- |
 | nothing          | Runs from source alone                 | pre-commit over staged paths; pre-push over the whole tree |
-| `build`, `docker` | Needs a compile or a running daemon   | pre-push under `hooks`; CI under `split`                   |
-| `network`        | Needs the network                      | CI, or `gspot check` by hand. Never a hook.                |
+| `build`, `docker` | Needs a compile or a running daemon   | pre-push, and CI when set                                  |
+| `network`        | Needs the network                      | pre-push, and CI when set                                  |
 
 Pre-commit runs the staged-path subset for `fast` and the affected scopes for `slow`. Pre-push runs
 the whole tree.
@@ -195,3 +203,12 @@ Step 5 is not optional. Two fixers that disagree loop, and the reference set has
 the shape: Prettier realigns every table row while the documentation rule says not to, and
 markdownlint sets list indentation to four while the documentation rule says two. gspot resolves
 those at config generation time (one `[format]` block) and asserts convergence at fix time.
+
+## Platforms and runners
+
+Linux and macOS, on x86-64 and arm64. Windows is supported through WSL only: hooks and tasks are
+Bash, and nothing here targets PowerShell. `gspot install` on native Windows exits 2 with that
+sentence.
+
+One runner per repository. A monorepo mixing Python and TypeScript still declares one runner, and
+mise is the one that fits both.

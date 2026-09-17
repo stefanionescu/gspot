@@ -18,9 +18,8 @@ Rules:
 - Keep Apple framework callbacks from leaking into Domain by translating them
   into app-level events or use case inputs.
 
-This repository also enforces approved UIKit import paths through local
-architecture lint rules. Keep new UIKit imports within interop/platform
-boundaries or update the local lint rule with the architectural reason.
+Where a project declares approved UIKit import boundaries, keep new UIKit imports inside them, or
+change the declared boundary and state the architectural reason.
 
 ## UIKit Lists and Data Sources
 

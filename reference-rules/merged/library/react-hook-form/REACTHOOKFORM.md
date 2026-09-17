@@ -4,7 +4,7 @@
 
 Check the installed React Hook Form, React, TypeScript, validation resolver, and UI component
 versions before using an API. Keep the application's existing form library and submission transport
-unless the task requires a change. Install through the repository's Bun and mise workflow.
+unless the task requires a change. Install through the project's package manager.
 
 - Keep `@hookform/resolvers` compatible with the installed Zod release, including Zod 4.5. Use the
   official `zodResolver` adapter rather than rebuilding its nested-error mapping.

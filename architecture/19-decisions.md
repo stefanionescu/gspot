@@ -16,13 +16,13 @@ runs. ESLint, Prettier, ShellCheck, shfmt, SQLFluff, SwiftLint, SwiftFormat, mar
 and tsc run from mise tasks; enabling them in qlty would run every check twice." Beyond duplication,
 none of the three orchestrators can express the coverage check, because none of them knows which
 files a tool actually processed. The coverage check is the product, so the orchestrator has to be
-the one that owns the files each check reads.
+the one that owns the file listing.
 
 qlty keeps its three unique plugins: trufflehog, editorconfig-checker and dotenv-linter, plus
 `qlty smells` behind a parsed-output gate rather than a `mode = "block"` that does not block.
 
 **No second orchestrator for other languages either.** A language gspot has no preset for is declared
-with `kind = "partial"` and a reason, and the coverage report says so. A MegaLinter bridge would be
+with an `[[exception]]` against the coverage check and a reason, and the coverage report says so. A MegaLinter bridge would be
 a second configuration surface and a second finding format for breadth gspot has chosen not to
 pursue. One tool per job applies to orchestrators.
 
@@ -36,7 +36,7 @@ pursue. One tool per job applies to orchestrators.
 command names three SQL paths and two of them are silently ignored. No amount of reading finds that;
 only asking sqlfluff finds it. This is the single decision the whole design rests on.
 
-**Tradeoff.** A full coverage is slower than a manifest read, and six the files a check reads kinds have to be implemented
+**Tradeoff.** A full coverage is slower than a manifest read, and six file listing mechanisms have to be implemented
 and fixture-tested. Accepted.
 
 ## D-03 Generated configuration is tracked
@@ -72,7 +72,7 @@ analysis process.
 **Alternatives.** Implement the Python rules in Python with `ast` and `libcst`, as
 `yap-text-inference` does in 12 files.
 
-**Evidence for.** Eighteen rules times six languages is 108 implementations under the per-language
+**Evidence for.** Every rule times every language is the implementation count under the per-language
 approach, and the reference set already shows the result: three repositories, three implementations,
 three divergent behaviours for one rule name.
 
@@ -92,14 +92,14 @@ module-level `def __getattr__`.
 after that line vanish from three checks. `master` found them; the branch found none of them. The
 audit found it by diffing extractor output, which is not a repeatable process.
 
-## D-07 Everything is an error; adoption uses a baseline with an expiry (inherited, extended)
+## D-07 Everything is an error; adoption uses a baseline (inherited, extended)
 
 **Decision.** Zero `warn` severities, `--max-warnings 0`, `--strict` everywhere,
 `reportUnusedDisableDirectives: "error"`. A rule with a backlog gets a baseline: a recorded count
-that can only fall, with an expiry. Default expiry is 90 days, 180 for rules that imply file
-splitting. At expiry the count must be zero or the gate fails. Moving the date is a visible commit.
+that can only fall. There is no expiry and no owner. The count is listed in every run report.
 
-**Alternatives rejected.** A warning level. Expiry that warns and never fails, which is a warning
+**Alternatives rejected.** A warning level. A dated expiry on the baseline, which an earlier draft
+carried and which is a deadline nobody set; the count falling is the only signal that matters. Expiry that warns and never fails, which is a warning
 level by another name. Expiry that fails only in CI, which makes the hook and CI disagree.
 
 **Evidence.** The reference repository's own decision, quoted: "Everything is an error. Zero `warn`
@@ -113,7 +113,7 @@ becomes the habit, the exception list makes it visible, which is more than the r
 **Decision.** Eighteen structural rules and one naming policy survive. Everything else is a mature
 tool.
 
-**Evidence.** Three independent reimplementations of the same eighteen rules across three
+**Evidence.** Three independent reimplementations of the same rules across three
 repositories is proof that no tool ships them. The reference audit reaches the same conclusion for
 the five file-existence rules and the four barrel rules independently, and explicitly rejects
 `eslint-plugin-barrel-files` and `eslint-plugin-no-barrel-files` as "lightly maintained".
@@ -122,18 +122,20 @@ Rules dropped in favour of a plugin: `no-imports-after-statements` becomes `impo
 `newline-after-imports` becomes `import-x/newline-after-import` with `count: 1`. Tools dropped
 because no task ever invoked them, in `yap-swift-app`: Lizard, jscpd and madge.
 
-## D-09 Ruff `S` replaces bandit
+## D-09 Ruff `S` runs alongside bandit; nothing a reference repository runs is cut on theory
 
-**Decision.** Python security analysis runs through Ruff's `S` family. bandit is not installed.
+**Decision.** Ruff `S` is selected and bandit, pip-audit, interrogate, Bearer and Lizard keep
+running wherever a reference repository runs them today. A tool is dropped only after a
+replacement is proven on that repository, finding for finding.
 
-**Alternatives.** bandit with its own configuration, which `yap-text-inference` runs alongside Ruff
-with `S` unselected.
+**Alternatives.** Cut bandit for Ruff `S`, pip-audit for osv-scanner, interrogate for Ruff `D`,
+Bearer for Semgrep, Lizard for `sonarjs/cognitive-complexity`. An earlier draft did all five.
 
-**Evidence.** The `S` family is bandit's rule set reimplemented in Ruff. Running both produces two
-findings per issue with different identifiers, which is why the reference repository left `S` off.
-Dropping bandit instead removes a process, a configuration file and a duplicate finding stream, and
-loses nothing except bandit's per-test skip syntax, which Ruff expresses as a per-rule
-`# noqa: S###` with a reason. One tool per job.
+**Evidence.** Each cut rested on a claim that did not survive contact with the repository: Ruff
+`D` skips private and nested functions, so it is not interrogate at 100; `sonarjs/cognitive-complexity`
+is turned off for every file in `yap-landing`, so Lizard was the only complexity gate; Bearer's
+fingerprinted ignores do not port to Semgrep; bandit scans `docker/` and `quality/`, which Ruff
+`S` does not reach. Overlap between two tools costs seconds. A lost check costs a class of defect.
 
 ## D-10 The naming policy stays one data file (inherited)
 
@@ -163,7 +165,7 @@ checksums into `.gspot/bin/`.
 **Alternatives.** Support mise only, which is simpler and excludes a Next.js repository that does
 not want a version manager. Or require Homebrew, which excludes Linux CI.
 
-**Evidence.** Fourteen of roughly thirty-one tools are not npm packages. All three reference
+**Evidence.** Many of the tools are not npm packages. All three reference
 repositories chose mise, and all three are polyglot. A single-language repository has a weaker
 reason to adopt one.
 
@@ -190,14 +192,18 @@ all three failures.
 **Evidence.** It contains the project's architecture. An upgrade that rewrites a team's ownership
 map is a bug, not a feature.
 
-## D-15 No CI preset by default
+## D-15 CI is a question at init, never a default
 
-**Decision.** the GitHub CI emitter exists and is off.
+**Decision.** `init` asks "Set up CI?" and proposes the answer from what it finds: a workflow with
+a lint job proposes replacing that job, a workflow without one proposes adding a job, no CI
+proposes no. Emitters exist for GitHub Actions, GitLab CI and Buildkite, and any other provider
+gets the two commands printed. Nothing is written without a yes. Every check runs locally whatever
+the answer.
 
 **Evidence.** The reference repository states "there is no `.github/` and none is wanted."
 Respecting that is the difference between a tool that gets adopted and one that gets configured
-around. gspot prints one line at init saying which gate the repository does not have, and stops
-there.
+around. The same repository runs CodeQL, Bearer and four scanners at push with no CI, which is
+why no check may be CI-only.
 
 ## D-16 One Vale style
 
@@ -207,7 +213,7 @@ there.
 and opt-in, so a repository adopts the taste rules later.
 
 **Evidence.** The split existed only for staged adoption, and adoption already
-happens per rule through baselines with an expiry. A second style duplicates a
+happens per rule through baselines. A second style duplicates a
 mechanism that exists elsewhere, and its name (`plain`, `text`, `strict`) tells
 a reader nothing. One style, one name, every rule an error, and a rule with a
 backlog gets a baseline like any other.
@@ -246,16 +252,16 @@ reference repositories built.
 relational operators with a `stopBy` bound, the composites, and `constraints` applying a regex to a
 captured metavariable, across 26 languages including TypeScript, Python, Swift, Bash and CSS.
 Fourteen of the eighteen structural rules are expressible that way. Against that: the reference set
-has the same eighteen rules implemented four times, diverging in each.
+has the same rules implemented four times, diverging in each.
 
 **Tradeoff.** ast-grep rule files are less expressive than code for count-based and directory-based
-rules, so five rules keep original implementations, and a generic counter serves every rule that
+rules, so a handful keep original implementations, and a generic counter serves every rule that
 needs a ceiling. Total original analysis code drops from roughly 6,000 lines to roughly 640.
 
 ## D-20 The naming policy compiles; it does not execute
 
-**Decision.** The 102-term policy and its per-language limits are one JSON document with five
-renderers, emitting a `@typescript-eslint/naming-convention` rule array, a pylint regex set, a
+**Decision.** The 103-term policy and its per-language limits are one JSON document with five
+emitters, emitting a `@typescript-eslint/naming-convention` rule array, a pylint regex set, a
 SwiftLint block, a sqlfluff config and an ls-lint config. gspot ships no identifier extractor.
 
 **Alternatives.** Keep the engine, which is 2,479 lines in one reference repository, 14 files in a
@@ -294,25 +300,26 @@ MegaLinter does. pylint alone, which is slow.
 **Evidence.** Ruff's FAQ states it implements every rule natively and does not support custom or
 third-party rules, and the plugin discussion is open with no implementation as of September 2026.
 Running both at defaults produces two findings per issue with different codes, which is why the
-reference repository dropped pylint and wrote 139 files of Python instead.
+reference repository dropped pylint and wrote its own Python checks instead.
 
-## D-23 One gate surface, partitioned by requirement
+## D-23 Hooks and CI are two independent settings
 
-**Decision.** Three modes: `hooks`, `ci`, and `split`. In `split`, every check runs in exactly one
-place, chosen by what each check requires, with one deliberate overlap: CI re-runs the fast and slow sets over the whole
-tree because the hook only saw the staged set.
+**Decision.** `[gate] hooks = true|false` and `[gate] ci = none|github|gitlab|buildkite`. Four
+combinations, all valid. Both surfaces call the same task graph with a stage name. Pre-commit
+runs what needs nothing over staged paths; pre-push runs everything over the tree; CI repeats
+pre-push.
 
-**Alternatives.** Both surfaces running everything, which is the common default.
+**Alternatives.** One `gate` enum with `hooks`, `ci` and `split`, which an earlier draft had.
+It stored the same two facts in one field and made "both" a special mode with its own name.
 
-**Evidence.** Four observed costs of duplication: markdownlint already runs twice per push in the
-reference tree from two task paths; a hook carrying container builds and four scanners takes
-minutes, so developers reach for `--no-verify`; sixteen `SKIP_*` variables exist because the hooks
-carry CI work; and every CI check is billed per push.
+**Evidence.** Duplication in the reference tree comes from two definitions of one check, not from
+two surfaces: markdownlint runs twice per push from two task paths. One graph, called from two
+places, cannot drift.
 
 ## D-24 No file-exclusion mechanism that a tool alone honours
 
 **Decision.** gspot never writes a tool ignore file that the coverage check cannot see through.
-Every exclusion is a declaration in `gspot.toml` with a status, and the files a check reads confirms what the tool
+Every exclusion is a declaration in `gspot.toml` with a status, and file listing confirms what the tool
 actually did.
 
 **Evidence.** MegaLinter's own configuration carries five distinct exclusion mechanisms and
@@ -338,20 +345,21 @@ active voice, present tense, no modals). ISO 24495's are the structural ones
 approximated, not vendored. This is an alignment for both standards, not a
 conformance claim for either; the style says so in its header.
 
-## D-26 gspot's own gate carries a zero exception limit
+## D-26 gspot's own gate carries no exceptions
 
-**Decision.** `gspot.toml` in this repository sets `[exceptions] max = 0`, and the self-gate fails
-if any `[exceptions]` entry exists. When self-application fails, the responses are to fix gspot's
+**Decision.** `gspot.toml` in this repository has no `[[exception]]` entry, and the self-gate fails
+if one appears. When self-application fails, the responses are to fix gspot's
 code or to change the rule for everyone. Adding an exemption for gspot is not a response.
 
 **Evidence.** Every reference repository made the other choice. `quality/eslint/policy.mjs` lints a
-13,451-line lint package with `eslint:recommended` plus six rules while shipping nine plugins to its
+large lint package with `eslint:recommended` plus six rules while shipping nine plugins to its
 consumers, and the `qlty.toml` comment claiming complexity is enforced there is false.
 
-## D-27 Three preset kinds, named for what selects them
+## D-27 Seven preset kinds, named for what selects them
 
-**Decision.** `language:`, `framework:` and `repository:`. Everything else that was a preset kind is a
-setting.
+**Decision.** `language:`, `framework:`, `library:`, `tool:`, `database:`, `platform:` and
+`repository:`, defined once in [02-model.md](02-model.md). Runner and CI are settings. The general
+rules install with `[rules] install = true`, which is a setting too.
 
 **Alternatives.** Eight kinds: `lang:`, `framework:`, `aspect:`, `doctrine:`, `runner:`, `ci:`,
 `cd:`, `bridge:`.
@@ -360,7 +368,7 @@ setting.
 duplication. `aspect:` is borrowed from aspect-oriented programming, where it means something else,
 and it served as the bucket for anything not tied to a language, which is the vague-container
 pattern the shipped banned-terms policy bans as term group 1. `doctrine:` is invented, and the kind
-is unnecessary because rules arrive with `rules = true` and the language and framework presets
+is unnecessary because rules arrive with `[rules] install = true` and the language and framework presets
 contribute their own. `lang:` is an abbreviation, and `unicorn/prevent-abbreviations` is in the
 shipped TypeScript rule set.
 
@@ -373,7 +381,7 @@ than by what it does:
 
 | Was                                                                     | Now                                                                       | Why                                                                                                      |
 | ----------------------------------------------------------------------- | ------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------- |
-| `budget`                                                                | `[exceptions] max`                                                        | Finance metaphor for a cap on a count. This is not a finance tool.                                       |
+| `budget`                                                                | removed; there is no cap                                                  | Finance metaphor for a cap on a count, and the cap itself was a feature nobody asked for.                |
 | `ledger`                                                                | the exception list                                                        | Same.                                                                                                    |
 | `ratchet`                                                               | `baseline`                                                                | Mechanical metaphor. The files were already at `.gspot/baseline/`, so the plain word was already in use. |
 | `census`                                                                | `coverage`                                                                | Population metaphor. The thing measures coverage, and everyone knows that word.                          |
@@ -401,12 +409,12 @@ them as one reviewable commit.
 separately from the rules.
 
 **Evidence against a bot.** Bumping the version without re-rendering leaves the generated
-configuration stale, so `gspot sync --check` fails on every subsequent run. A bot that changes one line
+configuration stale, so `gspot generate --check` fails on every subsequent run. A bot that changes one line
 produces a broken tree. `gspot upgrade` does the whole operation and opens the result.
 
 **Evidence against floating tools.** A check run that resolves a tool version from the network can
 run a different rule set than the last commit recorded, and cannot run at all offline. The lock is
-tracked, and `sync`, `sync --check` and `check` never reach the network.
+tracked, and `generate`, `generate --check` and `check` never reach the network.
 
 **The one hard failure.** A negative coverage change aborts an upgrade. A rule getting stricter is
 loud; a tool quietly ceasing to read a directory is not, and coverage loss is the failure mode the
@@ -419,7 +427,7 @@ release note. No alias, no deprecation period, no automatic migration.
 
 **Evidence.** The reference repositories forbid backward compatibility in their own rules, and the
 reason applies here with force: an automatic migration is how a loosening entry survives a rename
-without anybody reading it again. A `[[exception]]` entry with a reason and an owner has to be
+without anybody reading it again. A `[[exception]]` entry with a reason has to be
 re-read when the rule it loosens changes shape, and a failing load is what makes that happen.
 
 ## D-30 Do not report what nobody can fix
@@ -447,8 +455,8 @@ disabled list measures the misfit.
 
 ## D-31 Easy to change, impossible to hide
 
-**Decision.** Every common settings change is one command. A loosening command refuses without
-`--reason` and `--owner`, and lands in the exception list.
+**Decision.** Every common settings change is one TOML line, documented in a copy-paste table. A
+loosening entry carries a reason and is listed in every run report.
 
 **Alternatives.** Hand-edited TOML only, which makes exclusion tedious and therefore rare. Or a
 free-form disable flag, which makes it invisible.
@@ -458,12 +466,12 @@ variables exist because turning a check off properly was harder than skipping it
 suppressions cite `N/A` as their ticket because the field was mandatory and unvalidated. Friction
 does not produce discipline; it produces workarounds.
 
-`gspot exceptions add` prints the coverage it removes before writing anything, which is what
-makes the decision informed rather than merely recorded.
+Every exception is listed in every run report with its reason, which is what makes the
+decision visible rather than merely recorded.
 
 ## D-32 One setting decides which migrations are frozen
 
-**Decision.** `[sql.migrations] immutable_through`, taking `"none"`, `"all"` or a version. No
+**Decision.** `[sql] immutable_through`, taking `"none"`, `"all"` or a version. No
 default; `gspot init` asks once. A frozen migration gets `secrets` and `immutability` and nothing
 else, and `gspot fix` never writes to it.
 
@@ -498,7 +506,7 @@ monorepo's rule file implies.
 **Evidence.** Row-level security, explicit grants, `SECURITY DEFINER` search paths, migration
 safety, migration order, object naming, index coverage for foreign keys and blocking DDL are
 Postgres facts. Putting them behind a product name makes them unavailable to a Neon, RDS, Drizzle or
-Prisma project for no reason. Nine of the fourteen non-language checks are general.
+Prisma project for no reason. Nine of the eighteen non-language checks are general.
 
 **The shape it sets.** Every database preset that follows requires `database:postgres` and adds only
 what its own tooling dictates.
@@ -524,11 +532,11 @@ appears, this decision is revisited against a real tree.
 
 ## D-36 Two rule-file targets in v0
 
-**Decision.** The assembler writes `CLAUDE.md` and `AGENTS.md`. Other agent targets are renderers
+**Decision.** The assembler writes `CLAUDE.md` and `AGENTS.md`. Other agent targets are emitters
 over the same document model and arrive on demand.
 
 **Evidence.** Every reference repository uses exactly these two. MegaLinter's eight targets prove
-the renderer needs more outputs eventually; nothing proves it needs them now.
+the emitter needs more outputs eventually; nothing proves it needs them now.
 
 ## D-37 The corpus merge takes content from the longest fork and form from slopshop
 
@@ -556,8 +564,9 @@ markdownlint settle them on the first run and restating them is a second source 
 ## D-39 gspot owns only the `mise.toml` tool pins it introduced
 
 **Decision.** `[tools]` entries gspot wrote are recorded by name in `.gspot/tools.lock` and merged;
-a consumer's own pins are untouched. A tool both sides pin resolves to the stricter constraint, and
-a conflict fails with both named.
+a consumer's own pins are never changed. When both sides pin a tool and the consumer's version is
+below what a check needs, gspot reports both versions and stops. It does not upgrade somebody
+else's toolchain on their behalf.
 
 **Evidence.** `yap-swift-app` pins `ansible-core`, `deno` and `supabase` for product reasons in the
 same block. Owning the whole block would stop a consumer pinning a product tool, which is not
@@ -566,12 +575,12 @@ acceptable.
 ## D-40 A consumer registers its own checks through the same manifest shape
 
 **Decision.** `gspot.toml` accepts `[[check]]` entries with the same fields a preset check has: `id`,
-`command`, `kind`, `invocation`, `stage`, `gate` and `the files a check reads`. A consumer check joins the task
+`command`, `inspects`, `takes`, `stage`, `gate` and `file_list`. A consumer check joins the task
 graph and the coverage report like any other.
 
 **Alternatives.** No surface, so a consumer runs its own scripts outside the gate.
 
-**Evidence.** `slopshop` has twelve application-specific integrity checks and `yap-landing` has
+**Evidence.** `slopshop` has sixteen application-specific integrity checks and `yap-landing` has
 four. Without a surface, every consumer keeps a `quality/` folder beside gspot, which is the thing
 the distribution exists to remove. The check contract is already declarative, so this is a manifest
 entry pointing at a consumer script, not a plugin system.
@@ -588,16 +597,14 @@ useful; one that says "40 unused" without the caveat is not.
 ## D-42 The repository stays private until told otherwise, and nothing in the design depends on it
 
 **Decision.** `gspot` is private today and the design assumes that. If it goes public, two things
-change: the six Vale style packages are fetched by `gspot install` rather than vendored, and the
+change: the Vale style packages are fetched by `gspot install` rather than vendored, and the
 rule corpus ships as a separate package so an organisation can keep its engineering opinions private
 while using the public tooling. Neither changes any other document.
 
 ## D-43 Policy is edited in `gspot.toml`; a command exists only where a hand edit cannot do the job
 
-**Decision.** Fifteen commands (D-45 added `uninstall` and `completion`). Listing and inspection commands read
-`gspot.toml`; the one that writes to it is `exceptions add`, which validates the
-reason and owner and prints the coverage lost. Limits, terms, declarations,
-migrations and presets are edited in the file and applied with `gspot sync`.
+**Decision.** Fourteen commands. No command writes `gspot.toml`. Limits, terms, declarations,
+exceptions, migrations and presets are edited in the file and applied with `gspot generate`.
 
 **Alternatives.** A command per table, which an earlier surface had: `limits set`,
 `terms add`, `terms exempt`, `migrations freeze-through`, `declare`,
@@ -606,7 +613,7 @@ migrations and presets are edited in the file and applied with `gspot sync`.
 **Evidence.** Each of those wrote one TOML line the person could have written,
 and several pairs wrote the same table (`checks disable` and `exceptions add`),
 which is two ways to do one thing. `run` duplicated the task runner the
-repository already chose. `baseline` duplicated what `init` and `sync` do when
+repository already chose. `baseline` duplicated what `init` and `generate` do when
 they meet findings. `rules report` was one flag on `report`. Nineteen commands
 became fourteen: `why`, `terms test` and `coverage --explain` were three answers to
 "explain this" and are one `explain`; `tools` had one verb, so `tools install` is `install`, the way `bun install` installs what a project needs, and the file that was always the source of truth is now also the
@@ -649,7 +656,7 @@ A configuration file for a tool gspot generates is read, carried into
 `gspot.toml`, and deleted, because two configurations for one tool is drift.
 A tool whose job a gspot check now does is removed whole, config and dependency
 and scripts, with each removal listed; a tool with no gspot equivalent is left
-alone. A hook runner is replaced. CI is never edited. The exact table is in [17-lifecycle.md](17-lifecycle.md).
+gets a proposed `[[check]]`. A hook runner is replaced. CI is edited only after a yes at init. The exact table is in [17-lifecycle.md](17-lifecycle.md).
 
 ### D-48 gspot's pin wins for its own tools, the project's for TypeScript
 

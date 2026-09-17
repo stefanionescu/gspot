@@ -1,0 +1,9 @@
+id: structure/reexports-in-index-only
+language: TypeScript
+message: This file re-exports, and it is not an index. Import from the source.
+
+rule:
+  kind: export_statement
+  has:
+    field: source
+    kind: string

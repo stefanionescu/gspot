@@ -9,17 +9,14 @@ or `Services`.
 SwiftUI is the default UI framework. UIKit is an interop tool and platform API
 surface, not the default app architecture.
 
-MVVM is the default presentation pattern. It is not the whole architecture.
-Clean Architecture is the boundary model: dependencies point inward, and outer
-layers adapt external systems to inner business concepts.
+SwiftUI does not require a presentation pattern, and this file does not pick one. What it does
+require is that a view renders state and forwards intent, which the sections below spell out.
 
-Do not adopt VIPER, Clean Swift VIP, MVP, Presenter/Interactor/Worker template
-structures, or MVC screen modules as the default architecture. Do not add
-ceremony unless it reduces concrete coupling, duplication, or test friction.
+Whichever pattern a project picks, a view must not reach past its own layer into a network client,
+a database, an SDK singleton or process-global framework state. That constraint is what the
+sections below enforce, and it holds under MVVM, TCA, observable state or anything else.
 
-Simple screens may stay simple, but they must not bypass dependency boundaries.
-A small view can call a small ViewModel or use case; it should not reach into a
-network client, database, SDK singleton, or process-global framework state.
+A project that wants a named pattern writes it down itself. The distribution does not pick one.
 
 ## SwiftUI Views
 
@@ -69,8 +66,8 @@ Rules:
 - Use ViewModel published state for screen or flow state.
 - Use feature state owners only when state is shared across multiple screens in
   the same bounded context.
-- A shared Store is allowed as a feature state owner, but MVVM remains the
-  default screen presentation pattern.
+- A shared store is allowed as a feature state owner. It does not replace whatever owns a single
+  screen's state.
 - Stores are not a dumping ground for all app state. They own cohesive
   feature/domain state.
 - App-wide state belongs in app composition only when truly global, such as

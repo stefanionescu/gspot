@@ -614,7 +614,7 @@ Do not add custom CSS or layout HTML to routine Markdown pages.
 
 ### Source line length
 
-Wrap prose at approximately 100 characters.
+Wrap prose at the line length the project sets.
 
 Do not split:
 
@@ -1075,7 +1075,7 @@ code fences.
 
 ### Keep code blocks readable
 
-Aim for code lines of approximately 80 characters when the language permits.
+Aim for code lines within the line length the project sets, when the language permits.
 Avoid horizontal scrolling.
 
 Do not distort idiomatic or valid syntax solely to meet a line target.

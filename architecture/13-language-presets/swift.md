@@ -48,8 +48,8 @@ sets and left them off:
 
 | Rule                       | Findings | Preset behaviour                                                           |
 | -------------------------- | -------- | ------------------------------------------------------------------------ |
-| `no_magic_numbers`         | 921      | Baseline, 180-day expiry                                                 |
-| `one_declaration_per_file` | 294      | Baseline, 180-day expiry. Implies file splitting, so the expiry is long. |
+| `no_magic_numbers`         | 921      | Baseline                                                                 |
+| `one_declaration_per_file` | 294      | Baseline. Implies file splitting, so the count falls slowly.             |
 | `type_contents_order`      | 426      | Baseline                                                                 |
 | `file_types_order`         | 93       | Baseline                                                                 |
 | `no_empty_block`           | 28       | On immediately                                                           |
@@ -95,7 +95,7 @@ in the tree, not in any target  -> orphan-source, fails
 in a target, not in the tree    -> broken project reference, fails
 ```
 
-The files a check reads is `xcodebuild -showBuildSettings` plus the target file lists, or
+The file listing is `xcodebuild -showBuildSettings` plus the target file lists, or
 `swift package describe --type json` for a package. See [../05-coverage.md](../05-coverage.md).
 
 ### The tracked symlink
@@ -104,12 +104,12 @@ The files a check reads is `xcodebuild -showBuildSettings` plus the target file 
 symlinks rather than following them silently, because a source directory that is a symlink to a
 plist is a fact somebody needs to see.
 
-## Required kinds
+## Required inspections
 
 ```text
 .swift          format syntax style types structure naming prose spelling
 Package.swift   format syntax style types spelling
-.xcconfig       syntax schema spelling secrets
+.xcconfig       syntax schema spelling security
 .entitlements   syntax schema spelling
 .plist          syntax schema spelling
 .xcstrings      syntax schema spelling
@@ -118,7 +118,7 @@ project.pbxproj syntax schema
 
 `project.pbxproj` gets no `spelling`: the reference repository excludes it from `typos` because the
 format is full of hashes, and that exclusion is correct. It is expressed as the absence of
-`spelling` from the required kinds, not as a `typos` ignore, so the coverage check does not report it as
+`spelling` from the required inspections, not as a `typos` ignore, so the coverage check does not report it as
 weak.
 
 ## Totality

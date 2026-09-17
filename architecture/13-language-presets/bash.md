@@ -1,6 +1,6 @@
 # `language:bash`
 
-The language with the widest gap between "linted" and "covered" in the reference set: 204 shell
+The language with the widest gap between "linted" and "covered" in the reference set: 99 shell
 files, of which 129 get ShellCheck and shfmt but not the project rules, because the rule table knows
 only three project prefixes.
 
@@ -13,8 +13,8 @@ extensionless tracked files whose first line is a bash or sh shebang
 .githooks/**              (hook files, usually extensionless)
 ```
 
-The extensionless case is the whole problem. `yap-swift-app` has 104 mise task files and 3 hook
-files with no extension, and `slopshop` and `yap-text-inference` have 28 and 35. A preset that claims
+The extensionless case is the whole problem. `yap-swift-app` has 102 mise task files and 3 hook
+files with no extension, and `yap-text-inference` has 37. A preset that claims
 only `.sh` misses 140 files in one repository.
 
 Detection is by shebang, read from the first line of every tracked text file that has no extension,
@@ -59,7 +59,7 @@ rather than the consumer:
 
 A consumer re-enabling any of them is tightening, and needs no metadata.
 
-## Required kinds
+## Required inspections
 
 ```text
 .sh .bash                  format syntax style structure naming prose spelling
@@ -70,7 +70,7 @@ extensionless with shebang format syntax style structure naming prose spelling
 Identical for `.sh` and for extensionless task files. That identity is the fix for the fourth blind
 spot: `SHELL_PROJECT_RULES` in the reference repository maps three project prefixes to their script
 directories, so the 129 files outside those prefixes get two checks instead of six. There is no
-prefix table in gspot. Scope decides which preset applies; the preset applies the same required kinds
+prefix table in gspot. Scope decides which preset applies; the preset applies the same required inspections
 everywhere.
 
 ## Structure rules for shell
@@ -85,14 +85,32 @@ The shell-specific parameters, from the reference set:
 | `function-nesting`      | 3                                                                                                                        | same                                                                                                                    | ast-grep plus counter            |
 | `mutable-assignments`   | 8 per function                                                                                                           | same. Caps reassignments to one variable inside a function, which matters in a language with no local scope by default. | ast-grep plus counter            |
 | `doc-comment-required`  | Every function carries `# name: Description.` plus the Globals, Arguments, Outputs and Returns sections where they apply | `rules/BASH.md`, 181 existing headers                                                                                   | ast-grep `precedes`              |
-| `unused-functions`      | Cross-file reachability from task files and hooks as entry points                                                        |                                                                                                                         | original code, roughly 200 lines |
+| `unused-functions`      | Cross-file reachability from task files, hooks and `structure.add.entry_points`                                          |                                                                                                                         | original code, roughly 200 lines |
 | `duplicate-functions`   | 3 identical bodies                                                                                                       | `IDENTICAL_FUNCTIONS_THRESHOLD`                                                                                         | `jscpd`                          |
-| `disable-justification` | Every `# shellcheck disable=SCxxxx` carries `reason:` and `owner:`                                                       | 24 existing disables                                                                                                    | ast-grep regex                   |
-| `strict-mode` | Every script sets `set -euo pipefail` before its first command. ShellCheck does not require it. | `comfyui-reactor-connector/quality/shell/checks/safety.py` | ast-grep |
+| `disable-justification` | Every `# shellcheck disable=SCxxxx` carries `reason:`                                                                    | 24 existing disables                                                                                                    | ast-grep regex                   |
+| `strict-mode` | Every script sets `set -euo pipefail` before its first command. ShellCheck does not require it. | the reference shell checks | ast-grep |
 | `no-eval` | No `eval`, and no `bash -c` or `sh -c` over a string built from a variable | same | ast-grep |
 | `guarded-removal` | `rm -rf` and `rm -r` take a quoted path that is not a bare variable, `/`, `~` or `.` | same | ast-grep |
-| `inline-code-extracted` | A `python -c`, `node -e` or `bun -e` argument is extracted and linted by the owning language preset, like a heredoc | `comfyui-reactor-connector/quality/shell/checks/embeds.py` | preset extraction |
-| `executable-bit`        | Every file with a shebang is executable, and every executable has a shebang                                              | MegaLinter's `bash_exec` linter                                                                                         | `bash-exec`                      |
+| `inline-code-extracted` | A `python -c`, `node -e` or `bun -e` argument is extracted and linted by the owning language preset, like a heredoc | the reference shell checks | preset extraction |
+| `executable-bit`        | Every executable has a shebang. A sourced library carries a shebang and is not executable; `library-purity` decides which is which | MegaLinter's `bash_exec` linter, corrected by `rules/BASH.md`                                                     | `bash-exec`                      |
+| `bash-3-compatible`     | No `mapfile`, `readarray`, `declare -A`, `${x,,}`, `coproc`, `wait -n`, `declare -n`, `globstar` unless the file checks `BASH_VERSINFO` first | `yap-text-inference/quality/shell/checks/bash.py`; macOS ships Bash 3.2                                              | ast-grep                         |
+| `library-purity`        | A sourced `.sh` sets no shell options, never calls `exit`, has no top-level statements, and is not executable; an entrypoint ends with `main "$@"` | same                                                                                                                    | ast-grep                         |
+| `no-echo`               | `printf`, never `echo`                                                                                                   | `yap-text-inference/quality/shell/checks/safety.py`                                                                  | ast-grep                         |
+| `no-or-true`            | No `|| true`; a command whose failure is acceptable says so with an `if`                                               | same                                                                                                                    | ast-grep                         |
+| `no-kill-by-pattern`    | No `pkill -f`, no `killall`; a process is killed by a pid the script holds                                                | same                                                                                                                    | ast-grep                         |
+| `checked-cd`            | Every `cd` is `cd -- <path> || exit`, and directory constants use `CDPATH='' cd -- ... && pwd -P`                            | same                                                                                                                    | ast-grep                         |
+| `config-defaults-owned` | `${VAR:-default}` appears only in files listed in `[bash] config_files`                                                 | `yap-text-inference/quality/shell/checks/config.py`, `yap-landing` `checkConfigDefaults`                            | ast-grep plus setting            |
+| `source-annotations`    | Every `source` of a sibling file has a `# shellcheck source=` line, and the set of annotations equals the set of sources | `yap-text-inference/quality/shell/checks/architecture.py`                                                            | ast-grep                         |
+| `no-forwarding-script`  | A script of four lines or fewer whose only command runs another script fails; so does a file named `*compat*`, `*wrapper*` or `*forward*` | `yap-landing` `script-policy`, `yap-swift-app` `SHELL_FORWARDING_WRAPPER_REGEX`                                        | ast-grep regex                   |
+| `private-prefix`        | A function called from no other file starts with `_`                                                                    | `yap-text-inference/quality/shell/checks/architecture.py`, `shell.private-call`                                     | ast-grep plus the reachability walk |
+| `private-before-public` | Every `_` function sits above the first public function, and `main` is last                                              | same, `shell.private-order`                                                                                             | ast-grep                         |
+
+### The preset is at least as strict as the strictest reference repository
+
+`yap-text-inference` enforces fourteen shell checks today. Twelve are rows above. Its four-line
+file header and its `_CFG_*_READY` include guards are that repository's conventions and stay
+there as `[[check]]` entries. A Bash preset looser than that repository is a preset that cannot be
+installed there, which is the test.
 
 ### Bash complexity is not a gap
 
@@ -114,7 +132,7 @@ the one-time migration.
 
 | Habit                                     | Reference evidence                                                                                                    | gspot                                                                                                                                                                             |
 | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Task and hook files are tooling, not code | 129 files with two checks instead of six                                                                              | One required kinds, no prefix table                                                                                                                                                      |
+| Task and hook files are tooling, not code | 129 files with two checks instead of six                                                                              | One required inspections, no prefix table                                                                                                                                                      |
 | The lint package's own shell is exempt    | `quality/security/codeql/scan.sh` is 150 lines against a limit of 140, and `main` in the Trivy runner is undocumented | Self-hosting: the distribution's shell obeys the same rules                                                                                                                       |
 | Sourced config files are unlinted         | `api/scripts/config.sh` read by a lint runner                                                                         | Claimed as shell                                                                                                                                                                  |
 | Heredoc contents are invisible            |                                                                                                                       | `structure`'s heredoc check, ported from `yap-text-inference/quality/shell/checks/heredocs.py`: an embedded SQL or Python heredoc is extracted and linted by that language's preset |

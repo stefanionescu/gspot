@@ -118,7 +118,7 @@ The last two rows are the honest part. Under the coverage check they are explici
 
 ```toml
 [[declare]]
-kind   = "partial"
+as         = "partial"
 paths  = ["**/*.yml", "**/*.yaml", "**/*.toml"]
 reason = "Vale has no comment-only mode for these formats"
 owner  = "platform"
@@ -126,8 +126,8 @@ owner  = "platform"
 
 Except that this declaration is wrong, and the coverage check makes that visible: those files get
 `format`, `syntax` and `schema` from `repository:configuration`, so they are `covered` without prose. The
-declaration is needed only for the `prose` kind specifically, which is why required kinds are per
-extension and `prose` is simply absent from the `repository:configuration` required kinds. No declaration required, no
+declaration is needed only for the `prose` inspection specifically, which is why required inspections are per
+extension and `prose` is simply absent from the `repository:configuration` required inspections. No declaration required, no
 pretence of coverage either.
 
 ## The runner
@@ -148,12 +148,12 @@ Two properties the reference plan specifies and this design keeps:
    must point into the real file. Vale reports positions in the stream it read, and the stream is
    the file verbatim, so positions carry. The fallback path in the reference plan (replacing
    backtick spans and URLs with spaces of equal length when `TokenIgnores` fails inside code
-   comments) preserves columns for the same reason, and the install the files a check reads decides which path is
+   comments) preserves columns for the same reason, and the install check decides which path is
    needed.
 1. **Any alert fails.** The runner parses `--output=JSON` and fails on a non-empty result, rather
    than trusting the exit code, which is 1 only for `error` level.
 
-## Install the files each check reads
+## Install checks
 
 The reference plan's step 1 becomes a `gspot doctor --prose` assertion, run at install and in CI,
 because every one of these is a behaviour that a Vale version bump can change:
@@ -167,7 +167,7 @@ vale ls-config
 
 Pass criteria: nothing inside backticks or a URL is reported; `$#` in shell is not read as a
 comment; every rule the config disables shows as off; a decorative glyph is flagged and an arrow is
-not. A failing the files a check reads fails `gspot install`, with the failing behaviour named.
+not. A failing install check fails `gspot install`, with the failing behaviour named.
 
 ## Rules disabled, and why
 
@@ -226,13 +226,12 @@ configuration:
 
 1. `gspot init` with `repository:prose` enables `gspot` at error severity, with a baseline
    measured at install for every rule that has findings.
-1. `gspot` is off. Enabling it measures baselines and sets a default expiry of ninety days per
-   rule family.
-1. The fix order from the reference plan becomes the default baseline expiry order, so mechanical
-   families expire first and the taste-dependent ones last.
+1. `gspot` is off. Enabling it measures a baseline per rule family, and each count can only fall.
+1. The fix order from the reference plan is the suggested order for working the baselines down,
+   mechanical families first and the taste-dependent ones last.
 1. The two tooling conventions the gate rejects are preset decisions rather than project work: shell
    function headers use `# name: Description.` and not `# name - Description.`, and suppression
-   metadata uses `reason: X. owner: Y.` and not a dash-delimited form. Both are what the structure
+   metadata uses `reason: X.` and not a dash-delimited form. Both are what the structure
    engine emits and validates, so a repository adopting gspot gets the compatible form from the
    start. The 181 existing headers and 30 suppressions in the reference repository are a one-time
    migration `gspot fix` performs.

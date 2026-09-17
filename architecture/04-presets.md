@@ -2,7 +2,7 @@
 
 ## The manifest
 
-One file per preset, `manifest.toml`. Everything a preset contributes is declared here, and the loader
+One file per preset, `manifest.toml`. Everything a preset contributes is declared here, and the preset reader
 rejects a preset that contributes anything it did not declare.
 
 ```toml
@@ -16,12 +16,12 @@ detect      = { any_file = ["tsconfig*.json", "**/*.ts", "**/*.tsx"] }
 # Shared packages this preset installs in addition to its own checks and rule
 # block. A shared package is checks plus a rule block that belong to several
 # presets and to no one of them: `http` is installed by every HTTP framework,
-# `i18n` by every i18n library. `sync` installs it while any such preset is
+# `i18n` by every i18n library. `generate` installs it while any such preset is
 # present and removes it when the last one goes.
 shared      = []
 
 # Files this preset claims. Used to build the coverage candidate set, and
-# cross-checked against every the files a check reads result.
+# cross-checked against every file listing result.
 [claims]
 extensions  = [".ts", ".tsx", ".mts", ".cts", ".js", ".jsx", ".mjs", ".cjs", ".d.ts"]
 filenames   = ["tsconfig.json", "package.json", "eslint.config.js"]
@@ -49,18 +49,18 @@ readers   = ["eslint"]
 # Checks. One entry per atomic unit the scheduler runs and the coverage check counts.
 [[checks]]
 id          = "ts/eslint"
-kind        = ["style", "structure", "naming"]
+inspects        = ["style", "structure", "naming"]
 mechanism   = "configured"
 stage       = "pre-commit"
-invocation  = "project"
+takes  = "project"
 command     = ["eslint", "--max-warnings", "0", "--no-warn-ignored"]
 fails_on    = "exit-code"
-files_from  = { via = "print-config", command = ["eslint", "--print-config"] }
+file_list  = { via = "print-config", command = ["eslint", "--print-config"] }
 fix         = ["eslint", "--fix"]
 
 # Output patterns that mean the tool broke, not that the code is bad.
 # Taken from MegaLinter's common_linter_errors.
-[[checks.tool_failures]]
+[[checks.tool_errors]]
 regex   = "Error while loading rule|Failed to load plugin|Cannot find module"
 message = """
 ESLint could not load a plugin or rule from the generated config.
@@ -68,7 +68,7 @@ ESLint could not load a plugin or rule from the generated config.
   - Run `gspot config eslint` to see the resolved config and its provenance.
 """
 
-[[checks.tool_failures]]
+[[checks.tool_errors]]
 regex   = "Parsing error: Cannot read file .*tsconfig"
 message = """
 The type-aware rules could not find a tsconfig for a linted file.
@@ -79,15 +79,15 @@ The type-aware rules could not find a tsconfig for a linted file.
 
 [[checks]]
 id          = "ts/tsc"
-kind        = ["types", "syntax"]
+inspects        = ["types", "syntax"]
 mechanism   = "configured"
 stage       = "pre-commit"
-invocation  = "project"
+takes  = "project"
 command     = ["tsc", "--noEmit"]
 fails_on    = "exit-code"
-files_from  = { via = "project-graph", command = ["tsc", "--noEmit", "--listFiles"] }
+file_list  = { via = "project-graph", command = ["tsc", "--noEmit", "--listFiles"] }
 
-# Kind required kinds: what a file of this language must have to count as covered.
+# Kind required inspections: what a file of this language must have to count as covered.
 [required]
 ".ts"   = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".d.ts" = ["format", "syntax", "types", "spelling"]
@@ -99,11 +99,6 @@ files_from  = { via = "project-graph", command = ["tsc", "--noEmit", "--listFile
 name      = "eslint.rules"
 ops       = ["add", "remove", "set"]
 direction = "declared-per-rule"
-
-[[settings]]
-name      = "eslint.ignores"
-ops       = ["add"]
-direction = "loosen"
 
 [[settings]]
 name      = "tsconfig.paths"
@@ -122,19 +117,19 @@ checks = ["ts/eslint", "ts/tsc"]
 
 Loader invariants, each enforced at load:
 
-1. Every `[[checks]]` entry declares at least one kind.
+1. Every `[[checks]]` entry declares at least one inspection.
 1. Every `[[configs]]` entry names at least one reader. A config with no reader is the
    `api-false-positives.json` bug, and it fails to load.
 1. Every check appears in at least one task. A check reachable from no task is the Semgrep bug, and
    it fails to load. 3a. Every check declares `mechanism`, and a check at a plugin or 4 carries
    the `searched` tool list and the `verdict` that justified original code. Those two fields are
    reviewed at every release, which is what stops the distribution from growing a fifth `quality/`
-   folder. 3b. Every check declares `invocation` and `fails_on`. A `fails_on` of `finding-count` or
+   folder. 3b. Every check declares `takes` and `fails_on`. A `fails_on` of `finding-count` or
    `parsed-output` declares its counting regex. There is no `warn` value.
 1. Every extension in `[claims]` appears in `[required]`.
 1. Every setting declares its direction, so the direction classifier is mechanical.
 1. Templates reference only preset-local files and settings values, never product paths. A template
-   that reads `api/docker-compose.yml` does so through a declared `[[project.value]]` block, which
+   that reads `api/docker-compose.yml` does so itself, in the check, which
    names the file, the extraction and the failure message. This is the mechanism that replaces the
    hardcoded nginx image tag.
 
@@ -185,7 +180,7 @@ response) and ships the rest as a the project layer template the consumer copies
 
 | Preset                         | Kind    | Tools                                                                | Notes                                                                                                                                    |
 | ---------------------------- | ------------- | -------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------- |
-| `repository:structure`       | `structure`   | gspot structure engine                                               | The eighteen rules. Implied by every language preset. [12-structure-and-naming.md](12-structure-and-naming.md)                             |
+| `repository:structure`       | `structure`   | gspot structure engine                                               | The     hteen rules. Implied by every language preset. [12-structure-and-naming.md](12-structure-and-naming.md)                             |
 | `repository:naming`          | `naming`      | gspot naming engine                                                  | The 290-line policy, extended through the settings file                                                                                  |
 | `repository:prose`           | `prose`       | Vale                                                                 | [11-prose.md](11-prose.md)                                                                                                               |
 | `repository:secrets`         | `secrets`     | gitleaks, trufflehog                                                 | Whole tree including binaries                                                                                                            |
@@ -195,29 +190,31 @@ response) and ships the rest as a the project layer template the consumer copies
 | `repository:commits`         | none          | commitlint                                                           | Commit message stage                                                                                                                     |
 | `repository:duplication`     | `duplication` | jscpd                                                                | Per-language thresholds                                                                                                                  |
 | `repository:formatting`      | `format`      | editorconfig-checker                                                 | Renders `.editorconfig` from the format settings of every selected preset, so indentation cannot disagree between Prettier, shfmt and Ruff |
-| `repository:assets`          | `format`      | gspot asset policy                                                   | Dimensions, file size ceiling, naming, orphan detection against source references. Closes blind spot 5.                                  |
+| `repository:assets`          | `format`      | gspot asset policy                                                   | Orphan detection against source references, plus `secrets`. No dimension or size policy. Closes blind spot 5. |
 | `repository:spelling`        | `spelling`    | typos                                                                | Implied by everything                                                                                                                    |
-| `repository:naming`          | `naming`      | The policy document plus five renderers, plus ls-lint                | No extractor. D-20.                                                                                                                      |
+| `repository:naming`          | `naming`      | The policy document plus five emitters, plus ls-lint                | No extractor. D-20.                                                                                                                      |
 
 `repository:formatting` is worth naming: `yap-swift-app` carries a hand-written `.editorconfig` with
 shfmt hints, a `.prettierrc.json` with `tabWidth: 4`, and a markdownlint `MD007` indent of 4 chosen
 to match Prettier. Three files agreeing by hand. The preset derives all three from one `[format]`
 block.
 
-### Runner and CI presets
+### Runner and CI emitters
 
 | Preset                       | Emits                                                                                                       |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------- |
 | the mise runner            | `mise.toml` `[tools]`, `.mise/tasks/**`, `[settings]`                                                       |
 | the bun runner             | `package.json` `scripts`, `.gspot/tools.lock`, `.gspot/bin/`                                                |
 | the npm runner             | same as the bun runner with npm                                                                             |
-| the GitHub CI emitter      | `.github/workflows/gspot.yml`, plus `actionlint` and `zizmor` over its own output. Off by default.          |
-| the GitHub release emitter | Nothing but a `gspot check --stage release` call for a workflow the consumer already has. [09-gates.md](09-gates.md). |
+| the GitHub Actions emitter | `.github/workflows/gspot.yml`, plus `actionlint` and `zizmor` over its own output. Only when `[gate] ci = "github"`. |
+| the GitLab CI emitter      | a marked `gspot` job in `.gitlab-ci.yml`. Only when `[gate] ci = "gitlab"`.                                  |
+| the Buildkite emitter      | a step in `.buildkite/pipeline.yml`. Only when `[gate] ci = "buildkite"`.                                    |
+| the release step           | Nothing but a `gspot check --stage release` call for a workflow the consumer already has. [09-gates.md](09-gates.md). |
 
 ### Rule preset
 
 the general rules ships the general layer only, and installs without any check preset. A repository
-that wants the agent rules and none of the linting runs `gspot init --rules-only`.
+that wants the agent rules and none of the linting runs `gspot init --rules install --presets ""`.
 
 ## Detection
 
@@ -231,6 +228,7 @@ that wants the agent rules and none of the linting runs `gspot init --rules-only
 | `express` in dependencies | `framework:express` |
 | `NODE_CLASS_MAPPINGS` in the root `__init__.py`, or `[tool.comfy]` in `pyproject.toml` | `framework:comfyui` |
 | `supabase/config.toml`                                                      | `platform:supabase`, which pulls `database:postgres`                |
+| `wrangler.jsonc`, `wrangler.toml`, or `functions/_middleware.js`               | `platform:cloudflare`                                                 |
 | Any `*.sql` with Postgres syntax, or a Postgres connection string in config | `database:postgres`                                                  |
 | `pyproject.toml` with `fastapi`                                             | `framework:fastapi`                                                   |
 | `*.xcodeproj` or `Package.swift`                                            | `language:swift`, and `tool:xcode` when an `.xcodeproj` exists |
@@ -326,26 +324,31 @@ pre-commit step: a production env guard on staged `.env.prod*` paths. The preset
 The reference repository's production guard is kept as a preset check, generalised: any tracked path
 matching a declared production pattern fails at commit.
 
-#### Required kinds
+#### Required inspections
 
 ```text
-.json .jsonc            format syntax schema spelling
-.yaml .yml              format syntax schema style spelling
+.json .jsonc            format syntax spelling, plus schema when one is known
+.yaml .yml              format syntax style spelling, plus schema when one is known
 .toml                   format syntax schema style spelling
-.env .env.*             syntax style spelling secrets
+.env .env.*             syntax style spelling security
 .plist .entitlements    syntax schema spelling
-.xcconfig               syntax schema spelling secrets
+.lock uv.lock bun.lock  syntax deps
+.webmanifest            syntax schema
+.txt                    spelling
+.nvmrc .node-version    syntax
+_headers _redirects     syntax, through platform:cloudflare
+.xcconfig               syntax schema spelling security
 .xcstrings              syntax schema spelling
 .xml .storyboard .xib   format syntax spelling
 ```
 
 No `prose`: Vale has no comment-only mode for any of these, which [../11-prose.md](11-prose.md)
-states and which the required kinds reflects by omission rather than by an exclusion. No `structure` or
+states and which the required inspections reflects by omission rather than by an exclusion. No `structure` or
 `naming`: the structure engine has no adapter for data formats, which is accepted.
 
 `.xcconfig` gets `secrets` explicitly because the reference repository's `.gitleaks.toml` allowlists
 four public client identifiers in `ios/Yap/Config/*.xcconfig`. Those four entries become four
-`[[exception]]` entries with reasons, which is the same allowlist with an owner attached.
+`[[exception]]` entries with reasons.
 
 #### Totality
 

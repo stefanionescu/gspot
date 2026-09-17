@@ -12,81 +12,46 @@ active voice, present tense, no modal verbs. gspot enforces that on this folder.
 ```text
 gspot/
 ├── architecture/               design documents. This folder.
-├── reference-rules/            the five repositories' rule files, verbatim, for the merge
-├── packages/                   libraries and the command-line tool
-│   ├── gspot/                  the tool. The only name a consumer installs.
-│   │   └── src/
-│   │       ├── commands/       one module per command, on commander; parsing and output only
-│   │       ├── presets/          load a manifest, resolve a selection, validate it
-│   │       ├── schedule/       task graph, invalidation, parallel execution
-│   │       ├── coverage/       tracked files, the files each check reads, statuses
-│   │       └── report/         run report, SARIF output, terminal output
-│   ├── settings/               gspot.toml: schema, merge, direction, exception count
-│   ├── structure/              a runtime over declarative rule files
-│   │   ├── rules/              ast-grep YAML, one file per rule per language
-│   │   └── src/
-│   │       ├── scan.ts         run rule files, reject ERROR and MISSING nodes
-│   │       ├── count.ts        count findings against a ceiling
-│   │       └── walk.ts         directory shape: lone files, prefix collisions
-│   ├── naming/                 the policy document and its five emitters
-│   │   ├── policy.json         99 banned terms in 8 groups, per-language limits
-│   │   └── src/emit/           eslint.ts pylint.ts swiftlint.ts sqlfluff.ts ls-lint.ts
-│   ├── prose/                  the Vale style and the grammar dispatcher
-│   │   └── styles/gspot/       every prose rule, each an error
-│   ├── eslint-plugin/          the structural rules ESLint hosts in process
-│   └── rules/                  the markdown corpus and its assembler
+├── reference-rules/            the forks' rule files, input to the corpus merge. Deleted once it lands.
+├── src/
+│   ├── commands/               one module per command; argument parsing and output only
+│   ├── detect/                 extension counts, shebangs, manifest dependency reads
+│   ├── settings/               gspot.toml and the preset files: parse, merge, resolve a selection
+│   ├── run/                    task graph, execution, run report, SARIF
+│   ├── coverage/               tracked files, file listings, statuses
+│   └── structure/              the ast-grep runtime, the finding counter, the directory walk
+├── presets/                    one folder per preset kind, one file per preset
+│   ├── language/               typescript.toml  python.toml  bash.toml  ...
+│   ├── framework/              nextjs.toml  express.toml  fastapi.toml  ...
+│   ├── library/  tool/  database/  platform/
+│   ├── repository/             secrets.toml  naming.toml  structure.toml  ...
+│   └── rules/                  the Markdown the assembler installs into a consumer,
+│                               under the same kind names
 │       ├── general/            rules that hold for every file
-│       ├── language/           one file per language, plus language/naming/
-│       ├── framework/ library/ tool/ database/ platform/ shared/   one folder per preset, or per shared block
-│       └── src/assemble.ts     writes CLAUDE.md, AGENTS.md and rules/
-├── presets/                      the selectable units
-│   ├── language-typescript/    manifest.toml, configs/, tasks.toml, rules.toml
-│   ├── language-javascript/
-│   ├── language-python/
-│   ├── language-swift/
-│   ├── language-bash/
-│   ├── language-sql/
-│   ├── language-markdown/
-│   ├── language-css/
-│   ├── language-html/
-│   ├── tool-docker/
-│   ├── framework-nextjs/
-│   ├── library-zod/
-│   ├── database-postgres/
-│   ├── platform-supabase/
-│   ├── shared-http/
-│   ├── framework-fastapi/
-│   ├── framework-comfyui/
-│   ├── tool-xcode/
-│   ├── repository-static-site/
-│   ├── tool-vitest/
-│   ├── tool-pytest/
-│   ├── repository-configuration/
-│   ├── repository-structure/
-│   ├── repository-naming/
-│   ├── repository-prose/
-│   ├── repository-formatting/
-│   ├── repository-spelling/
-│   ├── repository-secrets/
-│   ├── repository-vulnerabilities/
-│   ├── repository-dependencies/
-│   ├── repository-licenses/
-│   ├── repository-commits/
-│   ├── repository-duplication/
-│   └── repository-assets/
-├── fixtures/                   golden repositories the tests assert against
-│   ├── monorepo/               the yap-swift-app shape: 4 scopes, 6 languages
-│   ├── single-project/         the yap-landing shape: the simple-repo floor
-│   ├── python-service/         the yap-text-inference shape: variant extras
-│   ├── next-app/               the slopshop shape
-│   ├── comfyui-node/           the comfyui-reactor-connector shape
-│   └── ignore-semantics/       one file per ignore idiom, for the files a check reads tests
-├── gspot.toml                  written by gspot init, when the tool exists
+│       ├── language/           TYPESCRIPT.md  PYTHON.md  ...  plus language/naming/
+│       └── framework/ library/ tool/ database/ platform/ shared/
+├── ast-grep/                   one rule file per structural rule per language
+├── eslint-plugin/              phase 2, and only if editor feedback earns a second engine
+│
+│                               below this line: what gspot writes into gspot,
+│                               identical to what it writes into any other repository
+├── gspot.toml                  the selection
 ├── mise.toml                   emitted by the mise runner
-├── CLAUDE.md                   assembled
-├── AGENTS.md                   assembled
-└── rules/                      assembled
+├── rules/  CLAUDE.md  AGENTS.md    assembled from presets/rules/
+└── .gspot/                     generated tool configs, coverage table, run reports
 ```
+
+The split at the line is the point. Everything above it is the distribution. Everything below it is
+output, written by gspot, in the same shape it writes into a consumer. gspot's own repository is the
+first repository gspot manages.
+
+Two names appear twice, deliberately. `presets/rules/` is the Markdown the distribution ships;
+`rules/` at the root is what the assembler produced for this repository. Source and output, the same
+relationship as `presets/language/typescript.toml` and `.gspot/generated/eslint.config.js`.
+
+One package. Nothing here is published separately, so nothing here is a workspace. The ESLint plugin
+would be the one exception, since ESLint resolves a plugin by name, except that flat config also
+accepts a plugin object, so a generated config imports it from `gspot` like anything else.
 
 ## Names, and why
 
@@ -94,10 +59,10 @@ Every name below was chosen against a rule, not by habit. The rules are the ones
 abbreviations, no vague containers, one word means one thing, and no borrowed jargon that carries a
 different meaning elsewhere.
 
-### The three preset kinds
+### The seven preset kinds
 
-Three kinds. Five things that read like kinds are settings, and two candidate kinds carried invented
-names.
+Seven kinds, defined in [02-model.md](02-model.md). Five things that read like kinds are settings,
+and two candidate kinds carried invented names.
 
 | Kind          | Selects by                                            | Example              | Claims files by |
 | ------------- | ----------------------------------------------------- | -------------------- | --------------- |
@@ -114,12 +79,11 @@ Names rejected, and the reason:
 | Rejected                      | Reason                                                                                                                                                                                                                                                                                           |
 | ----------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `aspect:`                     | Borrowed from aspect-oriented programming, where it means something else. Here it meant "the bucket for anything not tied to a language", which is the vague-container pattern the shipped policy bans. `repository:` has prior art: MegaLinter names this exact class of linter `repository_*`. |
-| `doctrine:`                   | Invented. Nobody calls agent rule files doctrine. The kind is also unnecessary: rules arrive with `rules = true`, and language and framework presets contribute their own rule files. Deleting the kind removes a concept.                                                                         |
+| `doctrine:`                   | Invented. Nobody calls agent rule files doctrine. The kind is also unnecessary: rules arrive with `[rules] install = true`, and language and framework presets contribute their own rule files. Deleting the kind removes a concept.                                                                         |
 | `lang:`                       | An abbreviation. `unicorn/prevent-abbreviations` is in the shipped TypeScript rule set, so the distribution cannot use one in its own vocabulary.                                                                                                                                                |
 | `runner:mise`                 | A preset and a setting for one choice. `runner = "mise"` in `gspot.toml` already decides it.                                                                                                                                                                                                       |
-| `ci:github`, `cd:github`      | Same duplication. `gate` and `ci` are settings.                                                                                                                                                                                                                                                  |
-| `bridge:megalinter`           | `bridge` says nothing about what runs. `repository:megalinter` names the tool.                                                                                                                                                                                                                   |
-| `dependencies`, `vulnerabilities`                | `dependencies` is an abbreviation. `vulnerabilities` is an acronym outside the well-known set. The presets are `repository:dependencies` and `repository:vulnerabilities`.                                                                                                                                            |
+| `ci:github`, `cd:github`      | Same duplication. `[gate] hooks` and `[gate] ci` are settings.                                                                                                                                                                                                                                                  |
+| `bridge:megalinter`           | `bridge` says nothing about what runs, and the bridge itself was cut; see 20-tooling.md.                                                                                                                                                                                                                   |
 | `editorconfig` as a preset name | The preset derives every formatter setting from one block. It does not run one tool. It is `repository:formatting`.                                                                                                                                                                                |
 
 ### The rules tree
@@ -135,16 +99,20 @@ Names rejected, and the reason:
 The four directories are **layers**, not tiers. A layer has a name, so nobody counts. The generated
 index states that the more specific layer wins, which no reference `CLAUDE.md` does.
 
-### Libraries
+### Source modules
 
-| Name                           | Holds                                                            | Rejected name, and why                                                                                                     |
-| ------------------------------ | ---------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `packages/settings/`           | `gspot.toml`: parse, merge, classify direction, count exceptions | `packages/overlay/`. Borrowed from configuration-layering tools. The file holds settings, so the package handles settings. |
-| `packages/structure/`          | the rule-file runtime, the counter, the directory walk           | `packages/engine/`. A vague container.                                                                                     |
-| `packages/naming/`             | the policy document and five emitters                            | none                                                                                                                       |
-| `packages/rules/`              | the Markdown corpus and the assembler                            | `packages/doctrine/`. Invented.                                                                                            |
-| `packages/gspot/src/commands/` | one module per command                                           | `src/cli/`. An abbreviation, and it duplicates the package name.                                                           |
-| `packages/gspot/src/schedule/` | the task graph and its execution                                 | `src/runner/`. `runner` already names the mise, bun and npm choice. One word, one meaning.                                 |
+| Name             | Holds                                                              | Rejected name, and why                                                                                     |
+| ---------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------ |
+| `src/commands/`  | one module per command                                             | `src/cli/`. An abbreviation.                                                                                 |
+| `src/detect/`    | what languages, frameworks and tools a directory holds             | `src/scan/`. `scan` already names what a security tool does.                                                 |
+| `src/settings/`  | `gspot.toml` and the preset files: parse, merge, resolve           | `src/overlay/`. Borrowed from configuration-layering tools. The file holds settings.                        |
+| `src/run/`       | the task graph and its execution                                   | `src/runner/`. `runner` already names the mise, bun and npm choice. One word, one meaning.                   |
+| `src/coverage/`  | tracked files, file listings, statuses                             | `src/census/`. A population metaphor for something everyone calls coverage.                                  |
+| `src/structure/` | the ast-grep runtime, the counter, the directory walk              | `src/engine/`. A vague container.                                                                            |
+
+Six modules, one package. Split a module into two when the second job inside it outgrows a file, not
+before. `src/structure/` is the one to watch: the ast-grep runtime and the directory walk share a
+folder today and have nothing else in common.
 
 ### What no name in this tree contains
 
@@ -183,12 +151,12 @@ from the selection.
 | Surface       | Command                    | Reason                                                                                                            |
 | ------------- | -------------------------- | ----------------------------------------------------------------------------------------------------------------- |
 | npm registry  | `bun add -d gspot`         | Primary. Presets publish under the `@gspot` scope.                                                                  |
-| mise          | `mise use gspot@<version>` | A release asset, for a repository with no Node toolchain. A Python-only repository has no reason to install Node. |
+| mise          | `mise use npm:gspot@<version>` | Node arrives as a mise pin. In v0 that is how a Python-only repository installs gspot; the release asset without Node follows, D-34. |
 | Single binary | `bun build --compile`      | The mise asset. Native grammar modules are the open constraint. D-34.                                             |
 
 The Python case is concrete. `yap-text-inference` carries a `package.json`, a `bun.lock` and a bun
-pin. It needs all three to run three JavaScript tools. Under gspot that repository installs the
-binary and `uv`, and grows no `node_modules`.
+pin. It needs all three to run three JavaScript tools. Under gspot that repository pins Node through
+mise, installs gspot from npm the same way, and keeps no `package.json` or `node_modules` of its own.
 
 ## What a consumer's tree looks like after init
 
@@ -203,10 +171,9 @@ binary and `uv`, and grows no `node_modules`.
 │   ├── baseline/           one file per rule with a baseline. Tracked.
 │   └── run/                run reports. Untracked.
 ├── .mise/tasks/gspot/      emitted when runner = "mise"
-├── .githooks/              emitted when the gate includes hooks
-├── CLAUDE.md               assembled, when rules = true
-├── AGENTS.md               assembled, when rules = true
-├── rules/                  assembled, when rules = true
+├── CLAUDE.md               assembled, when [rules] install = true
+├── AGENTS.md               assembled, when [rules] install = true
+├── rules/                  assembled, when [rules] install = true
 │   └── project/            the consumer's own, never overwritten
 ├── eslint.config.js        a stub that re-exports the generated config
 └── .editorconfig           derived from one [format] block
@@ -218,7 +185,7 @@ Four properties hold.
   opens with a header naming the command that wrote it.
 - **Generated configuration is tracked.** Editors, language servers and `bunx <tool>` all discover
   configuration by walking up from the file.
-- **A hand edit fails the next run.** `gspot sync --check` re-renders and compares bytes.
+- **A hand edit fails the next run.** `gspot generate --check` re-renders and compares bytes.
 - **`rules/project/` survives every upgrade.** It holds the project's own architecture, and an
   upgrade that rewrote it would be a defect.
 
@@ -229,7 +196,7 @@ is a release gate.
 
 **The order is fixed: build the tool, then install it here.** Nothing at the root
 of this repository is written by hand. `gspot.toml` is written by `gspot init`,
-every tool configuration by `gspot sync`, every task and hook by the runner
+every tool configuration by `gspot generate`, every task and hook by the runner
 emitter, and the rule files by the assembler. Until gspot can run, this
 repository has no gate, and that is the honest state. A hand-written
 configuration at the root would be the first exception to the rule the tool
@@ -237,14 +204,17 @@ exists to enforce.
 
 ### The selection
 
-`gspot.toml` at the repository root, with no `[exceptions]` block and no `[[declare]]` entries:
+`gspot.toml` at the repository root, with no `[[exception]]` entries:
 
 ```toml
 version = 1
 runner  = "mise"
-gate    = "split"
-rules   = true
-ci      = "github"
+[rules]
+install = true
+
+[gate]
+hooks = true
+ci    = "github"
 
 presets = [
   "language:typescript", "language:bash", "language:markdown", "repository:configuration",
@@ -254,22 +224,21 @@ presets = [
   "repository:licenses", "repository:commits", "repository:duplication",
 ]
 
-[[scope]]
-path  = "fixtures"
-presets = []              # the fixture files are deliberately wrong
-
 [[declare]]
-kind   = "vendored"
-paths  = ["packages/prose/styles/Google/**", "packages/prose/styles/write-good/**",
-          "packages/prose/styles/proselint/**", "packages/prose/styles/RedHat/**"]
+as         = "vendored"
+paths  = ["prose/styles/Google/**", "prose/styles/write-good/**",
+          "prose/styles/proselint/**", "prose/styles/RedHat/**"]
 reason = "Pinned upstream Vale packages, fetched by gspot install"
 
-[exceptions]
-max = 0                 # the commitment
+[[declare]]
+as         = "partial"
+paths  = ["src/coverage/ignore-*/**"]
+reason = "Trees built to be wrong, so the ignore replay has something to disagree with"
+
 ```
 
-`max = 0` is the commitment. The distribution cannot loosen a rule it ships without raising its own
-limit in a visible commit, and raising it is the signal that the rule is wrong.
+No `[[exception]]` entry is the commitment. The distribution cannot loosen a rule it ships without
+an exception visible in review, and needing one is the signal that the rule is wrong.
 
 ### What self-application costs
 
@@ -340,35 +309,45 @@ weaknesses. `gspot` claims to enforce the measurable consequences of the four pr
 nothing more, and the style file says so in its own header. Anything else would be the
 enforcement-on-paper pattern this whole design exists to remove.
 
-### Reading-grade ceilings
 
-Thresholds differ by document class, because a rule file for an agent and a README for a stranger
-are not the same text.
+### How this is tested
 
-| Class                   | Paths                  | Grade ceiling |
-| ----------------------- | ---------------------- | ------------: |
-| Public documentation    | `README.md`, `docs/**` |            10 |
-| Rule corpus             | `rules/**`             |            12 |
-| Code comments           | every source file      |            12 |
+gspot cobbles together forty tools it did not write. That bounds what is worth testing: not whether
+ESLint finds bugs, which is ESLint's problem, but whether gspot hands it the right files with the
+right configuration and reads its answer correctly.
 
-### The fixtures are the coverage proof
+Almost everything gspot does is a pure function over data, and those are ordinary unit tests:
 
-`fixtures/` is excluded from the presets, because the fixture files are deliberately wrong. They are
-inputs to tests, and the coverage check treats the directory as a declared scope with no presets.
+| Tested | Input | Assertion |
+| --- | --- | --- |
+| Detection | a file list plus manifest contents | the proposed preset selection |
+| Settings merge | preset defaults, scope settings, root settings | the resolved value and its source |
+| Config rendering | a resolved selection | the rendered file, byte for byte, as a snapshot |
+| Output parsing | recorded real output from each tool | the finding list, including the zero-findings and tool-broke cases |
+| Coverage statuses | a claim set and a path list | the status per path |
+| Task graph | a selection and a stage | the node order and what runs in parallel |
 
-Three assertion sets run on every change:
+Two things need a real tool and a real tree, and only two:
 
-| Assertion                   | Fixture                                                                                                                                                                                      | Fails when                                                                                                                                                      |
-| --------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **Coverage parity**         | `fixtures/monorepo/`, reproducing the reference monorepo shape: four scopes, six languages, a generated types file, a binary asset directory, an Xcode project, 102 extensionless task files | The checked-in expected path table changes. Any preset change that loses coverage fails here first.                                                               |
-| **Ignore-semantics parity** | `fixtures/ignore-semantics/`, one file per ignore idiom: bare directory name, trailing slash, leading slash, negation, `**`, character class, extension glob, case sensitivity               | gspot's replay of a tool's ignore semantics disagrees with the real tool. This is the test the reference set did not have when `.sqlfluffignore` lost 58 files. |
-| **Structure parity**        | the whole tree                                                                                                                                                                               | A grammar or adapter change produces a record set that is not a superset of the previous one, per D-06                                                          |
+1. **Ignore-semantics replay.** gspot replays each tool's ignore rules to predict which files it
+   reads. That prediction has to agree with the tool. One small tree per ignore idiom, run against
+   the real binary, lives beside the test in `src/coverage/`. This is the test the reference set did
+   not have when a `.sqlfluffignore` entry silently hid 58 of 83 files.
+1. **The self-lint.** `gspot check` on `gspot`, with the presets shipped so far. It proves the whole
+   path end to end: detect, resolve, render, invoke, parse, report. It is the first test to run after
+   the first preset works, and it runs on every change after that.
+
+The self-lint is the integration test and there is no separate set of golden repositories. A tree
+built to mirror `yap-swift-app` proves the tool works on `yap-swift-app`, which is the overfitting
+this design exists to avoid. What the self-lint cannot reach is a language gspot's own repository
+does not contain, so a preset for Swift or SQL is proven by running it against a real repository
+that has them, by hand, once, and recording the result in the pull request.
 
 Plus a fourth, specific to this document:
 
 | Assertion     | Fails when                                                                                                                 |
 | ------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| **Self-gate** | `gspot check --all` on `gspot` fails, or `gspot.toml` contains a `[exceptions]` entry, or `[exceptions] max` is above zero |
+| **Self-gate** | `gspot check` on `gspot` fails, or `gspot.toml` contains an `[[exception]]` entry |
 
 ### When self-application fails
 
@@ -392,7 +371,7 @@ list for Swift. `quality/security/semgrep/{run,retry,projects}.sh` and
 `dotenv-linter` is configured and never runs. `codeql/api-false-positives.json` is never read
 because the reader looks for `false-positives.json`.
 
-**Rule:** a file lands in the same commit as its caller. `knip` plus the preset loader's orphan rule
+**Rule:** a file lands in the same commit as its caller. `knip` plus the preset reader's orphan rule
 enforce it, and a file written "for the next phase" is written in the next phase.
 
 ### 2. No utility bucket, ever
@@ -428,7 +407,7 @@ scanner. `.editorconfig`, `.prettierrc.json` and markdownlint `MD007` agreeing a
 hand, with a comment saying so.
 
 **Rule:** a fact has one home. A preset that needs a product fact reads it through a declared
-`[[project.value]]`, per [07-config-generation.md](07-config-generation.md). A value two tools need
+the check that needs it, per [07-config-generation.md](07-config-generation.md). A value two tools need
 is derived from one block, never stated twice.
 
 ### 5. One concept, one implementation, one name
@@ -446,13 +425,13 @@ file-name half automatically.
 
 ### 6. A check is not a check until a task runs it
 
-**Observed:** 40 Semgrep rules, a pinned binary, a runner, a retry wrapper and an environment file,
+**Observed:** 39 Semgrep rules, a pinned binary, a runner, a retry wrapper and an environment file,
 with zero invocations from any hook, task, script or plugin. Coverage thresholds of 80 percent that
 run only under an environment variable nothing sets. `[smells] mode = "block"` beside a command that
 exits zero on 119 findings. `ios:lint` in no hook.
 
 **Rule:** a check enters the graph in the same commit as its implementation, or it does not enter.
-The preset loader refuses a check reachable from no task, which makes this mechanical rather than a
+The preset reader refuses a check reachable from no task, which makes this mechanical rather than a
 matter of discipline.
 
 ### 7. Exit zero means it ran
@@ -482,7 +461,7 @@ moved file. `.gitignore` un-ignoring a deleted path. `ios/.swiftlint.yml` carryi
 names a directory that no longer exists. Two `knip.json` files naming `eslint-config.js` where the
 file is `eslint.config.js`. A README describing a layout two refactors old.
 
-**Rule:** `gspot sync --check` asserts every glob matches at least one path and every referenced file
+**Rule:** `gspot generate --check` asserts every glob matches at least one path and every referenced file
 exists, on gspot's own tree, at pre-commit. A forward-looking glob is marked as such with a reason.
 
 ### 10. Delete the thing you replaced
@@ -505,9 +484,9 @@ violated each one at cost.
 | Constraint                                                                                                                                                                                                                               | Reason                                                                                                                                                                                                                                                                   |
 | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | **No file over 300 lines, no function over 60, no more than 5 parameters, cognitive complexity at most 8.**                                                                                                                              | The limits gspot ships. `quality/security/codeql/scan.sh` is 150 lines against a shell limit of 140, in the repository that set the limit.                                                                                                                               |
-| **The preset manifest is data, not code.** A preset contributes through declared fields. When a preset needs behaviour the manifest cannot express, the manifest gains a field and every preset gets it, rather than that preset gaining a script. | `slopshop`'s `quality/` has twelve application-specific integrity checks that grew because there was no declarative setting for them.                                                                                                                                       |
-| **One adapter interface, seven questions.** A rule never reaches past the adapter to the grammar.                                                                                                                                        | Three repositories wrote per-language rule implementations and got three divergent behaviours for one rule name.                                                                                                                                                         |
-| **The coverage check never imports a preset, and a preset never imports the coverage check.** Presets declare the files each check reads; the coverage check runs them.                                                                                            | `quality/` imports nothing from the products, which is the one boundary the reference set got right, and it is worth keeping explicitly.                                                                                                                                 |
+| **The preset manifest is data, not code.** A preset contributes through declared fields. When a preset needs behaviour the manifest cannot express, the manifest gains a field and every preset gets it, rather than that preset gaining a script. | `slopshop`'s `quality/` has sixteen application-specific integrity checks that grew because there was no declarative setting for them.                                                                                                                                       |
+| **One adapter interface.** A rule never reaches past the adapter to the grammar.                                                                                                                                                    | Three repositories wrote per-language rule implementations and got three divergent behaviours for one rule name.                                                                                                                                                         |
+| **The coverage check never imports a preset, and a preset never imports the coverage check.** Presets declare file listings; the coverage check runs them.                                                                                            | `quality/` imports nothing from the products, which is the one boundary the reference set got right, and it is worth keeping explicitly.                                                                                                                                 |
 | **No dependency resolves by hoisting.** Every package declares what it imports.                                                                                                                                                          | `quality/` imports 17 npm packages and declares 2. Fifteen resolve through hoisting from four manifests, `syncpack` exists largely to keep those copies equal, and every `knip.json` lists the same plugins under `ignoreDependencies` to silence the resulting reports. |
 
 ## The rule that keeps this tree honest

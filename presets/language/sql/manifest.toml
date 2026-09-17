@@ -1,0 +1,51 @@
+[preset]
+id    = "language:sql"
+kind     = "language"
+requires = ["repository:formatting"]
+title = "SQL"
+
+[claims]
+extensions = [".sql", ".pgsql", ".psql"]
+
+[required]
+".sql"   = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
+".pgsql" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
+".psql"  = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
+
+[[configs]]
+target   = ".gspot/generated/sqlfluff.cfg"
+template = "configs/sqlfluff.cfg.tmpl"
+readers  = ["sql/sqlfluff"]
+
+[[tools]]
+id       = "sqlfluff"
+version  = "4.0.0"
+provider = "uv"
+
+[[checks]]
+id            = "sql/sqlfluff"
+inspects      = ["format", "style"]
+mechanism     = "configured"
+stage         = "pre-commit"
+takes         = "file-list"
+command       = ["sqlfluff", "lint", "--dialect=ansi"]
+fails_on      = "exit-code"
+fix           = ["sqlfluff", "fix", "--dialect=ansi"]
+tools         = ["sqlfluff"]
+config_arg    = "--config"
+file_list     = { via = "check-mode", command = ["sqlfluff", "lint", "--nofail", "--dialect=ansi"], ignored_regex = "Exact file path (\\S+) was given but it was ignored", ignore_files = [".sqlfluffignore"] }
+
+[[checks.tool_errors]]
+regex   = "Unknown dialect|could not be loaded|Error loading config|^Traceback \\(most recent"
+message = """
+sqlfluff could not read its configuration or its dialect.
+  - `.gspot/generated/sqlfluff.cfg` is written by `gspot generate`. Run it before this.
+  - Run `gspot config sqlfluff` to see the resolved configuration and where each value came from.
+  - A dialect comes from the database preset. Select `database:postgres` where the SQL is Postgres.
+"""
+
+[[tasks]]
+name        = "lint:sql"
+description = "Format check and style check every SQL file"
+scope       = "per-scope"
+checks      = ["sql/sqlfluff"]

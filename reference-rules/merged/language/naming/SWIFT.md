@@ -134,36 +134,15 @@ UIViewController+ChildContainment.swift
 UserDefaults+SessionStorage.swift
 ```
 
-## Swift MVVM Names
+## Suffixes that name a role
 
-For SwiftUI and MVVM, suffixes are deterministic.
+A type's suffix says what it owns. Which suffixes a project uses depends on the pattern it picked,
+and that list is the project's own. Two rules hold whatever the list is:
 
-Use:
-
-```text
-FeatureView.swift
-FeatureViewModel.swift
-FeatureViewState.swift
-FeatureViewAction.swift
-FeatureRepository.swift
-FeatureClient.swift
-FeatureCoordinator.swift
-FeatureViewModelTests.swift
-```
-
-Rules:
-
-- `View` presents UI and forwards user intent.
-- `ViewModel` owns presentation state, async task orchestration for the
-  presentation surface, and user-intent methods.
-- `ViewState` is a value describing screen state.
-- `ViewAction` is a typed user or lifecycle event.
-- `Coordinator` owns navigation or flow state.
-- `Repository` owns domain-facing data access.
-- `Client` owns external API, SDK, HTTP, storage, or platform mechanics.
-- `UseCase` owns an application operation or business workflow.
-- `Formatter` owns domain-sensitive display formatting.
-- Avoid `Manager`, `Handler`, and `Data` for MVVM owner types.
+- A suffix means one thing across the whole codebase. If `Repository` owns domain-facing data
+  access in one feature, it does not own HTTP mechanics in another.
+- `Manager`, `Handler`, `Helper`, `Util` and `Data` are not roles. They name a position in an
+  imagined architecture rather than a behaviour, and the naming policy bans them.
 
 Bad:
 

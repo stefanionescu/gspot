@@ -16,6 +16,6 @@
 - Put grants and revokes in the `Grants` section so privilege changes are
   auditable.
 - Use comments to explain business invariants, security boundaries, and
-  non-obvious Supabase behavior. Do not comment obvious SQL syntax.
+  non-obvious platform behavior. Do not comment obvious SQL syntax.
 - Do not leave placeholder comments, TODOs, fake examples, or unexplained
   suppressions in migrations.

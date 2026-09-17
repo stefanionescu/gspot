@@ -48,13 +48,13 @@ Rules:
 - Do not log raw user content, protocol payloads, tokens, headers, cookies, or full provider payloads.
 - Redaction belongs in the central telemetry layer. When a new sensitive key can reach logs or reports, update logger redaction and telemetry scrubbing instead of relying on one-off call-site filtering.
 - Request-path logs should include stable correlation fields when available: `requestId`, domain operation IDs, provider `requestId`, and `userId` only when it is safe and needed.
-- Keep log item keys stable. Renaming log fields is an observability contract change.
+- Keep log object keys stable. Renaming log fields is an observability contract change.
 - Avoid large, deeply nested, or expensive-to-compute log fields. Summarize counts, IDs, statuses, provider names, and durations instead.
 - Tests for telemetry should assert mandatory fields and redaction, not just that a logger was called.
 - Important production signals include error rate, response latency, throughput, saturation, process restarts, provider failures, database failures, and circuit breaker state.
 
 ```ts
-// Bad: configured message hides searchable fields.
+// Bad: a dynamic message hides searchable fields.
 logger.info(`Provider operation ${operationId} started for ${accountId}`);
 
 // Good: stable message, structured fields.

@@ -1,0 +1,25 @@
+id: structure/export-only-file
+language: TypeScript
+message: This file only re-exports. It adds a hop to every import and nothing else.
+
+rule:
+  kind: program
+  all:
+    - has:
+        stopBy: neighbor
+        kind: export_statement
+        has:
+          field: source
+          kind: string
+    - not:
+        has:
+          stopBy: neighbor
+          not:
+            any:
+              - kind: comment
+              - kind: import_statement
+              - all:
+                  - kind: export_statement
+                  - has:
+                      field: source
+                      kind: string

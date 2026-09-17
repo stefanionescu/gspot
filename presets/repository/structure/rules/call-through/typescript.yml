@@ -1,0 +1,6 @@
+id: structure/call-through
+language: TypeScript
+message: probe
+rule:
+  any:
+    - pattern: function $NAME($$$ARGS) { return $INNER($$$ARGS) }

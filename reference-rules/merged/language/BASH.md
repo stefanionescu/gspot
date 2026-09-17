@@ -604,7 +604,7 @@ Rules:
 
 - Indent with 2 spaces. No tabs except tab-stripping here-documents with
   `<<-`.
-- Keep Bash source lines within 80 columns where practical.
+- Keep Bash source lines within the line length the project sets, where practical.
 - Use blank lines between logical blocks.
 - Keep `; then` and `; do` on the same line as `if`, `for`, `while`, `until`,
   and `select`.
@@ -1597,7 +1597,7 @@ Rules:
 - Write downloads to explicit files.
 - Verify checksums or signatures for executable downloads.
 - Do not pipe network content into `bash` unless the source is pinned, trusted,
-  and there is no safer package coordinator or checksum-based flow.
+  and there is no safer package manager or checksum-based flow.
 - Do not print response bodies that may contain secrets.
 - Use retries only for known retryable network, provider, or service failures,
   with bounded attempts, delay, and attempt-count logging.

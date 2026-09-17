@@ -24,10 +24,12 @@ responsible module and the required behavior when designing or reviewing such a 
 
 ### Structure and routing
 
-- Put routing in `src/app`, domain behavior in `src/features`, shared UI in `src/components`,
-  integrations in `src/lib` or `src/server`, and framework configuration at the application root.
-  Keep an existing root `app` layout consistent. Use feature folders and `_components` where they
-  clarify ownership.
+- Next.js owns two path facts and no more: the router directory, `app/` or `pages/`, optionally
+  under `src/`, and the reserved names inside it. Everything else about the layout is the
+  project's own.
+- Wherever domain behaviour, shared UI and integrations live, they live somewhere deliberate, and
+  the router directory holds routing rather than the application. A private folder, prefixed with
+  an underscore, is the framework's mechanism for keeping non-route files inside a route segment.
 - Use route files for routing and assembling the page. Keep a small page in `page.tsx` when that is
   clear. Extract a component or module when it has its own UI, data, or domain responsibility.
 - Follow Next.js special filenames and exports. A `page` exposes UI; a `route` exposes an HTTP
@@ -112,10 +114,10 @@ implement the controls and content inside that section.
   its callers. Do not preserve a monolithic component by adding more flags, callbacks, and unrelated
   state to it.
 
-Use `features/<feature>/ui/layouts`, `ui/sections`, and `ui/components` as the normal layout for
-feature UI. Small features can keep local files together until these owners exist. App Router's
-reserved `layout.tsx` remains the framework entry; a feature layout is an ordinary component with
-its own descriptive name.
+Where a project separates a feature's layouts, sections and components, keep that separation
+consistent and write it down where the project keeps its own rules. Small features can keep local files
+together until those owners exist. App Router's reserved `layout.tsx` remains the framework entry;
+a feature-level layout is an ordinary component with its own descriptive name.
 
 ### Keep sections usable during loading and failure
 
@@ -704,11 +706,10 @@ bypass database policy; keep it restricted to operations that explicitly need th
 Ordinary user operations should retain the intended user and tenant context. Do not expose such a
 client through a shared provider or browser configuration module.
 
-For Supabase, use the supported `@supabase/ssr` integration consistently; do not combine its cookie
+Where the auth library ships a framework integration, use it consistently; do not combine its cookie
 ownership with legacy Auth Helpers in the same authentication flow. Keep browser and request-scoped
 server clients distinct, and use verified server identity for authorization. A client-side
 `getSession()` read may supply a transport token but is not server authorization evidence. See
-[Supabase's SSR migration guide](https://supabase.com/docs/guides/auth/server-side/migrating-to-ssr-from-auth-helpers).
 
 When session refresh requires response cookie updates, use the authentication library's supported
 integration for the installed Next/runtime release. Keep that behavior out of read-only RSC context
@@ -755,7 +756,7 @@ invalidation do not automatically remove a response that a worker explicitly sto
 - Define cache versioning and worker activation behavior. Test an existing controlled tab during an
   update, offline reload, logout, account switching, and Back navigation. A new worker must not
   discard an unsaved draft or serve another account's content.
-- For Supabase Storage, authorize the bucket and object path, not just the existence of a signed-in
+- For object storage, authorize the bucket and object path, not just the existence of a signed-in
   session. Test another user's object and each preview, blurred, watermarked, or transformed
   variant. Enforce resource access in database and storage policies.
 - Treat signed URLs as bearer access with an expiry. Keep them out of telemetry and persistent

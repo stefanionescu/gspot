@@ -45,10 +45,10 @@ JavaScript that no JavaScript linter reads, and it is the HTML equivalent of the
 problem in [bash.md](bash.md). Where inline scripts are unavoidable, the preset extracts them and
 hands them to `language:javascript` through stdin, exactly as Vale handles borrowed grammars.
 
-### Required kinds
+### Required inspections
 
 ```text
-.html .htm     format syntax style accessibility links structure spelling secrets
+.html .htm     format syntax style accessibility links structure spelling security
 templates      format syntax style spelling
 ```
 
@@ -91,9 +91,9 @@ the exact check at a `build` requirement and the source scan at no requirement.
 | `quality/site/css/dead.js`                                                                                                    | `purgecss`, invoked directly rather than imported from a wrapper                                                                                                                                                                                                         |
 | `quality/site/links/check.mjs`                                                                                                | `linkinator`                                                                                                                                                                                                                                                             |
 | `quality/site/madge.config.cjs`                                                                                               | `import-x/no-cycle`                                                                                                                                                                                                                                                      |
-| `quality/site/lizard/false-positives`, `.whitelizard`, `quality/repository/complexity/run.sh`, `quality/config/complexity.sh` | Lizard is dropped in favour of `sonarjs/cognitive-complexity`, which already runs and does not disagree with a second metric. The baseline-with-staleness-check pattern in `run.sh` is adopted as the baseline, so the mechanism survives even though the tool does not. |
+| `quality/site/lizard/false-positives`, `.whitelizard`, `quality/repository/complexity/run.sh`, `quality/config/complexity.sh` | Lizard stays. It is the only complexity gate in force: `sonarjs/cognitive-complexity` is turned off for every file by `practicalSiteOverrides`. Both run under gspot; cyclomatic and cognitive measure different things. The baseline-with-staleness-check pattern in `run.sh` is adopted as the baseline. `.whitelizard` is read by nothing and eight of its entries are stale; it is deleted. |
 | `quality/site/jscpd/{css,js}.json`                                                                                            | `repository:duplication`, one config                                                                                                                                                                                                                                     |
-| `quality/config/complexity.sh`, `quality/repository/complexity/run.sh`                                                        | `sonarjs/cognitive-complexity`                                                                                                                                                                                                                                           |
+| `quality/config/complexity.sh`, `quality/repository/complexity/run.sh`                                                        | Lizard, invoked directly, thresholds from `[limits]`                                                                                                                                                                                                                   |
 | `quality/shared/**` (50-plus files)                                                                                           | The shared presets, identical to the other repositories                                                                                                                                                                                                                    |
 
 ## Where a simple project is currently weak
@@ -130,7 +130,7 @@ The fix costs no build change and no rewrite:
 inference. Types come from comments rather than syntax, so nothing about the build, the output or
 the runtime changes.
 
-`language:javascript` therefore claims the `types` kind, and the required kinds for `.js` gains it. A
+`language:javascript` therefore claims the `types` inspection, and the required inspections for `.js` gains it. A
 plain-JavaScript file with no type coverage becomes `partial`, which is the correct report:
 the reference repository has zero type checking and nothing says so.
 
@@ -150,8 +150,8 @@ repository has it.
 
 ### 3. Browser support is declared and unenforced
 
-`yap-landing` targets browsers through `browserslist` and checks nothing against it. Two tools close
-that:
+`yap-landing` has no `browserslist` and checks nothing against browser support. Two tools close
+that once one is written, and `init` proposes it from the current defaults:
 
 - **`eslint-plugin-compat`** fails a JavaScript API call that the declared browser set does not
   support.
@@ -194,8 +194,8 @@ HTML gets one rule engine, `html-validate`, which already carries `require-img-a
 `property-no-vendor-prefix`. None carries a reason.
 
 Eight of the ten are notation choices that a formatter settles. Under gspot they move into the
-`[format]` block and stop being disabled rules, and the two that remain become counted against the
-limit entries with a reason and an owner.
+`[format]` block and stop being disabled rules, and the two that remain become `[[exception]]`
+entries with a reason.
 
 No stylelint plugin is installed. `slopshop/CLEANUP.md` section 22 describes a styling system with
 three words for layered UI and one word with seven homes, and `yap-landing` has a single
@@ -275,23 +275,23 @@ nothing.
 | stylelint rules                             | 10 standard rules off, no reasons                                   | 8 resolved by `[format]`, 2 counted against the limit with reasons               |
 | Dead CSS                                    | `purgecss`, wrapped in bespoke code                                 | `purgecss`, invoked directly                                                     |
 | Links                                       | `linkinator`                                                        | `linkinator` plus `lychee`                                                       |
-| Complexity                                  | Lizard with a validated baseline                                    | `sonarjs/cognitive-complexity`, with the baseline mechanism kept as the baseline |
+| Complexity                                  | Lizard with a validated baseline                                    | Lizard plus `sonarjs/cognitive-complexity`, with the baseline mechanism kept as the baseline |
 
-Seventeen rows. Twelve go from nothing to a maintained tool, two replace bespoke code with
+Twelve rows go from nothing to a maintained tool, two replace bespoke code with
 configuration, and none needs original code.
 
 Two rows go the other way, and both are worth stating: `yap-landing`'s HTML policy and its
-two-required kinds `html-validate` setup are better than the gspot draft was, and both are adopted rather
+two-required inspections `html-validate` setup are better than the gspot draft was, and both are adopted rather
 than replaced.
 
 ## Why this is the floor
 
 `yap-landing` is the smallest reference repository and it still carries 118 files of quality
 tooling, a five-file rule corpus, 15 mise tasks, a `.qlty` directory, two git hooks and 33 dev
-dependencies. Under gspot it selects seven presets and writes one `gspot.toml`.
+dependencies. Under gspot it selects its presets and writes one `gspot.toml`.
 
 If the design does not make this repository both simpler and stricter, it is not worth adopting
 anywhere. A monorepo absorbs tooling overhead and a small project does not, and a simple project is
 where unchecked code hides most easily: there is no type checker, no framework contract and no
-reviewer expecting complexity. The test is in [18-proof.md](../18-proof.md) for the monorepo and in
-`fixtures/single-project/` for this one.
+reviewer expecting complexity. The test is a real repository for the monorepo and in
+a real single-project repository for this one.

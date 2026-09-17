@@ -1,0 +1,446 @@
+[preset]
+id       = "repository:structure"
+kind     = "repository"
+supplies = true
+title    = "Structural limits and the rules that measure them"
+
+[claims]
+extensions = [".ts", ".mts", ".cts", ".sh", ".bash"]
+filenames  = []
+interpreters = ["bash", "sh", "dash", "ksh", "zsh"]
+
+[defaults]
+"limits.file_lines"              = 300
+"limits.function_lines"          = 60
+"limits.function_parameters"     = 5
+"limits.cognitive_complexity"    = 8
+"limits.cyclomatic_complexity"   = 8
+"limits.branches"                = 8
+"limits.returns"                 = 4
+"limits.statements"              = 30
+"limits.locals"                  = 10
+"limits.boolean_expressions"     = 4
+"limits.nesting"                 = 3
+"limits.public_methods"          = 12
+"limits.barrel_reexports"        = 20
+"limits.identical_functions"     = 3
+"limits.prefix_collisions"       = 2
+"limits.trivial_statements"      = 2
+"limits.trivial_nodes"           = 10
+"limits.shell.file_lines"        = 140
+"limits.shell.function_lines"    = 40
+"limits.shell.function_branches" = 8
+"limits.shell.function_nesting"  = 3
+"limits.shell.mutable_assignments" = 8
+
+[[settings]]
+name      = "limits.file_lines"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.function_lines"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.function_parameters"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.cognitive_complexity"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.cyclomatic_complexity"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.branches"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.returns"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.statements"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.locals"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.boolean_expressions"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.nesting"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.public_methods"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.barrel_reexports"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.identical_functions"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.prefix_collisions"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.trivial_statements"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.trivial_nodes"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.shell.file_lines"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.shell.function_lines"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.shell.function_branches"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.shell.function_nesting"
+ops       = ["set"]
+direction = "ceiling"
+
+[[settings]]
+name      = "limits.shell.mutable_assignments"
+ops       = ["set"]
+direction = "ceiling"
+
+[[checks]]
+id        = "structure/trivial-function"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/trivial-function"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/trivial-file"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/trivial-file"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/export-only-file"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/export-only-file"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/exported-alias-constants"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/exported-alias-constants"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/duplicate-barrel-exports"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/duplicate-barrel-exports"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/barrel-ceiling"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/barrel-ceiling"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[checks.limit]
+measure = "per-file"
+setting = "limits.barrel_reexports"
+
+[[checks]]
+id        = "structure/header-comments-before-imports"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/header-comments-before-imports"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/private-before-public"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/private-before-public"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/doc-comment-required"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/doc-comment-required"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/disable-justification"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/disable-justification"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/mutable-assignments"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/mutable-assignments"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[checks.limit]
+measure = "per-function"
+setting = "limits.shell.mutable_assignments"
+
+[[checks]]
+id        = "structure/function-branches"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/function-branches"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[checks.limit]
+measure = "per-function"
+setting = "limits.shell.function_branches"
+
+[[checks]]
+id        = "structure/function-nesting"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/function-nesting"
+fails_on  = "finding-count"
+tools     = []
+file_list = { via = "file-list" }
+
+[checks.limit]
+measure = "nesting"
+setting = "limits.shell.function_nesting"
+
+[[checks]]
+id        = "structure/single-file-folder"
+inspects  = ["structure"]
+mechanism = "original"
+stage     = "pre-commit"
+takes     = "file-list"
+builtin   = "single-file-folder"
+fails_on  = "finding-count"
+tools     = []
+searched  = ["eslint core", "unicorn", "sonarjs", "import-x", "ruff", "pylint", "SwiftLint", "ast-grep"]
+verdict   = "a directory is not a node, so no parser is ever handed one. Every tool searched reads one file at a time and cannot see what sits beside it."
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/prefix-collisions"
+inspects  = ["structure"]
+mechanism = "original"
+stage     = "pre-commit"
+takes     = "file-list"
+builtin   = "prefix-collisions"
+fails_on  = "finding-count"
+tools     = []
+searched  = ["eslint core", "unicorn", "import-x", "ls-lint", "ruff", "SwiftLint", "ast-grep"]
+verdict   = "ls-lint enforces one name against one pattern and has no way to compare two names in a directory with each other."
+file_list = { via = "file-list" }
+
+[checks.limit]
+setting = "limits.prefix_collisions"
+
+[[checks]]
+id        = "structure/file-length"
+inspects  = ["structure"]
+mechanism = "original"
+stage     = "pre-commit"
+takes     = "file-list"
+builtin   = "file-length"
+fails_on  = "finding-count"
+tools     = []
+searched  = ["shellcheck", "shfmt", "sqlfluff", "ast-grep", "eslint max-lines", "pylint max-module-lines"]
+verdict   = "shellcheck and sqlfluff have no length rule, and ast-grep matches nodes rather than counting lines. Every other language has this from its own linter."
+file_list = { via = "file-list" }
+
+[checks.limit]
+setting = "limits.shell.file_lines"
+
+[[checks]]
+id        = "structure/function-length"
+inspects  = ["structure"]
+mechanism = "original"
+stage     = "pre-commit"
+takes     = "file-list"
+builtin   = "function-length"
+fails_on  = "finding-count"
+tools     = []
+searched  = ["shellcheck", "shfmt", "ast-grep", "eslint max-lines-per-function", "ruff PLR0915", "SwiftLint function_body_length"]
+verdict   = "the same gap as file-length, one level down. shellcheck has no size rule of any kind."
+file_list = { via = "file-list" }
+
+[checks.limit]
+setting = "limits.shell.function_lines"
+
+[[checks]]
+id        = "structure/unused-functions"
+inspects  = ["structure"]
+mechanism = "original"
+stage     = "pre-commit"
+takes     = "file-list"
+builtin   = "unused-functions"
+fails_on  = "finding-count"
+tools     = []
+searched  = ["shellcheck", "shfmt", "knip", "vulture", "periphery", "ast-grep"]
+verdict   = "knip, vulture and periphery each cover one language and none covers shell. Reachability spans files, so it is not a node pattern."
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/call-through"
+inspects  = ["structure"]
+mechanism = "original"
+stage     = "pre-commit"
+takes     = "file-list"
+builtin   = "call-through"
+fails_on  = "finding-count"
+tools     = []
+searched  = ["eslint core", "typescript-eslint", "unicorn", "sonarjs", "import-x", "ruff", "pylint", "SwiftLint", "ast-grep"]
+verdict   = "ast-grep cannot assert that a parameter list and an argument list name the same identifiers in the same order: a parameter carries a type annotation the argument does not, so `function f(a: number) { return g(a) }` does not match `function $N($$$A) { return $I($$$A) }`. It matches untyped parameters only. 21-roadmap.md names this outcome in advance and falls the rule back to a plugin."
+file_list = { via = "file-list" }
+
+[[checks]]
+id        = "structure/duplicate-functions"
+inspects  = ["structure", "duplication"]
+mechanism = "original"
+stage     = "pre-commit"
+takes     = "file-list"
+builtin   = "duplicate-functions"
+fails_on  = "finding-count"
+tools     = []
+searched  = ["jscpd", "eslint core", "sonarjs", "unicorn", "ruff", "pylint", "SwiftLint", "ast-grep"]
+verdict   = "jscpd finds duplicated text across a repository and reports a line range; nothing reports a whole function body matched exactly across a tree and names the functions. Two bodies that differ only in their parameter names are text-different and structurally identical, which is the case that matters and the one a text matcher misses."
+file_list = { via = "file-list" }
+
+[checks.limit]
+setting = "limits.identical_functions"
+
+[[checks]]
+id        = "structure/reexports-in-index-only"
+inspects  = ["structure"]
+mechanism = "rule-file"
+stage     = "pre-commit"
+takes     = "file-list"
+rules     = "rules/reexports-in-index-only"
+fails_on  = "finding-count"
+tools     = []
+paths     = ["**/*.ts", "**/*.mts", "**/*.cts", "!**/index.ts", "!**/index.mts", "!**/index.cts"]
+file_list = { via = "file-list" }
+
+[[tasks]]
+name        = "lint:structure"
+description = "Measure every source file against the structural limits"
+scope       = "per-scope"
+checks      = [
+  "structure/trivial-function",
+  "structure/trivial-file",
+  "structure/export-only-file",
+  "structure/exported-alias-constants",
+  "structure/duplicate-barrel-exports",
+  "structure/barrel-ceiling",
+  "structure/header-comments-before-imports",
+  "structure/private-before-public",
+  "structure/doc-comment-required",
+  "structure/disable-justification",
+  "structure/mutable-assignments",
+  "structure/function-branches",
+  "structure/function-nesting",
+  "structure/single-file-folder",
+  "structure/prefix-collisions",
+  "structure/file-length",
+  "structure/function-length",
+  "structure/unused-functions",
+  "structure/call-through",
+  "structure/duplicate-functions",
+  "structure/reexports-in-index-only",
+]

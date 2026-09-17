@@ -84,7 +84,7 @@ Rules:
 - Keep instructions ordered from stable to volatile:
     - base image
     - OS packages
-    - package coordinator install
+    - package manager install
     - dependency manifests
     - dependency install
     - source copy
@@ -93,7 +93,7 @@ Rules:
 - Prefer `COPY` over `ADD`.
 - Do not use remote `ADD`.
 - If downloading binaries, pin versions and verify checksums/signatures.
-- Follow `rules/BASH.md` for shell behavior inside `RUN` blocks. Move complex
+- Follow the Bash rules for shell behavior inside `RUN` blocks. Move complex
   shell logic into reviewed scripts instead of expanding Dockerfile inline
   commands.
 - Avoid full OS upgrades by default; use updated base images. Use targeted package upgrades only for documented vulnerability exceptions.
@@ -179,7 +179,7 @@ General rules:
 - Install dependencies from lockfiles when available.
 - For npm services: prefer `npm ci --omit=dev` or the approved npm production equivalent.
 - For Bun services: use `bun install` in build stage and `bun install --production` in runtime stage.
-- Do not use npm/pnpm/yarn in `api/`.
+- Use one package manager per service. Do not mix them in one image.
 - Do not install global npm dependencies. If a service truly needs global npm tools, put global prefix under the non-root user home and document why.
 - Do not rely on package-coordinator binaries in runtime unless the runtime actually invokes them.
 - Removing npm/yarn from runtime is allowed as a hardening step only if the service does not need them and the Dockerfile remains maintainable.

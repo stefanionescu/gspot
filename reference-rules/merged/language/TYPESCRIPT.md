@@ -23,19 +23,14 @@ TypeScript projects must use strict compiler settings:
 - `noImplicitOverride`
 - `forceConsistentCasingInFileNames`
 
-Compiled Node services use `NodeNext` module semantics. Internal imports that
-point at TypeScript source use runtime `.js` extensions because they must
-resolve after compilation.
-
-Deno Edge Functions use explicit `.ts` extensions for internal imports. Bun or
-tsx-run TypeScript scripts use extensionless imports unless their runtime
-requires an explicit extension.
+How an internal import resolves is a fact about the runtime, not about TypeScript. See the
+`runtime/` rules for the runtime this code targets.
 
 Local lint configuration owns exact TypeScript enforcement. Do not duplicate
 rule IDs or lint options here. The durable standards are: type-only imports and
-exports stay explicit, item shapes use `type` aliases, external input is
+exports stay explicit, object shapes use `type` aliases, external input is
 validated at runtime, `any` and unsafe assertions are avoided, TypeScript enums
-are not introduced, and type declarations live in the required `types/` roots.
+are not introduced, and type declarations live where the project declares them.
 
 When implementation or enforcement conflicts with this standard, call out the
 conflict or fix it in an explicit task. Do not weaken the rule to match drift.
@@ -75,26 +70,19 @@ Rules:
   namespace.
 - Do not use `namespace`, `module`, or `import x = require(...)`.
 
-Follow runtime import extension policy:
-
-- TypeScript that compiles under NodeNext uses `.js` in internal source
-  imports.
-- Deno Edge Function internal imports use `.ts`.
-- Bun or tsx-run TypeScript scripts use extensionless imports unless the runtime
-  requires a suffix.
-- Shared lint tooling follows JavaScript ESLint config.
+Follow the import extension policy of the runtime this code targets. It is stated once, in the
+`runtime/` rule file for that runtime, and not repeated per language.
 
 Avoid root mega-barrels. Keep re-exports in index files small and intentional.
 Import leaf modules when that is the local pattern.
 
 ## Type Placement
 
-Put reusable type declarations in the established type owner for the affected
-subproject. Runtime-free shared types, generated types, and test-only types
+Put reusable type declarations in the type owner the project declares for that subproject. Runtime-free shared types, generated types, and test-only types
 should not be mixed together.
 
 Do not add interface declarations to work around lint. Use `type` aliases for
-item shapes. Keep type-only modules runtime-free. A type file must not import
+object shapes. Keep type-only modules runtime-free. A type file must not import
 runtime code with side effects.
 
 Local types are acceptable only where the local lint rules allow them and they
@@ -148,7 +136,7 @@ Rules:
 - Annotate exported function return types.
 - Annotate callback parameter types when inference is unclear.
 - Avoid parameter reassignment.
-- Do not use overloads when a discriminated union or options item is clearer.
+- Do not use overloads when a discriminated union or options object is clearer.
 - Keep generics minimal.
 
 Use optional parameters only for truly optional inputs. Do not make a parameter
@@ -184,7 +172,7 @@ Rules:
 - Use discriminated unions for known variants.
 - Avoid type aliases that only rename another type without adding meaning.
 
-Use `type` aliases for item shapes. Do not require interfaces over types, even
+Use `type` aliases for object shapes. Do not require interfaces over types, even
 though Google prefers interfaces in some cases.
 
 ## Null, Undefined, and Optional Values
@@ -248,7 +236,6 @@ Rules:
   runtime assumptions.
 - Do not add comments that restate the code.
 - Do not include change history in comments.
-- Every ESLint disable directive must include a useful description.
 
 JSDoc lint rules must require documentation for exported functions, with type
 tags disabled because TypeScript owns types.
@@ -260,7 +247,7 @@ Use tests to verify behavior, not implementation detail.
 Rules:
 
 - Keep shared test types under the required test type roots.
-- Use `vi.mocked()` or typed local helpers for Vitest mock access.
+- Use the test runner's typed mock helpers rather than casting a mock to `any`.
 - Mock external boundaries, not internal implementation details.
 - Avoid `any` in tests. Use `unknown`, typed fixtures, or narrow mock helpers.
 - Non-null assertions are allowed in test files only when the arrange step makes

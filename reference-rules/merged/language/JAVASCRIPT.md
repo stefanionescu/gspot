@@ -2,7 +2,7 @@
 
 ## Core JavaScript Philosophy
 
-JavaScript in this repo should make the static-site contract obvious. Build code turns config, content, and assets into deterministic output. Browser code adds small, progressive behavior to static HTML. Quality tooling checks the repo; it must not leak into production code.
+JavaScript should make its contract obvious. Build code turns config, content, and assets into deterministic output. Browser code adds small, progressive behavior to static HTML. Quality tooling checks the repo; it must not leak into production code.
 
 Prefer plain values, small functions, explicit module boundaries, and readable control flow. Avoid clever runtime indirection, implicit globals, hidden side-effects, and abstractions that obscure the source of generated HTML.
 
@@ -10,14 +10,14 @@ If enforcement differs from this document, fix the enforcement or update the rul
 
 ## Runtime Standard
 
-Node scripts in this repo run on Node 22 as declared by `mise.toml` and `package.json`. Browser scripts must work as plain scripts loaded from static HTML. Cloudflare middleware must stay compatible with the Workers runtime.
+Server-side scripts run on the runtime and version the project declares. Browser scripts must work as plain scripts loaded from static HTML. Cloudflare middleware must stay compatible with the Workers runtime.
 
 Rules:
 
 - Use APIs available in the declared runtime.
-- Do not rely on implicit globals except the browser globals explicitly allowed by ESLint for `shared/`.
+- Do not rely on implicit globals. A file states its runtime, and only that runtime's globals are available.
 - Keep package versions exact; do not use range prefixes.
-- Do not add a build step that requires a runtime outside the repo's declared tooling without updating `mise.toml`, package policy, and documentation.
+- Do not add a build step that requires a runtime outside the project's declared tooling without updating `mise.toml`, package policy, and documentation.
 
 ## Source Files
 
@@ -48,7 +48,7 @@ Rules:
 - Do not create container classes or exported objects only to simulate a namespace.
 - Avoid root mega-barrels. Keep re-exports small and intentional.
 
-Production site code must not import quality tooling. Browser scripts must not import Node-only code, config modules, middleware, or quality tooling.
+Production code must not import quality tooling. Browser scripts must not import server-only code, config modules, middleware, or quality tooling.
 
 ## Values, Literals, and Coercion
 
@@ -164,7 +164,7 @@ Rules:
 - Prefer short comments near the surprising decision.
 - Do not add history comments.
 - Do not leave commented-out code.
-- Keep shellcheck and lint disable comments justified with a nearby reason and ticket marker when policy requires it.
+- Keep every lint disable comment justified with a nearby reason. See `general/SUPPRESSIONS.md`.   uires it.
 - JSDoc is useful for exported quality helpers, but routine private functions do not need boilerplate comments.
 
 ## Generated Code

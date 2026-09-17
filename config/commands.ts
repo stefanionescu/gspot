@@ -1,0 +1,16 @@
+export const COMMANDS = [
+  'init',
+  'uninstall',
+  'generate',
+  'upgrade',
+  'install',
+  'doctor',
+  'check',
+  'fix',
+  'report',
+  'coverage',
+  'config',
+  'explain',
+  'hooks',
+  'completion',
+]

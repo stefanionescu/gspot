@@ -1,0 +1,14 @@
+id: structure/function-branches
+language: bash
+message: This function branches more than the ceiling allows.
+
+rule:
+  any:
+    - kind: if_statement
+    - kind: elif_clause
+    - kind: case_item
+    - kind: while_statement
+    - kind: for_statement
+  inside:
+    stopBy: end
+    kind: function_definition

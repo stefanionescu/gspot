@@ -2,7 +2,7 @@
 
 The rules the reference repositories wrote code for, and the mechanisms that express them without
 code. This is the largest single reduction in the design: eighteen structural rules implemented four
-times across four repositories, plus a 102-term naming policy implemented three times, become
+times across four repositories, plus a naming policy implemented three times, become
 configuration, declarative rule files and one policy document.
 
 The instruction this answers: keep every rule, because they exist to kill slop and ban specific
@@ -11,7 +11,7 @@ terms, and write as little original code as possible.
 ## Why it exists
 
 The adoption test for a bespoke check: **it survives only when no maintained tool expresses the
-rule.** Applied to the reference set, eighteen rules survive, and the evidence that they are real is
+rule.** Applied to the reference set, the rules below survive, and the evidence that they are real is
 that three independent codebases implemented the same set without sharing code:
 
 | Rule                                         | `yap-swift-app`                                                         | `slopshop`                                | `yap-text-inference`                                    |
@@ -71,7 +71,7 @@ implementations in three repositories.
 
 ## The eighteen structural rules, mapped
 
-Eighteen rules, three reference implementations each. Where each one lands:
+Each rule has three reference implementations. Where each one lands:
 
 | Rule                                                                                      | Mechanism | How                                                                                                                                                                                                                                                           |
 | ----------------------------------------------------------------------------------------- | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -117,7 +117,7 @@ implemented once.
 
 ## The adapter, for what remains
 
-Four rules and one counter cannot be expressed declaratively, because they are directory-level or
+A few rules and one counter cannot be expressed declaratively, because they are directory-level or
 count-level rather than node-level. Those use a language adapter that answers a fixed set of
 questions about a file.
 
@@ -145,8 +145,8 @@ suppressions(tree)         -> Suppression[]     rule, reason, owner, span
 callGraph(tree)            -> Edge[]            local only; cross-file resolution is the runtime's job
 ```
 
-Seven questions. Every rule is written against them and knows nothing about the language. A new
-language is one adapter, not eighteen rules.
+Every rule is written against these and knows nothing about the language. A new language is one
+adapter, not a reimplementation of every rule.
 
 ### Grammar choices
 
@@ -179,7 +179,7 @@ source, or declare the file. It is never coverage that silently evaporates.
 
 ### 2. A parser swap is verified by superset diff
 
-The reference audit's own method, adopted as a release gate:
+The reference audit's own method, adopted as a test in the extractor suite:
 
 ```text
 the parity test --baseline <ref> --paths <glob>
@@ -213,26 +213,28 @@ plugin API, `4` original code. See 12-structure-and-naming.md for the per-langua
 | `file-length`                    | 1 / 4       | 300 lines source, 140 shell                                                             | `set.max_file_lines`, `set.max_shell_file_lines`, per-path `set`   |
 | `function-length`                | 1 / 4       | 60 lines source, 40 shell                                                               | `set.max_function_lines`                                           |
 | `function-params`                | 1           | 5                                                                                       | `set.max_params`                                                   |
-| `trivial-file`                   | 2           | fails a file with one declaration and no logic                                          | `add.allow_paths`                                                  |
-| `trivial-function`               | 2           | fails a function of 2 statements or fewer, or 10 AST nodes or fewer, that only forwards | `set.trivial_statements`, `set.trivial_nodes`, `add.allow_symbols` |
-| `export-only-file`               | 2           | fails a file that only re-exports, outside an index                                     | `add.allow_paths`                                                  |
-| `single-file-folder`             | 4           | fails a directory with one source file                                                  | `add.allow_paths`                                                  |
-| `prefix-collisions`              | 4           | fails 2 or more files sharing a 2-part name prefix in one directory                     | `set.threshold`, `add.allow_paths`                                 |
+| `trivial-file`                   | 2           | fails a file with one declaration and no logic                                          | none                                                   |
+| `trivial-function`               | 2           | fails a function of 2 statements or fewer, or 10 AST nodes or fewer, that only forwards and has one caller | `set.trivial_statements`, `set.trivial_nodes`  |
+| `export-only-file`               | 2           | fails a file that only re-exports, outside an index                                     | none                                                   |
+| `single-file-folder`             | 4           | fails a directory with one source file                                                  | none                                                   |
+| `prefix-collisions`              | 4           | fails 2 or more files sharing a 2-part name prefix in one directory                     | `set.threshold`                                  |
 | `barrel-ceiling`                 | rule-file + counter | 20 re-exports per index                                                                 | `set.max_reexports`                                                |
-| `reexports-in-index-only`        | 2           | on                                                                                      | `add.allow_paths`                                                  |
+| `reexports-in-index-only`        | 2           | on                                                                                      | none                                                   |
 | `duplicate-barrel-exports`       | 2           | on                                                                                      | none                                                               |
-| `no-index-imports`               | 1           | on                                                                                      | `add.allow_paths`                                                  |
+| `no-index-imports`               | 1           | on                                                                                      | none                                                   |
 | `import-layout`                  | 1           | grouped, ordered, one blank line after imports                                          | `set.groups`                                                       |
 | `import-path-style`              | 1           | alias over deep relative                                                                | `set.alias_map`                                                    |
 | `boundaries`                     | 1           | declared contracts, forbidden-import style                                              | `add.contracts`                                                    |
 | `header-comments-before-imports` | 2           | on                                                                                      | none                                                               |
 | `exported-alias-constants`       | 2           | fails `export const A = B`                                                              | none                                                               |
-| `call-through`                   | 2           | fails a function that only calls one other with the same arguments                      | `add.allow_symbols`                                                |
+| `call-through`                   | 2           | fails a function that only calls one other with the same arguments                      | none                                                 |
 | `exports-at-bottom`              | 1           | Python only, `__all__` at the bottom                                                    | none                                                               |
+| `private-prefix`                 | 2           | Python: a top-level name not listed in `__all__` starts with `_`, so the list and the prefix cannot disagree. Bash: a function called from no other file starts with `_` | none                                                 |
+| `private-before-public`          | 2           | every internal definition sits above the first public one: `_` names in Python and Bash, non-exported declarations in TypeScript and JavaScript; `main` last in Bash | none                                                   |
 | `duplicate-functions`            | 1           | fails 3 or more identical function bodies                                               | `set.threshold`                                                    |
 | `unused-functions`               | 1 / 4       | cross-file reachability from declared entry points                                      | `add.entry_points`                                                 |
-| `doc-comment-required`           | 1 / 2       | exported functions carry a doc comment in the declared shape                            | `add.allow_symbols`                                                |
-| `disable-justification`          | 1 / 2       | every suppression carries `reason:` and `owner:`                                        | none                                                               |
+| `doc-comment-required`           | 1 / 2       | exported functions carry a doc comment in the declared shape                            | none                                                 |
+| `disable-justification`          | 1 / 2       | every suppression carries a `reason:`                                        | none                                                               |
 | `mutable-assignments`            | rule-file + counter | 8 reassignments per function. Shell only.                                               | `set.shell.mutable_assignments`                                    |
 | `function-branches`              | rule-file + counter | 8. Shell only, where no complexity tool exists.                                         | `set.shell.function_branches`                                      |
 | `function-nesting`               | rule-file + counter | 3. Shell only.                                                                          | `set.shell.function_nesting`                                       |
@@ -256,16 +258,18 @@ The engine evaluates these directly for every language, and additionally emits t
 enforce them too where they exist. Two enforcers of one declaration, and `gspot explain` prints
 the table, so no hand-written prose has to describe it.
 
-## The ESLint plugin
+## The ESLint plugin, and why it is not in v0
 
-`@gspot/eslint-plugin` exposes the rules that are per-file and AST-local as real ESLint rules, so
-they run inside the ESLint process with editor integration and `--fix` where applicable. The rules
-that need cross-file knowledge (`single-file-folder`, `prefix-collisions`, `unused-functions`,
-`duplicate-functions`, `boundaries` reachability) run in the CLI, because ESLint gives a rule one
-file at a time.
+One engine runs the structural rules: ast-grep, over every language. A second path exists on paper,
+an ESLint plugin hosting the per-file AST-local rules in process, and its only advantage is editor
+feedback: a squiggle while you type rather than a finding at commit.
 
-Both paths share one implementation. The rule takes an adapter-shaped input, and the ESLint layer
-adapts `estree` to the adapter interface.
+That advantage is real and it is not v0. A second engine means the same rule written twice, in two
+dialects, kept in agreement by a test nobody runs after the first month. It also only ever covers
+JavaScript and TypeScript, so it cannot replace the first engine, only shadow part of it.
+
+If it ships later, it ships as a folder inside this package, not a published one. Flat config accepts
+a plugin object, so a generated config imports it from `gspot` rather than resolving a package name.
 
 ## Limits and thresholds
 
@@ -304,7 +308,7 @@ function_nesting       = 3
 mutable_assignments    = 8
 ```
 
-### The four divergences
+### The divergences
 
 | Limit                       | `yap-swift-app` | `yap-text-inference` | `yap-landing` | Taken |
 | --------------------------- | --------------: | -------------------: | ------------: | ----: |
@@ -348,7 +352,7 @@ Four observations follow, and each changes the design.
 | `shell.mutable_assignments` | none                                                                       | none                        | none                       | ast-grep plus counter |
 | `public_methods`            | `max-classes-per-file` plus `no-restricted-syntax`                         | pylint `max-public-methods` | `type_body_length`         | none                  |
 
-The `none` cells are honest gaps, and the coverage check reports them as kind gaps rather than
+The `none` cells are honest gaps, and the coverage check reports them as inspection gaps rather than
 pretending a limit applies everywhere.
 
 The Bash rows are not gaps. `yap-text-inference/quality/shell/checks/complexity.py` already measures
@@ -362,30 +366,30 @@ The densest asset and the one most at risk of being reimplemented. Its parts:
 
 | Policy element                                                                                                                               | Reference implementation                     | gspot mechanism                                                                                                                                                                                                                                                                                                                               |
 | -------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| **102 banned terms**, case-insensitive substring match against identifier parts                                                              | Original extractor plus matcher, three times | **2.** TypeScript: `@typescript-eslint/naming-convention` with `custom: {regex, match: false}`, plus core `id-denylist` for exact names. Python: pylint `bad-names-rgxs`, one regex. Swift: SwiftLint `identifier_name` `excluded` plus a `custom_rules` regex. Bash and SQL: ast-grep regex constraint and a sqlfluff plugin.                |
+| **103 banned terms**, case-insensitive substring match against identifier parts                                                              | Original extractor plus matcher, three times | **2.** TypeScript: `@typescript-eslint/naming-convention` with `custom: {regex, match: false}`, plus core `id-denylist` for exact names. Python: pylint `bad-names-rgxs`, one regex. Swift: SwiftLint `identifier_name` `excluded` plus a `custom_rules` regex. Bash and SQL: ast-grep regex constraint and a sqlfluff plugin.                |
 | **banned duplicate words** in one identifier                                                                                                 | Original                                     | **2.** One regex per language, `(?i)\b(\w+)[A-Z_]?\1\b` shaped per case convention                                                                                                                                                                                                                                                            |
 | **banned digits** in identifiers                                                                                                             | Original                                     | **1.** `@typescript-eslint/naming-convention` `format` plus a custom regex; pylint `invalid-name` regexes; SwiftLint `identifier_name`                                                                                                                                                                                                        |
 | **max characters** per language (35 TS, 40 Swift, 55 SQL)                                                                                    | Original                                     | **2.** A length bound inside the same `naming-convention` custom regex, `^.{1,35}$`; pylint `*-rgx` with a bounded length; SwiftLint `identifier_name` `max_length`                                                                                                                                                                           |
 | **max words** per language (4 TS, 5 Swift, 7 SQL)                                                                                            | Original                                     | **2.** A word-count regex in the same place: at most N case-boundary groups                                                                                                                                                                                                                                                                   |
 | **case conventions** per category (files, types, functions, parameters, variables, properties, routes, enum cases, tables, columns, indexes) | Original                                     | **1.** `@typescript-eslint/naming-convention` has a `selector` per category and is strictly more expressive than the policy's category list. pylint has a `*-naming-style` and `*-rgx` per category. SwiftLint has `identifier_name` and `type_name`. sqlfluff has `capitalisation.*` and `references.*`. ls-lint owns files and directories. |
-| **reserved terms with allowed kinds** (`data`, `message`, `id`)                                                                              | Original                                     | **2.** `naming-convention` with a `filter` and a `files` override, or an ast-grep rule with a path constraint                                                                                                                                                                                                                                 |
+| **reserved terms with allowed uses** (`data`, `message`, `id`)                                                                              | Original                                     | **2.** `naming-convention` with a `filter` and a `files` override, or an ast-grep rule with a path constraint                                                                                                                                                                                                                                 |
 | **role-word preferences** (prefer specific verbs over `get`, ban abbreviations)                                                              | Prose only                                   | **1.** `unicorn/prevent-abbreviations` with a custom `replacements` map, which is exactly this rule as a maintained plugin                                                                                                                                                                                                                    |
 | **per-path exemptions and `nameRules`**                                                                                                      | Original                                     | **5 settings in `gspot.toml`**, rendered into each tool's native override mechanism                                                                                                                                                                                                                                                              |
 
 The naming policy stops being an engine and becomes **one JSON document that compiles into five tool
-configurations**. The compiler is a renderer, not an analyzer: it reads the policy and emits a
+configurations**. The compiler is a emitter, not an analyzer: it reads the policy and emits a
 `naming-convention` rule array, a pylint regex set, a SwiftLint block, a sqlfluff config and an
 ls-lint config.
 
 That is the single largest reduction in the design. The reference set has roughly 2,479 lines under
 `naming/` in one repository, 14 files in another and 13 in a third. gspot has one policy document,
-one renderer, and no extractor at all, because the tools already extract.
+one emitter, and no extractor at all, because the tools already extract.
 
-**The tradeoff, stated.** A renderer cannot express everything an engine can. Three known losses:
+**The tradeoff, stated.** A emitter cannot express everything an engine can. Three known losses:
 
 1. **Cross-file prefix collision** needs the directory walk, original code. Kept.
 1. **Per-identifier-kind reporting** gets coarser: pylint reports `disallowed-name` rather than
-   naming which banned term matched. The renderer compensates by emitting one rule per term group
+   naming which banned term matched. The emitter compensates by emitting one rule per term group
    with a distinct message, accepting more config for better diagnostics.
 1. **`banDuplicateWords` across case boundaries** is regex-expressible per convention but not in one
    pattern. Five patterns instead of one function.
@@ -404,7 +408,7 @@ speculative guard names it `ensureConfigIfNeeded`. One that adds a parallel impl
 announces itself in the name**, and banning the name blocks the construct at the only point where it
 is visible to a regex.
 
-That is the whole argument, and it is why this list is worth more than its 102 lines suggest.
+That is the whole argument, and it is why this list is worth more than its 103 lines suggest.
 
 ## The categories
 
@@ -417,12 +421,12 @@ That is the whole argument, and it is why this list is worth more than its 102 l
 lands in it. `utils/common.ts` and `core/generic.py` are where a codebase goes to stop having an
 architecture.
 
-**Notes.** `data` is banned in the Python fork and reserved-with-allowed-kinds in the monorepo,
+**Notes.** `data` is banned in the Python fork and reserved-with-allowed-uses in the monorepo,
 where the API success envelope legitimately has a `data` field. Ships as a reserved term, not a ban.
 `catalog` has one path exemption in the reference tree, which is the signal that it belongs in a
 lower layer.
 
-### 2. Role words with no role (10 terms)
+### 2. Role words with no role (11 terms)
 
 `helper`, `helpers`, `util`, `utils`, `manager`, `handler`, `processor`, `service`, `wrapper`,
 `shim`, `shims`
@@ -447,7 +451,7 @@ in the code. `final` and `latest` are the same defect with a timestamp.
 **Reason, second order.** This category is the highest-signal one for machine-generated code. It is
 the vocabulary a model reaches for when asked to improve something it does not want to replace.
 
-### 4. Defensive and hedging names (16 terms)
+### 4. Defensive and hedging names (19 terms)
 
 `ensure`, `maybe`, `likely`, `should`, `if_needed`, `ifneeded`, `ifNeeded`, `if_available`,
 `ifavailable`, `if_changed`, `ifchanged`, `if_possible`, `ifpossible`, `or_throw`, `orthrow`,
@@ -461,14 +465,14 @@ admits it does not know whether its own precondition holds.
 **Notes.** The strongest category in the list, and the one the other three forks agree on most
 closely.
 
-### 5. Ambiguous verbs (14 terms)
+### 5. Ambiguous verbs (21 terms)
 
-`load`, `loaded`, `loader`, `loaders`, `loading`, `fetch`, `render`, `sync`, `sync_`, `_sync`,
+`load`, `loaded`, `loader`, `loaders`, `loading`, `fetch`, `render`, `generate`, `sync_`, `_sync`,
 `sync-`, `-sync`, `synchronize`, `synchronise`, `materialize`, `materialise`, `coerce`, `resolve`,
 `resolving`, `resolution`, `scoped`
 
 **Reason.** Each covers several distinct operations, so the name does not say which happened. `load`
-is read-from-disk, deserialize, initialize, fetch-over-network or populate-a-cache. `sync` is push,
+is read-from-disk, deserialize, initialize, fetch-over-network or populate-a-cache. `generate` is push,
 pull, reconcile or merge, and `NAMING.md` has a retrieval-and-CRUD section that assigns a specific
 verb to each.
 
@@ -490,7 +494,7 @@ needs word-boundary matching against split identifier parts, never raw substring
 group where the reference implementation's `caseInsensitive: true` substring match is a hazard
 rather than a feature.
 
-### 7. Test slop (9 terms)
+### 7. Test slop (12 terms)
 
 `fixture`, `fixtures`, `test case`, `test_case`, `testcase`, `under-test`, `under_test`,
 `undertest`, `edge case`, `edge-case`, `edge_cases`, `edge-cases`
@@ -498,7 +502,7 @@ rather than a feature.
 **Reason.** `GENERAL.md` has "Test Behavior, Not Values". A test named `testEdgeCases` asserts
 nothing nameable, and a `fixtures` directory is category 1 wearing a test costume.
 
-### 8. Project-specific (3 terms, do not ship)
+### 8. Project-specific (4 terms, do not ship)
 
 `runpsql`, `postlock`, `prelock`, `values`
 
@@ -511,7 +515,7 @@ section as a reserved word. See C-14 in [10-rules.md](10-rules.md).
 
 | Group             |   Terms | Default     | Removable as a unit            |
 | ----------------- | ------: | ----------- | ------------------------------ |
-| `containers`      |      13 | on          | yes, with a reason             |
+| `containers`      |      15 | on          | yes, with a reason             |
 | `roles`           |      11 | on          | yes                            |
 | `marketing`       |      17 | on          | no. This group is the product. |
 | `defensive`       |      19 | on          | no                             |
@@ -519,7 +523,7 @@ section as a reserved word. See C-14 in [10-rules.md](10-rules.md).
 | `verbs-strict`    |      13 | on          | yes                            |
 | `conjunctions`    |       8 | on          | yes                            |
 | `test-slop`       |      12 | on          | yes                            |
-| **Total shipped** | **~99** |             |                                |
+| **Total shipped** | **103** |             | none                                |
 | Project-specific  |       4 | not shipped | none                           |
 
 Two groups cannot be removed wholesale: `marketing` and `defensive`. They are the two that
@@ -527,9 +531,9 @@ correspond to rules the corpus states as absolutes, and a repository that wants 
 `enhancedHandler` is not using this distribution. Individual terms in those groups still take scoped
 exemptions, which is the difference between a policy and a wall.
 
-Reserved terms, banned except in named kinds:
+Reserved terms, banned except in named uses:
 
-| Term      | Allowed kinds                                |
+| Term      | Allowed uses                                 |
 | --------- | -------------------------------------------- |
 | `data`    | API success envelope field                   |
 | `message` | API client message field                     |
@@ -540,7 +544,7 @@ Reserved terms, banned except in named kinds:
 ## Enforcement, with no original matcher
 
 Per 12-structure-and-naming.md, the policy compiles into each tool's own mechanism. One JSON
-document, five renderers, no extractor.
+document, five emitters, no extractor.
 
 | Language               | Mechanism                                                                                                                        | Shape                                                                                                                                                              |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -548,10 +552,10 @@ document, five renderers, no extractor.
 | Python                 | pylint `bad-names-rgxs`, reporting `disallowed-name` (C0104), plus `good-names-rgxs` for exemptions                              | One regex per group. Note the pylint bug where a comma inside a regex is mangled by the config parser, so groups are comma-separated and each regex is comma-free. |
 | Swift                  | SwiftLint `identifier_name` and `type_name` for case and length, plus `custom_rules` with a regex per group for the terms        | `custom_rules: {banned_role_words: {regex: "...", match_kinds: [identifier]}}`                                                                                     |
 | Bash                   | ast-grep with a `regex` constraint on the captured function-name and variable-name metavariables                                 | One YAML rule per group                                                                                                                                            |
-| SQL                    | a sqlfluff rule plugin, a plugin, because ast-grep has no SQL grammar                                                         | One plugin reading the same policy document                                                                                                                        |
+| SQL                    | a sqlfluff rule plugin, because ast-grep has no SQL grammar                                                         | One plugin reading the same policy document                                                                                                                        |
 | Files and directories  | ls-lint, one config, every language                                                                                              | Case rules plus a blocklist regex                                                                                                                                  |
 
-Matching semantics, fixed once and applied by every renderer, because the reference implementation's
+Matching semantics, fixed once and applied by every emitter, because the reference implementation's
 substring match is the one part of the policy with a real defect:
 
 1. **Split the identifier into parts** by case boundary, underscore and hyphen.
@@ -591,23 +595,23 @@ scoped exemptions.
 
 | Component                                              | Estimated lines        | Why nothing else does it                                                                                                                          |
 | ------------------------------------------------------ | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Coverage: tracked files, the files each check reads, statuses, report      | 1,200                  | The product. No linter and no aggregator computes it.                                                                                             |
+| Coverage: tracked files, file listings, statuses, report      | 1,200                  | The product. No linter and no aggregator computes it.                                                                                             |
 | Settings: schema, typed merge, direction, limit        | 600                    | The consumer extension surface                                                                                                                    |
-| Config renderers, one per tool                         | 900                    | Each is a template plus a provenance header                                                                                                       |
-| Naming policy renderer                                 | 300                    | Compiles one policy into five tool configs                                                                                                        |
-| Task graph, scheduler, runner emitters                 | 700                    |                                                                                                                                                   |
+| Config emitters, one per tool                         | 900                    | Each is a template plus a provenance header                                                                                                       |
+| Naming policy emitter                                 | 300                    | Compiles one policy into five tool configs                                                                                                        |
+| Task graph, scheduler, runner emitters                 | 700                    | none                                                                                                                                                   |
 | Generic finding counter (the finding counter)                | 80                     | Serves every mechanism-2 rule that needs a ceiling: barrel size, shell branches, shell nesting, mutable assignments, trivial-function node count  |
 | Directory walk: single-file folders, prefix collisions | 60                     | Directory-level, invisible to every linter                                                                                                        |
-| Line counters for Bash and SQL                         | 60                     |                                                                                                                                                   |
+| Line counters for Bash and SQL                         | 60                     | none                                                                                                                                                   |
 | Unused-function reachability for Bash and SQL          | 200                    | Nothing exists for either language, and reachability is not expressible as a node pattern                                                         |
 | SQL naming, as a sqlfluff rule plugin (a plugin)    | 150                    | ast-grep has no SQL grammar                                                                                                                       |
-| ast-grep rule files                                    | 0 code, ~50 YAML files |                                                                                                                                                   |
-| Rules assembler                                        | 300                    |                                                                                                                                                   |
-| Prose runner: grammar dispatch for Vale                | 200                    |                                                                                                                                                   |
+| ast-grep rule files                                    | 0 code, ~50 YAML files | none                                                                                                                                                   |
+| Rules assembler                                        | 300                    | none                                                                                                                                                   |
+| Prose runner: grammar dispatch for Vale                | 200                    | none                                                                                                                                                   |
 | **Total original analysis code**                       | **~560 lines**         | Four structural rules plus SQL naming. Bash complexity moved to a rule file once `yap-text-inference` showed the thresholds, so it costs nothing. |
 | **Total original code**                                | **~4,720 lines**       | Mostly orchestration, rendering and coverage                                                                                                      |
 
-Against roughly 13,451 lines in one reference `quality/` folder, times four repositories, with the
+Against the reference `quality/` folders, with the
 same rules diverging in each.
 
 ## The rule that keeps it this way
