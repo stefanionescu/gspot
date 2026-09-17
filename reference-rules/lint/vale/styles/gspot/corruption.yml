@@ -1,0 +1,24 @@
+extends: existence
+message: "Residue of the global replace: '%s'."
+level: error
+ignorecase: true
+tokens:
+  - z\.item\(
+  - item literal
+  - source item
+  - item keys
+  - package coordinator
+  - package-coordinator
+  - secret coordinator
+  - service-coordinator
+  - access command
+  - platform command
+  - source command
+  - process command
+  - access-command
+  - project operators
+  - project controls
+  - project regex
+  - project Bash harnesses
+  - encodedBytes
+  - "code: 'project'"

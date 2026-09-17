@@ -1,0 +1,8 @@
+extends: existence
+message: "An image without alt text, or alt text that starts with 'Image of'."
+level: error
+scope: raw
+nonword: true
+tokens:
+  - "!\\[\\]\\((?!img/decorative)"
+  - "!\\[(?:Image|Graphic|Picture) of"

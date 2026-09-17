@@ -1,9 +1,0 @@
-id: structure/barrel-ceiling
-language: TypeScript
-message: This file re-exports more than the ceiling allows.
-
-rule:
-  kind: export_statement
-  has:
-    field: source
-    kind: string

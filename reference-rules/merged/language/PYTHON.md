@@ -1,25 +1,35 @@
+---
+layer: language
+preset: python
+title: Python
+---
+
 # Python
+
+The Python rules span five files: this one (modules, imports, interfaces, docstrings, entry points),
+Typing, Design (functions and classes), Flow (control flow, errors, logging, resources), and
+Packaging (installs and dependencies).
 
 ## Core Python Philosophy
 
 Rules:
 
-- Write readable Python before clever Python.
-- Prefer explicit data flow, clear names, and small functions.
+- Write readable Python before clever Python. `unenforced`
+- Prefer explicit data flow, clear names, and small functions. `unenforced`
 - Keep code import-stable. Importing a module must not load models, initialize
   engines, touch external services, start background work, parse CLI arguments, or mutate
-  runtime state.
-- Prefer project-specific rules over generic style guides when they conflict.
+  runtime state. `enforced-by: structure/import-boundary`
+- Prefer project-specific rules over generic style guides when they conflict. `unenforced`
 - Prefer consistency with the surrounding module when a source guide allows more
-  than one style.
-- Do not make style-only churn outside the requested scope.
+  than one style. `unenforced`
+- Do not make style-only churn outside the requested scope. `unenforced`
 - Do not preserve obsolete Python APIs, wrappers, re-exports, or alternate code
-  paths. Replace it completely.
+  paths. Replace it completely. `enforced-by: python/vulture`
 - Make public behavior clear through names, type annotations, docstrings, and
-  tests when tests are requested.
-- Use exceptions for exceptional conditions, not for ordinary branch logic.
+  tests. `enforced-by: python/ruff D`
+- Use exceptions for exceptional conditions, not for ordinary branch logic. `enforced-by: python/ruff TRY`
 - Use built-in language features directly when they express the operation
-  clearly.
+  clearly. `enforced-by: python/ruff TRY`
 
 Good Python is easy to scan:
 
@@ -48,44 +58,24 @@ __all__ = [
 ]
 ```
 
-Bad Python hides behavior and ownership:
-
-```python
-from examples import *
-
-STATE = {"instance": None}
-
-def get_instance():
-    import importlib
-
-    return importlib.import_module("loader").build_examples()
-```
-
 ## Runtime, Encoding, and Files
 
 Rules:
 
-- Use Python 3.12 syntax.
-- Store source files as UTF-8.
-- Do not add an encoding declaration unless a tool or runtime requires it.
-- Use LF line endings.
-- Keep identifiers ASCII-only.
+- Use the syntax of the project's declared Python version. The version is stated once, in the
+  runtime pin, and never repeated in prose. `unenforced`
+- Store source files as UTF-8. `enforced-by: naming/identifiers`
+- Do not add an encoding declaration unless a tool or runtime requires it. `enforced-by: naming/identifiers`
+- Use LF line endings. `enforced-by: naming/identifiers`
+- Keep identifiers ASCII-only. `enforced-by: naming/identifiers`
 - Use English words for identifiers, comments, and docstrings unless an external
-  identifier must keep another language or spelling.
-- Use non-ASCII characters sparingly in string data.
-- Do not use byte-order marks.
-- Python filenames must use `.py`.
-- Python filenames must be snake_case, except `__init__.py` and `__main__.py`.
-- Python filenames must not contain dashes.
-- Keep modules importable by pydoc, tests, linting tools, and type checkers.
-
-Bad:
-
-```text
-ModelConfig.py
-model-config.py
-model config.py
-```
+  identifier must keep another language or spelling. `enforced-by: python/ruff D`
+- Use non-ASCII characters sparingly in string data. `enforced-by: naming/identifiers`
+- Do not use byte-order marks. `enforced-by: naming/identifiers`
+- Python filenames must use `.py`. `enforced-by: naming/identifiers`
+- Python filenames must be snake_case, except `__init__.py` and `__main__.py`. `enforced-by: naming/identifiers`
+- Python filenames must not contain dashes. `enforced-by: naming/identifiers`
+- Keep modules importable by pydoc, tests, linting tools, and type checkers. `enforced-by: naming/identifiers`
 
 Good:
 
@@ -99,19 +89,19 @@ __main__.py
 
 Rules:
 
-- Treat environment variables as external text input.
-- Read environment variables at a configuration or application boundary, not
-  throughout business logic.
-- Parse and validate environment-derived values once before passing them inward.
+- Treat environment variables as external text input. `enforced-by: structure/env-access-owner`
+- Read environment variables in one configuration owner module. `os.environ` and `os.getenv`
+  appear nowhere else. `enforced-by: structure/env-access-owner`
+- Parse and validate environment-derived values once before passing them inward. `unenforced`
 - Store secrets in environment variables or a secret manager, never in source
-  code, docs examples, tests, or checked-in config.
+  code, docs examples, tests, or checked-in config. `enforced-by: structure/env-access-owner`
 - Do not use a real-looking default for a secret. Missing required secrets
-  should fail at startup or command initialization.
+  fail at startup or command initialization. `enforced-by: secrets/gitleaks`
 - Do not make importable modules depend on an active shell, virtual
-  environment, current working directory, or globally installed package.
+  environment, current working directory, or globally installed package. `enforced-by: integrity/dependency-ownership`
 - Use project configuration, editable installs, `python -m`, or the configured
-  environment to resolve imports.
-- Do not commit virtual environment directories or generated package caches.
+  environment to resolve imports. `enforced-by: integrity/dependency-ownership`
+- Do not commit virtual environment directories or generated package caches. `enforced-by: integrity/dependency-ownership`
 
 Good:
 
@@ -128,128 +118,38 @@ def load_config(environ: Mapping[str, str]) -> AppConfig:
     return AppConfig(max_items=int(raw_max_items))
 ```
 
-Bad:
-
-```python
-def list_items() -> list[Item]:
-    limit = int(os.getenv("MAX_ITEMS", "100"))
-    return query_items(limit=limit)
-```
-
-## Package Installation Security
-
-These rules apply to deployment scripts, release images, CI release installs,
-production environment bootstraps, and any committed install command meant to
-create a repeatable runtime environment.
-
-Rules:
-
-- Prefer a generated lock or requirements file with every direct and transitive
-  dependency pinned.
-- For pip-based deployment installs, use hash-checking mode with
-  `--require-hashes`.
-- Use `sha256` hashes for package artifacts.
-- Hashes must cover every requirement and every transitive dependency in the
-  requirements file.
-- Requirements used with `--require-hashes` must be pinned with `==`, a direct
-  URL, or a filesystem path.
-- Use multiple hashes for a package when deployments may install different
-  wheels for different supported platforms.
-- Disallow source distributions for deployment installs with
-  `--only-binary :all:` when all required packages publish compatible wheels.
-- If a package must be installed from source, treat that as a deliberate
-  supply-chain exception. Keep the build environment explicit and reviewed.
-- Do not rely on hashes embedded in package-index download URLs as the integrity
-  control for deployment installs. The hash must be local to the requirements or
-  lock material used by the install.
-- Do not use `--extra-index-url` for private packages in deployment installs.
-  Prefer a single controlled `--index-url`, or `--no-index` with reviewed
-  `--find-links` wheel artifacts.
-- Use `--no-deps` only when the requirements file already contains the complete
-  resolved dependency tree.
-- Install the local project through pip, not direct setuptools commands.
-- When project dependencies are already installed from a pinned and hashed
-  requirements file, install the local project with `python -m pip install
---no-deps .` or the editable equivalent for development workflows.
-- Do not call `python setup.py install`, `python setup.py develop`, or
-  `easy_install`.
-- Do not weaken install security in a deploy script just to make an install pass.
-  Fix the requirements or document the supply-chain exception.
-- Do not add or regenerate dependency locks, hashes, or requirements files unless
-  the requested task includes dependency maintenance.
-
-Good deployment install:
-
-```bash
-python -m pip install \
-  --require-hashes \
-  --only-binary :all: \
-  --no-deps \
-  -r requirements.lock
-```
-
-Good local project install after dependency install:
-
-```bash
-python -m pip install --no-deps .
-```
-
-Good editable install for development:
-
-```bash
-python -m pip install --no-deps -e .
-```
-
-Good hashed requirement:
-
-```text
-example-package==1.2.3 \
-  --hash=sha256:1111111111111111111111111111111111111111111111111111111111111111 \
-  --hash=sha256:2222222222222222222222222222222222222222222222222222222222222222
-```
-
-Bad deployment installs:
-
-```bash
-python -m pip install -r loose-requirements.lock
-python -m pip install --extra-index-url https://packages.example.com/simple private-package
-python setup.py install
-python setup.py develop
-easy_install example-package
-```
-
 ## Module Structure
 
 Order module contents this way:
 
-1. Module docstring.
-2. `from __future__ import annotations`, when used.
-3. Other module dunders, except `__all__`.
-4. Imports.
-5. Module constants.
-6. Type aliases.
-7. Dataclasses and classes, internal ones first.
-8. Functions, internal ones first.
-9. `if __name__ == "__main__":` guard, when the module is executable.
-10. `__all__` at the bottom.
+1. Module docstring. `enforced-by: python/ruff D100`
+2. `from __future__ import annotations`, when used. `enforced-by: python/basedpyright`
+3. Other module dunders, except `__all__`. `enforced-by: structure/private-prefix`
+4. Imports. `unenforced`
+5. Module constants. `enforced-by: structure/no-singletons`
+6. Type aliases. `enforced-by: python/basedpyright`
+7. Dataclasses and classes, internal ones first. `enforced-by: structure/private-before-public`
+8. Functions, internal ones first. `enforced-by: structure/private-before-public`
+9. `if __name__ == "__main__":` guard, when the module is executable. `enforced-by: structure/shell-embeds`
+10. `__all__` at the bottom. `enforced-by: structure/private-prefix`
 
 Rules:
 
-- Every runtime module should have a module docstring that describes its present
-  purpose.
+- Every runtime module has a module docstring that describes its present
+  purpose. `enforced-by: python/ruff D100`
 - Keep top-level code limited to declarations, constants, imports, and cheap
-  initialization.
+  initialization. `enforced-by: structure/import-boundary`
 - Do not perform I/O, network calls, quantization, model loading, CLI parsing, or
-  long computations at import time.
+  long computations at import time. `enforced-by: structure/import-boundary`
 - Do not mutate global runtime state at import time except for declared
-  constants and deliberate local configuration.
-- Keep `__all__` explicit for modules with a public API.
-- Use `__all__ = []` when a module intentionally exports no public names.
+  constants and deliberate local configuration. `enforced-by: structure/import-boundary`
+- Keep `__all__` explicit for modules with a public API. `enforced-by: structure/private-prefix`
+- Use `__all__ = []` when a module intentionally exports no public names. `enforced-by: structure/private-prefix`
 - Every top-level name not listed in `__all__` starts with one underscore. The list and the
-  prefix cannot disagree.
+  prefix cannot disagree. `enforced-by: structure/private-prefix`
 - Every internal definition sits above the first public definition. Python resolves names at
   call time, so the order has no runtime meaning; it is fixed so a reader meets the helpers
-  before the code that uses them, the same order the TypeScript and Bash rules require.
+  before the code that uses them, the same order the TypeScript and Bash rules require. `enforced-by: structure/private-prefix`
 
 Good:
 
@@ -277,72 +177,49 @@ __all__ = [
 ]
 ```
 
-Bad:
-
-```python
-from pathlib import Path
-
-settings = read_runtime_settings()
-model = AutoModel.from_pretrained("some-model")
-
-__all__ = ["model"]
-```
-
 ## Imports
 
 Rules:
 
 - Put imports at the top of the file, after the module docstring and future
-  imports.
-- Keep ordinary imports in one flat block. Do not separate standard-library,
-  third-party, first-party, or sibling imports with blank lines.
-- Put one-line imports before multiline or explicitly parenthesized imports.
-- Sort one-line imports by the total rendered statement length. Break equal
-  lengths by case-insensitive statement text and then exact statement text.
-- Sort multiline or explicitly parenthesized imports by the rendered import
-  header length using the same text tie-breakers.
-- Sort names inside grouped imports by rendered name length using the same text
-  tie-breakers.
-- Apply the same ordering and spacing rules inside a top-level bare
-  `if TYPE_CHECKING:` body.
-- Put a blank line after each completed import block.
-- Use one import per line for ordinary imports.
-- Import typing and `collections.abc` symbols directly.
-- Use absolute imports for cross-package repository imports.
+  imports. `enforced-by: python/ruff D100`
+- Group imports in PEP 8 sections separated by one blank line: `__future__`, standard library,
+  third-party, first-party, local. Sort alphabetically within a section, `import x` before
+  `from x import y`, names inside a grouped import sorted alphabetically. `enforced-by: structure/import-layout`
+- A project that prefers one flat block sorted by rendered line length declares it with
+  `[tools.ruff] import_sort = "length"`; the formatter then owns that order. `enforced-by: integrity/dependency-ownership`
+- Apply the same ordering inside a top-level bare `if TYPE_CHECKING:` body. `enforced-by: structure/import-layout`
+- Put a blank line after the last import. `enforced-by: structure/import-layout`
+- Use one import per line for ordinary imports. `enforced-by: structure/import-layout`
+- Import typing and `collections.abc` symbols directly. `enforced-by: structure/import-layout`
+- Use absolute imports for cross-package repository imports. `enforced-by: structure/import-layout`
 - Use explicit relative imports for sibling modules inside the same package when
-  surrounding code already does that.
-- Never use implicit relative imports.
-- Never use wildcard imports.
-- Never import inside function, method, or class bodies in runtime code.
+  surrounding code already does that. `enforced-by: structure/import-layout`
+- Never use implicit relative imports. `enforced-by: structure/import-layout`
+- Never use wildcard imports. `enforced-by: structure/import-layout`
+- Never import inside function, method, or class bodies in runtime code. `enforced-by: structure/import-layout`
 - Never use dynamic imports through `importlib.import_module`, `__import__`, or
-  `builtins.__import__` in runtime code.
-- Do not rely on the main script directory being present on `sys.path`.
+  `builtins.__import__` in runtime code. `enforced-by: structure/import-layout`
+- Do not rely on the main script directory being present on `sys.path`. `enforced-by: integrity/dependency-ownership`
 - Avoid circular imports by moving shared data or contracts into a lower-level
-  owner.
+  owner. `enforced-by: structure/import-layout`
 
 Good:
 
 ```python
 from __future__ import annotations
 
-import torch
 import logging
+from collections.abc import Iterable, Sequence
 from pathlib import Path
-from .runtime import RuntimeConfig
+
+import torch
 from transformers import AutoTokenizer
+
 from src.config.model.selection import MODEL
 from src.runtime.config import ModelSettings
-from collections.abc import Iterable, Sequence
-```
 
-Bad:
-
-```python
-import os, sys
-from examples import *
-
-def build():
-    import src.runtime.settings
+from .runtime import RuntimeConfig
 ```
 
 Direct symbol imports are acceptable for public classes, functions, constants,
@@ -365,38 +242,32 @@ logger = logging.getLogger(__name__)
 rng = random.Random(seed)  # noqa: S311
 ```
 
-Do not import a module only to hide a vague name:
-
-```python
-from storage.file_system import options as fs_options
-```
-
 Use aliases only when:
 
-- two imported modules have the same final name;
-- an imported module conflicts with a local top-level name;
-- the original module name is inconveniently long;
-- the alias is a standard abbreviation, such as `np` for NumPy;
-- the alias disambiguates a generic module name.
+- two imported modules have the same final name; `unenforced`
+- an imported module conflicts with a local top-level name; `unenforced`
+- the original module name is inconveniently long; `unenforced`
+- the alias is a standard abbreviation, such as `np` for NumPy; `enforced-by: python/ruff E711`
+- the alias disambiguates a generic module name. `unenforced`
 
 ## Public and Internal Interfaces
 
 Rules:
 
-- Public names are names intended for callers outside the module.
-- Internal names use one leading underscore.
+- Public names are names intended for callers outside the module. `enforced-by: structure/private-prefix`
+- Internal names use one leading underscore. `enforced-by: structure/private-prefix`
 - Do not use double-leading underscores unless avoiding subclass collisions in a
-  class designed for inheritance.
-- Do not invent double-leading and double-trailing dunder names.
-- Use `__all__` to declare public module exports.
+  class designed for inheritance. `enforced-by: structure/private-prefix`
+- Do not invent double-leading and double-trailing dunder names. `enforced-by: structure/private-prefix`
+- Use `__all__` to declare public module exports. `enforced-by: structure/private-prefix`
 - Imported names are implementation details unless explicitly exported through
-  `__all__` or documented as module API.
-- Do not rely on indirect access to names imported by another module.
-- Public attributes should not have leading underscores.
-- Internal modules, functions, constants, and attributes should have one leading
-  underscore.
+  `__all__` or documented as module API. `enforced-by: structure/private-prefix`
+- Do not rely on indirect access to names imported by another module. `unenforced`
+- Public attributes have no leading underscore. `enforced-by: structure/private-prefix`
+- Internal modules, functions, constants, and attributes have one leading
+  underscore. `enforced-by: structure/private-prefix`
 - A module-level function, class, constant or type alias that is not in `__all__` starts with
-  one underscore, and every underscored definition comes before the first public one.
+  one underscore, and every underscored definition comes before the first public one. `enforced-by: structure/import-boundary`
 
 Good:
 
@@ -415,350 +286,51 @@ __all__ = [
 ]
 ```
 
-Bad:
-
-```python
-def __normalize_label__(value):
-    return int(value)
-```
-
-Bad, public before internal:
-
-```python
-def build_model_settings(model: str, quantization: str) -> ModelSettings:
-    """Build model settings for one runtime."""
-    return ModelSettings(model=model, quantization=_normalize_quantization(quantization))
-
-def _normalize_quantization(value: str) -> str:
-    return value.strip().lower()
-```
-
 ## Formatting
 
-The project's formatter is the source of truth for mechanical formatting.
+The formatter is the source of truth for mechanical formatting. It owns indentation (4 spaces),
+line length, blank lines, whitespace, trailing commas, parentheses, and string quotes (double).
 
 Rules:
 
-- Do not fight the formatter.
-- Do not hand-align code in ways the formatter will undo.
-- Do not use semicolons.
-- Do not put multiple statements on one line.
-- Keep formatting consistent with the surrounding file when the formatter allows
-  more than one readable option.
-
-### Indentation
-
-Rules:
-
-- Use 4 spaces per indentation level.
-- Never use tabs.
-- Use implicit continuation inside parentheses, brackets, and braces.
-- Prefer hanging indents with one argument or item per line when a call or
-  literal is too long.
-- When using a hanging indent, put no arguments on the first line.
-- Align closing delimiters with the construct start when the values are split
-  across lines.
-
-Good:
-
-```python
-result = long_function_name(
-    first_argument,
-    second_argument,
-    third_argument,
-)
-```
-
-Good:
-
-```python
-result = long_function_name(first_argument, second_argument, third_argument)
-```
-
-Bad:
-
-```python
-result = long_function_name(first_argument,
-    second_argument,
-    third_argument)
-```
-
-Long conditionals may use extra indentation to distinguish the condition from
-the body:
-
-```python
-if (
-    config is None
-    or "editor.language" not in config
-    or config["editor.language"].use_spaces is False
-):
-    use_tabs()
-```
-
-### Line Length and Wrapping
-
-Rules:
-
-- Python code uses the formatter line length the project sets.
-- Prefer shorter lines when they are naturally readable.
-- Keep docstring summary lines concise and on one physical line.
-- Wrap long expressions with implicit continuation inside parentheses, brackets,
-  and braces.
-- Do not use backslashes for line continuation.
-- Break before binary operators in new multiline arithmetic or boolean
-  expressions when that improves readability.
-- Prefer breaking at the highest syntactic level.
-- Do not split a name from its type annotation unless the name and type together
-  cannot fit readably.
-- Put long URLs on their own comment line instead of splitting them.
-
-Good:
-
-```python
-income = (
-    gross_wages
-    + taxable_interest
-    + (dividends - qualified_dividends)
-    - ira_deduction
-    - student_loan_interest
-)
-```
-
-Bad:
-
-```python
-income = (gross_wages +
-          taxable_interest +
-          (dividends - qualified_dividends) -
-          ira_deduction -
-          student_loan_interest)
-```
-
-Good:
-
-```python
-message = (
-    "This long string is split through implicit literal concatenation "
-    "inside parentheses."
-)
-```
-
-Bad:
-
-```python
-message = "This long string is split with an explicit continuation " \
-    "character."
-```
-
-### Blank Lines
-
-Rules:
-
-- Use two blank lines between top-level function and class definitions.
-- Use one blank line between methods inside a class.
-- Use one blank line between a class docstring and the first method.
-- Use blank lines inside functions sparingly to separate logical sections.
-- Do not add blank lines immediately after a `def` line.
-- Do not use large blank-line blocks as visual decoration.
-
-Good:
-
-```python
-def build_examples() -> list[PromptExample]:
-    """Build examples."""
-    return []
-
-def count_examples(examples: list[PromptExample]) -> int:
-    """Return the number of examples."""
-    return len(examples)
-```
-
-Bad:
-
-```python
-def build_examples() -> list[PromptExample]:
-
-    return []
-```
-
-### Whitespace
-
-Rules:
-
-- Do not use extra whitespace inside parentheses, brackets, or braces.
-- Do not use whitespace before commas, semicolons, or colons.
-- Use one space after commas and colons, except at the end of a line.
-- Do not use whitespace before the opening parenthesis of a function call.
-- Do not use whitespace before indexing or slicing brackets.
-- Surround assignment, augmented assignment, comparisons, identity checks,
-  membership checks, and boolean operators with one space on each side.
-- Use judgment around arithmetic operators, but never use more than one space on
-  either side.
-- Do not vertically align assignments, comments, dictionary colons, or other
-  tokens with extra spaces.
-- Do not leave trailing whitespace.
-
-Good:
-
-```python
-spam(ham[1], {"eggs": 2})
-x = 1
-long_name = 2
-if value is not None:
-    return value
-```
-
-Bad:
-
-```python
-spam( ham[ 1 ], { "eggs" : 2 } )
-x         = 1
-long_name = 2
-if value == None:
-    return value
-```
-
-For slices, treat the colon like a low-priority binary operator when both sides
-are complex. Omit spaces when an endpoint is omitted.
-
-Good:
-
-```python
-items[1:9]
-items[:9]
-items[lower + offset : upper + offset]
-items[: upper_fn(x) : step_fn(x)]
-```
-
-Bad:
-
-```python
-items[1: 9]
-items[lower + offset:upper + offset]
-items[ : upper]
-```
-
-### Trailing Commas
-
-Rules:
-
-- Use a trailing comma in multiline literals, argument lists, imports, and
-  `__all__`.
-- Do not use a redundant trailing comma when the closing delimiter is on the
-  same line.
-- Use a trailing comma for a one-item tuple, preferably inside parentheses.
-
-Good:
-
-```python
-FILES = ("setup.cfg",)
-
-VARIANTS = [
-    "trt",
-    "vllm",
-    "awq",
-]
-```
-
-Bad:
-
-```python
-FILES = "setup.cfg",
-VARIANTS = ["trt", "vllm",]
-```
-
-### Parentheses
-
-Rules:
-
-- Use parentheses for grouping, tuples, and implicit line continuation.
-- Do not wrap simple conditions in unnecessary parentheses.
-- Do not wrap simple return values in unnecessary parentheses.
-- Parenthesize one-item tuples for clarity.
-- Returning a tuple may use parentheses when it improves readability.
-
-Good:
-
-```python
-if is_ready:
-    return value
-
-singleton = (value,)
-return first, second
-```
-
-Bad:
-
-```python
-if (is_ready):
-    return (value)
-```
-
-### String Quotes
-
-Rules:
-
-- Use double quotes for ordinary strings in new code.
-- Use single quotes only when it avoids escaping or matches surrounding code the
-  formatter preserves.
-- Use triple double quotes for docstrings.
-- Prefer triple double quotes for multiline strings.
-- Do not create string literals with significant trailing whitespace.
-- Use `textwrap.dedent()` when a multiline string should not include indentation.
-
-Good:
-
-```python
-name = "ModernBERT"
-message = "It's ready."
-doc = """One multiline string."""
-```
-
-Bad:
-
-```python
-name = 'ModernBERT'
-doc = '''A docstring-like string.'''
-```
+- Do not hand-align code in ways the formatter will undo. `enforced-by: python/ruff-format`
+- Do not use semicolons. `enforced-by: python/ruff-format`
+- Do not put multiple statements on one line. `enforced-by: python/ruff-format`
+- Keep formatting consistent with the surrounding file when the formatter allows more than one
+  readable option. `enforced-by: python/ruff-format`
 
 ## Comments and Docstrings
 
 Rules:
 
-- Describe present behavior only.
-- Do not include change history.
-- Do not mention removed, replaced, renamed, or previous code.
+- Describe present behavior only. `unenforced`
+- Do not include change history. `unenforced`
+- Do not mention removed, replaced, renamed, or previous code. `unenforced`
 - Do not reference specific file paths unless the reference is essential and
-  stable.
-- Keep comments and docstrings accurate when behavior changes.
-- Use clear English.
-- Use complete sentences for block comments and docstrings.
-- Keep punctuation, spelling, and grammar clean.
+  stable. `unenforced`
+- Keep comments and docstrings accurate when behavior changes. `enforced-by: python/ruff D`
+- Use clear English. `unenforced`
+- Use complete sentences for block comments and docstrings. `enforced-by: integrity/dependency-ownership`
+- Keep punctuation, spelling, and grammar clean. `unenforced`
 
 ### Comments
 
 Rules:
 
 - Use comments to explain intent, invariants, edge cases, and non-obvious
-  choices.
-- Do not narrate obvious code.
-- Block comments apply to the code that follows and use `#` plus one space on each line.
+  choices. `enforced-by: python/ruff ERA001`
+- Do not narrate obvious code. `enforced-by: python/ruff ERA001`
+- Block comments apply to the code that follows and use `#` plus one space on each line. `enforced-by: integrity/dependency-ownership`
 - Inline comments are separated from code by at least two spaces and start with
-  `#` plus one space.
-- Use inline comments sparingly.
-- Keep comments up to date when code changes.
+  `#` plus one space. `enforced-by: python/ruff ERA001`
+- Use inline comments sparingly. `enforced-by: python/ruff ERA001`
+- Keep comments up to date when code changes. `enforced-by: python/ruff ERA001`
 
 Good:
 
 ```python
 # Longformer uses the first token for global attention in classification.
 global_attention_mask[:, 0] = 1
-```
-
-Bad:
-
-```python
-global_attention_mask[:, 0] = 1  # Set item to one
 ```
 
 When suppressing a linter warning, keep the suppression narrow and explain it
@@ -768,45 +340,31 @@ when the symbolic name is not enough:
 rng = random.Random(seed)  # noqa: S311
 ```
 
-Do not add broad suppressions:
-
-```python
-# noqa
-```
-
 ### Docstrings
 
 Rules:
 
-- Use triple double quotes for all docstrings.
-- Write docstrings for public modules, functions, classes, and methods.
-- Write docstrings for nontrivial private functions and methods.
-- Do not write noisy docstrings for obvious private helpers.
-- One-line docstrings stay on one line and end with punctuation.
+- Use triple double quotes for all docstrings. `enforced-by: python/ruff D`
+- Write docstrings for public modules, functions, classes, and methods. `enforced-by: python/ruff D`
+- Write docstrings for nontrivial private functions and methods. `enforced-by: structure/private-prefix`
+- Do not write noisy docstrings for obvious private helpers. `enforced-by: structure/private-prefix`
+- One-line docstrings stay on one line and end with punctuation. `enforced-by: python/ruff D`
 - Multiline docstrings start with a one-line summary, then a blank line, then
-  details.
-- Put the closing triple quotes of a multiline docstring on their own line.
-- Do not restate the signature in a docstring.
+  details. `enforced-by: python/ruff D`
+- Put the closing triple quotes of a multiline docstring on their own line. `enforced-by: python/ruff D`
+- Do not restate the signature in a docstring. `enforced-by: python/ruff D`
 - Document arguments, return values, yielded values, side effects, and raised
-  exceptions when they are part of the interface.
+  exceptions when they are part of the interface. `unenforced`
 - Do not document exceptions raised only when callers violate the documented
-  contract.
-- Keep docstring style consistent within a file. Descriptive style and
-  imperative style are both allowed by the source material.
+  contract. `unenforced`
+- Summary lines are imperative: "Return the total token budget.", not "Returns the total
+  token budget." `enforced-by: python/ruff D`
 
 Good one-line docstring:
 
 ```python
 def build_token_budget(prompt_tokens: int, output_tokens: int) -> int:
     """Return the total token budget."""
-    return prompt_tokens + output_tokens
-```
-
-Bad one-line docstring:
-
-```python
-def build_token_budget(prompt_tokens: int, output_tokens: int) -> int:
-    """build_token_budget(prompt_tokens, output_tokens) -> int"""
     return prompt_tokens + output_tokens
 ```
 
@@ -833,12 +391,12 @@ def fetch_rows(keys: Sequence[str]) -> Mapping[str, tuple[str, ...]]:
 
 Rules:
 
-- Runtime modules should start with a docstring describing the module's purpose.
-- A module docstring may include a short usage example when it helps callers.
+- Runtime modules start with a docstring describing the module's purpose. `enforced-by: python/ruff D`
+- A module docstring may include a short usage example when it helps callers. `enforced-by: python/ruff D100`
 - Test modules do not need a module docstring unless they need unusual setup,
-  environment, or update instructions.
+  environment, or update instructions. `enforced-by: python/ruff D100`
 - Do not write a test module docstring that only repeats the file name or module
-  name.
+  name. `enforced-by: python/ruff D100`
 
 Good:
 
@@ -846,26 +404,20 @@ Good:
 """Runtime settings assembly for the inference server."""
 ```
 
-Bad:
-
-```python
-"""Tests for loader."""
-```
-
 ### Function and Method Docstrings
 
 Rules:
 
-- Public functions and methods require docstrings.
-- Nontrivial private helpers require docstrings.
-- Functions with non-obvious logic require docstrings.
-- Functions that mutate an argument must say so.
-- Generator functions use `Yields:` instead of `Returns:`.
+- Public functions and methods require docstrings. `enforced-by: python/ruff D`
+- Nontrivial private helpers require docstrings. `enforced-by: structure/private-prefix`
+- Functions with non-obvious logic require docstrings. `enforced-by: python/ruff D`
+- Functions that mutate an argument must say so. `unenforced`
+- Generator functions use `Yields:` instead of `Returns:`. `enforced-by: python/ruff D`
 - `Returns:` may be omitted when the one-line summary already fully describes
-  the returned value.
-- Do not document `None` returns unless it clarifies control flow.
-- Use `Args:`, `Returns:`, `Yields:`, and `Raises:` sections when needed.
-- Keep section indentation consistent within a file.
+  the returned value. `enforced-by: python/ruff D`
+- Do not document `None` returns unless it clarifies control flow. `unenforced`
+- Use `Args:`, `Returns:`, `Yields:`, and `Raises:` sections when needed. `enforced-by: python/ruff D`
+- Keep section indentation consistent within a file. `unenforced`
 
 Good:
 
@@ -887,25 +439,18 @@ def build_engine_settings(
     """
 ```
 
-Bad:
-
-```python
-def build_engine_settings(engine, path, tokens):
-    """build_engine_settings(engine, path, tokens)."""
-```
-
 ### Class Docstrings
 
 Rules:
 
-- Public classes require docstrings.
+- Public classes require docstrings. `enforced-by: python/ruff D`
 - A class docstring starts with a one-line summary describing what an instance
-  represents.
+  represents. `enforced-by: python/ruff D`
 - Public attributes, excluding properties, are documented in an `Attributes:`
-  section.
+  section. `enforced-by: python/ruff D`
 - Exception class docstrings describe the condition represented by the
-  exception, not the raising site.
-- Do not write "Class that..." as the summary.
+  exception, not the raising site. `enforced-by: python/ruff D`
+- Do not write "Class that..." as the summary. `enforced-by: python/ruff D`
 
 Good:
 
@@ -925,13 +470,6 @@ class RuntimePrompt:
     group: str
 ```
 
-Bad:
-
-```python
-class RuntimePrompt:
-    """Class that stores a runtime prompt."""
-```
-
 Good exception docstring:
 
 ```python
@@ -939,21 +477,14 @@ class MissingModelError(Exception):
     """The requested model artifact is unavailable."""
 ```
 
-Bad exception docstring:
-
-```python
-class MissingModelError(Exception):
-    """Raised when model loading fails."""
-```
-
 ### Property Docstrings
 
 Rules:
 
-- Property docstrings describe the attribute, not the method action.
-- Use attribute-style wording.
+- Property docstrings describe the attribute, not the method action. `enforced-by: python/ruff D`
+- Use attribute-style wording. `unenforced`
 - Do not write "Returns..." for a property unless the surrounding file already
-  uses that style.
+  uses that style. `enforced-by: python/ruff-format`
 
 Good:
 
@@ -964,25 +495,16 @@ def num_labels(self) -> int:
     return len(self.labels)
 ```
 
-Bad:
-
-```python
-@property
-def num_labels(self) -> int:
-    """Returns the number of supported runtime labels."""
-    return len(self.labels)
-```
-
 ### Override Docstrings
 
 Rules:
 
 - An overridden method may omit a docstring when it is decorated with
-  `@override` and does not materially change the base contract.
+  `@override` and does not materially change the base contract. `enforced-by: python/ruff D`
 - Add a docstring when an override changes behavior, side effects, constraints,
-  or return semantics.
+  or return semantics. `enforced-by: python/ruff D`
 - Use `typing.override` when available in the target runtime. Use
-  `typing_extensions.override` when needed.
+  `typing_extensions.override` when needed. `enforced-by: python/ruff D`
 
 Good:
 
@@ -999,516 +521,40 @@ class Child(Parent):
 
 Rules:
 
-- Use TODO comments only for temporary, tracked work.
-- A TODO starts with `TODO:`, then a link or issue reference, then `-`, then an
-  explanation.
-- Do not use individual names or team names as TODO ownership.
-- Do not add TODOs for vague future improvements.
-- Include a specific event or date when the TODO depends on time or an external
-  milestone.
+- Use TODO comments only for temporary, tracked work. `enforced-by: python/ruff ERA001`
+- A TODO is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`. The owner is an issue link or an
+  expiry date, never a person or team. `enforced-by: python/ruff TD`
+- Do not add TODOs for vague future improvements. `enforced-by: python/ruff TD`
+- An expired date or a closed issue makes the TODO a finding. `enforced-by: python/ruff TD`
 
 Good:
 
 ```python
-# TODO: https://example.com/issues/123 - Remove this branch when all exports use JSONL.
-```
-
-Bad:
-
-```python
-# TODO: clean this up later
-# TODO(alex): fix this
-```
-
-## Type Annotations
-
-Type annotations improve readability and catch type-related errors. They are
-especially important for public APIs, stable code, complex data shapes, and
-model or data boundaries.
-
-### Annotation Scope
-
-Rules:
-
-- Annotate public APIs.
-- Annotate functions whose types are hard to infer.
-- Annotate data structures crossing module boundaries.
-- Annotate code that is prone to type-related errors.
-- Annotate code when it becomes stable from a type perspective.
-- Do not annotate `self` or `cls` unless needed for precise typing.
-- Do not annotate `__init__` as returning `None` unless local tooling or
-  surrounding style requires it.
-- Use `Any` only when the type should genuinely be unconstrained or cannot be
-  expressed clearly.
-- Do not add obsolete `# type:` comments.
-- Prefer modern Python 3.12 shorthand syntax over older `typing.Union`,
-  `typing.Optional`, `typing.List`, `typing.Dict`, and `typing.Type` aliases.
-
-Good:
-
-```python
-def build_examples(source: Literal["warmup", "test"] = "warmup") -> list[PromptExample]:
-    """Build examples for a data source."""
-```
-
-Acceptable for a private helper when the body is obvious and local:
-
-```python
-def _token_count(value):
-    return int(value)
-```
-
-Better when the helper is part of a typed flow:
-
-```python
-def _token_count(value: int) -> int:
-    return int(value)
-```
-
-### Annotated Metadata
-
-Rules:
-
-- Use `typing.Annotated` when a framework or validation library needs metadata
-  attached to a normal Python type.
-- Put the real type first. Put framework or validation metadata after it.
-- Keep defaults as ordinary Python parameter defaults when using
-  `Annotated`.
-- Do not put conflicting defaults in both the metadata object and the function
-  signature.
-- Do not use arbitrary string metadata as a substitute for clear domain types,
-  validators, or documented framework metadata.
-- Prefer `Annotated` over older framework styles that replace the Python
-  default value with a metadata object.
-
-Good:
-
-```python
-def read_items(q: Annotated[str | None, Query(max_length=50)] = None) -> list[Item]:
-    return find_items(query=q)
-```
-
-Bad:
-
-```python
-def read_items(q: str | None = Query(default=None, max_length=50)) -> list[Item]:
-    return find_items(query=q)
-```
-
-Bad conflicting defaults:
-
-```python
-def read_items(q: Annotated[str, Query(default="recent")] = "popular") -> list[Item]:
-    return find_items(query=q)
-```
-
-### Using Any and Object
-
-Rules:
-
-- Use `object` when a value can be literally any Python object and the function
-  only uses operations available on all objects, such as passing the value to
-  `str()`.
-- Use `object` for callback return values when the callback return value is
-  ignored.
-- Use `Any` when the type cannot be expressed accurately, the correct type would
-  make the API unreasonably hard to use, or the value intentionally escapes type
-  checking.
-- Do not use `Any` just to avoid writing a precise type.
-- Prefer a protocol, type variable, overload, or small value object over `Any`
-  when that models the contract clearly.
-
-Good:
-
-```python
-def format_for_display(value: object) -> str:
-    """Format any object for display."""
-    if isinstance(value, int):
-        return f"{value:02}"
-    return str(value)
-
-def call_callback(callback: Callable[[int], object]) -> None:
-    """Call a callback and ignore its return value."""
-    callback(42)
-```
-
-Bad:
-
-```python
-def format_for_display(value: Any) -> str:
-    return str(value)
-
-def call_callback(callback: Callable[[int], None]) -> None:
-    callback(42)
-```
-
-### Input and Return Types
-
-Rules:
-
-- For arguments, prefer protocols and abstract collection types such as
-  `Iterable`, `Sequence`, `Mapping`, and `Callable`.
-- For arguments that accept any value, use `object`, not `Any`.
-- For concrete implementations, return concrete types such as `list`, `dict`,
-  and concrete dataclasses.
-- For protocols and abstract base classes, choose return types case by case
-  based on the promised interface.
-- Avoid union return types when callers must immediately branch with
-  `isinstance()` to use the result.
-- If different result shapes require different caller behavior, prefer separate
-  functions, a tagged dataclass, a protocol, or a small hierarchy with a clear
-  common contract.
-- Use `float` instead of `int | float` for numeric APIs where integers are valid
-  float inputs.
-- Use `None`, not `Literal[None]`.
-
-Good:
-
-```python
-def map_lengths(values: Iterable[str]) -> list[int]:
-    return [len(value) for value in values]
-
-def create_label_map() -> dict[str, int]:
-    return {"reject": 0, "accept": 1}
-
-def to_display_text(value: object) -> str:
-    return str(value)
-```
-
-Bad:
-
-```python
-def map_lengths(values: list[str]) -> list[int]:
-    return [len(value) for value in values]
-
-def create_label_map() -> MutableMapping[str, int]:
-    return {"reject": 0, "accept": 1}
-
-def to_display_text(value: Any) -> str:
-    return str(value)
-```
-
-### Typing Imports
-
-Rules:
-
-- Import symbols from `typing` and `collections.abc` directly.
-- Prefer `collections.abc` abstract containers for input types.
-- Prefer built-in generic types such as `list[str]`, `dict[str, int]`, and
-  `tuple[str, ...]`.
-- Do not use `typing.List`, `typing.Dict`, or `typing.Tuple` in new Python 3.12
-  code.
-- Do not use `typing.Type`; use built-in `type`.
-- Do not use `typing.Union` or `typing.Optional`; use `|`.
-- Do not use `typing.Text` in new code.
-- Use `str` for text and `bytes` for binary data.
-- Use `AnyStr` only when multiple string annotations must all be the same text
-  or binary type.
-
-Good:
-
-```python
-from collections.abc import Iterable, Mapping, Sequence
-from typing import Any, Literal, TypeAlias
-
-def transform(rows: Sequence[tuple[str, int]]) -> Mapping[str, int]:
-    ...
-```
-
-Bad:
-
-```python
-from typing import Dict, List, Tuple, Type
-
-def transform(rows: List[Tuple[str, int]]) -> Dict[str, int]:
-    ...
-
-def build(cls: Type[ModelConfig]) -> ModelConfig:
-    ...
-```
-
-### None and Optional Values
-
-Rules:
-
-- Use explicit `X | None` for nullable values.
-- Put `None` last in union annotations.
-- Do not rely on implicit optional inference from a default of `None`.
-- Use `is None` and `is not None` for None checks.
-- When a parameter is nullable and has a default, annotate it as nullable.
-
-Good:
-
-```python
-def read_examples(path: Path | None = None) -> list[PromptExample]:
-    if path is None:
-        path = DEFAULT_DATA_PATH
-    ...
-```
-
-Bad:
-
-```python
-def normalize(value: None | str) -> str:
-    ...
-
-def read_examples(path: Path = None) -> list[PromptExample]:
-    path = path or DEFAULT_DATA_PATH
-```
-
-### Generic Types
-
-Rules:
-
-- Specify type parameters for generic types.
-- Do not write bare `Sequence`, `Mapping`, `list`, or `dict` unless the element
-  type is intentionally unconstrained and made explicit with `Any`.
-- Prefer `TypeVar` when a relationship between input and output types matters.
-
-Good:
-
-```python
-def get_names(employee_ids: Sequence[int]) -> Mapping[int, str]:
-    ...
-```
-
-Bad:
-
-```python
-def get_names(employee_ids: Sequence) -> Mapping:
-    ...
-```
-
-Good when the key type should be preserved:
-
-```python
-_T = TypeVar("_T")
-
-def get_names(employee_ids: Sequence[_T]) -> Mapping[_T, str]:
-    ...
-```
-
-### Type Aliases
-
-Rules:
-
-- Use type aliases for complex repeated types.
-- Type alias names use CapWords.
-- Internal type aliases use one leading underscore.
-- Use Python 3.12 `type` statements for new type aliases when they improve
-  clarity and the surrounding module already uses Python 3.12 syntax.
-- Keep `TypeAlias` for existing aliases when changing syntax would create
-  unrelated churn.
-- Do not use `TypeAlias` for ordinary value, module, class, function, constant,
-  or path aliases.
-
-Good:
-
-```python
-from typing import TypeAlias
-
-_LossAndGradient: TypeAlias = tuple[torch.Tensor, torch.Tensor]
-MetricMap: TypeAlias = Mapping[str, float]
-Path = pathlib.Path
-ERROR_EXISTS = errno.EEXIST
-```
-
-Bad:
-
-```python
-_LossAndGradient = tuple[torch.Tensor, torch.Tensor]
-Path: TypeAlias = pathlib.Path
-ERROR_EXISTS: TypeAlias = errno.EEXIST
-```
-
-### Type Variables
-
-Rules:
-
-- Private unconstrained type variables may use `_T`, `_P`, and similar short
-  names.
-- Public or constrained type variables must have descriptive names.
-- Use `_co` and `_contra` suffixes for covariant and contravariant variables.
-- Do not use public single-letter `T` or `P` for type variables.
-
-Good:
-
-```python
-from collections.abc import Callable
-from typing import ParamSpec, TypeVar
-
-_P = ParamSpec("_P")
-_T = TypeVar("_T")
-AddableType = TypeVar("AddableType", int, float, str)
-AnyFunction = TypeVar("AnyFunction", bound=Callable)
-```
-
-Bad:
-
-```python
-T = TypeVar("T")
-_F = TypeVar("_F", bound=Callable)
-_T = TypeVar("_T", int, float, str)
-```
-
-### Forward References
-
-Rules:
-
-- Prefer `from __future__ import annotations` for forward references.
-- Do not remove `from __future__ import annotations` only because newer Python
-  versions defer annotation evaluation. A project on an earlier version keeps
-  future annotations as its convention.
-- Use string annotations only when future annotations are not available or when
-  needed for a type-checking-only import pattern.
-- Avoid type-only circular imports. They are design pressure to move shared
-  contracts.
-
-Good:
-
-```python
-from __future__ import annotations
-
-class Node:
-    def __init__(self, parent: Node | None = None) -> None:
-        self.parent = parent
-```
-
-Acceptable when avoiding a runtime import strictly for typing:
-
-```python
-from typing import TYPE_CHECKING
-
-if TYPE_CHECKING:
-    from external_package import ExternalType
-
-def build(value: "ExternalType") -> str:
-    ...
-```
-
-### Protocols and Interfaces
-
-Rules:
-
-- Prefer `typing.Protocol` for structural interfaces used by a consumer.
-- Keep protocols narrow. Define only the attributes and methods the consumer
-  needs.
-- Place a protocol near the consumer when it describes what that consumer needs,
-  not what an implementation happens to provide.
-- Use `@runtime_checkable` only when runtime `isinstance()` checks are truly
-  needed.
-- Use abstract base classes when nominal identity, runtime instantiation checks,
-  or a standard-library ABC contract is the real requirement.
-- Do not use an abstract base class to share implementation code.
-- Do not mix interface definition with subclass-based code sharing.
-- Implementations do not need to import or subclass a protocol for type checkers
-  to recognize that they satisfy it.
-
-Good:
-
-```python
-class Reader(Protocol):
-    def read(self) -> str:
-        ...
-
-def print_reader(reader: Reader) -> None:
-    print(reader.read())
-```
-
-Good implementation:
-
-```python
-class FileReader:
-    def read(self) -> str:
-        return "contents"
-```
-
-Bad:
-
-```python
-class BaseReader(abc.ABC):
-    def read_and_print(self) -> None:
-        print(self.read())
-
-    @abc.abstractmethod
-    def read(self) -> str:
-        ...
-```
-
-### Variable Annotations
-
-Rules:
-
-- Use variable annotations when the inferred type is unclear or impossible.
-- Use one space after the colon.
-- Do not use a space before the colon.
-- If assigning a value, use one space around `=`.
-
-Good:
-
-```python
-examples: list[PromptExample] = []
-label_by_name: dict[str, int] = {}
-```
-
-Bad:
-
-```python
-examples:list[PromptExample] = []
-label_by_name : dict[str, int]={}
-```
-
-### Ignoring Type Errors
-
-Rules:
-
-- Avoid `# type: ignore`.
-- If an ignore is necessary, keep it line-scoped.
-- Include the specific error code when the type checker supports it.
-- Do not keep unused ignores.
-- Prefer refactoring or a clearer annotation over suppressing a type error.
-
-Good:
-
-```python
-value = untyped_api()  # type: ignore[no-any-return]
-```
-
-Bad:
-
-```python
-# type: ignore
+# TODO(https://example.com/issues/123): Remove this branch when all exports use JSONL.
 ```
 
 ## Constants, Globals, and Mutable State
 
 Rules:
 
-- Module constants are allowed and encouraged.
-- Constants use uppercase names with underscores.
-- Internal constants use one leading underscore.
-- Avoid mutable global state.
-- Do not use lazy singleton state.
+- Module constants are allowed and encouraged. `enforced-by: structure/no-singletons`
+- Constants use uppercase names with underscores. `enforced-by: structure/private-prefix`
+- Internal constants use one leading underscore. `enforced-by: structure/private-prefix`
+- Avoid mutable global state. `enforced-by: structure/no-singletons`
+- Do not use lazy singleton state. `enforced-by: structure/no-singletons`
 - Do not create module-level `STATE`, `_STATE`, `INSTANCE`, `_INSTANCE`, or
-  `_instance` holders.
-- Do not expose mutable globals directly as public API.
+  `_instance` holders. `enforced-by: structure/import-boundary`
+- Do not expose mutable globals directly as public API. `enforced-by: structure/no-singletons`
 - If mutable global state is genuinely required, keep it internal and document
-  the design reason.
+  the design reason. `enforced-by: structure/no-singletons`
 - Do not mutate module globals as a hidden side effect of ordinary function
-  calls.
+  calls. `enforced-by: structure/no-singletons`
 
 Good:
 
 ```python
 DEFAULT_MODEL_NAME = "answerdotai/ModernBERT-base"
 _MAX_RETRIES = 3
-```
-
-Bad:
-
-```python
-STATE = {"instance": None}
-_INSTANCE = None
 ```
 
 Prefer passing state explicitly:
@@ -1518,1158 +564,21 @@ def build_client(config: ClientConfig) -> Client:
     return Client(config)
 ```
 
-Do not hide process-wide state behind lifecycle helpers:
-
-```python
-def get_instance() -> Client:
-    ...
-```
-
-## Functions and Methods
-
-Rules:
-
-- Keep functions focused on one responsibility.
-- Prefer plain functions and explicit data flow before classes.
-- Name functions by action and domain concept.
-- Do not use `process`, `handle`, `run`, `execute`, or `do_work` when a more
-  precise action exists.
-- Use `handle` only for callbacks, framework boundaries, event handlers, or
-  signal handlers.
-- Keep side effects explicit in the name or docstring.
-- Do not hide I/O in helpers that look like pure transformations.
-
-### Function Size
-
-Rules:
-
-- Keep functions small and focused.
-- Custom lint limits functions and methods to 60 counted code lines by default.
-- If a function approaches the limit, consider extracting real sub-operations.
-- Do not split a function into meaningless helpers only to satisfy the count.
-- Extract helpers when the extracted operation has a clear name and contract.
-
-Good extraction:
-
-```python
-def _trim_history_messages(
-    messages: Sequence[HistoryMessage],
-    max_messages: int,
-) -> list[HistoryMessage]:
-    if len(messages) <= max_messages:
-        return list(messages)
-    return list(messages[-max_messages:])
-```
-
-Bad extraction:
-
-```python
-def _part_one(data):
-    ...
-
-def _part_two(data):
-    ...
-```
-
-### Default Arguments
-
-Rules:
-
-- Do not use mutable objects as default argument values.
-- Use `None` as the default and create the mutable value inside the function.
-- Immutable defaults such as `None`, strings, numbers, booleans, and tuples are
-  allowed.
-- Do not use dynamic values such as `time.time()` as defaults.
-- Do not use parsed flag values, environment-dependent values, or mutable global
-  values as defaults.
-- When an annotated parameter has a default, put spaces around `=`.
-- When an unannotated parameter has a default, do not put spaces around `=`.
-
-Good:
-
-```python
-def collect_labels(labels: Sequence[str] | None = None) -> list[str]:
-    if labels is None:
-        labels = []
-    return list(labels)
-```
-
-Bad:
-
-```python
-def collect_labels(labels: list[str] = []) -> list[str]:
-    return labels
-```
-
-Good formatting:
-
-```python
-def resize(width: int = 0, height: int = 0) -> None:
-    ...
-```
-
-Bad formatting:
-
-```python
-def resize(width: int=0, height: int=0) -> None:
-    ...
-```
-
-### Return Statements
-
-Rules:
-
-- Be consistent in return statements.
-- If any return statement returns a value, every no-value path should explicitly
-  return `None` or end in a clear final return.
-- Do not mix `return` and `return value` in the same function.
-- Do not rely on implicit `None` when an explicit no-result path is meaningful.
-
-Good:
-
-```python
-def safe_sqrt(value: float) -> float | None:
-    if value < 0:
-        return None
-    return math.sqrt(value)
-```
-
-Bad:
-
-```python
-def safe_sqrt(value: float) -> float | None:
-    if value >= 0:
-        return math.sqrt(value)
-```
-
-### Nested Functions and Classes
-
-Rules:
-
-- Nested functions are allowed when they close over a local value and make the
-  outer function clearer.
-- Nested classes are allowed for narrowly scoped helper types.
-- Do not nest a function only to hide it from users.
-- Prefer a module-level private helper when tests or reuse need direct access.
-- Avoid nested functions that make the outer function long or hard to scan.
-
-Good:
-
-```python
-def get_adder(summand: float) -> Callable[[float], float]:
-    """Return a function that adds a fixed summand."""
-
-    def add(value: float) -> float:
-        return summand + value
-
-    return add
-```
-
-Bad:
-
-```python
-def build_examples(data: list[object]) -> list[PromptExample]:
-    def normalize_prompt(value: object) -> str:
-        return str(value).strip()
-
-    ...
-```
-
-Use a module helper instead:
-
-```python
-def _normalize_prompt(value: object) -> str:
-    return str(value).strip()
-```
-
-### Lambda Functions
-
-Rules:
-
-- Lambdas are allowed for simple one-line expressions.
-- Do not bind a lambda directly to a name. Use `def`.
-- Prefer generator expressions over `map()` or `filter()` with a lambda.
-- Use functions from `operator` for common operations when they are clearer.
-- If a lambda spans multiple lines or becomes hard to read, use a named
-  function.
-
-Good:
-
-```python
-def double(value: int) -> int:
-    return value * 2
-
-sorted_items = sorted(items, key=lambda item: item.name)
-```
-
-Bad:
-
-```python
-double = lambda value: value * 2
-```
-
-### Conditional Expressions
-
-Rules:
-
-- Conditional expressions are allowed for simple cases.
-- Each portion should be easy to read: true expression, condition, false
-  expression.
-- Use a full `if` statement when the expression becomes long or nested.
-
-Good:
-
-```python
-mode = "stream" if is_streaming else "batch"
-```
-
-Bad:
-
-```python
-mode = (
-    choose_streaming_mode(request, config)
-    if complicated_condition(request, config, metadata)
-    else choose_batch_mode(request, config, metadata)
-)
-```
-
-### Comprehensions and Generator Expressions
-
-Rules:
-
-- Use comprehensions for simple mapping or filtering.
-- Do not use multiple `for` clauses or multiple filter expressions in one
-  comprehension.
-- Optimize for readability, not compactness.
-- Use ordinary loops for nested logic, multiple conditions, mutation, or
-  non-obvious transformations.
-- Generator expressions are preferred when a list is not needed.
-
-Good:
-
-```python
-names = [user.name for user in users if user is not None]
-```
-
-Good with a long expression:
-
-```python
-valid_examples = [
-    transform_example(example)
-    for example in examples
-    if is_valid_example(example)
-]
-```
-
-Bad:
-
-```python
-pairs = [(x, y) for x in range(10) for y in range(5) if x * y > 10]
-```
-
-Use a loop:
-
-```python
-pairs: list[tuple[int, int]] = []
-for x in range(10):
-    for y in range(5):
-        if x * y > 10:
-            pairs.append((x, y))
-```
-
-### Generators
-
-Rules:
-
-- Use generators when values can be produced lazily.
-- A generator docstring uses `Yields:`.
-- If a generator manages an expensive resource, make cleanup explicit.
-- Do not keep resource lifetime implicit in a partially consumed generator.
-
-Good:
-
-```python
-def iter_prompt_text(examples: Iterable[PromptExample]) -> Iterable[str]:
-    """Yield prompt text values.
-
-    Yields:
-        Prompt text values.
-    """
-    for example in examples:
-        yield example.prompt
-```
-
-## Classes
-
-### Class Design
-
-Rules:
-
-- Prefer functions and data structures unless a class owns real state,
-  invariants, or behavior.
-- Keep related classes together when they form one cohesive contract, including
-  schemas, exceptions, protocols, and their input/output records.
-- Split modules by independent responsibilities, not by class count.
-- Treat size limits as review prompts: document a justified limit adjustment
-  rather than extracting forwarding wrappers only to reduce line counts.
-- Do not create classes only to group static functions.
-- Avoid `Manager`, `Processor`, `Helper`, and similar vague class names.
-- Decide deliberately which attributes are public and which are internal.
-- Use public attributes for simple data.
-- Use one leading underscore for internal attributes.
-- Avoid double-leading underscores unless protecting a base class from subclass
-  name collisions.
-- Focus on the shape of data before adding behavior.
-- If a function coordinates work between multiple classes and no polymorphism is
-  involved, keep it a function unless one class clearly owns the behavior.
-
-Good:
-
-```python
-class RuntimeBatch:
-    """Tokenized prompts prepared for inference."""
-```
-
-Bad:
-
-```python
-class RuntimeManager:
-    """Class that manages runtime work."""
-```
-
-### Initialization and Named Constructors
-
-Rules:
-
-- Keep `__init__` small.
-- `__init__` should accept the values the class needs, not complex external
-  objects that happen to contain those values.
-- Do not couple a class constructor to database rows, ORM objects, API payloads,
-  CLI namespaces, or provider SDK response objects.
-- Use classmethod named constructors for external representations, such as
-  `from_row`, `from_payload`, `from_token`, or `from_path`.
-- Do not construct business objects with `ClassName(**external_attributes)` when
-  that couples the class to an external storage or wire format.
-- Validation of class invariants belongs in initialization.
-- Complex loading, serialization, deserialization, and validation systems should
-  stay outside the business object.
-- Derived attributes should be cheap, deterministic, and based on already
-  initialized fields. Prefer a named constructor when deriving them requires I/O,
-  external services, or complex parsing.
-
-Good:
-
-```python
-@dataclass
-class Point:
-    """Two-dimensional point."""
-
-    x: float
-    y: float
-
-    @classmethod
-    def from_row(cls, row: PointRow) -> Point:
-        """Build a point from a database row."""
-        return cls(x=row.x, y=row.y)
-```
-
-Bad:
-
-```python
-class Point:
-    def __init__(self, database_row):
-        self.x = database_row.x
-        self.y = database_row.y
-
-point = Point(**row.attributes)
-```
-
-### Dataclasses
-
-Rules:
-
-- Use dataclasses for plain data records.
-- Keep dataclass fields typed.
-- Document public fields in the class docstring `Attributes:` section when the
-  class is public.
-- Do not add methods to a dataclass unless they are part of the data contract.
-- Do not use a dataclass as a disguised mutable global configuration object.
-- Use `field(default_factory=...)` for mutable defaults.
-- Use `__post_init__` for simple invariant checks or cheap derived fields.
-- Prefer a named constructor over `__post_init__` when construction needs
-  parsing, I/O, external objects, or multiple alternate sources.
-- If a project already uses `attrs`, apply the same principles: use factories
-  for mutable defaults, validators for invariants, converters for simple input
-  normalization, and named constructors for complex creation paths.
-- Do not introduce `attrs` solely to avoid writing a small dataclass or ordinary
-  function.
-
-Good:
-
-```python
-@dataclass(frozen=True)
-class ModelVariant:
-    """Supported model variant.
-
-    Attributes:
-        name: Stable variant name.
-        base_model: Hugging Face base model identifier.
-    """
-
-    name: str
-    base_model: str
-```
-
-Good mutable default:
-
-```python
-@dataclass
-class Batch:
-    """Batch of prompts."""
-
-    prompts: list[PromptExample] = field(default_factory=list)
-```
-
-Bad mutable default:
-
-```python
-@dataclass
-class Batch:
-    prompts: list[PromptExample] = []
-```
-
-### Properties
-
-Rules:
-
-- Use properties only for cheap, straightforward, unsurprising attribute access.
-- Do not use a property to simply get and set an internal attribute.
-- Do not hide expensive work behind attribute syntax.
-- Do not hide side effects behind properties.
-- Use `@property`; do not manually implement descriptors unless the power
-  feature is necessary.
-- Avoid properties for computations subclasses may need to override and extend.
-
-Good:
-
-```python
-@property
-def num_examples(self) -> int:
-    """The number of examples."""
-    return len(self.examples)
-```
-
-Bad:
-
-```python
-@property
-def model(self) -> AutoModel:
-    return AutoModel.from_pretrained(self.model_name)
-```
-
-### Inheritance
-
-Rules:
-
-- Design explicitly for inheritance or avoid inheritance.
-- Prefer composition over inheritance for code sharing.
-- Do not subclass only to reuse methods or state.
-- Do not use the template method pattern as a default design. A base class that
-  defines control flow and calls subclass hooks is harder to read and easier to
-  break than a wrapper with explicit delegation.
-- Do not mix three different inheritance purposes in one hierarchy: code
-  sharing, interface definition, and specialization.
-- Use protocols or small ABCs for interfaces.
-- Use specialization only when the subclass truly is the base class plus more
-  and can be used anywhere the base class is expected.
-- Follow the Liskov substitution principle: callers that accept the base class
-  must be able to interact correctly with the subclass.
-- Keep strict specialization hierarchies shallow and physically close together
-  when practical.
-- Do not model variants as one class with a type field and many optional fields
-  that only apply for some type values.
-- Make invalid states unrepresentable where practical.
-- Use composition when behavior varies across more than one axis.
-- Use a wrapper when you need one behavior plus cross-cutting behavior such as
-  tracking, caching, timing, or logging.
-- Consider `functools.singledispatch` when an operation varies by type but does
-  not clearly belong to one class.
-- Public attributes have no leading underscore.
-- Internal attributes use one leading underscore.
-- Double-leading underscores are only for avoiding accidental subclass name
-  collisions.
-- If a class is intended for subclassing, document the public API and subclass
-  API separately when that distinction matters.
-
-Good specialization:
-
-```python
-@dataclass
-class EmailAddress:
-    """Email address shared by all address types."""
-
-    id: UUID
-    address: str
-
-@dataclass
-class Mailbox(EmailAddress):
-    """Email address that stores mail."""
-
-    password_hash: str
-```
-
-Bad optional-field variant:
-
-```python
-@dataclass
-class EmailAddress:
-    kind: str
-    id: UUID
-    address: str
-    password_hash: str | None
-    forwarding_targets: list[str] | None
-```
-
-Good wrapper:
-
-```python
-class TrackingRepository:
-    """Repository wrapper that records retrieved products."""
-
-    def __init__(self, repository: Repository) -> None:
-        self._repository = repository
-        self.seen: set[Product] = set()
-
-    def add_product(self, product: Product) -> None:
-        self._repository.add_product(product)
-        self.seen.add(product)
-```
-
-Bad subclass-based code sharing:
-
-```python
-class BaseRepository(abc.ABC):
-    def add_product(self, product: Product) -> None:
-        self._add_product(product)
-        self.seen.add(product)
-
-    @abc.abstractmethod
-    def _add_product(self, product: Product) -> None:
-        ...
-```
-
-### Decorators
-
-Rules:
-
-- Use decorators when they remove real repetition or express a clear framework
-  contract.
-- Decorator behavior must be unsurprising.
-- Decorators run at definition time, usually import time. Do not let them depend
-  on files, sockets, databases, network calls, or other unavailable resources.
-- Decorators should preserve function metadata when wrapping functions.
-- Write tests for decorators when tests are requested for decorated behavior.
-- Avoid `staticmethod`. Use a module-level function instead.
-- Use `classmethod` for named constructors or class-specific routines.
-- Use `@property` only under the property rules above.
-
-Good:
-
-```python
-class ModelConfig:
-    @classmethod
-    def from_name(cls, name: str) -> ModelConfig:
-        """Build a model config from a variant name."""
-        return cls(name=name)
-```
-
-Bad:
-
-```python
-class ModelConfig:
-    @staticmethod
-    def normalize_name(name: str) -> str:
-        return name.strip().lower()
-```
-
-Use a module function:
-
-```python
-def normalize_model_name(name: str) -> str:
-    return name.strip().lower()
-```
-
-### Exceptions as Classes
-
-Rules:
-
-- Custom exceptions inherit from `Exception`.
-- Do not inherit directly from `BaseException`.
-- Exception class names use CapWords.
-- Error exception names end with `Error`.
-- Exception names should not repeat the module name.
-- Exception docstrings describe the represented condition.
-
-Good:
-
-```python
-class InvalidVariantError(Exception):
-    """The requested model variant is not supported."""
-```
-
-Bad:
-
-```python
-class VariantsInvalidVariantError(BaseException):
-    """Raised in variants.py when the variant is invalid."""
-```
-
-## Exceptions and Error Handling
-
-Rules:
-
-- Use built-in exception classes when they fit the error.
-- Raise `ValueError` for invalid argument values.
-- Raise `TypeError` for invalid argument types when type validation is needed.
-- Keep `try` blocks as small as possible.
-- Catch specific exceptions.
-- Do not use bare `except:`.
-- Do not catch `Exception` unless re-raising or creating a deliberate isolation
-  boundary that records and suppresses failures.
-- Use `else` when code should run only if the `try` block succeeds.
-- Use `finally` for cleanup that must run regardless of success or failure.
-- Do not use `return`, `break`, or `continue` in a `finally` block when an
-  exception could be active.
-- Use `raise NewError(...) from error` when replacing an exception but preserving
-  the cause.
-- Use `raise NewError(...) from None` only when deliberately suppressing an
-  irrelevant implementation exception, and preserve relevant details in the new
-  message.
-- When catching operating-system errors, prefer Python's explicit OSError
-  subclass hierarchy over checking `errno` manually.
-
-Good:
-
-```python
-try:
-    value = collection[key]
-except KeyError:
-    return key_not_found(key)
-else:
-    return handle_value(value)
-```
-
-Bad:
-
-```python
-try:
-    return handle_value(collection[key])
-except KeyError:
-    return key_not_found(key)
-```
-
-Good exception replacement:
-
-```python
-try:
-    raw_value = payload["label"]
-except KeyError as error:
-    raise ValueError("Missing required field: label") from error
-```
-
-Bad catch-all:
-
-```python
-try:
-    start_server()
-except Exception:
-    return None
-```
-
-## Assertions
-
-Rules:
-
-- Do not use `assert` for application logic, input validation, permission
-  checks, or required preconditions.
-- Do not rely on `assert` to satisfy type checking or runtime correctness.
-- `assert` is acceptable in pytest tests.
-- `assert` is acceptable for non-critical internal consistency checks where
-  removing it would not change application behavior.
-- Use explicit `if` checks and raise exceptions for real validation.
-
-Good:
-
-```python
-def connect_to_port(minimum: int) -> int:
-    """Connect to the next available port."""
-    if minimum < 1024:
-        raise ValueError(f"Minimum port must be at least 1024: {minimum=}")
-    port = find_next_open_port(minimum)
-    if port is None:
-        raise ConnectionError(f"Could not connect on or above port: {minimum=}")
-    assert port >= minimum
-    return port
-```
-
-Bad:
-
-```python
-def connect_to_port(minimum: int) -> int:
-    assert minimum >= 1024
-    port = find_next_open_port(minimum)
-    assert port is not None
-    return port
-```
-
-## Boolean Logic and Comparisons
-
-Rules:
-
-- Compare to `None` with `is None` or `is not None`.
-- Do not compare booleans to `True` or `False`.
-- Use truthiness for sequences and containers.
-- When handling integers, compare to `0` when zero has domain meaning.
-- Do not write `if not value` when `None`, `0`, `False`, and empty containers
-  have different meanings.
-- Use `is not` instead of `not ... is`.
-- Use `isinstance()` for type checks.
-- Use `startswith()` and `endswith()` for prefix and suffix checks.
-- Do not compare types directly unless exact type identity is the real contract.
-- For rich ordering, implement all relevant comparison operations or use
-  `functools.total_ordering()`.
-
-Good:
-
-```python
-if value is not None:
-    ...
-
-if not examples:
-    ...
-
-if count == 0:
-    ...
-
-if isinstance(obj, int):
-    ...
-
-if filename.endswith(".json"):
-    ...
-```
-
-Bad:
-
-```python
-if value != None:
-    ...
-
-if greeting == True:
-    ...
-
-if len(examples) == 0:
-    ...
-
-if type(obj) is int:
-    ...
-
-if filename[-5:] == ".json":
-    ...
-```
-
-NumPy arrays may reject implicit boolean evaluation. Use `.size` or another
-explicit property when checking array emptiness.
-
-## Control Flow Simplification
-
-Rules:
-
-- Reduce nesting when a condition can be merged without changing behavior.
-- Merge adjacent `if` statements when the inner condition has no intervening
-  work and no `else` branch that changes the result.
-- Prefer guard clauses when they remove a level of nesting and keep the main
-  path easy to scan.
-- Hoist repeated code out of conditional branches when it runs in every branch.
-- Hoist loop-invariant statements out of `for` and `while` loops when they do
-  not depend on the loop variable and have no required repeated side effect.
-- Do not combine conditions when separate conditions communicate distinct
-  domain decisions more clearly.
-- Do not hoist code when execution order, exceptions, logging, timing, database
-  calls, or mutation would change.
-
-Good merged condition:
-
-```python
-if is_enabled and has_examples:
-    return build_examples()
-```
-
-Bad nested condition:
-
-```python
-if is_enabled:
-    if has_examples:
-        return build_examples()
-```
-
-Good hoisted branch code:
-
-```python
-if sold > DISCOUNT_AMOUNT:
-    total = sold * DISCOUNT_PRICE
-else:
-    total = sold * PRICE
-label = f"Total: {total}"
-```
-
-Bad repeated branch code:
-
-```python
-if sold > DISCOUNT_AMOUNT:
-    total = sold * DISCOUNT_PRICE
-    label = f"Total: {total}"
-else:
-    total = sold * PRICE
-    label = f"Total: {total}"
-```
-
-Good loop-invariant hoist:
-
-```python
-city = "London"
-for building in buildings:
-    addresses.append((building.street_address, city))
-```
-
-Bad loop-invariant assignment:
-
-```python
-for building in buildings:
-    city = "London"
-    addresses.append((building.street_address, city))
-```
-
-Do not merge conditions when it hides separate decisions:
-
-```python
-if not request.user:
-    raise PermissionError("Authentication is required")
-if not request.user.can_export:
-    raise PermissionError("Export permission is required")
-```
-
-## Iteration and Collections
-
-Rules:
-
-- Use default iterators and membership operators for containers that support
-  them.
-- Iterate dictionaries directly for keys.
-- Use `.items()` when both keys and values are needed.
-- Do not call `.keys()` only to iterate keys.
-- Do not call `.readlines()` only to iterate file lines.
-- Do not mutate a container while iterating over it.
-- Prefer clear loops over dense collection transformations.
-- Use `yield from iterable` instead of a loop that only yields every item from
-  another iterable.
-- Use `any()` and `all()` for simple existence or universal predicate checks.
-- Use `[]` for an empty list and `{}` for an empty dictionary.
-- Use `list()` or `dict()` when converting an iterable or mapping, not for empty
-  literals.
-
-Good:
-
-```python
-for key in values:
-    ...
-
-for key, value in values.items():
-    ...
-
-for line in file_obj:
-    ...
-
-if item in values:
-    ...
-```
-
-Bad:
-
-```python
-for key in values.keys():
-    ...
-
-for line in file_obj.readlines():
-    ...
-```
-
-Good delegated yield:
-
-```python
-def get_content(entry: Entry) -> Iterable[Block]:
-    yield from entry.get_blocks()
-```
-
-Bad delegated yield:
-
-```python
-def get_content(entry: Entry) -> Iterable[Block]:
-    for block in entry.get_blocks():
-        yield block
-```
-
-Good predicate check:
-
-```python
-found = any(thing == expected for thing in things)
-all_valid = all(is_valid(thing) for thing in things)
-```
-
-Bad predicate loop:
-
-```python
-found = False
-for thing in things:
-    if thing == expected:
-        found = True
-        break
-```
-
-Good empty containers:
-
-```python
-items = []
-metadata = {}
-```
-
-Bad empty containers:
-
-```python
-items = list()
-metadata = dict()
-```
-
-## Strings, Logging, and Error Messages
-
-### String Formatting
-
-Rules:
-
-- Use f-strings, `%` formatting, or `.format()` for formatting.
-- Prefer f-strings for ordinary string interpolation.
-- Do not use `+` to format strings with values.
-- A single `a + b` concatenation is allowed when both values are already strings
-  and this is not formatting.
-- Do not accumulate strings with `+` or `+=` in a loop.
-- Accumulate parts in a list and `"".join(parts)`, or use `io.StringIO`.
-- Use implicit literal concatenation inside parentheses for long string
-  literals.
-
-Good:
-
-```python
-message = f"name: {name}; score: {score}"
-
-rows = ["<table>"]
-for last_name, first_name in employees:
-    rows.append("<tr><td>%s, %s</td></tr>" % (last_name, first_name))
-rows.append("</table>")
-employee_table = "".join(rows)
-```
-
-Bad:
-
-```python
-message = "name: " + name + "; score: " + str(score)
-
-employee_table = "<table>"
-for last_name, first_name in employees:
-    employee_table += "<tr><td>%s, %s</td></tr>" % (last_name, first_name)
-employee_table += "</table>"
-```
-
-### Logging
-
-Rules:
-
-- Create loggers with `logging.getLogger(__name__)`.
-- Use module-level loggers. Logger names should track the package and module
-  hierarchy through `__name__`.
-- Do not log through the root logger from application or library modules.
-- Use `print()` for ordinary CLI output intended for the user.
-- Use `logger.debug()` for detailed diagnostic information.
-- Use `logger.info()` for normal operational events and status.
-- Use `logger.warning()` when something unexpected happened but the software can
-  still continue as expected.
-- Use `warnings.warn()` in library code when client code should change to avoid
-  the issue.
-- Raise an exception to report an error that prevents the requested operation.
-- Use `logger.error()`, `logger.exception()`, or `logger.critical()` when an
-  error is deliberately suppressed at an isolation boundary and must be recorded.
-- Use `logger.exception()` only inside an exception handler.
-- Logging calls that accept pattern strings must use a string literal first
-  argument and pass values as later arguments.
-- Do not use f-strings in logging pattern calls.
-- Do not call logging once for the static text and once for the value.
-- Do not eagerly compute expensive logging arguments unless the log level is
-  enabled. Use `logger.isEnabledFor(...)` around expensive diagnostic work.
-- Configure handlers, formatters, and levels at the application entrypoint or
-  deployment boundary, not in importable library modules.
-- Call `logging.basicConfig()` before logger methods are called when an
-  entrypoint uses basic configuration.
-- If dictionary or file logging configuration is used, set
-  `disable_existing_loggers` deliberately.
-- Library modules must not add handlers other than `logging.NullHandler()` to
-  their own top-level logger.
-- Do not define custom logging levels unless there is a documented application
-  need.
-- Do not log secrets, tokens, passwords, PII, or full authenticated request
-  bodies.
-- Keep log messages precise and searchable.
-
-Good:
-
-```python
-logger.info("Warmup prompts: %d", num_prompts)
-logger.warning("Requested max_length=%d exceeds model limit; clamping to %d", requested, effective)
-```
-
-Good expensive debug logging:
-
-```python
-if logger.isEnabledFor(logging.DEBUG):
-    logger.debug(
-        "Tokenization details: %s",
-        build_expensive_tokenization_summary(batch),
-    )
-```
-
-Good exception logging:
-
-```python
-try:
-    upload_model(model_dir)
-except UploadError:
-    logger.exception("Model upload failed")
-    raise
-```
-
-Bad:
-
-```python
-logging.info("Warmup prompts: %d", num_prompts)
-logger.info(f"Warmup prompts: {num_prompts}")
-logger.info("Warmup prompts:")
-logger.info(num_prompts)
-```
-
-Bad exception logging:
-
-```python
-logger.exception("Model upload failed")
-```
-
-### Error Messages
-
-Rules:
-
-- Error messages must match the actual error condition.
-- Interpolated values must be clearly identifiable.
-- Prefer `name=value` formatting for values that aid debugging.
-- Keep messages easy to grep.
-- Start user-visible messages with an uppercase letter.
-- Do not leak schema names, table names, file paths, internal IDs, stack traces,
-  trigger names, policy names, secrets, or implementation details.
-- Use generic messages for configuration and infrastructure failures unless the
-  details are part of the public contract.
-
-Good:
-
-```python
-if not 0 <= probability <= 1:
-    raise ValueError(f"Not a probability: {probability=}")
-```
-
-Bad:
-
-```python
-if probability < 0 or probability > 1:
-    raise ValueError(f"The probability was bad: {probability}")
-```
-
-Good logging around OS errors:
-
-```python
-try:
-    workdir.rmdir()
-except OSError as error:
-    logger.warning("Could not remove directory (reason: %r): %r", error, workdir)
-```
-
-Bad logging:
-
-```python
-try:
-    workdir.rmdir()
-except OSError:
-    logger.warning("Directory already was deleted: %s", workdir)
-```
-
-## Files and Stateful Resources
-
-Rules:
-
-- Explicitly close files, sockets, database connections, mmap mappings, h5py
-  files, matplotlib figures, and similar stateful resources.
-- Prefer `with` statements for resources that support context management.
-- Use `contextlib.closing()` for closeable resources without context-manager
-  support.
-- Do not rely on finalizers or garbage collection for resource cleanup.
-- Keep resource scope as small as practical.
-- Do not return open resources from helpers unless resource ownership is part of
-  the documented contract.
-- Document resource lifetime when context-based management is infeasible.
-
-Good:
-
-```python
-with path.open(encoding="utf-8") as file_obj:
-    for line in file_obj:
-        handle_line(line)
-```
-
-Bad:
-
-```python
-file_obj = path.open()
-for line in file_obj:
-    handle_line(line)
-```
-
-Good for closeable objects without context-manager support:
-
-```python
-import contextlib
-
-with contextlib.closing(open_remote_resource(url)) as resource:
-    consume(resource)
-```
-
 ## Main Programs and Top-Level Code
 
 Rules:
 
-- Executable modules put main behavior in a `main()` function.
-- Use `if __name__ == "__main__":` before executing program behavior.
-- Prefer `raise SystemExit(main())` when `main()` returns an exit code.
-- Do not parse CLI arguments at import time.
+- Executable modules put main behavior in a `main()` function. `enforced-by: structure/shell-embeds`
+- Use `if __name__ == "__main__":` before executing program behavior. `enforced-by: structure/shell-embeds`
+- Prefer `raise SystemExit(main())` when `main()` returns an exit code. `enforced-by: structure/shell-embeds`
+- Do not parse CLI arguments at import time. `enforced-by: structure/import-boundary`
 - Do not run quantization, model loading, tests, network calls, or file
-  mutations at import time.
-- Use `python -m package.module` for repository Python entrypoints.
-- Shell scripts must call Python modules, not inline Python snippets.
-- Files that are not intended to execute directly do not need a shebang.
+  mutations at import time. `enforced-by: structure/import-boundary`
+- Use `python -m package.module` for repository Python entrypoints. `enforced-by: structure/shell-embeds`
+- Shell scripts must call Python modules, not inline Python snippets. `enforced-by: structure/shell-embeds`
+- Files that are not intended to execute directly do not need a shebang. `enforced-by: structure/shell-embeds`
 - Directly executable Python files may use `#!/usr/bin/env python3` when a
-  shebang is needed.
+  shebang is needed. `enforced-by: structure/shell-embeds`
 
 Good:
 
@@ -2683,70 +592,61 @@ if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
-Bad:
-
-```python
-args = parser.parse_args()
-start_server(args)
-```
-
 ## Power Features
 
-Avoid power features unless the project already has a clear local pattern and
+Avoid power features unless the project already has a clear local pattern and `enforced-by: security/semgrep`
 the feature is necessary.
 
 Avoid:
 
-- custom metaclasses;
-- bytecode manipulation;
-- dynamic inheritance;
-- object reparenting;
-- import hooks and import hacks;
-- runtime monkeypatching;
-- reflection-heavy designs;
-- modifying interpreter internals;
-- `__del__` cleanup logic;
-- manual descriptor implementations;
-- dynamic code generation.
+- custom metaclasses; `enforced-by: security/semgrep`
+- bytecode manipulation; `enforced-by: security/semgrep`
+- dynamic inheritance; `enforced-by: security/semgrep`
+- object reparenting; `enforced-by: security/semgrep`
+- import hooks and import hacks; `enforced-by: security/semgrep`
+- runtime monkeypatching; `enforced-by: security/semgrep`
+- reflection-heavy designs; `enforced-by: security/semgrep`
+- modifying interpreter internals; `enforced-by: security/semgrep`
+- `__del__` cleanup logic; `enforced-by: security/semgrep`
+- manual descriptor implementations; `enforced-by: security/semgrep`
+- dynamic code generation. `enforced-by: security/semgrep`
 
 Allowed standard-library uses include `dataclasses`, `enum`, and `abc` when they
 fit the problem.
 
 Rules:
 
-- Do not use a power feature to make code shorter.
-- Do not use a power feature to hide a dependency cycle or ownership problem.
+- Do not use a power feature to make code shorter. `enforced-by: security/semgrep`
+- Do not use a power feature to hide a dependency cycle or ownership problem. `enforced-by: security/semgrep`
 - Prefer ordinary functions, dataclasses, explicit imports, and explicit data
-  structures.
+  structures. `enforced-by: python/ruff RUF009`
 
 ## Threading and Concurrency
 
 Rules:
 
-- Do not rely on atomicity of built-in types.
-- Do not rely on atomic variable assignment for synchronization.
-- Use `queue.Queue` for thread communication when appropriate.
+- Do not rely on atomicity of built-in types. `enforced-by: python/ruff ASYNC`
+- Do not rely on atomic variable assignment for synchronization. `enforced-by: python/ruff ASYNC`
+- Use `queue.Queue` for thread communication when appropriate. `enforced-by: python/ruff ASYNC`
 - Use `threading` locks, conditions, or higher-level primitives for shared
-  state.
-- Prefer `threading.Condition` over low-level polling loops.
-- Keep shared mutable state small and explicit.
-- Document concurrency, cancellation, and isolation behavior when present.
+  state. `enforced-by: integrity/dependency-ownership`
+- Prefer `threading.Condition` over low-level polling loops. `enforced-by: python/ruff ASYNC`
+- Keep shared mutable state small and explicit. `enforced-by: python/ruff ASYNC`
+- Document concurrency, cancellation, and isolation behavior when present. `enforced-by: python/ruff ASYNC`
 
 ## Tests
 
-Add or change tests only when the user asks.
+Rules:
 
-Rules when Python tests are requested:
-
-- Test behavior, not implementation details.
-- Use pytest-style `assert` in tests.
-- Keep tests focused on the behavior under change.
+- Test behavior, not implementation details. `unenforced`
+- Use pytest-style `assert` in tests. `enforced-by: python/ruff S101`
+- Keep tests focused on the behavior under change. `unenforced`
 - Do not add module docstrings to test files unless they explain unusual setup,
-  environment requirements, or update commands.
-- Do not assert hardcoded configuration values that can change freely.
-- Use mocks only at external boundaries.
-- Do not test that mocks return the values assigned inside the test.
-- Cover meaningful edge cases, failure paths, and state transitions.
+  environment requirements, or update commands. `enforced-by: integrity/dependency-ownership`
+- Do not assert hardcoded configuration values that can change freely. `unenforced`
+- Use mocks only at external boundaries. `unenforced`
+- Do not test that mocks return the values assigned inside the test. `unenforced`
+- Cover meaningful edge cases, failure paths, and state transitions. `unenforced`
 
 Good:
 
@@ -2756,180 +656,87 @@ def test_parse_prompt_rejects_unexpected_entry() -> None:
         parse_prompt(value=object())
 ```
 
-Bad:
+## Review Checklist
 
-```python
-def test_default_temperature() -> None:
-    assert CONFIG.temperature == 0.7
-```
+Before `gspot check`, read the change against these questions:
 
-## Anti-Patterns
+- Does the code follow local project rules over generic style preferences? `unenforced`
+- Are imports top-level, grouped, sorted, and free of cycles? `unenforced`
+- Is the module import-stable, with no import-time work? `enforced-by: structure/import-boundary`
+- Are public APIs typed and documented? `unenforced`
+- Do argument types accept the broadest useful protocol or abstract collection? `unenforced`
+- Do concrete implementations return concrete types? `unenforced`
+- Is `Any` avoided where `object`, a protocol, or a type variable would express `enforced-by: python/basedpyright`
+- Are names consistent with [`NAMING.md`](NAMING.md)? `unenforced`
+- Are functions small, focused, and under the local length limit? `unenforced`
+- Are defaults immutable or initialized inside the function? `unenforced`
+- Are None checks explicit? `unenforced`
+- Are constructors free of external row, payload, SDK, or CLI object coupling? `unenforced`
+- Is subclassing used only for interfaces or true specialization, not code `unenforced`
+- Are exceptions specific, with narrow `try` blocks? `enforced-by: integrity/dependency-ownership`
+- Are resources managed with `with` or documented ownership? `unenforced`
+- Are logging calls using literal pattern strings and argument parameters? `unenforced`
+- Is logging configured only at the application boundary? `unenforced`
+- Are error messages precise, actionable, and free of internal details? `unenforced`
+- Are environment variables read, parsed, and validated at a boundary instead `enforced-by: structure/env-access-owner`
+- When changing deployment install commands, are pip requirements pinned, `enforced-by: integrity/dependency-ownership`
+- Are comments present where behavior is non-obvious and absent where they only `enforced-by: python/ruff ERA001`
+- Is `__all__` explicit and at the bottom when public exports exist? `enforced-by: structure/private-prefix`
+- Are package boundaries and import-linter contracts respected? `unenforced`
+- Is importable code under `src/` without `sys.path` mutation? `enforced-by: integrity/dependency-ownership`
+- For FastAPI code, are path operations thin and grouped behind routers? `unenforced`
+- For FastAPI code, are parameter defaults, `Annotated` metadata, and `enforced-by: python/basedpyright`
+- For FastAPI code, are route declarations ordered so fixed paths are not `unenforced`
+- For FastAPI code, are request and response schemas using Pydantic v2 APIs and `unenforced`
+- For FastAPI code, are `Field` constraints, schema metadata, and examples `unenforced`
+- For FastAPI code, do nested models use precise typed fields instead of `unenforced`
+- For FastAPI code, are special boundary types such as `UUID`, `datetime`, `unenforced`
+- For FastAPI code, are headers and cookies declared with `Header()` and `unenforced`
+- For FastAPI code, do response models filter private fields through dedicated `enforced-by: structure/private-prefix`
+- For FastAPI code, are success status codes declared on decorators, error `unenforced`
+- For FastAPI code, are custom exception handlers registered at the app boundary `unenforced`
+- For FastAPI code, are forms and files declared with `Form()`, `File()`, and `unenforced`
+- For FastAPI code, do file uploads use `UploadFile` unless the file is small `unenforced`
+- For FastAPI code, are replacement and partial-update routes using clear `unenforced`
+- For FastAPI code, are OpenAPI, Swagger UI, and ReDoc disabled by default and `unenforced`
+- For FastAPI code, is blocking I/O kept out of `async def` path operations? `enforced-by: integrity/dependency-ownership`
+- For FastAPI code, are dependencies placed at the narrowest correct boundary:
+- For FastAPI code, are secrets externalized, credentials errors generic, and `enforced-by: secrets/gitleaks`
+- For FastAPI code, are background tasks, middleware, and streaming endpoints `unenforced`
+- Did you avoid tests, linting, and formatting commands unless requested? `unenforced`
 
-Do not write:
+## Source Decisions
 
-```python
-from module import *
-```
+These rules adapt PEP 8, PEP 257, and the Google Python Style Guide into one standard. Where they
+disagree, the decision is:
 
-```python
-from typing import Dict, List, Optional, Type, Union
-```
+| Topic | Decision |
+| --- | --- |
+| Style authority | These rules and the configured tools win over the source guides. |
+| Line length | The formatter's configured line length, not PEP 8's 79 or Google's 80. |
+| Formatter and linters | Ruff format, Ruff lint, basedpyright, import-linter, and the structure engine. Pylint guidance from Google maps to these tools. |
+| Runtime | The project's declared Python version, stated once in the runtime pin. |
+| Future imports | Prefer `from __future__ import annotations`. |
+| Quotes | Double quotes; docstrings always triple double quotes. |
+| Imports | Absolute imports across packages; explicit relative sibling imports inside a package when that is the local pattern; direct imports of public symbols and of typing and `collections.abc` names. |
+| `__all__` | At the bottom of the module, overriding PEP 8's dunder placement for `__all__` only. Other dunders such as `__version__` sit after the module docstring and future imports. |
+| License boilerplate | None unless the project defines the exact text. |
+| Function and file length | The configured limits; barrel `__init__.py` files are exempt from the file limit. |
+| Typing | Every function annotated; modern union syntax, built-in generics, `type` statements or `TypeAlias` for real aliases, `Annotated` for metadata, `object` for any value, protocols for structural interfaces; abstract input types and concrete return types. |
+| Logging | `logging.getLogger(__name__)` in modules; entrypoints configure handlers; libraries add only `NullHandler`. |
+| Project layout | Importable code under `src/`; no `sys.path` patches. |
+| Inheritance | Composition for code sharing, protocols for interfaces, subclassing only for true specialization. |
+| FastAPI | The FastAPI rules apply only to FastAPI applications and never override these rules. |
+| Package installs | Pinned, hashed, binary-only requirements for deployments; no direct setuptools commands. |
 
-```python
-type Rows = list[dict[str, object]]
-```
+When editing an existing file, follow the surrounding style where the source guides allow a choice.
+When creating new code, use the decisions in this table.
 
-```python
-def format_value(value: Any) -> str:
-    return str(value)
-```
+## Tooling Authority
 
-```python
-def load(path: None | Path) -> list[str]:
-    ...
-```
-
-```python
-_Rows = list[dict[str, object]]
-```
-
-```python
-Path: TypeAlias = pathlib.Path
-```
-
-```python
-def f(value=[]):
-    ...
-```
-
-```python
-if value == None:
-    ...
-```
-
-```python
-if flag == True:
-    ...
-```
-
-```python
-try:
-    ...
-except:
-    ...
-```
-
-```python
-try:
-    return transform(collection[key])
-except KeyError:
-    return fallback()
-```
-
-```python
-logger.info(f"Loaded {count} prompts")
-```
-
-```python
-logging.info("Loaded %d prompts", count)
-```
-
-```python
-logger.exception("Upload failed")
-```
-
-```python
-STATE = {"instance": None}
-```
-
-```python
-def get_instance():
-    ...
-```
-
-```python
-def build():
-    import examples
-```
-
-```python
-def build_client() -> Client:
-    token = os.getenv("API_TOKEN", "example-token")
-    return Client(token=token)
-```
-
-```python
-import importlib
-
-module = importlib.import_module("examples")
-```
-
-```python
-import sys
-
-sys.path.insert(0, "src")
-```
-
-```bash
-python -m pip install -r loose-requirements.lock
-python -m pip install --extra-index-url https://packages.example.com/simple private-package
-python setup.py install
-python setup.py develop
-easy_install example-package
-```
-
-```python
-def __getattr__(name: str) -> object:
-    ...
-```
-
-```python
-class TrainingManager:
-    ...
-```
-
-```python
-class Point:
-    def __init__(self, row):
-        self.x = row.x
-        self.y = row.y
-```
-
-```python
-class BaseRepository(abc.ABC):
-    def add_product(self, product: Product) -> None:
-        self._add_product(product)
-        self.seen.add(product)
-```
-
-```python
-double = lambda value: value * 2
-```
-
-```python
-employee_table = ""
-for row in rows:
-    employee_table += render_row(row)
-```
-
-```python
-if len(examples):
-    ...
-```
-
-```python
-if type(value) is str:
-    ...
-```
-
-```python
-if name[:4] == "test":
-    ...
-```
-
-```python
-def main():
-    ...
-
-main()
-```
+- Treat a lint failure as a policy failure. `unenforced`
+- Do not add per-file ignores, inline ignores, or broad config exceptions unless the user
+  explicitly asks for a tooling change or the violation is unavoidable, and then with a reason. `unenforced`
+- Do not copy an existing per-file ignore into new files. `unenforced`
+- Do not broaden an existing exception to make unrelated code pass. `unenforced`
+- Do not disable a rule when a clear code change can satisfy it. `unenforced`

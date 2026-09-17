@@ -1,0 +1,6 @@
+extends: occurrence
+message: "A list item longer than 45 words. Split it or make it a paragraph."
+level: error
+scope: list
+max: 45
+token: "\\b\\w+\\b"

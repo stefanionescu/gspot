@@ -1,0 +1,63 @@
+# nextjs
+
+Kind: framework. Requires: typescript, css, config-files.
+
+## Detects and claims
+
+| | |
+| --- | --- |
+| Detect | `next` in dependencies; `next.config.{js,mjs,ts}` |
+| Claims | `app/**`, `pages/**`, `src/app/**`, `src/pages/**`, `middleware.{js,ts}`, `proxy.{js,ts}`, `next.config.*`, `next-env.d.ts` (generated), `public/**` (binary and static) |
+| Architecture it assumes | the App Router layout, because `create-next-app` produces it; nothing else |
+
+## Tools
+
+eslint-config-next, @eslint/compat, eslint-plugin-react-hooks (through next), eslint-plugin-i18next,
+@formatjs/icu-messageformat-parser (inside gspot), postcss-modules (inside gspot).
+
+## Generated configuration
+
+The typescript flat config gains, in order: `eslint-config-next` core-web-vitals and typescript
+(wrapped by `@eslint/compat` on ESLint 10), the `[architecture]` boundaries (route, feature,
+shared), `gspot/require-server-only` over server files, `gspot/no-client-environment` over every
+file, `react-hooks/*`, `react/no-array-index-key`, `react/no-danger`,
+`@next/next/no-async-client-component`, and the framework-entry overrides that turn off
+`no-trivial-files`, `no-export-only-files`, `no-reexports-outside-index` and
+`no-single-file-folders` for `page`, `layout`, `template`, `default`, `loading`, `error`,
+`not-found`, `global-error`, `route`, `middleware` and `proxy` files.
+
+Server files: `**/server/**`, `**/*.server.*`, `features/*/server/**`, `lib/**/server.*`, and any
+file with `'use server'`. Client files: any file with `'use client'`.
+
+## Checks
+
+| Id | Stage | Command |
+| --- | --- | --- |
+| `typescript/eslint` | commit | with the additions above |
+| `nextjs/typecheck` | commit | `tsc --noEmit` with `next-env.d.ts` |
+| `nextjs/build` | push, build | `next build` when `[tools.next] build_in_gate = true` |
+| `integrity/route-segments` | commit | no segment holds both `page` and `route` |
+| `integrity/next-config` | commit | `next.config.*` parsed as syntax: no secret in `env`, no `eslint.ignoreDuringBuilds`, no `typescript.ignoreBuildErrors` |
+| `integrity/css-usage` | push | every CSS module class used and defined |
+| `integrity/locales` | push | ICU parse, no empty message, keys without dots, every locale complete against the base, every message key used through the type checker |
+| `integrity/required-rules` | push | the required rule list still resolves per file class |
+| `integrity/dependency-alignment` | commit | `next` and `eslint-config-next` on one version; `react` and `react-dom` on one version |
+| `integrity/manifest-policy` | commit | pinned `packageManager`, one lockfile, sorted manifests |
+
+## Settings
+
+| Setting | Default |
+| --- | --- |
+| `architecture.route_directories` | `app`, `pages` |
+| `architecture.shared_directories` | `components`, `lib`, `hooks`, `config`, `validators`, `types`, `server` |
+| `architecture.feature_contracts` | `index`, `public`, `contracts` |
+| `architecture.allowed_imports` (from, to, reason) | none |
+| `tools.next.translations` (directory, base locale) | detected from next-intl configuration |
+| `tools.next.build_in_gate` | false |
+| `tools.eslint.restricted_imports` (name, message) | none; the reference picture-component rule is one entry |
+
+## Rule files
+
+`framework/nextjs/NEXTJS.md`, `framework/nextjs/SECURITY.md`, `framework/react/REACT.md`, `runtime/node/NODE.md`,
+`runtime/browser/BROWSER.md`; `runtime/workers/WORKERS.md` through cloudflare when `@opennextjs/cloudflare` is
+present; `library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.

@@ -1,25 +1,31 @@
+---
+layer: tool
+preset: vitest
+title: Vitest
+---
+
 # Vitest
 
 ## Testing
 
 Rules for API tests:
 
-- Prefer component-style API tests for meaningful backend behavior: start the API surface, use real middleware and routes, mock only boundaries that leave the process.
-- Unit test pure domain functions when the behavior is algorithmic or has many input branches.
-- Use narrow in-process HTTP tests with the app factory and `supertest` when lifecycle, ports, and process startup are irrelevant.
-- Use a real HTTP client against a started server when startup, shutdown, readiness, middleware order, sockets, or container-like behavior matters.
-- Configure real HTTP clients so non-2xx responses do not throw. The test should decide which status is acceptable.
-- Use e2e tests only when runtime lifecycle, provider connection behavior, or deployment wiring matters.
-- Real provider tests need explicit opt-in env vars and must not run as part of default suites.
-- Use nested `describe()` blocks when they make reports clearer: route, method, scenario, expectation.
+- Prefer component-style API tests for meaningful backend behavior: start the API surface, use real middleware and routes, mock only boundaries that leave the process. `enforced-by: typescript/eslint`
+- Unit test pure domain functions when the behavior is algorithmic or has many input branches. `enforced-by: typescript/eslint`
+- Use narrow in-process HTTP tests with the app factory and `supertest` when lifecycle, ports, and process startup are irrelevant. `enforced-by: typescript/eslint`
+- Use a real HTTP client against a started server when startup, shutdown, readiness, middleware order, sockets, or container-like behavior matters. `enforced-by: typescript/eslint`
+- Configure real HTTP clients so non-2xx responses do not throw. The test decides which status is acceptable. `enforced-by: typescript/eslint`
+- Use e2e tests only when runtime lifecycle, provider connection behavior, or deployment wiring matters. `enforced-by: typescript/eslint`
+- Real provider tests need explicit opt-in env vars and must not run as part of default suites. `enforced-by: typescript/eslint`
+- Use nested `describe()` blocks when they make reports clearer: route, method, scenario, expectation. `enforced-by: typescript/eslint`
 
 When an API behavior changes, consider the five backend outcomes:
 
-- HTTP response: status, envelope, headers, and body.
-- Persisted state: rows created, updated, deleted, or deliberately unchanged.
-- External calls: provider, webhook, email, storage, or database calls.
-- Runtime side effects: locks, cache entries, queues, timers, readiness, and circuit state.
-- Observability: required logs, traces, metrics, and exception reports.
+- HTTP response: status, envelope, headers, and body. `enforced-by: typescript/eslint`
+- Persisted state: rows created, updated, deleted, or deliberately unchanged. `enforced-by: typescript/eslint`
+- External calls: provider, webhook, email, storage, or database calls. `enforced-by: typescript/eslint`
+- Runtime side effects: locks, cache entries, queues, timers, readiness, and circuit state. `enforced-by: typescript/eslint`
+- Observability: required logs, traces, metrics, and exception reports. `enforced-by: typescript/eslint`
 
 ```ts
 describe('buildOrderContext', () => {
@@ -77,26 +83,8 @@ describe('POST /reports', () => {
 
 ## Testing Data and Infrastructure
 
-Tests must own the data they rely on. A test should be understandable and
-repeatable without depending on execution order or a mystery seed state.
-
-Rules when tests are requested:
-
-- Create subject records inside the test or an explicit fixture helper.
-- Use descriptive unique values for names, emails, IDs, and external references.
-- Do not depend on previous tests.
-- Do not depend on a globally empty database.
-- Do not use count assertions that fail when unrelated data exists.
-- Avoid global mutable fixtures.
-- Avoid file-level mutable IDs that one test writes and another test reads.
-- Separate metadata, context data, and the records being tested.
-- Create unrelated records when the behavior must prove it does not overreach.
-- Use unique queue names, event IDs, operation IDs, or correlation IDs for
-  event-driven tests.
-- Do not purge shared queues or shared tables as a substitute for isolated test data.
-- Avoid fixed sleeps. Use bounded polling, fake timers, or a runtime signal that proves completion.
-- Test databases may use tmpfs or relaxed durability only inside explicit test infrastructure. Never copy those settings into production compose.
-- Clean up only through established test infrastructure; do not add ad hoc production cleanup code.
+Tests own the data they rely on. Build subjects through builders under `tests/support/` with a
+unique per-run suffix.
 
 ```ts
 const uniqueSuffix = `${Date.now()}-${crypto.randomUUID()}`;
@@ -138,20 +126,8 @@ it('reads a created order', async () => {
 
 ## Network and Provider Testing
 
-Outbound network behavior must be isolated by default. Tests should fail when
-the code tries to reach an unexpected external service.
-
-Rules when tests are requested:
-
-- Block unmocked external HTTP calls by default.
-- Allow only the local API under test unless the suite explicitly opts into a real provider.
-- Mock provider, webhook, storage, database, queue, and real-time transport boundaries at their platform owner.
-- Assert important outgoing request shape: URL owner, method, headers that are safe to inspect, timeout, body shape, and trace metadata.
-- Test provider timeout, slow response, one-time 5xx, retry/circuit behavior, malformed JSON, missing fields, and rejected promises when the module owns recovery.
-- Prefer fake timers or explicit timeout controls over real network delays.
-- Default mocks must be realistic enough to fail when required payload fields are missing.
-- Do not assert on secrets or full sensitive payloads.
-- Do not test provider SDK internals. Test this API's contract with the provider boundary.
+Block unmocked external HTTP by default (`vi.stubGlobal('fetch', ...)` or an interceptor that `enforced-by: typescript/eslint`
+rejects unknown hosts). Assert the outbound contract this API owns.
 
 ```ts
 expect(mockedFetch).toHaveBeenCalledWith(
@@ -203,25 +179,25 @@ mockProvider
 
 ## Vitest Mocking Patterns
 
-Use mocks to isolate boundaries and simulate external behavior. Do not use
+Use mocks to isolate boundaries and simulate external behavior. Do not use `enforced-by: typescript/eslint`
 mocks to prove private implementation details.
 
 Mock taxonomy:
 
-- Isolation mocks replace external systems such as provider HTTP, database, filesystem, timers, and queues.
-- Simulation mocks model realistic states such as timeout, provider 429, stale lock, malformed payload, or empty query result.
-- Implementation mocks replace code inside the behavior under test and are usually a smell.
+- Isolation mocks replace external systems such as provider HTTP, database, filesystem, timers, and queues. `enforced-by: typescript/eslint`
+- Simulation mocks model realistic states such as timeout, provider 429, stale lock, malformed payload, or empty query result. `enforced-by: typescript/eslint`
+- Implementation mocks replace code inside the behavior under test and are a smell. `enforced-by: typescript/eslint`
 
-Rules when tests are requested:
+Rules:
 
-- Mock at the platform boundary whenever possible.
-- Keep outcome-affecting mocks in the test arrange block.
-- Reset or redefine common mocks in `beforeEach()`.
-- Restore environment variables, globals, fake timers, and spies in cleanup.
-- Avoid surprising global auto-mocks.
-- Use `vi.mocked()` for typed mock access.
-- Use partial mocks sparingly and only when a full boundary replacement would hide too much useful behavior.
-- Do not mock the candidate under test.
+- Mock at the platform boundary whenever possible. `enforced-by: typescript/eslint`
+- Keep outcome-affecting mocks in the test arrange block. `enforced-by: typescript/eslint`
+- Reset or redefine common mocks in `beforeEach()`. `enforced-by: typescript/eslint`
+- Restore environment variables, globals, fake timers, and spies in cleanup. `enforced-by: typescript/eslint`
+- Avoid surprising global auto-mocks. `enforced-by: typescript/eslint`
+- Use `vi.mocked()` for typed mock access. `enforced-by: typescript/eslint`
+- Use partial mocks sparingly and only when a full boundary replacement would hide too much useful behavior. `enforced-by: typescript/eslint`
+- Do not mock the candidate under test. `enforced-by: typescript/eslint`
 
 Mock global fetch:
 

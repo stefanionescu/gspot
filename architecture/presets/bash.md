@@ -1,0 +1,66 @@
+# bash
+
+Kind: language. Requires: structure, naming, formatting, spelling.
+
+## Detects and claims
+
+| | |
+| --- | --- |
+| Detect | `.sh`, `.bash` in the tree; a `bash`, `sh`, `zsh` shebang |
+| Claims | `.sh`, `.bash`, `.zsh`, `.bats`, extensionless files with a shell shebang, including hooks and task files |
+| Required inspections | format, syntax, style, structure, naming, prose, spelling |
+
+## Tools
+
+shellcheck, shfmt, bash (host). All three run on Windows through Git for Windows or their own
+builds.
+
+## Generated configuration
+
+| Target | Stub | Holds |
+| --- | --- | --- |
+| `.gspot/shellcheckrc` | `.shellcheckrc` | `shell=bash`, `source-path=SCRIPTDIR`, `external-sources=true`, `enable=all`, disables from `[tools.shellcheck] disable` with reasons |
+| `.editorconfig` section | managed block | indent width and `switch_case_indent` from `[format]` |
+
+## Checks
+
+| Id | Stage | Command |
+| --- | --- | --- |
+| `bash/syntax` | commit | `bash -n <file>` per file |
+| `bash/shellcheck` | commit | `shellcheck --rcfile .gspot/shellcheckrc --severity=style --check-sourced {files}` |
+| `bash/shfmt` | commit | `shfmt -d -i <indent> -ci -s {files}`; fix `-w`, order format |
+| `structure/shell-interpreter` | commit | shebang is `#!/usr/bin/env bash` or `#!/bin/bash`; line 2 is `#`; line 3 is a concrete description; line 4 is `# Runtime: Bash N.N+, macOS and Linux.` (or `Linux`); `set -euo pipefail` and `shopt -s inherit_errexit` before the first command in an executable; Bash 4 features named in the header; computed directory constants use `CDPATH=`, `cd --`, `pwd -P` and a failure path; `main "$@"` last in an executable; top-level assignments `readonly`; a library (sourced) file is declarative at top level and not executable; an executable file has the bit set through git; every `mktemp` has a `trap` that removes it |
+| `structure/doc-comment` | commit | function header `# name: summary`, no vague summary words (`handle`, `perform`, `execute`, `do`), doc sections when present |
+| `structure/duplicate-functions` | commit | normalised bodies, min lines from `[limits.shell]` |
+| `structure/unused-functions`, `dead-parameters` | commit | reachability across every claimed file; markers `lint:allow-unused-function <name>` |
+| `structure/private-prefix` | commit | a function called from no other file starts with `_`; `main` and hook entry points exempt |
+| `structure/private-before-public` | commit | `_` functions above the rest; `main` last |
+| `structure/trivial-function` | commit | statement ceiling; single-use and direct call-through forms; `lint:allow-trivial-function` marker |
+| `structure/file-length`, `function-length` | commit | `[limits.shell]` |
+| `structure/prefix-collisions`, `file-directory-collision`, `single-file-folder` | commit | with the hook-directory `pre` allowance |
+| `structure/shell-script-policy` | commit | no inline `node -e`, no forwarding wrappers over four lines, no compat or deprecated alias names |
+| `structure/shell-embeds` | commit | no inline Python, Node or generated-script heredocs |
+| `structure/shell-ssh-blocks` | commit | multi-line ssh heredocs named and documented |
+| `structure/shell-config-defaults` | commit | `${VAR:-x}` only in `[tools.bash] config_owners`; allowed fragments |
+| `structure/shell-config-guards` | commit | one idempotent guard per config owner |
+| `structure/shell-boundaries` | commit | `# Boundary:` header and source annotations in `[tools.bash] architecture_roots` |
+| `structure/env-access-owner` | commit | environment variables declared in the owner are read elsewhere only through it |
+| `structure/shell-branches`, `shell-nesting`, `shell-mutable-assignments` | commit | ast-grep counts against `[limits.shell]` |
+| `structure/shell-safety` | commit | no `|| true`, no `pkill -f`, no `rm -rf` outside `[tools.bash.safety] owners`, checked `cd`, no state-file sourcing, no unowned cleanup |
+| `security/semgrep` hook rules | push | no `curl \| sh`, no `eval` |
+
+## Settings
+
+`tools.shellcheck.disable` (code, reason), `tools.bash.doc_style` (`colon` default), `tools.bash.config_owners`,
+`tools.bash.architecture_roots`, `tools.bash.safety.owners`, `tools.bash.allowed_default_fragments`,
+`tools.bash.runtime_header` (default `macOS and Linux`), `limits.shell.*`.
+
+## Rule files
+
+`language/BASH.md`, `language/bash/LANGUAGE.md`, `language/bash/SAFETY.md`, `language/bash/OPERATIONS.md`,
+`language/naming/BASH.md`.
+
+## Not covered here
+
+zsh-specific syntax. Files with a `zsh` shebang get `zsh -n`, shfmt and the structure checks;
+ShellCheck skips them and `doctor` says so.

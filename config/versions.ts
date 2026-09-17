@@ -1,3 +1,0 @@
-export const SETTINGS_SCHEMA_VERSION = 1
-export const COVERAGE_TABLE_VERSION = 1
-export const TOOL_LOCK_VERSION = 1

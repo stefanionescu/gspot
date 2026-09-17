@@ -1,3 +1,9 @@
+---
+layer: language
+preset: sql
+title: SQL Naming
+---
+
 # SQL Naming
 
 SQL names are durable infrastructure contracts. Rename them only
@@ -8,23 +14,23 @@ through migrations and contract-aware code changes.
 Rules:
 
 - SQL schemas, tables, columns, functions, function parameters, indexes,
-  triggers, constraints, and policies use `lower_snake_case`.
-- SQL keywords are uppercase.
-- Storage buckets use `lower_snake_case`.
-- Edge Function folders use `kebab-case`.
-- Environment variables and secrets use `UPPER_SNAKE_CASE`.
-- Storage item keys must be stable, explicit, and validated by policy or
-  trigger when user-controlled.
-- Fully qualify grants and function signatures when ambiguity is possible.
-- Do not use quoted sentence-style identifiers for local policy names.
-- Do not use pluralization or prefixes inconsistently inside one schema.
+  triggers, constraints, and policies use `lower_snake_case`. `enforced-by: naming/identifiers`
+- SQL keywords are uppercase. `enforced-by: structure/sql-migration-docs`
+- Storage buckets use `lower_snake_case`. `enforced-by: naming/identifiers`
+- Edge Function folders use `kebab-case`. `enforced-by: naming/identifiers`
+- Environment variables and secrets use `UPPER_SNAKE_CASE`. `enforced-by: naming/identifiers`
+- Storage object keys must be stable, explicit, and validated by policy or
+  trigger when user-controlled. `enforced-by: naming/identifiers`
+- Fully qualify grants and function signatures when ambiguity is possible. `enforced-by: structure/sql-migration-docs`
+- Do not use quoted sentence-style identifiers for local policy names. `enforced-by: naming/identifiers`
+- Do not use pluralization or prefixes inconsistently inside one schema. `enforced-by: naming/identifiers`
 
 Bad:
 
 ```sql
 CREATE TABLE public.OrderItems (
-    userId uuid NOT NULL,
-    createdAt timestamptz NOT NULL
+    user_id uuid NOT NULL,
+    created_at timestamptz NOT NULL
 );
 
 CREATE POLICY "users_can_view_order_items" ON public.OrderItems
@@ -35,8 +41,8 @@ Good:
 
 ```sql
 CREATE TABLE public.order_items (
-    userId uuid NOT NULL,
-    createdAt timestamptz NOT NULL
+    user_id uuid NOT NULL,
+    created_at timestamptz NOT NULL
 );
 
 CREATE POLICY users_can_view_own_order_items ON public.order_items
@@ -47,23 +53,24 @@ CREATE POLICY users_can_view_own_order_items ON public.order_items
 
 Rules:
 
-- Migration filenames use `YYYYMMDDHHMMSS_description.sql`.
-- The timestamp is a 14-digit timestamp.
-- Timestamps must be strictly increasing in sorted migration order.
-- The description uses `lower_snake_case`.
-- The description starts with a lowercase letter.
-- Use the project migration creation command when creating blank migrations.
-- Do not insert an older timestamp before an already committed migration.
-- Name the migration for the durable database change, not for the app task.
+- Migration filenames use `YYYYMMDDHHMMSS_description.sql`. `enforced-by: naming/identifiers`
+- The timestamp is a 14-digit timestamp. `enforced-by: naming/identifiers`
+- Timestamps must be strictly increasing in sorted migration order. `enforced-by: postgres/migrations-frozen`
+- The description uses `lower_snake_case`. `enforced-by: naming/identifiers`
+- The description starts with a lowercase letter. `enforced-by: naming/identifiers`
+- Use the project migration creation command when creating blank migrations. `enforced-by: postgres/migrations-frozen`
+- Do not insert an older timestamp before an already committed migration. `enforced-by: postgres/migrations-frozen`
+- Name the migration for the durable database change, not for the app task. `unenforced`
 
-Recommended migration description verbs:
+The description starts with one of these verbs and no other. These verbs govern migration
+filenames only; function names follow the SQL Functions rules below.
 
 - `create_*` for new schemas, tables, functions, buckets, indexes, policies, or
-  cron wiring.
-- `alter_*` for schema or behavior changes.
-- `insert_*` for initial durable data.
-- `update_*` for durable data updates.
-- `delete_*` only for intentional durable data removals.
+  cron wiring. `unenforced`
+- `alter_*` for schema or behavior changes. `unenforced`
+- `insert_*` for initial durable data. `enforced-by: naming/identifiers`
+- `update_*` for durable data updates. `enforced-by: naming/identifiers`
+- `delete_*` only for intentional durable data removals. `enforced-by: naming/identifiers`
 
 Bad:
 
@@ -85,21 +92,21 @@ Good:
 
 Rules:
 
-- Table names identify the domain set stored by the relation.
-- Column names identify the value, not the application layer that reads it.
-- Foreign-key columns use the referenced concept plus `_id`.
-- Timestamp columns should use stable event names such as `createdAt`,
-  `updatedAt`, `deleted_at`, or a concrete domain event time.
+- Table names identify the domain set stored by the relation. `unenforced`
+- Column names identify the value, not the application layer that reads it. `unenforced`
+- Foreign-key columns use the referenced concept plus `_id`. `enforced-by: naming/identifiers`
+- Timestamp columns use stable event names such as `created_at`,
+  `updated_at`, `deleted_at`, or a concrete domain event time. `enforced-by: postgres/migrations-frozen`
 - Boolean columns use concise positive assertion names without an `is_`
-  prefix.
-- Avoid generic columns that hide meaning.
+  prefix. `enforced-by: naming/identifiers`
+- Avoid generic columns that hide meaning. `enforced-by: naming/identifiers`
 
 Bad:
 
 ```sql
 CREATE TABLE public.data (
     id uuid PRIMARY KEY,
-    item jsonb NOT NULL,
+    payload jsonb NOT NULL,
     flag boolean NOT NULL,
     date timestamptz NOT NULL
 );
@@ -121,18 +128,20 @@ CREATE TABLE public.message_delivery_attempts (
 
 Rules:
 
-- SQL function names use verb phrases or domain operation names.
+- SQL function names use verb phrases or domain operation names. `enforced-by: naming/identifiers`
+These verbs govern function names, not migration filenames.
+
 - Retrieval functions use `get_` regardless of whether they return one row,
   an optional row, a collection, or a paginated collection. Do not use
-  `read_`, `find_`, `fetch_`, `load_`, or `list_` as retrieval synonyms.
+  `read_`, `find_`, `fetch_`, `load_`, or `list_` as retrieval synonyms. `enforced-by: naming/identifiers`
 - Data-access mutation functions use `set_`, `insert_`, `update_`, or
   `delete_` according to the operation they perform. Do not use `create_`,
-  `add_`, `save_`, `write_`, `put_`, `upsert_`, or `remove_` as synonyms.
-- Function parameters use `lower_snake_case`.
-- Parameter names should not collide confusingly with table columns.
+  `add_`, `save_`, `write_`, `put_`, `upsert_`, or `remove_` as synonyms. `enforced-by: naming/identifiers`
+- Function parameters use `lower_snake_case`. `enforced-by: naming/identifiers`
+- Parameter names never collide with table column names. `enforced-by: naming/identifiers`
 - `SECURITY DEFINER` functions must have names that make the privileged action
-  clear.
-- Do not name functions like arbitrary script tasks.
+  clear. `enforced-by: postgres/squawk`
+- Do not name functions like arbitrary script tasks. `enforced-by: naming/identifiers`
 
 Bad:
 
@@ -164,17 +173,17 @@ $$;
 
 Rules:
 
-- Name constraints and scope them to their table or concept.
-- Name indexes by table plus indexed columns or purpose.
-- Name triggers by event and action.
-- Name policies by actor plus allowed action.
+- Name constraints and scope them to their table or concept. `enforced-by: naming/identifiers`
+- Name indexes by table plus indexed columns or purpose. `enforced-by: naming/identifiers`
+- Name triggers by event and action. `enforced-by: naming/identifiers`
+- Name policies by actor plus allowed action. `enforced-by: naming/identifiers`
 - Keep names stable because they appear in migrations, errors, grants, and
-  database inspection output.
+  database inspection output. `enforced-by: naming/identifiers`
 
 Bad:
 
 ```sql
-CREATE INDEX idx1 ON public.messages (userId);
+CREATE INDEX idx1 ON public.messages (user_id);
 ALTER TABLE public.messages ADD CONSTRAINT check_status CHECK (status <> '');
 CREATE TRIGGER trigger1 BEFORE UPDATE ON public.messages EXECUTE FUNCTION public.update_updated_at();
 CREATE POLICY select_policy ON public.messages FOR SELECT USING (true);
@@ -183,7 +192,7 @@ CREATE POLICY select_policy ON public.messages FOR SELECT USING (true);
 Good:
 
 ```sql
-CREATE INDEX messages_user_id_created_at_idx ON public.messages (userId, createdAt);
+CREATE INDEX messages_user_id_created_at_idx ON public.messages (user_id, created_at);
 
 ALTER TABLE public.messages
     ADD CONSTRAINT messages_status_not_empty_check CHECK (status <> '');
@@ -197,19 +206,19 @@ CREATE POLICY users_can_view_own_messages
     ON public.messages
     FOR SELECT
     TO authenticated
-    USING (userId = auth.uid());
+    USING (user_id = auth.uid());
 ```
 
 ## Storage Names
 
 Rules:
 
-- Storage buckets use `lower_snake_case`.
-- Storage item keys are stable and explicit.
-- User-controlled key segments must be validated and bounded before use.
+- Storage buckets use `lower_snake_case`. `enforced-by: naming/identifiers`
+- Storage object keys are stable and explicit. `enforced-by: naming/identifiers`
+- User-controlled key segments must be validated and bounded before use. `unenforced`
 - Do not embed secrets, provider tokens, raw user text, or private identifiers in
-  item keys.
-- Do not use display text as storage identity.
+  object keys. `unenforced`
+- Do not use display text as storage identity. `enforced-by: naming/identifiers`
 
 Bad:
 

@@ -1,0 +1,10 @@
+extends: substitution
+message: "Use '%s' instead of '%s' for interface actions."
+level: error
+ignorecase: true
+swap:
+  click on: select
+  hit: press
+  tap on: select
+  key in: enter
+  type in: enter

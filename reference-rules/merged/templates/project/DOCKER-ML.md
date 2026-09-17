@@ -1,0 +1,216 @@
+---
+layer: template
+preset: none
+title: Docker for Model Serving
+---
+
+# Docker for Model Serving
+
+Project template. Copy into `rules/project/` when the repository builds CUDA images that download and serve models. Edit it to match the project;
+gspot never upgrades a project file.
+
+## Image Stack Ownership
+
+This repository has two image stacks:
+
+- `docker/vllm/`
+- `docker/trt/`
+
+Rules:
+
+- Do not assume a root `Dockerfile`.
+- Each stack owns its Dockerfile, build script, runtime scripts, download
+  helpers, README, and `.dockerignore`.
+- Shared Docker behavior belongs under `docker/common/`.
+- Shared behavior must be real. Do not move stack-specific logic into
+  `docker/common/` just because two files look similar.
+- Keep vLLM-specific behavior in `docker/vllm/`.
+- Keep TensorRT-LLM behavior in `docker/trt/`.
+- Keep host-side repository scripts under `scripts/`; keep image-build and
+  image-runtime scripts under `docker/`.
+
+Bad:
+
+```text
+docker/Dockerfile
+docker/common/start_everything.sh
+```
+
+Good:
+
+```text
+docker/vllm/Dockerfile
+docker/vllm/scripts/main.sh
+docker/trt/Dockerfile
+docker/trt/scripts/main.sh
+docker/common/scripts/server.sh
+```
+
+## Source Material Decisions
+
+These rules adapt Dockerfile best practices, Hadolint guidance, BuildKit secret
+handling, NVIDIA CUDA image constraints, and this repository's runtime model.
+
+| Topic                | Local decision                                                                                  |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| Stack ownership      | `docker/vllm/` and `docker/trt/` are separate image stacks.                                     |
+| Shared Docker code   | `docker/common/` owns only behavior that is truly common to both stacks.                        |
+| Dependency authority | `pyproject.toml` and `uv.lock` are canonical. Generated requirements are compatibility exports. |
+| Runtime Python       | Images must target the repository Python version from `pyproject.toml` and `mise.toml`.         |
+| Shell                | Image scripts follow the Bash rules.                                                      |
+| Docker lint          | Hadolint is the Docker lint authority through `mise run lint:docker`.                           |
+| Security             | Docker security checks come from Hadolint plus the repository security task.                    |
+| Secrets              | BuildKit secrets and runtime environment variables are allowed. Baked secrets are forbidden.    |
+| Model downloads      | Remote model downloads must validate required inputs before network work starts.                |
+| CUDA                 | CUDA and GPU libraries are stack-owned runtime dependencies, not host cache copies.             |
+| Generated files      | Do not hand-edit dependency exports. Regenerate them from source inputs.                        |
+
+## Build Contexts
+
+Rules:
+
+- Build from the repository root only when the Dockerfile needs repository-wide
+  source, generated dependency exports, or shared scripts.
+- Keep stack build scripts responsible for choosing the Dockerfile and build
+  context.
+- Do not hide build inputs in the developer shell. Build scripts must declare
+  required environment variables and fail before Docker starts when they are
+  missing.
+- Do not copy `.venv`, caches, local model directories, logs, or `.artifacts`
+  into the build context.
+- Do not rely on files ignored by the stack-local `.dockerignore`.
+- Keep build arguments explicit. A build argument is part of the image contract.
+
+Build scripts make the stack obvious:
+
+```bash
+docker build \
+  --file docker/vllm/Dockerfile \
+  --tag "${image_tag}" \
+  --build-arg "MODEL=${MODEL}" \
+  .
+```
+
+Do not build by changing directories and relying on ambient paths:
+
+```bash
+cd docker/vllm
+docker build .
+```
+
+
+## Base Images and CUDA
+
+Rules:
+
+- Use stack-appropriate CUDA, PyTorch, vLLM, or TensorRT base images.
+- Pin base images by explicit tags. Do not use `latest`.
+- Do not switch CUDA major versions casually. CUDA version changes affect PyTorch
+  wheels, TensorRT-LLM, vLLM, FlashInfer, and GPU driver compatibility.
+- Keep CUDA runtime libraries in the image stack that needs them.
+- Do not copy host CUDA directories or GPU driver files into images.
+- Do not assume the build host has a GPU. Build-time validation must distinguish
+  host checks from image runtime checks.
+- Runtime GPU checks belong in runtime scripts or health/warmup flows, not in
+  build steps unless the build step truly requires a GPU.
+- TRT image behavior may install PyTorch or TensorRT-LLM separately when wheel
+  compatibility depends on CUDA. Document that behavior in the owning Dockerfile
+  or script.
+
+## Dependency Inputs
+
+`pyproject.toml` and `uv.lock` are canonical. The Dockerfiles consume generated
+compatibility exports:
+
+- `requirements-vllm.txt`
+- `requirements-trt.txt`
+
+These files are generated by:
+
+```bash
+mise run deps:export
+```
+
+Rules:
+
+- Do not hand-edit generated requirements exports.
+- Do not add dependencies only in a Dockerfile when they belong in
+  `pyproject.toml`.
+- Do not add a runtime package to a development-only dependency group.
+- Do not install optional dependencies for the wrong stack.
+- Keep vLLM, TRT, local, and llmcompressor dependency surfaces separate.
+- After changing dependency source inputs, regenerate dependency exports and
+  verify them.
+- Do not introduce a second lockfile or stack-specific dependency authority.
+
+## Package Installation
+
+## Python in Images
+
+Rules:
+
+- Python helper code in `docker/` follows the Python rules.
+- Call helper modules with `python -m`.
+- Do not patch `sys.path` in Docker helper Python.
+- Do not embed non-trivial inline Python in Dockerfiles or shell scripts.
+- Keep download validation, model allowlist checks, and structured parsing in
+  Python modules.
+- Keep stack-specific download logic in the stack's `download/` package.
+- Keep common validation in `docker/common/download/`.
+- Do not import product runtime modules from Docker helper code unless the
+  import is part of a deliberate boundary and does not trigger runtime setup.
+
+## Shell in Images
+
+Rules:
+
+- Docker shell scripts follow the Bash rules.
+- Runtime scripts must be directly auditable. Do not hide startup behavior in
+  Dockerfile `CMD` strings.
+- Sourced Docker shell libraries must not run main behavior when sourced.
+- Validate required environment variables before starting model servers.
+- Do not enable debug tracing around tokens, model repository names when they
+  are sensitive, or request payloads.
+- Use arrays for server command arguments.
+- Keep `exec` in final server handoff paths so signals reach the server process.
+- Avoid background processes unless the script owns cleanup and signal handling.
+
+## Models and Artifacts
+
+Rules:
+
+- Model IDs, engine labels, quantization modes, and artifact paths are image
+  contracts.
+- Validate model IDs and engine labels before downloading artifacts.
+- Keep downloaded artifacts under explicit image paths.
+- Do not copy host model caches into images.
+- Do not bake local absolute paths into image metadata.
+- Do not store prompt payloads, private test conversations, or request bodies in
+  image layers.
+- Distinguish source models, quantized checkpoints, TRT engines, tokenizer
+  files, and generated metadata by name and path.
+- Treat engine build metadata as a runtime contract. Do not silently change its
+  schema inside Docker scripts.
+
+TRT artifacts and vLLM model artifacts are not interchangeable. A Docker change
+that touches one stack must not quietly change the other stack's artifact
+contract.
+
+## Hugging Face Downloads
+
+Rules:
+
+- Validate required Hugging Face repository inputs before network calls.
+- Validate Docker build revisions where the Docker build contract requires a
+  pinned remote artifact.
+- Use `HF_TOKEN` only as a secret or runtime environment variable.
+- Do not echo token values.
+- Do not put token values in build args, labels, image tags, logs, or generated
+  files.
+- Use explicit cache directories when cache location matters.
+- Fail with actionable messages for missing token, missing repo, invalid
+  revision, missing files, or download failure.
+- Keep Hugging Face API calls inside Python helper modules or clearly owned
+  shell boundaries.
+- Do not add broad retries. Use bounded retries only for known network
+  transient failures.

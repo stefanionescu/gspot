@@ -1,0 +1,2140 @@
+{
+  "total": 7616,
+  "matched": 6551,
+  "fuzzy": 220,
+  "listed": 490,
+  "missing": 355,
+  "unresolved": 0,
+  "items": [
+    {
+      "source": "yap-swift-app/rules/API.md",
+      "line": 906,
+      "norm": "include request trace when available",
+      "reason": "restated as: include the request trace when one is available"
+    },
+    {
+      "source": "yap-swift-app/rules/API.md",
+      "line": 907,
+      "norm": "propagate stable request or correlation ids to provider calls when supported",
+      "reason": "restated as: propagate them to provider calls when supported"
+    },
+    {
+      "source": "yap-swift-app/rules/API.md",
+      "line": 911,
+      "norm": "use debug for noisy diagnostic details info for normal lifecycle events warn for degraded or retryable conditions error for failed operations and fatal only when the process or a major runtime owner is unusable",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/API.md",
+      "line": 921,
+      "norm": "redaction belongs in the central telemetry layer when a new sensitive key can reach logs or reports update logger redaction and telemetry scrubbing instead of relying on one off call site filtering",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/API.md",
+      "line": 1173,
+      "norm": "allow only the local api under test unless the suite explicitly opts into a real provider",
+      "reason": "restated as: allow only the local service under test unless the suite explicitly opts into a real provider through an environment var"
+    },
+    {
+      "source": "yap-swift-app/rules/GENERAL.md",
+      "line": 152,
+      "norm": "never log sensitive data tokens passwords pii full request bodies with auth headers",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/SUPABASE.md",
+      "line": 175,
+      "norm": "for ownership checks use select auth uid or select auth jwt style helper calls in policies following supabase performance guidance",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/SUPABASE.md",
+      "line": 214,
+      "norm": "keep supabase auth admin cron storage and internal supabase roles narrowly scoped to the functions or schemas they need",
+      "reason": "restated as: keep service owned roles such as those a platform creates for auth cron or storage narrowly scoped to the functions or s"
+    },
+    {
+      "source": "yap-swift-app/rules/SUPABASE.md",
+      "line": 360,
+      "norm": "integration tests depend on the local supabase stack and function server",
+      "reason": "restated as: integration tests depend on a local database and where one exists a local function server"
+    },
+    {
+      "source": "yap-swift-app/rules/DOCUMENTATION.md",
+      "line": 766,
+      "norm": "in formal reference definitions",
+      "reason": "decision: superseded: contractions are banned everywhere, so the exceptions list is gone"
+    },
+    {
+      "source": "yap-swift-app/rules/DOCUMENTATION.md",
+      "line": 768,
+      "norm": "in strong safety requirements",
+      "reason": "decision: superseded: contractions are banned everywhere, so the exceptions list is gone"
+    },
+    {
+      "source": "yap-swift-app/rules/DOCUMENTATION.md",
+      "line": 769,
+      "norm": "when a negative must be unmistakable",
+      "reason": "decision: superseded: contractions are banned everywhere, so the exceptions list is gone"
+    },
+    {
+      "source": "yap-swift-app/rules/DOCUMENTATION.md",
+      "line": 770,
+      "norm": "with a proper noun when the result can be read as possessive",
+      "reason": "decision: superseded: contractions are banned everywhere, so the exceptions list is gone"
+    },
+    {
+      "source": "yap-swift-app/rules/DOCUMENTATION.md",
+      "line": 1127,
+      "norm": "verifying the relevant fact",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/DOCUMENTATION.md",
+      "line": 2289,
+      "norm": "put one space between pipes and cell content",
+      "reason": "formatter-owned: Ruff format, Prettier, shfmt or markdownlint enforce it; the rule file states the tool owns formatting"
+    },
+    {
+      "source": "yap-swift-app/rules/DOCUMENTATION.md",
+      "line": 2891,
+      "norm": "be approximately 40 to 155 characters when possible",
+      "reason": "superseded: the hedge was removed and the rule restated as a fact"
+    },
+    {
+      "source": "yap-swift-app/rules/IOS.md",
+      "line": 1263,
+      "norm": "code must compile without warnings when feasible",
+      "reason": "superseded: the hedge was removed and the rule restated as a fact"
+    },
+    {
+      "source": "yap-swift-app/rules/IOS.md",
+      "line": 1390,
+      "norm": "keep dto payload examples short if used they must represent the current external contract",
+      "reason": "superseded: the sentence stated nothing enforceable and was dropped by decision"
+    },
+    {
+      "source": "yap-swift-app/rules/DOCKER.md",
+      "line": 431,
+      "norm": "keep nginx image tags explicit avoid unpinned nginx alpine for production if image reproducibility matters",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 292,
+      "norm": "view is valid for swiftui views",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 293,
+      "norm": "viewmodel is valid for presentation state owners",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 296,
+      "norm": "coordinator is valid for navigation or flow ownership",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 1135,
+      "norm": "view presents ui and forwards user intent",
+      "reason": "restated as: view displays navigation affordances and forwards user intent"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 1136,
+      "norm": "viewmodel owns presentation state async task orchestration for the presentation surface and user intent methods",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 1138,
+      "norm": "viewstate is a value describing screen state",
+      "reason": "restated as: viewstate value describing screen presentation state"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 1139,
+      "norm": "viewaction is a typed user or lifecycle event",
+      "reason": "restated as: viewaction typed user or lifecycle intent emitted by a view"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 1140,
+      "norm": "coordinator owns navigation or flow state",
+      "reason": "restated as: coordinator navigation or flow state owner"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 1141,
+      "norm": "repository owns domain facing data access",
+      "reason": "restated as: a repository owns domain mapping and domain facing data operations"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 1142,
+      "norm": "client owns external api sdk http storage or platform mechanics",
+      "reason": "restated as: client external api sdk http storage or platform protocol boundary"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 1143,
+      "norm": "usecase owns an application operation or business workflow",
+      "reason": "restated as: usecase application operation or business workflow"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 1145,
+      "norm": "avoid manager handler and data for mvvm owner types",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 1525,
+      "norm": "global constants and static readonly constants may use upper snake case when the value is intended to be fixed and conventionally constant",
+      "reason": "superseded: constants casing is a firm rule, not an option"
+    },
+    {
+      "source": "yap-swift-app/rules/NAMING.md",
+      "line": 1843,
+      "norm": "constants may use upper snake case when they are fixed global or module constants",
+      "reason": "superseded: constants casing is a firm rule, not an option"
+    },
+    {
+      "source": "yap-swift-app/rules/TYPESCRIPT.md",
+      "line": 46,
+      "norm": "application and service typescript source",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/TYPESCRIPT.md",
+      "line": 48,
+      "norm": "typescript scripts and migration generators",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/TYPESCRIPT.md",
+      "line": 50,
+      "norm": "shared typescript or typescript adjacent tooling",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/TYPESCRIPT.md",
+      "line": 122,
+      "norm": "typescript that compiles under nodenext uses js in internal source imports",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/TYPESCRIPT.md",
+      "line": 125,
+      "norm": "bun or tsx run typescript scripts use extensionless imports unless the runtime requires a suffix",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/TYPESCRIPT.md",
+      "line": 127,
+      "norm": "shared lint tooling follows javascript eslint config",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/TYPESCRIPT.md",
+      "line": 307,
+      "norm": "every eslint disable directive must include a useful description",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/BASH.md",
+      "line": 74,
+      "norm": "when writing scripts write bash do not create python ruby perl javascript typescript swift or other scripting language files for script work",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-swift-app/rules/BASH.md",
+      "line": 124,
+      "norm": "wires together build lint deploy or cleanup steps",
+      "reason": "restated as: wires together install lint quantization engine build runtime publish or cleanup steps"
+    },
+    {
+      "source": "yap-swift-app/rules/BASH.md",
+      "line": 158,
+      "norm": "must not call exit except for truly fatal documented initialization failure in a script family that expects it prefer return",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/PLANNING.md",
+      "line": 113,
+      "norm": "put data shape changes before runtime quantization engine build or publishing surfaces that consume the data",
+      "reason": "restated as: put data shape changes before ui or api surfaces that present the data"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 294,
+      "norm": "read environment variables at a configuration or application boundary not throughout business logic",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 363,
+      "norm": "when project dependencies are already installed from a pinned and hashed requirements file install the local project with python m pip install",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 485,
+      "norm": "put one line imports before multiline or explicitly parenthesized imports",
+      "reason": "superseded: PEP 8 import sections are the default; length sort is an opt-in"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 488,
+      "norm": "sort multiline or explicitly parenthesized imports by the rendered import header length using the same text tie breakers",
+      "reason": "superseded: PEP 8 import sections are the default; length sort is an opt-in"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 632,
+      "norm": "use implicit continuation inside parentheses brackets and braces",
+      "reason": "formatter-owned: Ruff format, Prettier, shfmt or markdownlint enforce it; the rule file states the tool owns formatting"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 633,
+      "norm": "prefer hanging indents with one argument or object per line when a call or literal is too long",
+      "reason": "decision: formatter-owned: Ruff format enforces it; the Python file states that the formatter owns layout"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 636,
+      "norm": "align closing delimiters with the construct start when the values are split across lines",
+      "reason": "decision: formatter-owned: Ruff format enforces it; the Python file states that the formatter owns layout"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 679,
+      "norm": "local python code uses the ruff limit of 120 characters",
+      "reason": "formatter-owned: Ruff format, Prettier, shfmt or markdownlint enforce it; the rule file states the tool owns formatting"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 680,
+      "norm": "prefer shorter lines when they are naturally readable",
+      "reason": "formatter-owned: Ruff format, Prettier, shfmt or markdownlint enforce it; the rule file states the tool owns formatting"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 681,
+      "norm": "keep docstring summary lines concise and on one physical line",
+      "reason": "formatter-owned: Ruff format, Prettier, shfmt or markdownlint enforce it; the rule file states the tool owns formatting"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 685,
+      "norm": "break before binary operators in new multiline arithmetic or boolean expressions when that improves readability",
+      "reason": "decision: formatter-owned: Ruff format enforces it; the Python file states that the formatter owns layout"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 771,
+      "norm": "surround assignment augmented assignment comparisons identity checks membership checks and boolean operators with one space on each side",
+      "reason": "decision: formatter-owned: Ruff format enforces it; the Python file states that the formatter owns layout"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 773,
+      "norm": "use judgment around arithmetic operators but never use more than one space on either side",
+      "reason": "formatter-owned: Ruff format, Prettier, shfmt or markdownlint enforce it; the rule file states the tool owns formatting"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 852,
+      "norm": "use parentheses for grouping tuples and implicit line continuation",
+      "reason": "formatter-owned: Ruff format, Prettier, shfmt or markdownlint enforce it; the rule file states the tool owns formatting"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 856,
+      "norm": "returning a tuple may use parentheses when it improves readability",
+      "reason": "formatter-owned: Ruff format, Prettier, shfmt or markdownlint enforce it; the rule file states the tool owns formatting"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 1027,
+      "norm": "keep docstring style consistent within a file descriptive style and imperative style are both allowed by the source material",
+      "reason": "decision: superseded: docstring summaries are imperative"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 1237,
+      "norm": "a todo starts with todo then a link or issue reference then then an explanation",
+      "reason": "superseded: one TODO format, TODO(<issue-url-or-YYYY-MM-DD>): <sentence>"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 1241,
+      "norm": "include a specific event or date when the todo depends on time or an external milestone",
+      "reason": "superseded: one TODO format, TODO(<issue-url-or-YYYY-MM-DD>): <sentence>"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 1268,
+      "norm": "annotate functions whose types are hard to infer",
+      "reason": "superseded: every function and parameter is annotated"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 1269,
+      "norm": "annotate data structures crossing module boundaries",
+      "reason": "superseded: every function and parameter is annotated"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 1270,
+      "norm": "annotate code that is prone to type related errors",
+      "reason": "superseded: every function and parameter is annotated"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 1271,
+      "norm": "annotate code when it becomes stable from a type perspective",
+      "reason": "superseded: every function and parameter is annotated"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 1795,
+      "norm": "custom lint limits functions and methods to 60 counted code lines by default",
+      "reason": "decision: superseded: numeric limits live in the `[limits]` table; the rule file says 'the configured limit'"
+    },
+    {
+      "source": "yap-text-inference/rules/PYTHON.md",
+      "line": 4133,
+      "norm": "mix def and async def path operations and dependencies as needed",
+      "reason": "restated as: mix def and async def path operations and dependencies freely fastapi runs each correctly"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 127,
+      "norm": "parser directives such as syntax",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 128,
+      "norm": "arg values needed by from",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 131,
+      "norm": "environment values that describe runtime behavior",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 133,
+      "norm": "python and runtime dependency installation",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 135,
+      "norm": "model or artifact download and validation",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 140,
+      "norm": "put related operations in the same layer when they form one installation transaction",
+      "reason": "restated as: put related operations in the same layer when they form one installation transaction split unrelated operations when it "
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 142,
+      "norm": "split unrelated operations into separate layers when it improves cache reuse or review",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 144,
+      "norm": "keep run blocks readable long shell bodies belong in reviewed scripts",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 147,
+      "norm": "use json array form for entrypoint and cmd",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 213,
+      "norm": "combine apt update package install and apt cache cleanup in one run block",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 214,
+      "norm": "use no install recommends unless a recommended package is deliberately required",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 218,
+      "norm": "remove package manager cache in the same layer that creates it",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 220,
+      "norm": "use binary wheels for runtime dependencies when practical",
+      "reason": "restated as: use binary wheels for runtime dependencies"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 317,
+      "norm": "use runtime environment variables for runtime credentials",
+      "reason": "restated as: use environment variables for all secrets"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 349,
+      "norm": "keep model inference engine quantization tokenizer settings gpu settings and server port behavior consistent with src runtime settings py",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 351,
+      "norm": "keep docker readme environment tables in sync with build scripts and dockerfiles",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 359,
+      "norm": "runtime scripts must surface actionable failure messages",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 364,
+      "norm": "signal handling must allow graceful shutdown of the server process",
+      "reason": "restated as: signal handling allows graceful shutdown of the server process"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 365,
+      "norm": "log enough runtime state to diagnose engine selection model path port quantization mode and gpu configuration without printing secrets",
+      "reason": "restated as: log enough runtime state to diagnose the selected mode paths port and hardware configuration without printing secrets"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 376,
+      "norm": "exclude local caches virtual environments artifacts logs and secrets",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 377,
+      "norm": "exclude git venv artifacts test output and package manager caches unless a stack has a documented reason to include them",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 381,
+      "norm": "keep dockerignore changes reviewed with the dockerfile that depends on them",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 390,
+      "norm": "copy dependency metadata before source when doing so improves cache reuse",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 394,
+      "norm": "keep expensive downloads in layers whose inputs are explicit",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 397,
+      "norm": "use multi stage builds when they meaningfully keep build tools out of runtime images",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 405,
+      "norm": "treat docker lint and security findings as real until proven otherwise",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 406,
+      "norm": "fix docker issues directly instead of adding broad ignores",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 407,
+      "norm": "keep suppressions narrow and explain the concrete false positive or platform constraint",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 438,
+      "norm": "when verification is requested prefer the repository task over ad hoc tool invocations",
+      "reason": "decision: superseded: verification and tests policy is stated once in general/agent/WORKING.md"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 451,
+      "norm": "keep examples copy pasteable from the repository root unless the readme says otherwise",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 455,
+      "norm": "keep docker docs aligned with build args environment variables image tags exposed ports and artifact paths",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/DOCKER.md",
+      "line": 457,
+      "norm": "keep stack specific docs in the stack directory",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 30,
+      "norm": "follow this file when choosing names for files directories modules packages classes dataclasses functions methods parameters variables constants cli flags environment variables test helpers data examples and documentation examples",
+      "reason": "restated as: follow this file when choosing names for files directories classes structs protocols type aliases interfaces enums funct"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 253,
+      "norm": "use read for reading values from a source into memory",
+      "reason": "decision: superseded: retrieval functions use `get` only; `read`, `choose` and `sanitize` as retrieval synonyms are not adopted (general/code/NAMING.md)"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 254,
+      "norm": "use get for immediate access that does not imply work mutation or i o",
+      "reason": "decision: superseded: retrieval functions use `get` only; `read`, `choose` and `sanitize` as retrieval synonyms are not adopted (general/code/NAMING.md)"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 259,
+      "norm": "use choose when selecting the final value from inputs defaults and constraints",
+      "reason": "decision: superseded: retrieval functions use `get` only; `read`, `choose` and `sanitize` as retrieval synonyms are not adopted (general/code/NAMING.md)"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 265,
+      "norm": "use sanitize only when the function actually transforms input into a safe external representation",
+      "reason": "decision: superseded: retrieval functions use `get` only; `read`, `choose` and `sanitize` as retrieval synonyms are not adopted (general/code/NAMING.md)"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 267,
+      "norm": "avoid positional boolean parameters use options enums or explicit function names when a boolean would be ambiguous",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 395,
+      "norm": "python source filenames use snake case py except python owned files such as init py and main py",
+      "reason": "restated as: python filenames must be snake case except init py and main py"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 399,
+      "norm": "shell scripts use lowercase sh names existing numbered pipeline steps use nn description sh such as 01 install sh",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 403,
+      "norm": "related script families own a subdirectory instead of accumulating prefixed sibling files",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 408,
+      "norm": "test modules under tests are named for the evaluated scenario or runner responsibility",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 578,
+      "norm": "shell source file stems use lowercase words separated by hyphens or underscores",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 580,
+      "norm": "numbered pipeline step scripts use nn description sh",
+      "reason": "decision: restored: numbered pipeline steps are now a bullet in language/naming/BASH.md"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 581,
+      "norm": "executable scripts use sh when invoked through documented commands",
+      "reason": "decision: restored: numbered pipeline steps are now a bullet in language/naming/BASH.md"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 664,
+      "norm": "private functions begin with and are callable only inside their defining file",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 666,
+      "norm": "public sourced functions begin with their family or domain namespace followed by the action such as server start restart read state or trt prepare checkpoint",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 669,
+      "norm": "entrypoint local functions are private except for main",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/NAMING.md",
+      "line": 793,
+      "norm": "test result files may include timestamps when they are generated artifacts",
+      "reason": "decision: restored: generated artifact names may carry timestamps, now a bullet in general/code/NAMING-FILES.md"
+    },
+    {
+      "source": "yap-text-inference/rules/BASH.md",
+      "line": 421,
+      "norm": "a function beginning with is private to its defining file",
+      "reason": "restated as: a function beginning with is private to its defining file appears before the public functions and is never called from a"
+    },
+    {
+      "source": "yap-text-inference/rules/BASH.md",
+      "line": 423,
+      "norm": "a private function must not be called from another file",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-text-inference/rules/BASH.md",
+      "line": 819,
+      "norm": "keep a function within 40 non comment statements eight control flow branches and three levels of control flow nesting",
+      "reason": "decision: superseded: numeric limits live in the `[limits]` table; the rule file says 'the configured limit'"
+    },
+    {
+      "source": "yap-text-inference/rules/BASH.md",
+      "line": 1584,
+      "norm": "a dedicated host reset selected explicitly with reset may use broad pkill f engine helper matches terminate all nvidia compute pids and reset the gpu those operations belong only in the reset process owner never in a normal stop path",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-text-inference/rules/BASH.md",
+      "line": 1588,
+      "norm": "reset is disabled by default it attempts every cleanup stage reports failures and returns non zero when any required stage fails",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/GENERAL.md",
+      "line": 140,
+      "norm": "internal route asset file or function names",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/GENERAL.md",
+      "line": 141,
+      "norm": "internal identifiers tokens or private configuration values",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/GENERAL.md",
+      "line": 294,
+      "norm": "license checker json controls the allowed license list for all subprojects",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/JAVASCRIPT.md",
+      "line": 106,
+      "norm": "avoid root mega barrels keep re exports small and intentional",
+      "reason": "decision: superseded: no re-exports in application source replaces 'keep barrels small'"
+    },
+    {
+      "source": "yap-landing/rules/JAVASCRIPT.md",
+      "line": 114,
+      "norm": "config contains global site settings keep it data only",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/JAVASCRIPT.md",
+      "line": 115,
+      "norm": "pages contains page owned templates and route metadata",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/JAVASCRIPT.md",
+      "line": 117,
+      "norm": "functions contains edge middleware only",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/JAVASCRIPT.md",
+      "line": 118,
+      "norm": "shared contains static browser assets copied to dist shared",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/JAVASCRIPT.md",
+      "line": 127,
+      "norm": "keep asset paths normalized and rooted where the build pipeline expects them",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/JAVASCRIPT.md",
+      "line": 140,
+      "norm": "put browser behavior in shared js",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/JAVASCRIPT.md",
+      "line": 268,
+      "norm": "keep shellcheck and lint disable comments justified with a nearby reason and ticket marker when policy requires it",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 48,
+      "norm": "prefer concrete domain names over generic role names",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 49,
+      "norm": "name values for what they represent not where they came from",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 50,
+      "norm": "name functions by the action they perform and the value they return",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 51,
+      "norm": "name booleans as positive assertions isready hasconsent cantrack",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 52,
+      "norm": "avoid vague names such as data object thing stuff misc helper util and manager",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 53,
+      "norm": "avoid names that describe code history such as oldtemplate newconfig legacypath or migratedpage",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 54,
+      "norm": "avoid abbreviations unless the abbreviation is the public contract or the common technical term",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 96,
+      "norm": "helper helpers util utils misc and stuff are banned because they hide ownership",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 107,
+      "norm": "bash files and task names use kebab case",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 109,
+      "norm": "directories use kebab case unless the platform owns the exact name",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 112,
+      "norm": "page source belongs under pages",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 113,
+      "norm": "authored bodies belong under content",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 114,
+      "norm": "source media belongs under assets",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 115,
+      "norm": "browser javascript shared by generated pages belongs under shared",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 145,
+      "norm": "assets contains source media and static assets",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 147,
+      "norm": "config contains global site settings only",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 148,
+      "norm": "content contains authored content bodies",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 150,
+      "norm": "pages contains page owned templates route metadata and variants",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 152,
+      "norm": "shared contains browser javascript copied to dist shared",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 153,
+      "norm": "dist is generated output and must not own source naming decisions",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 171,
+      "norm": "functions parameters mutable variables and normal constants use lowercamelcase",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 173,
+      "norm": "static constant properties and environment owned names may use upper snake case",
+      "reason": "superseded: constants casing is a firm rule, not an option"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 174,
+      "norm": "object properties use lowercamelcase unless they mirror an external contract",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 175,
+      "norm": "unused parameters start with",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 199,
+      "norm": "name module files for the concept they own",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 200,
+      "norm": "prefer nouns for data config modules and verbs for small executable scripts only when the file is control like",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 201,
+      "norm": "avoid generic file names such as helpers js utils js index js common js and misc js",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 226,
+      "norm": "use verbs for functions that perform work build copy render resolve validate write",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 227,
+      "norm": "use nouns for values returned by functions only when the function name still reads as an action such as readpackagename",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 229,
+      "norm": "name boundary functions by the boundary they own normalizepublicpath rendertemplate renderlegalmarkdown",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 230,
+      "norm": "avoid pass through names that only restate another function",
+      "reason": "restated as: avoid pass through functions that only rename another call"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 256,
+      "norm": "import the owning leaf module instead of a broad barrel",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 280,
+      "norm": "shell function and local variable names use lower snake case",
+      "reason": "restated as: function local variables use lower snake case"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 286,
+      "norm": "use dir path file root and args suffixes when they clarify shell value shape",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 310,
+      "norm": "template placeholders use upper snake case inside double braces",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 312,
+      "norm": "data attributes use kebab case because they are html attributes",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 315,
+      "norm": "markdown content file names match the public route or content owner",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 338,
+      "norm": "test files use test js when added",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 339,
+      "norm": "test names describe scenario and expected outcome",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/NAMING.md",
+      "line": 340,
+      "norm": "fixtures use names that describe the input contract",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/BASH.md",
+      "line": 63,
+      "norm": "when writing scripts write bash do not create non bash scripting language files for script work",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "yap-landing/rules/BASH.md",
+      "line": 1806,
+      "norm": "eventually consistent external services",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 31,
+      "norm": "identify the simplest change that solves the actual problem",
+      "reason": "restated as: what is the simplest change that solves the problem correctly"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 32,
+      "norm": "trace effects on callers persisted data authentication and user visible behavior",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 33,
+      "norm": "consider real failure modes invalid input network failures concurrent access cancellation and permission failures where the affected contract allows them",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 35,
+      "norm": "check the installed framework and dependency versions before applying api guidance",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 36,
+      "norm": "when moving a file or renaming a declaration find and update its imports task commands configuration references and documentation in the same change",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 44,
+      "norm": "mention unrelated findings without silently turning them into another project",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 45,
+      "norm": "include refactoring when it is necessary to complete the requested change correctly",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 46,
+      "norm": "when practical separate refactoring that preserves behavior from changes to behavior",
+      "reason": "superseded: the hedge was removed and the rule restated as a fact"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 56,
+      "norm": "avoid functions that only forward unchanged arguments files that only re export unrelated declarations and wrappers that add no validation policy or error handling preserve the existing exceptions for supported barrel files and framework entries",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 59,
+      "norm": "keep feature behavior local until multiple callers establish a shared concept",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 62,
+      "norm": "keep policy values in configuration and executable behavior in implementation modules",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 69,
+      "norm": "prefer limited duplication over an abstraction that combines unrelated behavior",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 71,
+      "norm": "a module with its own security resource or runtime boundary may be justified independently of caller count",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 73,
+      "norm": "when an abstraction needs more flags modes or branches for individual callers check whether those callers need separate implementations",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 75,
+      "norm": "when an abstraction is wrong restore the separate behaviors and share only the operations that still have the same inputs outputs and meaning",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 77,
+      "norm": "let callers supply a dependency when existing callers need different implementations do not add factories or dependency injection layers for hypothetical callers",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 79,
+      "norm": "keep state and i o at clear boundaries when that simplifies the behavior",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 89,
+      "norm": "if an invariant is unclear trace how it is established before adding another check",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 90,
+      "norm": "handle expected failures explicitly do not silently convert an infrastructure failure into an empty successful result",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 92,
+      "norm": "keep authorization and server validation at the server boundary regardless of client side checks",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 97,
+      "norm": "never commit credentials tokens or private keys",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 98,
+      "norm": "access secrets through the server configuration module keep them out of client bundles public environment variables and browser visible responses",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 101,
+      "norm": "keep internal stack traces filesystem paths database structure and private identifiers out of user facing errors",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 103,
+      "norm": "use actionable sentence case messages explain what the user can do next when there is a useful next action",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 105,
+      "norm": "use stable public error codes where callers need to distinguish failures and keep internal diagnostics in the appropriate server logging channel",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 114,
+      "norm": "preserve file and function size limits folder checks and import spacing",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 117,
+      "norm": "fix a rule violation in its owner rather than weakening the checker globally",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 118,
+      "norm": "keep framework required filenames and exports apply their existing narrow exceptions",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 125,
+      "norm": "describe current behavior git records implementation history",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 126,
+      "norm": "explain non obvious constraints security decisions concurrency and domain invariants",
+      "reason": "restated as: explain non obvious invariants security boundaries concurrency behavior and runtime assumptions"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 127,
+      "norm": "avoid narrating obvious statements or copying volatile default values into comments",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 128,
+      "norm": "link to source only when readers need that definition or implementation update links when files move avoid comments that merely say where another symbol is defined",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 130,
+      "norm": "keep doc comments accurate when parameters return values or behavior change",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 173,
+      "norm": "continue when your work does not conflict with existing changes",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 174,
+      "norm": "build on compatible edits and keep your diff limited to the requested work",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/GENERAL.md",
+      "line": 175,
+      "norm": "ask for clarification only when completing your change would directly contradict or overwrite an existing change and its intended outcome cannot be determined",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 126,
+      "norm": "one page remains the main source to update when the fact changes",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 584,
+      "norm": "put the reader s immediate questions first followed by details needed later",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 1288,
+      "norm": "replace sensitive text before capture do not rely on blur to remove information inspect the final image and its metadata before publishing it",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 1309,
+      "norm": "standard markdown cannot express the needed structure or accessible label",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 1443,
+      "norm": "remain stable so links to the heading keep working",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 2269,
+      "norm": "the table would be clearer as several smaller tables",
+      "reason": "restated as: the table is better as several smaller tables"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 2446,
+      "norm": "use the new heading directly do not retain old anchors redirects or compatibility aliases",
+      "reason": "decision: superseded: the corpus keeps the anchor rule from the Swift repository (preserve an old anchor only when the publishing system treats it as a public contract)"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 3387,
+      "norm": "generated references that no longer match their source",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 3404,
+      "norm": "needed information can the intended reader complete the task with the prerequisites instructions and limits provided",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 3406,
+      "norm": "finding information can the reader identify the relevant section from its heading or link label are required details visible before the action",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 3408,
+      "norm": "understanding can the reader explain what to do and why define unfamiliar terms and resolve ambiguous pronouns or instructions",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 3410,
+      "norm": "use can the reader perform the action recognize success and recover from an expected failure",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 3543,
+      "norm": "sections form a related specialist subject",
+      "reason": "restated as: sections form a coherent advanced subject"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 4053,
+      "norm": "an advanced guide exists only when readers need a separate specialist explanation",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 4057,
+      "norm": "markdown uses headings lists and tables for their intended purposes and works in the supported renderers",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 4059,
+      "norm": "link labels explain their destinations and the links work",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/DOCUMENTATION.md",
+      "line": 4064,
+      "norm": "no stale content unnecessary duplicates or unexplained placeholders remain",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 34,
+      "norm": "apply the naming checks for the affected application or tooling scope",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 35,
+      "norm": "if this guide and a dynamic check disagree correct the guide or configuration responsible for the mismatch do not bypass a rule with an alias quoted property or renamed wrapper",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 38,
+      "norm": "preserve exact platform framework sdk and generated contract names",
+      "reason": "restated as: preserve framework standard library sdk generated and external contract names exactly"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 39,
+      "norm": "a required external name does not grant a broad exception to unrelated local names",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 40,
+      "norm": "generated code can retain generator owned names handwritten surrounding code follows the project policy",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 48,
+      "norm": "name what a value means or does avoid names that only repeat its data type or how it is stored",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 51,
+      "norm": "name a keyed collection by its contents and key when useful usersbyid",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 52,
+      "norm": "avoid private abbreviations or shortening words by deleting letters",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 53,
+      "norm": "let the enclosing type module or directory supply context add qualifiers only when two concepts would otherwise be ambiguous at the same use site",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 55,
+      "norm": "avoid repeating a type in a value name such as namestring rolearray or userobject",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 104,
+      "norm": "use a singular or plural noun to express one value or a collection let the return type express optionality and asynchronous work",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 110,
+      "norm": "use insert update and delete for the corresponding persistence operations",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 112,
+      "norm": "use create for a new independent domain value make for constructing dependencies and build for assembling a value from existing values",
+      "reason": "restated as: use build for constructing a value from existing values"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 114,
+      "norm": "use parse decode encode and validate when those are the actual operations",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 116,
+      "norm": "use a precise domain verb for a workflow such as submitorder when it does more than one direct crud operation",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 118,
+      "norm": "avoid generic operations such as process handle or dowork when the action can be named keep framework owned callback names unchanged",
+      "reason": "restated as: do not use generic names such as process handle run execute manage perform or dowork when the action can be named"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 120,
+      "norm": "if a name joins several operations check whether the function does unrelated work split that work only when the resulting functions have useful responsibilities",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 135,
+      "norm": "use concise positive states for stored flags and direct domain mappings enabled active or retryable",
+      "reason": "restated as: stored boolean columns and direct domain mappings use concise positive states without an is prefix such as enabled activ"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 137,
+      "norm": "use is for computed state has for presence and can for capability",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 138,
+      "norm": "avoid negative names that create double negation at call sites",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 141,
+      "norm": "name a predicate a function that answers a yes or no question so callers can distinguish it from the value it checks",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 152,
+      "norm": "use kebab case for locally owned javascript and typescript filenames and directories",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 153,
+      "norm": "name a file for the related behavior it implements or its main export",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 154,
+      "norm": "name a css module after the component it styles gallery module css beside gallery tsx or after its folder when several components share it hook files are named after what they observe hooks media query ts the function starts with use",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 157,
+      "norm": "keep feature behavior within the feature move it to a shared module only when existing callers need the same behavior",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 159,
+      "norm": "avoid generic type buckets and unrelated utils collections",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 160,
+      "norm": "keep small features in one directory until subdirectories make related files easier to find",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 161,
+      "norm": "avoid redundant filename prefixes when the enclosing directory already supplies that context following the dynamic scope of the folder checks",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 163,
+      "norm": "preserve ecosystem configuration filenames generated paths and framework route syntax",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 164,
+      "norm": "retain existing file function limits barrel rules and folder checks naming is not a reason to bypass those checks or create tiny files solely to fit a limit",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 171,
+      "norm": "use pascalcase for react components and camelcase for ordinary functions and values",
+      "reason": "restated as: classes constructor values and react components use pascalcase"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 172,
+      "norm": "use the use prefix for actual react hooks not ordinary functions",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 173,
+      "norm": "preserve next js special filenames default exports http method exports and names such as generatemetadata and generatestaticparams",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 175,
+      "norm": "preserve route groups dynamic segments private folders and parallel route slots their brackets parentheses underscores and prefixes are framework syntax",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 177,
+      "norm": "keep event prop contracts such as onchange and onblur intact name the local operation by the behavior it performs when the framework does not require that name",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 190,
+      "norm": "use descriptive generic parameter names when a single t does not make the role clear",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 193,
+      "norm": "treat abbreviations as words in local names such as parsehttpurl preserve external spellings such as xmlhttprequest",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 197,
+      "norm": "namespace import aliases describe the imported module preserve conventional library namespace forms already used by the project",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 199,
+      "norm": "prefer named exports while preserving required ecosystem defaults",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 210,
+      "norm": "use request response dto or row only when that suffix describes the shape",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 213,
+      "norm": "name conversion functions for their operation and domain concept avoid repeating all parameter and return types in the name",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 215,
+      "norm": "treat a public name change as a contract change including route parameters environment variables and operational log fields",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 217,
+      "norm": "keep environment names and protocol fields owned by providers exactly as specified",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 218,
+      "norm": "keep log field names stable and specific do not use vague fields to conceal several meanings",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 222,
+      "norm": "use kebab case for shell file stems unless a tool owns the filename",
+      "reason": "restated as: shell source file stems use kebab case unless an existing tool or external control owns the name"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 223,
+      "norm": "keep git hooks and mise file tasks extensionless in their existing locations standalone bash scripts and sourced libraries may use sh do not rename the existing task entry points to impose a different convention",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 228,
+      "norm": "preserve externally supplied names such as mise project root",
+      "reason": "decision: project-specific: names one repository's layout, task, script, or product; the project templates hold that layer"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 230,
+      "norm": "name functions by their action or by the value they deliberately print to stdout",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 231,
+      "norm": "avoid collisions with shell builtins and common commands",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 233,
+      "norm": "name loop variables for their contents reserve temporary path names for actual temporary files or directories",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 243,
+      "norm": "prefer descriptions such as rejects an expired session over works or test one",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 244,
+      "norm": "name setup functions by the state or behavior they create",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 245,
+      "norm": "avoid a global collection of unexplained test values shared by unrelated scenarios",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/NAMING.md",
+      "line": 246,
+      "norm": "preserve library required fixture apis and test file conventions locally owned names still follow the dynamic policy",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 74,
+      "norm": "use const for bindings that are not reassigned",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 75,
+      "norm": "use let when reassignment is needed never use var",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 76,
+      "norm": "keep side effect imports rare make their purpose clear at the import site",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 77,
+      "norm": "keep triple slash references out of handwritten source framework generated declarations such as next env d ts follow their generator s requirements",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 79,
+      "norm": "keep file comments about the code s purpose remove change history notes stale paths and generated examples that are not part of the working code",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 91,
+      "norm": "use named imports and exports for application modules keep mutable exports such as export let out of public module apis",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 93,
+      "norm": "use default exports for framework special files such as page layout loading error and metadata functions and for configuration files whose tools expect a default export",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 95,
+      "norm": "keep default exports out of other application modules",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 96,
+      "norm": "use modules for namespacing do not create a class or exported object solely to collect unrelated functions under one name",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 129,
+      "norm": "use literal unions or as const objects for fixed sets of values do not use typescript enums",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 130,
+      "norm": "parse strings numbers booleans and dates explicitly when they enter through user input environment variables or provider responses",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 132,
+      "norm": "avoid implicit coercion of those external values",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 133,
+      "norm": "check values explicitly when 0 false null and undefined have different meanings a truthiness check groups them together and can discard a valid value",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 144,
+      "norm": "add an object type annotation when the object implements a shared api or its shape needs to be explicit prefer that annotation to an as sometype assertion",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 146,
+      "norm": "use destructuring when it makes the fields being used easier to see keep the local names clear and consistent with the source fields",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 150,
+      "norm": "use readonly arrays or properties when callers are expected to leave them unchanged",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 161,
+      "norm": "annotate exported function return types react component return types and framework inferred exports can use inference when it preserves the framework s supported types",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 163,
+      "norm": "annotate callback parameters when typescript cannot infer their types clearly",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 164,
+      "norm": "avoid reassigning parameters use a local variable for a value that changes during the function",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 165,
+      "norm": "use a discriminated union or an options object when it expresses the inputs more clearly than overloads",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 167,
+      "norm": "add generic parameters only when they describe a useful relationship between types give them descriptive names when a single t does not explain their role",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 178,
+      "norm": "keep constructors focused on initializing the instance",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 180,
+      "norm": "use decorators only when the project s approved framework or toolchain requires them",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 190,
+      "norm": "avoid any including assertions to any",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 192,
+      "norm": "keep non null assertions out of production code",
+      "reason": "restated as: avoid non null assertions in production code"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 193,
+      "norm": "validate the value use a typed helper or correct the source type before considering a cast",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 194,
+      "norm": "use a discriminated union for known variants its discriminant property lets a check select the fields available in each variant",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 196,
+      "norm": "give type aliases a clear purpose avoid aliases that only rename another type without explaining a distinct use or relationship",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 207,
+      "norm": "normalize external empty strings missing fields and null values when they enter the application preserve differences that matter to the operation",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 209,
+      "norm": "check missing values before use do not replace those checks with non null assertions in production code",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 223,
+      "norm": "database rows and rpc results that have not already been validated",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 226,
+      "norm": "webhooks and scheduled job payloads",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 239,
+      "norm": "treat caught values as unknown narrow them before reading properties",
+      "reason": "restated as: catch as unknown and narrow before reading properties"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 241,
+      "norm": "keep each try block close to the operation whose failure it handles",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 243,
+      "norm": "use promise all for independent work with a bounded number of concurrent operations",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 250,
+      "norm": "document exported apis when their purpose is not clear from their names and types",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 251,
+      "norm": "explain invariants access checks concurrency behavior and runtime assumptions that callers need to preserve an invariant is a condition that stays true before and after an operation",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 253,
+      "norm": "put type information in typescript declarations rather than repeating it in jsdoc",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 254,
+      "norm": "keep comments about behavior and purpose remove comments that repeat the code or record its change history",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 256,
+      "norm": "give every eslint disable directive a specific explanation",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 266,
+      "norm": "keep shared test types with the tests that use them separate from production types",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 267,
+      "norm": "use vi mocked or typed local helpers when accessing vitest mocks",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 268,
+      "norm": "mock external dependencies as needed keep internal implementation details out of mock contracts",
+      "reason": "superseded: the hedge was removed and the rule restated as a fact"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 270,
+      "norm": "use non null assertions in tests only when the setup clearly establishes that the value exists",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 277,
+      "norm": "leave generated database type files to their generator",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 278,
+      "norm": "change the generator when its output needs a style or structure change or document the required exception",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 280,
+      "norm": "keep handwritten adapters around generated types small and beside the code that needs them",
+      "reason": "restated as: keep hand written wrappers around generated types small and owned by the boundary that needs them"
+    },
+    {
+      "source": "slopshop/rules/general/TYPESCRIPT.md",
+      "line": 281,
+      "norm": "apply style refactors to handwritten source and generators rather than editing generated output by hand",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 28,
+      "norm": "a shebang is the first line such as usr bin env bash that selects the interpreter",
+      "reason": "decision: glossary or definition of a shell term, not a rule"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 29,
+      "norm": "standard input stdin supplies input to a control standard output stdout carries its result standard error stderr carries errors and diagnostic messages",
+      "reason": "decision: glossary or definition of a shell term, not a rule"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 31,
+      "norm": "an exit status is the number a control returns zero means success nonzero means failure or another condition defined by that control",
+      "reason": "decision: glossary or definition of a shell term, not a rule"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 33,
+      "norm": "expansion replaces shell syntax with values for example name expands a variable",
+      "reason": "decision: glossary or definition of a shell term, not a rule"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 34,
+      "norm": "command substitution control captures a control s output as text",
+      "reason": "decision: glossary or definition of a shell term, not a rule"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 35,
+      "norm": "process substitution control makes a control s output available as a file like input",
+      "reason": "decision: glossary or definition of a shell term, not a rule"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 36,
+      "norm": "a glob such as ts matches paths a nul delimiter separates filenames with a zero byte so spaces and newlines in a name do not split it",
+      "reason": "decision: glossary or definition of a shell term, not a rule"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 38,
+      "norm": "a trap runs a control when the shell receives a selected signal or exits",
+      "reason": "decision: glossary or definition of a shell term, not a rule"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 44,
+      "norm": "use bash to call commands and pass values between them keep complex application logic in the application modules",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 55,
+      "norm": "keep mise tasks hooks and ci entries focused on calling the commands they need put more complex behavior in the module responsible for it",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 57,
+      "norm": "keep structured data parsing and source code analysis in their existing javascript modules",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 58,
+      "norm": "if logic is too complex for bash put it in its existing application or tooling module do not add another scripting runtime or put a node program inline in a shell task",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 314,
+      "norm": "set e errexit exits after some control failures with exceptions described below",
+      "reason": "decision: glossary or definition of a shell term, not a rule"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 315,
+      "norm": "set u nounset treats an unset variable as an error when expanded",
+      "reason": "decision: glossary or definition of a shell term, not a rule"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 316,
+      "norm": "set o pipefail makes a pipeline fail if one of its commands fails",
+      "reason": "decision: glossary or definition of a shell term, not a rule"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 417,
+      "norm": "handle empty arrays correctly under the dynamic bash version and set u",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 852,
+      "norm": "use readarray or a while read loop for line based input",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 965,
+      "norm": "keep untrusted associative array keys out of arithmetic expressions",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 1518,
+      "norm": "use an existing structured parser for json use jq only when the workflow declares it as a prerequisite this guide does not add it to the toolchain",
+      "reason": "decision: superseded: jq and yq are pinned tools of the bash preset, not per-workflow prerequisites"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 1520,
+      "norm": "use a project owned parser for yaml when yaml structure matters treat yq as an explicit prerequisite only for workflows that already require it",
+      "reason": "decision: superseded: jq and yq are pinned tools of the bash preset, not per-workflow prerequisites"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 1897,
+      "norm": "bash xtracefd requires bash 4 1 or later check the dynamic runtime before using it",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 1964,
+      "norm": "move duplicated shell helpers into the local script family only when the callers need the same behavior and error handling",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/general/BASH.md",
+      "line": 1968,
+      "norm": "use the dynamic bash runtime change shebangs only when the requested implementation needs it",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/nextjs/DRIZZLE.md",
+      "line": 639,
+      "norm": "review security definer functions separately restrict who can execute them control their search path and give them only the authority needed for the operation",
+      "reason": "decision: the corpus states this rule under other wording in the owning file"
+    },
+    {
+      "source": "slopshop/rules/nextjs/INTERNATIONALIZATION.md",
+      "line": 30,
+      "norm": "use the established i18n library prefer next intl for new next js localization that fits its model use server translation apis for async server components and client hooks inside client components pass translated labels or scoped messages where possible do not ship the entire catalog to every client boundary just because a provider supports it",
+      "reason": "superseded: the hedge was removed and the rule restated as a fact"
+    }
+  ]
+}
