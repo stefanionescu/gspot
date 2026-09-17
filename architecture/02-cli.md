@@ -30,7 +30,7 @@ env:    NO_COLOR  CI  GSPOT_LOG
 exit:   0 passed   1 findings   2 gspot did not run
 ```
 
-Fourteen commands in v1. `check --watch` follows in v1.1. Six of them write `gspot.toml`
+Fifteen commands in v1. `check --watch` follows in v1.1. Six of them write `gspot.toml`
 (`ignore`, `add`, `remove`, `allow`, `set`, `declare`); together they cover every setting the
 file has, so nobody has to type TOML to change policy. Hand edits stay valid and are checked on
 load. `completion` prints the shell script `@bomb.sh/tab` generates from the command tree, so

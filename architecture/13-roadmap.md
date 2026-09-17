@@ -14,7 +14,7 @@ folder deleted and no rule lost.
 | Tracked files, natures, scopes, staged files | the four reference repositories list correctly |
 | Tool runner with file lists, concurrency, missing-tool handling | a planted repository with one missing tool fails with the hint |
 | Reporter, run record, exit codes | output matches the shape in [02-cli.md](02-cli.md) |
-| `init`, `check`, `sync`, `doctor`, `uninstall`, `why`, `explain`, `completion`, and the six writing commands | the fourteen-command surface parses and every command works; `explain` renders `summary`, `why` and `fix` for every check in the bash preset; `completion` output from `tab` completes every command in bash and zsh |
+| `init`, `check`, `sync`, `doctor`, `uninstall`, `why`, `explain`, `completion`, and the six writing commands | the fifteen-command surface parses and every command works; `explain` renders `summary`, `why` and `fix` for every check in the bash preset; `completion` output from `tab` completes every command in bash and zsh |
 | The npm launcher and one platform package per target | `bunx gspot --version` works from a local registry on the three platforms with no network and `--ignore-scripts` |
 | Version pin: `.gspot/version`, the runner pin, the mismatch refusal, `--version` | a binary of another version exits 2 on `check` with the two remedies |
 | Hooks, staged mode, `.mise/conf.d/gspot.toml` | a planted repository commits through the hook |

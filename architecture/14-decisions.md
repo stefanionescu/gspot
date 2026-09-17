@@ -137,7 +137,7 @@ logic) only.
 `init`, `check`, `sync`, `rules`, `doctor`, `upgrade`, `uninstall`. `fix` is a flag on `check`;
 coverage lives in `doctor`; the last run is a file. Rejected: fourteen verbs, half of which
 printed things nobody asked for. Superseded in part: D-32 and D-37 add the six writing commands,
-`why` and `explain`; D-45 folds `rules` into `sync`; D-55 adds `completion`. The count is fourteen.
+`why` and `explain`; D-45 folds `rules` into `sync`; D-55 adds `completion`. The count is fifteen.
 
 ## D-24 No environment variables turn checks off
 
@@ -286,7 +286,7 @@ tables with two reason conventions.
 appeared, configuration files not owned, hooks or CI changed by hand) with the command that
 applies each, beside the tool and coverage report it already printed. `sync` installs the rule
 files and the managed blocks, `sync --check` reports their drift and the unenforced count, and
-`sync --project-templates` copies templates once. Thirteen commands, fourteen with D-55. Rejected: `init
+`sync --project-templates` copies templates once. Fourteen commands, fifteen with D-55. Rejected: `init
 --reconcile` and `rules`, which printed or wrote a subset of what `doctor` and `sync` already
 covered, so a person had two commands to remember for one question.
 

@@ -7,39 +7,24 @@ itself.
 
 ```text
 gspot/
-├── packages/
-│   ├── cli/                    the binary. TypeScript, Bun.
-│   │   ├── src/
-│   │   │   ├── commands/       one file per command: parse flags, call one function, print
-│   │   │   ├── config/         gspot.toml schema (zod), merge, validation messages
-│   │   │   ├── presets/        manifest loading and validation
-│   │   │   ├── repository/     tracked files, natures, scopes, staged files, manifests
-│   │   │   ├── run/            check scheduling, tool runner, reporter, run record, baselines
-│   │   │   ├── render/         templates, stubs, managed blocks, hooks, runner surface, workflow
-│   │   │   ├── structure/      tree-sitter loading, ast-grep driver, original analyses
-│   │   │   ├── naming/         policy schema, extractors, matcher
-│   │   │   ├── prose/          Vale driver, grammar mapping
-│   │   │   ├── integrity/      one file per integrity check
-│   │   │   ├── rules/          corpus assembly, front matter, corpus lint
-│   │   │   └── doctor/         tool probes, coverage report, detection report
-│   │   ├── grammars/           tree-sitter WASM files, embedded at build
-│   │   └── tests/
-│   └── eslint-plugin/          eslint-plugin-gspot, published to npm
-│       ├── src/rules/          one file per rule, ported with its tests
-│       └── tests/
-├── presets/                    one folder per preset: manifest.toml, templates, ast-grep rules, docs
-├── rules/                      the corpus, by layer (moved from reference-rules/merged after repair)
-├── prose/                      the gspot Vale style and vocabulary
-├── docs/                       user documentation, published
+├── .changeset/  .github/  .gspot/  .mise/    changesets, CI and release workflows, gspot's own generated files, mise pins
 ├── architecture/               this folder
-├── tests/
-│   ├── repositories/           planted repositories, one per preset and one per reference shape
-│   └── parity/                 naming and structure parity fixtures from the reference repos
-├── gspot.toml                  gspot's own policy, written by gspot init
-├── .gspot/                     gspot's own generated files
-├── mise.toml                   bun, and the tools gspot's own checks need
-└── package.json                workspace root
+├── docs/                       the manual, a Starlight site with generated reference pages
+├── packages/
+│   ├── cli/                    the binary: src/, types/, grammars/, tests/
+│   ├── eslint-plugin/          eslint-plugin-gspot
+│   └── npm/                    the launcher package and the platform package template
+├── presets/                    one folder per preset: manifest.toml, templates, ast-grep rules, semgrep packs
+├── prose/                      the gspot Vale style and vocabularies
+├── rules/                      the agent rule corpus, by layer
+├── schema/                     gspot.schema.json, run-record.schema.json
+├── tests/                      planted repositories, acceptance, parity, performance, release
+├── gspot.toml  mise.toml  package.json  bunfig.toml  tsconfig.json
+└── AGENTS.md  CLAUDE.md  CHANGELOG.md  LICENSE.md  README.md
 ```
+
+Every folder and file, with what each holds, is in [16-file-tree.md](16-file-tree.md). A file
+goes where that document says or the document changes in the same commit.
 
 Two published artefacts: the binary (GitHub Releases, one asset per platform) and
 `eslint-plugin-gspot` (npm). Presets, rules and prose ship inside the binary. On npm the binary

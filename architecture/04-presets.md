@@ -12,10 +12,12 @@ presets/typescript/
   manifest.toml            everything the preset contributes
   eslint.config.js.tmpl    configuration templates
   tsconfig.base.json.tmpl
-  rules/                   ast-grep rule files, one per structural rule and grammar
-  docs/TYPESCRIPT.md       agent rule files, by layer
-  docs/naming/TYPESCRIPT.md
+  knip.json.tmpl
+  rules/                   ast-grep rule files, one directory per rule, one file per grammar
 ```
+
+The agent rule files are not inside the preset folder: the corpus is one tree under `rules/`
+and the manifest names its files there by path ([16-file-tree.md](16-file-tree.md)).
 
 A preset contributes: files it claims, tools with versions, configuration it renders, checks it
 runs, settings it exposes, and rule files it installs. It contributes nothing it does not declare.
@@ -119,7 +121,7 @@ direction = "neutral"
 ".ts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 
 [rules]
-language = ["docs/TYPESCRIPT.md", "docs/naming/TYPESCRIPT.md"]
+language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
 ```
 
 ### Field rules
