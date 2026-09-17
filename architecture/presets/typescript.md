@@ -64,7 +64,7 @@ application scopes) refuses every re-export in source; `index-only` allows index
 | `tools.eslint.import_style` | neutral | `js` for TypeScript compiled to ESM, `ts` for Deno, `extensionless` for bundled code; per file class |
 | `tools.eslint.test_files` | neutral | `**/*.{test,spec}.{ts,tsx}`, `**/tests/**` |
 | `tools.typescript.paths` | neutral | from the existing tsconfig at init |
-| `tools.knip.entry` | neutral | from the framework preset; carried from an existing `knip.json` at init |
+| `tools.knip.entry` | neutral | from the framework preset |
 | `architecture.types_directory` | neutral | `types` |
 | `architecture.elements`, `architecture.allow`, `architecture.roles` | tightening | one element; the default roles |
 | `structure.reexports` | tightening | `none` |

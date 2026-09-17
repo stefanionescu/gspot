@@ -142,10 +142,8 @@ change
 
 no longer runs; delete when ready
   .githooks/                      core.hooksPath now points at .gspot/hooks
-  quality/                        your lint scripts; gspot replaces what the ledger maps
-  .mise/tasks/repo/lint/*  ...    35 tasks that call quality/ or a tool gspot now owns
-  ios/package.json                a workspace package whose dependencies are all linters
-  rules/                          your agent rules; delete once .gspot/rules/ covers them
+  quality/                        a folder of lint scripts; nothing in the gate calls it
+  ios/package.json                a manifest whose dependencies are all tools gspot now pins
   mise.toml                       15 pins gspot also pins (gspot doctor lists them)
 
 baseline
@@ -176,8 +174,11 @@ Carried into `gspot.toml`, because they are facts about the repository and not p
 | osv-scanner ignored advisories | `[tools.osv] ignore` |
 | license exceptions | `[[tools.licenses.exceptions]]` |
 | a rule turned off in a linter config (ESLint `off`, Ruff `ignore` and `per-file-ignores`, SwiftLint `disabled_rules`, ShellCheck `disable`, sqlfluff `exclude_rules`, squawk `excluded_rules`, markdownlint `false`, stylelint `null`) | one `[[ignore]]` per rule with the reason `carried from <file> at init` |
-| knip `entry` and `project`; Periphery `schemes` and retain options; the Xcode scheme | `[tools.knip] entry`, `[tools.periphery]`, `[tools.xcodebuild] scheme` |
-| generated paths in an ignore file (`.prettierignore`, `.eslintignore`) | not carried; printed as `gspot declare <path> --produced-by "..."` suggestions the person completes |
+
+That is the whole carry list: exception lists and allowlists, which are facts about the
+repository. Everything else in an old file (entry points, schemes, contracts, ignore patterns,
+limits) is policy: the person reads it with `git show` and re-declares what they still want
+through `set`, `declare` or a hand edit. One loader per list above, none per tool.
 
 Every carried reason says `carried from <file> at init`, prints on every run like any other
 ignore, and is the person's to rewrite or remove. Nothing else is read from the old file: a
@@ -188,16 +189,13 @@ entry when they want it in the gate.
 
 Hand-written hooks are never deleted. When `.githooks/` or another hook directory holds scripts
 gspot did not write, `init` points `core.hooksPath` at `.gspot/hooks` and lists the old directory
-under "no longer runs; delete when ready". The same line covers a folder of home-grown lint
-scripts (`quality/`, `lint/`, `.qlty/`), a workspace package whose dependencies are all linters,
-a root `package.json` whose dependencies are all linters in a repository with no JavaScript (with
-its lockfile; under the mise runner the npm tools move to `npm:` pins and the Node footprint
-goes), a task-runner task whose body calls a file in such a folder or a tool gspot now owns, an
-agent rules directory the corpus covers, and a `mise.toml` or `devDependencies` pin gspot also
-pins. Takeover reads configuration at conventional paths only; a configuration file kept inside
-a lint folder (`quality/config/shellcheckrc`) is not found, and the plan says so and names the
-path to move it to before running `init` again.
-gspot touches nothing it did not write; the person deletes with the list in hand (D-57).
+under "no longer runs; delete when ready". Three other things land on that list, each by one
+rule that reads no code: a directory nothing in the gate references (`quality/`, `lint/`,
+`.qlty/`), a package manifest whose dependencies are all tools gspot now pins (with its
+lockfile), and a `mise.toml` or `devDependencies` pin gspot also pins. Task-runner tasks, agent
+rule directories and documentation are the person's; gspot lints them and never judges them.
+Takeover reads conventional paths only. gspot touches nothing it did not write; the person
+deletes with the list in hand (D-57).
 [17-migration.md](17-migration.md) shows the list for a real repository.
 
 An existing `CLAUDE.md` or `AGENTS.md` is never read, split or moved. gspot appends one managed

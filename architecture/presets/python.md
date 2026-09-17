@@ -22,7 +22,7 @@ pyproject-fmt, uv. Installed through mise `pipx:` or a `gspot` dependency group 
 | Target | Stub | Holds |
 | --- | --- | --- |
 | `.gspot/ruff.toml` | `[tool.ruff] extend` in `pyproject.toml` | the selected families including `S` and `ANN401`, `PLR2004`, `PLR1702`, `PLR0917`, `FAST`; the ignores; the limits (`C901` at `cyclomatic_complexity`, `PLR0915` at `statements`, `PLR1702` at `nested_blocks`); format options from `[format]` |
-| `.gspot/basedpyrightconfig.json` and `.gspot/basedpyright.<project>.json` | `pyrightconfig.json` | `typeCheckingMode: all`, `reportPrivateUsage`, `extraPaths`, includes from claims minus every variant's files; one file per `[[tools.basedpyright.projects]]` entry with its `include` |
+| `.gspot/basedpyrightconfig.json` | `pyrightconfig.json` | `typeCheckingMode: all`, `reportPrivateUsage`, `extraPaths`, includes from claims |
 | `[tool.importlinter]` | written into `pyproject.toml` through a TOML edit that preserves comments | root packages and contracts from `[architecture.contracts]` |
 | `[tool.deptry]`, `[tool.vulture]` | same | the reference options |
 
@@ -32,7 +32,7 @@ pyproject-fmt, uv. Installed through mise `pipx:` or a `gspot` dependency group 
 | --- | --- | --- |
 | `python/ruff` | commit | `ruff check --config .gspot/ruff.toml {files}`; fix order codemod |
 | `python/ruff-format` | commit | `ruff format --check`; fix order format |
-| `python/basedpyright` | commit | `basedpyright -p .gspot/basedpyrightconfig.json` over the default project, then `uv run --extra <extra> basedpyright -p .gspot/basedpyright.<name>.json` per `[[tools.basedpyright.projects]]` entry; an entry whose `platform` is not this machine's is a platform skip and prints so; the baseline is basedpyright's own file under `.gspot/baseline/`, written with `--writebaseline` at `init` |
+| `python/basedpyright` | commit | `basedpyright -p .gspot/basedpyrightconfig.json`; the baseline is basedpyright's own file under `.gspot/baseline/`, written with `--writebaseline` at `init` |
 | `python/import-linter` | commit | `lint-imports` |
 | `python/pydoclint` | commit | `pydoclint --allow-init-docstring true {files}` until Ruff `DOC` leaves preview |
 | `python/deptry` | push | `deptry <source roots>` |
@@ -53,8 +53,7 @@ pyproject-fmt, uv. Installed through mise `pipx:` or a `gspot` dependency group 
 | --- | --- | --- |
 | `tools.ruff.select`, `tools.ruff.options` (per-rule options; a rule turned off is a `gspot ignore python/ruff --rule <code>`) | per-rule | the ledger set |
 | per-file rule exemptions | loosening | none; written as `[[ignore]]` entries with `rule` and `paths`, rendered into `per-file-ignores` |
-| `[[tools.basedpyright.projects]]` (`name`, `include`, `extra` or `group`, `platform`) | neutral | none; a repository whose engines need incompatible dependency sets (a TensorRT project and a vLLM project) declares one entry per set, and the files in an entry leave the default project. `init` carries entries from existing per-variant pyright configs |
-| `tools.basedpyright.exclude` (carries a reason) | loosening | none |
+| `tools.basedpyright.exclude` (carries a reason) | loosening | none. A repository that must type-check some files under another dependency set excludes them here and adds a `[[check]]` (`command = ["uv", "run", "--extra", "trt", "basedpyright", "-p", "typecheck/trt.json"]`, `platform = "linux"`); gspot has no slot for that, on purpose |
 | deptry rules turned off | loosening | none; `gspot ignore python/deptry --rule DEP002 --reason` |
 | `tools.vulture.ignore_names` | loosening | none |
 | `architecture.contracts` | tightening | none |

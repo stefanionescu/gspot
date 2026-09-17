@@ -382,10 +382,11 @@ for a tool in the same space.
 
 ## D-57 Migration is the owner's step; gspot lists, the person deletes
 
-`init` replaces what it owns and lists everything it made redundant (lint folders, hand-written
-hooks, lint-only tasks and workspace packages, duplicate pins, an old rules directory) under "no
-longer runs; delete when ready", and `doctor` keeps listing it. The person deletes, with the
-completeness check as the proof for rules and the ledger as the proof for checks.
-[17-migration.md](17-migration.md) shows the list for yap-swift-app. Rejected: `init` deleting
-those itself, which would destroy code it cannot prove it replaced, and which no stranger would
-say yes to.
+`init` replaces what it owns and lists what it can prove redundant without reading code: a
+directory nothing in the gate references, a hand-written hook directory, a manifest whose
+dependencies are all tools gspot pins, a pin gspot also pins. `doctor` keeps listing them. Tasks,
+rule directories and documentation are the person's to judge; the migration document walks them
+for the reference repositories, and the ledger is the proof for checks. Rejected: `init` deleting
+those itself, which would destroy code it cannot prove it replaced; rejected: `init` reading task
+bodies or rule files to decide what is redundant, which is a heuristic per repository shape and
+the kind of code this design refuses.

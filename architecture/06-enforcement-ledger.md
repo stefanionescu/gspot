@@ -159,7 +159,7 @@ Source: `TI pyproject.toml`, `TI quality/python/`, `TI quality/repository/`.
 | --- | --- | --- |
 | Ruff select: A ANN ARG ASYNC B BLE C4 C90 COM D DTZ E EM ERA EXE F FA FBT FIX FLY FURB G ICN INP ISC LOG N PERF PGH PIE PL PT PTH PYI Q RET RSE RUF S SIM SLF SLOT T10 T20 TC TD TRY UP W YTT; ignore COM812 D203 D213; fix all; beyond the reference set `ANN401`, `PLR2004`, `FAST`, and `DOC` when it leaves preview | pyproject | rendered `ruff.toml`; `python/ruff` |
 | Ruff format: 120 columns, 4 spaces, double quotes, LF, docstring code | pyproject | `python/ruff-format` |
-| pyright strict per project, `extraPaths`, per-variant projects with their own includes, each run under a uv extra and only on Linux | pyrightconfig, `config/typecheck/*.json`, `.mise/tasks/type/*` | `python/basedpyright` in `all` mode with `[[tools.basedpyright.projects]]` (`name`, `include`, `extra`, `platform`); a project whose `platform` does not hold is a platform skip; `reportPrivateUsage` on |
+| pyright strict, `extraPaths`; per-variant projects run under a uv extra and only on Linux | pyrightconfig, `config/typecheck/*.json`, `.mise/tasks/type/*` | `python/basedpyright` in `all` mode over the default project; each variant is a `[[check]]` the repository declares with `platform = "linux"`, which is a platform skip elsewhere; `reportPrivateUsage` on |
 | import-linter contracts (forbidden) | pyproject `[[tool.importlinter.contracts]]` | `python/import-linter`; contracts in `[architecture.contracts]` |
 | pydoclint with init docstrings | mise task | `python/pydoclint`, until Ruff `DOC` is stable |
 | interrogate fail-under 100, nothing ignored | pyproject | Ruff `D100` to `D107` with nothing ignored; interrogate is cut |

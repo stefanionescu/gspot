@@ -242,8 +242,12 @@ surface = "mise"           # mise | npm | bun | pnpm | uv | none
   load and names the `ignore` line.
 - The `marketing` and `defensive` term groups cannot be removed as groups. Individual names in
   them take scoped `allowed` entries.
-- `[[check]]` entries have `id`, `command`, `paths`, `stage`, and optionally `fix`, `count_regex`
-  and `requires` (`build`, `docker`, `network`).
+- `[[check]]` entries have `id`, `command`, `paths`, `stage`, and optionally `fix`, `count_regex`,
+  `requires` (`build`, `docker`, `network`) and `platform` (`macos`, `linux`, `windows`; a check
+  whose platform is not this machine's is a platform skip and prints so). A `[[check]]` is how a
+  repository runs anything gspot does not ship: a second type-check project under a different
+  dependency set, a generator, a product test. It joins the graph like a preset check, and no
+  preset grows a slot for it.
 - A key gspot does not know fails to load. The one place for an option gspot has no slot for is
   `[tools.<name>.extra]`, which carries a reason and prints every run; nothing is silent.
 
