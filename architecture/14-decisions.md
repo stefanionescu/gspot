@@ -188,11 +188,13 @@ that uses it and which agents extend in place.
 The binary, `check`, `sync`, `doctor` and the hooks run natively on Windows; CI tests it.
 Rejected: WSL only, which excludes a stranger's machine for a reason that is gspot's to fix.
 
-## D-32 `gspot ignore` is the one command that writes `gspot.toml`
+## D-32 Every setting has a writing command; hand edits stay valid
 
-An ignore entry with a reason is the edit people make most and mistype most. Every other change
-is a hand edit followed by `gspot sync`. Rejected: no writing command at all, which the previous
-design held; rejected: commands for every setting, which hide decisions.
+`ignore`, `add`, `remove`, `allow`, `set` and `declare` write `gspot.toml` through one writer
+that keeps comments and order, validates as load does, and runs `sync`. A hand edit produces the
+same file. Rejected: no writing command at all, which an earlier design held and which made the
+first customization a TOML lookup; rejected: hiding decisions behind commands, which the required
+reasons and the tracked file prevent, since every command's output is a line in `gspot.toml`.
 
 ## D-33 Install policy is part of the gate
 
@@ -225,3 +227,44 @@ Three commands join `ignore` as the ones that touch `gspot.toml` or explain it: 
 `remove` change the preset list with the same validation and re-render, `why` explains one file.
 Rejected: hand edits for every preset change, which a stranger gets wrong in the same ways the
 ignore table was got wrong.
+
+## D-38 One license mode, exceptions name the license
+
+The license checks run in allow mode only: a package passes when its reported license is on the
+allowlist or an exception names that package at that exact version with the license it reports and
+a reason. Rejected: the exclude mode two reference repositories also ran, which lists packages to
+skip without saying what was accepted and so cannot notice a license change at the same version.
+
+## D-39 `explain` covers a tool's rule, not only a gspot check
+
+`gspot explain <tool>/<rule>` prints the rule's summary, the check that runs it, and the exact
+`gspot.toml` line that changes it. The finding line prints the command. Rejected: a link to the
+tool's documentation alone, which answers "what is it" and not "how do I change it here".
+
+## D-40 Every tool has an `extra` passthrough
+
+`[tools.<name>.extra]` renders verbatim into the tool's configuration with a required reason,
+prints every run, and is reported by `upgrade --check` when a slot arrives for one of its keys.
+`init` uses it to carry options it has no slot for. Rejected: failing on unknown options, which
+blocked a person until a release added the slot, and dropping them at takeover, which lost
+configuration silently.
+
+## D-41 `upgrade` asks before it writes
+
+`gspot upgrade` prints its plan and waits for a yes, as `init` does; `--yes` skips the question
+and `--check` is read-only. Rejected: writing on invocation, which surprised people who wanted the
+report and made a wrong version choice a revert instead of a no.
+
+## D-42 A second `init` becomes `init --reconcile`
+
+`init` on an installed repository refuses and points at `--reconcile`, which re-detects, writes
+nothing, and prints the `add`, `declare` and `sync` commands that would apply each difference.
+Rejected: re-running the full init, which cannot tell a deliberate omission from a new arrival
+and would overwrite one to serve the other.
+
+## D-43 Copied project templates carry their origin version
+
+A project template copied into the project layer opens with a `gspot-template` header naming the
+template and the gspot version. `upgrade --check` reports when that template changed upstream;
+nothing merges it. Rejected: upgrading project files, which the project owns; rejected: no header,
+which left the person unaware that the source they copied had moved on.

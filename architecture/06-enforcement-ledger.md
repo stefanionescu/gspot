@@ -324,7 +324,7 @@ Source: `SS quality/`.
 | ansible-lint over playbooks | SA pinned `ansible-core`, ran nothing | `config-files/ansible-lint` when a playbook or `ansible.cfg` exists |
 | nginx `-t` through the compose service | SA `nginx/lint.js` | `nginx/config-test` (push, docker) |
 | dotenv-linter | SA qlty (never ran) | `config-files/dotenv-linter` |
-| license allowlist with exact-version exceptions; npm through `license-checker-rseidelsohn`, Python through `pip-licenses` | all | `licenses/npm`, `licenses/pip` (push) |
+| license allowlist with exact-version exceptions; npm through `license-checker-rseidelsohn`, Python through `pip-licenses`; TI exceptions record the accepted license and a reason | all | `licenses/npm`, `licenses/pip` (push); every exception carries `license` and fails when the reported license differs |
 | syncpack one version per dependency across the workspace | SA | `dependencies/syncpack` with a rendered config that also holds the paired-package groups |
 | lychee offline over Markdown | SA | `docs/links` (lychee, `--include-fragments`) |
 | package.json: exact versions no ranges, sorted, no scripts under mise, engines match runtime pin, bun version matches mise pin; root scripts limited to approved wrappers, `bun run` references exist, no section-marker scripts, package scripts never wrap `mise run` | SA `packages/*.js`, LA `package-json/scripts.js`, SS | `integrity/manifest-policy` with `[tools.package-json] scripts` and `allowed_scripts` |

@@ -151,7 +151,7 @@ the release note. There is no automatic migration of `gspot.toml`.
 `gspot upgrade --to 0.4.0` re-renders from the older version. Because generated files, baselines
 and rule files are tracked, `git revert` of the upgrade commit followed by `gspot sync` also
 restores the previous state. A baseline written by the newer version for a rule the older one
-lacks is reported by `sync --check` and deleted by hand.
+lacks is reported by `sync --check` and removed by `sync --baseline`.
 
 ## Network
 

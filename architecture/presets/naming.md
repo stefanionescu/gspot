@@ -25,7 +25,8 @@ api/src/turn/enhancedHandler.ts:1:1  naming/identifiers  file "enhancedHandler":
 
 ## Settings
 
-`naming.banned_terms`, `naming.allowed` (name, reason), `naming.external`, `naming.reserved`,
+`naming.banned_terms`, `naming.allowed` (name, reason; `gspot allow naming <name> --reason`),
+`naming.external` (`gspot allow naming-external <name>`), `naming.reserved`,
 `naming.remove_groups` (group, reason), `naming.contract_properties`, `[[naming.rules]]`.
 
 ## Rule files

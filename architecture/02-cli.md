@@ -7,6 +7,7 @@ This document decides every command, flag, output line and exit code. Each is on
 
 ```text
 gspot init      [--yes] [--presets <ids>] [--without <ids>] [--scope <path=ids>] [--own <tools>] [--no-install]
+                [--reconcile]
                 [--hooks gspot|lefthook|husky|none] [--ci github|none] [--rules yes|no]
                 [--project-templates] [--runner mise|npm|bun|pnpm|uv|none]
 gspot check     [<check-id>] [--staged] [--since <ref>] [--fix] [--dry-run] [--watch]
@@ -16,10 +17,13 @@ gspot rules     [--check] [--project-templates]
 gspot ignore    <check-id> [--paths <glob>...] [--rule <rule>] [--reason <text>]
 gspot add       <preset>... [--scope <path>]
 gspot remove    <preset> [--scope <path>]
+gspot allow     <tool> <value>... [--reason <text>]
+gspot set       <key> <value> [--reason <text>] [--scope <path>]
+gspot declare   <glob>... [--produced-by <command> | --vendored] [--reason <text>]
 gspot why       <path>
-gspot explain   <check-id>
+gspot explain   <check-id> | <tool>/<rule>
 gspot doctor    [--json] [--settings]
-gspot upgrade   [--check] [--to <version>]
+gspot upgrade   [--check] [--to <version>] [--yes]
 gspot uninstall [--keep-hooks]
 
 global: --help  --version  --quiet  --verbose  --no-color  -C <dir>
@@ -27,7 +31,9 @@ env:    NO_COLOR  CI  GSPOT_LOG
 exit:   0 passed   1 findings   2 gspot did not run
 ```
 
-Twelve commands in v1. `completion <shell>` follows in v1.1.
+Fifteen commands in v1. `completion <shell>` follows in v1.1. Six of them write `gspot.toml`
+(`ignore`, `add`, `remove`, `allow`, `set`, `declare`); together they cover every setting the file
+has, so nobody has to type TOML to change policy. Hand edits stay valid and are checked on load.
 
 ## init
 
@@ -120,8 +126,12 @@ missing.
 
 For each owned tool: its configuration is read (through the tool's own print-config where one
 exists), every value it carries is written into `gspot.toml` under `[tools.<name>]`, the file is
-deleted, and a stub at the conventional path points at the generated file. An option gspot has
-no slot for is listed in the plan as dropped, never carried silently.
+deleted, and a stub at the conventional path points at the generated file. Where a tool has no
+print-config (markdownlint, stylelint, typos, hadolint, sqlfluff), gspot parses the file with the
+tool's own loader. An option gspot has no slot for is carried into `[tools.<name>.extra]` with the
+reason `carried from <file> at init`, rendered verbatim into the generated config, and listed in
+the plan. Nothing is dropped; a key the loader itself rejects is listed as dropped with the
+loader's message.
 
 A tool gspot has no preset for is left alone and listed. The person adds it as a `[[check]]`
 entry when they want it in the gate.
@@ -132,9 +142,16 @@ block between markers. An existing rules directory is left alone; gspot's files 
 
 ### Refusal
 
-`init` refuses to run when `gspot.toml` exists. It prints the two commands that apply afterwards:
-`gspot doctor` to see what the repository gained, and editing `gspot.toml` then `gspot sync` to
-change the policy.
+`init` refuses to run when `gspot.toml` exists and points at `gspot init --reconcile`.
+
+### Reconcile
+
+`gspot init --reconcile` runs detection again on an installed repository and writes nothing. It
+prints what `init` would propose today that the policy does not have: languages and frameworks
+that appeared, tool configuration files that appeared at conventional paths and are not taken
+over, extensions no preset claims, hooks or CI that changed outside gspot. Each line ends with the
+command that applies it (`gspot add nextjs`, `gspot declare "vendor/**" --vendored`, `gspot sync`).
+Nothing is applied without that second command, so a re-run can never overwrite a decision.
 
 ## check
 
@@ -157,6 +174,12 @@ Every finding line carries the rule, the message, and a link to the rule's page 
 `docs/rules/<check-id>`. `gspot explain <check-id>` prints that page in the terminal: what the
 check looks for, which preset turns it on, the rule file statement it enforces, the settings that
 change it, and the ignore entry that turns it off.
+
+`gspot explain markdownlint/MD024` does the same for a rule inside a tool: the tool's own summary
+of the rule, the check that runs it, and the exact `[tools.markdownlint]` line that changes or
+turns it off, with the reason field already in it. The finding line for a tool rule prints this
+command, so the path from "what is MD024" to "how do I change it" is one command and never a
+trip to the tool's website.
 
 Results are cached in `.gspot/cache/` keyed on the tool version, the generated configuration
 hash and the content hash of every file the check read. A check whose inputs are unchanged
@@ -216,10 +239,8 @@ Installs or refreshes the agent rule files for the selected presets, and the man
 
 `gspot ignore <check-id> --paths "scripts/**" --reason "One launcher script per environment."`
 appends an `[[ignore]]` entry to `gspot.toml`, validates the file, and prints the entry. The
-reason is required and refused when it says nothing. This is one of three commands that write
-`gspot.toml` (with `add` and `remove`), because a hand-typed TOML array of tables is the thing people get wrong, and an
-ignore with a reason is the safest edit to automate. `--rule` narrows to one rule inside the
-check. Everything else in `gspot.toml` is edited by hand.
+reason is required and refused when it says nothing. `--rule` narrows to one rule inside the
+check.
 
 Inline suppressions for gspot's own engines use one syntax per comment style:
 
@@ -235,8 +256,39 @@ A suppression without a reason is a finding. Every form is counted in the suppre
 `gspot add nextjs vitest` appends presets to the root selection (`--scope api` to a scope's),
 validates the file, runs `sync`, and prints the plan `init` would have printed for them: tools
 added, files written, baselines created. `gspot remove vitest` does the reverse, including the
-files `sync` no longer renders. With `ignore`, these are the three commands that write
-`gspot.toml`; every other edit is by hand.
+files `sync` no longer renders.
+
+## allow
+
+`gspot allow typos udid --reason "Apple API name"` appends to the allow list a tool exposes:
+`typos` words, `typos-exclude` paths, `licenses` exceptions (`name@version` with `--license`),
+`naming` allowed names, `naming-external` names, `gitleaks` allow entries, `osv` ignored advisory
+ids. The reason is required for every list except `typos` words, where the word itself is the
+reason and `--reason` is optional. The entry prints back, `sync` runs, and the next `check` shows
+the finding gone.
+
+## set
+
+`gspot set limits.function_lines 80 --reason "Route tables are one ordered list each."` writes one
+scalar or list setting: any `[limits]` key, any tool slot, any `[architecture]`, `[structure]`,
+`[naming]`, `[rules]`, `[hooks]`, `[ci]`, `[editor]`, `[coverage]` or `[runner]` key. The key is
+the dotted path `doctor --settings` prints. A loosening (raising a limit, turning a rule or a
+tool off) requires the reason; a tightening does not. `--scope` targets a scope table. An unknown
+key fails with the keys that exist under that table.
+
+## declare
+
+`gspot declare "api/types/supabase.ts" --produced-by "supabase gen types"` and
+`gspot declare "vendor/**" --vendored --reason "Upstream source, patched only by rebase."` append
+`[[declare]]` entries, so file natures never need hand-written TOML either.
+
+## Writing `gspot.toml`
+
+The six writing commands share one writer. It parses the file with its comments and order intact,
+appends or replaces the one entry, validates the whole file exactly as load does, writes it, runs
+`sync`, and prints the lines it wrote. A refused reason (`N/A`, `TBD`, empty) or an unknown key
+fails before anything is written. A hand edit produces the same file; the commands exist so that
+the common edits are one line at the terminal instead of a table someone has to look up.
 
 ## why
 
@@ -261,8 +313,8 @@ unchecked files          12
   assets/hero.wav                    binary: secrets scan only
 
 detected, not selected
-  nextjs                             next in package.json
-  vitest                             vitest in package.json
+  nextjs                             next in package.json        gspot add nextjs
+  vitest                             vitest in package.json      gspot add vitest
 
 hooks      .gspot/hooks  installed
 ci         none
@@ -278,11 +330,19 @@ where the value came from (preset default, scope table, root table).
 
 ## upgrade
 
-`gspot upgrade --check` prints what the newer version changes: rules added, removed, stricter;
-tools bumped; rule files changed; presets now available that the repository does not select;
-coverage change. `gspot upgrade` moves the version pin, re-renders, writes baselines for rules
-that arrive with findings, and reports. Never writes `gspot.toml`. Never commits. `--to` moves
-to an exact version, downward included.
+`gspot upgrade --check` prints what the newer version changes and writes nothing: rules added,
+removed, stricter; tools bumped; rule files changed; presets now available that the repository
+does not select; coverage change; `extra` keys that now have a slot; project templates that
+changed upstream since they were copied (read from the `gspot-template` header line), which the
+person merges by hand or ignores.
+
+`gspot upgrade` prints the same report as its plan, then asks, exactly as `init` does. `--yes`
+skips the question. On a yes it moves the version pin, re-renders every generated file, rewrites
+the managed blocks between their markers, writes baselines for rules that arrive with findings,
+and reports. It never writes `gspot.toml`, never touches text outside a managed block, never
+touches the project rule layer, and never commits. Because every decision lives in `gspot.toml`,
+an upgrade cannot lose a setting; what it changes is visible in the tracked diff of `.gspot/`.
+`--to` moves to an exact version, downward included.
 
 ## uninstall
 

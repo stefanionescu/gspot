@@ -40,7 +40,8 @@ and gets findings from the hooks with a message it can act on.
 
 1. **One command installs it.** `gspot init --yes` produces a passing gate in any repository gspot
    has a preset for, on the day it runs, through a baseline of existing findings.
-2. **One file configures it.** `gspot.toml` holds every decision. Nothing else is edited by hand.
+2. **One file configures it.** `gspot.toml` holds every decision, and every decision has a
+   one-line command that writes it. Nothing else is edited by hand.
 3. **Nothing is silent.** Every ignore carries a reason and prints on every run. Every skipped
    check prints. Every baseline prints its count. A tool that cannot run fails the checks that need it.
 4. **Nothing is hidden in a tool's own ignore file.** gspot hands every tool an explicit file
@@ -62,11 +63,14 @@ and gets findings from the hooks with a message it can act on.
   network checks.
 - See a finding. The output names the file, line, rule and message, and prints the command that
   reproduces that one check alone.
-- Disagree with a finding. Add an `[[ignore]]` with a reason to `gspot.toml`, or raise a limit in
-  `[limits]` with a reason. Both print on every run.
-- Add a language. Edit `presets` in `gspot.toml`, run `gspot sync`. New findings enter a baseline.
-- Upgrade. Run `gspot upgrade`. Read the report: new rules, changed limits, tool bumps, rule
-  file changes, coverage change. Commit the diff.
+- Disagree with a finding. `gspot ignore <check> --paths <glob> --reason "..."`, or
+  `gspot set limits.function_lines 80 --reason "..."`, or `gspot allow typos <word>`. Each writes
+  one entry to `gspot.toml`, and each prints on every run.
+- Add a language. `gspot add python`, or `gspot init --reconcile` to see what appeared since the
+  install. New findings enter a baseline.
+- Upgrade. Run `gspot upgrade`. Read the plan: new rules, changed limits, tool bumps, rule file
+  changes, coverage change, templates changed upstream. Say yes. Commit the diff. Nothing you wrote
+  is touched.
 
 ## Principles
 

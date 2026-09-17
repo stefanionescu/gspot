@@ -21,14 +21,29 @@ CC-BY-4.0, Unlicense, BlueOak-1.0.0, Python-2.0.
 
 | Id | Stage | Command |
 | --- | --- | --- |
-| `licenses/npm` | push | `license-checker-rseidelsohn --onlyAllow <list> --excludePackages <exact versions> --excludePrivatePackages --start <scope>` per workspace package; zero packages scanned is a failure |
-| `licenses/pip` | push | `pip-licenses --allow-only <list> --ignore-packages <exact versions>` |
-| `integrity/allowlists-resolve` | commit | every exception names `name@exact.version` |
+| `licenses/npm` | push | `license-checker-rseidelsohn --json --excludePrivatePackages --start <scope>` per workspace package; gspot compares every reported license against the allowlist and the exceptions; zero packages scanned is a failure |
+| `licenses/pip` | push | `pip-licenses --format=json`; the same comparison |
+| `integrity/allowlists-resolve` | commit | every exception names `name@exact.version` that the lockfile holds |
+
+An exception passes only when the package reports the license the exception names. A package whose
+reported license differs from its exception fails with both licenses in the message, so a license
+change at the same version is never accepted silently.
 
 ## Settings
 
 `tools.licenses.allow` (add carries no reason; remove does), `tools.licenses.exceptions`
-(`name@version`, reason).
+(`name@version`, `license`, reason); `gspot allow licenses colorama@0.4.6 --license BSD --reason`
+writes an exception.
+
+```toml
+[tools.licenses]
+allow = ["MPL-2.0"]
+
+[[tools.licenses.exceptions]]
+package = "colorama@0.4.6"
+license = "BSD"
+reason  = "Installed metadata reports the permissive BSD license in its short form."
+```
 
 ## Rule files
 

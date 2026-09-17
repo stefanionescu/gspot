@@ -37,7 +37,9 @@ unconditionally and the code files per preset.
 The merge left out one team's architecture on purpose. That material still has value to the
 team that wrote it, so it ships as templates under `templates/project/`, and
 `gspot init --project-templates` or `gspot rules --project-templates` copies the ones that match
-the selection into the repository's project layer once. gspot never upgrades a project file.
+the selection into the repository's project layer once. gspot never upgrades a project file. The
+copy opens with `<!-- gspot-template: IOS-ARCHITECTURE 0.4.0 -->`, so `upgrade --check` can report
+that the template changed upstream; merging is the person's choice.
 
 | Template | Content |
 | --- | --- |
@@ -166,8 +168,8 @@ the guides for the files you change. A more specific layer wins over a general o
 | Zod | `.gspot/rules/library/zod/ZOD.md` |
 | Project rules | `rules/project/` |
 
-Run `gspot check --staged` before committing. Edit `gspot.toml` to change policy; never edit
-files under `.gspot/`. Do not use subagents or parallel agents unless asked in the conversation.
+Run `gspot check --staged` before committing. Change policy with `gspot set`, `gspot allow` or
+`gspot ignore` (or by editing `gspot.toml`), then `gspot sync`; never edit files under `.gspot/`. Do not use subagents or parallel agents unless asked in the conversation.
 <!-- <<< gspot managed <<< -->
 ```
 

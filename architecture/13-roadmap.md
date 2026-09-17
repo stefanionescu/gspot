@@ -14,7 +14,7 @@ folder deleted and no rule lost.
 | Tracked files, natures, scopes, staged files | the four reference repositories list correctly |
 | Tool runner with file lists, concurrency, missing-tool handling | a planted repository with one missing tool fails with the hint |
 | Reporter, run record, exit codes | output matches the shape in [02-cli.md](02-cli.md) |
-| `init`, `check`, `sync`, `doctor`, `uninstall` | the seven-command surface parses; five work |
+| `init`, `check`, `sync`, `doctor`, `uninstall`, and the six writing commands | the fifteen-command surface parses; `init`, `check`, `sync`, `doctor`, `uninstall`, `ignore`, `set`, `allow`, `add`, `remove`, `declare` work |
 | Hooks, staged mode, `.mise/conf.d/gspot.toml` | a planted repository commits through the hook |
 | One preset: bash (ShellCheck, shfmt, `bash -n`) | `gspot init --yes && gspot check` passes on a repository with one script |
 

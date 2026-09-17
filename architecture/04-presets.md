@@ -95,6 +95,7 @@ stage    = "push"
 takes    = "project"
 command  = ["knip", "--config", "{config:knip}"]
 
+# every tool gets `tools.<name>.extra` (verbatim passthrough with a reason) without declaring it
 [[settings]]
 name      = "tools.eslint.rules"
 kind      = "table"
@@ -218,6 +219,7 @@ app, an Express API, a Supabase project, a static site on Cloudflare, and a Next
   dictates (`app/`, `supabase/migrations/`, `functions/`).
 - Read a product value into its own configuration. A check that needs the nginx image tag reads
   the compose file at run time.
-- Ship a tool without slots for the options a real repository sets on it.
+- Ship a tool without slots for the options a real repository sets on it. The `extra` table
+  covers the gap until the slot exists; it is not a reason to leave the slot out.
 - Ship a check no stage runs.
 - Ship a rule file that links to another rule file.
