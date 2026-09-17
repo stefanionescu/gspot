@@ -307,7 +307,9 @@ facts about their repository, not policy.
 Every command prints lines; `--json` prints a documented object. The only interactive moments
 are the questions `init` and `upgrade` ask through `@clack/prompts`, skipped under `--yes`, `CI`
 or no terminal. commander parses and writes help; picocolors colours; zod validates; smol-toml
-reads and `@decimalturn/toml-patch` writes `gspot.toml`. No terminal UI framework,
+reads and `@decimalturn/toml-patch` writes `gspot.toml`; `consola` carries messages on stderr.
+The full table, one library per job, is in [12-repository-layout.md](12-repository-layout.md);
+what stays gspot's own is listed under it. No terminal UI framework,
 table renderer or logging framework. Rejected: a rendered interface, which agents cannot read,
 CI cannot show, and which no linter people already trust has.
 

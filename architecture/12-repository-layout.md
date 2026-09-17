@@ -82,6 +82,21 @@ ask.
 | Shell completions | `@bomb.sh/tab` with its commander adapter | `gspot completion <shell>`; the same library Wrangler, Nuxt, Astro and Vitest use |
 | JSON schema for `gspot.toml` | zod v4 `z.toJSONSchema` | `gspot.schema.json`, published to SchemaStore each release |
 | Baselines where the tool has its own | ESLint bulk suppressions, `basedpyright --writebaseline` | gspot drives the tool's file under `.gspot/baseline/`; the editor honours the same file |
+| Split identifiers into parts | `scule` (`splitByCase`, the case functions) | the naming engine's splitter; the whole-part matcher stays gspot's (D-08) |
+| Find workspace packages | `@manypkg/get-packages` | npm, pnpm, yarn, bun, Lerna and Rush workspaces from one call; scopes come from its answer |
+| Read and write JSON with comments | `jsonc-parser` (`modify`, `applyEdits`) | the `tsconfig.json` `extends` stub and the `.vscode/*.json` managed entries without losing a comment |
+| Read and write YAML keeping comments | `yaml` (the `Document` API) | the `lefthook.yml` block, workflow rendering |
+| Edit `package.json` keeping its indent | `@npmcli/package-json` | scripts, `devDependencies` and `packageManager` edits at `init` and `upgrade` |
+| Parse `.editorconfig` | `editorconfig` | the managed block and the `[format]` derivation |
+| License expressions | `spdx-expression-parse`, `spdx-satisfies` | matching `MIT OR Apache-2.0` against the allowlist |
+| Markdown structure | `mdast-util-from-markdown` (remark) | `integrity/stale-paths`, `integrity/docs-headings`, `docs/readme-shape`, `markdown/fences`; no regex over Markdown |
+| Unified diffs | `diff` (jsdiff) | `check --fix --dry-run` and `sync --check` output |
+| Concurrency | `p-limit` | the tool runner's per-stage limit |
+| Plain-English schema errors | `zod-validation-error` | every message from a bad `gspot.toml` or manifest |
+| Messages on stderr | `consola` | levels for `--quiet` and `--verbose`, TTY and CI detection, a JSON reporter under `--json`; findings on stdout stay gspot's reporter |
+| Spawning on Windows | `cross-spawn` where `Bun.spawn` cannot run a `.cmd` shim | the npm-installed tools on Windows (`eslint.cmd`, `prettier.cmd`) |
+| Newer-version lookup | `latest-version` | the one lookup `doctor` and `init` make |
+| File watching (v1.1) | `@parcel/watcher` | `check --watch` |
 | Path selectors | picomatch | one syntax everywhere |
 | Versions | semver | pins, floors, the version-pin comparison |
 | Parsing for the structure and naming engines | `web-tree-sitter` with embedded grammars; `libpg-query` WASM for SQL | no native modules |
@@ -93,6 +108,13 @@ Not used: any terminal UI framework, table renderer, spinner library outside cla
 framework, or dependency-injection container. Columns are computed from the longest id.
 [15-prior-art.md](15-prior-art.md) records the candidates that were considered and not taken.
 
+What stays gspot's own, because no library does it: the preset loader and merge, the file-set
+computation from claims, natures and ignores, the reporter that prints findings, the
+whole-part naming matcher, the structure analyses listed in [05-engines.md](05-engines.md),
+the integrity checks, and the writers for generated files and managed blocks. Each is small,
+and each has a test. A contribution that adds a library for one of these is welcome when the
+library is maintained and does the whole job.
+
 ## Build
 
 - `bun build --compile --target=bun-<os>-<arch>` per platform, with the grammar WASM files,
@@ -103,6 +125,20 @@ framework, or dependency-injection container. Columns are computed from the long
   one version; the launcher resolves the installed platform package by `process.platform` and
   `process.arch` and fails with the install hint when none is present.
 - `eslint-plugin-gspot` builds with `bun build` to ESM and CommonJS, versioned with the binary.
+
+## Release
+
+Nothing in the release path is gspot's own code:
+
+| Step | Tool |
+| --- | --- |
+| Version and changelog | `changesets`: every change lands with a changeset file; the release PR bumps the version and writes the changelog |
+| Build | a GitHub Actions matrix runs `bun build --compile` per target; the run record of the build is the release note's tool table |
+| Provenance | `actions/attest` signs every binary and the npm packages carry `--provenance` from trusted publishing, so `doctor` and a person can verify what they run |
+| GitHub release | `softprops/action-gh-release` uploads the binaries and checksums |
+| npm | the launcher and one platform package per target, published in one job at one version |
+| Homebrew tap (post-v1) | a tap repository updated by `repository_dispatch` from the release workflow with `SierraSoftworks/actions-tap` |
+| Docs | Astro Starlight; `starlight-llms-txt` writes `llms.txt`, `llms-full.txt` and `llms-small.txt` from the same pages |
 
 ## Tests
 
@@ -118,6 +154,8 @@ framework, or dependency-injection container. Columns are computed from the long
 | Platform | the unit and planted-repository suites run on `ubuntu`, `macos` and `windows` in CI | the CI matrix |
 | Completion | every command and flag appears in the completions `tab` generates for bash, zsh, fish and PowerShell | `packages/cli/tests/unit` |
 | Schema | `gspot.schema.json` validates every fixture `gspot.toml` and rejects every invalid fixture the load tests use | `packages/cli/tests/unit` |
+| Launcher | the npm launcher and platform packages are published to a `verdaccio` registry in CI and installed from it on the three platforms with `--ignore-scripts`; `bunx gspot --version` runs | `tests/release` |
+| Fixtures | planted repositories are written with `fs-fixture` and removed after each test | `tests/repositories` |
 | Corpus | `reference-rules/lint/corpus-lint.ts` (front matter, markers, links, size, layer boundary, fences, corruption, Vale), `mark-statements.ts --check`, `completeness-check.ts` | gspot's own gate; interim home `reference-rules/lint/` until `packages/cli/src/rules/` exists |
 | Self | `gspot check` on gspot, no ignores | gspot's own gate |
 

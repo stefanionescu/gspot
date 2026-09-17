@@ -40,8 +40,9 @@ Runs external tools. Owns nothing about what they find.
   Unchanged inputs skip the run and print `cache`. `--staged` therefore costs the staged files
   only. The cache is per machine and never tracked.
 - **Platforms.** Commands are spawned without a shell. Paths are joined with `node:path` and
-  passed to tools in the platform's form. On Windows, tools are resolved with their `.exe` and
-  `.cmd` shims.
+  passed to tools in the platform's form. On Windows, npm-installed tools are `.cmd` shims that
+  a plain spawn cannot run; `cross-spawn` resolves them, with no shell and no quoting of gspot's
+  own.
 - **Missing tool.** The check reports `MISSING` with the install hint and fails.
 - **Skips.** `gspot.local.toml` skips and `--skip` print and record. A `docker` requirement with
   no daemon fails; a platform requirement (`macos`, `linux`) that does not hold passes as

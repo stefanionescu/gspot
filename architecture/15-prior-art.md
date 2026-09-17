@@ -42,6 +42,20 @@ it. [12-repository-layout.md](12-repository-layout.md) lists the same libraries 
 | Command parsing and help | [commander](https://github.com/tj/commander.js) | the most used option; its help text is the command reference |
 | Questions at `init` and `upgrade` | [`@clack/prompts`](https://github.com/bombshell-dev/clack) | any other prompt library |
 | Parsing for the engines | [`web-tree-sitter`](https://github.com/tree-sitter/tree-sitter), [`libpg-query`](https://github.com/pganalyze/libpg_query) WASM, the [ast-grep CLI](https://ast-grep.github.io/) | a parser of any kind |
+| Identifier splitting | [`scule`](https://github.com/unjs/scule) | the naming engine's case splitter |
+| Workspace discovery | [`@manypkg/get-packages`](https://www.npmjs.com/package/@manypkg/get-packages) | reading `workspaces`, `pnpm-workspace.yaml`, Lerna and Rush by hand |
+| JSON with comments, YAML, `package.json` | [`jsonc-parser`](https://github.com/microsoft/node-jsonc-parser), [`yaml`](https://github.com/eemeli/yaml), [`@npmcli/package-json`](https://www.npmjs.com/package/@npmcli/package-json) | writers that lose comments or indentation |
+| `.editorconfig` | [`editorconfig`](https://www.npmjs.com/package/editorconfig) | a parser |
+| License expressions | [`spdx-expression-parse`](https://www.npmjs.com/package/spdx-expression-parse), [`spdx-satisfies`](https://www.npmjs.com/package/spdx-satisfies) | string comparison of license names |
+| Markdown structure | [remark](https://github.com/remarkjs/remark) (`mdast-util-from-markdown`) | regexes over Markdown |
+| Diffs | [`diff`](https://www.npmjs.com/package/diff) | a diff printer |
+| Concurrency | [`p-limit`](https://www.npmjs.com/package/p-limit) | a queue |
+| Readable schema errors | [`zod-validation-error`](https://github.com/causaly/zod-validation-error) | rewriting zod messages by hand |
+| Messages on stderr | [`consola`](https://github.com/unjs/consola) | a logger with levels and TTY detection |
+| Windows spawning | [`cross-spawn`](https://www.npmjs.com/package/cross-spawn) | `.cmd` shim handling |
+| Newer-version lookup | [`latest-version`](https://www.npmjs.com/package/latest-version) | a registry client |
+| Release | [changesets](https://github.com/changesets/changesets), [`actions/attest`](https://github.com/actions/attest-build-provenance), `softprops/action-gh-release`, [`verdaccio`](https://github.com/verdaccio/verdaccio) for the publish test, [`fs-fixture`](https://www.npmjs.com/package/fs-fixture) for planted repositories | release scripts |
+| Docs site | [Starlight](https://starlight.astro.build/) with [`starlight-llms-txt`](https://github.com/delucis/starlight-llms-txt) | a site generator and an `llms.txt` writer |
 
 ## Considered and not adopted
 

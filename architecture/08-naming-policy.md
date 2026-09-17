@@ -222,7 +222,8 @@ names under the router directory.
 
 ## Matching
 
-1. Split the identifier into parts at case boundaries, underscores, hyphens, dots and spaces.
+1. Split the identifier into parts at case boundaries, underscores, hyphens, dots and spaces
+   (`scule`'s `splitByCase`, with the acronym rule per language applied on top).
    `HTMLParser` splits to `html`, `parser`. `user_id` splits to `user`, `id`.
 2. Lowercase every part.
 3. A single-word term matches when it equals one part. `uncommon` does not match `common`;
