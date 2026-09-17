@@ -75,8 +75,11 @@ runtime chosen per file class).
 | Swift naming extractor and trivial-function analysis | parity on the frozen source |
 | macOS job in the workflow | runs green |
 
-Acceptance: the worktree harness on yap-swift-app across its three scopes. The repository is
-read, never written; its own gate keeps running until its owners migrate it.
+Acceptance: the worktree harness on yap-swift-app across its three scopes, with the numbers in
+[17-migration.md](17-migration.md) as the pass condition: every check in `quality/` maps to a
+gspot check, the 29 configuration files are replaced or carried, the 35 lint tasks and the 15
+duplicate pins are listed. The repository is read, never written; its own gate keeps running
+until its owners migrate it.
 
 ## Phase 5: prose, security, upgrade
 

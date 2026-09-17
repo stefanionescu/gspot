@@ -45,7 +45,8 @@ and enter with a baseline.
 ## Settings
 
 `tools.swiftlint.extra_configs` (a rule turned off is `gspot ignore swift/swiftlint --rule <id>`, rendered into `disabled_rules`), `tools.swiftformat.options`,
-`tools.periphery.retain`, `tools.xcodebuild.scheme`, `tools.xcodebuild.destination`.
+`tools.periphery.retain`, `tools.xcodebuild.scheme`, `tools.xcodebuild.destination`. `init`
+carries `schemes` and the retain options from an existing `.periphery.yml`.
 
 ## Rule files
 

@@ -143,6 +143,10 @@ change
 no longer runs; delete when ready
   .githooks/                      core.hooksPath now points at .gspot/hooks
   quality/                        your lint scripts; gspot replaces what the ledger maps
+  .mise/tasks/repo/lint/*  ...    35 tasks that call quality/ or a tool gspot now owns
+  ios/package.json                a workspace package whose dependencies are all linters
+  rules/                          your agent rules; delete once .gspot/rules/ covers them
+  mise.toml                       15 pins gspot also pins (gspot doctor lists them)
 
 baseline
   22 rules enter a baseline with 1,204 findings; every other check passes
@@ -171,7 +175,9 @@ Carried into `gspot.toml`, because they are facts about the repository and not p
 | gitleaks allowlist entries and baseline fingerprints | `[tools.gitleaks] allow`, `baseline_reasons` |
 | osv-scanner ignored advisories | `[tools.osv] ignore` |
 | license exceptions | `[[tools.licenses.exceptions]]` |
-| a rule turned off in a linter config (ESLint `off`, Ruff `ignore` and `per-file-ignores`, SwiftLint `disabled_rules`, ShellCheck `disable`, markdownlint `false`, stylelint `null`) | one `[[ignore]]` per rule with the reason `carried from <file> at init` |
+| a rule turned off in a linter config (ESLint `off`, Ruff `ignore` and `per-file-ignores`, SwiftLint `disabled_rules`, ShellCheck `disable`, sqlfluff `exclude_rules`, squawk `excluded_rules`, markdownlint `false`, stylelint `null`) | one `[[ignore]]` per rule with the reason `carried from <file> at init` |
+| knip `entry` and `project`; Periphery `schemes` and retain options; the Xcode scheme | `[tools.knip] entry`, `[tools.periphery]`, `[tools.xcodebuild] scheme` |
+| generated paths in an ignore file (`.prettierignore`, `.eslintignore`) | not carried; printed as `gspot declare <path> --produced-by "..."` suggestions the person completes |
 
 Every carried reason says `carried from <file> at init`, prints on every run like any other
 ignore, and is the person's to rewrite or remove. Nothing else is read from the old file: a
@@ -182,9 +188,12 @@ entry when they want it in the gate.
 
 Hand-written hooks are never deleted. When `.githooks/` or another hook directory holds scripts
 gspot did not write, `init` points `core.hooksPath` at `.gspot/hooks` and lists the old directory
-under "no longer runs; delete when ready". A folder of home-grown lint scripts (`quality/`,
-`lint/`, `.qlty/`) and a workspace package whose dependencies are all linters get the same line.
-gspot touches nothing it did not write.
+under "no longer runs; delete when ready". The same line covers a folder of home-grown lint
+scripts (`quality/`, `lint/`, `.qlty/`), a workspace package whose dependencies are all linters,
+a task-runner task whose body calls a file in such a folder or a tool gspot now owns, an agent
+rules directory the corpus covers, and a `mise.toml` or `devDependencies` pin gspot also pins.
+gspot touches nothing it did not write; the person deletes with the list in hand (D-57).
+[17-migration.md](17-migration.md) shows the list for a real repository.
 
 An existing `CLAUDE.md` or `AGENTS.md` is never read, split or moved. gspot appends one managed
 block between markers. An existing rules directory is left alone; gspot's files land in
@@ -395,6 +404,10 @@ configuration not owned
 changed outside gspot
   .husky/pre-commit                  hook added by hand           gspot sync
   .github/workflows/lint.yml         a second lint job            none; informational
+
+pinned twice
+  swiftlint 0.63.2                   mise.toml and .mise/conf.d/gspot.toml   delete the mise.toml line
+  eslint 9.38.0                      api/package.json and the root            delete the api entry
 
 hooks      .gspot/hooks  installed
 ci         none

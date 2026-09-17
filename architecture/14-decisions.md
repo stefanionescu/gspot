@@ -379,3 +379,13 @@ descriptors are read when a preset is written. None is run or embedded: qlty is 
 downloads its own tools, Trunk is closed, MegaLinter is Docker-only. [15-prior-art.md](15-prior-art.md)
 records what each taught. Rejected: building on qlty's plugin catalog, which its license forbids
 for a tool in the same space.
+
+## D-57 Migration is the owner's step; gspot lists, the person deletes
+
+`init` replaces what it owns and lists everything it made redundant (lint folders, hand-written
+hooks, lint-only tasks and workspace packages, duplicate pins, an old rules directory) under "no
+longer runs; delete when ready", and `doctor` keeps listing it. The person deletes, with the
+completeness check as the proof for rules and the ledger as the proof for checks.
+[17-migration.md](17-migration.md) shows the list for yap-swift-app. Rejected: `init` deleting
+those itself, which would destroy code it cannot prove it replaced, and which no stranger would
+say yes to.

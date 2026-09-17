@@ -20,7 +20,7 @@ builds.
 | Target | Stub | Holds |
 | --- | --- | --- |
 | `.gspot/shellcheckrc` | `.shellcheckrc` | `shell=bash`, `source-path=SCRIPTDIR`, `external-sources=true`, `enable=all`, `disable=` lines rendered from the `[[ignore]]` entries for `bash/shellcheck` |
-| `.editorconfig` section | managed block | indent width and `switch_case_indent` from `[format]` |
+| `.editorconfig` shell section | through formatting, which owns the file | indent width and `switch_case_indent` from `[format]` |
 
 ## Checks
 

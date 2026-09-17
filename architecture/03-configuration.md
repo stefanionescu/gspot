@@ -17,6 +17,7 @@ This document decides the one file a person edits, the files gspot owns, and how
 | `.gspot/last.json` | gspot | no | The last run. |
 | `.gitignore` | gspot, managed block | yes | Lists the three untracked paths above: `gspot.local.toml`, `.gspot/cache/`, `.gspot/last.json`. |
 | `<conventional path>` stubs | gspot | yes | One-line files that point editors at `.gspot/`. |
+| `.editorconfig` | gspot | yes | Owned whole by the formatting preset, rendered from `[format]`; `[tools.editorconfig.extra]` adds a section gspot does not render. |
 | `.mise/conf.d/gspot.toml` | gspot | yes | Tool pins and tasks under the mise runner. |
 | `.github/workflows/gspot.yml` | gspot | yes | The CI job, when enabled. |
 | `.vscode/settings.json`, `.vscode/extensions.json` | gspot, managed block | yes | Editor wiring, when `[editor] vscode = true`. |

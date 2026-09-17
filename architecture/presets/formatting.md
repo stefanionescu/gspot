@@ -23,9 +23,9 @@ Defaults are the values three of four reference repositories share.
 
 | Target | Stub | Derived |
 | --- | --- | --- |
-| `.editorconfig` | managed block | `end_of_line`, `insert_final_newline`, `charset`, `trim_trailing_whitespace`, indent per extension, `switch_case_indent` for shell |
+| `.editorconfig` | none; gspot owns the whole file at its conventional path, with the header | `end_of_line`, `insert_final_newline`, `charset`, `trim_trailing_whitespace`, indent per extension, `switch_case_indent` for shell; `[tools.editorconfig.extra]` for a section gspot does not render |
 | `.gspot/prettier.json` | `.prettierrc.json` (the whole document is the path) | `tabWidth`, `printWidth`, `singleQuote`, `trailingComma`, `semi`, `arrowParens: always`, `embeddedLanguageFormatting: off` |
-| `.gspot/prettierignore` | `.prettierignore` managed block | by nature: generated, vendored, binary, lockfiles |
+| `.prettierignore` | none; gspot owns the whole file at the root, with the header, for editors (the gate passes file lists) | by nature: generated, vendored, binary, lockfiles |
 | shfmt flags | in the bash check command | `-i <width> -ci -s` |
 | ruff format section | in `.gspot/ruff.toml` | `indent-width`, `quote-style`, `line-ending` |
 | markdownlint MD007 | in `.gspot/markdownlint.jsonc` | `indent` |

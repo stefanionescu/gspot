@@ -37,9 +37,10 @@ Every repository on the same gspot version runs the same rules. Upgrading gspot 
 | [14-decisions.md](14-decisions.md) | The decision log with the rejected alternative for each |
 | [15-prior-art.md](15-prior-art.md) | What gspot copies from tools people already use, and which libraries it reuses instead of writing its own |
 | [16-file-tree.md](16-file-tree.md) | Every folder and file in gspot's repository, and what each holds |
+| [17-migration.md](17-migration.md) | The two goals; what `init` replaces, carries, deletes and leaves in a repository that has its own linting, with yap-swift-app worked file by file |
 | [presets/README.md](presets/README.md) | One page per preset |
 
-Read 01 to 05 to understand the tool. Read 06 to 09 to understand the rules. Read 10 to 16 to
+Read 01 to 05 to understand the tool. Read 06 to 09 to understand the rules. Read 10 to 17 to
 build it.
 
 ## Glossary
