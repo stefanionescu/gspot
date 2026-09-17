@@ -32,7 +32,7 @@ postcss-modules (inside gspot, for CSS module usage).
 
 ## Settings
 
-`tools.stylelint.rules` (per-rule), `tools.purgecss.safelist` (reason), `tools.purgecss.content`.
+`tools.stylelint.rules` (per-rule options; off is a `gspot ignore --rule`), `tools.purgecss.safelist` (reason), `tools.purgecss.content`.
 
 ## Rule files
 

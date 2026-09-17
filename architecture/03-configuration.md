@@ -9,11 +9,13 @@ This document decides the one file a person edits, the files gspot owns, and how
 | `gspot.toml` | the repository | yes | The policy. Written by `init`, changed by the six writing commands (`ignore`, `add`, `remove`, `allow`, `set`, `declare`) or by hand; every load validates it the same way. |
 | `gspot.local.toml` | one machine | no | Local skips. Nothing else. |
 | `.gspot/<tool>.<ext>` | gspot | yes | Generated tool configuration. Header names the writer. |
+| `.gspot/version` | gspot | yes | The gspot version this repository runs. One line. Written by `init`, moved by `upgrade`. |
 | `.gspot/hooks/*` | gspot | yes | Git hooks. |
 | `.gspot/baseline/*.json` | gspot | yes | Recorded finding counts. |
 | `.gspot/rules/**` | gspot | yes | Installed agent rule files. |
 | `.gspot/cache/**` | gspot | no | Check results keyed on inputs. |
 | `.gspot/last.json` | gspot | no | The last run. |
+| `.gitignore` | gspot, managed block | yes | Lists the three untracked paths above: `gspot.local.toml`, `.gspot/cache/`, `.gspot/last.json`. |
 | `<conventional path>` stubs | gspot | yes | One-line files that point editors at `.gspot/`. |
 | `.mise/conf.d/gspot.toml` | gspot | yes | Tool pins and tasks under the mise runner. |
 | `.github/workflows/gspot.yml` | gspot | yes | The CI job, when enabled. |
@@ -46,17 +48,36 @@ path    = "ios"
 presets = ["swift", "xcode"]
 
 # Limits. Only keys a check reads exist. A value above the shipped default carries a reason.
+# A root key applies to every language. A language table overrides it for that language only.
 [limits]
 file_lines            = 300
 function_lines        = { value = 80, reason = "Route tables are one ordered list each." }
 cyclomatic_complexity = 10
 cognitive_complexity  = 8
 
+[limits.python]
+file_lines = { value = 400, reason = "Pydantic models for one API surface live in one module." }
+
+[limits.bash]
+file_lines     = 140
+function_lines = 40
+
 # Naming. Extends the shipped policy. Terms are whole identifier parts.
 [naming]
 banned_terms = ["dispatcher", "orchestrator"]
 allowed      = [{ name = "spawnSync", reason = "Node API name" }]
 reserved     = [{ term = "data", allowed_for = ["API success envelope field"] }]
+
+# Per-language ceilings and cases. Defaults are the shipped table in 08-naming-policy.md.
+[naming.python]
+max_chars = 35
+max_words = 4
+
+[naming.python.parameters]
+max_words = { value = 3, reason = "Handler signatures read as one line." }
+
+[naming.swift]
+max_chars = { value = 45, reason = "UIKit delegate methods are long by convention." }
 
 [[naming.rules]]
 paths = ["api/scripts/steps/*.sh"]
@@ -94,15 +115,11 @@ reexports = "none"                   # none | index-only
 call_through_allowed = [{ file = "src/openapi/components.ts", name = "buildErrorResponseExample", reason = "Public name is the stable contract." }]
 
 # Per-tool passthrough. Keys are the tool's own option names. Rendered into the template.
-[tools.shellcheck]
-disable = [{ code = "SC2312", reason = "set -e interaction on every correct if-function." }]
-
+# A tool's own "disable", "ignore" or "exclude rules" option is never a slot: those lines are
+# rendered from the [[ignore]] entries for the check, so what does not run is in one place.
 [tools.eslint]
-rules = { "unicorn/prefer-ternary" = "off" }   # a rule turned off carries a reason below
+rules = { "unicorn/prefer-ternary" = ["error", "only-single-line"] }   # rule options; off is an [[ignore]]
 import_style = { "src/**" = "js", "functions/**" = "ts", "scripts/**" = "extensionless" }
-
-[tools.eslint.reasons]
-"unicorn/prefer-ternary" = "Nested ternaries read worse than the if."
 
 [tools.trufflehog]
 enabled = { value = false, reason = "This repository has no credentials a verifier can test." }
@@ -141,6 +158,18 @@ check  = "typescript/eslint"
 rule   = "gspot/no-cross-folder-imports"
 paths  = ["api/config/tests/environment.ts"]
 reason = "The Vitest config loader cannot resolve the @config alias."
+
+# No paths: the rule is off everywhere in the scope. This is how a rule is turned off,
+# for gspot's own checks and for every tool (ShellCheck SC codes, Ruff codes, SwiftLint ids).
+[[ignore]]
+check  = "typescript/eslint"
+rule   = "unicorn/no-null"
+reason = "carried from eslint.config.mjs at init"
+
+[[ignore]]
+check  = "bash/shellcheck"
+rule   = "SC2312"
+reason = "set -e interaction on every correct if-function."
 
 [[ignore]]
 check   = "dependencies/osv"
@@ -198,6 +227,15 @@ surface = "mise"           # mise | npm | bun | pnpm | uv | none
   summary line.
 - Raising a limit above the shipped default, turning a rule or a tool off, adding a typo word,
   adding an allowed name: each carries a reason. Lowering a limit or adding a banned term does not.
+- `[limits.<language>]` and `[naming.<language>]` take the language preset ids (`python`,
+  `typescript`, `javascript`, `swift`, `bash`, `sql`). A key there overrides the root key for
+  that language's checks. `[naming.<language>.<category>]` narrows to one identifier category
+  (`files`, `directories`, `types`, `functions`, `parameters`, `variables`, `properties`). The
+  keys are `max_chars`, `max_words` and `case`. A ceiling above the shipped default or a looser
+  case carries a reason.
+- A rule inside a tool is turned off by an `[[ignore]]` with `rule` and no `paths`, never by a
+  tool slot. `[tools.<name>.rules]` holds rule options and rules turned on; `off` there fails to
+  load and names the `ignore` line.
 - The `marketing` and `defensive` term groups cannot be removed as groups. Individual names in
   them take scoped `allowed` entries.
 - `[[check]]` entries have `id`, `command`, `paths`, `stage`, and optionally `fix`, `count_regex`
@@ -229,8 +267,10 @@ name from what exists.
 
 `[tools.<name>]` holds the options a person changes on that tool. Each preset declares the slots
 its tools expose, with the option's own name, so a person who knows ESLint writes
-`rules = { ... }` and a person who knows ShellCheck writes `disable = [...]`. The template renders
-them into the tool's format. An option with no slot fails to load and names the slots that exist.
+`rules = { ... }` and a person who knows Prettier writes `printWidth`. The template renders them
+into the tool's format. An option with no slot fails to load and names the slots that exist.
+A rule slot holds options and rules turned on; turning a rule off is an `[[ignore]]`, so there is
+one place to look for what does not run.
 
 Every tool exposes `enabled`. Setting it false, with a reason, removes every check that tool
 runs and prints the reason every run. This is the control over what runs; `init` is the control

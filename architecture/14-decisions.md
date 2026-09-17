@@ -136,7 +136,8 @@ logic) only.
 
 `init`, `check`, `sync`, `rules`, `doctor`, `upgrade`, `uninstall`. `fix` is a flag on `check`;
 coverage lives in `doctor`; the last run is a file. Rejected: fourteen verbs, half of which
-printed things nobody asked for.
+printed things nobody asked for. Superseded in part: D-32 and D-37 add the six writing commands,
+`why` and `explain`; D-45 folds `rules` into `sync`. The count is thirteen.
 
 ## D-24 No environment variables turn checks off
 
@@ -237,17 +238,18 @@ skip without saying what was accepted and so cannot notice a license change at t
 
 ## D-39 `explain` covers a tool's rule, not only a gspot check
 
-`gspot explain <tool>/<rule>` prints the rule's summary, the check that runs it, and the exact
-`gspot.toml` line that changes it. The finding line prints the command. Rejected: a link to the
-tool's documentation alone, which answers "what is it" and not "how do I change it here".
+`gspot explain <tool>/<rule>` prints the rule's summary, the check that runs it, the `gspot
+ignore` line that turns it off and the `gspot set` line that changes its options. The finding
+line prints the command. `explain` also takes a check id, a preset id and a setting key, so one
+verb answers "what is this" for everything gspot has a name for. Rejected: a link to the tool's
+documentation alone, which answers "what is it" and not "how do I change it here".
 
 ## D-40 Every tool has an `extra` passthrough
 
 `[tools.<name>.extra]` renders verbatim into the tool's configuration with a required reason,
 prints every run, and is reported by `upgrade --check` when a slot arrives for one of its keys.
-`init` uses it to carry options it has no slot for. Rejected: failing on unknown options, which
-blocked a person until a release added the slot, and dropping them at takeover, which lost
-configuration silently.
+A person writes it; `init` does not (D-46). Rejected: failing on unknown options, which blocked
+a person until a release added the slot.
 
 ## D-41 `upgrade` asks before it writes
 
@@ -255,12 +257,13 @@ configuration silently.
 and `--check` is read-only. Rejected: writing on invocation, which surprised people who wanted the
 report and made a wrong version choice a revert instead of a no.
 
-## D-42 A second `init` becomes `init --reconcile`
+## D-42 A second `init` reports instead of writing
 
-`init` on an installed repository refuses and points at `--reconcile`, which re-detects, writes
-nothing, and prints the `add`, `declare` and `sync` commands that would apply each difference.
-Rejected: re-running the full init, which cannot tell a deliberate omission from a new arrival
-and would overwrite one to serve the other.
+`init` on an installed repository refuses. What changed in the repository since the install is
+reported, with the `add`, `declare` and `sync` command that would apply each difference, and
+nothing is applied without that second command. Rejected: re-running the full init, which cannot
+tell a deliberate omission from a new arrival and would overwrite one to serve the other.
+Superseded by D-45 on where the report lives: `doctor`, not an `init` flag.
 
 ## D-43 Copied project templates carry their origin version
 
@@ -268,3 +271,73 @@ A project template copied into the project layer opens with a `gspot-template` h
 template and the gspot version. `upgrade --check` reports when that template changed upstream;
 nothing merges it. Rejected: upgrading project files, which the project owns; rejected: no header,
 which left the person unaware that the source they copied had moved on.
+
+## D-44 One way to turn a rule off
+
+A rule inside a tool is turned off by `gspot ignore <check> --rule <rule>` with no paths, which
+writes an `[[ignore]]` entry, the same shape as a path-scoped ignore. A tool slot
+(`[tools.eslint.rules]`) holds options and rules turned on and refuses `off`. Rejected: both
+forms, which the first draft of this folder allowed and which put "what does not run" in two
+tables with two reason conventions.
+
+## D-45 `doctor` absorbs reconcile; `sync` absorbs `rules`
+
+`doctor` prints what changed in the repository since `init` (languages and frameworks that
+appeared, configuration files not owned, hooks or CI changed by hand) with the command that
+applies each, beside the tool and coverage report it already printed. `sync` installs the rule
+files and the managed blocks, `sync --check` reports their drift and the unenforced count, and
+`sync --project-templates` copies templates once. Thirteen commands. Rejected: `init
+--reconcile` and `rules`, which printed or wrote a subset of what `doctor` and `sync` already
+covered, so a person had two commands to remember for one question.
+
+## D-46 Takeover replaces; it carries exception lists only
+
+At `init`, an owned tool's existing configuration file is deleted (git keeps it; the plan prints
+`git show HEAD:<path>`) and gspot's is written. Carried into `gspot.toml`: typos words, gitleaks
+allowlists and baseline fingerprints, osv ignored advisories, license exceptions, and rules
+turned off, which become `[[ignore]]` entries with the reason `carried from <file> at init`.
+Nothing else is read. Rejected: one loader per tool that carries every option into
+`[tools.<name>]` or `extra`, which is twenty loaders to write and maintain and which preserves the
+old policy inside the new one, so the repository never adopts the shipped rule set. Rejected:
+carrying nothing, which makes a person re-type a typo list and a gitleaks allowlist that are
+facts about their repository, not policy.
+
+## D-47 Static output, one library per job
+
+Every command prints lines; `--json` prints a documented object. The only interactive moments
+are the questions `init` and `upgrade` ask through `@clack/prompts`, skipped under `--yes`, `CI`
+or no terminal. commander parses and writes help; picocolors colours; zod validates; smol-toml
+reads and `toml-patch` (or a line-based appender) writes `gspot.toml`. No terminal UI framework,
+table renderer or logging framework. Rejected: a rendered interface, which agents cannot read,
+CI cannot show, and which no linter people already trust has.
+
+## D-48 Limits and naming ceilings are per language
+
+`[limits]` and `[naming]` keys apply to every language at the root and can be overridden under a
+language table (`[limits.python]`, `[naming.swift.parameters]`). The shipped per-language
+defaults are the strictest observed (D-20). Rejected: one number for every language, which made
+a Python module limit and a TypeScript file limit the same setting and forced a repository to
+loosen both to loosen one.
+
+## D-49 The repository pins its gspot version
+
+`.gspot/version` and the runner surface pin one gspot version per repository. A binary of another
+version refuses `check`, `sync` and the writing commands with the two remedies. A global install
+exists to run `init`; after that, the hook and the runner resolve the pin. Rejected: whatever
+version is on `PATH`, which makes two people on one repository run two rule sets and makes an
+upgrade happen by accident.
+
+## D-50 Every check explains itself in plain English
+
+Each check carries `summary`, `why` and `fix`, written for a person who does not code, validated
+non-empty at load, printed by `explain` and the finding line, and rendered into `docs/`. gspot's
+own prose, help strings and docs pass the prose engine and a readability ceiling in gspot's gate.
+Rejected: messages alone plus the tool's website, which assume a reader who already knows what a
+barrel file or a call-through is.
+
+## D-51 The writing commands also remove, and lists append
+
+`ignore`, `allow` and `declare` take `--remove`; `set` takes `--default` and, for lists,
+`--replace` and `--remove`, appending otherwise. One entry per command; bulk edits are a hand
+edit followed by `sync`. Rejected: write-only commands, which made the second edit to any entry
+a TOML lookup, the very thing D-32 removed for the first edit.

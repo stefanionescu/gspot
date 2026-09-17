@@ -29,9 +29,11 @@ The three arrive together, pinned to one version, in every repository that runs 
 
 ## Who it is for
 
-The primary user is a developer who did not write gspot and does not read this folder. They run
-`gspot init` in a repository nobody at gspot has seen, answer three questions, and get a working
-gate. They edit one file to adjust it. They run `gspot upgrade` and read a short diff.
+The primary user is a developer who did not write gspot and does not read this folder. They may
+not read code at all: they describe what they want to an AI agent and check the result. They
+run `gspot init` in a repository nobody at gspot has seen, answer the questions it asks (or pass
+`--yes`), and get a working gate. They change one line to adjust it. They run `gspot upgrade` and
+read a short diff.
 
 The secondary user is an AI agent working in that repository. It reads the installed rule files
 and gets findings from the hooks with a message it can act on.
@@ -66,8 +68,10 @@ and gets findings from the hooks with a message it can act on.
 - Disagree with a finding. `gspot ignore <check> --paths <glob> --reason "..."`, or
   `gspot set limits.function_lines 80 --reason "..."`, or `gspot allow typos <word>`. Each writes
   one entry to `gspot.toml`, and each prints on every run.
-- Add a language. `gspot add python`, or `gspot init --reconcile` to see what appeared since the
-  install. New findings enter a baseline.
+- Add a language. `gspot add python`, or `gspot doctor` to see what appeared since the install
+  and the command that adds it. New findings enter a baseline.
+- Wonder what a finding means. `gspot explain <check>` says what the check looks for, what goes
+  wrong without it, and what to do, in plain words.
 - Upgrade. Run `gspot upgrade`. Read the plan: new rules, changed limits, tool bumps, rule file
   changes, coverage change, templates changed upstream. Say yes. Commit the diff. Nothing you wrote
   is touched.
@@ -86,6 +90,12 @@ and gets findings from the hooks with a message it can act on.
   carries a reason and prints every run.
 - **The tool owns a job or leaves it alone.** When gspot owns a linter, no second configuration
   for that linter exists in the repository.
+- **Take over, list, never guess.** At `init`, gspot replaces the configuration of every tool it
+  has a preset for, carries the repository's exception lists, and lists everything else it found
+  (other tools, hand-written hooks, home-grown lint folders) without touching it.
+- **Written for someone who does not code.** Every message, help text, check summary and page
+  says what happened and what to do next, in plain words, and names the command that does it.
+  gspot's own prose runs through gspot's prose engine.
 
 ## Non-goals
 

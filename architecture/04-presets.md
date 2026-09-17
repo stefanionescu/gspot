@@ -80,6 +80,9 @@ id      = "typescript/tsc"
 stage   = "commit"
 takes   = "project"                 # project | files
 command = ["tsc", "--noEmit", "-p", "{stub:tsconfig.json}"]
+summary = "Checks that every TypeScript file type-checks with the strict compiler options."
+why     = "A file that does not type-check can crash at run time in a way the editor already knew about."
+fix     = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
 
 [[checks]]
 id      = "typescript/eslint"
@@ -88,18 +91,24 @@ takes   = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{files}"]
 fix     = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"               # codemod | imports | manifest | format
+summary = "Runs ESLint with the shipped rule set over every TypeScript file."
+why     = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."
+fix     = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[checks]]
 id       = "typescript/knip"
 stage    = "push"
 takes    = "project"
 command  = ["knip", "--config", "{config:knip}"]
+summary  = "Finds files, exports and dependencies nothing uses."
+why      = "Dead code is read, maintained and shipped for nobody."
+fix      = "Delete what knip names, or add a knip entry point if the file is loaded in a way knip cannot see."
 
 # every tool gets `tools.<name>.extra` (verbatim passthrough with a reason) without declaring it
 [[settings]]
 name      = "tools.eslint.rules"
 kind      = "table"
-direction = "per-rule"              # a rule set to off carries a reason
+direction = "per-rule"              # options and rules turned on; `off` is refused (use an ignore)
 
 [[settings]]
 name      = "tools.typescript.paths"
@@ -128,6 +137,10 @@ language = ["docs/TYPESCRIPT.md", "docs/naming/TYPESCRIPT.md"]
 - Every `[[configs]]` entry has a reader among the checks, or fails to load.
 - Every check is in a stage. `commit` checks need nothing but the source. `push` checks need a
   build, a daemon or the network. `manual` checks take minutes or need credentials.
+- Every check carries `summary` (what it looks for, one sentence), `why` (what goes wrong
+  without it) and `fix` (what to do), written for a person who does not code. The loader refuses
+  an empty one. `explain`, the finding line and the generated page under `docs/rules/` print
+  them; nothing else describes a check.
 - `takes = "files"` receives the claimed file list as `{files}`. `takes = "project"` runs once
   from the scope root and reports its own inputs.
 - A check with `fix` names its `fix_order`.
@@ -149,6 +162,9 @@ stage   = "commit"
 engine  = "structure"
 rules   = "rules/call-through"       # a directory of ast-grep YAML, one file per grammar
 limit   = "limits.trivial_statements"
+summary = "Finds a function that only passes its arguments on to one other function."
+why     = "The extra name adds a hop to read and nothing to the program."
+fix     = "Call the inner function directly and delete the wrapper, or give the wrapper real work."
 
 [[checks]]
 id      = "naming/identifiers"

@@ -32,10 +32,15 @@ osv-scanner, knip, deptry, syncpack, eslint-plugin-package-json, lockfile-lint.
 | `integrity/lockfile-fresh` | commit when a manifest or lockfile is staged; push | `bun install --frozen-lockfile --dry-run` (or npm, pnpm, yarn equivalents), `uv lock --check` |
 | `integrity/manifest-policy` | commit | exact versions (no `^`, `~`, ranges); keys ordered by `package-json/order-properties`; one `packageManager`, equal across workspace packages; root packages private; no foreign lockfiles; `engines` agree with `.nvmrc`, `.node-version` and the mise pin; scripts policy from `[tools.package-json] scripts` (`any`, `wrappers`, `none`) |
 | `integrity/install-policy` | commit when a manifest, lockfile or install config is staged; push | minimum release age at or above `[tools.install] min_release_age_days`; the security scanner declared where the manager supports one; the installed tree equals the lockfile version for version; every peer dependency satisfied |
-| `integrity/dependency-ownership` | commit | Python: `pyproject.toml` owns every dependency; no `requirements*.txt` unless declared exported; no `pip install` outside `[tools.dependencies] pip_install_allowed` |
+| `integrity/dependency-ownership` | commit | Python: `pyproject.toml` owns every dependency; no `requirements*.txt` unless a `[[declare]]` names it with `produced_by` (`uv export ...`), in which case `integrity/generated-fresh` checks it; no `pip install` outside `[tools.dependencies] pip_install_allowed` |
 | `integrity/large-files` | commit | a tracked file over `[limits] file_size_kb` (default 1024) is under LFS or declared |
 | `typescript/knip`, `python/deptry` | push | unused dependencies and exports |
 | `dependencies/swift` | push | `Package.resolved` is present and matches `Package.swift`; osv-scanner has no Swift extractor and `doctor` says so |
+
+The exact-version rule belongs to `package.json` and its workspace packages only. Python
+dependencies keep their ranges in `pyproject.toml`, because a Python package installed into
+someone else's environment (a plugin, a ComfyUI custom node, a library) must declare ranges;
+the pins live in `uv.lock`, and `integrity/lockfile-fresh` is the check that they hold.
 
 ## Settings
 

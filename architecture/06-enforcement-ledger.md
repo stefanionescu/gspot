@@ -40,12 +40,12 @@ One `[limits]` table. The shipped default is the strictest value any source uses
 | `trivial_statements` | 2 | all four | `gspot/no-trivial-functions`; structure engine |
 | `trivial_ast_nodes` | 10 | TI `functions.json` | structure engine for python |
 | `line_length` | 120 | SA prettier, TI ruff, SA swiftlint | Prettier `printWidth`; Ruff `line-length`; SwiftLint `line_length`; shfmt through `.editorconfig` |
-| `shell.file_lines` | 140 | TI, SA (LA has 180) | structure engine |
-| `shell.function_lines` | 40 | TI (SA and LA have 100, SS 60) | structure engine |
-| `shell.function_branches` | 8 | TI `config/shell.py` | ast-grep count |
-| `shell.function_nesting` | 3 | TI | ast-grep count |
-| `shell.mutable_assignments` | 8 | TI | ast-grep count |
-| `shell.duplicate_min_lines` | 3 | TI | structure engine |
+| `bash.file_lines` | 140 | TI, SA (LA has 180) | structure engine |
+| `bash.function_lines` | 40 | TI (SA and LA have 100, SS 60) | structure engine |
+| `bash.function_branches` | 8 | TI `config/shell.py` | ast-grep count |
+| `bash.function_nesting` | 3 | TI | ast-grep count |
+| `bash.mutable_assignments` | 8 | TI | ast-grep count |
+| `bash.duplicate_min_lines` | 3 | TI | structure engine |
 | `duplication.min_lines` | 8 | TI, LA jscpd | jscpd |
 | `duplication.min_tokens` | 40 | same | jscpd |
 | `duplication.threshold_percent` | 4 | same | jscpd |
@@ -58,6 +58,14 @@ One `[limits]` table. The shipped default is the strictest value any source uses
 | `docs.paragraph_sentences` | 4 | same | Vale `gspot.paragraph-length` |
 
 Every limit is a setting with direction `ceiling`: raising it carries a reason.
+
+A root key applies to every language that has a check for it. A key under a language table
+(`[limits.python]`, `[limits.typescript]`, `[limits.javascript]`, `[limits.swift]`,
+`[limits.bash]`, `[limits.sql]`) overrides it for that language only, so a Python module may be
+allowed 400 lines while TypeScript stays at 300. The `bash.*`, `sql.*` and `swift.*` rows above
+are keys that exist only under their language table, because no other language has the check.
+The naming ceilings (characters and words per identifier) are not limits; they live under
+`[naming.<language>]` and are listed in [08-naming-policy.md](08-naming-policy.md).
 
 ## 2. JavaScript and TypeScript structure
 

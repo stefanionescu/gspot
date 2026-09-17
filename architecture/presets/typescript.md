@@ -60,7 +60,7 @@ application scopes) refuses every re-export in source; `index-only` allows index
 
 | Setting | Direction | Default |
 | --- | --- | --- |
-| `tools.eslint.rules` | per-rule (off carries a reason) | the ledger set |
+| `tools.eslint.rules` | per-rule (options and rules turned on; off is a `gspot ignore --rule`) | the ledger set |
 | `tools.eslint.import_style` | neutral | `js` for TypeScript compiled to ESM, `ts` for Deno, `extensionless` for bundled code; per file class |
 | `tools.eslint.test_files` | neutral | `**/*.{test,spec}.{ts,tsx}`, `**/tests/**` |
 | `tools.typescript.paths` | neutral | from the existing tsconfig at init |

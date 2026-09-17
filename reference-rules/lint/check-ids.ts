@@ -11,7 +11,7 @@ const KINDS = new Set([
   "vitest", "pytest", "zod", "drizzle", "trpc", "tanstack-query", "zustand", "react-hook-form", "i18n",
   "structure", "naming", "prose", "secrets", "vulnerabilities", "dependencies", "licenses", "commits",
   "duplication", "formatting", "docs", "config-files", "static-site", "integrity", "security", "assets",
-  "spelling", "coverage", "gspot", "package-json",
+  "spelling", "coverage", "gspot", "package-json", "sync",
 ]);
 
 function walk(dir: string, out: string[] = []): string[] {

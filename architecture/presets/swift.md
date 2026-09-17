@@ -44,7 +44,7 @@ and enter with a baseline.
 
 ## Settings
 
-`tools.swiftlint.disabled` (reason), `tools.swiftlint.extra_configs`, `tools.swiftformat.options`,
+`tools.swiftlint.extra_configs` (a rule turned off is `gspot ignore swift/swiftlint --rule <id>`, rendered into `disabled_rules`), `tools.swiftformat.options`,
 `tools.periphery.retain`, `tools.xcodebuild.scheme`, `tools.xcodebuild.destination`.
 
 ## Rule files

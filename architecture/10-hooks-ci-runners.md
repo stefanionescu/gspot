@@ -30,6 +30,11 @@ A check requires nothing, or one of `build`, `docker`, `network`. A requirement 
 Editing `gspot.toml` or a generated config re-runs every check in the scopes it governs. A lint
 policy change never waits for push to be checked.
 
+Staged mode reads the working-tree content of each staged path, not the staged blob. There is
+no stash dance: it is the one thing hooks get wrong most, and the cost is one honest line. When a
+staged file also has unstaged changes, the output says `checked working tree; N files have
+unstaged changes` so nobody mistakes the verdict for a verdict on the commit alone.
+
 ## Hook managers
 
 `[hooks] manager` selects one:
@@ -52,8 +57,13 @@ exec "${GSPOT_BIN:-gspot}" check --staged "$@"
 
 `init` resolves how the binary is found on this machine and writes it into the hook: `mise exec
 -- gspot` under the mise runner, `bunx gspot` or `npx gspot` under an npm runner, the absolute
-path otherwise. A hook that cannot find gspot prints the install command and fails; it never
-passes.
+path otherwise. Each of these resolves the version the repository pins, not a global copy. A
+hook that cannot find gspot prints the install command and fails; it never passes.
+
+Hooks that exist and were not written by gspot (a `.githooks/` directory of hand-written scripts,
+a `.husky/` set the person declined to hand over) are never deleted. `init` lists them under "no
+longer runs; delete when ready" once `core.hooksPath` points elsewhere. A person who keeps their
+own hooks chooses `[hooks] manager = "none"` and calls `gspot check --staged` from them.
 
 `core.hooksPath` is per clone. `sync` sets it when hooks are on, so a fresh clone gets hooks on
 the first `gspot sync`, which the runner's setup task calls. The pre-push hook calls `git lfs
@@ -81,7 +91,13 @@ The runner is a surface for humans and editors. Every task calls gspot; the grap
 
 gspot never edits `mise.toml`. mise merges every file under `.mise/conf.d/`, so gspot owns one
 file there and the repository's own pins and tasks stay untouched. A pin the repository already
-set for a tool gspot needs is kept; `doctor` reports a version below the preset's floor.
+set for a tool gspot needs is kept; `doctor` reports a version below the preset's floor. The
+gspot file also pins gspot itself (`gspot = "0.5.0"` through `ubi:`), which is what `mise exec`
+and the hook resolve.
+
+A `.tool-versions` file counts as mise being present, because mise reads it. proto, volta, nvm,
+pyenv and asdf without mise are not runners gspot writes to: `init` reports them, proposes mise,
+and falls back to the package manager surface when the person declines.
 
 Task names carry the `gspot:` prefix under mise so they cannot collide. Under npm the names are
 `check` and `sync`; an existing script with that name is listed in the plan as replaced and

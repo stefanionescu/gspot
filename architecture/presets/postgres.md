@@ -18,7 +18,7 @@ squawk, sqlfluff with dialect `postgres`, `libpg-query` inside gspot.
 
 | Target | Holds |
 | --- | --- |
-| `.gspot/squawk.toml` | `assume_in_transaction` from `[tools.squawk]`, excluded rules with reasons, `--exclude-path` for migrations at or before `frozen_through` |
+| `.gspot/squawk.toml` | `assume_in_transaction` from `[tools.squawk]`, `excluded_rules` rendered from the `[[ignore]]` entries for `postgres/squawk`, `--exclude-path` for migrations at or before `frozen_through` |
 | `.gspot/sqlfluff.cfg` | `dialect = postgres` |
 
 ## Checks
@@ -37,8 +37,7 @@ squawk, sqlfluff with dialect `postgres`, `libpg-query` inside gspot.
 
 ## Settings
 
-`tools.squawk.assume_in_transaction` (default `true` under supabase), `tools.squawk.excluded_rules`
-(rule, reason), `tools.squawk.frozen_through` (`none`, `all`, or a version), `tools.postgres.migrations_dir`,
+`tools.squawk.assume_in_transaction` (default `true` under supabase), `tools.squawk.frozen_through` (`none`, `all`, or a version), `tools.postgres.migrations_dir`,
 `tools.postgres.client_schemas` (default `public`), `tools.postgres.doc_sections` (the section
 name list).
 

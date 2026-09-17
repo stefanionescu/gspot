@@ -31,7 +31,7 @@ Every repository on the same gspot version runs the same rules. Upgrading gspot 
 | [08-naming-policy.md](08-naming-policy.md) | The banned-term and case policy, its schema and its matching rules |
 | [09-rules-corpus.md](09-rules-corpus.md) | The agent rule files: layers, assembly, repair, enforcement links |
 | [10-hooks-ci-runners.md](10-hooks-ci-runners.md) | Git hooks, staged mode, task runners, the CI workflow |
-| [11-toolchain.md](11-toolchain.md) | How each tool is obtained, pinned, verified and upgraded |
+| [11-toolchain.md](11-toolchain.md) | How gspot itself is installed and pinned per repository; how each tool is obtained, pinned, verified and upgraded |
 | [12-repository-layout.md](12-repository-layout.md) | gspot's own repository, packages, tests and self-lint |
 | [13-roadmap.md](13-roadmap.md) | Phases, the v1 cut, acceptance per phase |
 | [14-decisions.md](14-decisions.md) | The decision log with the rejected alternative for each |
@@ -64,6 +64,8 @@ One word, one meaning, everywhere in this folder and in the code.
 | install policy | The package manager's own supply-chain settings: minimum release age, security scanner, lockfile agreement. |
 | project template | A rule file gspot copies into the project layer once and never upgrades. |
 | slop | Code, names or prose that add nothing: wrappers, hedges, marketing words, defensive guards for impossible states, restated comments. |
+| version pin | The gspot version a repository runs, in `.gspot/version` and the runner surface. A binary of another version refuses to check or sync. |
+| takeover | What `init` does to a tool's existing configuration: deletes it, writes gspot's, carries the exception lists. |
 
 ## How this folder is maintained
 

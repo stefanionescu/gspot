@@ -38,6 +38,7 @@ docker/trivy-image
 docs/links
 docs/links-external
 docs/readme-present
+docs/readme-shape
 drizzle/migrations-fresh
 drizzle/relations-complete
 duplication/jscpd
@@ -236,6 +237,7 @@ swift/periphery
 swift/swiftformat
 swift/swiftlint
 swift/swiftlint-analyze
+sync/check
 trpc/router-boundaries
 typescript/eslint
 typescript/knip

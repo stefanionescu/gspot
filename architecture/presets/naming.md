@@ -25,9 +25,13 @@ api/src/turn/enhancedHandler.ts:1:1  naming/identifiers  file "enhancedHandler":
 
 ## Settings
 
-`naming.banned_terms`, `naming.allowed` (name, reason; `gspot allow naming <name> --reason`),
-`naming.external` (`gspot allow naming-external <name>`), `naming.reserved`,
-`naming.remove_groups` (group, reason), `naming.contract_properties`, `[[naming.rules]]`.
+`naming.banned_terms` (`gspot set naming.banned_terms <term>...`), `naming.allowed` (name, reason;
+`gspot allow naming <name> --reason`), `naming.external` (`gspot allow naming-external <name>`),
+`naming.reserved`, `naming.remove_groups` (group, reason), `naming.contract_properties`,
+`[[naming.rules]]`; per language and per category: `naming.<language>.max_chars`,
+`naming.<language>.max_words`, `naming.<language>.<category>.case`, `.max_chars`, `.max_words`
+(`gspot set naming.python.parameters.max_words 3`). Defaults are the table in
+[../08-naming-policy.md](../08-naming-policy.md).
 
 ## Rule files
 

@@ -32,7 +32,7 @@ html-validate, prettier; tree-sitter html inside gspot.
 
 ## Settings
 
-`tools.html-validate.rules` (per-rule), `tools.html.template_files`, `tools.html.copy_excluded`
+`tools.html-validate.rules` (per-rule options; off is a `gspot ignore --rule`), `tools.html.template_files`, `tools.html.copy_excluded`
 (paths with reasons), `tools.html.inline_script_types`.
 
 ## Rule files

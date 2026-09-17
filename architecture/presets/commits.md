@@ -23,7 +23,7 @@ of `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `c
 
 ## Settings
 
-`tools.commitlint.scopes`, `tools.commitlint.types`, `tools.commitlint.rules` (per-rule).
+`tools.commitlint.scopes`, `tools.commitlint.types`, `tools.commitlint.rules` (per-rule options; off is a `gspot ignore --rule`).
 
 ## Rule files
 

@@ -18,7 +18,7 @@ hadolint, trivy, docker (host).
 
 | Target | Stub | Holds |
 | --- | --- | --- |
-| `.gspot/hadolint.yaml` | `.hadolint.yaml` | `failure-threshold: style`, ignored rules from `[tools.hadolint] ignore` with reasons, trusted registries |
+| `.gspot/hadolint.yaml` | `.hadolint.yaml` | `failure-threshold: style`, `ignored:` rendered from the `[[ignore]]` entries for `docker/hadolint`, trusted registries |
 | `.gspot/trivy.yaml` | none | severities, ignore file path, timeout |
 
 ## Checks
@@ -34,7 +34,7 @@ hadolint, trivy, docker (host).
 
 ## Settings
 
-`tools.hadolint.ignore` (rule, reason), `tools.hadolint.trusted_registries`, `tools.trivy.severity`
+`tools.hadolint.trusted_registries`, `tools.trivy.severity`
 (default `HIGH,CRITICAL`), `tools.trivy.ignore` (id, reason), `tools.trivy.timeout`.
 
 ## Rule files

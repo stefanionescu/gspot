@@ -129,6 +129,9 @@ in one named file: HTTP headers (`Content-Type`, `Retry-After`), ARIA attributes
 
 ## Per-language tables
 
+These are the defaults for `[naming.<language>]`; a repository changes them per language and
+per category (see Extension below).
+
 | Language | Files | Directories | Types | Functions | Parameters | Variables | Properties | Other | Max chars | Max words |
 | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
 | TypeScript | kebab | kebab | pascal | camel | camel | camel, upper-snake | camel | routes kebab, path parameters camel, operation ids camel | 35 | 4 |
@@ -257,12 +260,33 @@ reserved     = [{ term = "payload", allowed_for = ["queue message body"] }]
 remove_groups = [{ group = "verbs-strict", reason = "A model-serving codebase has real loaders." }]
 contract_properties = [{ file = "src/app/api/checkout/route.ts", names = ["Retry-After"] }]
 
+# Ceilings and cases per language, and per category inside a language.
+[naming.python]
+max_chars = 35
+max_words = { value = 5, reason = "Scientific names in this domain are long." }
+
+[naming.python.parameters]
+max_words = 3
+
+[naming.typescript.files]
+case = { value = ["kebab", "pascal"], reason = "React component files are PascalCase in this repository." }
+
 [[naming.rules]]
 # as above
 ```
 
 `banned_terms` adds. `allowed` exempts exact identifiers with a reason. `remove_groups` drops a
-removable group with a reason. Every loosening entry prints in every run.
+removable group with a reason. `[naming.<language>]` sets `max_chars` and `max_words` for one
+language; `[naming.<language>.<category>]` narrows to one category (`files`, `directories`,
+`types`, `functions`, `parameters`, `variables`, `properties`) and may also set `case` to a list
+of the pattern names above. The shipped per-language table is the default for every key. A
+ceiling above the default or a case list wider than the default carries a reason; tighter does
+not. Every loosening entry prints in every run.
+
+Each key has a writing command: `gspot set naming.banned_terms dispatcher`,
+`gspot set naming.python.parameters.max_words 3`, `gspot allow naming createServiceRoleClient
+--reason "..."`, `gspot set naming.remove_groups verbs-strict --reason "..."`. The `marketing`
+and `defensive` groups refuse removal by command and by hand alike (D-13).
 
 ## Prose shares the list
 

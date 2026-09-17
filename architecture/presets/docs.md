@@ -25,12 +25,18 @@ excludes from `[tools.lychee] exclude` with reasons; a second profile for the on
 | `integrity/docs-headings` | commit | no heading from the banned list (`Table of contents`, `Project structure`, `Repository layout`, `Directory structure`, `File map`, `Codebase map`) |
 | `integrity/stale-paths` | commit | every path-shaped token in Markdown and comments names a tracked file, unless it is in a code fence tagged `text` or matches `[tools.docs] path_exceptions` |
 | `docs/readme-present` | commit | every scope has a `README.md`; the root has a `LICENSE` |
-| `rules/check` | commit | the installed agent files match the assembled render; the managed block in `CLAUDE.md` and `AGENTS.md` is intact; every `enforced-by` names a check |
+| `sync/check` | commit | the installed agent files match the assembled render; the managed block in `CLAUDE.md` and `AGENTS.md` is intact; every `enforced-by` names a check |
+| `docs/readme-shape` | commit | every `README.md` has one H1, an opening paragraph before the first H2, a Contents list when it has more than six H2 headings, a section whose heading contains `install`, `setup`, `start` or `requirements`, and no banned heading; content beyond this shape stays in the rule files as `unenforced` |
 
 ## Settings
 
 `tools.docs.path_exceptions` (patterns, reason), `tools.docs.banned_headings` (add), `tools.lychee.exclude`
-(url patterns, reason), `tools.docs.require_license` (default true).
+(url patterns, reason), `tools.docs.require_license` (default true), `tools.docs.readme_shape` (`true`
+default; `false` with a reason turns `docs/readme-shape` off), `tools.docs.contents_threshold` (default 6).
+
+The shape check is the whole of README enforcement. What a README says is the rule file's job
+(`general/prose/DOCS-CONTENT.md`, `templates/docs/README.md` and `templates/docs/ADVANCED.md`,
+which follow the short-README-plus-ADVANCED shape); gspot does not grade content.
 
 ## Rule files
 

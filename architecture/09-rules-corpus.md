@@ -36,7 +36,7 @@ unconditionally and the code files per preset.
 
 The merge left out one team's architecture on purpose. That material still has value to the
 team that wrote it, so it ships as templates under `templates/project/`, and
-`gspot init --project-templates` or `gspot rules --project-templates` copies the ones that match
+`gspot init --project-templates` or `gspot sync --project-templates` copies the ones that match
 the selection into the repository's project layer once. gspot never upgrades a project file. The
 copy opens with `<!-- gspot-template: IOS-ARCHITECTURE 0.4.0 -->`, so `upgrade --check` can report
 that the template changed upstream; merging is the person's choice.
@@ -80,7 +80,7 @@ layer names, deployment topology and product vocabulary belong to the project la
 team writes and gspot never touches.
 
 The corpus lint enforces the boundary with a word list per layer: a general or language file that
-names a directory layout, a service tier or a deployment target fails `rules --check` in gspot's
+names a directory layout, a service tier or a deployment target fails the corpus lint in gspot's
 own repository.
 
 ## Repair pass
@@ -144,7 +144,7 @@ not measured.
 
 ## Assembly
 
-`gspot rules` (also run by `sync` when `[rules] install = true`):
+`gspot sync`, when `[rules] install = true`:
 
 1. Selects the files for the selected presets, root and every scope.
 2. Writes them under `[rules] directory` (default `.gspot/rules/`), keeping the layer folders.

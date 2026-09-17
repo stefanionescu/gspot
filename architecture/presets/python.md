@@ -51,11 +51,11 @@ pyproject-fmt, uv. Installed through mise `pipx:` or a `gspot` dependency group 
 
 | Setting | Direction | Default |
 | --- | --- | --- |
-| `tools.ruff.select`, `tools.ruff.ignore` (ignore carries a reason) | per-rule | the ledger set |
-| `tools.ruff.per_file_ignores` | loosening | none |
+| `tools.ruff.select`, `tools.ruff.options` (per-rule options; a rule turned off is a `gspot ignore python/ruff --rule <code>`) | per-rule | the ledger set |
+| per-file rule exemptions | loosening | none; written as `[[ignore]]` entries with `rule` and `paths`, rendered into `per-file-ignores` |
 | `tools.basedpyright.projects` | neutral | one project over every claimed file |
 | `tools.basedpyright.exclude` (carries a reason) | loosening | none |
-| `tools.deptry.ignore` | loosening | none |
+| deptry rules turned off | loosening | none; `gspot ignore python/deptry --rule DEP002 --reason` |
 | `tools.vulture.ignore_names` | loosening | none |
 | `architecture.contracts` | tightening | none |
 | `architecture.package_roots` | neutral | detected from `pyproject.toml` |

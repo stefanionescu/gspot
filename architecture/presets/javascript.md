@@ -35,7 +35,11 @@ files under `[architecture] types_directory`.
 
 ## Settings
 
-`tools.eslint.*` as typescript; `tools.eslint.globals` per file class.
+`tools.eslint.*` as typescript; `tools.eslint.globals` per file class: `node` (the default),
+`browser`, `worker`, `commonjs`. `init` proposes `browser` for a file class an HTML file in the
+tree references through `<script src>` and for a `web/` or `public/` directory with no
+`package.json` of its own; everything else is `node`. `gspot set tools.eslint.globals "web/**"
+browser` changes it, and `gspot why <file>` prints the runtime a file got.
 
 ## Rule files
 

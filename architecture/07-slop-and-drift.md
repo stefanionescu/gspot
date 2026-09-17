@@ -131,8 +131,8 @@ so every kind gets a check.
 | Documentation links | every relative link and anchor resolves; external links resolve at manual | `integrity/docs-links`, `static-site/links-external` | commit, manual |
 | Allowlists and ignores | every entry matches at least one tracked file | `integrity/allowlists-resolve` | commit |
 | Baselines | every baseline names a rule that exists; no count rose | `integrity/baselines-current`, the baseline verdict | commit |
-| Rule files | the installed rule files equal the assembled render; every statement's `enforced-by` names a check that exists | `rules --check` | push |
-| Agent index | the managed block in `CLAUDE.md` and `AGENTS.md` matches the installed files | `rules --check` | commit |
+| Rule files | the installed rule files equal the assembled render; every statement's `enforced-by` names a check that exists | `sync --check` | push |
+| Agent index | the managed block in `CLAUDE.md` and `AGENTS.md` matches the installed files | `sync --check` | commit |
 | Hooks | the three hook files exist and call gspot; `core.hooksPath` points at them | `integrity/task-policy` | commit |
 | Runner tasks | the required tasks exist in the runner surface | `integrity/task-policy` | commit |
 | Locale catalogs | every locale has every key the base locale has; every key is used | `integrity/locales` | push |

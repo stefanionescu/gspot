@@ -1,7 +1,39 @@
 # Toolchain
 
-This document decides how the tools gspot drives are pinned, obtained, verified and upgraded.
-gspot pins; the ecosystem installs; `doctor` verifies.
+This document decides how gspot itself is installed and pinned, and how the tools gspot drives
+are pinned, obtained, verified and upgraded. gspot pins; the ecosystem installs; `doctor`
+verifies.
+
+## Installing gspot
+
+gspot is one binary per platform, published to GitHub Releases, with an npm wrapper package
+`gspot` that downloads the matching asset at install with checksum verification. Three ways to
+get it, in the order the manual recommends them:
+
+| Way | Command | For |
+| --- | --- | --- |
+| mise | `mise use -g ubi:<org>/gspot` for a global copy; `.mise/conf.d/gspot.toml` pins it per repository | any repository; the only way that needs no Node for a Python or Swift repository |
+| npm, bun, pnpm | `bunx gspot init`, `npx gspot init`; `devDependencies.gspot` pins it per repository | JavaScript repositories, with nothing installed globally |
+| release asset | download `gspot-<os>-<arch>` from the release page and put it on `PATH` | machines with neither |
+
+Homebrew, winget and scoop packages follow v1. A `curl | sh` installer is never offered; the
+corpus bans the pattern and gspot obeys its own rules.
+
+A global install exists to run `gspot init` in a repository that has nothing yet. After `init`,
+the repository pins its own version in two places: `.gspot/version` (one line, tracked, read by
+every command) and the runner surface (`[tools] gspot = "0.5.0"` in `.mise/conf.d/gspot.toml`
+through the `ubi:` backend, or `devDependencies.gspot` under a package manager). The hook and
+the runner tasks resolve that pinned version (`mise exec -- gspot`, `bunx gspot`), so two people
+on one repository run the same gspot whatever they installed globally.
+
+A binary of another version than `.gspot/version` exits 2 on `check`, `sync` and the writing
+commands and prints the two ways forward: install the pinned version (`mise install`, the package
+manager's install) or move the pin (`gspot upgrade --to <this version>`). `init`, `doctor`,
+`explain`, `why`, `--version` and `--help` run under any version. With runner `none` the pin is
+`.gspot/version` alone and the hook calls the absolute path `init` recorded.
+
+A newer gspot is announced in three places and nowhere else: the last line of `init`, `doctor`,
+and `upgrade --check`. `check`, `sync` and the hooks never look.
 
 ## Pins
 
@@ -136,12 +168,14 @@ coverage
   + 14 files newly claimed   - 0 files lose a check
 
 action on upgrade
-  2 new baselines   1 tool to install: mise install
+  2 new baselines   1 tool to install (runs mise install after the yes)
 ```
 
-`gspot upgrade` moves the pin, re-renders, writes baselines for rules that arrive with findings,
-and prints the report. It never edits `gspot.toml`, never commits, and aborts when the target
-version claims fewer files than the installed one.
+`gspot upgrade` moves the pin in `.gspot/version` and the runner surface, re-renders, writes
+baselines for rules that arrive with findings, runs the runner's install step so the bumped tools
+are present (`--no-install` skips it and prints the command), and prints the report. It never
+edits `gspot.toml`, never commits, and aborts when the target version claims fewer files than the
+installed one.
 
 A setting renamed or removed between versions fails to load with the old name, the new name and
 the release note. There is no automatic migration of `gspot.toml`.
@@ -156,6 +190,6 @@ lacks is reported by `sync --check` and removed by `sync --baseline`.
 ## Network
 
 `upgrade --check` and `upgrade` reach the network to read the target version's presets.
-`doctor` reaches it once to learn whether a newer gspot exists, and only when run by a person.
-`check`, `sync` and the hooks never do. A `network` requirement on a check is the check's own
+`doctor` and the last line of `init` reach it once to learn whether a newer gspot exists, and
+only when run by a person. `check`, `sync` and the hooks never do. A `network` requirement on a check is the check's own
 (external links, advisory databases) and puts it at `push` or `manual`.

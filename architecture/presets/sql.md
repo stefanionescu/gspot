@@ -34,8 +34,8 @@ sqlfluff never reads a `.sqlfluffignore`; gspot passes the file list.
 
 ## Settings
 
-`tools.sqlfluff.dialect` (set by the database preset), `tools.sqlfluff.rules` (per-rule, off with a reason),
-`tools.sqlfluff.exclude_rules`.
+`tools.sqlfluff.dialect` (set by the database preset), `tools.sqlfluff.rules` (per-rule options; a rule turned off
+is `gspot ignore sql/sqlfluff --rule <code>`, rendered into `exclude_rules`).
 
 ## Rule files
 

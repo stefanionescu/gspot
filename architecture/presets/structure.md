@@ -32,7 +32,6 @@ Every file a language preset claims. The engine dispatches by grammar.
 | `structure/header-comments-before-imports` | ts, js (plugin); py, swift (ast-grep) | file comment after imports |
 | `structure/import-layout` | ts, js (plugin); py (engine) | grouping and order |
 | `structure/exports-at-bottom` | py (engine) | `__all__` last |
-| `structure/private-before-public` | py, bash, ts (ast-grep) | internal definitions above the first public one |
 | `structure/doc-comment` | bash (engine); ts through `jsdoc/require-jsdoc`; py through Ruff `D100` to `D107` and pydoclint; swift through SwiftLint `missing_docs` | every public function documented |
 | `structure/duplicate-functions` | bash, swift (engine); ts through sonarjs; py through jscpd | identical bodies at or above `[limits] identical_functions` |
 | `structure/unused-functions`, `dead-parameters` | bash (engine); ts knip; py vulture; swift Periphery | unreachable declarations |
@@ -47,7 +46,7 @@ Every file a language preset claims. The engine dispatches by grammar.
 
 ## Settings
 
-Every `[limits]` key in the ledger; `structure.reexports` (`none`, `index-only`);
+Every `[limits]` key in the ledger, at the root or under a language table (`limits.python.file_lines`); `structure.reexports` (`none`, `index-only`);
 `structure.trivial_exemptions` (language, path, names, reason); `structure.single_file_folder_allowed`
 (paths, reason); `structure.prefix_collision_allowed` (paths, reason); `structure.call_through_allowed`
 (file, name, reason); `structure.folder_name_allowed` (paths, reason); `architecture.types_directory`;

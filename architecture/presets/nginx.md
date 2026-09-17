@@ -27,7 +27,7 @@ directory for the test and removed after.
 
 ## Settings
 
-`tools.nginx.compose_file`, `tools.nginx.compose_service`, `tools.gixy.disable` (check, reason).
+`tools.nginx.compose_file`, `tools.nginx.compose_service`, a gixy check turned off is `gspot ignore nginx/gixy --rule <check> --reason`.
 
 ## Rule files
 

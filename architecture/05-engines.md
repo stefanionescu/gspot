@@ -50,8 +50,10 @@ Runs external tools. Owns nothing about what they find.
 ## 2. eslint-plugin-gspot
 
 An ESLint plugin published from the gspot repository and imported by the generated flat config.
-Editors run it. The rules are the JavaScript and TypeScript structural rules the reference
-repositories wrote, ported with their tests and their semantics.
+Editors run it. The rules are the 21 JavaScript and TypeScript structural rules the reference
+repositories wrote, ported with their tests and their semantics, plus the five gspot adds
+(`private-before-public`, `types-placement`, `import-direction`, `no-reexports`,
+`env-access-owner`).
 
 | Rule | Reports |
 | --- | --- |

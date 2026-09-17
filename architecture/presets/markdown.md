@@ -34,7 +34,7 @@ markdownlint-cli2, prettier, lychee.
 
 ## Settings
 
-`tools.markdownlint.rules` (per-rule), `tools.lychee.exclude` (reason).
+`tools.markdownlint.rules` (per-rule options; off is a `gspot ignore --rule`), `tools.lychee.exclude` (reason).
 
 ## Rule files
 

@@ -14,9 +14,11 @@ folder deleted and no rule lost.
 | Tracked files, natures, scopes, staged files | the four reference repositories list correctly |
 | Tool runner with file lists, concurrency, missing-tool handling | a planted repository with one missing tool fails with the hint |
 | Reporter, run record, exit codes | output matches the shape in [02-cli.md](02-cli.md) |
-| `init`, `check`, `sync`, `doctor`, `uninstall`, and the six writing commands | the fifteen-command surface parses; `init`, `check`, `sync`, `doctor`, `uninstall`, `ignore`, `set`, `allow`, `add`, `remove`, `declare` work |
+| `init`, `check`, `sync`, `doctor`, `uninstall`, `why`, `explain`, and the six writing commands | the thirteen-command surface parses and every command works; `explain` renders `summary`, `why` and `fix` for every check in the bash preset |
+| Version pin: `.gspot/version`, the runner pin, the mismatch refusal, `--version` | a binary of another version exits 2 on `check` with the two remedies |
 | Hooks, staged mode, `.mise/conf.d/gspot.toml` | a planted repository commits through the hook |
 | One preset: bash (ShellCheck, shfmt, `bash -n`) | `gspot init --yes && gspot check` passes on a repository with one script |
+| Self-lint begins | gspot's own shell scripts and hooks pass under gspot with no ignores |
 
 ## Phase 1: JavaScript and TypeScript
 
@@ -28,6 +30,9 @@ folder deleted and no rule lost.
 | Structure engine: tree-sitter loading, ast-grep driver, directory analyses, shell analyses | every shell check in the ledger fires on its planted defect |
 | Baselines | `init` on a repository with findings passes; a grown count fails |
 | Integrity: generated drift, stale paths, allowlists, suppressions, manifest policy, lockfile, docs links, tsconfig options | each has a fixture |
+| `upgrade --check` and `upgrade`, including the install step and `--to` | the report renders between two planted preset versions; the pin moves both ways |
+| Takeover: replace and carry exceptions (typos, gitleaks, osv, licenses, disabled rules as ignores) | a planted repository with the four files loses them and gains the entries |
+| Full self-lint | gspot's TypeScript passes under gspot with no ignores; `docs/` and every check `summary` pass the prose engine |
 
 Acceptance: the worktree harness on yap-landing shows every finding its JavaScript and shell
 checks report under a gspot check, plus the additions; the repository itself is untouched.
@@ -43,7 +48,10 @@ checks report under a gspot check, plus the additions; the repository itself is 
 | express preset | boundaries and HTTP rules |
 | dependency ownership, typecheck membership, security-headers integrity checks | fixtures |
 
-Acceptance: the worktree harness on yap-text-inference.
+Acceptance: the worktree harness on yap-text-inference, and on the two ComfyUI custom-node
+repositories for the Python half of the fifth shape (a root `__init__.py`, `requirements.txt`
+exported from `pyproject.toml` and declared with `produced_by`, dependency ranges because the
+node is a library).
 
 ## Phase 3: the web
 
@@ -54,7 +62,9 @@ Acceptance: the worktree harness on yap-text-inference.
 | zod, drizzle, trpc, tanstack-query, zustand, react-hook-form, i18n, vitest presets | each installs its rule file and its ESLint rules |
 | GitHub Actions emitter | the workflow runs green on a planted repository |
 
-Acceptance: the worktree harness on slopshop and on yap-landing's site checks.
+Acceptance: the worktree harness on slopshop, on yap-landing's site checks, and on the ComfyUI
+repositories' `web/` half (browser JavaScript with no bundler, CSS and HTML beside Python, the
+runtime chosen per file class).
 
 ## Phase 4: Swift
 
@@ -73,15 +83,14 @@ read, never written; its own gate keeps running until its owners migrate it.
 | --- | --- |
 | prose preset: Vale driver, `gspot` style, packages, vocabulary, stdin grammars, adjacent selectors | the 30 rules fire on planted defects |
 | secrets, vulnerabilities, dependencies, licenses, duplication presets wired (Semgrep runs) | each at its stage on a planted repository |
-| `upgrade --check` and `upgrade` | the report renders for a preset change between two versions |
-| `explain`, `completion` | v1.1 |
+| `completion <shell>`, `check --watch` | v1.1 |
 
 ## Phase 6: the corpus
 
 | Deliverable | Done when |
 | --- | --- |
 | Repair pass over `rules/` | Vale clean, corruption rule clean, no cross-file links |
-| Front matter and enforcement markers on every statement | `rules --check` passes; the unenforced count is recorded |
+| Front matter and enforcement markers on every statement | `sync --check` passes; the unenforced count is recorded |
 | Assembler and managed index block | the four reference repositories get their files and index |
 | Corpus lint in gspot's gate | runs on every change |
 
@@ -113,8 +122,13 @@ repository) and reports the rest as unchecked.
 
 Phases 0 through 4, plus the secrets, dependencies and licenses presets from phase 5. That is a
 gspot that installs in a Python API, a Swift app, an Express and Supabase monorepo, a static
-site and a Next.js app, replaces four quality folders, and passes on day one through baselines.
-Prose, upgrade, the corpus and CodeQL follow in v1.1 and v1.2.
+site, a Next.js app and a ComfyUI custom node, replaces six quality folders, upgrades itself,
+explains every finding, and passes on day one through baselines. Prose, the corpus and CodeQL
+follow in v1.1 and v1.2.
+
+The reference repositories are never modified. Every acceptance run happens in a detached
+`git worktree` that is removed afterwards; migrating a repository to gspot is a separate,
+deliberate change its owner makes.
 
 ## Risks
 
