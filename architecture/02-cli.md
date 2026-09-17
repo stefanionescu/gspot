@@ -23,16 +23,34 @@ gspot explain   <check-id> | <tool>/<rule> | <preset> | <setting-key>
 gspot doctor    [--settings]
 gspot upgrade   [--check] [--to <version>] [--yes] [--no-install]
 gspot uninstall [--keep-hooks]
+gspot completion <bash|zsh|fish|powershell>
 
 global: --help  --version  --json  --quiet  --verbose  --no-color  -C <dir>
 env:    NO_COLOR  CI  GSPOT_LOG
 exit:   0 passed   1 findings   2 gspot did not run
 ```
 
-Thirteen commands in v1. `completion <shell>` and `check --watch` follow in v1.1. Six of them
-write `gspot.toml` (`ignore`, `add`, `remove`, `allow`, `set`, `declare`); together they cover
-every setting the file has, so nobody has to type TOML to change policy. Hand edits stay valid
-and are checked on load.
+Fourteen commands in v1. `check --watch` follows in v1.1. Six of them write `gspot.toml`
+(`ignore`, `add`, `remove`, `allow`, `set`, `declare`); together they cover every setting the
+file has, so nobody has to type TOML to change policy. Hand edits stay valid and are checked on
+load. `completion` prints the shell script `@bomb.sh/tab` generates from the command tree, so
+every command and flag completes in bash, zsh, fish and PowerShell.
+
+## Conventions
+
+The checklist is [clig.dev](https://clig.dev/). What it means here:
+
+- Output goes to stdout; messages about the run (progress, warnings, hints) go to stderr, so
+  `gspot check --json > out.json` holds only the record.
+- `-h` and `--help` on every command; `--help` lists every flag with one plain sentence each.
+  `--version` prints the version and nothing else.
+- No colour, no spinner and no question without a terminal. A question that has no flag and no
+  terminal is exit 2, naming the flag.
+- A mistyped command or flag prints the closest match. A command that deletes (`uninstall`,
+  `init` over existing configuration, `remove`) prints its plan and asks; `--yes` answers.
+- Every command that writes takes `--dry-run` and prints what it would write.
+- Every finding ends with a `help:` line, the way Ruff prints one, taken from the check's `fix`.
+- Flags mean the same thing everywhere: `--scope`, `--reason`, `--json`, `--yes`, `--remove`.
 
 What the CLI is for, and what stays a hand edit: the commands add, change or remove one entry
 at a time, because that is the edit a person makes when a finding appears. A bulk change (ten
@@ -219,7 +237,9 @@ prints `MISSING` and fails with the install hint from `doctor`.
 api        typescript/tsc            ok       512 files   4.2s
 api        typescript/eslint         FAIL     512 files  21.4s
   src/routes/turn.ts:41:3  gspot/no-call-through  This function passes its arguments straight through to buildTurn.
+    help: Call buildTurn directly and delete this function, or give it real work.
   src/routes/turn.ts:88:1  max-lines-per-function  Function has 71 lines (limit 60).
+    help: Split the function, or raise the limit with a reason: gspot set limits.function_lines 80 --reason "..."
   reproduce: gspot check typescript/eslint --scope api
 api        docker/hadolint           ok         1 file    0.3s
 supabase   sql/sqlfluff              ok        83 files   1.8s
@@ -340,7 +360,7 @@ One verb for "what is this". It takes:
 | Argument | Prints |
 | --- | --- |
 | a check id (`structure/call-through`) | `summary`, `why` and `fix` from the manifest; the preset that turns it on; the rule file statement it enforces; the settings that change it; the `ignore` line that turns it off |
-| a tool rule (`markdownlint/MD024`) | the tool's own summary or its page; the check that runs it; the `ignore` line for off; the `set` line for options |
+| a tool rule (`markdownlint/MD024`) | the tool's own summary, read from the tool (`ruff rule <code> --output-format json`, `swiftlint rules <id>`, an ESLint rule's `meta.docs`, markdownlint's rule metadata, ShellCheck's wiki page id) or its page; the check that runs it; the `ignore` line for off; the `set` line for options |
 | a preset id (`python`) | what it detects and claims, the tools it pins, the checks it runs by stage, the settings it exposes, the rule files it installs |
 | a setting key (`limits.function_lines`) | meaning, default, direction, current value and where it came from, the `set` line that changes it |
 

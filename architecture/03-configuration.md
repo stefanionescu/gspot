@@ -20,6 +20,7 @@ This document decides the one file a person edits, the files gspot owns, and how
 | `.mise/conf.d/gspot.toml` | gspot | yes | Tool pins and tasks under the mise runner. |
 | `.github/workflows/gspot.yml` | gspot | yes | The CI job, when enabled. |
 | `.vscode/settings.json`, `.vscode/extensions.json` | gspot, managed block | yes | Editor wiring, when `[editor] vscode = true`. |
+| `gspot.schema.json` | gspot, published with each release | no | The JSON schema of `gspot.toml`, generated from the zod schema and submitted to SchemaStore, so taplo and editors validate the file as they do `mise.toml`. `init` writes a `#:schema` line at the top of `gspot.toml`. |
 
 Every generated file opens with a header:
 
@@ -28,7 +29,9 @@ Every generated file opens with a header:
 # Change policy: gspot set / allow / ignore, or edit gspot.toml, then run: gspot sync
 ```
 
-JSON files carry the same text under a `"_gspot"` key.
+JSON files carry the same text under a `"_gspot"` key. `sync --check` finds generated files by
+this header, not by a stored list, so a renamed or copied generated file is still caught, and
+gspot writes them read-only where the platform allows, as projen does.
 
 ## `gspot.toml`
 
@@ -313,6 +316,12 @@ values fail at load with both presets named; a person resolves it with an explic
 ```
 
 - `init` writes one file per rule that has findings. The gate passes that day.
+- Where a tool has its own baseline mechanism, gspot drives it instead of counting: ESLint's
+  bulk suppressions (`--suppress-all` at `init`, `--suppressions-location
+  .gspot/baseline/eslint.json` on every run, `--prune-suppressions` under `sync --baseline`) and
+  basedpyright's `--writebaseline` with the file under `.gspot/baseline/`. The tool then honours
+  the same file in the editor, so the editor and the gate agree. Every other check uses the count
+  file above. The person sees one command either way.
 - `check` fails when the count exceeds the baseline, or when a touched file's own count grows.
   A count below the baseline passes and prints.
 - `sync --baseline` lowers every baseline to the last run's counts. It never raises one.

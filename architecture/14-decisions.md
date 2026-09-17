@@ -137,7 +137,7 @@ logic) only.
 `init`, `check`, `sync`, `rules`, `doctor`, `upgrade`, `uninstall`. `fix` is a flag on `check`;
 coverage lives in `doctor`; the last run is a file. Rejected: fourteen verbs, half of which
 printed things nobody asked for. Superseded in part: D-32 and D-37 add the six writing commands,
-`why` and `explain`; D-45 folds `rules` into `sync`. The count is thirteen.
+`why` and `explain`; D-45 folds `rules` into `sync`; D-55 adds `completion`. The count is fourteen.
 
 ## D-24 No environment variables turn checks off
 
@@ -286,7 +286,7 @@ tables with two reason conventions.
 appeared, configuration files not owned, hooks or CI changed by hand) with the command that
 applies each, beside the tool and coverage report it already printed. `sync` installs the rule
 files and the managed blocks, `sync --check` reports their drift and the unenforced count, and
-`sync --project-templates` copies templates once. Thirteen commands. Rejected: `init
+`sync --project-templates` copies templates once. Thirteen commands, fourteen with D-55. Rejected: `init
 --reconcile` and `rules`, which printed or wrote a subset of what `doctor` and `sync` already
 covered, so a person had two commands to remember for one question.
 
@@ -307,7 +307,7 @@ facts about their repository, not policy.
 Every command prints lines; `--json` prints a documented object. The only interactive moments
 are the questions `init` and `upgrade` ask through `@clack/prompts`, skipped under `--yes`, `CI`
 or no terminal. commander parses and writes help; picocolors colours; zod validates; smol-toml
-reads and `toml-patch` (or a line-based appender) writes `gspot.toml`. No terminal UI framework,
+reads and `@decimalturn/toml-patch` writes `gspot.toml`. No terminal UI framework,
 table renderer or logging framework. Rejected: a rendered interface, which agents cannot read,
 CI cannot show, and which no linter people already trust has.
 
@@ -341,3 +341,39 @@ barrel file or a call-through is.
 `--replace` and `--remove`, appending otherwise. One entry per command; bulk edits are a hand
 edit followed by `sync`. Rejected: write-only commands, which made the second edit to any entry
 a TOML lookup, the very thing D-32 removed for the first edit.
+
+## D-52 The npm package is a launcher over per-platform packages
+
+The `gspot` npm package lists one package per platform as `optionalDependencies`, each gated by
+`os` and `cpu` and holding the compiled binary; its `bin` runs the one that installed. This is
+how Biome and ast-grep ship. Rejected: a wrapper that downloads the release asset at install,
+which fails behind proxies, under `--ignore-scripts` and offline, and runs code at install time.
+
+## D-53 `gspot.toml` has a published JSON schema
+
+`gspot.schema.json` is generated from the zod schema with `z.toJSONSchema`, published with each
+release and submitted to SchemaStore; `init` writes the `#:schema` line. Editors and taplo then
+validate the file as they do `mise.toml`. Rejected: validation only at load, which tells a person
+about a typo after they saved and switched windows.
+
+## D-54 Where a tool has its own baseline, gspot drives it
+
+ESLint's bulk suppressions and basedpyright's baseline file live under `.gspot/baseline/` and
+are written at `init`, read on every run and pruned by `sync --baseline`. The editor honours the
+same file, so the editor and the gate agree. Every other check uses gspot's count file. Rejected:
+one gspot-owned format for everything, which made the editor show findings the gate had
+baselined.
+
+## D-55 Completions come from `tab`, in v1
+
+`gspot completion <shell>` prints the script `@bomb.sh/tab` generates from the commander tree
+for bash, zsh, fish and PowerShell. Rejected: a hand-written completion command, which is why the
+feature sat in v1.1.
+
+## D-56 qlty, Trunk and MegaLinter are prior art, never dependencies
+
+They validate the shape (init, check, pinned tool versions, one config) and their docs and
+descriptors are read when a preset is written. None is run or embedded: qlty is Fair Source and
+downloads its own tools, Trunk is closed, MegaLinter is Docker-only. [15-prior-art.md](15-prior-art.md)
+records what each taught. Rejected: building on qlty's plugin catalog, which its license forbids
+for a tool in the same space.

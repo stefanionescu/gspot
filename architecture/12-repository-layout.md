@@ -42,8 +42,12 @@ gspot/
 ```
 
 Two published artefacts: the binary (GitHub Releases, one asset per platform) and
-`eslint-plugin-gspot` (npm). Presets, rules and prose ship inside the binary. An npm wrapper
-package `gspot` downloads the matching binary at install for people who prefer `npx`.
+`eslint-plugin-gspot` (npm). Presets, rules and prose ship inside the binary. On npm the binary
+ships the way Biome and ast-grep ship theirs: one package per platform
+(`@gspot/cli-darwin-arm64`, `@gspot/cli-linux-x64`, ...) holding the executable, gated by the
+`os` and `cpu` fields, and a thin `gspot` package that lists them as `optionalDependencies` and
+whose `bin` launcher runs the one that installed. Nothing downloads at install time and no
+install script runs, so `npx`, `--ignore-scripts`, proxies and offline mirrors all work.
 
 ## Folder rules
 
@@ -70,7 +74,14 @@ ask.
 | Colour | picocolors | off under `NO_COLOR`, `CI`, `--no-color` or no terminal |
 | Schemas for `gspot.toml`, manifests, run record | zod | error messages rewritten into plain English before printing |
 | Read TOML | smol-toml | |
-| Write `gspot.toml` keeping comments and order | `toml-patch`, evaluated first; a line-based appender is the fallback | the writer only appends an entry, replaces one key or removes one entry |
+| Write `gspot.toml` keeping comments and order | `@decimalturn/toml-patch` | TOML 1.1; `patch()` and `TomlDocument`; a comment travels with the entry it belongs to when the entry moves or goes |
+| Detect and drive the package manager | `package-manager-detector`, `nypm` | lockfile and `packageManager` detection; `installDependencies` and `addDependency` for npm, pnpm, yarn and bun |
+| `.gitignore` semantics without git | `ignore`, `globby` with `gitignore: true` | the walk `init` does when there is no repository |
+| Name a language gspot has no preset for | `linguist-languages` | GitHub Linguist's extension data, offline |
+| SARIF for CI | `node-sarif-builder` | the `.gspot/last.sarif` rendering |
+| Shell completions | `@bomb.sh/tab` with its commander adapter | `gspot completion <shell>`; the same library Wrangler, Nuxt, Astro and Vitest use |
+| JSON schema for `gspot.toml` | zod v4 `z.toJSONSchema` | `gspot.schema.json`, published to SchemaStore each release |
+| Baselines where the tool has its own | ESLint bulk suppressions, `basedpyright --writebaseline` | gspot drives the tool's file under `.gspot/baseline/`; the editor honours the same file |
 | Path selectors | picomatch | one syntax everywhere |
 | Versions | semver | pins, floors, the version-pin comparison |
 | Parsing for the structure and naming engines | `web-tree-sitter` with embedded grammars; `libpg-query` WASM for SQL | no native modules |
@@ -80,6 +91,7 @@ ask.
 
 Not used: any terminal UI framework, table renderer, spinner library outside clack, logging
 framework, or dependency-injection container. Columns are computed from the longest id.
+[15-prior-art.md](15-prior-art.md) records the candidates that were considered and not taken.
 
 ## Build
 
@@ -87,7 +99,9 @@ framework, or dependency-injection container. Columns are computed from the long
   presets, rules and prose embedded through Bun's file embedding. Output: `gspot-darwin-arm64`,
   `gspot-darwin-x64`, `gspot-linux-x64`, `gspot-linux-arm64`, `gspot-windows-x64.exe`.
 - The version comes from the release tag and is written into every generated file header.
-- The npm wrapper resolves the platform and downloads the asset with checksum verification.
+- The npm release publishes one platform package per target plus the launcher package, all at
+  one version; the launcher resolves the installed platform package by `process.platform` and
+  `process.arch` and fails with the install hint when none is present.
 - `eslint-plugin-gspot` builds with `bun build` to ESM and CommonJS, versioned with the binary.
 
 ## Tests
@@ -102,6 +116,8 @@ framework, or dependency-injection container. Columns are computed from the long
 | Parity | the naming extractor and the structure analyses over frozen copies of the reference repositories' source; the record set is a superset of the reference implementation's | `tests/parity` |
 | Performance | `gspot check --staged` over ten staged files in a 1,000-file scope completes under 5 seconds with a warm cache and under 30 cold, on every CI platform | `tests/performance` |
 | Platform | the unit and planted-repository suites run on `ubuntu`, `macos` and `windows` in CI | the CI matrix |
+| Completion | every command and flag appears in the completions `tab` generates for bash, zsh, fish and PowerShell | `packages/cli/tests/unit` |
+| Schema | `gspot.schema.json` validates every fixture `gspot.toml` and rejects every invalid fixture the load tests use | `packages/cli/tests/unit` |
 | Corpus | `reference-rules/lint/corpus-lint.ts` (front matter, markers, links, size, layer boundary, fences, corruption, Vale), `mark-statements.ts --check`, `completeness-check.ts` | gspot's own gate; interim home `reference-rules/lint/` until `packages/cli/src/rules/` exists |
 | Self | `gspot check` on gspot, no ignores | gspot's own gate |
 
@@ -140,6 +156,11 @@ cannot follow fails the gate the same way a long function does.
   finding, now what* (read it, `explain` it, fix it, or `ignore` it with a reason); *Monorepos
   and scopes*; *Without mise* (the package-manager surface and its limits). Each guide is under
   two pages and every step is one command.
+
+The manual also publishes `llms.txt` at its root (the index of every page in plain text, the
+way qlty and the Astral tools do) and one page, *Working with an agent*, that says how an agent
+reads a finding, runs `explain`, changes policy with the writing commands, and never edits
+`.gspot/`. The managed block in `CLAUDE.md` links to it.
 
 `architecture/` stays the design and is linked from the manual. `docs/` is linted by gspot like
 any other Markdown in the repository, plus the readability ceiling above.

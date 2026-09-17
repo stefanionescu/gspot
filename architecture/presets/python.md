@@ -32,7 +32,7 @@ pyproject-fmt, uv. Installed through mise `pipx:` or a `gspot` dependency group 
 | --- | --- | --- |
 | `python/ruff` | commit | `ruff check --config .gspot/ruff.toml {files}`; fix order codemod |
 | `python/ruff-format` | commit | `ruff format --check`; fix order format |
-| `python/basedpyright` | commit | `basedpyright -p <project>` per project |
+| `python/basedpyright` | commit | `basedpyright -p <project>` per project; the baseline is basedpyright's own file under `.gspot/baseline/`, written with `--writebaseline` at `init` |
 | `python/import-linter` | commit | `lint-imports` |
 | `python/pydoclint` | commit | `pydoclint --allow-init-docstring true {files}` until Ruff `DOC` leaves preview |
 | `python/deptry` | push | `deptry <source roots>` |

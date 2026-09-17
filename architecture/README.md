@@ -35,9 +35,10 @@ Every repository on the same gspot version runs the same rules. Upgrading gspot 
 | [12-repository-layout.md](12-repository-layout.md) | gspot's own repository, packages, tests and self-lint |
 | [13-roadmap.md](13-roadmap.md) | Phases, the v1 cut, acceptance per phase |
 | [14-decisions.md](14-decisions.md) | The decision log with the rejected alternative for each |
+| [15-prior-art.md](15-prior-art.md) | What gspot copies from tools people already use, and which libraries it reuses instead of writing its own |
 | [presets/README.md](presets/README.md) | One page per preset |
 
-Read 01 to 05 to understand the tool. Read 06 to 09 to understand the rules. Read 10 to 14 to
+Read 01 to 05 to understand the tool. Read 06 to 09 to understand the rules. Read 10 to 15 to
 build it.
 
 ## Glossary

@@ -6,14 +6,14 @@ verifies.
 
 ## Installing gspot
 
-gspot is one binary per platform, published to GitHub Releases, with an npm wrapper package
-`gspot` that downloads the matching asset at install with checksum verification. Three ways to
-get it, in the order the manual recommends them:
+gspot is one binary per platform, published to GitHub Releases and to npm as a launcher package
+over one package per platform (D-52). Three ways to get it, in the order the manual recommends
+them:
 
 | Way | Command | For |
 | --- | --- | --- |
 | mise | `mise use -g ubi:<org>/gspot` for a global copy; `.mise/conf.d/gspot.toml` pins it per repository | any repository; the only way that needs no Node for a Python or Swift repository |
-| npm, bun, pnpm | `bunx gspot init`, `npx gspot init`; `devDependencies.gspot` pins it per repository | JavaScript repositories, with nothing installed globally |
+| npm, bun, pnpm | `bunx gspot init`, `npx gspot init`; `devDependencies.gspot` pins it per repository. The `gspot` package is a launcher over per-platform packages (`@gspot/cli-<os>-<arch>`) listed as `optionalDependencies`, so the install downloads nothing and runs no script | JavaScript repositories, with nothing installed globally |
 | release asset | download `gspot-<os>-<arch>` from the release page and put it on `PATH` | machines with neither |
 
 Homebrew, winget and scoop packages follow v1. A `curl | sh` installer is never offered; the
@@ -76,7 +76,7 @@ gspot downloads nothing. It writes pins into the surface the repository already 
 | Ecosystem | gspot writes | Person runs |
 | --- | --- | --- |
 | mise (recommended) | `.mise/conf.d/gspot.toml` `[tools]` with every pin, using `npm:`, `pipx:`, `ubi:` or `github:` backends where mise has no core plugin | `mise install` |
-| npm, bun, pnpm | `devDependencies` in `package.json` for npm tools, after the yes in the plan | the package manager's install |
+| npm, bun, pnpm | `devDependencies` in `package.json` for npm tools, after the yes in the plan; written and installed through `nypm`, which detects the manager from the lockfile and `packageManager` | the package manager's install |
 | uv | `[dependency-groups] gspot = [...]` in `pyproject.toml` for Python tools, after the yes | `uv sync --group gspot` |
 | Homebrew, apt, winget, scoop, cargo | nothing; `doctor` prints the install command for the platform it runs on | the command |
 | host | nothing; `doctor` reports presence | install Xcode, Docker |

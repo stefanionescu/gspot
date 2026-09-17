@@ -14,7 +14,8 @@ folder deleted and no rule lost.
 | Tracked files, natures, scopes, staged files | the four reference repositories list correctly |
 | Tool runner with file lists, concurrency, missing-tool handling | a planted repository with one missing tool fails with the hint |
 | Reporter, run record, exit codes | output matches the shape in [02-cli.md](02-cli.md) |
-| `init`, `check`, `sync`, `doctor`, `uninstall`, `why`, `explain`, and the six writing commands | the thirteen-command surface parses and every command works; `explain` renders `summary`, `why` and `fix` for every check in the bash preset |
+| `init`, `check`, `sync`, `doctor`, `uninstall`, `why`, `explain`, `completion`, and the six writing commands | the fourteen-command surface parses and every command works; `explain` renders `summary`, `why` and `fix` for every check in the bash preset; `completion` output from `tab` completes every command in bash and zsh |
+| The npm launcher and one platform package per target | `bunx gspot --version` works from a local registry on the three platforms with no network and `--ignore-scripts` |
 | Version pin: `.gspot/version`, the runner pin, the mismatch refusal, `--version` | a binary of another version exits 2 on `check` with the two remedies |
 | Hooks, staged mode, `.mise/conf.d/gspot.toml` | a planted repository commits through the hook |
 | One preset: bash (ShellCheck, shfmt, `bash -n`) | `gspot init --yes && gspot check` passes on a repository with one script |
@@ -28,7 +29,7 @@ folder deleted and no rule lost.
 | typescript, javascript, formatting, structure, naming, config-files, markdown, spelling, commits, docs presets | each has a planted repository |
 | Naming engine with the TypeScript, JavaScript and shell extractors | parity with the reference extractors on the frozen sources |
 | Structure engine: tree-sitter loading, ast-grep driver, directory analyses, shell analyses | every shell check in the ledger fires on its planted defect |
-| Baselines | `init` on a repository with findings passes; a grown count fails |
+| Baselines | `init` on a repository with findings passes; a grown count fails; the ESLint baseline is the tool's own suppressions file and the editor honours it |
 | Integrity: generated drift, stale paths, allowlists, suppressions, manifest policy, lockfile, docs links, tsconfig options | each has a fixture |
 | `upgrade --check` and `upgrade`, including the install step and `--to` | the report renders between two planted preset versions; the pin moves both ways |
 | Takeover: replace and carry exceptions (typos, gitleaks, osv, licenses, disabled rules as ignores) | a planted repository with the four files loses them and gains the entries |
@@ -83,7 +84,7 @@ read, never written; its own gate keeps running until its owners migrate it.
 | --- | --- |
 | prose preset: Vale driver, `gspot` style, packages, vocabulary, stdin grammars, adjacent selectors | the 30 rules fire on planted defects |
 | secrets, vulnerabilities, dependencies, licenses, duplication presets wired (Semgrep runs) | each at its stage on a planted repository |
-| `completion <shell>`, `check --watch` | v1.1 |
+| `check --watch` | v1.1 |
 
 ## Phase 6: the corpus
 

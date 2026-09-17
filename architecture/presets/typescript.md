@@ -31,7 +31,7 @@ the ledger.
 | Id | Stage | Command |
 | --- | --- | --- |
 | `typescript/tsc` | commit | `tsc --noEmit -p <stub tsconfig>` per scope |
-| `typescript/eslint` | commit | `eslint --max-warnings 0 --no-warn-ignored --config .gspot/eslint.config.js {files}`; fix: `--fix`, order codemod |
+| `typescript/eslint` | commit | `eslint --max-warnings 0 --no-warn-ignored --config .gspot/eslint.config.js --suppressions-location .gspot/baseline/eslint.json {files}`; fix: `--fix`, order codemod; the baseline is ESLint's own suppressions file, written with `--suppress-all` at `init` and pruned by `sync --baseline` |
 | `typescript/knip` | push | `knip --config .gspot/knip.json` |
 | `integrity/tsconfig-options` | commit | engine |
 | `integrity/required-rules` | push | `eslint --print-config` per file class, compared with the preset's rule list |

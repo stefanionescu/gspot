@@ -130,7 +130,10 @@ language = ["docs/TYPESCRIPT.md", "docs/naming/TYPESCRIPT.md"]
 - `conflicts` names presets that cannot be selected together.
 - `detect` proposes the preset at `init` and in `doctor`. Detection never selects.
 - `claims` decides which files the preset's checks receive. A file claimed by no selected preset
-  is unchecked.
+  is unchecked. Besides `extensions` and `filenames`, `claims` may name `tags`, computed the way
+  pre-commit's `identify` library does from extension, shebang, executable bit and content
+  (`shell`, `python`, `node`, `executable`, `text`, `binary`), so hooks and task files with no
+  extension are claimed without a filename list.
 - Every tool the checks or the generated configuration need is in `[[tools]]` with a version
   and the name under each ecosystem gspot knows (`npm`, `pypi`, `mise`, `brew`, `cargo`,
   `github`). `doctor` verifies presence and version.
@@ -219,7 +222,7 @@ Signals, in the order `init` prints them:
 | `.md` files | markdown |
 | `.json`, `.yaml`, `.toml` files | config-files |
 | any repository | structure, naming, formatting, docs, secrets, dependencies, commits, spelling |
-| `go.mod`, `Cargo.toml`, `Gemfile`, `manage.py`, `vite.config.*`, Expo `app.json`, `nest-cli.json`, `svelte.config.*`, `vue.config.*` | nothing yet; `init` prints "no preset for go; 212 files unchecked" and `doctor` lists them |
+| `go.mod`, `Cargo.toml`, `Gemfile`, `manage.py`, `vite.config.*`, Expo `app.json`, `nest-cli.json`, `svelte.config.*`, `vue.config.*` | nothing yet; `init` prints "no preset for go; 212 files unchecked" and `doctor` lists them. The language name and the extension list come from GitHub Linguist's data (`linguist-languages`), not a table gspot keeps |
 
 Detection reads manifests and file names. It never reads code to guess a framework.
 
