@@ -7,7 +7,7 @@ This document decides every command, flag, output line and exit code. Each is on
 
 ```text
 gspot init      [--yes] [--presets <ids>] [--without <ids>] [--scope <path=ids>] [--own <tools>] [--no-install]
-                [--hooks gspot|lefthook|husky|none] [--ci github|none] [--rules yes|no]
+                [--hooks gspot|lefthook|husky|none] [--ci github|none] [--rules yes|no] [--format keep|shipped]
                 [--project-templates] [--runner mise|npm|bun|pnpm|uv|none]
 gspot check     [<check-id>] [--staged] [--since <ref>] [--fix] [--dry-run]
                 [--stage commit|push|manual] [--scope <path>] [--skip <check-id>]
@@ -110,6 +110,7 @@ every proposal. With no terminal and no flag for a question, gspot exits 2 and n
 | Write a CI workflow? | Yes when `.github/` exists with no lint job; else no | `--ci github|none` |
 | Install agent rule files? | Yes | `--rules yes|no` |
 | Task runner surface | The runner detected; `none` when none | `--runner` |
+| Keep your formatting? (asked only when an existing formatter config differs from the shipped `[format]`) | Keep: your indent and width go into `[format]` and nothing is reformatted | `--format keep|shipped` |
 
 ### The plan
 

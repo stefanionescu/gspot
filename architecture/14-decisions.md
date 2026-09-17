@@ -390,3 +390,12 @@ for the reference repositories, and the ledger is the proof for checks. Rejected
 those itself, which would destroy code it cannot prove it replaced; rejected: `init` reading task
 bodies or rule files to decide what is redundant, which is a heuristic per repository shape and
 the kind of code this design refuses.
+
+## D-58 Formatting is asked, never imposed
+
+When a repository's formatter configuration differs from the shipped `[format]`, `init` asks
+one question, `--format keep|shipped`, and `--yes` keeps the repository's values. Whatever is
+chosen is written to `[format]` and can be changed with one `gspot set`. Rejected: always
+shipping 4 spaces and 120 columns, which reformats a stranger's whole repository on the first
+commit and buries the real diff; rejected: always keeping, which never lets a repository
+converge on one style and contradicts D-20 for the one setting where "strictest" has no meaning.

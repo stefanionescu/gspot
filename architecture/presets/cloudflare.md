@@ -16,7 +16,7 @@ wrangler, zizmor is not relevant; the Semgrep landing pack for workers.
 
 ## Generated configuration
 
-The scope's ESLint config gains worker globals (`Response`, `Request`, `fetch`, `caches`) for
+The files this preset claims get the `worker` runtime (the rule in [javascript.md](javascript.md)), so the scope's ESLint config gains worker globals (`Response`, `Request`, `fetch`, `caches`) for
 `functions/**` and `_worker.*`.
 
 ## Checks

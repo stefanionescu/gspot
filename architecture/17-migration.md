@@ -4,7 +4,8 @@ This document decides the two goals gspot is built against, what `gspot init` do
 repository that already has home-grown linting, and what that repository looks like when the
 migration is done. yap-swift-app is worked first because it has the most to replace;
 yap-text-inference second because its policy lives in `pyproject.toml` and inside the lint
-folder, which is the harder case. The other reference repositories follow in one table.
+folder, which is the harder case; yap-landing third because one language runs in three
+runtimes there. The other reference repositories follow in one table.
 
 ## The two goals
 
@@ -153,14 +154,77 @@ one general mechanism or one corrected default.
   Node footprint.
 - **A default must not tighten by accident.** With no `[[scope]]`, commitlint has no scope enum.
 
+## yap-landing in numbers
+
+A plain-JavaScript static site built to `dist/` and served by Cloudflare Pages: Node build
+scripts, browser scripts, one Pages worker, HTML templates with placeholders, legal copy in
+Markdown, images and videos, no tests. The smallest of the six, and the one that tests three
+runtimes in one language, product copy that is not documentation, and a formatter set
+differently from the shipped default.
+
+| Today | Count | After `init --yes` and the delete-when-ready step |
+| --- | --- | --- |
+| Root lint config files | 12 (`.commitlintrc.json`, `.editorconfig`, `.license-checker.json`, `.markdownlint-cli2.jsonc`, `.prettierrc.json`, `.prettierignore`, `.semgrepignore`, `.stylelintrc.json`, `.whitelizard`, `bearer.yml`, `bearer.ignore`, `typos.toml`) plus `.qlty/` | none hand-written; stubs for commitlint, markdownlint, prettier, stylelint and typos; the rest gone |
+| `quality/` | 119 files, 564 KB, plus its own `quality/package.json` | deleted; the manifest is listed as one whose dependencies are all pinned tools |
+| `package.json` `devDependencies` | 33, of which 25 are linters and their plugins | the 25 show as "pinned twice" once gspot pins them; the build tools (esbuild, html-minifier-terser, qrcode) stay |
+| `package.json` `scripts` | 7, of which 5 wrap `mise run` | `integrity/manifest-policy` flags the wrappers; `build` and `start` stay |
+| `.mise/tasks/` | 15, of which 14 are lint, format, deps, knip or hook tasks | `setup` stays and gains `gspot sync`; the person deletes 14 |
+| `.githooks/` | 3 | deleted; `.gspot/hooks/` |
+| `mise.toml` `[tools]` | 13 pins, 10 of them linters, two of which (lizard, qlty) gspot cuts | bun, node and jq stay; `doctor` lists the 10 |
+| `rules/`, `CLAUDE.md`, `AGENTS.md` | 5 files and a three-line index | one managed block each; the old `rules/` deleted once the completeness check is clean |
+| `README.md` | a "Quality" section of six commands | rewritten to `gspot check`; `integrity/stale-paths` fails until it is |
+
+## yap-landing, file by file
+
+| File | Verb | What happens |
+| --- | --- | --- |
+| `.prettierrc.json` (100 columns) and `.editorconfig` (2 spaces) | replace, ask | the shipped `[format]` is 4 and 120. `init` sees the difference and asks `--format keep|shipped`; `--yes` keeps the repository's values, and `[format]` records the answer (D-58) |
+| `.editorconfig` | replace | owned by the formatting preset, rendered from `[format]`; the shell section is the shipped rule; `package.json` at 4 is one `[tools.editorconfig.extra]` entry if wanted |
+| `.prettierignore`, `.semgrepignore`, `bearer.yml`, `.qlty/` | delete | natures and file lists; Bearer and qlty are cut |
+| `bearer.ignore` (12 false positives) | delete | re-enter through the Semgrep baseline |
+| `.whitelizard` (18 functions) | delete | Lizard is cut. The functions enter ESLint's own suppressions file for `complexity` and `sonarjs/cognitive-complexity` at `init` (D-54), so the same debt is baselined by the tool the editor runs |
+| `.stylelintrc.json` | replace, carry | `.gspot/stylelint.json` and a stub; the nine rules set to `null` become nine `[[ignore]]` entries; the `property-no-vendor-prefix` ignores are the shipped ones |
+| `.markdownlint-cli2.jsonc` | replace | every value is the shipped default except MD049 `asterisk`; one `gspot set tools.markdownlint.rules.MD049` if the person wants it back |
+| `.commitlintrc.json` | replace | the scope list is policy; with no `[[scope]]` there is no enum unless the person sets `tools.commitlint.scopes` |
+| `.license-checker.json` | replace, carry | its allowlist uses globs (`Apache*`, `MIT*`); gspot matches SPDX expressions, so `rc`'s `(BSD-2-Clause OR MIT OR Apache-2.0)` passes with no entry. Of the 12 excluded packages, those whose reported license is in the shipped allowlist need nothing; the rest become `[[tools.licenses.exceptions]]` with the license the checker reports |
+| `typos.toml` | replace, carry | eight words carried |
+| `.node-version`, `.nvmrc` | leave | runtime pins; `integrity/manifest-policy` checks they agree with `engines` and mise, which they do |
+| `mise.toml` | leave, list | ten pins gspot also pins or cuts |
+| `package.json` | change, list | gspot's npm tools are pinned (in `devDependencies` under an npm-family runner, under mise `npm:` otherwise); the 25 old linter entries show as "pinned twice"; the five `mise run` wrapper scripts fail `integrity/manifest-policy` |
+| `bunfig.toml` | leave | already at the shipped install policy |
+| `.githooks/` | delete | `.gspot/hooks/` |
+| `.mise/tasks/` | leave 1, delete 14 | the person's to delete, using this table |
+| `quality/` | delete | every check maps: the 16 ESLint rules to `eslint-plugin-gspot`, the shell family, the naming engine, the HTML copy and script policy, dead CSS, links, jscpd, madge to `import-x/no-cycle`, Lizard to `complexity`, the CodeQL and Semgrep packs, the `package.json` policy |
+| `_headers`, `_redirects`, `functions/_middleware.js`, `site.webmanifest`, `robots.txt`, `404.html` | leave | the cloudflare and static-site presets check them: the security headers are present, HTML paths revalidate, `_redirects` parses, the manifest validates |
+| `pages/**/template.html`, `pages/legal/pages.js`, `content/*.md` | leave | `structure/html-copy` (placeholders only; the copy lives in `content/`). `content/*.md` is product copy, not documentation: `gspot ignore prose/vale --paths "content/**" --reason "Product copy."` when the prose preset is selected; markdownlint and typos still run over it |
+| `assets/videos/**` | leave | over the 1 MB limit; `integrity/large-files` fails until they are under LFS or `gspot ignore integrity/large-files --paths "assets/videos/**" --reason "..."` |
+| `server.js`, `build/**`, `config/**`, `pages/**/*.js`, `shared/**`, `functions/**` | leave | one JavaScript preset, three runtimes, decided by what references each file: `functions/**` is `worker` because the cloudflare preset claims it; `shared/*.js` is `browser` because `pages/*/template.html` references it through `<script src>`; everything else is `node`, CommonJS where the nearest `package.json` has no `type`. `gspot why shared/toggle.js` prints "browser: referenced by pages/landing/template.html" |
+| `config/*.js` | leave | `integrity/config-purity`: literals only, which they are |
+| `rules/`, `CLAUDE.md`, `AGENTS.md` | leave, add | one managed block each |
+
+What this repository taught, and the general rule each lesson landed as:
+
+- **One language, several runtimes.** A file's runtime comes from what references it (a
+  platform preset's claim, an HTML `<script src>`), never from a folder name
+  ([presets/javascript.md](presets/javascript.md)). The folder-name guess this document once
+  suggested is gone.
+- **Formatting is the one policy `init` asks about.** Every other default ships at the strictest
+  observed value; formatting has no strictest value, and a reformat of every file is the most
+  disruptive thing `init` could do unasked (D-58).
+- **Product copy is not documentation**, and needs no mechanism: the ordinary path ignore on the
+  prose check does it.
+- **A cut tool's baseline re-enters through the replacement tool's own baseline.** The Lizard
+  allowlist becomes ESLint suppressions, and nothing is lost.
+- **Nothing else changed.** Large media, lint-only manifests, wrapper scripts, license globs and
+  duplicate pins each met an existing rule.
+
 ## The other reference repositories
 
-yap-swift-app and yap-text-inference are worked above. The remaining four:
+yap-swift-app, yap-text-inference and yap-landing are worked above. The remaining three:
 
 | Repository | Shape | Root lint configs | `quality/` | Hooks | Lint-related tasks | Lint pins in `mise.toml` | Old `rules/` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
 | slopshop | Next.js on Cloudflare | 8 (`.commitlintrc.json`, `.editorconfig`, `.license-checker.json`, `.markdownlint-cli2.jsonc`, `.prettierrc.json`, `.prettierignore`, `eslint.config.mjs`, `typos.toml`) | 83 files, 416 KB | 3 | 20 of 28 | 4 of 7 | 2 folders |
-| yap-landing | static site on Cloudflare | 12, including `.whitelizard`, `.qlty/`, `bearer.*`, `.semgrepignore`, `.stylelintrc.json` | 119 files, 564 KB | 3 | 14 of 15 | 9 of 13 | 5 files |
 | comfyui-reactor-connector | Python custom node with a `web/` front end | 7 (`.markdownlint-cli2.yaml`, `.prettierrc.json`, `.prettierignore`, `.stylelintrc.json`, `.typos.toml`, `pyrightconfig.json`, `tsconfig.json`) plus the `pyproject.toml` tool tables | 225 files, 2.0 MB | 3 | 27 of 36 | 8 of 12 | 8 files |
 | comfyui-live-shopping | same shape | 7 | 221 files, 1.9 MB | 3 | 27 of 36 | 8 of 12 | 8 files |
 

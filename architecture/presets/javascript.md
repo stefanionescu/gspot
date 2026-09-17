@@ -35,11 +35,14 @@ files under `[architecture] types_directory`.
 
 ## Settings
 
-`tools.eslint.*` as typescript; `tools.eslint.globals` per file class: `node` (the default),
-`browser`, `worker`, `commonjs`. `init` proposes `browser` for a file class an HTML file in the
-tree references through `<script src>` and for a `web/` or `public/` directory with no
-`package.json` of its own; everything else is `node`. `gspot set tools.eslint.globals "web/**"
-browser` changes it, and `gspot why <file>` prints the runtime a file got.
+`tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes
+from what references it, never from a folder name: `worker` when a platform preset claims it,
+`browser` when a tracked HTML file references it through `<script src>` (URL paths resolved
+against the repository root and the declared output directory), `node` otherwise. `sourceType`
+follows Node's own resolution: the nearest `package.json` `type`, then `.mjs` and `.cjs`.
+Import aliases are what the runtime resolves: `package.json` `imports` and tsconfig `paths`.
+`gspot set tools.eslint.globals "<glob>" browser` overrides one file class, and `gspot why
+<file>` prints the runtime a file got and why.
 
 ## Rule files
 
