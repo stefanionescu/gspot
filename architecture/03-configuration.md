@@ -56,7 +56,7 @@ presets = ["swift", "xcode"]
 [limits]
 file_lines            = 300
 function_lines        = { value = 80, reason = "Route tables are one ordered list each." }
-cyclomatic_complexity = 10
+cyclomatic_complexity = 8
 cognitive_complexity  = 8
 
 [limits.python]

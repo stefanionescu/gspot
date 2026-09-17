@@ -2,8 +2,9 @@
 
 This document decides the two goals gspot is built against, what `gspot init` does to a
 repository that already has home-grown linting, and what that repository looks like when the
-migration is done. yap-swift-app is the worked example because it has the most to replace. The
-other reference repositories follow in one table each.
+migration is done. yap-swift-app is worked first because it has the most to replace;
+yap-text-inference second because its policy lives in `pyproject.toml` and inside the lint
+folder, which is the harder case. The other reference repositories follow in one table.
 
 ## The two goals
 
@@ -79,11 +80,86 @@ other reference repositories follow in one table each.
 | `*/.env.example`, `*/.env.development`, `*/.env.staging` | leave | `config-files/dotenv` checks that tracked ones hold keys only; `integrity/env-files` refuses staging the rest |
 | `api/Dockerfile`, `api/docker-compose.yml`, `api/nginx.conf`, `supabase/config.toml` | leave | product files: checked, never written |
 
+## yap-text-inference in numbers
+
+A Python inference server with two Docker images and a large shell layer. It has fewer
+dotfiles than yap-swift-app because most of its policy lives in `pyproject.toml` tables and
+inside `quality/`, which changes what `init` can find.
+
+| Today | Count | After `init --yes` and the delete-when-ready step |
+| --- | --- | --- |
+| Root config files | 5 (`.markdownlint-cli2.yaml`, `.prettierrc.json`, `.prettierignore`, `.typos.toml`, `pyrightconfig.json`) | none hand-written; stubs for markdownlint, prettier, typos, pyright |
+| `pyproject.toml` tool tables | `[tool.ruff]` (97 lines), `[tool.interrogate]`, `[tool.deptry]`, `[tool.vulture]`, `[tool.bandit]`, `[tool.pytest]`, `[tool.importlinter]` with nine contracts (589 lines in all) | the tables gspot owns are rewritten from `gspot.toml` through a comment-preserving edit; `[project]`, `[dependency-groups]` and `[tool.uv]` are untouched; `[tool.interrogate]` and `[tool.bandit]` are removed because the tools are cut |
+| Configuration inside `quality/` | `quality/config/shellcheckrc`, `security/osv/config.toml`, `security/gitleaks/{baseline,reasons}.json`, `repository/licenses/policy.json`, `typecheck/{trt,vllm,llmcompressor}.json`, `naming/policy.json`, `duplication/*.json` | not at conventional paths, so takeover does not find them; step 0 below moves the five that carry facts, and the rest are the ledger's job |
+| `quality/` | 139 files, 2.8 MB, plus a `quality/package.json` workspace | deleted |
+| Root `package.json`, `bun.lock` | exist only to install jscpd, markdownlint and prettier | listed as lint-only; deleted. Under the mise runner the npm tools become `npm:` pins and the repository has no Node footprint |
+| `.mise/tasks/` | 34 task files: 20 are lint, format, type, deps, hook, security or licenses tasks | 12 test tasks stay; `setup` stays; `check` is rewritten by hand to call `gspot check` and the tests; 20 deleted |
+| `.githooks/` | 3, including a hand-written commit-message regex | deleted; `.gspot/hooks/`, with commitlint in the `commit-msg` hook |
+| `mise.toml` `[tools]` | 14 pins, 9 of them linters | the person trims to bun, node (mise's `npm:` backend needs it), python, uv, jq; `doctor` lists the nine |
+| `rules/` | 7 files, 13,721 lines, with `rules/DOCUMENTATION.md` excluded from its own linters | one managed block in `CLAUDE.md` and `AGENTS.md` (they are identical today); the old `rules/` is deleted once the completeness check is clean |
+| Documentation | `README.md` and `ADVANCED.md` name 65 `mise run` commands and one `quality/` path | the "Develop the project" and "Developer workflow" sections shrink to `gspot check`, `gspot check --fix`, and the test tasks; `integrity/stale-paths` fails until they do |
+
+## yap-text-inference, file by file
+
+| File | Verb | What happens |
+| --- | --- | --- |
+| `.markdownlint-cli2.yaml` | replace | `.gspot/markdownlint.jsonc` and a stub. MD007 indent 4 and MD013 off are the defaults; its `ignores` come from natures; `MD060` off is carried as an `[[ignore]]` |
+| `.prettierrc.json`, `.prettierignore` | replace | the shipped defaults; `embeddedLanguageFormatting: off` is added; the generated `requirements-*.txt` pattern becomes a `gspot declare` suggestion |
+| `.typos.toml` | replace, carry | four words (`AWQ`, `certifi`, `TRT`, `vLLM`) carried |
+| `pyrightconfig.json` | replace, carry | `.gspot/basedpyrightconfig.json` and a stub. `typeCheckingMode` moves from `strict` to `all` with a baseline. The nine files it excludes are the ones the three variant projects include, so the excludes disappear and the variants become three `[[tools.basedpyright.projects]]` entries |
+| `quality/config/typecheck/{trt,vllm,llmcompressor}.json` and `.mise/tasks/type/*` | carry after step 0 | each variant becomes `[[tools.basedpyright.projects]] name = "trt" include = [...] extra = "trt" platform = "linux"`. On a Mac the three checks print as platform skips, which is what the task's `uname` guard did; in CI on Linux they run under `uv run --extra` |
+| `[tool.ruff]` | replace, carry | rendered from the ledger set. `lint.select` equals the shipped families; gspot adds `S`, `ANN401`, `PLR2004`, `PLR0917` and `FAST`, which enter with a baseline. Every `lint.pylint.max-*` value and `mccabe.max-complexity = 8` equals the shipped `[limits]` default. `extend-ignore-names` (`setUp`, `tearDown`, ...) are shipped external names. `COM812`, `D203`, `D213` are shipped ignores |
+| `[tool.interrogate]` | delete, carry | cut for Ruff `D100` to `D107`. `ignore-init-method = true` becomes `[[ignore]] check = "python/ruff" rule = "D107"` with the reason `carried from [tool.interrogate] at init` |
+| `[tool.deptry]` | replace, carry | `per_rule_ignores` entries become `[[ignore]]` entries with `rule = "DEP001"` and the package in the reason; `known_first_party` is detected |
+| `[tool.vulture]` | replace | `paths` come from claims (`quality` drops out with the folder); `min_confidence = 80` is the default |
+| `[tool.bandit]` | delete | cut; Ruff `S` and the Semgrep Python pack |
+| `[tool.pytest]` | replace | `testpaths` from claims; `addopts` gains `--strict-markers --strict-config` |
+| `[tool.importlinter]` and its nine contracts | replace, carry | the contracts are policy the repository wrote and are carried verbatim into `[architecture.contracts]` (they are the architecture, and D-46's exception for "facts about the repository" covers a declared import matrix the same way it covers an allowlist); `root_packages` from `[architecture] package_roots` |
+| `[tool.uv]`, `[project]`, `[dependency-groups]` | leave | product dependencies, indexes and conflicts; gspot adds a `gspot` dependency group only when the runner is uv |
+| `quality/config/shellcheckrc` | carry after step 0 | `.gspot/shellcheckrc` and a root stub; its disables become ignores |
+| `quality/config/security/osv/config.toml` | carry after step 0 | four ignored advisories with reasons; `ignoreUntil` becomes `review_by` |
+| `quality/config/security/gitleaks/{baseline,reasons}.json` | carry after step 0 | `[tools.gitleaks] baseline_reasons`, each with its `review_by` |
+| `quality/config/repository/licenses/policy.json` | carry after step 0 | the four-license allowlist is narrower than the shipped twelve; the person keeps the narrow one with `gspot set tools.licenses.allow --replace ...` or accepts the shipped one; the exemptions become `[[tools.licenses.exceptions]]` with their licenses and reasons |
+| `quality/config/naming/policy.json`, `rules.py`, `schema.py` | ledger | the shipped policy is the union of the reference policies; the structural prefixes (`TRT_`, `OTEL_`, `WS_`, `HF_`) are the example in [08-naming-policy.md](08-naming-policy.md); any term unique to this repository is added by hand with `gspot set naming.banned_terms` in step 4 |
+| `quality/config/security/semgrep/*.yml`, `vendor/*.yml` | ledger | the `python`, `secrets` and `markers` packs ship in the python and vulnerabilities presets; the vendored sets ship pinned; `bandit.yml` is not shipped because Ruff `S` is the port |
+| `quality/config/security/codeql/*` | ledger | `security/codeql` at `manual` with `[tools.codeql] false_positives` |
+| `quality/config/duplication/*.json` | ledger | the shipped jscpd values are these |
+| `quality/config/python/*`, `quality/config/repository/*`, `quality/config/shell.py` | ledger | every limit and policy file maps to a `[limits]` key or a structure check in [06-enforcement-ledger.md](06-enforcement-ledger.md) section 5 and 6 |
+| `quality/python/`, `quality/repository/`, `quality/shell/`, `quality/security/`, `quality/lib/` | delete | the 14 Python structure analyses, the shell family, the naming engine, the integrity checks and the security runners, all in gspot |
+| `.githooks/commit-msg` | delete | a regex that accepted any scope; commitlint replaces it, and with no `[[scope]]` in `gspot.toml` there is no scope enum, so `feat(server):` still passes |
+| `.githooks/pre-commit`, `pre-push` and the `SKIP_*` variables | delete | `.gspot/hooks/`; the production-env guard is `integrity/env-files`; there are no skip variables (D-24), only `gspot.local.toml` |
+| `docker/trt/Dockerfile`, `docker/vllm/Dockerfile`, their `.dockerignore` and `build.sh` | leave | hadolint, `docker/dockerignore` and the bash preset check them; `templates/project/DOCKER-ML.md` is offered because the base images are CUDA |
+| `scripts/`, `docker/shared/scripts/` | leave | the bash preset's structure family runs over them; the shell limits (140 lines, 40 per function) are this repository's own values |
+| `config/` | leave | `integrity/config-purity` checks the modules hold literals; `architecture.roles.env` is proposed as the module that reads `os.environ` most |
+| `.env.example` | leave | `config-files/dotenv`; `config-files/env-example` once `tools.dotenv.accessor` names the reader |
+| `mise.toml` | leave, list | nine pins gspot also pins; `github:Bearer/bearer` goes with Bearer |
+| `README.md`, `ADVANCED.md` | leave, rewrite | the docs checks pass once the developer sections name gspot commands and the test tasks instead of the 20 deleted tasks |
+
+What is different here, and what it changed in the design:
+
+- **A repository can need several incompatible dependency sets.** The engines cannot share one
+  virtual environment, so type checking runs per variant under `uv run --extra`, and two of the
+  three only build on Linux with CUDA. `[[tools.basedpyright.projects]]` now carries `extra`
+  and `platform`, and a project whose platform does not hold is a platform skip that prints,
+  the same rule as SwiftLint on Linux ([presets/python.md](presets/python.md)).
+- **Policy that lives inside the lint folder is invisible to takeover.** `init` reads
+  conventional paths. The plan says which files it did not find and where to move them, and the
+  migration has a step 0 for it.
+- **The cyclomatic limit was wrong in the ledger.** Every source repository uses 8; the ledger
+  said 10. D-20 says the strictest observed ships, so the default is 8.
+- **Documentation that lists task names goes stale when the tasks go.** `integrity/stale-paths`
+  now also checks that every `mise run`, `bun run` and `npm run` a document names exists.
+- **A Python repository should not need Node.** A root `package.json` whose dependencies are all
+  linters is listed as lint-only, and under the mise runner the npm tools become `npm:` pins.
+- **A commit-message regex that allowed any scope must not become an enum by accident.** With
+  no `[[scope]]`, commitlint has no `scope-enum`.
+
 ## The other reference repositories
+
+yap-swift-app and yap-text-inference are worked above. The remaining four:
 
 | Repository | Shape | Root lint configs | `quality/` | Hooks | Lint-related tasks | Lint pins in `mise.toml` | Old `rules/` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| yap-text-inference | Python API, Docker, shell | 5 (`.markdownlint-cli2.yaml`, `.prettierrc.json`, `.prettierignore`, `.typos.toml`, `pyrightconfig.json`) plus `[tool.ruff]`, `[tool.importlinter]`, `[tool.deptry]`, `[tool.vulture]` in `pyproject.toml` | 139 files, 2.8 MB | 3 | 16 of 34 | 10 of 14 | 7 files |
 | slopshop | Next.js on Cloudflare | 8 (`.commitlintrc.json`, `.editorconfig`, `.license-checker.json`, `.markdownlint-cli2.jsonc`, `.prettierrc.json`, `.prettierignore`, `eslint.config.mjs`, `typos.toml`) | 83 files, 416 KB | 3 | 20 of 28 | 4 of 7 | 2 folders |
 | yap-landing | static site on Cloudflare | 12, including `.whitelizard`, `.qlty/`, `bearer.*`, `.semgrepignore`, `.stylelintrc.json` | 119 files, 564 KB | 3 | 14 of 15 | 9 of 13 | 5 files |
 | comfyui-reactor-connector | Python custom node with a `web/` front end | 7 (`.markdownlint-cli2.yaml`, `.prettierrc.json`, `.prettierignore`, `.stylelintrc.json`, `.typos.toml`, `pyrightconfig.json`, `tsconfig.json`) plus the `pyproject.toml` tool tables | 225 files, 2.0 MB | 3 | 27 of 36 | 8 of 12 | 8 files |
@@ -115,6 +191,10 @@ every finding means and what to do.
 
 ## How the migration runs
 
+0. When policy files live inside the lint folder rather than at conventional paths (a
+   `shellcheckrc`, an osv config, a gitleaks baseline, per-variant type-check configs), move
+   them to the conventional path with `git mv` so takeover finds them. `init --dry-run` lists
+   the ones it did not find.
 1. `gspot init` in a branch. Read the plan: the delete, carry, change and "no longer runs"
    sections. Say yes.
 2. `gspot check`. Everything passes through baselines; read the counts.

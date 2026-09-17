@@ -190,8 +190,13 @@ Hand-written hooks are never deleted. When `.githooks/` or another hook director
 gspot did not write, `init` points `core.hooksPath` at `.gspot/hooks` and lists the old directory
 under "no longer runs; delete when ready". The same line covers a folder of home-grown lint
 scripts (`quality/`, `lint/`, `.qlty/`), a workspace package whose dependencies are all linters,
-a task-runner task whose body calls a file in such a folder or a tool gspot now owns, an agent
-rules directory the corpus covers, and a `mise.toml` or `devDependencies` pin gspot also pins.
+a root `package.json` whose dependencies are all linters in a repository with no JavaScript (with
+its lockfile; under the mise runner the npm tools move to `npm:` pins and the Node footprint
+goes), a task-runner task whose body calls a file in such a folder or a tool gspot now owns, an
+agent rules directory the corpus covers, and a `mise.toml` or `devDependencies` pin gspot also
+pins. Takeover reads configuration at conventional paths only; a configuration file kept inside
+a lint folder (`quality/config/shellcheckrc`) is not found, and the plan says so and names the
+path to move it to before running `init` again.
 gspot touches nothing it did not write; the person deletes with the list in hand (D-57).
 [17-migration.md](17-migration.md) shows the list for a real repository.
 

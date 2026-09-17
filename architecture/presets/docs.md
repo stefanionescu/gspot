@@ -23,7 +23,7 @@ excludes from `[tools.lychee] exclude` with reasons; a second profile for the on
 | `docs/links` | commit | `lychee --config .gspot/lychee.toml --offline --include-fragments {files}`: every relative link resolves to a tracked file and every `#anchor` to a heading or an HTML id |
 | `docs/links-external` | manual, network | `lychee --no-offline` with the online profile |
 | `integrity/docs-headings` | commit | no heading from the banned list (`Table of contents`, `Project structure`, `Repository layout`, `Directory structure`, `File map`, `Codebase map`) |
-| `integrity/stale-paths` | commit | every path-shaped token in Markdown and comments names a tracked file, unless it is in a code fence tagged `text` or matches `[tools.docs] path_exceptions` |
+| `integrity/stale-paths` | commit | every path-shaped token in Markdown and comments names a tracked file, and every `mise run <task>`, `bun run <script>` or `npm run <script>` names a task or script that exists, unless it is in a code fence tagged `text` or matches `[tools.docs] path_exceptions` |
 | `docs/readme-present` | commit | every scope has a `README.md`; the root has a `LICENSE` |
 | `sync/check` | commit | the installed agent files match the assembled render; the managed block in `CLAUDE.md` and `AGENTS.md` is intact; every `enforced-by` names a check |
 | `docs/readme-shape` | commit | every `README.md` has one H1, an opening paragraph before the first H2, a Contents list when it has more than six H2 headings, a section whose heading contains `install`, `setup`, `start` or `requirements`, and no banned heading; content beyond this shape stays in the rule files as `unenforced` |

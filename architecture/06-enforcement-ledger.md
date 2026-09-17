@@ -21,7 +21,7 @@ One `[limits]` table. The shipped default is the strictest value any source uses
 | `function_lines` | 60 | same | ESLint `max-lines-per-function`; Ruff `PLR0915`; SwiftLint `function_body_length`; structure engine for python code lines and bash |
 | `function_parameters` | 5 | SS `MAX_PARAMETERS`, TI ruff `max-args`, LA lizard `--arguments` | ESLint `max-params`; Ruff `PLR0913`; SwiftLint `function_parameter_count` |
 | `cognitive_complexity` | 8 | SA, LA, SS `COGNITIVE_COMPLEXITY_THRESHOLD` | `sonarjs/cognitive-complexity` for every JavaScript and TypeScript file |
-| `cyclomatic_complexity` | 10 | TI `max-complexity`; LA lizard `--CCN`; SA swiftlint `cyclomatic_complexity` | ESLint core `complexity`; Ruff `C901`; SwiftLint `cyclomatic_complexity`; the shell branch count |
+| `cyclomatic_complexity` | 8 | TI and the ComfyUI repositories `max-complexity` 8; LA lizard `--CCN` 8; SA swiftlint `cyclomatic_complexity` 8 | ESLint core `complexity`; Ruff `C901`; SwiftLint `cyclomatic_complexity`; the shell branch count |
 | `classes_per_file` | 1 | SA swiftlint `one_declaration_per_file` | ESLint `max-classes-per-file`; SwiftLint `one_declaration_per_file`; Ruff has no rule, the structure engine counts top-level classes |
 | `nested_blocks` | 3 | TI ruff `PLR1702` | Ruff `PLR1702`; ESLint `max-depth` is the same number |
 | `positional_arguments` | 5 | new, beside `function_parameters` | Ruff `PLR0917` |
@@ -159,7 +159,7 @@ Source: `TI pyproject.toml`, `TI quality/python/`, `TI quality/repository/`.
 | --- | --- | --- |
 | Ruff select: A ANN ARG ASYNC B BLE C4 C90 COM D DTZ E EM ERA EXE F FA FBT FIX FLY FURB G ICN INP ISC LOG N PERF PGH PIE PL PT PTH PYI Q RET RSE RUF S SIM SLF SLOT T10 T20 TC TD TRY UP W YTT; ignore COM812 D203 D213; fix all; beyond the reference set `ANN401`, `PLR2004`, `FAST`, and `DOC` when it leaves preview | pyproject | rendered `ruff.toml`; `python/ruff` |
 | Ruff format: 120 columns, 4 spaces, double quotes, LF, docstring code | pyproject | `python/ruff-format` |
-| pyright strict per project, `extraPaths`, per-variant projects with their own excludes | pyrightconfig, `config/typecheck/*.json` | `python/basedpyright` in `all` mode with `[tools.basedpyright.projects]`; `reportPrivateUsage` on |
+| pyright strict per project, `extraPaths`, per-variant projects with their own includes, each run under a uv extra and only on Linux | pyrightconfig, `config/typecheck/*.json`, `.mise/tasks/type/*` | `python/basedpyright` in `all` mode with `[[tools.basedpyright.projects]]` (`name`, `include`, `extra`, `platform`); a project whose `platform` does not hold is a platform skip; `reportPrivateUsage` on |
 | import-linter contracts (forbidden) | pyproject `[[tool.importlinter.contracts]]` | `python/import-linter`; contracts in `[architecture.contracts]` |
 | pydoclint with init docstrings | mise task | `python/pydoclint`, until Ruff `DOC` is stable |
 | interrogate fail-under 100, nothing ignored | pyproject | Ruff `D100` to `D107` with nothing ignored; interrogate is cut |

@@ -182,7 +182,7 @@ Repository-level assertions. Each is small, reads git or a manifest, and answers
 | Check | Question |
 | --- | --- |
 | `integrity/generated-drift` | Does every generated file match its render? |
-| `integrity/stale-paths` | Does every path mentioned in prose, comments, config allowlists and ignore lists exist? |
+| `integrity/stale-paths` | Does every path mentioned in prose, comments, config allowlists and ignore lists exist, and does every runner task or script a document tells the reader to run exist? |
 | `integrity/allowlists-resolve` | Does every path in an allowlist or `[[ignore]]` match at least one tracked file? |
 | `integrity/config-purity` | Does every file in a declared config directory hold only literals (no functions, control flow, I/O)? |
 | `integrity/suppressions` | Does every inline suppression carry a reason, and did the census grow? |
