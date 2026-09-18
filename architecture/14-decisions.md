@@ -522,3 +522,17 @@ case rather than demanding one case. The commitlint `sentence-case` check reject
 names `ESLint`. The push check starts at the merge base with the upstream branch, so history
 from before the preset is never judged. Rejected: `subject-max-length` 100 and
 `header-max-length` 120 from a reference repository, which loosen what the corpus states.
+
+## D-75 One TOML style: the writer's, which taplo formats to
+
+Recorded 2026-09-18, when the config-files preset first ran over this repository. The
+`gspot.toml` writer emits compact brackets (`["bash", "spelling"]`, `{word = "udid"}`) and
+one-line arrays. The rendered taplo configuration formats to the same: no padding inside
+brackets or inline tables, and arrays never expanded or collapsed. A hand edit and a written
+entry then agree, and `config-files/toml-format` passes over the file the writer owns.
+
+Two more choices landed in the same preset. Schema loading is off in the taplo configuration,
+so the commit stage stays offline and the schema check is v8r's at push. zizmor reports in its
+GitHub format, which puts the file, the line, and the audit on one line. Rejected: padded
+brackets, which taplo cannot be told to add; and excluding `gspot.toml` from the format check,
+which D-27 forbids.

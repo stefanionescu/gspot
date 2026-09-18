@@ -109,7 +109,7 @@ npm = "typescript"
 [[configs]]
 template = "eslint.config.js.tmpl"
 target = ".gspot/eslint.config.mjs"
-stub = { path = "eslint.config.mjs", body = "export { default } from '{target}';" }
+stub = {path = "eslint.config.mjs", body = "export { default } from '{target}';"}
 
 [[configs]]
 template = "jsconfig.json.tmpl"
@@ -127,9 +127,9 @@ takes = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
-claims = { extensions = [".js", ".jsx", ".mjs", ".cjs"], tags = ["shebang:node"] }
+claims = {extensions = [".js", ".jsx", ".mjs", ".cjs"], tags = ["shebang:node"]}
 inspection = ["style", "structure", "security"]
-output = { format = "eslint-json" }
+output = {format = "eslint-json"}
 tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:"
 summary = "Runs ESLint with the shipped rule set over every JavaScript file."
 why = "ESLint catches mistakes and slop the runtime accepts: unused code, unsafe patterns, functions that only forward."
@@ -143,7 +143,7 @@ command = ["tsc", "-p", "{config:jsconfig}", "--pretty", "false"]
 tool = "tsc"
 whole = true
 inspection = ["types"]
-output = { format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$" }
+output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks plain JavaScript through its JSDoc comments."
 why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."
 fix = "Add or fix the JSDoc type the checker names; gspot explain tsc/TS2345 links the error page."
@@ -155,7 +155,7 @@ takes = "project"
 command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "compact", "{workspace:--workspace}"]
 cwd = "root"
 inspection = ["dependencies"]
-output = { format = "regex", pattern = "^(?<file>[^:\\s]+)(?::\\s*(?<message>.*))?$" }
+output = {format = "regex", pattern = "^(?<file>[^:\\s]+)(?::\\s*(?<message>.*))?$"}
 summary = "Finds files, exports and dependencies nothing uses."
 why = "Dead code is read, maintained and shipped for nobody."
 fix = "Delete what knip names, or add a knip entry point with gspot set tools.knip.entry if the file is loaded in a way knip cannot see."

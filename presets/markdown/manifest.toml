@@ -21,7 +21,7 @@ mise = "npm:markdownlint-cli2"
 [[configs]]
 template = "markdownlint.jsonc.tmpl"
 target = ".gspot/markdownlint.jsonc"
-stub = { path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"extends\": \"./.gspot/markdownlint.jsonc\" },\n    \"globs\": [\"**/*.md\", \"**/*.mdx\", \"!.gspot/**\", \"!**/node_modules/**\", \"!**/dist/**\", \"!**/build/**\", \"!**/coverage/**\"]\n}\n" }
+stub = {path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"extends\": \"./.gspot/markdownlint.jsonc\" },\n    \"globs\": [\"**/*.md\", \"**/*.mdx\", \"!.gspot/**\", \"!**/node_modules/**\", \"!**/dist/**\", \"!**/build/**\", \"!**/coverage/**\"]\n}\n"}
 
 [[checks]]
 id = "markdown/markdownlint"
@@ -31,7 +31,7 @@ command = ["markdownlint-cli2", "--no-globs", "--config", "{config:markdownlint}
 fix_command = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config:markdownlint}", "{files}"]
 fix_order = "format"
 inspection = ["style"]
-output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+)(?::(?<column>\\d+))? (?<rule>MD\\d+)\\/(?<message>.*)$" }
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+)(?::(?<column>\\d+))? (?<rule>MD\\d+)\\/(?<message>.*)$"}
 summary = "Checks every Markdown file against markdownlint with the shipped rule set."
 why = "Markdown that lints the same everywhere renders the same everywhere."
 fix = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."

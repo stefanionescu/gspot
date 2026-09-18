@@ -33,7 +33,7 @@ fragment = true
 [[configs]]
 template = "tsconfig.base.json.tmpl"
 target = ".gspot/tsconfig.base.json"
-stub = { path = "tsconfig.json", merge = { extends = "{target}" } }
+stub = {path = "tsconfig.json", merge = {extends = "{target}"}}
 per_scope = true
 
 [[checks]]
@@ -43,7 +43,7 @@ takes = "project"
 cwd = "scope"
 command = ["tsc", "--noEmit", "-p", "tsconfig.json", "--pretty", "false"]
 inspection = ["types", "syntax"]
-output = { format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$" }
+output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Checks that every TypeScript file type-checks with the strict compiler options."
 why = "A file that does not type-check can crash at run time in a way the editor already knew about."
 fix = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
@@ -55,9 +55,9 @@ takes = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
-claims = { extensions = [".ts", ".tsx", ".mts", ".cts"] }
+claims = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
 inspection = ["style", "structure", "security"]
-output = { format = "eslint-json" }
+output = {format = "eslint-json"}
 tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:"
 summary = "Runs ESLint with the shipped rule set over every TypeScript file."
 why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."

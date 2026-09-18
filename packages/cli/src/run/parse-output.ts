@@ -146,7 +146,7 @@ function parseLines(check: string, text: string, help: string): Finding[] {
  * @param root the repository root, to make the absolute paths ESLint prints relative
  * @returns the findings
  */
-export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, root: string): Finding[] {
+function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string): Finding[] {
     const output = spec.output ?? DEFAULT_OUTPUT;
     const text = `${stdout}\n${stderr}`;
     switch (output.format) {
@@ -166,4 +166,24 @@ export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, roo
             return parseGrouped(spec.id, output, text, spec.fix);
         }
     }
+}
+
+function relativeTo(root: string, file: string): string {
+    const prefix = `${root}/`;
+    return file.startsWith(prefix) ? file.slice(prefix.length) : file;
+}
+
+/**
+ * The findings a tool's output holds, with every path relative to the root.
+ * @param spec the check
+ * @param stdout the tool's standard output
+ * @param stderr the tool's standard error
+ * @param root the repository root, to make absolute paths relative
+ * @returns the findings
+ */
+export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, root: string): Finding[] {
+    return parseRaw(spec, stdout, stderr, root).map((finding) => ({
+        ...finding,
+        file: relativeTo(root, finding.file),
+    }));
 }

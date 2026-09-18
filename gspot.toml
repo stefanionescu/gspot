@@ -4,7 +4,7 @@
 # gspot set, allow, ignore, declare, add, remove. Run gspot explain <anything> for what it means.
 
 version = 1
-presets = [ "bash", "spelling", "typescript", "markdown", "prose", "commits" ]
+presets = ["bash", "spelling", "typescript", "markdown", "prose", "commits", "config-files"]
 
 [[scope]]
 path = "packages/cli"
@@ -34,16 +34,16 @@ surface = "mise"
 
 [tools.docs]
 path_exceptions = [
-    { patterns = ["rules/**"], reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one." },
-    { patterns = ["architecture/**"], reason = "The architecture names files in other repositories and files that are not built yet." },
+    {patterns = ["rules/**"], reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."},
+    {patterns = ["architecture/**"], reason = "The architecture names files in other repositories and files that are not built yet."},
 ]
 
 [tools.typos]
-words = [ { word = "udid", reason = "Apple's device identifier API name." }, { word = "certifi", reason = "The Python certificate package name." }, { word = "axe", reason = "The axe-core accessibility package name." }, { word = "Virtua", reason = "The Virtua list virtualisation library." }, { word = "virtua", reason = "The Virtua list virtualisation library." }, { word = "synchronise", reason = "British spellings the naming policy bans on purpose." }, { word = "synchronised", reason = "British spellings the naming policy bans on purpose." }, { word = "materialise", reason = "British spellings the naming policy bans on purpose." }, { word = "IFEs", reason = "The ESLint option name for immediately invoked functions." }, { word = "IIF", reason = "The word typos sees inside the ESLint option IIFEs." } ]
-exclude = [ { paths = [ "prose/styles/gspot/us-english.yml" ], reason = "A list of British spellings mapped to their US forms." } ]
+words = [{word = "udid", reason = "Apple's device identifier API name."}, {word = "certifi", reason = "The Python certificate package name."}, {word = "axe", reason = "The axe-core accessibility package name."}, {word = "Virtua", reason = "The Virtua list virtualisation library."}, {word = "virtua", reason = "The Virtua list virtualisation library."}, {word = "synchronise", reason = "British spellings the naming policy bans on purpose."}, {word = "synchronised", reason = "British spellings the naming policy bans on purpose."}, {word = "materialise", reason = "British spellings the naming policy bans on purpose."}, {word = "IFEs", reason = "The ESLint option name for immediately invoked functions."}, {word = "IIF", reason = "The word typos sees inside the ESLint option IIFEs."}]
+exclude = [{paths = ["prose/styles/gspot/us-english.yml"], reason = "A list of British spellings mapped to their US forms."}]
 
 [architecture]
-roles = { env = "packages/cli/src/platform/environment.ts" }
+roles = {env = "packages/cli/src/platform/environment.ts"}
 
 [tools.typescript]
 types = ["bun"]
@@ -56,14 +56,14 @@ target = "ESNext"
 lib = ["ESNext"]
 
 [tools.eslint]
-import_style = { "**/*" = "ts" }
-script_files = [ "packages/npm/**", "packages/cli/build.ts", "packages/cli/publish.ts", "packages/eslint-plugin/build.ts", "docs/generate.ts" ]
-globals = { "packages/npm/**" = "commonjs" }
+import_style = {"**/*" = "ts"}
+script_files = ["packages/npm/**", "packages/cli/build.ts", "packages/cli/publish.ts", "packages/eslint-plugin/build.ts", "docs/generate.ts"]
+globals = {"packages/npm/**" = "commonjs"}
 
 [tools.knip]
-entry = [ "**/build.ts", "**/publish.ts", "packages/npm/gspot/gspot.js", "docs/generate.ts" ]
-ignore_dependencies = [ { name = "verdaccio", reason = "The release test starts it through bunx, which knip cannot see." }, { name = "tree-sitter-bash", reason = "The grammar WASM file is read from the package, not imported." }, { name = "tree-sitter-css", reason = "The grammar WASM file is read from the package, not imported." }, { name = "tree-sitter-html", reason = "The grammar WASM file is read from the package, not imported." }, { name = "tree-sitter-javascript", reason = "The grammar WASM file is read from the package, not imported." }, { name = "tree-sitter-python", reason = "The grammar WASM file is read from the package, not imported." }, { name = "tree-sitter-typescript", reason = "The grammar WASM file is read from the package, not imported." } ]
+entry = ["**/build.ts", "**/publish.ts", "packages/npm/gspot/gspot.js", "docs/generate.ts"]
+ignore_dependencies = [{name = "verdaccio", reason = "The release test starts it through bunx, which knip cannot see."}, {name = "tree-sitter-bash", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-css", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-html", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-javascript", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-python", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-typescript", reason = "The grammar WASM file is read from the package, not imported."}]
 
 [structure]
-single_file_folder_allowed = [ { paths = [ "packages/npm/gspot" ], reason = "The npm launcher package is one file by design: it runs the platform package that installed." } ]
-prefix_collision_allowed = [ { paths = [ "packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/tests/rules/**" ], reason = "ESLint rule ids are the file names, and the ids share their first word by convention." } ]
+single_file_folder_allowed = [{paths = ["packages/npm/gspot"], reason = "The npm launcher package is one file by design: it runs the platform package that installed."}]
+prefix_collision_allowed = [{paths = ["packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/tests/rules/**"], reason = "ESLint rule ids are the file names, and the ids share their first word by convention."}]

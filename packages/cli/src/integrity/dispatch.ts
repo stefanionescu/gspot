@@ -3,6 +3,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { fences } from '#cli/integrity/fences.ts';
 import type { IntegrityCheck } from '#types/integrity.ts';
+import { envExample } from '#cli/integrity/env-example.ts';
 import { stalePaths } from '#cli/integrity/stale-paths.ts';
 import { readmeShape } from '#cli/integrity/readme/shape.ts';
 import { docsHeadings } from '#cli/integrity/docs-headings.ts';
@@ -18,6 +19,7 @@ const checks: Record<string, IntegrityCheck> = {
     'readme-present': readmePresent,
     'readme-shape': readmeShape,
     fences,
+    'env-example': envExample,
 };
 
 /**

@@ -1,0 +1,13 @@
+[schema]
+enabled = false
+
+[formatting]
+indent_string = "<%= format.indent_style === 'tab' ? '\t' : ' '.repeat(format.indent_width) %>"
+column_width = <%= format.print_width %>
+align_entries = false
+reorder_keys = false
+array_auto_expand = false
+array_auto_collapse = false
+compact_inline_tables = true
+<% const options = tool('taplo').rules; if (options && typeof options === 'object') { for (const [key, value] of Object.entries(options)) { %><%= key %> = <%= tomlString(value) %>
+<% } } %>

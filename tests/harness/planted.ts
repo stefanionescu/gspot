@@ -48,3 +48,21 @@ export function git(cwd: string, argv: string[], environment: Record<string, str
     });
     return { code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() };
 }
+
+/**
+ * A PATH that starts with the folders of the named mise-installed tools, for a planted repository outside this one.
+ * @param names the tool names as mise knows them (`taplo`, `npm:v8r`)
+ * @returns the PATH value
+ */
+export function toolsPath(names: string[]): string {
+    const folders = names.flatMap((name) => {
+        const result = Bun.spawnSync(['mise', 'which', name.replace(/^[a-z]+:/u, '')], {
+            cwd: root,
+            stdout: 'pipe',
+            stderr: 'pipe',
+        });
+        const found = result.stdout.toString().trim();
+        return found !== '' && result.exitCode === 0 ? [found.slice(0, found.lastIndexOf('/'))] : [];
+    });
+    return [...folders, environmentVariables()['PATH'] ?? ''].join(':');
+}

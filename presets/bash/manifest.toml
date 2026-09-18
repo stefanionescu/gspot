@@ -39,7 +39,7 @@ provider = "host"
 [[configs]]
 template = "shellcheckrc.tmpl"
 target = ".gspot/shellcheckrc"
-stub = { path = ".shellcheckrc", copy = true }
+stub = {path = ".shellcheckrc", copy = true}
 
 [[checks]]
 id = "bash/syntax"
@@ -47,7 +47,7 @@ stage = "commit"
 takes = "files"
 command = ["bash", "-n", "{file}"]
 inspection = ["syntax"]
-output = { format = "regex", pattern = "^(?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$" }
+output = {format = "regex", pattern = "^(?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$"}
 summary = "Checks that every shell script parses before anything else runs it."
 why = "A script with a syntax error stops at the broken line, sometimes after it has already done half its work."
 fix = "Open the file at the line bash names and fix the quoting, bracket or keyword it complains about."
@@ -58,7 +58,7 @@ stage = "commit"
 takes = "files"
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
 inspection = ["style", "security"]
-output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$" }
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
 summary = "Runs ShellCheck with every rule on, over every shell script and the files they source."
 why = "ShellCheck catches the quoting, globbing and exit-status mistakes that make shell scripts fail on the one input nobody tested."
 fix = "Read the SC code in the finding; gspot explain shellcheck/SC2086 links to its page. Turn one code off with gspot ignore bash/shellcheck --rule SC2086 --reason."
@@ -71,7 +71,7 @@ command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
 fix_command = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
 fix_order = "format"
 inspection = ["format"]
-output = { format = "regex", pattern = "^--- (?<file>[^\\s]+)\\.orig$", message = "This script is not formatted the way shfmt formats it." }
+output = {format = "regex", pattern = "^--- (?<file>[^\\s]+)\\.orig$", message = "This script is not formatted the way shfmt formats it."}
 summary = "Checks that every shell script is formatted the way shfmt formats it."
 why = "One formatter means diffs show what changed, not how someone's editor indents."
 fix = "Run gspot check --fix to format every script, or shfmt -w on one file."

@@ -1,0 +1,17 @@
+extends: default
+
+rules:
+    line-length: disable
+    document-start: disable
+    truthy:
+        check-keys: false
+    braces:
+        max-spaces-inside: 1
+    brackets:
+        max-spaces-inside: 1
+    indentation:
+        spaces: <%= format.indent_width %>
+        indent-sequences: consistent
+<% const options = tool('yamllint').rules; if (options && typeof options === 'object') { for (const [name, value] of Object.entries(options)) { %>    <%= name %>: <%= json(value) %>
+<% } } %><% for (const name of rulesOff('config-files/yaml')) { %>    <%= name %>: disable
+<% } %>

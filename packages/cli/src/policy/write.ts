@@ -85,7 +85,8 @@ export function writePolicy(root: string, mutate: Mutation, isDryRun = false): W
     for (const [key, value] of Object.entries(raw))
         if (!before.has(key) && isTableArrayAdded(value))
             seed = `${seed.trimEnd()}\n\n${stringifyToml({ [key]: value })}`;
-    const next = patch(seed, raw, { inlineTableStart: 2 });
+    // No padding inside array brackets: the style taplo formats to, so a hand edit and a written entry agree.
+    const next = patch(seed, raw, { inlineTableStart: 2, bracketSpacing: false });
     const policy = parsePolicyText(next, 'gspot.toml', root);
     assertPolicyComplete(policy);
     const isChanged = next !== text;

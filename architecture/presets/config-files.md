@@ -13,38 +13,46 @@ language owns, so `.toml`, `.yaml` and `.json` files stop being spell-checked on
 
 ## Tools
 
-prettier, taplo, yamllint, v8r, actionlint, zizmor, dotenv-linter, plutil (host, macOS),
-xmllint (host).
+taplo, yamllint, v8r, actionlint, zizmor, dotenv-linter, plutil (host, macOS), xmllint (host).
+Prettier comes from the formatting preset.
 
 ## Generated configuration
 
-| Target                | Holds                                                                                                                                      |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.gspot/taplo.toml`   | format from `[format]`; schema catalog on                                                                                                  |
-| `.gspot/yamllint.yml` | `extends: default`, line length off, document-start off, indent from `[format]`                                                            |
-| `.gspot/v8r.yml`      | SchemaStore catalog plus preset-known schemas (`mise`, `supabase/config.toml`, `wrangler`, `.xctestplan`, asset catalogue `Contents.json`) |
+| Target                | Holds                                                                                                                                                                                                                                                  |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.gspot/taplo.toml`   | schema loading off (v8r owns schemas, at push); indent and column width from `[format]`; arrays never expanded or collapsed, no padding inside brackets or inline tables, the style the `gspot.toml` writer emits (D-75); `[tools.taplo] rules` on top |
+| `.gspot/yamllint.yml` | `extends: default`, line length and document start off, `truthy` not on keys (the `on:` of a workflow), one space allowed inside braces and brackets (the Prettier style), indent from `[format]`                                                      |
+| `.gspot/v8r.yml`      | errors for files with no known schema ignored; a custom catalog with the mise schema and every `[tools.v8r] schemas` entry on top of SchemaStore                                                                                                       |
+
+Each has a stub at the conventional path (`.taplo.toml`, `.yamllint.yml`, `.v8rrc.yml`) so editors
+and bare tool runs find it.
 
 ## Checks
 
-| Id                             | Stage         | Command                                                                                                                          |
-| ------------------------------ | ------------- | -------------------------------------------------------------------------------------------------------------------------------- |
-| `config-files/json`            | commit        | `prettier --check` and `@eslint/json` for JSON and JSONC                                                                         |
-| `config-files/toml`            | commit        | `taplo fmt --check`, `taplo check` with schema                                                                                   |
-| `config-files/yaml`            | commit        | `yamllint -c .gspot/yamllint.yml {files}`                                                                                        |
-| `config-files/schema`          | commit        | `v8r` over files with a known schema                                                                                             |
-| `config-files/actions`         | commit        | `actionlint` and `zizmor` over `.github/workflows/*`                                                                             |
-| `config-files/dotenv`          | commit        | `dotenv-linter` over tracked environment files (`.env*`, `.dev.vars*`); a tracked one holds keys only unless declared a template |
-| `config-files/env-example`     | push          | every key the code reads through the declared accessor appears in the template                                                   |
-| `config-files/plist`           | commit, macos | `plutil -lint`; `plutil -convert xml1` round trip                                                                                |
-| `config-files/xml`             | commit        | `xmllint --noout`                                                                                                                |
-| `config-files/xcstrings`       | commit, macos | `xcstringstool` (through xcode)                                                                                                  |
-| `config-files/manifest-schema` | commit        | `package.json`, `tsconfig.json`, `knip.json`, `pyproject.toml` (through `validate-pyproject`) against their schemas              |
+| Id                              | Stage         | Command                                                                                                                                          |
+| ------------------------------- | ------------- | ------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `config-files/json`             | commit        | Prettier parses and formats JSON, JSONC and JSON5; the findings come from `formatting/prettier`                                                  |
+| `config-files/toml`             | commit        | `taplo check --no-schema {files}`: syntax alone, offline                                                                                         |
+| `config-files/toml-format`      | commit        | `taplo fmt --check {files}`; fix, order format                                                                                                   |
+| `config-files/yaml`             | commit        | `yamllint -c .gspot/yamllint.yml -f parsable -s {files}`                                                                                         |
+| `config-files/schema`           | push, network | `v8r --ignore-errors {files}` over JSON, YAML and TOML: `package.json`, `tsconfig.json`, workflows, mise and the rest of the SchemaStore catalog |
+| `config-files/actions`          | commit        | `actionlint {files}` over `.github/workflows/*`                                                                                                  |
+| `config-files/actions-security` | commit        | `zizmor --offline --format github {files}` over `.github/workflows/*`                                                                            |
+| `config-files/dotenv`           | commit        | `dotenv-linter check {files}` over tracked environment files (`.env*`, `.dev.vars*`); fix, order format                                          |
+| `config-files/env-example`      | push          | engine: every key the code reads through `process.env`, `os.environ` or the declared accessor appears in a template                              |
+| `config-files/plist`            | commit, macOS | `plutil -lint {files}` over `.plist` and `.entitlements`                                                                                         |
+| `config-files/xml`              | commit        | `xmllint --noout {files}` over `.xml`, `.storyboard` and `.xib`                                                                                  |
+
+`config-files/env-example` searches the whole scope for reads and compares them with the
+templates in the scope; a scope with no template has nothing to compare and no finding.
+`.xcstrings` files are claimed here and checked by the xcode preset.
 
 ## Settings
 
-`tools.yamllint.rules`, `tools.taplo.rules`, `tools.v8r.schemas` (file pattern to schema URL),
-`tools.dotenv.templates` (default `.env.example`, `.env.template`, `.env.sample`),
-`tools.dotenv.accessor` (the function name that reads environment variables).
+`tools.yamllint.rules`, `tools.taplo.rules`, `tools.v8r.schemas` (entries with a `pattern` and a
+`schema` URL), `tools.dotenv.templates` (default `.env.example`, `.env.template`, `.env.sample`,
+`.dev.vars.example`), `tools.dotenv.accessor` (the function name that reads environment
+variables, on top of `process.env` and `os.environ`).
 
 ## Rule files
 

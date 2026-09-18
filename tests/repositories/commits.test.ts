@@ -2,8 +2,7 @@
 import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { git, gspot, PLANTED_TIMEOUT_MS, run, script } from '#tests/harness/planted.ts';
+import { git, gspot, toolsPath, PLANTED_TIMEOUT_MS, run, script } from '#tests/harness/planted.ts';
 
 const INIT = [
     'init',
@@ -18,11 +17,6 @@ const INIT = [
     'no',
     '--no-install',
 ];
-
-function commitlintPath(): string {
-    const result = Bun.spawnSync(['mise', 'where', 'npm:@commitlint/cli'], { stdout: 'pipe', stderr: 'pipe' });
-    return result.exitCode === 0 ? join(result.stdout.toString().trim(), 'bin') : '';
-}
 
 describe('the commits preset', () => {
     test(
@@ -40,7 +34,7 @@ describe('the commits preset', () => {
             const environment = {
                 GSPOT_BIN: `bun ${gspot}`,
                 NO_COLOR: '1',
-                PATH: `${commitlintPath()}:${environmentVariables()['PATH'] ?? ''}`,
+                PATH: toolsPath(['commitlint']),
             };
             const bad = git(fixture.path, ['commit', '-qm', 'Added notes.'], environment);
             expect(bad.code).not.toBe(0);

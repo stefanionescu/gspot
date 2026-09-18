@@ -23,3 +23,6 @@ export type PathIndex = { known: Set<string>; tasks: Set<string>; isException: (
 export type ShapeProblem = [number, string, string];
 
 export type Tsconfig = { extends?: string | string[]; compilerOptions?: Record<string, unknown> };
+
+/** One environment variable read in code: the key and the line it is read on. */
+export type EnvRead = { key: string; line: number };

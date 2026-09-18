@@ -133,11 +133,10 @@ function isPolicyTouched(narrow: Set<string>): boolean {
     return narrow.has('gspot.toml') || narrow.values().some((path) => path.startsWith('.gspot/'));
 }
 
-function reclaimed(context: PlanContext, manifest: Manifest): TrackedFile[] {
-    const { session, scope, children } = context;
-    return claimedFiles(manifest, scope.selected, session.repository.files, scope.scope.path).filter((file) =>
-        isOutsideChildren(file, children),
-    );
+// The policy changed, so the check runs over everything it claims, with the check's own claims kept.
+function reclaimed(context: PlanContext, entry: PlanEntry): TrackedFile[] {
+    const { scope, children } = context;
+    return claimedFor(context, entry, scope.scope.path).filter((file) => isOutsideChildren(file, children));
 }
 
 function narrowed(context: PlanContext, entry: PlanEntry, files: TrackedFile[]): TrackedFile[] {
@@ -147,7 +146,7 @@ function narrowed(context: PlanContext, entry: PlanEntry, files: TrackedFile[]):
     const isTouched = isPolicyTouched(narrow);
     if (entry.spec.takes !== 'files') return !isTouched && inNarrowed.length === 0 ? [] : files;
     if (!isTouched || !entry.manifest || inNarrowed.length > 0) return inNarrowed;
-    return reclaimed(context, entry.manifest);
+    return reclaimed(context, entry);
 }
 
 function filesFor(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean): TrackedFile[] {
