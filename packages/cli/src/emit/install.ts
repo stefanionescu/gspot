@@ -1,10 +1,11 @@
 // init: read the repository, propose a policy, print the plan, write it after a yes, install the tools, baseline the findings.
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
+import { git } from '#cli/platform/spawn.ts';
 import { applyAll } from '#cli/emit/apply.ts';
-import { hasPolicy } from '#cli/policy/read.ts';
 import { openSession } from '#cli/run/session.ts';
 import { initPlanText } from '#cli/output/plan.ts';
+import * as messages from '#cli/policy/messages.ts';
 import { isConfirmed } from '#cli/output/prompts.ts';
 import { proposeText } from '#cli/policy/propose.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
@@ -16,6 +17,7 @@ import { askInitQuestions } from '#cli/emit/questions.ts';
 import { unknownLanguages } from '#cli/presets/detect.ts';
 import { newerVersion } from '#cli/doctor/newer-version.ts';
 import { workspaceScopes } from '#cli/repository/scopes.ts';
+import { hasPolicy, PolicyError } from '#cli/policy/read.ts';
 import { note, print, paint } from '#cli/output/messages.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { GSPOT_VERSION, writePin } from '#cli/run/version-pin.ts';
@@ -28,6 +30,14 @@ import { firstRun, firstRunSummary, installTools, updatePackageJson } from '#cli
 
 const ALREADY_INSTALLED =
     'This repository already has a gspot.toml. Run `gspot doctor` to see what changed since the install and the command that applies each change.\n';
+
+// git is the only way back from a takeover, so init starts from a tree with nothing uncommitted.
+function assertCleanTree(root: string, options: InitOptions): void {
+    if (options.allowDirty || options.isDryRun) return;
+    const status = git(root, ['status', '--porcelain']);
+    const changed = (status ?? '').split('\n').filter((line) => line.trim() !== '');
+    if (changed.length > 0) throw new PolicyError([messages.dirtyTree(changed.length)]);
+}
 
 async function prepare(root: string, options: InitOptions): Promise<InitPrepared> {
     const manifests = presetManifests();
@@ -77,7 +87,6 @@ async function write(
     options: InitOptions,
     prepared: InitPrepared,
 ): Promise<{ lines: string[]; first: Awaited<ReturnType<typeof firstRun>>; installNote: string; failing: number }> {
-    deleteReplaced(root, prepared.removed);
     writeFileSync(join(root, 'gspot.toml'), prepared.policyText);
     writePin(root, GSPOT_VERSION);
     writeFileSync(join(root, '.gitignore'), applyBlock(fileText(root, '.gitignore'), gitignoreBlock(), 'hash'));
@@ -91,6 +100,13 @@ async function write(
     const synced = await applyAll(session, options.binaryPath);
     const installNote = await installTools(root, prepared.runner, synced, options.install);
     const first = await firstRun(root);
+    const rendered = new Set([...synced.written, ...synced.unchanged]);
+    deleteReplaced(
+        root,
+        prepared.removed.filter((entry) => !rendered.has(entry.path)),
+    );
+    // The replaced files are gone from the file set now, so the render that names source files is taken once more.
+    await applyAll(await openSession(root), options.binaryPath);
     const summary = firstRunSummary(first, installNote);
     const newer = await newerVersion(GSPOT_VERSION);
     const { dim } = paint();
@@ -107,6 +123,7 @@ async function write(
 export async function initCommand(options: InitOptions): Promise<InitResult> {
     const root = findRoot(options.cwd);
     if (hasPolicy(root)) return { text: ALREADY_INSTALLED, json: { error: 'already-installed' }, exitCode: 2 };
+    assertCleanTree(root, options);
     const prepared = await prepare(root, options);
     const { plan, policyText } = prepared;
     if (!options.json) print(initPlanText(plan));

@@ -1,4 +1,5 @@
 // gspot check
+import { Option } from 'commander';
 import type { Command } from 'commander';
 import { emit } from '#cli/commands/emit.ts';
 import { checkCommand } from '#cli/run/check.ts';
@@ -41,7 +42,7 @@ export function registerCheck(program: Command): void {
         .option('--since <ref>', 'Commit and push stages over files changed since a git ref')
         .option('--fix', 'Run every fixer in order, then the checks again')
         .option('--dry-run', 'With --fix, print the diff of every fix and write nothing')
-        .option('--stage <stage>', 'One stage: commit, push, manual or message')
+        .addOption(new Option('--stage <stage>', 'One stage').choices(['commit', 'push', 'manual', 'message']))
         .option('--scope <path>', 'One scope only')
         .option(
             '--skip <check-id>',

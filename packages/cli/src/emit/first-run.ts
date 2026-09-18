@@ -17,7 +17,7 @@ const PACKAGE_RUNNERS = new Set(['bun', 'npm', 'pnpm']);
 
 function installCommands(runner: InitAnswers['runner']): string[][] {
     if (runner === 'mise') return [['mise', 'install']];
-    if (runner === 'uv') return [['uv', 'apply', '--group', 'gspot']];
+    if (runner === 'uv') return [['uv', 'sync', '--group', 'gspot']];
     return [[runner, 'install']];
 }
 

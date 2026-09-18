@@ -3,7 +3,7 @@ import { git } from '#cli/platform/spawn.ts';
 import { HOOK_HEADER } from '#config/markers.ts';
 import type { HookName, GeneratedFile, LefthookBlock } from '#types/emit.ts';
 
-const RUNTIME_LINE = '# Runtime: Bash 4.0+, macOS and Linux.';
+const RUNTIME_LINE = '# Runtime: Bash 3.2+, macOS and Linux.';
 const HOOK_NAMES: HookName[] = ['pre-commit', 'pre-push', 'commit-msg'];
 const HOOK_ARGS: Record<HookName, string> = {
     'pre-commit': 'check --staged',
@@ -49,7 +49,6 @@ export function hookBody(name: HookName, surface: string, binaryPath?: string): 
         HOOK_HEADER,
         RUNTIME_LINE,
         'set -euo pipefail',
-        'shopt -s inherit_errexit',
         '',
         'main() {',
         '    local -a gspot_command',

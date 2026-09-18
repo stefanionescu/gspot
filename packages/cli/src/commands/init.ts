@@ -1,4 +1,5 @@
 // gspot init
+import { Option } from 'commander';
 import type { Command } from 'commander';
 import { emit } from '#cli/commands/emit.ts';
 import type { InitOptions } from '#types/emit.ts';
@@ -30,6 +31,7 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         isDryRun: flags['dryRun'] === true,
         json: global['json'] === true,
         install: flags['install'] !== false,
+        allowDirty: flags['allowDirty'] === true,
         projectTemplates: flags['projectTemplates'] === true,
         ...given,
         ...(binary === undefined ? {} : { binaryPath: binary }),
@@ -58,12 +60,27 @@ export function registerInit(program: Command): void {
             commaList,
         )
         .option('--no-install', 'Skip the install step and print the command instead')
-        .option('--hooks <tool>', 'Where hooks go: gspot, lefthook, husky or none')
-        .option('--ci <provider>', 'Write a CI workflow: github or none')
-        .option('--rules <yes|no>', 'Install the agent rule files')
-        .option('--format <keep|shipped>', 'Keep your formatter settings, or take the shipped ones')
+        .option('--allow-dirty', 'Run although the working tree has uncommitted changes')
+        .addOption(new Option('--hooks <tool>', 'Where hooks go').choices(['gspot', 'lefthook', 'husky', 'none']))
+        .addOption(new Option('--ci <provider>', 'Write a CI workflow').choices(['github', 'none']))
+        .addOption(new Option('--rules <choice>', 'Install the agent rule files').choices(['yes', 'no']))
+        .addOption(
+            new Option('--format <choice>', 'Keep your formatter settings, or take the shipped ones').choices([
+                'keep',
+                'shipped',
+            ]),
+        )
         .option('--project-templates', 'Copy the project templates that match into the project rule layer')
-        .option('--runner <surface>', 'The task runner surface: mise, npm, bun, pnpm, uv or none')
+        .addOption(
+            new Option('--runner <surface>', 'The task runner surface').choices([
+                'mise',
+                'npm',
+                'bun',
+                'pnpm',
+                'uv',
+                'none',
+            ]),
+        )
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();

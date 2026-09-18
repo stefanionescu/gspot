@@ -49,16 +49,11 @@ and formatted.
 
 Each row was reproduced by running the command in the second column.
 
-| Id  | Defect                                               | Reproduction                                                                                                                                                    | Owner                                   |
-| --- | ---------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------- |
-| B-1 | The git hooks fail under Bash 3.2, which macOS ships | `/bin/bash -c 'set -euo pipefail; shopt -s inherit_errexit'` prints `invalid shell option name` and exits 1. Every hook opens with that line.                   | `emit/hooks.ts`, `hookBody`             |
-| B-2 | The workflow without mise downloads a missing file   | The step builds `gspot-$(uname -s)-$(uname -m)`, which is `gspot-linux-x86_64`. The release asset is `gspot-linux-x64`. The step verifies no checksum.          | `emit/workflow.ts`, `setupSteps`        |
-| B-3 | The uv install step runs a command uv does not have  | `installCommands` returns `uv apply --group gspot`. `upgrade`, the install hints and [11-toolchain.md](11-toolchain.md) say `uv sync`.                          | `emit/first-run.ts`                     |
-| B-4 | `init` accepts any value for a choice flag           | `gspot init --dry-run --hooks foo --runner banana --ci gitlab` prints a plan and no error. The flags are cast, not validated.                                   | `commands/init.ts`, `commands/check.ts` |
-| B-5 | `init` deletes before it writes                      | `write` calls `deleteReplaced` first, then writes the policy, installs and runs. A failure after the delete leaves the repository without either configuration. | `emit/install.ts`                       |
-| B-6 | The release tag does not reach the binary            | `GSPOT_VERSION` is a literal in `run/version-pin.ts`. The plugin holds a second literal. `publish.ts` stamps the tag into the npm manifests only.               | `run/version-pin.ts`, `publish.ts`      |
-| B-7 | The release tests never run                          | Both suites skip unless `GSPOT_RELEASE_TEST` is set. No workflow sets it.                                                                                       | `tests/release`                         |
-| B-8 | One command line holds every file                    | `{files}` expands to the whole list with no batching. A scope with several thousand files, or Windows with its 32 KB limit, cannot start the tool.              | `run/tool-runner.ts`, `expandPart`      |
+| Id  | Defect                                    | Reproduction                                                                                                                                       | Owner                              |
+| --- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| B-6 | The release tag does not reach the binary | `GSPOT_VERSION` is a literal in `run/version-pin.ts`. The plugin holds a second literal. `publish.ts` stamps the tag into the npm manifests only.  | `run/version-pin.ts`, `publish.ts` |
+| B-7 | The release tests never run               | Both suites skip unless `GSPOT_RELEASE_TEST` is set. No workflow sets it.                                                                          | `tests/release`                    |
+| B-8 | One command line holds every file         | `{files}` expands to the whole list with no batching. A scope with several thousand files, or Windows with its 32 KB limit, cannot start the tool. | `run/tool-runner.ts`, `expandPart` |
 
 ## Code gaps
 
@@ -118,47 +113,46 @@ acceptance harness exists.
 
 ## Order of work
 
-1. Defects B-1 to B-5, because each one stops a first install.
-2. Repository hygiene: G-1, G-11, G-12, the declaration of the Swift grammar and the format of
+1. Repository hygiene: G-1, G-11, G-12, the declaration of the Swift grammar and the format of
    `mise.toml`.
-3. Release safety: one version source for the binary, the plugin and `publish.ts`. The release
+2. Release safety: one version source for the binary, the plugin and `publish.ts`. The release
    tests run in the release workflow. A test runs the compiled binary. Closes B-6, B-7 and K-29.
-4. The schema: commit both schema files, add a `[[check]]` that fails when they differ from the
+3. The schema: commit both schema files, add a `[[check]]` that fails when they differ from the
    reader, and serve them from the manual. Closes G-3.
-5. One owner for each concept: K-1 to K-4, K-8 and K-14.
-6. Scale: B-8 and K-5 to K-7.
-7. The concerns of this repository leave the binary: K-18.
-8. Selection, which closes G-5, G-6, G-7, K-12 and K-22:
+4. One owner for each concept: K-1 to K-4, K-8 and K-14.
+5. Scale: B-8 and K-5 to K-7.
+6. The concerns of this repository leave the binary: K-18.
+7. Selection, which closes G-5, G-6, G-7, K-12 and K-22:
     - `requires` splits into `requires` and `recommends`, and `typescript` requires `javascript`;
     - a language preset recommends `structure`, `naming`, `formatting` and `spelling`;
     - `--without` and `gspot remove` drop a recommended preset;
     - dropping a required preset fails and prints the chain;
     - `--presets none` installs the rule files alone;
     - the init plan prints the presets and the number of checks for each.
-9. Profiles, which closes G-8 (D-79).
-10. Corpus independence, which closes G-4, K-19 and K-20, and amends D-73 in
-    [14-decisions.md](14-decisions.md):
+8. Profiles, which closes G-8 (D-79).
+9. Corpus independence, which closes G-4, K-19 and K-20, and amends D-73 in
+   [14-decisions.md](14-decisions.md):
     - the rule files say "the checks of the repository" and name no tool;
     - the managed block holds the `gspot check` sentence only when checks are installed;
     - `[rules]` gains a list of files or layers to leave out;
     - the corpus lint fails on `gspot` and on a tool name outside a code fence.
-11. `doctor`, which closes G-9 and K-9:
+10. `doctor`, which closes G-9 and K-9:
     - probe an npm library through its `package.json` under `node_modules`;
     - label a binary file `not checked`;
     - fail on a version that differs from the pin.
-12. Tests, which closes G-2, K-23 and K-28:
+11. Tests, which closes G-2, K-23 and K-28:
     - one planted repository for each shipped preset, with one planted defect for each check;
     - unit tests for each shell analysis, `apply`, `carry`, `plan`, `execute` and `doctor`;
     - planted cases for a changed working tree, a failed `init`, a wrong flag value and `uninstall`;
     - the acceptance harness on yap-landing;
     - `tests/parity` and `tests/performance` leave the tree until each holds a test.
-13. Documentation, which closes G-10 and K-30:
+12. Documentation, which closes G-10 and K-30:
     - the root README follows its template;
     - `packages/cli` and `packages/eslint-plugin` get a README each;
     - the manual gains guides for customization, profiles, presets, baselines, CI and uninstall;
     - each command gets a page with a worked example;
     - `docs/readme-shape` requires the sections the template names.
-14. The security presets of Phase 5 come before Phase 4 in [13-roadmap.md](13-roadmap.md). The
+13. The security presets of Phase 5 come before Phase 4 in [13-roadmap.md](13-roadmap.md). The
     acceptance run on yap-swift-app needs them.
 
 `bun test` stays the test framework. It needs no dependency, and the ESLint rule tester runs
@@ -175,9 +169,7 @@ hardening phase of [13-roadmap.md](13-roadmap.md).
 | G-5, G-7, K-12, K-22    | D-80                                           | [04-presets.md](04-presets.md), [02-cli.md](02-cli.md)                 |
 | G-4, G-6, K-19, K-20    | D-81                                           | [09-rules.md](09-rules.md)                                             |
 | the order of the phases | D-82                                           | [13-roadmap.md](13-roadmap.md), [17-migration.md](17-migration.md)     |
-| B-4, B-5                | D-83                                           | [02-cli.md](02-cli.md)                                                 |
 | B-6, B-7, K-29          | D-84                                           | [12-repository-layout.md](12-repository-layout.md)                     |
-| B-1, B-2                | D-85                                           | [10-hooks-ci-runners.md](10-hooks-ci-runners.md)                       |
 | K-18                    | D-86                                           | [09-rules.md](09-rules.md)                                             |
 | G-9, K-9                | D-87                                           | [04-presets.md](04-presets.md)                                         |
 | K-27                    | D-88                                           | [12-repository-layout.md](12-repository-layout.md)                     |
@@ -189,7 +181,6 @@ hardening phase of [13-roadmap.md](13-roadmap.md).
 
 The other rows need no decision. Each one is a defect against text this folder already holds:
 
-- B-3;
 - G-1 to G-3 and G-10 to G-13;
 - K-1 to K-4, K-8, K-10, K-11, K-15 and K-16;
 - K-23 to K-26, K-28 and K-30 to K-33.

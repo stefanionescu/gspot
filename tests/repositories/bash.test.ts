@@ -3,16 +3,14 @@ import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { git, PLANTED_TIMEOUT_MS, run, script } from '#tests/harness/planted.ts';
+import { commitAll, PLANTED_TIMEOUT_MS, run, script } from '#tests/harness/planted.ts';
 
 describe('the bash planted repository', () => {
     test(
         'init --yes writes the policy and check passes over a clean script',
         async () => {
             await using fixture = await createFixture({ 'scripts/build.sh': script, 'README.md': '# planted\n' });
-            git(fixture.path, ['init', '-q']);
-            git(fixture.path, ['add', '-A']);
-            git(fixture.path, ['commit', '-qm', 'init']);
+            commitAll(fixture.path);
             const init = run(fixture.path, [
                 'init',
                 '--yes',
@@ -54,7 +52,7 @@ describe('the bash planted repository', () => {
         'a finding fails the check with the file, the rule and a help line',
         async () => {
             await using fixture = await createFixture({ 'scripts/good.sh': script, 'README.md': '# planted\n' });
-            git(fixture.path, ['init', '-q']);
+            commitAll(fixture.path);
             run(fixture.path, [
                 'init',
                 '--yes',
@@ -92,7 +90,7 @@ describe('the bash planted repository', () => {
         'a missing tool fails with the install hint',
         async () => {
             await using fixture = await createFixture({ 'scripts/a.sh': script, home: {} });
-            git(fixture.path, ['init', '-q']);
+            commitAll(fixture.path);
             run(fixture.path, [
                 'init',
                 '--yes',
@@ -122,7 +120,7 @@ describe('the bash planted repository', () => {
         'a version pin from another gspot refuses check with both remedies',
         async () => {
             await using fixture = await createFixture({ 'scripts/a.sh': script });
-            git(fixture.path, ['init', '-q']);
+            commitAll(fixture.path);
             run(fixture.path, [
                 'init',
                 '--yes',

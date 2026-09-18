@@ -83,6 +83,25 @@ export function presetConflict(a: string, b: string): string {
 }
 
 /**
+ * A preset named in --without that a selected preset requires.
+ * @param name the preset the person left out
+ * @param chain the preset ids from the one selected to the one required
+ * @returns the message
+ */
+export function withoutRequired(name: string, chain: string[]): string {
+    return `\`${name}\` cannot be left out: ${chain.join(' requires ')}. Leave out \`${chain[0] ?? name}\` too, or keep \`${name}\`.`;
+}
+
+/**
+ * The working tree holds changes init did not make.
+ * @param count how many paths git status lists
+ * @returns the message
+ */
+export function dirtyTree(count: number): string {
+    return `The working tree has ${String(count)} uncommitted change(s). gspot init replaces configuration files, and git is the only way back, so commit or stash first. Pass --allow-dirty to run anyway.`;
+}
+
+/**
  * Requires that loop back on themselves.
  * @param chain the preset ids in the order they were followed
  * @returns the message

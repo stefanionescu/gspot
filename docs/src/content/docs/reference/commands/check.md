@@ -23,7 +23,7 @@ gspot check [options] [check-id]
 | `--since <ref>`         | Commit and push stages over files changed since a git ref          |
 | `--fix`                 | Run every fixer in order, then the checks again                    |
 | `--dry-run`             | With --fix, print the diff of every fix and write nothing          |
-| `--stage <stage>`       | One stage: commit, push, manual or message                         |
+| `--stage <stage>`       | One stage                                                          |
 | `--scope <path>`        | One scope only                                                     |
 | `--skip <check-id>`     | Skip one check this run; repeat for more                           |
 | `--message-file <path>` | The commit message file, for the message stage                     |

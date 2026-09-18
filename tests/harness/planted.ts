@@ -66,3 +66,13 @@ export function toolsPath(names: string[]): string {
     });
     return [...folders, environmentVariables()['PATH'] ?? ''].join(':');
 }
+
+/**
+ * Makes the planted directory a git repository with one commit, the state init expects.
+ * @param cwd the planted repository
+ */
+export function commitAll(cwd: string): void {
+    git(cwd, ['init', '-q']);
+    git(cwd, ['add', '-A']);
+    git(cwd, ['commit', '-qm', 'init']);
+}

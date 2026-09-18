@@ -1,10 +1,12 @@
 // What init selects: presets at the root and per scope from detection and flags, then the closure of requires.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import { nearMatches } from '#cli/policy/near.ts';
 import type { Manifest } from '#types/manifest.ts';
+import * as messages from '#cli/policy/messages.ts';
 import { detectPresets } from '#cli/presets/detect.ts';
-import { selectPresets } from '#cli/presets/select.ts';
 import type { ScopeEntry, TrackedFile } from '#types/repository.ts';
+import { SelectionError, selectPresets } from '#cli/presets/select.ts';
 import type { InitContext, InitInputs, InitSelection } from '#types/emit.ts';
 
 function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {
@@ -96,6 +98,54 @@ function rootLanguagesKept(
     });
 }
 
+function unknownProblems(ids: string[], manifests: Map<string, Manifest>): string[] {
+    const known = manifests.keys().toArray();
+    return ids.filter((id) => !manifests.has(id)).map((id) => messages.unknownPreset(id, nearMatches(id, known)));
+}
+
+function chainTo(
+    target: string,
+    from: string,
+    manifests: Map<string, Manifest>,
+    seen: Set<string>,
+): string[] | undefined {
+    if (from === target) return [from];
+    if (seen.has(from)) return undefined;
+    seen.add(from);
+    const requires = manifests.get(from)?.preset.requires ?? [];
+    for (const required of requires) {
+        const rest = chainTo(target, required, manifests, seen);
+        if (rest) return [from, ...rest];
+    }
+    return undefined;
+}
+
+function withoutProblems(without: string[], named: string[], manifests: Map<string, Manifest>): string[] {
+    return without.flatMap((id) => {
+        const chain = named
+            .filter((start) => start !== id)
+            .map((start) => chainTo(id, start, manifests, new Set()))
+            .find((found) => found !== undefined);
+        return chain ? [messages.withoutRequired(id, chain)] : [];
+    });
+}
+
+function assertKnown(
+    options: InitInputs['options'],
+    scopeFlags: Map<string, string[]>,
+    manifests: Map<string, Manifest>,
+): void {
+    const presets = options.presets ?? [];
+    const without = options.without ?? [];
+    const unknown = unknownProblems([...presets, ...without, ...scopeFlags.values().toArray().flat()], manifests);
+    if (unknown.length > 0) throw new SelectionError(unknown);
+}
+
+function assertNoneRequired(options: InitInputs['options'], named: string[], manifests: Map<string, Manifest>): void {
+    const left = withoutProblems(options.without ?? [], named, manifests);
+    if (left.length > 0) throw new SelectionError(left);
+}
+
 function closure(ids: Iterable<string>, manifests: Map<string, Manifest>): Set<string> {
     const selected = new Set<string>();
     for (const id of ids) {
@@ -114,6 +164,7 @@ export function selectForInit(inputs: InitInputs): InitSelection {
     const { root, repo, facts, workspace, manifests, options } = inputs;
     const context: InitContext = { manifests, files: repo.files, facts, options };
     const scopeFlags = parseScopeFlags(options.scopes);
+    assertKnown(options, scopeFlags, manifests);
     const scopes = initScopes(root, workspace, scopeFlags);
     const hasScopes = scopes.length > 1;
     const rootProposals = detectPresets(repo.files, manifests, facts);
@@ -124,6 +175,7 @@ export function selectForInit(inputs: InitInputs): InitSelection {
             scopeProposals.set(scope.path, scopeSelection(context, scope, scopeFlags.get(scope.path), proposedRoot));
     const inScopes = new Set(scopeProposals.values().toArray().flat());
     const rootIds = hasScopes ? rootLanguagesKept(context, proposedRoot, scopes, inScopes) : proposedRoot;
+    assertNoneRequired(options, [...rootIds, ...inScopes], manifests);
     const selectedIds = closure([...rootIds, ...inScopes], manifests);
     return { scopes, rootIds, scopeProposals, selectedIds, rootProposals };
 }

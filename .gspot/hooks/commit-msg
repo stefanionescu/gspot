@@ -1,9 +1,8 @@
 #!/usr/bin/env bash
 #
 # Written by gspot. Run `gspot uninstall` to remove.
-# Runtime: Bash 4.0+, macOS and Linux.
+# Runtime: Bash 3.2+, macOS and Linux.
 set -euo pipefail
-shopt -s inherit_errexit
 
 main() {
     local -a gspot_command

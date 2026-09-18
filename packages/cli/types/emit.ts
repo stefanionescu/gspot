@@ -47,6 +47,7 @@ export type InitOptions = {
     format?: 'keep' | 'shipped';
     runner?: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none';
     install: boolean;
+    allowDirty: boolean;
     projectTemplates: boolean;
     binaryPath?: string;
 };

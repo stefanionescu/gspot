@@ -9,14 +9,56 @@ const RELEASES = 'https://github.com/stefanionescu/gspot/releases/download';
 
 const RUNNERS: Record<string, string> = { ubuntu: 'ubuntu-latest', macos: 'macos-latest', windows: 'windows-latest' };
 
-function setupSteps(shape: WorkflowShape): string[] {
-    if (shape.isMise) return [`      - uses: ${MISE}`, '      - run: mise run gspot:setup'];
-    const url = `${RELEASES}/v${shape.version}/gspot-$(uname -s | tr A-Z a-z)-$(uname -m)`;
+const ASSET_CASES = [
+    '            Linux-x86_64) asset=gspot-linux-x64 ;;',
+    '            Linux-aarch64) asset=gspot-linux-arm64 ;;',
+    '            Darwin-arm64) asset=gspot-darwin-arm64 ;;',
+    '            Darwin-x86_64) asset=gspot-darwin-x64 ;;',
+];
+
+// uname prints x86_64 and aarch64; the release assets end in x64 and arm64, so the step maps one to the other and verifies the checksum.
+function unixInstall(version: string): string[] {
+    const base = `${RELEASES}/v${version}`;
     return [
-        `      - run: curl -fsSL "${url}" -o /usr/local/bin/gspot && chmod +x /usr/local/bin/gspot`,
-        '      - run: gspot doctor',
-        '      - run: gspot apply',
+        '      - name: Install gspot',
+        '        run: |',
+        '          case "$(uname -s)-$(uname -m)" in',
+        ...ASSET_CASES,
+        '            *) echo "gspot has no build for this runner"; exit 2 ;;',
+        '          esac',
+        `          curl -fsSL "${base}/$asset" -o "$RUNNER_TEMP/gspot"`,
+        `          curl -fsSL "${base}/checksums.txt" -o "$RUNNER_TEMP/checksums.txt"`,
+        String.raw`          expected="$(grep "  $asset\$" "$RUNNER_TEMP/checksums.txt" | cut -d' ' -f1)"`,
+        `          actual="$(shasum -a 256 "$RUNNER_TEMP/gspot" | cut -d' ' -f1)"`,
+        '          test -n "$expected" && test "$expected" = "$actual"',
+        '          mkdir -p "$HOME/.local/bin"',
+        '          install -m 0755 "$RUNNER_TEMP/gspot" "$HOME/.local/bin/gspot"',
+        '          echo "$HOME/.local/bin" >> "$GITHUB_PATH"',
     ];
+}
+
+function windowsInstall(version: string): string[] {
+    const base = `${RELEASES}/v${version}`;
+    return [
+        '      - name: Install gspot',
+        '        shell: pwsh',
+        '        run: |',
+        "          $asset = 'gspot-windows-x64.exe'",
+        "          $bin = Join-Path $env:RUNNER_TEMP 'gspot-bin'",
+        '          New-Item -ItemType Directory -Force -Path $bin | Out-Null',
+        `          Invoke-WebRequest "${base}/$asset" -OutFile (Join-Path $bin 'gspot.exe')`,
+        `          Invoke-WebRequest "${base}/checksums.txt" -OutFile (Join-Path $bin 'checksums.txt')`,
+        "          $expected = ((Get-Content (Join-Path $bin 'checksums.txt')) -match \"  $asset$\" | Select-Object -First 1).Split(' ')[0]",
+        "          $actual = (Get-FileHash (Join-Path $bin 'gspot.exe') -Algorithm SHA256).Hash.ToLower()",
+        "          if (-not $expected -or $expected -ne $actual) { throw 'The gspot checksum does not match.' }",
+        '          Add-Content $env:GITHUB_PATH $bin',
+    ];
+}
+
+function setupSteps(shape: WorkflowShape, platform: string): string[] {
+    if (shape.isMise) return [`      - uses: ${MISE}`, '      - run: mise run gspot:setup'];
+    const install = platform === 'windows' ? windowsInstall(shape.version) : unixInstall(shape.version);
+    return [...install, '      - run: gspot doctor', '      - run: gspot apply'];
 }
 
 function jobHead(name: string, runner: string, setup: string[]): string[] {
@@ -31,12 +73,12 @@ function jobHead(name: string, runner: string, setup: string[]): string[] {
     ];
 }
 
-function checkJob(platform: string, setup: string[]): string[] {
+function checkJob(shape: WorkflowShape, platform: string): string[] {
     return [
-        ...jobHead(`check-${platform}`, RUNNERS[platform] ?? 'ubuntu-latest', setup),
+        ...jobHead(`check-${platform}`, RUNNERS[platform] ?? 'ubuntu-latest', setupSteps(shape, platform)),
         '      - run: gspot check --json > gspot.json',
         '      - run: gspot check --stage manual',
-        "        if: github.event_name == 'push' && github.ref == 'refs/heads/main'",
+        "        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
         `      - uses: ${SARIF}`,
         '        if: always()',
         '        with:',
@@ -44,9 +86,12 @@ function checkJob(platform: string, setup: string[]): string[] {
     ];
 }
 
-function swiftJob(shape: WorkflowShape, setup: string[]): string[] {
+function swiftJob(shape: WorkflowShape): string[] {
     if (shape.swiftScope === undefined || shape.platforms.includes('macos')) return [];
-    return [...jobHead('swift', 'macos-latest', setup), `      - run: gspot check --scope ${shape.swiftScope}`];
+    return [
+        ...jobHead('swift', 'macos-latest', setupSteps(shape, 'macos')),
+        `      - run: gspot check --scope ${shape.swiftScope}`,
+    ];
 }
 
 /**
@@ -55,7 +100,6 @@ function swiftJob(shape: WorkflowShape, setup: string[]): string[] {
  * @returns the generated file
  */
 export function workflowFile(shape: WorkflowShape): GeneratedFile {
-    const setup = setupSteps(shape);
     const content = [
         headerFor('gspot.yml', shape.version).trimEnd(),
         'name: gspot',
@@ -64,8 +108,8 @@ export function workflowFile(shape: WorkflowShape): GeneratedFile {
         '  contents: read',
         '  security-events: write',
         'jobs:',
-        ...shape.platforms.flatMap((platform) => checkJob(platform, setup)),
-        ...swiftJob(shape, setup),
+        ...shape.platforms.flatMap((platform) => checkJob(shape, platform)),
+        ...swiftJob(shape),
         '',
     ].join('\n');
     return { path: '.github/workflows/gspot.yml', content, readOnly: true, kind: 'workflow' };
