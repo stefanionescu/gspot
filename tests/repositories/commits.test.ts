@@ -40,6 +40,22 @@ describe('the commits preset', () => {
             expect(`${bad.stdout}${bad.stderr}`).toContain('type-empty');
             const good = git(fixture.path, ['commit', '-qm', 'docs: add the notes page'], environment);
             expect(good.code).toBe(0);
+            const draft = join(fixture.path, 'draft.txt');
+            await Bun.write(draft, 'Fixed stuff.\n');
+            const refused = run(
+                fixture.path,
+                ['check', 'commits/commitlint', '--at', 'message', '--message-file', draft],
+                environment,
+            );
+            expect(refused.code).toBe(1);
+            expect(refused.stdout).toContain('commits/commitlint');
+            expect(run(fixture.path, ['check', 'commits/range', '--no-cache'], environment).code).toBe(0);
+            await Bun.write(join(fixture.path, 'more.md'), '# more\n');
+            git(fixture.path, ['add', '-A']);
+            git(fixture.path, ['commit', '-qm', 'Pushed past the hook.', '--no-verify']);
+            const range = run(fixture.path, ['check', 'commits/range', '--no-cache'], environment);
+            expect(range.code).toBe(1);
+            expect(range.stdout).toContain('type-empty');
         },
         PLANTED_TIMEOUT_MS,
     );

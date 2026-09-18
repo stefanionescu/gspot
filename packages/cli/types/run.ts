@@ -170,5 +170,6 @@ export type PlantedCase = {
     expected: string;
     policy?: string;
     policyEdit?: [string, string];
+    removed?: string[];
     executable?: string[];
 };

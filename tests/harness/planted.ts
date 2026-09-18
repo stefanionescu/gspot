@@ -5,6 +5,30 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 
 const root = new URL('../..', import.meta.url).pathname;
 
+// Writes the defect into the repository and returns the function that takes it out again.
+async function plant(cwd: string, planted: PlantedCase): Promise<() => Promise<void>> {
+    const policyPath = join(cwd, 'gspot.toml');
+    const policy = await Bun.file(policyPath).text();
+    const removed = new Map<string, string>();
+    const gone = planted.removed ?? [];
+    for (const path of gone) removed.set(path, await Bun.file(join(cwd, path)).text());
+    for (const path of removed.keys()) Bun.spawnSync(['rm', '-f', join(cwd, path)]);
+    for (const [path, text] of Object.entries(planted.files)) await Bun.write(join(cwd, path), text);
+    const executables = planted.executable ?? [];
+    for (const path of executables) Bun.spawnSync(['chmod', '+x', join(cwd, path)]);
+    await Bun.write(policyPath, plantedPolicy(policy, planted));
+    return async () => {
+        for (const path of Object.keys(planted.files)) Bun.spawnSync(['rm', '-f', join(cwd, path)]);
+        for (const [path, text] of removed) await Bun.write(join(cwd, path), text);
+        await Bun.write(policyPath, policy);
+    };
+}
+
+function plantedPolicy(policy: string, planted: PlantedCase): string {
+    const edited = planted.policyEdit === undefined ? policy : policy.replace(...planted.policyEdit);
+    return planted.policy === undefined ? edited : `${edited}\n${planted.policy}`;
+}
+
 /** How long a planted-repository test may take: it spawns real tools. */
 export const PLANTED_TIMEOUT_MS = 60_000;
 
@@ -89,15 +113,8 @@ export async function runPlanted(
     planted: PlantedCase,
     environment: Record<string, string>,
 ): Promise<SpawnOutcome> {
-    const policyPath = join(cwd, 'gspot.toml');
-    const policy = await Bun.file(policyPath).text();
-    for (const [path, text] of Object.entries(planted.files)) await Bun.write(join(cwd, path), text);
-    const executables = planted.executable ?? [];
-    for (const path of executables) Bun.spawnSync(['chmod', '+x', join(cwd, path)]);
-    if (planted.policy !== undefined) await Bun.write(policyPath, `${policy}\n${planted.policy}`);
-    if (planted.policyEdit !== undefined) await Bun.write(policyPath, policy.replace(...planted.policyEdit));
+    const restore = await plant(cwd, planted);
     const outcome = run(cwd, ['check', planted.id, '--no-cache'], environment);
-    for (const path of Object.keys(planted.files)) Bun.spawnSync(['rm', '-f', join(cwd, path)]);
-    await Bun.write(policyPath, policy);
+    await restore();
     return outcome;
 }

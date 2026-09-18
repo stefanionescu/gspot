@@ -206,4 +206,51 @@ describe('the typescript preset', () => {
         },
         PLANTED_TIMEOUT_MS * 5,
     );
+
+    test(
+        'javascript/eslint lints a project that has no TypeScript',
+        async () => {
+            const clean =
+                '// Doubles numbers.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n';
+            await using fixture = await createFixture({
+                'package.json': PACKAGE,
+                '.gitignore': 'node_modules/\n',
+                'src/main.js': clean,
+                'src/index.js': "// The entry point.\nexport { twice } from './main.js';\n",
+            });
+            symlinkSync(join(root, 'node_modules'), join(fixture.path, 'node_modules'), 'dir');
+            commitAll(fixture.path);
+            const environment = { PATH: toolsPath(['ast-grep', 'ec', 'typos']) };
+            run(
+                fixture.path,
+                [
+                    'init',
+                    '--yes',
+                    '--presets',
+                    'javascript',
+                    '--runner',
+                    'none',
+                    '--ci',
+                    'none',
+                    '--hooks',
+                    'none',
+                    '--no-rules',
+                    '--no-install',
+                ],
+                environment,
+            );
+            const outcome = await runPlanted(
+                fixture.path,
+                {
+                    id: 'javascript/eslint',
+                    files: { 'src/paused.js': clean.replace('    return', () => '    debugger;\n    return') },
+                    expected: 'no-debugger',
+                },
+                environment,
+            );
+            expect(outcome.code, outcome.stdout).toBe(1);
+            expect(outcome.stdout).toContain('no-debugger');
+        },
+        PLANTED_TIMEOUT_MS * 2,
+    );
 });

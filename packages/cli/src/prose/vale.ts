@@ -1,4 +1,3 @@
-// Vale, driven by gspot: the style files rendered from the limits, the packages synced at setup, every alert a finding.
 import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
@@ -6,6 +5,8 @@ import type { Finding } from '#types/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import type { GeneratedFile } from '#types/emit.ts';
 import { routeGroups } from '#cli/prose/grammars.ts';
+// Vale, driven by gspot: the style files rendered from the limits, the packages synced at setup, every alert a finding.
+import type { SpawnResult } from '#types/platform.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import type { MergedView, Policy } from '#types/config.ts';
 import type { ProseRoute, ValeAlert } from '#types/prose.ts';
@@ -29,12 +30,21 @@ function renderedRule(stem: string, text: string, view: MergedView): string {
         .replace(LONGER_THAN, () => `longer than ${String(limit)}`);
 }
 
+// Vale runs with --no-exit, so alerts leave the exit code at 0; any other code means Vale itself failed, and that is never a pass.
+function assertValeRan(result: SpawnResult): void {
+    if (result.code === 0 && !result.missing) return;
+    const lines = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
+    const reason = lines.find((line) => /(?:^E\d+)|(?:not found)|(?:error)/iu.test(line)) ?? lines[0] ?? 'no output';
+    throw new Error(`Vale did not run (exit ${String(result.code)}): ${reason.trim()}`);
+}
+
 async function alertsFor(root: string, binary: string, group: ProseRoute[]): Promise<ValeAlert[]> {
     const [first] = group;
     if (first === undefined) return [];
     const base = [binary, '--config', join(root, VALE_CONFIG), '--output', 'line', '--no-exit'];
     if (first.mode === 'path') {
         const result = await run([...base, ...group.map((route) => route.path)], { cwd: root });
+        assertValeRan(result);
         return parseAlerts(result.stdout).map((alert) => ({
             ...alert,
             file: alert.file.startsWith(root) ? alert.file.slice(root.length + 1) : alert.file,
@@ -42,6 +52,7 @@ async function alertsFor(root: string, binary: string, group: ProseRoute[]): Pro
     }
     const text = readFileSync(join(root, first.path), 'utf8');
     const result = await run([...base, `--ext=${first.extension}`], { cwd: root, stdin: text });
+    assertValeRan(result);
     return parseAlerts(result.stdout).map((alert) => ({
         ...alert,
         file: alert.file.startsWith(VALE_STDIN) ? first.path : alert.file,
@@ -86,7 +97,9 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
  * @returns whether vale sync has run
  */
 export function hasPackages(root: string): boolean {
-    return VALE_PACKAGES.every((name) => existsSync(join(root, STYLES_DIRECTORY, name)));
+    // The Harper package reads the dictionaries vale sync puts beside the styles; without them Vale stops with E201.
+    const needed = [...VALE_PACKAGES, ...(VALE_PACKAGES.includes('Harper') ? [join('config', 'dictionaries')] : [])];
+    return needed.every((name) => existsSync(join(root, STYLES_DIRECTORY, name)));
 }
 
 /**

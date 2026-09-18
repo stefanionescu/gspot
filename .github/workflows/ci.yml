@@ -20,7 +20,7 @@ jobs:
             - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566
             - run: bun install --frozen-lockfile
             - run: bunx tsc --noEmit -p tsconfig.json
-            - run: bun test
+            - run: bun test --coverage
             - run: bun packages/cli/build.ts
             - run: mise run gspot:setup
               if: runner.os != 'Windows'
