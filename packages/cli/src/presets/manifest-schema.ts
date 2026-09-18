@@ -56,6 +56,7 @@ const configSchema = z.strictObject({
     per_scope: z.boolean().default(false),
     executable: z.boolean().default(false),
     header: z.boolean().default(true),
+    needs: z.string().optional(),
 });
 
 const SENTENCE_MIN = 12;

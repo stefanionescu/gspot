@@ -75,6 +75,7 @@ export type ConfigurationTarget = {
     per_scope?: boolean;
     executable?: boolean;
     header?: boolean;
+    needs?: string | undefined;
 };
 
 export type CheckSpec = {

@@ -13,7 +13,7 @@ function uncheckedNote(file: TrackedFile): string | undefined {
         const by = file.producedBy === undefined ? '' : ` by ${file.producedBy}`;
         return `generated${by}: secrets and freshness checks only`;
     }
-    if (file.nature === 'vendored') return 'vendored: secrets, licenses and vulnerabilities checks only';
+    if (file.nature === 'vendored') return 'vendored: secrets, licenses and security checks only';
     return undefined;
 }
 

@@ -60,12 +60,11 @@ repository.
 
 ## Presets that do not ship
 
-[presets/README.md](presets/README.md) lists 42 presets, and 12 ship. No `secrets`,
-`vulnerabilities`, `dependencies` or `licenses` preset ships.
+[presets/README.md](presets/README.md) lists 42 presets, and 17 ship. The five Phase 5
+presets ship: `secrets`, `security`, `dependencies`, `licenses` and `duplication`.
 
-A full replacement of the yap-swift-app gate needs 11 presets that do not ship: `swift`, `xcode`,
-`sql`, `postgres`, `supabase`, `secrets`, `vulnerabilities`, `dependencies`, `licenses`, `docker`
-and `nginx`. That repository holds 159 files under `quality/` and 102 mise task files. Its
+A full replacement of the yap-swift-app gate needs 7 presets that do not ship: `swift`, `xcode`,
+`sql`, `postgres`, `supabase`, `docker` and `nginx`. That repository holds 159 files under `quality/` and 102 mise task files. Its
 TypeScript, shell and Markdown files can run under gspot in a detached worktree once the
 acceptance harness exists.
 

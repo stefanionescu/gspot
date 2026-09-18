@@ -60,3 +60,16 @@ export type LicenseException = { package: string; license: string; reason: strin
 
 /** Builds one finding of a check from the file, the rule and the text. */
 export type Reporter = (file: string, rule: string, text: string) => Finding;
+
+/** One CodeQL result the policy accepts: the rule id, where, and why. */
+export type AcceptedResult = { rule: string; paths: string[]; reason: string };
+
+/** One result of a SARIF log, with the fields the CodeQL check reads. */
+export type SarifResult = {
+    ruleId?: string;
+    message?: { text?: string };
+    locations?: { physicalLocation?: { artifactLocation?: { uri?: string }; region?: { startLine?: number } } }[];
+};
+
+/** The part of a SARIF log the CodeQL check reads. */
+export type SarifLog = { runs?: { results?: SarifResult[] }[] };

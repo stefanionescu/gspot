@@ -705,3 +705,17 @@ used twice.
 It checks disabled tests for a reason, sleeps, a recording mode left on, snapshot references
 with no test, and coverage. Rejected: leaving tests to the five SwiftLint test rules, which see
 one file at a time and no snapshot folder.
+
+## D-94 Semgrep packs ship with their preset, and the registry stays on the network
+
+A Semgrep pack belongs to the preset whose code it reads: `security` holds the Node and token
+packs, and `express`, `supabase` and `swift` hold theirs. A `[[configs]]` row with
+`needs = "security"` is written only while that preset is selected, so a pack costs nothing in a
+repository that runs no Semgrep. `security/semgrep` runs the packs at push with no network.
+`security/semgrep-registry` is a manual check over the registry packs in
+`tools.semgrep.registry`. Rejected: vendoring the registry packs, because the Semgrep Rules
+License forbids shipping them inside another tool. The reference rules `no-console-log`,
+`no-ts-ignore` and `no-non-null-assertion-chain` are not carried: ESLint owns them.
+
+A command part `{each:<flag>:<setting>}` becomes the flag and one value for every value of a
+list setting. `tools.semgrep.rules` uses it to pass the repository's own rule files.

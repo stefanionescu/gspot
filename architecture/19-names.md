@@ -22,9 +22,7 @@ in the commit that applies it.
 
 ## Still to apply
 
-| Id  | Today                        | Becomes               | When                        |
-| --- | ---------------------------- | --------------------- | --------------------------- |
-| N-8 | the preset `vulnerabilities` | the preset `security` | with the preset, in Phase 5 |
+Nothing. Every rename is applied.
 
 ## Names that stay
 

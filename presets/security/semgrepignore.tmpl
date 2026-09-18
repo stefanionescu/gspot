@@ -1,0 +1,14 @@
+node_modules/
+dist/
+build/
+coverage/
+.build/
+DerivedData/
+Pods/
+.venv/
+.env*
+*.lock
+bun.lock
+package-lock.json
+<% for (const entry of settings['tools.semgrep.ignore'] ?? []) { for (const path of entry.paths ?? []) { %><%= path %>
+<% } } %>

@@ -9,8 +9,8 @@ import type { CarriedLists, TakeoverPlan } from '#types/lifecycle.ts';
 const DELETED_ALONGSIDE_OWNER: Record<string, string> = {
     prettierignore: 'formatting',
     sqlfluffignore: 'sql',
-    semgrepignore: 'vulnerabilities',
-    bearer: 'vulnerabilities',
+    semgrepignore: 'security',
+    bearer: 'security',
     whitelizard: 'javascript',
     qlty: 'structure',
 };

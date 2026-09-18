@@ -1,0 +1,22 @@
+---
+title: "security/semgrep"
+description: "Runs the Semgrep rule packs of the selected presets, and the repository's own rules, over the changed files."
+---
+
+Runs the Semgrep rule packs of the selected presets, and the repository's own rules, over the changed files.
+
+## Why
+
+An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to.
+
+## What to do
+
+Change the code the way the message says. Turn one rule off for a path with gspot ignore security/semgrep --rule <id> --paths <glob> --reason.
+
+## Where it runs
+
+- Preset: [the security preset](/reference/presets/security/)
+- Stage: push
+- Tool: semgrep
+
+Turn it off for a path with a reason: `gspot ignore security/semgrep --paths <glob> --reason "<why>"`.

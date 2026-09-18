@@ -7,6 +7,7 @@ import { pushBase } from '#cli/repository/staged.ts';
 import type { SpawnResult } from '#types/platform.ts';
 import { parseOutput } from '#cli/run/parse-output.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
+import { listArguments } from '#cli/run/list-arguments.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
 import { configurationName } from '#cli/presets/read-manifests.ts';
 import type { ToolPin, CheckSpec, ConfigurationTarget } from '#types/manifest.ts';
@@ -71,6 +72,8 @@ function suppressionsArguments(session: Session, planned: PlannedCheck): string[
 }
 
 function expandPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string[] {
+    const each = listArguments(planned, part);
+    if (each !== undefined) return each;
     if (part === '{files}') return sub.files.map((file) => toPlatform(file));
     if (part === '{suppressions}') return suppressionsArguments(session, planned);
     if (part === '{file}') return [];

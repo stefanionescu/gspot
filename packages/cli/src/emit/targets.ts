@@ -69,6 +69,13 @@ function stubFor(context: EmitContext, config: ConfigurationTarget, file: Genera
     else out.files.push(bodyStub(stub, stubPath, file.path, session.version, manifest.preset.id));
 }
 
+// A target with a needs key is written only while the preset it names is selected somewhere in the repository.
+function isWanted(config: ConfigurationTarget, session: Session): boolean {
+    if (config.needs === undefined) return true;
+    const wanted = config.needs;
+    return session.scopes.some((entry) => entry.selected.some((manifest) => manifest.preset.id === wanted));
+}
+
 function isRenderedHere(config: ConfigurationTarget, selection: ScopeSelection): boolean {
     if (config.fragment === true) return false;
     return config.per_scope === true || selection.scope.path === '';
@@ -82,7 +89,7 @@ function configurationFiles(
     seen: Set<string>,
 ): void {
     for (const config of manifest.configs) {
-        if (!isRenderedHere(config, selection)) continue;
+        if (!isRenderedHere(config, selection) || !isWanted(config, session)) continue;
         const target = targetPath(selection.scope.path, config);
         if (seen.has(target)) continue;
         seen.add(target);

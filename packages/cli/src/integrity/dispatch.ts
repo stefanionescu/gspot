@@ -1,6 +1,7 @@
 // The integrity engine: one function per check, chosen by `analysis =` in the manifest.
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
+import { codeql } from '#cli/integrity/codeql.ts';
 import { fences } from '#cli/integrity/fences.ts';
 import { envFiles } from '#cli/integrity/env/files.ts';
 import { licensesNpm } from '#cli/integrity/licenses.ts';
@@ -43,6 +44,7 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    codeql,
     'gitleaks-baseline': gitleaksBaseline,
 };
 
