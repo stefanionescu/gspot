@@ -6,7 +6,7 @@ title: SQL
 
 # SQL
 
-## SQL Style
+## SQL style
 
 - Use uppercase SQL keywords. `enforced-by: structure/sql-migration-docs`
 - Fully qualify cross-schema references, especially inside functions and RLS

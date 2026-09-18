@@ -6,7 +6,7 @@ title: TypeScript
 
 # TypeScript
 
-## Core TypeScript Philosophy
+## Core TypeScript philosophy
 
 TypeScript is useful here because it makes contracts explicit at compile time,
 but it is not a runtime validation layer. Use the type system to describe values
@@ -19,7 +19,7 @@ runtime behavior. If enforcement differs from this document, fix the enforcement
 or update the rule explicitly. Do not use mismatch as an excuse to ignore the
 standard.
 
-## TypeScript Standard
+## TypeScript standard
 
 TypeScript projects must use strict compiler settings:
 
@@ -33,15 +33,16 @@ How an internal import resolves is a fact about the runtime, not about TypeScrip
 `runtime/` rules for the runtime this code targets.
 
 Local lint configuration owns exact TypeScript enforcement. Do not duplicate
-rule IDs or lint options here. The durable standards are: type-only imports and
-exports stay explicit, object shapes use `type` aliases, external input is
-validated at runtime, `any` and unsafe assertions are avoided, TypeScript enums
-are not introduced, and type declarations live where the project declares them.
+rule IDs or lint options here.
+
+The durable standards are these. Type-only imports and exports stay explicit. Object shapes use
+`type` aliases. External input is validated at runtime. `any` and unsafe assertions are avoided, and TypeScript enums are not
+introduced. Type declarations live where the project declares them.
 
 When implementation or enforcement conflicts with this standard, call out the
 conflict or fix it in an explicit task. Do not weaken the rule to match drift.
 
-## File Classes
+## File classes
 
 Every TypeScript file is one of three classes, and the generated lint configuration treats them `enforced-by: integrity/generated-fresh`
 differently:
@@ -53,7 +54,7 @@ differently:
   runtime. `enforced-by: typescript/eslint jsdoc/require-jsdoc`
 - Shared tooling: follows the JavaScript ESLint configuration and the tooling file class. `unenforced`
 
-## Source Files
+## Source files
 
 Keep TypeScript files as normal UTF-8 source files with imports before `enforced-by: typescript/eslint import-x/first`
 implementation. Do not put imports after statements.
@@ -75,7 +76,7 @@ Rules:
 Prefer direct, searchable code over clever indirection. If a module needs a `unenforced`
 short explanation, document the purpose, not how it changed.
 
-## Modules, Imports, and Exports
+## Modules, imports, and exports
 
 Use ES module syntax everywhere. `unenforced`
 
@@ -99,7 +100,7 @@ No re-exports in application source: no `export { x } from`, no `export * from`,
 barrels. Import the module that declares the symbol. A library scope may allow re-exports in
 index files only, through the `[structure] reexports` setting.
 
-## Type Placement
+## Type placement
 
 Every type alias, every `as const` object that replaces an enum, and every generic helper type `enforced-by: typescript/eslint @typescript-eslint/prefer-as-const`
 lives under the `types/` directory (`types/` at the scope root, or the directory the project
@@ -117,7 +118,7 @@ Rules:
 - The exceptions are framework-generated `*.d.ts` files and a Zod schema module that exports
   `z.infer` of its own schema, each declared through the gate's ignore list with a reason. `enforced-by: security/semgrep`
 
-## Values, Literals, and Coercion
+## Values, literals, and coercion
 
 Prefer explicit, unsurprising values. `unenforced`
 
@@ -136,7 +137,7 @@ Rules:
 Use `as const` for fixed value sets when it improves type precision and does not `enforced-by: typescript/eslint @typescript-eslint/prefer-as-const`
 make the runtime shape harder to read.
 
-## Objects, Arrays, and Destructuring
+## Objects, arrays, and destructuring
 
 Keep object and array handling readable and type-safe. `unenforced`
 
@@ -154,7 +155,7 @@ Rules:
 With `noUncheckedIndexedAccess`, indexed reads produce optional values. Narrow
 those values before use in production code.
 
-## Functions and Parameters
+## Functions and parameters
 
 Use TypeScript annotations to make public function contracts explicit while `unenforced`
 letting local implementation details rely on clear inference.
@@ -185,7 +186,7 @@ Rules:
 If a class has no meaningful instance state, it is a module with
 named exports.
 
-## Types and Inference
+## Types and inference
 
 Let TypeScript infer local details, but make public contracts explicit. `unenforced`
 
@@ -203,7 +204,7 @@ Rules:
 Use `type` aliases for object shapes. Do not require interfaces over types, even `unenforced`
 though Google prefers interfaces in some cases.
 
-## Null, Undefined, and Optional Values
+## Null, undefined, and optional values
 
 Be precise about absence.
 
@@ -220,7 +221,7 @@ Rules:
 `exactOptionalPropertyTypes` is enabled, so `property?: T` is not the same
 contract as `property: T | undefined`. Pick the one that matches the real data.
 
-## Runtime Boundaries
+## Runtime boundaries
 
 TypeScript types do not validate runtime input.
 
@@ -237,7 +238,7 @@ After validation, pass typed values inward. Do not spread raw `unknown` or
 request-shaped values through domain code. Keep validation close to the boundary
 that receives untrusted data.
 
-## Errors and Async Code
+## Errors and async code
 
 Throw only `Error` subclasses. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
 
@@ -264,13 +265,13 @@ Rules:
   runtime assumptions. `unenforced`
 - Do not add comments that restate the code. `enforced-by: typescript/eslint jsdoc/require-jsdoc`
 - Do not include change history in comments. `enforced-by: typescript/eslint sonarjs/no-commented-code`
-- A TODO is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an
+- A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an
   expiry date, never a person. `enforced-by: typescript/eslint unicorn/expiring-todo-comments`
 
 JSDoc lint rules must require documentation for exported functions, with type
 tags disabled because TypeScript owns types.
 
-## Tests and Mocks
+## Tests and mocks
 
 Use tests to verify behavior, not implementation detail. `unenforced`
 
@@ -284,7 +285,7 @@ Rules:
   the value obviously present. `enforced-by: typescript/eslint @typescript-eslint/no-explicit-any`
 - Documentation-only TypeScript guidance changes must not update tests. `unenforced`
 
-## Generated Code
+## Generated code
 
 Generated TypeScript is mostly exempt from this guide.
 
@@ -300,7 +301,7 @@ Rules:
 If generated code violates a style preference, fix the generator or document the
 exception. Do not patch generated files by hand.
 
-## Async and Promises
+## Async and promises
 
 Async code must preserve correctness, debuggability, and bounded resource use.
 Do not let promise behavior become implicit.
@@ -349,7 +350,7 @@ export async function createProviderOperation(request: ProviderOperationRequest)
 }
 ```
 
-## Dependencies and Abstractions
+## Dependencies and abstractions
 
 Rules:
 
@@ -359,7 +360,7 @@ Rules:
 - Keep exact dependency versions. `enforced-by: integrity/manifest-policy`
 - Do not add a dependency for a one-line native API or a small local helper. `enforced-by: integrity/manifest-policy`
 
-## Declaration Order
+## Declaration order
 
 Bad, public before private:
 
@@ -385,7 +386,7 @@ export function parseOrder(input: unknown): Order {
 }
 ```
 
-## Rules Not Adopted
+## Rules not adopted
 
 The following external-guide rules are not adopted:
 

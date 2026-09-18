@@ -8,7 +8,7 @@ title: Bash Naming
 
 Bash naming follows Google shell guidance, with the overrides below for file stems.
 
-## Bash Case Rules
+## Bash case rules
 
 Rules:
 
@@ -61,7 +61,7 @@ deploy_api() {
 }
 ```
 
-## Bash Variables
+## Bash variables
 
 Rules:
 
@@ -99,7 +99,7 @@ local report_output
 report_output="$(generate_report)" || return 1
 ```
 
-## Bash Functions
+## Bash functions
 
 Rules:
 
@@ -141,7 +141,7 @@ validate_project_ref() {
 }
 ```
 
-## Bash Environment Names
+## Bash environment names
 
 Rules:
 

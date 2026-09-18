@@ -20,6 +20,6 @@ Rules that hold because the code runs on a V8 isolate runtime such as Cloudflare
 ## Lifetime
 
 - An isolate is reused across requests and discarded without warning. Do not keep state in a
-  module-level variable that later requests would read. `enforced-by: security/semgrep`
+  module-level variable that later requests read. `enforced-by: security/semgrep`
 - Work that must outlive the response uses the runtime's deferred-work mechanism, not a floating
   promise. `enforced-by: security/semgrep`

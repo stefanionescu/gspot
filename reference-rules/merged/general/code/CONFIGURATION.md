@@ -6,7 +6,7 @@ title: Configuration
 
 # Configuration
 
-## One Owner
+## One owner
 
 - Every process reads its environment in one configuration owner module. `process.env`,
   `os.environ`, `os.getenv`, `ProcessInfo.processInfo.environment`, `Deno.env`, and `$VAR` reads in

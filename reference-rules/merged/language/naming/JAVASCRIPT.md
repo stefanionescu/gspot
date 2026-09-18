@@ -21,7 +21,7 @@ Project decisions:
   packages that expose them. `unenforced`
 - Do not create static container classes or nested namespaces for organization. `unenforced`
 
-## JavaScript Case Rules
+## JavaScript case rules
 
 Rules:
 
@@ -72,7 +72,7 @@ const customerId = user.id;
 export { UserRepository, buildUser };
 ```
 
-## JavaScript Imports and Exports
+## JavaScript imports and exports
 
 Rules:
 
@@ -112,7 +112,7 @@ export function getActiveUser() {
 }
 ```
 
-## JavaScript Files
+## JavaScript files
 
 Bad:
 
@@ -132,7 +132,7 @@ email-template-formatter.mjs
 database-connection.cjs
 ```
 
-## JavaScript Functions and Values
+## JavaScript functions and values
 
 Bad:
 
@@ -156,7 +156,7 @@ const currentDate = new Date();
 const userIds = users.map((user) => user.id);
 ```
 
-## JavaScript Boundaries
+## JavaScript boundaries
 
 JavaScript often appears in tooling, config, and quality scripts. Name the
 script owner and exported functions by the contract they serve.

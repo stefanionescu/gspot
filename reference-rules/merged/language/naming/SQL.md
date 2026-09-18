@@ -9,7 +9,7 @@ title: SQL Naming
 SQL names are durable infrastructure contracts. Rename them only
 through migrations and contract-aware code changes.
 
-## SQL Case Rules
+## SQL case rules
 
 Rules:
 
@@ -49,7 +49,7 @@ CREATE POLICY users_can_view_own_order_items ON public.order_items
     FOR SELECT TO authenticated USING (true);
 ```
 
-## Migration Filenames
+## Migration filenames
 
 Rules:
 
@@ -88,7 +88,7 @@ Good:
 20260101123000_insert_default_notification_options.sql
 ```
 
-## SQL Tables and Columns
+## SQL tables and columns
 
 Rules:
 
@@ -124,7 +124,7 @@ CREATE TABLE public.message_delivery_attempts (
 );
 ```
 
-## SQL Functions and Parameters
+## SQL functions and parameters
 
 Rules:
 
@@ -169,7 +169,7 @@ END;
 $$;
 ```
 
-## Indexes, Constraints, Triggers, and Policies
+## Indexes, constraints, triggers, and policies
 
 Rules:
 
@@ -209,7 +209,7 @@ CREATE POLICY users_can_view_own_messages
     USING (user_id = auth.uid());
 ```
 
-## Storage Names
+## Storage names
 
 Rules:
 

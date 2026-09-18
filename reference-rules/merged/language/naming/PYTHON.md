@@ -8,7 +8,7 @@ title: Python Naming
 
 Python naming follows PEP 8, with the rules below.
 
-## Python Case Rules
+## Python case rules
 
 Rules:
 
@@ -52,7 +52,7 @@ def build_examples(source_items):
     ...
 ```
 
-## Python Modules and Imports
+## Python modules and imports
 
 Rules:
 
@@ -76,7 +76,7 @@ Good:
 from src.runtime.config import ModelSettings
 ```
 
-## Python Types and Dataclasses
+## Python types and dataclasses
 
 Rules:
 
@@ -108,7 +108,7 @@ class EvalExample:
     prediction: str
 ```
 
-## Python Boundary Names
+## Python boundary names
 
 Rules:
 
@@ -154,7 +154,7 @@ token = read_token(cli_token)
   variables, and established mathematical notation. `enforced-by: naming/identifiers`
 - Never use `l`, `O`, or `I` as single-character names. `enforced-by: naming/identifiers`
 - Use `self` for instance methods and `cls` for class methods. `unenforced`
-- If a parameter would conflict with a keyword, append one trailing underscore. `enforced-by: naming/identifiers`
+- If a parameter conflicts with a keyword, append one trailing underscore. `enforced-by: naming/identifiers`
 
 Good:
 

@@ -25,16 +25,16 @@ title: HTML
 - `target="_blank"` links carry `rel="noopener"`. `enforced-by: html/html-validate`
 - Boolean attributes are bare (`disabled`, not `disabled="true"`). Attribute values are quoted. `enforced-by: html/html-validate`
 
-## Scripts and Styles
+## Scripts and styles
 
 - No inline scripts, no inline event handler attributes (`onclick`), no `javascript:` URLs, no
-  inline `style` attributes. Behaviour lives in script files; presentation in stylesheets. `enforced-by: structure/html-scripts`
+  inline `style` attributes. Behavior lives in script files; presentation in stylesheets. `enforced-by: structure/html-scripts`
 - `<script type="application/ld+json">` is data and is allowed. `enforced-by: html/html-validate`
 - Scripts are `defer` or `type="module"`; nothing blocks parsing. `enforced-by: html/html-validate`
 - `document.write`, `innerHTML` with untrusted content, and `insertAdjacentHTML` with untrusted
   content are banned. `enforced-by: structure/html-scripts`
 
-## Templates and Copy
+## Templates and copy
 
 - Visible copy lives in content or configuration, not in script string literals or template
   logic. `enforced-by: structure/html-copy`

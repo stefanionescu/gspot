@@ -6,27 +6,26 @@ title: Postgres
 
 # Postgres
 
-## Migration Naming
+## Migration naming
 
 Prefer the `unenforced`
 project migration creation command when creating a blank migration, then edit
 the generated file. Keep migration timestamps chronological.
 
-## Migration Immutability
+## Migration immutability
 
 - After a migration exists on the base branch or has been applied to any remote
   database, treat it as immutable. `enforced-by: postgres/migrations-frozen`
 - Do not rename, reorder, squash, split, or edit applied migrations. `enforced-by: postgres/migrations-frozen`
 - If production needs a correction, create a new forward-only migration. `enforced-by: postgres/migrations-frozen`
-- If a migration has only existed in your local working branch and has not been
-  pushed or reviewed, it can be edited before merge, but still keep its paired
-  generated sources consistent. `unenforced`
+- A migration that exists only in your local branch, unpushed and unreviewed, can be edited before
+  merge. Keep its paired generated sources consistent when you do. `unenforced`
 - Do not repair migration history manually unless the user explicitly asks for a
   migration-history repair task. `enforced-by: postgres/migrations-frozen`
 - Do not use a web console or SQL editor on a remote database as a shortcut.
   Capture every durable change as a migration. `enforced-by: postgres/migrations-frozen`
 
-## Migration Structure
+## Migration structure
 
 Every hand-written SQL migration must include the migration header and section `enforced-by: structure/sql-migration-docs`
 headings required by the SQL documentation tooling. Do not duplicate the
@@ -61,7 +60,7 @@ SET search_path = '';
 Trigger creation must have a descriptive comment within five lines above the
 `CREATE TRIGGER` statement.
 
-## Tables and Data Modeling
+## Tables and data modeling
 
 - Prefer UUIDv7 primary keys via `public.generate_uuid_v7()` for app-owned rows. `enforced-by: postgres/squawk`
 - Add UUIDv7 check constraints for UUIDv7 columns. `enforced-by: postgres/squawk`
@@ -78,7 +77,7 @@ Trigger creation must have a descriptive comment within five lines above the
 - Keep generated columns, uniqueness constraints, and check constraints in the DB
   when they express durable invariants. Do not rely only on client validation. `enforced-by: postgres/squawk`
 
-## Row Level Security
+## Row level security
 
 - Enable RLS on every app table in an exposed schema. `enforced-by: postgres/squawk`
 - Exposed schemas are declared in `config.toml` under `[api].schemas`. `unenforced`
@@ -121,7 +120,7 @@ Trigger creation must have a descriptive comment within five lines above the
   when the view needs to respect underlying table RLS. Otherwise revoke access or
   keep the view out of exposed schemas. `unenforced`
 
-## Database Functions
+## Database functions
 
 - Prefer `SECURITY INVOKER`, which is the default. `enforced-by: postgres/squawk`
 - Use `SECURITY DEFINER` only when the function must cross RLS or role
@@ -152,7 +151,7 @@ Trigger creation must have a descriptive comment within five lines above the
   storage, narrowly scoped to the functions or schemas they need. `enforced-by: postgres/squawk`
 - When granting function execute, include the full function signature. `enforced-by: postgres/squawk`
 
-## Durable Data Migrations
+## Durable data migrations
 
 Do not use `seed.sql` for durable app data. Durable rows live in timestamped `enforced-by: postgres/migrations-frozen`
 migrations. Large or structured data migrations are generated from source data.

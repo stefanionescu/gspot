@@ -6,7 +6,7 @@ title: UIKit
 
 # UIKit
 
-## UIKit and Apple Framework Boundaries
+## UIKit and apple framework boundaries
 
 SwiftUI is the default for UI.
 
@@ -27,14 +27,14 @@ Rules:
 Where a project declares approved UIKit import boundaries, keep new UIKit imports inside them, or
 change the declared boundary and state the architectural reason.
 
-## UIKit Lists and Data Sources
+## UIKit lists and data sources
 
 SwiftUI `List`, `ScrollView`, `LazyVStack`, and grids remain the default for new
 SwiftUI screens. `UITableView` and `UICollectionView` are UIKit interop tools
-for legacy screens, platform-specific behavior, performance-sensitive lists, or
+for existing UIKit screens, platform-specific behavior, performance-sensitive lists, or
 reusable UIKit components.
 
-### Default Ownership
+### Default ownership
 
 Rules:
 
@@ -42,11 +42,12 @@ Rules:
   `UITableViewDelegate`, `UICollectionViewDataSource`, or
   `UICollectionViewDelegate` only for small, one-off lists with no meaningful
   branching, reuse, or section logic. `enforced-by: swift/swiftlint`
-- Move data source and delegate logic into dedicated objects when a list has
-  multiple cell types, has multiple sections, supports runtime display modes, is
-  reused by more than one screen, translates selection from `IndexPath` to
-  domain or presentation values, contains significant dequeue/configuration
-  logic, or risks turning the view controller into a mixed lifecycle/data/layout
+- Move data source and delegate logic into dedicated objects when a list has multiple cell types or
+  sections, supports runtime display modes, or is reused by more than one screen.
+  `enforced-by: swift/swiftlint`
+- Do the same when the list translates selection from `IndexPath` to domain or presentation values,
+  or holds significant dequeue or configuration logic. `enforced-by: swift/swiftlint`
+- Do the same when it risks turning the view controller into a mixed lifecycle, data and layout
   object. `enforced-by: swift/swiftlint`
 - `UITableView.dataSource`, `UITableView.delegate`,
   `UICollectionView.dataSource`, and `UICollectionView.delegate` are weak. The
@@ -105,7 +106,7 @@ final class MessagesViewController: UIViewController {
 }
 ```
 
-### Selection and Index Paths
+### Selection and index paths
 
 Rules:
 
@@ -127,7 +128,7 @@ func tableView(_ tableView: UITableView, didSelectRowAt indexPath: IndexPath) {
 }
 ```
 
-### Typed Cell Models
+### Typed cell models
 
 Cell model rules:
 
@@ -221,7 +222,7 @@ Cautions:
 - For modern collection/table screens, also consider diffable data sources when
   they fit the UIKit surface. `enforced-by: swift/swiftlint`
 
-### Diffable Data Sources and Snapshots
+### Diffable data sources and snapshots
 
 Rules:
 

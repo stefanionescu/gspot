@@ -1,10 +1,10 @@
 ---
 layer: template
 preset: none
-title: Advanced-guide template
+title: Advanced-Guide Template
 ---
 
-# Advanced-guide template
+# Advanced-Guide Template
 
 Template. Remove sections that do not apply. Do not publish empty headings or placeholder
 prose.

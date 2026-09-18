@@ -9,7 +9,7 @@ title: Supabase Deployment
 Project template. Copy into `rules/project/` when the repository deploys a Supabase project through scripted remote flows. Edit it to match the project;
 gspot never upgrades a project file.
 
-## Remote Deployment
+## Remote deployment
 
 Use the scripted remote flows. Do not hand-run partial remote changes unless the
 user explicitly asks for that operation.

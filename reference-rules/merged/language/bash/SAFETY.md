@@ -9,7 +9,7 @@ title: Bash Safety
 Calling commands, processes and privilege, structured data, network, secrets, temporary files,
 security, portability, testing, debugging, and refactoring.
 
-## Calling Commands
+## Calling commands
 
 Rules:
 
@@ -72,7 +72,7 @@ Shell boundary:
 bash -c 'printf "%s\n" "$1"' bash "${message}"
 ```
 
-## Process Management and Privilege Boundaries
+## Process management and privilege boundaries
 
 Rules:
 
@@ -168,7 +168,7 @@ sudo ls /root-owned-dir/*
 sudo sh -c "systemctl restart ${unit_name}"
 ```
 
-## Text, JSON, and Structured Data
+## Text, JSON, and structured data
 
 Rules:
 
@@ -210,7 +210,7 @@ tr '[:upper:]' '[:lower:]'
 LC_COLLATE=C tr A-Z a-z
 ```
 
-## Network Commands
+## Network commands
 
 Rules:
 
@@ -276,7 +276,7 @@ printf '%s  %s\n' "${expected_sha256}" "${installer}" | shasum -a 256 -c -
 bash "${installer}" --version "${tool_version}"
 ```
 
-## Secrets and Environment
+## Secrets and environment
 
 Rules:
 
@@ -286,7 +286,7 @@ Rules:
   ignored env files. `enforced-by: secrets/gitleaks`
 - Validate required secrets at the boundary. `enforced-by: secrets/gitleaks`
 - Do not echo, trace, write, commit, or include secrets in command-line
-  arguments when the process table could expose them. `enforced-by: secrets/gitleaks`
+  arguments when the process table can expose them. `enforced-by: secrets/gitleaks`
 - Prefer files or stdin for tools that accept sensitive values that way. `unenforced`
 - Do not use `set -x` around secret handling. `enforced-by: structure/shell-interpreter`
 - Do not write `.env` files from scripts unless the script owns that lifecycle
@@ -319,7 +319,7 @@ if [[ ! "${name}" =~ ^[A-Z_][A-Z0-9_]*$ ]]; then
 fi
 ```
 
-## Temporary Files, Locks, and Cleanup
+## Temporary files, locks, and cleanup
 
 Rules:
 
@@ -417,7 +417,7 @@ remove_build_dir() {
 }
 ```
 
-## Security Rules
+## Security rules
 
 Never:
 
@@ -453,7 +453,7 @@ find . -type f -name '*.sql' -print0 | xargs -0 shellcheck --
 If a value must become a command argument, keep it as an argument. Do not turn it
 into code.
 
-## Portability Rules
+## Portability rules
 
 Rules:
 
@@ -483,7 +483,7 @@ readonly SCRIPT_DIR
 When absolute path resolution must handle symlinks across platforms, prefer a
 small verified Bash helper or product-owned application code.
 
-## No Bash Tests
+## No Bash tests
 
 Rules:
 
@@ -575,7 +575,7 @@ Common failure causes:
   PATH collision. Check with `type -a command_name`. `unenforced`
 - Script fails before the shebang: UTF-8 BOM or CRLF line endings. `enforced-by: structure/shell-interpreter`
 
-## Refactoring Existing Scripts
+## Refactoring existing scripts
 
 When fixing or refactoring Bash:
 

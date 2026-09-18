@@ -6,7 +6,7 @@ title: Dependencies
 
 # Dependencies
 
-## Adding One
+## Adding one
 
 - Do not add a dependency for a one-line native API, a small local helper, or an array, object, or
   string utility. Use the platform first, then what the repository already depends on. `unenforced`

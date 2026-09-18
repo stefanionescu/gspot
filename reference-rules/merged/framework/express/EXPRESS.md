@@ -6,7 +6,7 @@ title: Express
 
 # Express
 
-## HTTP Handler Rules
+## HTTP handler rules
 
 Routes adapt HTTP to domain calls. They do not own validation policy, database
 access, provider mechanics, prompts, caching, or business decisions.
@@ -91,7 +91,7 @@ app.use(API_ROUTE_IMPORT_FILE, express.json({ limit: FILE_IMPORT_JSON_BODY_LIMIT
 app.use(express.json({ limit: DEFAULT_JSON_BODY_LIMIT }));
 ```
 
-## Function Shape and Parameters
+## Function shape and parameters
 
 API functions expose domain inputs and API/module result contracts, not
 transport or provider mechanics.

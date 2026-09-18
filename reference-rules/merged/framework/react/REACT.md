@@ -41,12 +41,16 @@ adds routing, server components, and caching on top of these.
   ordinary values during render rather than synchronizing duplicate state with effects. Clean up
   timers, observers, subscriptions, animation frames, and requests. `enforced-by: typescript/eslint react-hooks/exhaustive-deps`
 - Include every required hook dependency. Fix callbacks that retain outdated values in the component
-  or hook that creates them. Memoize when measurements show expensive work or a consumer needs a
-  stable reference. Use refs for mutable controller values and state for values displayed in the UI. `enforced-by: typescript/eslint react-hooks/rules-of-hooks`
+  or hook that creates them. `enforced-by: typescript/eslint react-hooks/rules-of-hooks`
+- Memoize when measurements show expensive work or a consumer needs a stable reference. Use refs for
+  mutable controller values and state for values displayed in the UI.
+  `enforced-by: typescript/eslint react-hooks/rules-of-hooks`
 - Give each state value one owner: URL for navigation, query cache for server snapshots, form/local
-  state for editing, and client store for truly shared client state. Streaming/normalized stores
-  need explicit reconciliation. Reset private state across identity and tenant changes; server
-  stores are request-scoped. `enforced-by: typescript/eslint react-hooks/exhaustive-deps`
+  state for editing, and client store for truly shared client state.
+  `enforced-by: typescript/eslint react-hooks/exhaustive-deps`
+- Streaming/normalized stores need explicit reconciliation. Reset private state across identity and
+  tenant changes; server stores are request-scoped.
+  `enforced-by: typescript/eslint react-hooks/exhaustive-deps`
 - Handle every promise by awaiting, returning, or explicitly catching failure. A `void` expression
   alone does not handle rejection. Retries need a retry-safe operation and bounded policy.
   Cancellation must not look like confirmed success. `enforced-by: typescript/eslint react-hooks/exhaustive-deps`
@@ -62,8 +66,7 @@ UI updates after hydration. Fix the mismatch instead of hiding warnings globally
   hydration or through a supported external-store pattern. `enforced-by: typescript/eslint react-hooks/exhaustive-deps`
 - Use stable entity identifiers for data identity and React's supported ID mechanism for
   relationships between controls and labels. `enforced-by: typescript/eslint react/no-array-index-key`
-- Give date/time formatting the same initial locale, time zone, and reference time where relative
-  output would otherwise differ. `unenforced`
+- Give date/time formatting the same initial locale, time zone, and reference time where relative output otherwise differs. `unenforced`
 - Do not branch rendered markup on `typeof window` as a routine hydration fix. Server and first
   browser output agree on the visible tree. `enforced-by: typescript/eslint react-hooks/exhaustive-deps`
 - Theme initialization may need the theme library's documented early script and a narrow hydration

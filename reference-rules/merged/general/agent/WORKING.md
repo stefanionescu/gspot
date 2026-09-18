@@ -6,7 +6,7 @@ title: Working in a Repository
 
 # Working in a Repository
 
-## Working Alone
+## Working alone
 
 Do not spawn subagents, background agents, parallel sessions, or multi-agent workflows for a `unenforced`
 task unless the user asked for them in this conversation. One agent reads the code and makes the
@@ -14,7 +14,7 @@ edits with the whole context in view. Splitting a task across agents loses that 
 work, and produces the drift these rules exist to catch. When a task looks too large for one
 agent, say so and ask; do not fan out.
 
-## Running Processes
+## Running processes
 
 Check for a running instance before you start a dev server, a build watcher, an emulator or a `unenforced`
 database. Look at the port, the process list and the runner's output. Reuse what runs. Start a
@@ -22,7 +22,7 @@ second instance only for a test that needs isolation, or when the user asks in t
 conversation. A framework that moves to the next free port hides the duplicate: two servers then
 serve different code. Stop what you started when the task ends.
 
-## Thinking Before Coding
+## Thinking before coding
 
 Read the relevant code before touching it. Understand the contracts, data flow, `unenforced`
 and ownership boundaries. Then think through your approach:
@@ -38,13 +38,13 @@ Before adding a new module, directory, or helper, identify the correct owner for
 the behavior. Do not create parallel implementations for a concept that has an
 owner. A new file comes with the reason the owning module grows that way.
 
-## Scope Discipline
+## Scope discipline
 
 - Do what was asked. Do not expand scope. `unenforced`
 - If you discover something unrelated that needs fixing, mention it to the user. Do not silently fix it unless it is trivial and in a file you are editing. `unenforced`
 - Do not add features, refactor surrounding code, or "improve" things that were not requested. `unenforced`
 
-## Verification and Tests
+## Verification and tests
 
 The gate runs at commit and push. Run `gspot check --staged` before committing and fix what it
 reports. Do not run verification broader than the change: no full test suites, builds, scans, or
@@ -54,7 +54,7 @@ Create or update tests only when the user asks for tests. When implementation wo
 tests need updates, report that follow-up instead of editing tests unasked. Tests that exist are held to the
 testing rules and the gate's assertion, focus, and coverage checks.
 
-## No Defensive Logic
+## No defensive logic
 
 Do not invent defensive logic for scenarios that are not part of the real contract. `unenforced`
 
@@ -63,7 +63,7 @@ Do not invent defensive logic for scenarios that are not part of the real contra
 - Trust internal invariants after they are established. If an invariant is unclear, trace the code and clarify the contract instead of adding speculative protection. `enforced-by: typescript/eslint @typescript-eslint/no-unnecessary-condition`
 - Do not pad the codebase with logic meant to protect against hypothetical future failures. `enforced-by: typescript/eslint @typescript-eslint/no-unnecessary-condition`
 
-## Managing Sprawl
+## Managing sprawl
 
 Keep one clear implementation for each concept. `unenforced`
 
@@ -81,7 +81,7 @@ Abstractions are useful only when they remove real complexity. They are harmful
 when they hide ownership, combine unrelated behavior, or predict reuse before
 the code proves it.
 
-### Prefer Duplication Over the Wrong Abstraction
+### Prefer duplication over the wrong abstraction
 
 - Duplication is cheaper than the wrong abstraction. `enforced-by: duplication/jscpd`
 - Prefer duplication until there are at least two real examples that prove the
@@ -89,51 +89,51 @@ the code proves it.
 - Do not build reusable code before the code is usable. `unenforced`
 - Do not preserve an abstraction because of sunk cost. `unenforced`
 
-### Do Not Abstract for One Caller
+### Do not abstract for one caller
 
 - Do not introduce an abstraction for one caller. `enforced-by: structure/call-through`
 - Do not introduce an abstraction for hypothetical future reuse. `enforced-by: typescript/eslint @typescript-eslint/no-unnecessary-condition`
 
-### Watch for Boxing
+### Watch for boxing
 
 - If a shared abstraction starts gaining flags, modes, optional branches, or
   caller-specific conditionals, treat that as evidence the abstraction is wrong. `unenforced`
 - "Boxing" is forbidden: do not stuff loosely related behavior into one
   function/class/module with parameters deciding which behavior runs. `unenforced`
 
-### Inline the Wrong Abstraction
+### Inline the wrong abstraction
 
 - When an abstraction is wrong, inline it back into each caller, delete the
   branches each caller does not need, then extract only the common behavior that
   remains. `unenforced`
 
-### Make the Change Easy
+### Make the change easy
 
 - Preparatory refactoring is allowed when it makes the requested change easier:
   first preserve behavior, then make the behavior change. `unenforced`
 - Keep refactoring and behavior changes in separate commits. `unenforced`
 
-### Keep Granularity Continuous
+### Keep granularity continuous
 
 - Higher-level helpers must be replaceable by a small number of lower-level
   operations. Do not create API granularity gaps. `unenforced`
 
-### Use Inversion of Control Deliberately
+### Use inversion of control deliberately
 
 - Use inversion of control when it prevents option explosion across multiple
   real use cases. `unenforced`
 - Do not add inversion of control for a single use case if it makes the call
   site harder without reducing complexity. `unenforced`
 
-### Prefer Data Flow and Data Structures
+### Prefer data flow and data structures
 
 - Prefer plain functions and explicit data flow before classes, interfaces,
   factories, strategies, inheritance, or framework patterns. `unenforced`
 - Prefer data structures and their relationships over code-pattern taxonomies. `unenforced`
 - Push state and I/O outward; keep core logic pure or close to
-  pure when that reduces moving parts. `unenforced`
+  pure when that reduces the number of parts. `unenforced`
 
-## Language Discipline
+## Language discipline
 
 Use direct, concrete language in code, comments, filenames, and documentation. `unenforced`
 
@@ -143,7 +143,7 @@ Use direct, concrete language in code, comments, filenames, and documentation. `
 
 If code uses vague language, improve it when touching that code.
 
-## No Backward Compatibility
+## No backward compatibility
 
 Never introduce compatibility layers, wrapper functions, re-exports for renamed symbols, deprecated-but-kept code, or any other form of backward-compatible scaffolding. `enforced-by: typescript/knip`
 

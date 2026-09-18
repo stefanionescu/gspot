@@ -23,7 +23,7 @@ Project decisions:
 - Do not introduce broad naming-lint policy changes outside an explicit
   quality-rule task. `unenforced`
 
-## TypeScript Case Rules
+## TypeScript case rules
 
 Rules:
 
@@ -74,7 +74,7 @@ function restoreDatabase() {}
 const urlValue = 'https://example.com';
 ```
 
-## TypeScript Files and Modules
+## TypeScript files and modules
 
 Rules:
 
@@ -139,7 +139,7 @@ export function bar(): number {
 }
 ```
 
-## TypeScript Variables
+## TypeScript variables
 
 Rules:
 
@@ -190,7 +190,7 @@ const MILLISECONDS_PER_DAY = 24 * 60 * 60 * 1000;
 setTimeout(restart, MILLISECONDS_PER_DAY);
 ```
 
-## TypeScript Functions
+## TypeScript functions
 
 Rules:
 
@@ -252,7 +252,7 @@ function createMenu(options: MenuOptions) {
 }
 ```
 
-## TypeScript Types
+## TypeScript types
 
 Rules:
 
@@ -300,7 +300,7 @@ function nicestElement<T>(items: readonly T[]): T {
 }
 ```
 
-## TypeScript Runtime Boundaries
+## TypeScript runtime boundaries
 
 Rules:
 

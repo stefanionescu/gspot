@@ -6,7 +6,7 @@ title: JavaScript
 
 # JavaScript
 
-## Core JavaScript Philosophy
+## Core JavaScript philosophy
 
 JavaScript makes its contract obvious. Build code turns config, content, and assets into deterministic output. Browser code adds small, progressive behavior to static HTML. Quality tooling checks the repo; it must not leak into production code.
 
@@ -14,7 +14,7 @@ Prefer plain values, small functions, explicit module boundaries, and readable c
 
 If enforcement differs from this document, fix the enforcement or update the rule explicitly. Do not use drift as a reason to ignore the standard.
 
-## Runtime Standard
+## Runtime standard
 
 Server-side scripts run on the runtime and version the project declares. Browser scripts must work as plain scripts loaded from static HTML. Cloudflare middleware must stay compatible with the Workers runtime.
 
@@ -26,7 +26,7 @@ Rules:
 - Keep package versions exact; do not use range prefixes. `enforced-by: integrity/manifest-policy`
 - Do not add a build step that requires a runtime outside the project's declared tooling without updating `mise.toml`, package policy, and documentation. `enforced-by: javascript/eslint n/no-unsupported-features`
 
-## Source Files
+## Source files
 
 Keep JavaScript files as normal UTF-8 source files with imports before implementation. Do not put imports after statements. `enforced-by: javascript/eslint import-x/first`
 
@@ -41,7 +41,7 @@ Rules:
 
 If a module needs a short explanation, document the purpose, not how it changed.
 
-## Modules, Imports, and Exports
+## Modules, imports, and exports
 
 Follow the owner boundary of the file you are editing. `unenforced`
 
@@ -62,7 +62,7 @@ Rules:
 
 Production code must not import quality tooling. Browser scripts must not import server-only code, config modules, middleware, or quality tooling.
 
-## Values, Literals, and Coercion
+## Values, literals, and coercion
 
 Prefer explicit, unsurprising values. `unenforced`
 
@@ -75,7 +75,7 @@ Rules:
 - Do not use truthiness checks when `0`, `''`, `false`, `null`, and `undefined` have different meanings. `enforced-by: javascript/eslint @typescript-eslint/strict-boolean-expressions`
 - Keep regular expressions close to the policy they enforce and name them by the contract they validate. `enforced-by: security/semgrep`
 
-## Objects, Arrays, and Destructuring
+## Objects, arrays, and destructuring
 
 Keep object and array handling readable. `unenforced`
 
@@ -87,7 +87,7 @@ Rules:
 - Prefer array methods when they improve clarity, but do not contort simple loops only to satisfy style preference. `unenforced`
 - Narrow indexed reads before use when the value may be absent. `enforced-by: javascript/eslint gspot/no-reexports`
 
-## Functions and Parameters
+## Functions and parameters
 
 Make function contracts obvious from names, parameters, and call sites. `unenforced`
 
@@ -117,7 +117,7 @@ Rules:
 
 If a class has no meaningful instance state, it is a module with named exports.
 
-## Null, Undefined, and Optional Values
+## Null, undefined, and optional values
 
 Handle absent values deliberately. `unenforced`
 
@@ -130,7 +130,7 @@ Rules:
 - Check DOM lookups and optional browser APIs before use. `unenforced`
 - Keep fallback values local and explicit. `unenforced`
 
-## Runtime Boundaries
+## Runtime boundaries
 
 Runtime boundaries must be validated or escaped before use.
 
@@ -154,7 +154,7 @@ Rules:
 - Avoid dynamic `require` or dynamic `import` for repo-owned modules. `enforced-by: security/semgrep`
 - Prefer `spawn`/`execFile` with argument arrays over shell command strings. `enforced-by: security/semgrep`
 
-## Errors and Async Code
+## Errors and async code
 
 Async code makes failure modes visible.
 
@@ -176,11 +176,11 @@ Rules:
 - Prefer short comments near the surprising decision. `unenforced`
 - Do not add history comments. `enforced-by: javascript/eslint sonarjs/no-commented-code`
 - Do not leave commented-out code. `enforced-by: javascript/eslint sonarjs/no-commented-code`
-- A TODO is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an expiry date, never a person. `enforced-by: javascript/eslint unicorn/expiring-todo-comments`
+- A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an expiry date, never a person. `enforced-by: javascript/eslint unicorn/expiring-todo-comments`
 - Keep every lint disable comment justified with a nearby reason on the same line or the line above. `enforced-by: integrity/suppressions`
 - JSDoc is useful for exported quality helpers, but routine private functions do not need boilerplate comments. `enforced-by: javascript/eslint jsdoc/require-jsdoc`
 
-## Generated Code
+## Generated code
 
 Generated output belongs in `dist/` or documented artifact directories, not in source roots.
 

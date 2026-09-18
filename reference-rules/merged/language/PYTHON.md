@@ -10,7 +10,7 @@ The Python rules span five files: this one (modules, imports, interfaces, docstr
 Typing, Design (functions and classes), Flow (control flow, errors, logging, resources), and
 Packaging (installs and dependencies).
 
-## Core Python Philosophy
+## Core Python philosophy
 
 Rules:
 
@@ -58,7 +58,7 @@ __all__ = [
 ]
 ```
 
-## Runtime, Encoding, and Files
+## Runtime, encoding, and files
 
 Rules:
 
@@ -85,7 +85,7 @@ modeling.py
 __main__.py
 ```
 
-## Environment and Configuration
+## Environment and configuration
 
 Rules:
 
@@ -118,7 +118,7 @@ def load_config(environ: Mapping[str, str]) -> AppConfig:
     return AppConfig(max_items=int(raw_max_items))
 ```
 
-## Module Structure
+## Module structure
 
 Order module contents this way:
 
@@ -147,9 +147,10 @@ Rules:
 - Use `__all__ = []` when a module intentionally exports no public names. `enforced-by: structure/private-prefix`
 - Every top-level name not listed in `__all__` starts with one underscore. The list and the
   prefix cannot disagree. `enforced-by: structure/private-prefix`
-- Every internal definition sits above the first public definition. Python resolves names at
-  call time, so the order has no runtime meaning; it is fixed so a reader meets the helpers
-  before the code that uses them, the same order the TypeScript and Bash rules require. `enforced-by: structure/private-prefix`
+- Every internal definition sits above the first public definition. Python resolves names at call
+  time, so the order has no runtime meaning. `enforced-by: structure/private-prefix`
+- The order is fixed so a reader meets the helpers before the code that uses them, the same order
+  the TypeScript and Bash rules require. `enforced-by: structure/private-prefix`
 
 Good:
 
@@ -250,7 +251,7 @@ Use aliases only when:
 - the alias is a standard abbreviation, such as `np` for NumPy; `enforced-by: python/ruff E711`
 - the alias disambiguates a generic module name. `unenforced`
 
-## Public and Internal Interfaces
+## Public and internal interfaces
 
 Rules:
 
@@ -299,7 +300,7 @@ Rules:
 - Keep formatting consistent with the surrounding file when the formatter allows more than one
   readable option. `enforced-by: python/ruff-format`
 
-## Comments and Docstrings
+## Comments and docstrings
 
 Rules:
 
@@ -387,7 +388,7 @@ def fetch_rows(keys: Sequence[str]) -> Mapping[str, tuple[str, ...]]:
     """
 ```
 
-### Module Docstrings
+### Module docstrings
 
 Rules:
 
@@ -404,7 +405,7 @@ Good:
 """Runtime settings assembly for the inference server."""
 ```
 
-### Function and Method Docstrings
+### Function and method docstrings
 
 Rules:
 
@@ -439,7 +440,7 @@ def build_engine_settings(
     """
 ```
 
-### Class Docstrings
+### Class docstrings
 
 Rules:
 
@@ -477,7 +478,7 @@ class MissingModelError(Exception):
     """The requested model artifact is unavailable."""
 ```
 
-### Property Docstrings
+### Property docstrings
 
 Rules:
 
@@ -495,7 +496,7 @@ def num_labels(self) -> int:
     return len(self.labels)
 ```
 
-### Override Docstrings
+### Override docstrings
 
 Rules:
 
@@ -517,15 +518,15 @@ class Child(Parent):
         return super().build()
 ```
 
-### TODO Comments
+### `TODO` comments
 
 Rules:
 
-- Use TODO comments only for temporary, tracked work. `enforced-by: python/ruff ERA001`
-- A TODO is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`. The owner is an issue link or an
+- Use `TODO` comments only for temporary, tracked work. `enforced-by: python/ruff ERA001`
+- A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`. The owner is an issue link or an
   expiry date, never a person or team. `enforced-by: python/ruff TD`
 - Do not add TODOs for vague future improvements. `enforced-by: python/ruff TD`
-- An expired date or a closed issue makes the TODO a finding. `enforced-by: python/ruff TD`
+- An expired date or a closed issue makes the `TODO` a finding. `enforced-by: python/ruff TD`
 
 Good:
 
@@ -533,7 +534,7 @@ Good:
 # TODO(https://example.com/issues/123): Remove this branch when all exports use JSONL.
 ```
 
-## Constants, Globals, and Mutable State
+## Constants, globals, and mutable state
 
 Rules:
 
@@ -564,7 +565,7 @@ def build_client(config: ClientConfig) -> Client:
     return Client(config)
 ```
 
-## Main Programs and Top-Level Code
+## Main programs and Top-Level code
 
 Rules:
 
@@ -592,7 +593,7 @@ if __name__ == "__main__":
     raise SystemExit(main())
 ```
 
-## Power Features
+## Power features
 
 Avoid power features unless the project already has a clear local pattern and `enforced-by: security/semgrep`
 the feature is necessary.
@@ -621,7 +622,7 @@ Rules:
 - Prefer ordinary functions, dataclasses, explicit imports, and explicit data
   structures. `enforced-by: python/ruff RUF009`
 
-## Threading and Concurrency
+## Threading and concurrency
 
 Rules:
 
@@ -656,7 +657,7 @@ def test_parse_prompt_rejects_unexpected_entry() -> None:
         parse_prompt(value=object())
 ```
 
-## Review Checklist
+## Review checklist
 
 Before `gspot check`, read the change against these questions:
 
@@ -666,7 +667,7 @@ Before `gspot check`, read the change against these questions:
 - Are public APIs typed and documented? `unenforced`
 - Do argument types accept the broadest useful protocol or abstract collection? `unenforced`
 - Do concrete implementations return concrete types? `unenforced`
-- Is `Any` avoided where `object`, a protocol, or a type variable would express `enforced-by: python/basedpyright`
+- Is `Any` avoided where `object`, a protocol, or a type variable expresses `enforced-by: python/basedpyright`
 - Are names consistent with [`NAMING.md`](NAMING.md)? `unenforced`
 - Are functions small, focused, and under the local length limit? `unenforced`
 - Are defaults immutable or initialized inside the function? `unenforced`
@@ -705,7 +706,7 @@ Before `gspot check`, read the change against these questions:
 - For FastAPI code, are background tasks, middleware, and streaming endpoints `unenforced`
 - Did you avoid tests, linting, and formatting commands unless requested? `unenforced`
 
-## Source Decisions
+## Source decisions
 
 These rules adapt PEP 8, PEP 257, and the Google Python Style Guide into one standard. Where they
 disagree, the decision is:
@@ -732,11 +733,12 @@ disagree, the decision is:
 When editing an existing file, follow the surrounding style where the source guides allow a choice.
 When creating new code, use the decisions in this table.
 
-## Tooling Authority
+## Tooling authority
 
 - Treat a lint failure as a policy failure. `unenforced`
-- Do not add per-file ignores, inline ignores, or broad config exceptions unless the user
-  explicitly asks for a tooling change or the violation is unavoidable, and then with a reason. `unenforced`
+- Do not add per-file ignores, inline ignores, or broad config exceptions. The exceptions are a
+  tooling change the user asked for, or an unavoidable violation, and each carries a reason.
+  `unenforced`
 - Do not copy an existing per-file ignore into new files. `unenforced`
 - Do not broaden an existing exception to make unrelated code pass. `unenforced`
 - Do not disable a rule when a clear code change can satisfy it. `unenforced`

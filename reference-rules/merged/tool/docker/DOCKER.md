@@ -6,7 +6,7 @@ title: Docker
 
 # Docker
 
-## Core Docker Philosophy
+## Core Docker philosophy
 
 Rules:
 
@@ -33,7 +33,7 @@ source files
       -> health/readiness probes
 ```
 
-## Base Image Selection
+## Base image selection
 
 Rules:
 
@@ -65,7 +65,7 @@ Digest example:
 FROM node:<MAJOR.MINOR.PATCH>-bookworm-slim@sha256:<DIGEST>
 ```
 
-## Node.js Image Variants
+## Node.js image variants
 
 Guidance:
 
@@ -78,7 +78,7 @@ Guidance:
 - Node Docker images differ by architecture; do not assume every variant exists on every architecture. `enforced-by: docker/hadolint`
 - Do not rely on a package manager bundled in the base image for production services; install the pinned one. `unenforced`
 
-## Dockerfile Structure
+## Dockerfile structure
 
 Rules:
 
@@ -94,8 +94,8 @@ Rules:
     - build `unenforced`
     - runtime copy `unenforced`
 - Order the file: parser directives, `ARG` values `FROM` needs, `FROM`, identity labels and
-  non-secret build args, runtime `ENV`, system packages, runtime dependencies, source and script
-  copies, artifact download and validation, then runtime user, workdir, exposed ports, healthcheck
+  non-secret build args, runtime `ENV`, system packages, runtime dependencies. Then source and
+  script copies, artifact download and validation, runtime user, workdir, exposed ports, healthcheck
   and entrypoint. `enforced-by: docker/hadolint`
 - Put related operations in the same layer when they form one installation transaction; split
   unrelated operations when it improves cache reuse or review. `unenforced`
@@ -173,7 +173,7 @@ USER appuser
 CMD ["node", "dist/src/main.js"]
 ```
 
-## Multi-Stage Builds
+## Multi-stage builds
 
 Rules:
 
@@ -186,7 +186,7 @@ Rules:
 - Native modules must be built for the runtime OS/libc/architecture. `enforced-by: docker/hadolint`
 - If build and runtime images differ, explicitly account for native module compatibility. `unenforced`
 
-## Package Installation
+## Package installation
 
 General rules:
 
@@ -198,7 +198,7 @@ General rules:
 - Do not rely on package-manager binaries in runtime unless the runtime actually invokes them. `enforced-by: docker/hadolint`
 - Removing npm/yarn from runtime is allowed as a hardening step only if the service does not need them and the Dockerfile remains maintainable. `enforced-by: docker/hadolint`
 
-## Bun and Node Tooling
+## Bun and Node tooling
 
 API-specific rules:
 
@@ -209,7 +209,7 @@ API-specific rules:
 - `NODE_ENV=production` belongs in runtime images and compose runtime env. `enforced-by: docker/hadolint`
 - Do not increase npm/Bun log verbosity in Dockerfiles unless debugging a requested build problem. `enforced-by: docker/hadolint`
 
-## Build Cache
+## Build cache
 
 Rules:
 
@@ -302,7 +302,7 @@ ARG NPM_TOKEN
 RUN echo "//registry.npmjs.org/:_authToken=$NPM_TOKEN" > .npmrc
 ```
 
-## Entrypoints and Health
+## Entrypoints and health
 
 Rules:
 
@@ -314,12 +314,13 @@ Rules:
 - Log enough runtime state to diagnose the selected mode, paths, port, and hardware configuration
   without printing secrets. `unenforced`
 - Do not start multiple long-lived processes unless the script owns process supervision. `unenforced`
-- Environment variables that configure the server are part of the runtime contract. Keep defaults
-  in the owning config modules; do not duplicate a default across Dockerfile, shell, and
-  application code unless it is part of the image contract. Prefer explicit `ENV` declarations for
-  values the image owns. Keep the README environment table in sync with the Dockerfile. `enforced-by: docker/hadolint`
+- Environment variables that configure the server are part of the runtime contract. Keep defaults in
+  the owning config modules; do not duplicate a default across Dockerfile, shell, and application
+  code unless it is part of the image contract. `enforced-by: docker/hadolint`
+- Prefer explicit `ENV` declarations for values the image owns. Keep the README environment table in
+  sync with the Dockerfile. `enforced-by: docker/hadolint`
 
-## Users and File Ownership
+## Users and file ownership
 
 Rules:
 
@@ -345,7 +346,7 @@ COPY --chown=node:node --from=build /build-stage/dist ./dist
 USER node
 ```
 
-## Process Model and PID 1
+## Process model and PID 1
 
 Rules:
 
@@ -373,7 +374,7 @@ ENTRYPOINT ["/usr/bin/dumb-init", "--"]
 CMD ["node", "dist/src/main.js"]
 ```
 
-## Graceful Shutdown
+## Graceful shutdown
 
 Rules:
 
@@ -400,7 +401,7 @@ SIGTERM / SIGINT
   -> process exits
 ```
 
-## Runtime Environment
+## Runtime environment
 
 Rules:
 
@@ -426,7 +427,7 @@ Rules:
 - Compose secrets come from environment or secret files ignored by git. `enforced-by: docker/hadolint`
 - Restart policy lets Docker/orchestrator restart failed processes. `enforced-by: docker/hadolint`
 
-## Memory and Resource Limits
+## Memory and resource limits
 
 Rules:
 
@@ -450,7 +451,7 @@ Optional Node command form when needed:
 CMD ["node", "--max-old-space-size=384", "dist/src/main.js"]
 ```
 
-## Security Scanning
+## Security scanning
 
 Rules:
 
@@ -463,18 +464,19 @@ Rules:
     - app dependency vulnerability `unenforced`
     - false positive / unreachable tool `unenforced`
 - Prefer refreshed base images and dependency updates over ad hoc OS upgrades. `enforced-by: docker/hadolint`
-- Treat Docker lint and security findings as real until proven otherwise; fix them directly, keep
-  a suppression narrow with the concrete false positive or platform constraint, and never add a
+- Treat Docker lint and security findings as real until proven otherwise, and fix them directly.
+  Keep a suppression narrow, naming the concrete false positive or platform constraint. Never add a
   scanner baseline to avoid a real finding. `unenforced`
-- Do not grant extra Linux capabilities by default, disable TLS verification, download executable
-  code without pinning and validation, use world-writable directories outside a scoped runtime
-  path, or add SSH keys, cloud credentials, local config files, or package-manager auth files. `unenforced`
-- Docker READMEs document the current build and runtime contract: build args, environment
-  variables, image tags, exposed ports, artifact paths; examples run from the repository root; no
-  real-looking secret values; no removed tools or history. `unenforced`
+- Do not grant extra Linux capabilities by default, disable TLS verification, or download executable
+  code without pinning and validation. Do not use world-writable directories outside a scoped
+  runtime path. Do not add SSH keys, cloud credentials, local config files, or package-manager auth
+  files. `unenforced`
+- Docker READMEs document the current build and runtime contract: build args, environment variables,
+  image tags, exposed ports, and artifact paths. Examples run from the repository root. They hold no
+  real-looking secret values and no removed tools or history. `unenforced`
 - Do not churn dependencies broadly without user approval. `enforced-by: docker/hadolint`
 
-## Image Inspection
+## Image inspection
 
 Rules:
 
@@ -495,7 +497,7 @@ Rules:
     - `docker run --rm <image> node --version` `unenforced`
     - `docker run --rm <image> sh -lc 'id && find /app -maxdepth 3 -type f | sort | head'` `unenforced`
 
-## Anti-Patterns
+## Anti-patterns
 
 - `FROM node` `enforced-by: docker/hadolint`
 - `FROM node:latest` `unenforced`
@@ -522,7 +524,7 @@ Rules:
 - Compose production bind-mounting source directories `unenforced`
 - Dockerfile changes that silently change Node major version `unenforced`
 
-## Docker RUN Blocks
+## Docker RUN blocks
 
 Dockerfiles are not Bash scripts, but shell behavior inside `RUN` lines must
 follow this guide when Bash is used.
@@ -562,7 +564,7 @@ RUN bash /tmp/install_bootstrap.sh && rm -f /tmp/install_bootstrap.sh
 
 The copied script must pass ShellCheck and follow this guide.
 
-## Review Checklist
+## Review checklist
 
 Before `gspot check`, read the change against these questions:
 

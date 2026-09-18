@@ -71,7 +71,7 @@ identifier does not prove that the caller may access the identified resource.
 Choose the behavior for unknown fields deliberately. `z.object()` removes unrecognized string keys `enforced-by: typescript/eslint zod/require-strict`
 from the parsed result; `z.strictObject()` rejects them; `z.looseObject()` retains them. Use
 `.catchall()` when additional fields have a defined value schema. Strict input contracts are useful
-when accepting a misspelled field would silently change the meaning of a write.
+when accepting a misspelled field silently changes the meaning of a write.
 
 - Define the fields that the operation accepts. Derive a patch from an explicit selection of
   editable fields, using `.pick()` where appropriate. Do not expose an entire database row through
@@ -85,10 +85,11 @@ when accepting a misspelled field would silently change the meaning of a write.
   transports can expose this distinction. `enforced-by: typescript/eslint zod/require-strict`
 - Use `.partial()` for changes to the top-level fields. Use Zod 4.5 `z.deepPartial(schema)` only
   when the operation supports nested patches at every affected level. Define how arrays and nested
-  objects are replaced or merged; partial validation does not implement those updates. The
-  functional API makes discriminators optional and converts discriminated unions to ordinary unions.
-  It also rejects objects with their own refinements. Define a dedicated patch schema when these
-  changes would weaken the contract. `enforced-by: typescript/eslint zod/require-strict`
+  objects are replaced or merged; partial validation does not implement those updates.
+  `enforced-by: typescript/eslint zod/require-strict`
+- The functional API makes discriminators optional and converts discriminated unions to ordinary
+  unions. It also rejects objects with their own refinements. Define a dedicated patch schema when
+  these changes weaken the contract. `enforced-by: typescript/eslint zod/require-strict`
 - Avoid defaults that turn an omitted patch field into a write. `.default()` returns an output value
   immediately for `undefined`; `.prefault()` supplies an input value that still passes through
   parsing. Use the latter when the fallback needs trimming or other validation. `enforced-by: typescript/eslint zod/require-strict`
@@ -96,9 +97,10 @@ when accepting a misspelled field would silently change the meaning of a write.
   display preference. Do not silently turn an invalid mutation, permission value, or required
   configuration into a successful default. `enforced-by: typescript/eslint zod/require-strict`
 - Project response fields before returning them. Do not rely on loose schemas to remove private
-  values. Zod 4.5 `z.properties()` validates named properties while preserving the original object;
-  nested transform and default results are discarded. Use it for instance checks, not for producing
-  a stripped response object. `enforced-by: typescript/eslint zod/require-strict`
+  values. `enforced-by: typescript/eslint zod/require-strict`
+- Zod 4.5 `z.properties()` validates named properties while preserving the original object; nested
+  transform and default results are discarded. Use it for instance checks, not for producing a
+  stripped response object. `enforced-by: typescript/eslint zod/require-strict`
 
 ### Normalize form and URL values
 
@@ -121,16 +123,21 @@ and files need explicit handling before domain code receives them.
   separate from `.optional()`, which accepts `undefined` rather than an empty string. `enforced-by: typescript/eslint zod/require-strict`
 - Select URL rules for the use case. `z.url()` accepts schemes beyond HTTP, while `z.httpUrl()`
   restricts web protocols and domain-shaped hosts. Define localhost or IP support separately when
-  needed. URL format validation does not establish a safe redirect target or authorize a server
-  fetch. Check the destination against the operation’s permitted targets. `enforced-by: typescript/eslint zod/require-strict`
+  needed. `enforced-by: typescript/eslint zod/require-strict`
+- URL format validation does not establish a safe redirect target or authorize a server fetch. Check
+  the destination against the operation's permitted targets.
+  `enforced-by: typescript/eslint zod/require-strict`
 - Distinguish calendar dates, local wall-clock times, and instants. Choose datetime offset and
   precision options explicitly. In Zod 4.5, default `z.iso.datetime()` requires seconds for a `Z` or
-  offset-qualified value. Use an explicit minute-precision schema when that format is allowed. Do
-  not turn a timezone-less value into an instant without the application's timezone policy. `enforced-by: typescript/eslint zod/require-strict`
+  offset-qualified value. `enforced-by: typescript/eslint zod/require-strict`
+- Use an explicit minute-precision schema when that format is allowed. Do not turn a timezone-less
+  value into an instant without the application's timezone policy.
+  `enforced-by: typescript/eslint zod/require-strict`
 - Match length validation to the product's definition of a character. Zod 4.5 string length checks
   count Unicode code points. JavaScript `.length` counts UTF-16 code units, and a displayed
-  character can contain several code points. Keep browser counters and server limits consistent; use
-  grapheme segmentation when the requirement concerns displayed characters. `enforced-by: typescript/eslint zod/require-strict`
+  character can contain several code points. `enforced-by: typescript/eslint zod/require-strict`
+- Keep browser counters and server limits consistent; use grapheme segmentation when the requirement
+  concerns displayed characters. `enforced-by: typescript/eslint zod/require-strict`
 - Use `z.file()` for declared size and MIME constraints where supported. Validate actual file
   content separately when required; metadata does not prove the bytes match the declared type.
   Likewise, `z.jwt()`, `z.creditCard()`, and phone formats do not verify signatures, payment
@@ -163,12 +170,16 @@ the first request's user, tenant, or locale in a shared schema.
   Give cross-field failures the relevant field path so the UI can associate them with a control. `enforced-by: typescript/eslint zod/require-strict`
 - Use refinement `when` only when the fields the refinement reads have independently passed their
   prerequisite validation. Do not force code to run against an invalid shape to collect more errors.
-  Bound asynchronous checks and keep database constraints authoritative for races such as
-  simultaneous attempts to claim the same unique value. `enforced-by: typescript/eslint zod/require-strict`
+  `enforced-by: typescript/eslint zod/require-strict`
+- Bound asynchronous checks and keep database constraints authoritative for races such as
+  simultaneous attempts to claim the same unique value.
+  `enforced-by: typescript/eslint zod/require-strict`
 - Treat recursive input support separately from transport support. Zod 4.5 can parse cyclic input;
   Zod Mini requires memoizer registration. JSON still cannot serialize cycles, symbols, Maps, or
-  Sets directly. Declared symbol keys can be validated, but unknown symbol keys are ignored even by
-  strict objects. Use an explicit transport shape for responses and persisted state. `enforced-by: typescript/eslint zod/require-strict`
+  Sets directly. `enforced-by: typescript/eslint zod/require-strict`
+- Declared symbol keys can be validated, but unknown symbol keys are ignored even by strict objects.
+  Use an explicit transport shape for responses and persisted state.
+  `enforced-by: typescript/eslint zod/require-strict`
 
 ### Encode and decode with codecs
 
@@ -186,13 +197,16 @@ together. Keep the existing tRPC transformer and query hydration format consiste
   it raises a runtime error rather than a validation issue. Define a codec or a separate response
   schema instead. `enforced-by: typescript/eslint zod/require-strict`
 - In Zod 4.5, runtime `z.input(schema)` and `z.output(schema)` select sides of nested pipes and
-  codecs. They are separate from the TypeScript helpers with angle brackets. Do not use `z.output()`
-  on an unconstrained one-way transform as proof of output validity; provide an explicit output
-  schema. Check wrapper behavior when defaults or prefaults belong to only one side of a codec. `enforced-by: typescript/eslint zod/require-strict`
+  codecs. They are separate from the TypeScript helpers with angle brackets.
+  `enforced-by: typescript/eslint zod/require-strict`
+- Do not use `z.output()` on an unconstrained one-way transform as proof of output validity; provide
+  an explicit output schema. Check wrapper behavior when defaults or prefaults belong to only one
+  side of a codec. `enforced-by: typescript/eslint zod/require-strict`
 - Define the expected round trip. Normalizing a URL or datetime can preserve its meaning without
-  preserving its original text. Check invalid dates, timezone offsets, numeric overflow, and
-  precision loss when converting between numbers and bigints. Keep custom conversion failures inside
-  the validation issue model when invalid input is expected. `enforced-by: typescript/eslint zod/require-strict`
+  preserving its original text. `enforced-by: typescript/eslint zod/require-strict`
+- Check invalid dates, timezone offsets, numeric overflow, and precision loss when converting
+  between numbers and bigints. Keep custom conversion failures inside the validation issue model
+  when invalid input is expected. `enforced-by: typescript/eslint zod/require-strict`
 
 ### Return useful validation errors
 
@@ -210,11 +224,12 @@ input after rejection. Keep unexpected server failures separate from invalid use
   over schema messages, which take precedence over per-parse, global, and locale error maps. Return
   `undefined` from an error map when the next configured handler decides. `enforced-by: typescript/eslint zod/require-strict`
 - Translate issues at render time or pass a request-scoped error map when parsing. Error callbacks
-  run during parsing. Do not call global `z.config()` with each request's locale on a shared server;
-  concurrent requests need independent language choices. Apply the same rule to mutable registries
-  and other request-specific global configuration. `enforced-by: typescript/eslint zod/require-strict`
+  run during parsing. `enforced-by: typescript/eslint zod/require-strict`
+- Do not call global `z.config()` with each request's locale on a shared server; concurrent requests
+  need independent language choices. Apply the same rule to mutable registries and other
+  request-specific global configuration. `enforced-by: typescript/eslint zod/require-strict`
 - Keep `reportInput` disabled for private payloads. Review custom messages and diagnostic context
-  too, since interpolating a field value can reveal it without that option. Send a safe projection
+  too, because interpolating a field value can reveal it without that option. Send a safe projection
   of issues instead of an entire error object or stack trace. `enforced-by: typescript/eslint zod/require-strict`
 
 ### Publish schemas and metadata

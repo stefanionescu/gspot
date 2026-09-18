@@ -6,7 +6,7 @@ title: nginx
 
 # nginx
 
-## Edge Responsibilities
+## Edge responsibilities
 
 - nginx handles edge concerns: TLS, request body limits, compression, timeout policy, static
   ACME paths, broad rate limiting, security headers. `enforced-by: nginx/config-test`

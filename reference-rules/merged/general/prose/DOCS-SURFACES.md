@@ -268,7 +268,7 @@ Do not use "now" unless timing contrast is essential. `unenforced`
 A bug-fix note answers:
 
 - Who was affected? `unenforced`
-- What incorrect behavior could they observe? `enforced-by: prose/vale gspot.modals`
+- What incorrect behavior do they observe? `enforced-by: prose/vale gspot.modals`
 - Is any action required? `unenforced`
 
 Describe the previous symptom in past tense. "Fixed a bug" is implied and does `unenforced`
@@ -339,7 +339,7 @@ release notes.
 
 State:
 
-- What is no longer available. `unenforced`
+- What is unavailable now. `unenforced`
 - The first version without it. `unenforced`
 - The supported replacement. `unenforced`
 - Data export or migration requirements. `unenforced`

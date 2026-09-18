@@ -9,7 +9,7 @@ title: FastAPI Runtime
 Forms and files, JSON encoding, async work, dependencies, security, streaming, background tasks,
 middleware, documentation exposure, and tests. Structure and schema rules are in the FastAPI file.
 
-## FastAPI Forms and Files
+## FastAPI forms and files
 
 Rules:
 
@@ -100,7 +100,7 @@ async def upload_images(files: Annotated[list[UploadFile], File()]) -> BatchUplo
     return await store_images(files)
 ```
 
-## FastAPI JSON Encoding and Updates
+## FastAPI JSON encoding and updates
 
 Rules:
 
@@ -161,7 +161,7 @@ async def patch_item(item_id: str, item: ItemPatch) -> ItemOut:
     return updated_item
 ```
 
-## FastAPI Async and Blocking Work
+## FastAPI async and blocking work
 
 Rules:
 
@@ -199,7 +199,7 @@ def read_item(item_id: str) -> Item:
     return item_repository.fetch_item(item_id)
 ```
 
-## FastAPI Dependencies
+## FastAPI dependencies
 
 Rules:
 
@@ -272,7 +272,7 @@ async def read_items(
     return list_items(q=params.q, skip=params.skip, limit=params.limit)
 ```
 
-## FastAPI Dependencies with Yield
+## FastAPI dependencies with yield
 
 Rules:
 
@@ -324,7 +324,7 @@ async def get_db() -> AsyncIterable[DBSession]:
         yield db
 ```
 
-## FastAPI Security
+## FastAPI security
 
 Rules:
 
@@ -416,7 +416,7 @@ async def login_for_access_token(
     return Token(access_token=access_token, token_type="bearer")
 ```
 
-## FastAPI Streaming
+## FastAPI streaming
 
 Rules:
 
@@ -476,7 +476,7 @@ async def stream_logs() -> AsyncIterable[ServerSentEvent]:
         yield ServerSentEvent(raw_data=line)
 ```
 
-## FastAPI Background Tasks
+## FastAPI background tasks
 
 Rules:
 
@@ -507,7 +507,7 @@ async def record_warmup(
     return {"message": "Warmup event queued"}
 ```
 
-## FastAPI Middleware
+## FastAPI middleware
 
 Rules:
 
@@ -540,7 +540,7 @@ async def add_process_time_header(request: Request, call_next):
     return response
 ```
 
-## FastAPI Metadata and Docs
+## FastAPI metadata and docs
 
 Rules:
 
@@ -605,7 +605,7 @@ Good project configuration:
 entrypoint = "app.main:app"
 ```
 
-## FastAPI Testing
+## FastAPI testing
 
 Follow the repository testing rules. Do not add or run tests unless requested. `enforced-by: python/ruff PT`
 

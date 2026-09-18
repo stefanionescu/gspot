@@ -36,7 +36,7 @@ Rules that hold for any HTTP service, whatever framework serves it.
 - Cookies, when the service owns sessions: `httpOnly`, `secure`, `sameSite`, explicit `maxAge`, a non-default name. Writes never happen on GET. `enforced-by: security/semgrep`
 - No default credentials, example admin users, test-only auth backdoors, or maintenance endpoints without authentication. `enforced-by: security/semgrep`
 
-## Naming on the Wire
+## Naming on the wire
 
 - JSON bodies and query parameters: `camelCase`. `enforced-by: naming/identifiers`
 - Headers: `X-Kebab-Case`. `enforced-by: naming/identifiers`

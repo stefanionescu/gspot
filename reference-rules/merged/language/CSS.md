@@ -10,8 +10,8 @@ title: CSS
 
 - One stylesheet entry per site or application; feature styles are imported from it or scoped
   to their component through CSS modules or the framework's scoping. `enforced-by: css/stylelint`
-- Design tokens (colour, spacing, type scale, radius, motion) are custom properties declared once
-  on `:root` and overridden per theme. A raw colour or pixel value outside the token file is a
+- Design tokens (color, spacing, type scale, radius, motion) are custom properties declared once
+  on `:root` and overridden per theme. A raw color or pixel value outside the token file is a
   finding. `enforced-by: css/stylelint`
 - Order rules from general to specific: reset, tokens, base elements, layout, components, states,
   utilities. `enforced-by: css/stylelint`
@@ -25,7 +25,7 @@ title: CSS
   `is-active`), never the visual (`red-text`, `mt-4`) unless the utility system owns that name. `enforced-by: css/stylelint`
 - Every class defined is used, and every class used is defined. The gate checks both directions. `enforced-by: integrity/css-usage`
 
-## Layout and Values
+## Layout and values
 
 - Use logical properties (`margin-inline`, `padding-block`, `inset-inline-start`) so
   right-to-left layouts work without overrides. `enforced-by: css/stylelint`

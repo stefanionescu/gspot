@@ -31,19 +31,20 @@ responsible module and the required behavior when designing or reviewing such a 
 - Keep application and tool dependencies compatible. Use one package manager and committed lockfile
   per installation boundary. Align `eslint-config-next` with the application's Next release. Never
   copy configuration from an older release of a library without checking its current API. `enforced-by: integrity/manifest-policy`
-- Check for a running `next dev` before starting one. Next.js moves to the next free port when
-  its port is taken, so a second start serves stale code beside the first without an error. Reuse
-  the running server; start another only for an isolated test or when the user asks. `unenforced`
-- Virtualize a list only when it is long enough or open-ended enough that the browser cannot hold it:
-  an infinite feed, a message history. Virtua is the virtualizer for those. An ordinary list, a panel,
-  a form, or a page of results renders its rows directly. `unenforced`
+- Check for a running `next dev` before starting one. Next.js moves to the next free port when its
+  port is taken, so a second start serves stale code beside the first without an error. `unenforced`
+- Reuse the running server; start another only for an isolated test or when the user asks.
+  `unenforced`
+- Virtualize a list only when it is long enough or open-ended enough that the browser cannot hold
+  it: an infinite feed, a message history. Virtua is the virtualizer for those. `unenforced`
+- An ordinary list, a panel, a form, or a page of results renders its rows directly. `unenforced`
 
 ### Structure and routing
 
 - Next.js owns two path facts and no more: the router directory, `app/` or `pages/`, optionally
   under `src/`, and the reserved names inside it. Everything else about the layout is the
   project's own. `enforced-by: integrity/route-segments`
-- Wherever domain behaviour, shared UI and integrations live, they live somewhere deliberate, and
+- Wherever domain behavior, shared UI and integrations live, they live somewhere deliberate, and
   the router directory holds routing rather than the application. A private folder, prefixed with
   an underscore, is the framework's mechanism for keeping non-route files inside a route segment. `enforced-by: typescript/eslint gspot/require-server-only`
 - Use route files for routing and assembling the page. Keep a small page in `page.tsx` when that is
@@ -56,16 +57,20 @@ responsible module and the required behavior when designing or reviewing such a 
   `@`. `enforced-by: integrity/route-segments`
 - Keep dependency direction clear: routes compose features; features consume shared infrastructure
   and UI; shared modules do not import feature or route implementations. Cross-feature dependencies
-  must have a clear public contract and no cycle. Separate browser-safe schemas/types from server
-  implementations. Avoid barrels that mix server and client runtime exports. `enforced-by: typescript/eslint boundaries/element-types`
+  must have a clear public contract and no cycle.
+  `enforced-by: typescript/eslint boundaries/element-types`
+- Separate browser-safe schemas/types from server implementations. Avoid barrels that mix server and
+  client runtime exports. `enforced-by: typescript/eslint boundaries/element-types`
 - Root layouts provide document elements. `error.tsx` is a Client Component; an error boundary does
   not catch its own segment's layout failure. Use a parent boundary or `global-error` when
   appropriate. Global error UI must be able to replace the document and work without the normal
   providers. `enforced-by: typescript/eslint gspot/require-server-only`
 - Use parallel or intercepted routes only for an actual navigation requirement. Verify direct load,
-  soft navigation, Back/Forward, refresh, and default slot behavior. Interception changes how the
-  destination is presented; it does not mean the URL never changes. Multiple root layouts cause full
-  page navigation between them. `enforced-by: integrity/route-segments`
+  soft navigation, Back/Forward, refresh, and default slot behavior.
+  `enforced-by: integrity/route-segments`
+- Interception changes how the destination is presented; it does not mean the URL never changes.
+  Multiple root layouts cause full page navigation between them.
+  `enforced-by: integrity/route-segments`
 
 ### Assigning files to an owner
 
@@ -179,8 +184,10 @@ uses the component payload to update the existing tree. Verify both paths.
   pending state activate a surrounding boundary automatically. `enforced-by: typescript/eslint @typescript-eslint/no-floating-promises`
 - Keep promise identity stable across client rerenders. A Server Component can pass a promise whose
   resolved value is safe to serialize; a Client Component can read it with React `use()` under
-  Suspense. Share that promise through a narrowly placed client provider when several consumers need
-  it. Keep request-specific promises out of process-global state. `enforced-by: typescript/eslint gspot/require-server-only`
+  Suspense. `enforced-by: typescript/eslint gspot/require-server-only`
+- Share that promise through a narrowly placed client provider when several consumers need it. Keep
+  request-specific promises out of process-global state.
+  `enforced-by: typescript/eslint gspot/require-server-only`
 - Handle rejected promises through the appropriate error boundary or an explicit result value. Keep
   `use()` out of `try`/`catch`. Suspense provides loading UI; it does not replace error handling. `enforced-by: typescript/eslint @typescript-eslint/no-floating-promises`
 - Keep important headings and likely largest-content elements in early content when their data is
@@ -201,9 +208,10 @@ Choose the response status, headers, and cookies before the response is committe
 begins, a late error cannot change an already-sent success status.
 
 - When an actual HTTP redirect, not-found status, or other rejection is required, complete that
-  decision before any enclosing boundary can send a fallback. Calling `notFound()` before the first
-  boundary written in a page does not guarantee this: an ancestor `loading.tsx` or Suspense boundary
-  may already have started the response. Verify the complete route's HTTP behavior. `enforced-by: security/semgrep`
+  decision before any enclosing boundary can send a fallback. `enforced-by: security/semgrep`
+- Calling `notFound()` before the first boundary written in a page does not guarantee this: an
+  ancestor `loading.tsx` or Suspense boundary may already have started the response. Verify the
+  complete route's HTTP behavior. `enforced-by: security/semgrep`
 - Account for streamed not-found and redirect behavior. A late not-found result can retain the
   original status while adding indexing metadata; a late redirect can use streamed client behavior.
   Check status, rendered outcome, and indexing metadata separately. `enforced-by: security/semgrep`
@@ -258,28 +266,36 @@ produces initial HTML; it can include both Server and Client Components. Keep th
 when deciding which code ships to the browser.
 
 - Pages/layouts stay Server Components by default in App Router. Place `'use client'` at an
-  interactive entry that needs browser state, effects, or browser APIs. Imported modules join that
-  client graph even without their own directive. A Client Component can also render on the server
-  during initial load. `enforced-by: typescript/eslint gspot/require-server-only`
+  interactive entry that needs browser state, effects, or browser APIs.
+  `enforced-by: typescript/eslint gspot/require-server-only`
+- Imported modules join that client graph even without their own directive. A Client Component can
+  also render on the server during initial load.
+  `enforced-by: typescript/eslint gspot/require-server-only`
 - Keep credentials, database access, authorization, and privileged integrations in server modules.
   Add `import 'server-only'` to their runtime owners. A file named `server.ts` is not automatically
   protected. Public env prefixes, TypeScript types, and hiding controls are not security boundaries. `enforced-by: typescript/eslint boundaries/element-types`
 - Pass only necessary React-serializable data across RSC boundaries. Do not serialize full database
   rows or secrets. Plain event callbacks cannot cross; Server Functions cross as references. React
   serialization is not the same as JSON or a tRPC transformer's serialization contract. `enforced-by: typescript/eslint gspot/require-server-only`
-- React supports values including `Date`, `Map`, and `Set` across Server Component boundaries.
-  Do not add SuperJSON solely to pass these values as supported React props. Use it where an
-  actual JSON transport needs richer types. Do not add the Babel or SWC SuperJSON plugins from
-  Pages Router data-hook examples to this App Router setup. See
-  [React's serializable types](https://react.dev/reference/rsc/use-client#serializable-types-returned-by-server-components). `enforced-by: typescript/eslint gspot/require-server-only`
+- React supports values including `Date`, `Map`, and `Set` across Server Component boundaries. Do
+  not add SuperJSON solely to pass these values as supported React props. Use it where an actual
+  JSON transport needs richer types. `enforced-by: typescript/eslint gspot/require-server-only`
+- Do not add the Babel or SWC SuperJSON plugins from Pages Router data-hook examples to this App
+  Router setup. See [React's serializable
+  types](https://react.dev/reference/rsc/use-client#serializable-types-returned-by-server-components).
+  `enforced-by: typescript/eslint gspot/require-server-only`
 - Compose server-rendered children into interactive wrappers from a Server Component. Do not import
-  a server implementation into a client module to achieve that composition. Place providers at their
-  lowest useful common ancestor. Providers may accept server-rendered children without turning those
-  children's implementations into client code. `enforced-by: typescript/eslint gspot/require-server-only`
+  a server implementation into a client module to achieve that composition.
+  `enforced-by: typescript/eslint gspot/require-server-only`
+- Place providers at their lowest useful common ancestor. Providers may accept server-rendered
+  children without turning those children's implementations into client code.
+  `enforced-by: typescript/eslint gspot/require-server-only`
 - Browser access and initial rendered output must be hydration safe. Do not read localStorage or
   viewport dimensions during server render, generate random keys, or format dates with different
-  server/browser assumptions. Use effects for browser synchronization; keep a deterministic initial
-  render. `suppressHydrationWarning` requires a narrow, explained exception. `enforced-by: typescript/eslint gspot/require-server-only`
+  server/browser assumptions. `enforced-by: typescript/eslint gspot/require-server-only`
+- Use effects for browser synchronization; keep a deterministic initial render.
+  `suppressHydrationWarning` requires a narrow, explained exception.
+  `enforced-by: typescript/eslint gspot/require-server-only`
 
 ### Designing a client boundary
 
@@ -318,9 +334,10 @@ singleton store with the first request's user or locale and then reuse it on the
 ### Rendering and navigation
 
 - Fetch initial data near its server owner. Do not add a Route Handler just for a Server Component
-  to HTTP-fetch its own application. Start independent reads together; keep permission-dependent
-  work behind authorization. Use Suspense around the part that waits, with a meaningful, stable
-  fallback. `enforced-by: typescript/eslint gspot/require-server-only`
+  to HTTP-fetch its own application. `enforced-by: typescript/eslint gspot/require-server-only`
+- Start independent reads together; keep permission-dependent work behind authorization. Use
+  Suspense around the part that waits, with a meaningful, stable fallback.
+  `enforced-by: typescript/eslint gspot/require-server-only`
 - Select caching explicitly using [Data rules](#data-access-writes-and-caching). RSC,
   server-rendered HTML, request memoization, persistent caching, React Query, and browser/CDN caches
   solve different problems. `enforced-by: typescript/eslint gspot/require-server-only`
@@ -358,8 +375,9 @@ singleton store with the first request's user or locale and then reuse it on the
   and internal HTTP calls to the same app. Parallelize independent reads; authorization precedes
   protected reads. `enforced-by: integrity/route-segments`
 - Limit queries for growing collections and use a stable sort order. Validate and cap page size on
-  the server. Select the fields needed for the first screen. Avoid reading every field or page, and
-  avoid making one extra query per returned record (the N+1 query pattern). `unenforced`
+  the server. Select the fields needed for the first screen. `unenforced`
+- Avoid reading every field or page, and avoid making one extra query per returned record (the N+1
+  query pattern). `unenforced`
 - Define response shapes and errors. Check upstream status and validate external data before using
   it. Keep private fields out of DTOs and query dehydration. Do not hide errors as empty successful
   results. `enforced-by: typescript/eslint gspot/require-server-only`
@@ -367,9 +385,11 @@ singleton store with the first request's user or locale and then reuse it on the
 ### Validate writes and update cached data
 
 - Validate input, identify the caller, and check authorization before every server write. Recheck
-  resource ownership even when a parent page checked it earlier. Use transactions and database
-  constraints to keep related changes consistent. For retryable writes, use an idempotency key or
-  equivalent mechanism so repeating a request does not repeat its saved effects. `enforced-by: typescript/eslint boundaries/element-types`
+  resource ownership even when a parent page checked it earlier.
+  `enforced-by: typescript/eslint boundaries/element-types`
+- Use transactions and database constraints to keep related changes consistent. For retryable
+  writes, use an idempotency key or equivalent mechanism so repeating a request does not repeat its
+  saved effects. `enforced-by: typescript/eslint boundaries/element-types`
 - Identify every cache affected by a write. Merge optimistic UI changes with the server's confirmed
   result. Invalidate the related detail, list, and summary views so they can refresh. Preserve newer
   confirmed changes when cancelling, rolling back, retrying, or merging concurrent edits. `enforced-by: typescript/eslint boundaries/element-types`
@@ -398,20 +418,22 @@ data operation or in the existing design note.
 - For the previous model, choose appropriate explicit `fetch` cache/revalidation and supported route
   options for the installed release. `React.cache` alone does not make a query persist across
   requests. `enforced-by: integrity/manifest-policy`
-- With supported Cache Components enabled, cache only deliberately reusable data/UI with
-  `use cache`; assign its lifetime and tags. Put uncached or request-dependent work behind suitable
-  Suspense boundaries. Read request values outside shared cached functions and pass validated
-  arguments. Do not paste `dynamic = 'force-static'`, `revalidate`, or Edge assumptions into this
-  model. `unenforced`
+- With supported Cache Components enabled, cache only deliberately reusable data/UI with `use
+  cache`; assign its lifetime and tags. Put uncached or request-dependent work behind suitable
+  Suspense boundaries. `unenforced`
+- Read request values outside shared cached functions and pass validated arguments. Do not paste
+  `dynamic = 'force-static'`, `revalidate`, or Edge assumptions into this model. `unenforced`
 - Keep private data private across every cache layer. Include all relevant identity, tenant, locale,
   filter, and permission dimensions where data is cached. Authorization must remain valid on a cache
-  hit; caching a decision must not retain revoked access. Default to uncached sensitive data until a
-  concrete isolation and invalidation design exists. Do not use raw session tokens as convenient
-  cache keys or tags. `enforced-by: security/semgrep`
+  hit; caching a decision must not retain revoked access. `enforced-by: security/semgrep`
+- Default to uncached sensitive data until a concrete isolation and invalidation design exists. Do
+  not use raw session tokens as convenient cache keys or tags. `enforced-by: security/semgrep`
 - Match invalidation APIs to their installed contracts. Current Next supports stale-while-revalidate
   through `revalidateTag(tag, 'max')` and immediate read-your-writes through `updateTag` in Server
-  Actions. Revalidation of a Next cache does not invalidate a browser query cache automatically.
-  Decide whether stale content is acceptable before choosing an API. `enforced-by: typescript/eslint gspot/require-server-only`
+  Actions. `enforced-by: typescript/eslint gspot/require-server-only`
+- Revalidation of a Next cache does not invalidate a browser query cache automatically. Decide
+  whether stale content is acceptable before choosing an API.
+  `enforced-by: typescript/eslint gspot/require-server-only`
 - Do not assume process memory persists across serverless requests or is shared across instances.
   Enable remote/private cache variants when the application's caching requirements and deployment
   support call for them. `unenforced`
@@ -563,7 +585,7 @@ successful empty collection from a fetch that never started.
 | Background refresh               | Keep the last usable result visible and show unobtrusive progress if useful |
 | Next page pending                | Keep all existing rows and indicate progress at the paging boundary         |
 | Next page fails                  | Keep existing rows and cursor state; expose an explicit retry               |
-| Resource no longer accessible    | Remove private stale data and follow the authorization/not-found contract   |
+| Resource access revoked          | Remove private stale data and follow the authorization/not-found contract   |
 | Request superseded by navigation | Cancel or ignore completion; do not overwrite the new resource              |
 
 Represent these states in both server-rendered screens and client query screens. Use Suspense while

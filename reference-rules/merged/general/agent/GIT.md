@@ -6,12 +6,12 @@ title: Git
 
 # Git
 
-## Protected Files
+## Protected files
 
 Do not modify `AGENTS.md`, `CLAUDE.md`, or files under `rules/` unless the user `unenforced`
 explicitly asks for rule changes.
 
-## Working With Uncommitted Changes
+## Working with uncommitted changes
 
 When `git status` or the worktree shows changes you did not make, do not panic. Other agents or contributors may be working in parallel.
 
@@ -37,7 +37,7 @@ When `git status` or the worktree shows changes you did not make, do not panic. 
 - Never force-push a protected branch. Force-push your own branch only after a rebase you performed. `unenforced`
 - Rebase onto the default branch before opening a pull request; do not merge the default branch into a feature branch. `unenforced`
 
-## What Is Never Committed
+## What is never committed
 
 - Secrets, credentials, `.env` files, local configuration. `enforced-by: integrity/env-files`
 - Generated output that the build produces (`dist/`, `coverage/`, caches). `unenforced`
@@ -45,7 +45,7 @@ When `git status` or the worktree shows changes you did not make, do not panic. 
 - Binaries and media outside Git LFS. `enforced-by: integrity/large-files`
 - Editor state (`.vscode/` beyond the managed block, `xcuserdata/`, `.idea/`). `unenforced`
 
-## Pull Requests
+## Pull requests
 
 - The title is the commit subject when the branch has one commit, otherwise a sentence for the whole change. `enforced-by: commits/commitlint`
 - The description states what changed, why, and how it was verified. It links the issue. `unenforced`

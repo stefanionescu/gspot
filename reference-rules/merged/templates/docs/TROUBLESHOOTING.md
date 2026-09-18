@@ -1,10 +1,10 @@
 ---
 layer: template
 preset: none
-title: Troubleshooting template
+title: Troubleshooting Template
 ---
 
-# Troubleshooting template
+# Troubleshooting Template
 
 Template. Remove sections that do not apply. Do not publish empty headings or placeholder
 prose.

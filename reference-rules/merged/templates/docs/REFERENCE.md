@@ -1,10 +1,10 @@
 ---
 layer: template
 preset: none
-title: Reference template
+title: Reference Template
 ---
 
-# Reference template
+# Reference Template
 
 Template. Remove sections that do not apply. Do not publish empty headings or placeholder
 prose.

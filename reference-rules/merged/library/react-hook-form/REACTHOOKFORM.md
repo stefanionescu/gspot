@@ -196,7 +196,7 @@ one instance between unrelated array names.
   identifies its current location in the submitted array. `enforced-by: typescript/eslint no-restricted-syntax`
 - Keep database IDs in a separate property such as `recordId`. Do not submit the generated render
   key as the persisted identifier. When adapting existing v7 data with an `id` property, account for
-  the generated key in `fields`, or use a supported custom `keyName` deliberately. `enforced-by: typescript/eslint no-restricted-syntax`
+  the generated key inside `fields`, or use a supported custom `keyName` deliberately. `enforced-by: typescript/eslint no-restricted-syntax`
 - Treat `fields` as the row structure and generated-key source, not a live value subscription. Read
   current values through `useWatch`, `getValues`, or submission. If combining watched values with
   row metadata, preserve the generated key rather than overwriting it with a domain ID. `enforced-by: typescript/eslint no-restricted-syntax`
@@ -234,7 +234,9 @@ unregistering a field does not rewrite a resolver schema that still requires it.
   Keep hooks unconditional; extract a component for a branch that owns its own hooks. `enforced-by: typescript/eslint no-restricted-syntax`
 - For wizard steps, keep one form provider above the steps or save drafts in an explicitly scoped
   owner. Validate the step before advancing and validate the complete payload on final submission.
-  Do not create a server module singleton or persist credentials to preserve a wizard draft. `enforced-by: typescript/eslint no-restricted-syntax`
+  `enforced-by: typescript/eslint no-restricted-syntax`
+- Do not create a server module singleton or persist credentials to preserve a wizard draft.
+  `enforced-by: typescript/eslint no-restricted-syntax`
 - For virtualized forms, keep the form owner mounted while rows enter and leave the viewport. Retain
   values across row unmounts, supply complete defaults, and use stable generated row keys. `enforced-by: typescript/eslint no-restricted-syntax`
 - Integrate with the existing virtualizer instead of adding another one for forms. `enforced-by: typescript/eslint no-restricted-syntax`
@@ -266,7 +268,7 @@ keep the form pending until the request finishes.
 - Keep pending, validation, and result state distinct. Avoid a second loading flag that can disagree
   with `isSubmitting`, a mutation's pending state, or an Action's pending state. `enforced-by: typescript/eslint no-restricted-syntax`
 
-## Integrate Server Actions and useActionState
+## Integrate server actions and useActionState
 
 Choose either a direct awaited Server Action call from the valid submit handler or a `enforced-by: typescript/eslint no-restricted-syntax`
 `useActionState` integration when its result and pending state are useful. Send only values allowed
@@ -294,9 +296,9 @@ form with rejection handling for validation failures that throw. Keep the server
 aligned with whether the payload contains raw field inputs or parsed output.
 
 Do not mirror the Action's result or pending flag into local state through Effects. If it returns `enforced-by: typescript/eslint no-restricted-syntax`
-field errors, an Effect may map that external result into `setError`. Validate returned field paths
-against the form contract, include the relevant method in dependencies, and ensure a stale response
-does not overwrite errors for a different record or a newer submission.
+field errors, an Effect may map that external result into `setError`. Validate returned field paths against the form contract and include the relevant method in
+dependencies. Make sure a stale response does not overwrite errors for a different record or a newer
+submission.
 
 A JavaScript-only `onSubmit` bridge does not provide submission before hydration. If progressive
 enhancement is required, use a supported native form Action or the installed React Hook Form `Form`
@@ -317,7 +319,7 @@ announcement.
 - Use `fieldState.error` in controlled field components and the relevant nested error path in native
   field components. Keep parent/array errors visible as well as leaf errors. `enforced-by: typescript/eslint no-restricted-syntax`
 - Use `setError` for returned field failures and a form-level key such as `root.server` for a safe
-  operation error. Clear or replace those errors when their cause no longer applies. `enforced-by: typescript/eslint no-restricted-syntax`
+  operation error. Clear or replace those errors when their cause is gone. `enforced-by: typescript/eslint no-restricted-syntax`
 - Do not treat `clearErrors` as revalidation. Use `trigger` when validation must run again, and
   await its result before an action that depends on validity. `enforced-by: typescript/eslint no-restricted-syntax`
 - Treat `isValid` as validation state, not proof of authorization or a successful save. A manual

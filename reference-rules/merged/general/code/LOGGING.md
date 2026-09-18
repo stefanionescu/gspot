@@ -6,7 +6,7 @@ title: Logging
 
 # Logging
 
-## One Logger
+## One logger
 
 - One logger owner per process, configured at the entrypoint: level, format, redaction, transports. `unenforced`
 - Feature code obtains a logger from that owner. It never instantiates, configures, or adds transports. `unenforced`
@@ -32,7 +32,7 @@ title: Logging
 - Summarize: counts, IDs, statuses, provider names, durations. No large, deeply nested, or expensive-to-compute fields. `unenforced`
 - Do not compute expensive log arguments when the level is disabled. `unenforced`
 
-## Never Log
+## Never log
 
 - Secrets, tokens, passwords, cookies, authorization headers, connection strings. `enforced-by: security/semgrep`
 - Personal data, raw user content, full request or response bodies, provider payloads, database rows. `enforced-by: security/semgrep`

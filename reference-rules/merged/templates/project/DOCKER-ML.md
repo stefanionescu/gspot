@@ -9,7 +9,7 @@ title: Docker for Model Serving
 Project template. Copy into `rules/project/` when the repository builds CUDA images that download and serve models. Edit it to match the project;
 gspot never upgrades a project file.
 
-## Image Stack Ownership
+## Image stack ownership
 
 This repository has two image stacks:
 
@@ -46,7 +46,7 @@ docker/trt/scripts/main.sh
 docker/common/scripts/server.sh
 ```
 
-## Source Material Decisions
+## Source material decisions
 
 These rules adapt Dockerfile best practices, Hadolint guidance, BuildKit secret
 handling, NVIDIA CUDA image constraints, and this repository's runtime model.
@@ -65,7 +65,7 @@ handling, NVIDIA CUDA image constraints, and this repository's runtime model.
 | CUDA                 | CUDA and GPU libraries are stack-owned runtime dependencies, not host cache copies.             |
 | Generated files      | Do not hand-edit dependency exports. Regenerate them from source inputs.                        |
 
-## Build Contexts
+## Build contexts
 
 Rules:
 
@@ -99,7 +99,7 @@ docker build .
 ```
 
 
-## Base Images and CUDA
+## Base images and CUDA
 
 Rules:
 
@@ -117,7 +117,7 @@ Rules:
   compatibility depends on CUDA. Document that behavior in the owning Dockerfile
   or script.
 
-## Dependency Inputs
+## Dependency inputs
 
 `pyproject.toml` and `uv.lock` are canonical. The Dockerfiles consume generated
 compatibility exports:
@@ -143,9 +143,9 @@ Rules:
   verify them.
 - Do not introduce a second lockfile or stack-specific dependency authority.
 
-## Package Installation
+## Package installation
 
-## Python in Images
+## Python in images
 
 Rules:
 
@@ -160,7 +160,7 @@ Rules:
 - Do not import product runtime modules from Docker helper code unless the
   import is part of a deliberate boundary and does not trigger runtime setup.
 
-## Shell in Images
+## Shell in images
 
 Rules:
 
@@ -175,7 +175,7 @@ Rules:
 - Keep `exec` in final server handoff paths so signals reach the server process.
 - Avoid background processes unless the script owns cleanup and signal handling.
 
-## Models and Artifacts
+## Models and artifacts
 
 Rules:
 
@@ -196,7 +196,7 @@ TRT artifacts and vLLM model artifacts are not interchangeable. A Docker change
 that touches one stack must not quietly change the other stack's artifact
 contract.
 
-## Hugging Face Downloads
+## Hugging face downloads
 
 Rules:
 

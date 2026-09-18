@@ -6,7 +6,7 @@ title: Swift
 
 # Swift
 
-## Swift Source Style
+## Swift source style
 
 Swift source follows Apple API Design Guidelines, Google Swift style guidance
 where it improves clarity, and the local formatting and lint configuration.
@@ -30,8 +30,7 @@ Import rules:
 - Import exactly the top-level modules the file uses. `enforced-by: swift/swiftlint`
 - Do not rely on transitive imports. `enforced-by: swift/swiftlint`
 - Prefer whole-module imports. `enforced-by: swift/swiftlint`
-- Import individual declarations only when importing the whole module would
-  pollute the namespace or create a known conflict. `unenforced`
+- Import individual declarations only when importing the whole module pollutes the namespace or create a known conflict. `unenforced`
 - Imports are the first non-comment tokens in the file. `enforced-by: swift/swiftlint`
 - Group imports by compiler condition where needed. `enforced-by: swift/swiftlint`
 - Place `@testable import` after regular imports when test files need it. `enforced-by: swift/swiftlint`
@@ -68,9 +67,9 @@ Formatting constructs:
 - Use numeric separators for long numeric literals when they improve
   readability. `enforced-by: swift/swiftlint`
 - Attributes with parameters go on their own line before the declaration when
-  they would hurt readability inline. `enforced-by: swift/swiftlint`
+  they hurt readability inline. `enforced-by: swift/swiftlint`
 
-## Swift Programming Practices
+## Swift programming practices
 
 Rules:
 
@@ -122,8 +121,7 @@ Rules:
 - Prefer methods/properties over free functions unless the free function is
   standard-library-like and symmetric. `enforced-by: swift/swiftlint`
 - Prefer `guard` for early exits and invalid preconditions. `enforced-by: swift/swiftlint`
-- Use `for ... where` when the whole loop body would be guarded by one
-  condition. `enforced-by: swift/swiftlint`
+- Use `for ... where` when the whole loop body is guarded by one condition. `enforced-by: swift/swiftlint`
 - Prefer `for` loops over `forEach` when control flow uses `return`, `break`,
   `continue`, or async work. `enforced-by: swift/swiftlint`
 - Prefer `map`, `compactMap`, and `filter` when they directly express collection
@@ -199,7 +197,7 @@ tableView.reloadData()
 - Tests inject the transport and cover request construction, status validation, decoding
   failure, cancellation, and mapping. They never hit a live service. `enforced-by: swift/swiftlint`
 
-## Documentation Comments
+## Documentation comments
 
 Rules:
 
@@ -219,7 +217,7 @@ Rules:
 - Do not add comments that only repeat the declaration. `enforced-by: swift/swiftlint`
 - Do not include change history, old names, file paths, or implementation
   chronology. `enforced-by: swift/swiftlint`
-- A TODO is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an
+- A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an
   expiry date, never a person. `enforced-by: swift/swiftlint todo`
 - `// MARK:` comments are regular comments, not doc comments. `enforced-by: swift/swiftlint`
 - Comments before declarations are doc comments only when they document the
@@ -256,7 +254,7 @@ Rules:
 - Avoid `DispatchQueue.main.async` when actor isolation can express the same
   requirement. `enforced-by: swift/swiftlint`
 - Prefer `Sendable` designs the compiler can verify. `enforced-by: swift/swiftlint`
-- Use `@preconcurrency import` for legacy modules when appropriate instead of
+- Use `@preconcurrency import` for modules without concurrency annotations instead of
   unsafe Sendable workarounds. `unenforced`
 - Do not mark types `@unchecked Sendable` or use `nonisolated(unsafe)` unless a
   local invariant is documented and there is no safer design. `enforced-by: swift/swiftlint`
@@ -265,7 +263,7 @@ Rules:
 - Inject clocks or scheduling boundaries when time affects business logic or
   tests. `enforced-by: swift/swiftlint`
 
-## Error Handling
+## Error handling
 
 Rules:
 
@@ -281,12 +279,12 @@ Rules:
   documented invariant; local lint already restricts this further. `enforced-by: swift/swiftlint`
 - Use `assertionFailure` for unexpected but recoverable states where production
   can safely continue. `enforced-by: swift/swiftlint`
-- Use `precondition` only when continuing would be invalid and the invariant is
+- Use `precondition` only when continuing is invalid and the invariant is
   required. `enforced-by: swift/swiftlint`
 - Do not add speculative fallback handling for states that cannot occur under
   the real contract. `enforced-by: security/semgrep`
 
-## Declaration Order
+## Declaration order
 
 Bad, public before private:
 

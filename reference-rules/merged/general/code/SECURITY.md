@@ -14,7 +14,7 @@ title: Security
 - Bound every input: size, length, count, depth, rate. `enforced-by: security/semgrep`
 - Reject unknown fields on write contracts. `enforced-by: security/semgrep`
 
-## Never Build Code or Paths From Input
+## Never build code or paths from input
 
 - No SQL, shell, file path, URL, HTML, regex, dynamic import, or template built by string
   concatenation with untrusted input. Use parameters, argument arrays, path joins against a fixed
@@ -22,7 +22,7 @@ title: Security
 - No `eval`, `new Function`, string timers, `exec` with a shell, or reflection driven by input. `enforced-by: security/semgrep`
 - Deserialize only formats that cannot execute (JSON, not pickle or YAML with custom tags). `enforced-by: security/semgrep`
 
-## Web Sinks
+## Web sinks
 
 - Untrusted content reaches the DOM as text, or through one reviewed sanitizer with an allowlist.
   Never through `innerHTML`, `outerHTML`, `document.write`, `insertAdjacentHTML`, or
@@ -31,13 +31,13 @@ title: Security
 - Send security headers: HSTS, `X-Content-Type-Options: nosniff`, frame policy, referrer policy,
   and a Content Security Policy that the application's own scripts satisfy. `enforced-by: integrity/security-headers`
 
-## Redirects and Outbound Requests
+## Redirects and outbound requests
 
 - Redirect only to a relative path or an allowlisted origin. `enforced-by: security/semgrep`
 - Outbound fetches to a user-influenced target check the host against an allowlist and reject
   private, loopback, link-local, and metadata addresses, on every hop of a redirect chain. `enforced-by: security/semgrep`
 
-## Authentication and Authorization
+## Authentication and authorization
 
 - Identity comes from a verified server-side session or token. A client-supplied user ID, role,
   or tenant is data, never authority. `unenforced`
@@ -52,7 +52,7 @@ title: Security
 - Cookies that carry sessions: `HttpOnly`, `Secure`, `SameSite`, explicit `Max-Age`, non-default
   name. Writes never happen on GET. `enforced-by: security/semgrep`
 
-## Secrets and Disclosure
+## Secrets and disclosure
 
 - No secret in source, configuration files, examples, tests, logs, error messages, URLs, build
   arguments, image layers, or commit history. `enforced-by: secrets/gitleaks`
@@ -60,7 +60,7 @@ title: Security
   upstream error. `enforced-by: secrets/gitleaks`
 - No default credentials, sample admin users, debug endpoints, or auth bypasses in any build. `enforced-by: secrets/gitleaks`
 
-## Supply Chain
+## Supply chain
 
 - Pin dependencies and actions exactly; install with a frozen lockfile; respect the minimum release
   age; scan in the gate. `enforced-by: integrity/install-policy`

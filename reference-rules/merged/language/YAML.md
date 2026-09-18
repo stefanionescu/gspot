@@ -11,7 +11,7 @@ and any `.yml` or `.yaml` the repository owns.
 
 - Two-space indentation, no tabs, LF line endings, one document per file unless the consumer
   requires a stream. `enforced-by: config-files/yaml`
-- Quote strings that YAML would otherwise reinterpret: `yes`, `no`, `on`, `off`, `null`, `~`,
+- Quote strings that YAML otherwise reinterprets: `yes`, `no`, `on`, `off`, `null`, `~`,
   version numbers such as `1.10`, octal-looking values, and anything starting with `*`, `&`, `!`,
   `%`, `@`, or a backtick. `enforced-by: config-files/yaml`
 - Keys are stable and unique. A duplicate key is a finding. `enforced-by: config-files/yaml`

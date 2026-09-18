@@ -6,12 +6,12 @@ title: Documentation
 
 # Documentation
 
-The documentation rules span five files: this one (scope, standard, ownership, readers, the
-documentation set, topic types, maintenance), Format (Markdown, page structure, text
-formatting, lists, tables, alerts), Content (code examples, procedures, links), Media (interfaces,
-keyboard input, illustrations, accessibility), and Surfaces (CLI, API, library, configuration,
-architecture, contributor, troubleshooting, releases), and Review (the checklists and the
-definition of done).
+The documentation rules span six files. This one covers scope, standard, ownership, readers, the
+documentation set, topic types, and maintenance. Format covers Markdown, page structure, text
+formatting, lists, tables, and alerts. Content covers code examples, procedures, and links; Media covers interfaces, keyboard input,
+illustrations, and accessibility. Surfaces covers CLI, API,
+library, configuration, architecture, contributor, troubleshooting, and releases. Review holds the
+checklists and the definition of done.
 
 ## Authority and scope
 
@@ -185,7 +185,7 @@ Give each kind of information a clear owner. `unenforced`
 |----------|-----------------|
 | Root README | Explain the whole repository, provide the shortest successful path, and route readers to owned subprojects. |
 | Subproject README | Explain one independently usable component, its normal setup, common commands, and routine operation. |
-| Advanced guide | Hold substantial specialist material that would obstruct the normal README path. |
+| Advanced guide | Hold substantial specialist material that obstructs the normal README path. |
 | Contributor guide | Explain contribution setup, review expectations, development workflow, and contribution policy. |
 | Architecture guide | Explain system boundaries, ownership, data flow, important constraints, and architectural reasoning. |
 | API reference | Define endpoints, authentication, requests, responses, errors, limits, and examples. |
@@ -274,7 +274,7 @@ Include, when relevant:
 
 Keep exhaustive internals out of the opening path. `unenforced`
 
-### Never add project layout sections
+### Never add sections that list the tree
 
 Project layout sections are prohibited in every README, advanced guide,
 contributor guide, architecture guide, and other project documentation file.
@@ -335,9 +335,9 @@ Keep everything in the README when:
 
 - The total content remains easy to scan. `unenforced`
 - Advanced material is only one short section. `unenforced`
-- Splitting would create two thin pages. `enforced-by: prose/vale gspot.modals`
-- Readers would need to switch pages during the basic setup path. `enforced-by: prose/vale gspot.modals`
-- The same information would have to be repeated in both files. `enforced-by: prose/vale gspot.modals`
+- Splitting creates two thin pages. `enforced-by: prose/vale gspot.modals`
+- Readers need to switch pages during the basic setup path. `enforced-by: prose/vale gspot.modals`
+- The same information has to be repeated in both files. `enforced-by: prose/vale gspot.modals`
 
 If a README becomes long, fix its structure before splitting it. Remove
 repetition, move true reference material to its owner, shorten oversized
@@ -393,11 +393,10 @@ Move content elsewhere when it has a different owner:
 - Put exact endpoint schemas in API reference documentation. `unenforced`
 - Put historical changes in release notes. `unenforced`
 - Put isolated design decisions in decision records. `unenforced`
-- Put incident-only commands in a restricted runbook when publishing them would
-  be unsafe. `enforced-by: prose/vale gspot.modals`
+- Put incident-only commands in a restricted runbook when publishing them is unsafe. `enforced-by: prose/vale gspot.modals`
 
 Delete the advanced guide and merge its unique material back into the README if `unenforced`
-the guide becomes small or no longer serves a distinct audience.
+the guide becomes small or stops serving a distinct audience.
 
 ## Use cognitive funneling
 
@@ -617,7 +616,7 @@ Do not describe the same behavior differently at each layer. `unenforced`
 
 ### Delete stale content
 
-Remove documentation that no longer applies. `unenforced`
+Remove documentation that does not apply. `unenforced`
 
 Do not:
 
@@ -637,7 +636,7 @@ Prefer stable authoritative sources. Replace or remove:
 - Archived unofficial copies. `unenforced`
 - Links to branch line numbers. `unenforced`
 - Private destinations. `unenforced`
-- Pages that no longer support the claim. `unenforced`
+- Pages that do not support the claim. `unenforced`
 
 Do not inline all external information to avoid link rot. Copying creates a `unenforced`
 different form of drift. Keep essential project instructions local and link to
@@ -668,7 +667,7 @@ Refresh them when:
 - The highlighted control moves. `unenforced`
 - The architecture changes. `enforced-by: prose/vale gspot.interface-verbs`
 - The theme makes the image illegible. `unenforced`
-- Example data no longer matches the text. `unenforced`
+- Example data does not match the text. `unenforced`
 
 Do not delete shared image assets until all versioned and localized pages have `unenforced`
 stopped referencing them.
@@ -700,5 +699,5 @@ Automation does not prove factual accuracy or usability. Human review remains
 required.
 
 Agents must follow the current repository rule on whether verification commands
-are authorized. This section describes project design, not permission to run
+are authorized. The subject here is project design, not permission to run
 checks.

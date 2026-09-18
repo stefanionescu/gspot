@@ -1,10 +1,10 @@
 ---
 layer: template
 preset: none
-title: Task template
+title: Task Template
 ---
 
-# Task template
+# Task Template
 
 Template. Remove sections that do not apply. Do not publish empty headings or placeholder
 prose.

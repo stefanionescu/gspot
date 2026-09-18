@@ -181,7 +181,7 @@ Rules:
 - Keep the title consistent with navigation and on-page content. `unenforced`
 - Do not add an H1 when the platform renders the front-matter title as H1. `unenforced`
 - Use stable identifiers for generated navigation. `unenforced`
-- Quote values when punctuation or type inference could change their meaning. `enforced-by: prose/vale gspot.modals`
+- Quote values when punctuation or type inference can change their meaning. `enforced-by: prose/vale gspot.modals`
 - Do not store secrets or internal publishing credentials in metadata. `enforced-by: secrets/gitleaks`
 - Remove obsolete fields instead of leaving empty values. `unenforced`
 
@@ -218,7 +218,7 @@ The introduction orients the reader in one or two short paragraphs.
 State:
 
 - What the subject is. `unenforced`
-- Why the reader would use it. `enforced-by: prose/vale gspot.modals`
+- Why the reader uses it. `enforced-by: prose/vale gspot.modals`
 - Any immediate scope or limitation. `unenforced`
 
 Do not restate the title in a full sentence. `unenforced`
@@ -588,7 +588,7 @@ Before adding a column, ask whether:
 - The attribute is required for comparison. `unenforced`
 - The value can move to a linked reference. `unenforced`
 - The table is better as several smaller tables. `unenforced`
-- A list would be clearer. `enforced-by: prose/vale gspot.modals`
+- A list is clearer. `enforced-by: prose/vale gspot.modals`
 
 Do not put paragraphs, large code blocks, or nested lists in table cells. `enforced-by: prose/vale gspot.paragraph-length`
 
@@ -599,7 +599,7 @@ Move information into the table or surrounding text first. `unenforced`
 Use a footnote only when:
 
 - The same qualification applies to several cells. `unenforced`
-- Inline content would make the table unreadable. `enforced-by: prose/vale gspot.modals`
+- Inline content makes the table unreadable. `enforced-by: prose/vale gspot.modals`
 - The note is secondary but necessary. `unenforced`
 
 Prefer Markdown-native footnotes when the renderer supports them:

@@ -9,7 +9,7 @@ title: Bash Operations
 Module ownership across a script family, deployment and publishing pipelines, and CI scripts.
 Script structure and options are in the Bash file; commands, processes and secrets in Bash Safety.
 
-## Module Ownership and Visibility
+## Module ownership and visibility
 
 Each file owns one cohesive responsibility. Directory structure supplies the family or domain `unenforced`
 name.
@@ -51,7 +51,7 @@ Preferred order inside the function section:
 3. Public library functions. `enforced-by: structure/shell-interpreter`
 4. `main` for executable scripts. `enforced-by: structure/shell-interpreter`
 
-## Deployment and Publishing Pipelines
+## Deployment and publishing pipelines
 
 Deployment, publishing, build, benchmark, and long-running runtime scripts need stricter structure
 than local utility scripts.
@@ -211,7 +211,7 @@ Use retries for:
 
 - retryable network pulls; `unenforced`
 - readiness polling; `unenforced`
-- eventually consistent provider APIs; `unenforced`
+- "eventually consistent" provider APIs; `unenforced`
 - remote service startup checks. `enforced-by: structure/shell-ssh-blocks`
 
 Do not use retries to mask:
@@ -225,7 +225,7 @@ Do not use retries to mask:
 - failing checks; `unenforced`
 - permission problems. `unenforced`
 
-## CI Scripts
+## CI scripts
 
 Rules:
 

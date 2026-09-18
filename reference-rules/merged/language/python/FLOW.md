@@ -8,7 +8,7 @@ title: Python Flow
 
 Exceptions, assertions, comparisons, control flow, iteration, strings, logging, and resources.
 
-## Exceptions and Error Handling
+## Exceptions and error handling
 
 Rules:
 
@@ -23,7 +23,7 @@ Rules:
 - Use `else` when code runs only if the `try` block succeeds. `enforced-by: integrity/dependency-ownership`
 - Use `finally` for cleanup that must run regardless of success or failure. `enforced-by: python/ruff BLE001`
 - Do not use `return`, `break`, or `continue` in a `finally` block when an
-  exception could be active. `enforced-by: integrity/dependency-ownership`
+  exception can be active. `enforced-by: integrity/dependency-ownership`
 - Use `raise NewError(...) from error` when replacing an exception but preserving
   the cause. `unenforced`
 - Use `raise NewError(...) from None` only when deliberately suppressing an
@@ -61,7 +61,7 @@ Rules:
 - Do not rely on `assert` to satisfy type checking or runtime correctness. `enforced-by: python/ruff S101`
 - `assert` is acceptable in pytest tests. `enforced-by: python/ruff S101`
 - `assert` is acceptable for non-critical internal consistency checks where
-  removing it would not change application behavior. `enforced-by: python/ruff S101`
+  removing it does not change application behavior. `enforced-by: python/ruff S101`
 - Use explicit `if` checks and raise exceptions for real validation. `unenforced`
 
 Good:
@@ -78,7 +78,7 @@ def connect_to_port(minimum: int) -> int:
     return port
 ```
 
-## Boolean Logic and Comparisons
+## Boolean logic and comparisons
 
 Rules:
 
@@ -117,7 +117,7 @@ if filename.endswith(".json"):
 NumPy arrays may reject implicit boolean evaluation. Use `.size` or another
 explicit property when checking array emptiness.
 
-## Control Flow Simplification
+## Control flow simplification
 
 Rules:
 
@@ -132,7 +132,7 @@ Rules:
 - Do not combine conditions when separate conditions communicate distinct
   domain decisions more clearly. `enforced-by: python/ruff SIM102`
 - Do not hoist code when execution order, exceptions, logging, timing, database
-  calls, or mutation would change. `enforced-by: python/ruff SIM102`
+  calls, or mutation change. `enforced-by: python/ruff SIM102`
 
 Good merged condition:
 
@@ -159,7 +159,7 @@ for building in buildings:
     addresses.append((building.street_address, city))
 ```
 
-## Iteration and Collections
+## Iteration and collections
 
 Rules:
 
@@ -215,9 +215,9 @@ items = []
 metadata = {}
 ```
 
-## Strings, Logging, and Error Messages
+## Strings, logging, and error messages
 
-### String Formatting
+### String formatting
 
 Rules:
 
@@ -309,7 +309,7 @@ except UploadError:
     raise
 ```
 
-### Error Messages
+### Error messages
 
 Rules:
 
@@ -339,7 +339,7 @@ except OSError as error:
     logger.warning("Could not remove directory (reason: %r): %r", error, workdir)
 ```
 
-## Files and Stateful Resources
+## Files and stateful resources
 
 Rules:
 

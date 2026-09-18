@@ -128,15 +128,15 @@ Documentation is not sales copy.
 Do not use:
 
 - Easy. `unenforced`
-- Easily. `enforced-by: prose/vale gspot.marketing`
+- `Easily`. `enforced-by: prose/vale gspot.marketing`
 - Simple. `unenforced`
-- Simply. `enforced-by: prose/vale gspot.marketing`
+- `Simply`. `enforced-by: prose/vale gspot.marketing`
 - Obviously. `unenforced`
 - Trivial. `unenforced`
-- Best-in-class. `unenforced`
-- Powerful. `enforced-by: prose/vale gspot.marketing`
+- `Best-in-class`. `unenforced`
+- `Powerful`. `enforced-by: prose/vale gspot.marketing`
 - Revolutionary. `unenforced`
-- Seamless. `enforced-by: prose/vale gspot.marketing`
+- `Seamless`. `enforced-by: prose/vale gspot.marketing`
 
 These words do not explain the work, and they can make a struggling reader feel
 at fault.
@@ -185,7 +185,7 @@ whether an action is required, recommended, or optional.
 
 Label recommendations and optional steps explicitly.
 
-### Use US English by default
+### Use US english by default
 
 Use US English spelling, grammar, and punctuation unless the project has chosen `enforced-by: prose/vale gspot.dashes`
 another documented language standard.
@@ -202,8 +202,8 @@ context.
 - Put the subject near the verb. `unenforced`
 - Keep one primary idea in each sentence. `unenforced`
 - Prefer short sentences over clauses joined by punctuation. `enforced-by: prose/vale gspot.dashes`
-- Name the actor when the action could belong to more than one component. `enforced-by: prose/vale gspot.modals`
-- Repeat a noun when a pronoun would be ambiguous. `enforced-by: prose/vale gspot.modals`
+- Name the actor when the action can belong to more than one component. `enforced-by: prose/vale gspot.modals`
+- Repeat a noun when a pronoun is ambiguous. `enforced-by: prose/vale gspot.modals`
 - Put conditions before actions when the condition changes whether the action
   applies. `unenforced`
 
@@ -354,7 +354,7 @@ Use "because" for cause. `unenforced`
 Use "after" or "from" for time.
 Use "while" only for simultaneous actions.
 
-Do not rely on "since" when it could mean time or cause. `enforced-by: prose/vale gspot.modals`
+Do not rely on "since" when it can mean time or cause. `enforced-by: prose/vale gspot.modals`
 
 ### Spell out abbreviations
 
@@ -365,8 +365,8 @@ put the abbreviation in parentheses.
 Content delivery network (CDN)
 ```
 
-Do not spell out universally familiar technical names when the expansion would `enforced-by: prose/vale gspot.modals`
-reduce clarity. Examples include API, URL, HTTP, JSON, and HTML.
+Do not spell out universally familiar technical names when the expansion reduces `enforced-by: prose/vale gspot.modals`
+clarity. Examples include API, URL, HTTP, JSON, and HTML.
 
 Avoid acronyms in titles unless the intended audience uses the acronym as the `enforced-by: prose/vale gspot.acronyms`
 primary name.
@@ -410,7 +410,7 @@ For prose intended primarily for people, use:
 January 3, 2026 at 10:30 AM UTC
 ```
 
-Include the time zone whenever readers in different regions could act on the `enforced-by: prose/vale gspot.modals`
+Include the time zone whenever readers in different regions can act on the `enforced-by: prose/vale gspot.modals`
 time.
 
 For machine-readable values, logs, APIs, release stamps, and sortable metadata,
@@ -424,7 +424,7 @@ Do not use ambiguous numeric dates such as `03/04/2026`. `enforced-by: prose/val
 
 ### Write currency unambiguously
 
-Name the currency when an amount could refer to more than one currency. `enforced-by: prose/vale gspot.modals`
+Name the currency when an amount can refer to more than one currency. `enforced-by: prose/vale gspot.modals`
 
 On first use in a page, write the amount and currency name:
 
@@ -445,7 +445,7 @@ $0.25 USD
 ```
 
 Do not write ambiguous forms such as `$10` when readers in several countries `unenforced`
-could interpret the symbol differently.
+can interpret the symbol differently.
 
 ### Match official capitalization
 
@@ -483,8 +483,7 @@ Avoid:
 Docker's command-line interface
 ```
 
-Ending a sentence with a preposition is acceptable when the alternative would
-sound unnatural or overly formal. Clarity matters more than a mechanical
+Ending a sentence with a preposition is acceptable when the alternative sounds unnatural or overly formal. Clarity matters more than a mechanical
 grammar preference.
 
 ### Use restrained punctuation
@@ -517,7 +516,7 @@ experience levels.
 - Use "default branch" or the branch's actual name instead of assuming a branch
   is named `master`. `unenforced`
 - Preserve exact external API, protocol, command, and user interface terms when
-  changing them would make the documentation inaccurate. `enforced-by: prose/vale gspot.modals`
+  changing them makes the documentation inaccurate. `enforced-by: prose/vale gspot.modals`
 
 Use "person" or a specific role when describing people. Use "user" when it is a `unenforced`
 defined product or system role.

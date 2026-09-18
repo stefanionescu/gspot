@@ -1,10 +1,10 @@
 ---
 layer: template
 preset: none
-title: API endpoint template
+title: API Endpoint Template
 ---
 
-# API endpoint template
+# API Endpoint Template
 
 Template. Remove sections that do not apply. Do not publish empty headings or placeholder
 prose.

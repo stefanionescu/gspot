@@ -8,9 +8,9 @@ title: Drizzle
 
 
 Some sections below name Supabase, because it is the Postgres platform these rules were written
-against and its pooler, auth and storage behaviour change what is correct. Those passages apply
+against and its pooler, auth and storage behavior change what is correct. Those passages apply
 when the project is on that platform. On any other Postgres, read them as the shape of the problem
-and check your own platform's behaviour. Nothing here requires Supabase.
+and check your own platform's behavior. Nothing here requires Supabase.
 
 ## Check versions and APIs
 
@@ -343,7 +343,7 @@ See [Drizzle SQL expressions](https://orm.drizzle.team/docs/sql).
 - Scope updates and deletes to the authorized resource. Treat an absent `where` clause as an
   explicit bulk operation with its own restricted caller and bounded impact. `enforced-by: typescript/eslint drizzle/enforce-delete-with-where`
 - Check the affected rows or a suitable `returning` projection. Handle a row that disappeared or
-  changed since the caller read it. Do not report success merely because the query completed. `enforced-by: typescript/eslint drizzle/enforce-delete-with-where`
+  changed after the caller read it. Do not report success merely because the query completed. `enforced-by: typescript/eslint drizzle/enforce-delete-with-where`
 - Tie an upsert to a deliberate unique constraint. Define which fields may change on conflict and
   retain tenant restrictions on that path. Handle uniqueness failures without exposing private data
   from another row. `enforced-by: typescript/eslint drizzle/enforce-delete-with-where`
@@ -490,7 +490,7 @@ when a query builder infers the view's TypeScript shape.
   TypeScript declaration does not add a constraint to the underlying data. `enforced-by: typescript/eslint drizzle/enforce-delete-with-where`
 - Mark externally managed views as existing where the installed Drizzle API supports it. Keep their
   creation and changes with their actual migration owner. `enforced-by: typescript/eslint drizzle/enforce-delete-with-where`
-- Check the privileges used to access underlying tables. For a view intended to respect caller
+- Check the privileges that access the underlying tables. For a view intended to respect caller
   permissions and RLS, use supported `security_invoker` behavior and verify the caller's grants.
   This uses underlying table policies; it does not create row policies on the view itself. `enforced-by: typescript/eslint drizzle/enforce-delete-with-where`
 - Treat a materialized view as stored results with a freshness policy. Define who refreshes it, when
@@ -550,7 +550,7 @@ See [Drizzle configuration](https://orm.drizzle.team/docs/drizzle-config-file) a
 2. Inspect the SQL for unintended drops, rename detection, type conversions, nullability, defaults,
    constraints, RLS, grants, and changes to externally managed objects. `enforced-by: typescript/eslint drizzle/enforce-delete-with-where`
 3. Plan data movement. For populated tables, backfill and validate values before enforcing a new
-   requirement. Use bounded batches when a single update would hold locks for too long. `enforced-by: typescript/eslint drizzle/enforce-delete-with-where`
+   requirement. Use bounded batches when a single update holds locks for too long. `enforced-by: typescript/eslint drizzle/enforce-delete-with-where`
 4. Update affected application callers for the new schema in the same change. Do not add dual
    reads, dual writes, phased compatibility releases, or support for the old schema. `enforced-by: typescript/eslint drizzle/enforce-delete-with-where`
 5. Apply the migration only when migration execution is requested. Use the selected runner and

@@ -9,7 +9,7 @@ title: Swift Naming
 Swift naming follows Apple API Design Guidelines, Google Swift file guidance
 where useful, and the local quality rules. Optimize for call-site clarity.
 
-## Swift Case Rules
+## Swift case rules
 
 Rules:
 
@@ -50,7 +50,7 @@ let avatarURL: URL?
 let userID: User.ID
 ```
 
-## Swift Scoped Names
+## Swift scoped names
 
 Prefer language scoping over name prefixes when a relationship is structural. `unenforced`
 If a type is owned by another type and can be nested, nest it instead of
@@ -60,7 +60,7 @@ Rules:
 
 - Use access control for privacy; do not signal privacy with `_privateName`. `unenforced`
 - Nest owned errors, options, and helper types when Swift allows it. `enforced-by: naming/identifiers`
-- Do not repeat the declaring type in static or class properties that return an
+- Do not repeat the declaring type inside static or class properties that return an
   instance of that same type. `unenforced`
 - Use lower camel case for global constants. `unenforced`
 - Use `shared` or `default` for singleton-like values only when those words
@@ -103,7 +103,7 @@ extension UIColor {
 let secondsPerMinute = 60
 ```
 
-## Swift Files
+## Swift files
 
 Rules:
 
@@ -165,7 +165,7 @@ Two rules hold whatever the list is:
 - A suffix means one thing across the whole codebase. If `Repository` owns domain-facing data
   access in one feature, it does not own HTTP mechanics in another. `enforced-by: naming/identifiers`
 - `Manager`, `Handler`, `Helper`, `Util` and `Data` are not roles. They name a position in an
-  imagined architecture rather than a behaviour, and the naming policy bans them. `enforced-by: naming/identifiers`
+  imagined architecture rather than a behavior, and the naming policy bans them. `enforced-by: naming/identifiers`
 
 Bad:
 
@@ -197,7 +197,7 @@ enum LoginViewAction {
 }
 ```
 
-## Swift ViewModel Methods
+## Swift ViewModel methods
 
 Use UI event names when a ViewModel method represents a direct UI event. Use `unenforced`
 domain verbs when the method does domain work.
@@ -253,7 +253,7 @@ func handleKeyboardDidShowNotification(_ notification: Notification) { }
 
 Do not use `handle` for normal ViewModel intent methods. `unenforced`
 
-## Swift Function and Argument Labels
+## Swift function and argument labels
 
 Rules:
 
@@ -303,7 +303,7 @@ struct Person {
 }
 ```
 
-## Swift Delegates
+## Swift delegates
 
 Delegate methods put the delegate owner first, following Apple API patterns.
 
@@ -346,7 +346,7 @@ func messageListDataSource(
 ) -> CGFloat
 ```
 
-## Swift Protocols
+## Swift protocols
 
 Rules:
 
@@ -394,7 +394,7 @@ protocol ProgressReporting {
 }
 ```
 
-## Swift Repositories, Clients, and Coordinators
+## Swift repositories, clients, and coordinators
 
 Rules:
 
@@ -450,7 +450,7 @@ enum ProfileDestination: Hashable {
 }
 ```
 
-## Swift Presentation Identifiers
+## Swift presentation identifiers
 
 Presentation identifiers are stable contracts for UI identity, diffable data
 sources, navigation, persistence, and tests. Name them for the thing they
@@ -489,7 +489,7 @@ struct MessageRow: Identifiable {
 let selectedMessageID = row.id
 ```
 
-## Swift Accessibility Identifiers
+## Swift accessibility identifiers
 
 Accessibility identifiers are stable UI test hooks, not localized user-facing
 copy.

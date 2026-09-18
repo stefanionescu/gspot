@@ -14,9 +14,10 @@ define which code updates that store and how it merges later server results.
 
 - Select the specific values and actions a component reads. Do not subscribe a large layout or every
   list row to the entire store with an unselected store hook. `enforced-by: typescript/eslint no-restricted-syntax`
-- Prefer a single primitive/entity selector. When a selector returns an object or
-  array of several values, use the installed Zustand version's supported equality mechanism, such as
-  `useShallow`, to avoid updates caused only by a newly allocated wrapper. `enforced-by: typescript/eslint no-restricted-syntax`
+- Prefer a single primitive/entity selector. When a selector returns an object or array of several
+  values, use the installed Zustand version's equality mechanism, such as `useShallow`. That avoids
+  updates caused only by a newly allocated wrapper.
+  `enforced-by: typescript/eslint no-restricted-syntax`
 - Shallow comparison is not deep comparison. Keep nested object identity stable when it did not
   change; replace the changed object/map/array through the store's supported update mechanism when
   it did. Mutating a Map in place can prevent subscribers from seeing a real update. `enforced-by: typescript/eslint no-restricted-syntax`
@@ -27,8 +28,10 @@ define which code updates that store and how it merges later server results.
   state. Avoid separate synchronized counts, copies of arrays, and flags that can disagree after
   deletion, rollback, or reset. `enforced-by: typescript/eslint no-restricted-syntax`
 - Keep related state transitions with their feature owner, normally as actions beside the state.
-  Group actions into a slice when it owns a real domain. External action functions use the intended
-  store instance; they do not bypass request or provider scope through a hidden global store. `enforced-by: typescript/eslint no-restricted-syntax`
+  Group actions into a slice when it owns a real domain.
+  `enforced-by: typescript/eslint no-restricted-syntax`
+- External action functions use the intended store instance; they do not bypass request or provider
+  scope through a hidden global store. `enforced-by: typescript/eslint no-restricted-syntax`
 - Keep async request identity and cancellation explicit. A delayed store action must not update the
   next resource after the reader switches away. `enforced-by: typescript/eslint no-restricted-syntax`
 - Reset private state on sign-out and identity/tenant changes. Persist only the fields that actually
@@ -39,9 +42,9 @@ define which code updates that store and how it merges later server results.
 - Do not store virtualizer handles or control state on global DOM nodes. Pass the controller through
   its local owner, props, or an appropriately scoped context. `enforced-by: typescript/eslint no-restricted-syntax`
 
-For streaming state stored by entity ID, define each transition: initialize from the server or query
-result; apply incoming chunks to the entity; merge the confirmed saved result; and retain or restore
-the draft after failure. Implement these transitions in the state update operations instead of
+For streaming state stored by entity ID, define each transition. Initialize from the server or query
+result. Apply incoming chunks to the entity. Merge the confirmed saved result. Retain or restore the
+draft after failure. Implement these transitions in the state update operations instead of
 copying data between stores with competing effects.
 
 ### Scope and initialize the store
@@ -105,8 +108,7 @@ middleware composition. See [slices](https://zustand.docs.pmnd.rs/learn/guides/s
 Call an action outside React through the correct store instance, or through an external function
 that receives that instance. Reading `getState()` is an imperative snapshot, not a React
 subscription. Use selectors for rendered values. Release manual subscriptions with the owning
-component or service. Keep related state changes in the action that owns them. Do not add legacy
-React batching support.
+component or service. Keep related state changes in the action that owns them. Do not add batching support for React versions before 18.
 
 ### Keep selector results stable
 
@@ -132,12 +134,12 @@ actions, request flags, controllers, and credentials out of persisted data. Use 
 serialization for Maps, Sets, and other values that ordinary JSON does not preserve.
 
 Persist the current store shape. Reset disposable cached state when its shape changes instead of `enforced-by: typescript/eslint no-restricted-syntax`
-adding versioned migrations or legacy merge paths. Keep user-authored data separate from disposable
+adding versioned migrations or merge paths for older shapes. Keep user-authored data separate from disposable
 cache state; move required records directly to the current shape. Handle missing, malformed, or
 unavailable storage with the store's initial state.
 
 Keep browser restoration separate from the initial server-compatible snapshot. Use `skipHydration` `enforced-by: typescript/eslint no-restricted-syntax`
-and explicit `rehydrate()` where automatic restoration would change the first browser render. Track
+and explicit `rehydrate()` where automatic restoration changes the first browser render. Track
 hydration completion through supported callbacks or subscriptions; reading `hasHydrated()` once is
 not a reactive subscription. Release hydration listeners when their owner unmounts.
 

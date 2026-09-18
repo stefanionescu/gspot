@@ -6,7 +6,7 @@ title: Express API
 
 # Express API
 
-## Core API Philosophy
+## Core API philosophy
 
 An Express API is a modular monolith: one deployable Node, Express, and TypeScript
 service with clear owners inside the service instead of distributed microservice
@@ -48,7 +48,7 @@ In this API, separation means HTTP adapters, domain modules, platform
 boundaries, configuration ownership, and generated public contracts each have
 clear responsibilities.
 
-## Request Validation
+## Request validation
 
 Routes call `validateRequest(contract.request)`. After middleware, routes read
 validated values with `getValidatedRequest()`.
@@ -73,7 +73,7 @@ const validated = getValidatedRequest(req);
 const { limit } = validated.query;
 ```
 
-## Response Shapes
+## Response shapes
 
 Public responses use `sendOk()` and `sendError()`. Successful responses use
 `{ "status": "ok", "data": ... }`. Errors use
@@ -98,12 +98,12 @@ function buildReportResponse(result: ReportSuccess): ReportHttpResponse {
 }
 ```
 
-## Security Boundaries
+## Security boundaries
 
-Security belongs at the boundary that can enforce it reliably: nginx or the
-load balancer for edge traffic shape, Express middleware for transport policy,
-Zod contracts for runtime input shape, modules for domain authorization, and
-platform owners for provider, database, filesystem, and process access.
+Security belongs at the boundary that can enforce it reliably. nginx or the load balancer owns edge
+traffic shape. Express middleware owns transport policy. Zod contracts own runtime input shape.
+Modules own domain authorization. Platform owners own provider, database, filesystem, and process
+access.
 
 Rules:
 
@@ -241,13 +241,13 @@ app.use((err, req, res, next) => {
 });
 ```
 
-## API Naming
+## API naming
 
 API names are public and operational contracts. They must distinguish API-facing
 language, domain language, provider language, database language, and log
 metadata.
 
-### API Response Names
+### API response names
 
 Rules:
 
@@ -285,7 +285,7 @@ function buildSubmitOrderResponse(result: SubmitOrderSuccess): SubmitOrderHttpRe
 }
 ```
 
-### API Domain and Data Access Names
+### API domain and data access names
 
 Rules:
 
@@ -295,9 +295,9 @@ Rules:
 - Application-owned database, cache, storage, SDK, and remote API retrieval
   functions use `get`. Multiplicity, pagination, and optionality belong in the
   noun and type, not in alternate verbs. `enforced-by: naming/identifiers`
-- Application-owned database and storage mutation functions use `set`,
-  `insert`, `update`, or `delete` according to whether they replace a supplied
-  value, add a new row or item, change an existing row or item, or destroy it. `enforced-by: naming/identifiers`
+- Application-owned database and storage mutation functions use `set`, `insert`, `update`, or
+  `delete`. `set` replaces a supplied value, `insert` adds a row or item, `update` changes one, and
+  `delete` destroys it. `enforced-by: naming/identifiers`
 - Database row names stay inside the platform database boundary. `unenforced`
 - Use `dbRow` only inside database boundary code when naming a database wire
   shape. `enforced-by: naming/identifiers`
@@ -324,7 +324,7 @@ export async function generateReport(input: GenerateReportInput, trace: RequestT
 const activeOrder = await getActiveOrder(orderId);
 ```
 
-### API Configuration and Environment Names
+### API configuration and environment names
 
 Rules:
 
@@ -351,7 +351,7 @@ export const providerConfig = {
 };
 ```
 
-### Logs and Telemetry Names
+### Logs and telemetry names
 
 Rules:
 
@@ -399,7 +399,10 @@ Rules:
 - Put searchable values in the first object argument; keep the message string stable. `unenforced`
 - Do not instantiate new Pino loggers in modules. `enforced-by: typescript/eslint no-console`
 - Do not use `pino-pretty` in deployed environments. `enforced-by: typescript/eslint no-console`
-- Do not add Pino transports, OpenTelemetry log forwarding, or observability-vendor wiring without an explicit observability task that defines service name, trace correlation, collector and exporter configuration, schema, redaction, and deployment ownership. `enforced-by: typescript/eslint no-console`
+- Do not add Pino transports, OpenTelemetry log forwarding, or observability-vendor wiring without
+  an explicit observability task. That task defines the service name, trace correlation, collector
+  and exporter configuration, schema, redaction, and deployment ownership.
+  `enforced-by: typescript/eslint no-console`
 - Use the reporting owner for exception capture. `enforced-by: typescript/eslint no-console`
 - Use the `err` field for `Error` objects so Pino serializes errors consistently. `enforced-by: typescript/eslint no-console`
 - Do not log full `req`, `res`, headers, cookies, request bodies, response bodies, provider responses, or DB rows outside the dedicated HTTP logger or reporting owner. `enforced-by: security/semgrep`

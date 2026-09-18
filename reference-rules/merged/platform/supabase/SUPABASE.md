@@ -6,7 +6,7 @@ title: Supabase
 
 # Supabase
 
-## Ground Rules
+## Ground rules
 
 - Use the established Supabase layout for migrations, Edge Functions, generated
   data, storage assets, and tests. Do not invent parallel source roots. `enforced-by: security/semgrep`
@@ -25,7 +25,7 @@ title: Supabase
 - If a schema or contract change affects another project, update that consumer
   deliberately and verify the affected scope. `enforced-by: security/semgrep`
 
-## Supabase Platform Rules
+## Supabase platform rules
 
 These rules align with Supabase CLI and platform behavior:
 
@@ -43,7 +43,7 @@ These rules align with Supabase CLI and platform behavior:
   storage schema metadata as read-only except for approved RLS policies, indexes,
   triggers, and bucket configuration migrations. `enforced-by: security/semgrep`
 
-## Change Workflow
+## Change workflow
 
 1. Read the owning migration, script, function, or test standard first. `unenforced`
 2. Decide whether the change belongs in raw SQL, a generated data migration,
@@ -81,7 +81,7 @@ rows that are easier to maintain as source data.
 - Storage seed scripts verify that database rows and object keys agree
   when rows reference managed assets. `enforced-by: postgres/squawk`
 
-## Edge Functions
+## Edge functions
 
 - Functions live under `functions/<function-name>/`. `enforced-by: config-files/schema`
 - Shared function code, config constants, and generated DB types live with their
@@ -114,7 +114,7 @@ rows that are easier to maintain as source data.
 - Test function logic with unit tests, and integration tests when
   the Supabase client, auth, RLS, or external invocation path matters. `enforced-by: security/semgrep`
 
-## Edge Function Imports
+## Edge function imports
 
 - Internal Edge Function imports must include `.ts`. `unenforced`
 - TypeScript code outside Edge Functions uses extensionless imports
@@ -123,7 +123,7 @@ rows that are easier to maintain as source data.
 - Supabase examples often use `functions/_shared`; the required shared-code
   directory is `functions/shared/`. `enforced-by: config-files/schema`
 
-## Config and Environment
+## Config and environment
 
 - `config.toml` is part of the desired local and remote Supabase configuration. `enforced-by: config-files/schema`
 - `[api].schemas` controls which schemas are exposed through the Data API. Any
@@ -150,7 +150,7 @@ rows that are easier to maintain as source data.
 - If a cron target function changes auth, update the Vault secret, function
   listener checks, and cron SQL together. `enforced-by: security/semgrep`
 
-## Generated Types
+## Generated types
 
 - Regenerate database types after schema changes that affect generated types. `enforced-by: integrity/generated-fresh`
 - Do not manually edit generated database type contents except for the
@@ -158,7 +158,7 @@ rows that are easier to maintain as source data.
 - If generated types change, check affected Edge Functions, tests, and consumers
   for compile fallout. `enforced-by: integrity/generated-fresh`
 
-## Do Not Do These
+## Do not do these
 
 - Do not create parallel source roots for functions, config, runtime, generated
   types, or durable seed data. `enforced-by: security/semgrep`
@@ -200,7 +200,7 @@ rows that are easier to maintain as source data.
 - Scheduling Edge Functions:
   <https://supabase.com/docs/guides/functions/schedule-functions> `unenforced`
 
-## Edge Function Names
+## Edge function names
 
 Rules:
 
@@ -229,7 +229,7 @@ functions/provider-config/
 functions/generated-types/
 ```
 
-## Review Checklist
+## Review checklist
 
 Before `gspot check`, read the change against these questions:
 

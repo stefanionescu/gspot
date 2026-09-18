@@ -6,7 +6,7 @@ title: Planning
 
 # Planning
 
-## Complete Change Content
+## Complete change content
 
 A plan must contain the complete content of every change it proposes.
 
@@ -23,10 +23,9 @@ Rules:
   regenerate, or delete an artifact. `unenforced`
 - Include changes to generated files when the plan expects generated files to
   change. `unenforced`
-- Include changes to images, icons, screenshots, binary assets, and other
-  non-text artifacts by listing the exact source path, output path, operation,
-  dimensions or metadata changes, and command or tool invocation needed to
-  reproduce the result. `unenforced`
+- Include changes to images, icons, screenshots, binary assets, and other non-text artifacts. List
+  the exact source path, output path, operation, dimension or metadata changes, and the command that
+  reproduces the result. `unenforced`
 - If a binary diff cannot be represented as text, include enough exact
   reproduction detail that the asset change is part of the plan rather than an
   implied follow-up. `unenforced`
@@ -60,12 +59,12 @@ Asset change:
 - Command: convert assets/hero.png -resize 1200x assets/hero.png
 ```
 
-## Verification Steps
+## Verification steps
 
 A plan lists `gspot check --staged` as its last step. It adds test work or other verification
-only when the user asked for it, scoped to the planned change.
+only when the user asked for it, scoped to the change in the plan.
 
-## Implementation Order
+## Implementation order
 
 Plans must define the exact order of implementation.
 
@@ -99,14 +98,14 @@ Good:
 4. Remove the old row-only mapping code using the exact deletion diff.
 ```
 
-## Plan Detail Level
+## Plan detail level
 
 Plans must be extensive and detailed enough to be directly executable.
 
 Rules:
 
 - Include the reasoning needed to understand why the steps are ordered that way. `unenforced`
-- Include file paths for every planned edit. `unenforced`
+- Include file paths for every edit in the plan. `unenforced`
 - Include exact names for new files, functions, types, commands, assets, and
   configuration keys. `unenforced`
 - Include expected intermediate states when a sequence temporarily changes

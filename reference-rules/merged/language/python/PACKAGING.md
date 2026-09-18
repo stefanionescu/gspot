@@ -8,7 +8,7 @@ title: Python Packaging
 
 Deployment installs, lock files, and hash checking.
 
-## Package Installation Security
+## Package installation security
 
 These rules apply to deployment scripts, release images, CI release installs,
 production environment bootstraps, and any committed install command meant to
@@ -80,7 +80,7 @@ example-package==1.2.3 \
   --hash=sha256:2222222222222222222222222222222222222222222222222222222222222222
 ```
 
-## Packages and Architecture
+## Packages and architecture
 
 Rules:
 
@@ -97,7 +97,7 @@ Rules:
 - Respect the import-linter contracts the project configures. `unenforced`
 - Keep lower-level packages independent of higher-level workflow packages. `unenforced`
 
-## src Layout and Import Path
+## Source layout and import path
 
 Rules:
 

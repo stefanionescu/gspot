@@ -1,10 +1,10 @@
 ---
 layer: template
 preset: none
-title: Concept template
+title: Concept Template
 ---
 
-# Concept template
+# Concept Template
 
 Template. Remove sections that do not apply. Do not publish empty headings or placeholder
 prose.

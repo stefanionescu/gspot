@@ -6,7 +6,7 @@ title: SwiftUI
 
 # SwiftUI
 
-## Core iOS Philosophy
+## Core iOS philosophy
 
 Architecture must make the app's domain obvious. A reader sees what the
 app does, not only framework buckets such as `Views`, `ViewModels`, `Managers`,
@@ -24,7 +24,7 @@ sections below enforce, and it holds under MVVM, TCA, observable state or anythi
 
 A project that wants a named pattern writes it down itself. The distribution does not pick one.
 
-## SwiftUI Views
+## SwiftUI views
 
 SwiftUI `View` types render state and forward user intent.
 
@@ -64,7 +64,7 @@ Rules:
   domain-sensitive formatting moves to a ViewModel or formatter
   dependency. `enforced-by: swift/swiftlint`
 
-## State Management
+## State management
 
 Rules:
 
@@ -119,7 +119,7 @@ Rules:
 - Test cancellation or stale-result behavior for ViewModels that launch async
   tasks. `enforced-by: swift/swiftlint`
 
-### Test Data and Fixtures
+### Test data and fixtures
 
 Rules:
 
@@ -176,7 +176,7 @@ private extension Message {
 These helpers belong in test code unless production preview fixtures already
 have a clear owner. Test fixture APIs never become a parallel model layer.
 
-### Unit Tests
+### Unit tests
 
 Rules:
 
@@ -195,7 +195,7 @@ Rules:
 - Coordinator tests cover route stack changes, modal presentation state,
   dismissal, root resets, and deep-link route translation. `enforced-by: swift/swiftlint`
 
-### XCTest and Swift Testing Style
+### XCTest and Swift testing style
 
 Rules:
 
@@ -209,7 +209,7 @@ Rules:
 - Do not add protocols only to mock a concrete type if a lower boundary can be
   injected. `unenforced`
 
-### UI and Snapshot Tests
+### UI and snapshot tests
 
 Rules:
 

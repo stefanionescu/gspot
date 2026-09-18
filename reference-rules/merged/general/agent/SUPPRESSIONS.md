@@ -19,6 +19,6 @@ A suppression turns a rule off for one place. Every one is counted and every one
   finding of its own. `enforced-by: integrity/suppressions`
 - There is no ticket field. A field nobody fills honestly is worse than no field. `unenforced`
 
-Every language has its own syntax for this and the rule is the same in all of them: the ESLint `unenforced`
-disable comment, the Ruff `noqa`, the type-checker ignore, the SwiftLint disable, the ShellCheck
-disable, the Semgrep suppression.
+Every language has its own syntax for this, and the rule is the same in all of them. The forms are `unenforced`
+the ESLint disable comment, the Ruff `noqa`, the type-checker ignore, the SwiftLint disable, the
+ShellCheck disable, and the Semgrep suppression.

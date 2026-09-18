@@ -9,13 +9,13 @@ title: Python Typing
 Type annotations, `Any`, generics, aliases, protocols, and type-checker suppressions. The module and
 interface rules are in the Python file.
 
-## Type Annotations
+## Type annotations
 
 Type annotations improve readability and catch type-related errors. They are
 especially important for public APIs, stable code, complex data shapes, and
 model or data boundaries.
 
-### Annotation Scope
+### Annotation scope
 
 Rules:
 
@@ -43,7 +43,7 @@ def _token_count(value: int) -> int:
     return int(value)
 ```
 
-### Annotated Metadata
+### Annotated metadata
 
 Rules:
 
@@ -66,7 +66,7 @@ def read_items(q: Annotated[str | None, Query(max_length=50)] = None) -> list[It
     return find_items(query=q)
 ```
 
-### Using Any and Object
+### Using any and object
 
 Rules:
 
@@ -75,8 +75,7 @@ Rules:
   `str()`. `enforced-by: python/basedpyright`
 - Use `object` for callback return values when the callback return value is
   ignored. `enforced-by: python/basedpyright`
-- Use `Any` when the type cannot be expressed accurately, the correct type would
-  make the API unreasonably hard to use, or the value intentionally escapes type
+- Use `Any` when the type cannot be expressed accurately, the correct type makes the API unreasonably hard to use, or the value intentionally escapes type
   checking. `enforced-by: python/basedpyright`
 - Do not use `Any` just to avoid writing a precise type. `enforced-by: python/basedpyright`
 - Prefer a protocol, type variable, overload, or small value object over `Any`
@@ -96,7 +95,7 @@ def call_callback(callback: Callable[[int], object]) -> None:
     callback(42)
 ```
 
-### Input and Return Types
+### Input and return types
 
 Rules:
 
@@ -129,7 +128,7 @@ def to_display_text(value: object) -> str:
     return str(value)
 ```
 
-### Typing Imports
+### Typing imports
 
 Rules:
 
@@ -155,7 +154,7 @@ def transform(rows: Sequence[tuple[str, int]]) -> Mapping[str, int]:
     ...
 ```
 
-### None and Optional Values
+### None and optional values
 
 Rules:
 
@@ -174,7 +173,7 @@ def read_examples(path: Path | None = None) -> list[PromptExample]:
     ...
 ```
 
-### Generic Types
+### Generic types
 
 Rules:
 
@@ -199,7 +198,7 @@ def get_names(employee_ids: Sequence[_T]) -> Mapping[_T, str]:
     ...
 ```
 
-### Type Aliases
+### Type aliases
 
 Rules:
 
@@ -208,8 +207,7 @@ Rules:
 - Internal type aliases use one leading underscore. `enforced-by: structure/private-prefix`
 - Use `type` statements for new type aliases when the declared Python version supports them
   and the surrounding module already uses them. `enforced-by: python/basedpyright`
-- Keep `TypeAlias` for existing aliases when changing syntax would create
-  unrelated churn. `enforced-by: python/basedpyright`
+- Keep `TypeAlias` for existing aliases when changing syntax creates unrelated churn. `enforced-by: python/basedpyright`
 - Do not use `TypeAlias` for ordinary value, module, class, function, constant,
   or path aliases. `enforced-by: python/basedpyright`
 
@@ -224,7 +222,7 @@ Path = pathlib.Path
 ERROR_EXISTS = errno.EEXIST
 ```
 
-### Type Variables
+### Type variables
 
 Rules:
 
@@ -246,7 +244,7 @@ AddableType = TypeVar("AddableType", int, float, str)
 AnyFunction = TypeVar("AnyFunction", bound=Callable)
 ```
 
-### Forward References
+### Forward references
 
 Rules:
 
@@ -281,7 +279,7 @@ def build(value: "ExternalType") -> str:
     ...
 ```
 
-### Protocols and Interfaces
+### Protocols and interfaces
 
 Rules:
 
@@ -318,7 +316,7 @@ class FileReader:
         return "contents"
 ```
 
-### Variable Annotations
+### Variable annotations
 
 Rules:
 
@@ -334,7 +332,7 @@ examples: list[PromptExample] = []
 label_by_name: dict[str, int] = {}
 ```
 
-### Ignoring Type Errors
+### Ignoring type errors
 
 Rules:
 

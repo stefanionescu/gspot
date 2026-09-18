@@ -61,7 +61,7 @@ Zod v4 rules:
 - Use `z.email()` for email strings. `enforced-by: typescript/eslint zod/require-strict`
 - Use `z.uuid()` for UUIDs, or domain ID helpers from the project's shared identifier types when
   they express the domain. `enforced-by: typescript/eslint zod/require-strict`
-- Use `z.guid()` only for legacy GUID-compatible values. `enforced-by: typescript/eslint zod/require-strict`
+- Use `z.guid()` only for GUID-shaped values an older system issued. `enforced-by: typescript/eslint zod/require-strict`
 - Use `z.coerce.number()` for query params that arrive as strings. `unenforced`
 - Use `z.preprocess()` for environment parsing. `enforced-by: typescript/eslint zod/require-strict`
 - Use `.strict()` on request bodies. `enforced-by: typescript/eslint zod/require-strict`
@@ -101,7 +101,7 @@ function validateOrderSource(value: unknown, ctx: z.RefinementCtx): void {
 }
 ```
 
-## OpenAPI and Contract Testing
+## OpenAPI and contract testing
 
 OpenAPI is generated from endpoint-local contracts. Tests catch drift
 between contract, middleware, implementation, and actual response envelopes.

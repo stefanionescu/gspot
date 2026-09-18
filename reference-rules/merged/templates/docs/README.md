@@ -1,10 +1,10 @@
 ---
 layer: template
 preset: none
-title: README template
+title: README Template
 ---
 
-# README template
+# README Template
 
 Template. Remove sections that do not apply. Do not publish empty headings or placeholder
 prose.

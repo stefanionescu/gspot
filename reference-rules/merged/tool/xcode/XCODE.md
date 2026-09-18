@@ -6,7 +6,7 @@ title: Xcode
 
 # Xcode
 
-## Project Settings
+## Project settings
 
 - Warnings are errors: `SWIFT_TREAT_WARNINGS_AS_ERRORS = YES` and
   `GCC_TREAT_WARNINGS_AS_ERRORS = YES` in every configuration. `enforced-by: config-files/plist`
@@ -28,7 +28,7 @@ title: Xcode
 - `Info.plist` values that vary by configuration come from build settings
   (`$(PRODUCT_BUNDLE_IDENTIFIER)`), not from edited plist copies. `enforced-by: config-files/plist`
 
-## Build Phases and Scripts
+## Build phases and scripts
 
 - Run-script phases call a script file in the repository that passes ShellCheck; the phase body
   is one line. `enforced-by: config-files/plist`

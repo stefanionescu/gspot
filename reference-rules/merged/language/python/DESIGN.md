@@ -9,7 +9,7 @@ title: Python Design
 Functions, methods, classes, dataclasses, inheritance, and decorators. The module and interface
 rules are in the Python file.
 
-## Functions and Methods
+## Functions and methods
 
 Rules:
 
@@ -23,7 +23,7 @@ Rules:
 - Keep side effects explicit in the name or docstring. `enforced-by: python/ruff D`
 - Do not hide I/O in helpers that look like pure transformations. `unenforced`
 
-### Function Size
+### Function size
 
 Rules:
 
@@ -45,7 +45,7 @@ def _trim_history_messages(
     return list(messages[-max_messages:])
 ```
 
-### Default Arguments
+### Default arguments
 
 Rules:
 
@@ -75,7 +75,7 @@ def resize(width: int = 0, height: int = 0) -> None:
     ...
 ```
 
-### Return Statements
+### Return statements
 
 Rules:
 
@@ -94,7 +94,7 @@ def safe_sqrt(value: float) -> float | None:
     return math.sqrt(value)
 ```
 
-### Nested Functions and Classes
+### Nested functions and classes
 
 Rules:
 
@@ -124,7 +124,7 @@ def _normalize_prompt(value: object) -> str:
     return str(value).strip()
 ```
 
-### Lambda Functions
+### Lambda functions
 
 Rules:
 
@@ -144,7 +144,7 @@ def double(value: int) -> int:
 sorted_items = sorted(items, key=lambda item: item.name)
 ```
 
-### Conditional Expressions
+### Conditional expressions
 
 Rules:
 
@@ -159,7 +159,7 @@ Good:
 mode = "stream" if is_streaming else "batch"
 ```
 
-### Comprehensions and Generator Expressions
+### Comprehensions and generator expressions
 
 Rules:
 
@@ -221,7 +221,7 @@ def iter_prompt_text(examples: Iterable[PromptExample]) -> Iterable[str]:
 
 ## Classes
 
-### Class Design
+### Class design
 
 Rules:
 
@@ -250,7 +250,7 @@ class RuntimeBatch:
     """Tokenized prompts prepared for inference."""
 ```
 
-### Initialization and Named Constructors
+### Initialization and named constructors
 
 Rules:
 
@@ -337,7 +337,7 @@ class Batch:
 Rules:
 
 - Use properties only for cheap, straightforward, unsurprising attribute access. `unenforced`
-- Do not use a property to simply get and set an internal attribute. `unenforced`
+- Do not use a property only to get and set an internal attribute. `unenforced`
 - Do not hide expensive work behind attribute syntax. `unenforced`
 - Do not hide side effects behind properties. `unenforced`
 - Use `@property`; do not manually implement descriptors unless the power
@@ -450,7 +450,7 @@ def normalize_model_name(name: str) -> str:
     return name.strip().lower()
 ```
 
-### Exceptions as Classes
+### Exceptions as classes
 
 Rules:
 

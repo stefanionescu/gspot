@@ -6,14 +6,14 @@ title: Errors
 
 # Errors
 
-## Error Taxonomy
+## Error taxonomy
 
 - An expected operational error (invalid input, missing resource, permission denied, provider timeout) becomes a typed result or a typed error the caller can branch on. `unenforced`
 - A programmer error (broken invariant, impossible state) is thrown, logged with its stack, and surfaces as a generic failure. It is never caught to keep going. `unenforced`
 - A startup failure fails fast before the process accepts work. `unenforced`
 - A fatal runtime error goes through the shutdown path so the supervisor restarts the process. `unenforced`
 
-## Raising and Catching
+## Raising and catching
 
 - Throw or raise only the language's error type or a subclass of it. Never strings, numbers, plain objects, or provider payloads. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
 - Catch the narrowest type. Never a bare catch-all unless the block re-raises or is a deliberate isolation boundary that records the failure. `enforced-by: python/ruff BLE001`
@@ -24,7 +24,7 @@ title: Errors
 - Do not add speculative handling for states that cannot occur under the real contract. `unenforced`
 - Run required cleanup in `finally` or the language's equivalent. `unenforced`
 
-## Error Messages
+## Error messages
 
 Error messages visible to users, command-line callers, generated artifacts, or logs must not leak internal system details.
 
@@ -44,7 +44,7 @@ Error messages visible to users, command-line callers, generated artifacts, or l
 - Keep messages consistent in tone and casing across the repository `unenforced`
 - Keep messages easy to grep: stable text, values as arguments `enforced-by: security/semgrep`
 
-## At Boundaries
+## At boundaries
 
 - Convert technical errors to user-facing messages at the presentation boundary. `unenforced`
 - Central error handling owns final formatting; feature code does not format transport errors. `unenforced`

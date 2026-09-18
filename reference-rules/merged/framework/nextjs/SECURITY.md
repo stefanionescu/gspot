@@ -19,45 +19,49 @@ data and permissions the operation uses.
   independent boundary. Authenticate and authorize at the data/action owner. A protected layout,
   hidden button, request proxy, or client-side redirect alone does not protect an endpoint. `unenforced`
 - Derive identity from a verified server session. Restrict reads and writes to resources and tenants
-  that the caller can access. Test signed-out callers, another user's resource, another tenant, and
-  revoked access. Check permissions on the server instead of trusting a browser-provided role or
-  user ID. Database row-level security (RLS) adds access checks; keep admin clients restricted to
-  operations that need their authority. `unenforced`
+  that the caller can access. Check permissions on the server instead of trusting a browser-provided
+  role or user ID. `unenforced`
+- Test signed-out callers, another user's resource, another tenant, and revoked access. Database
+  row-level security (RLS) adds access checks; keep admin clients restricted to operations that need
+  their authority. `unenforced`
 - Validate and bound all external input: bodies, query strings, path parameters, cookies, file
   uploads, cursors, and provider responses. Enforce size and resource limits. Validate file
   type/content and storage access where uploads exist. Raw strings do not become safe because
   TypeScript calls them IDs. `unenforced`
 - Keep secrets in server configuration, validate required values, and fail clearly when absent.
-  `NEXT_PUBLIC_*` values are public and generally substituted at build time. Avoid exporting server
-  configuration through a shared barrel. Server-only markers and build checks enforce module
-  boundaries; client environment lint is a limited additional check. `unenforced`
+  `NEXT_PUBLIC_*` values are public and substituted at build time. Avoid exporting server
+  configuration through a shared barrel. `unenforced`
+- Server-only markers and build checks enforce module boundaries; client environment lint is a
+  limited additional check. `unenforced`
 - Expose only safe DTO fields and stable error codes. Logs must not contain session tokens,
   authorization headers, passwords, private messages, full sensitive request bodies, or provider
   credentials. Record enough safe context to diagnose a failure, including correlation IDs where
   useful. `unenforced`
 - Use the framework's supported Server Action and origin checks. Protect custom cookie-authenticated
-  writes against cross-site request forgery (CSRF). Keep writes out of GET requests. Cross-Origin
-  Resource Sharing (CORS) controls browser access to responses; authenticate callers separately.
-  Allow credentialed cross-origin requests only from the required origins. `unenforced`
+  writes against cross-site request forgery (CSRF). Keep writes out of GET requests. `unenforced`
+- Cross-Origin Resource Sharing (CORS) controls browser access to responses; authenticate callers
+  separately. Allow credentialed cross-origin requests only from the required origins. `unenforced`
 - Route Handlers use the correct method/status/content type and parse failures safely. Verify
   webhook signatures against the required raw body before processing, and handle replay/idempotency.
   Rate-limit costly public operations using deployment-appropriate shared state. `unenforced`
 - Allow only approved redirect destinations and external fetch targets when users can influence
   them. Prevent server-side request forgery (SSRF) by checking internal address targets and each
-  redirect in a chain. Validate untrusted input and use safe APIs before passing it to SQL, shell
-  commands, HTML rendering, or browser navigation. `unenforced`
+  redirect in a chain. `unenforced`
+- Validate untrusted input and use safe APIs before passing it to SQL, shell commands, HTML
+  rendering, or browser navigation. `unenforced`
 - Render user content as text or through a reviewed sanitizer. Rich Markdown/HTML links, embedded
   media, and translated rich text need explicit safe protocols/content rules. Do not use
-  `dangerouslySetInnerHTML` for unsanitized user or provider output. Configure Content Security
-  Policy (CSP) and other security headers for the application. Verify them with its rendering and
-  scripts. `unenforced`
+  `dangerouslySetInnerHTML` for unsanitized user or provider output. `unenforced`
+- Configure Content Security Policy (CSP) and other security headers for the application. Verify
+  them with its rendering and scripts. `unenforced`
 - Propagate cancellation and deadlines to streaming/provider work where supported. A disconnected
   browser must not leave avoidable expensive work running indefinitely. Handle partial stream
   failure separately from completion. Avoid unrestricted retries or unbounded request fan-out. `unenforced`
 - Keep request state isolated across deployment instances and define which data each cache stores.
-  Store sessions, uploads, and jobs in storage that survives instance restarts. Check Node, Edge,
-  static export, and deployment adapter support before selecting runtime features. Use shared
-  storage when a file or rate limit needs to be visible to several instances. `unenforced`
+  Store sessions, uploads, and jobs in storage that survives instance restarts. `unenforced`
+- Check Node, Edge, static export, and deployment adapter support before selecting runtime features.
+  Use shared storage when a file or rate limit needs to be visible to several instances.
+  `unenforced`
 - Maintain dependency and secret scanning with the repository's tools and hooks. Investigate scanner
   findings and scope each suppression to a reviewed finding with a documented reason. `unenforced`
 - Verify authorization and data isolation with negative integration cases and focused boundary
@@ -95,7 +99,7 @@ Ordinary user operations retain the intended user and tenant context. Do not exp
 client through a shared provider or browser configuration module.
 
 Where the auth library ships a framework integration, use it consistently; do not combine its cookie
-ownership with legacy Auth Helpers in the same authentication flow. Keep browser and request-scoped
+ownership with the older "Auth Helpers" package in the same authentication flow. Keep browser and request-scoped
 server clients distinct, and use verified server identity for authorization. A client-side
 `getSession()` read may supply a transport token but is not server authorization evidence. See
 [Supabase server-side auth for Next.js](https://supabase.com/docs/guides/auth/server-side/nextjs).
@@ -208,8 +212,9 @@ type, cache policy, and other response headers before returning the stream.
   use supported piping or pull-based production for large output. `unenforced`
 - Parse the application format independently of network chunks. A read can contain half a UTF-8
   character, part of a JSON record, or several events. Use incremental decoding and retain an
-  incomplete record until it is complete. Define framing for Server-Sent Events or newline-delimited
-  JSON rather than assuming one `enqueue` equals one client read. `unenforced`
+  incomplete record until it is complete. `unenforced`
+- Define framing for Server-Sent Events or newline-delimited JSON rather than assuming one `enqueue`
+  equals one client read. `unenforced`
 - Close or cancel file handles and upstream readers according to the runtime's stream ownership
   rules. Stream large files incrementally instead of loading them fully into memory. `unenforced`
 - Once headers are committed, report late failures through the defined stream protocol or close the

@@ -9,7 +9,7 @@ title: Naming Files
 Casing across languages, file and directory names, boundary and external names, and test names.
 The vocabulary and function-name rules are in the Naming file.
 
-## Casing Across Languages
+## Casing across languages
 
 Each language naming file states its own case table. These decisions hold across every language so `unenforced`
 the same concept reads the same way at every boundary.
@@ -25,7 +25,7 @@ the same concept reads the same way at every boundary.
 | Environment variables | `UPPER_SNAKE_CASE`, named by the external contract. No application prefix is required; platform-owned names are kept verbatim. |
 | Constants | Module-level constants bound to a literal or a frozen object are `UPPER_SNAKE_CASE` in TypeScript, JavaScript, Python, and Bash, and lowerCamelCase in Swift. |
 
-## Files and Directories
+## Files and directories
 
 Files and directories define ownership. Name them for the behavior or entity
 they own, not for reuse intent.
@@ -37,8 +37,7 @@ Rules:
   the language uses primary-type filenames. `unenforced`
 - A module file is named after the cohesive capability it owns. `unenforced`
 - Do not create catch-all files or directories for unrelated code. `unenforced`
-- Do not move code into shared locations just because a future caller might
-  appear. `unenforced`
+- Do not move code into shared locations for a caller that does not exist yet. `unenforced`
 - Promote shared code only when there is a repeated concept and a stable owner. `unenforced`
 - A directory named by a broad layer is acceptable only when the project
   architecture explicitly owns that layer. `unenforced`
@@ -82,7 +81,7 @@ src/accounts/
 src/accounts/avatar/
 ```
 
-## Boundaries and External Names
+## Boundaries and external names
 
 External systems often use names that do not match the domain language. Keep
 those names at the boundary and translate them intentionally.
@@ -90,8 +89,7 @@ those names at the boundary and translate them intentionally.
 Rules:
 
 - Preserve external field names in DTOs, SQL rows, generated types, wire
-  payloads, and validation schemas when changing them would misrepresent the
-  contract. `unenforced`
+  payloads, and validation schemas when changing them misrepresents the contract. `unenforced`
 - Translate provider names into domain names before passing values into domain
   or presentation layers. `unenforced`
 - Do not leak provider, database, storage, or HTTP mechanics into ViewModels,
@@ -195,7 +193,7 @@ func testMessagesShowUnreadMessagesFirst() async throws { }
 func testSubmitButtonTappedShowsValidationErrorWhenEmailIsInvalid() async throws { }
 ```
 
-## Review Checklist
+## Review checklist
 
 Before `gspot check`, read the change against these questions:
 

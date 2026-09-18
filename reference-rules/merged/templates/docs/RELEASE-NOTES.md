@@ -1,10 +1,10 @@
 ---
 layer: template
 preset: none
-title: Release-note templates
+title: Release-Note Templates
 ---
 
-# Release-note templates
+# Release-Note Templates
 
 Template. Remove sections that do not apply. Do not publish empty headings or placeholder
 prose.

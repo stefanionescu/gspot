@@ -126,7 +126,7 @@ token that has deployment access.
 Do not mix placeholder styles such as `YOUR_PROJECT`, `{project}`, and `enforced-by: prose/vale gspot.placeholders`
 `project-name` on the same page.
 
-Do not format a placeholder as a value readers might run unchanged. `enforced-by: prose/vale gspot.modals`
+Do not format a placeholder as a value a reader can run unchanged. `enforced-by: prose/vale gspot.modals`
 
 ### Show enough context
 
@@ -386,7 +386,7 @@ External links add maintenance risk.
 Use an external link when:
 
 - The external source is authoritative. `unenforced`
-- Duplicating the information would create a stale copy. `enforced-by: prose/vale gspot.modals`
+- Duplicating the information creates a stale copy. `enforced-by: prose/vale gspot.modals`
 - The reader needs a standard, provider contract, license, or maintained tool
   reference. `unenforced`
 
@@ -419,7 +419,7 @@ Use a call to action only when:
 - The reader has reached a logical next step. `unenforced`
 - The destination directly helps complete the reader's goal. `unenforced`
 - The destination is trusted and clearly named. `unenforced`
-- A normal inline link would not communicate the importance of the next step. `enforced-by: prose/vale gspot.modals`
+- A normal inline link does not communicate the importance of the next step. `enforced-by: prose/vale gspot.modals`
 
 Use action-oriented text such as "Create a repository" or "Start the tutorial." `unenforced`
 Do not use vague promotional text.
@@ -445,7 +445,7 @@ When a cross-version link is necessary:
 - Name the destination version in the surrounding sentence. `unenforced`
 - Include the version in the destination path when the platform requires it. `unenforced`
 - Prefer the same topic in the target version. `unenforced`
-- Explain why the reader needs the older or newer version. `unenforced`
+- Explain why the reader needs a different version. `unenforced`
 - Do not use a cross-version link as a substitute for maintaining the current
   page. `unenforced`
 

@@ -22,8 +22,11 @@ state. Keep each resource's ownership clear across server and client rendering.
 
 - Prefetch useful initial queries on the server and hydrate through the selected integration. Server
   and browser use identical query keys, inputs, and serialization. Verify hydrated content does not
-  immediately refetch unintentionally. Streaming pending queries requires the integration's
-  supported dehydration behavior, not just passing a promise into arbitrary JSON. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
+  immediately refetch unintentionally.
+  `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
+- Streaming pending queries requires the integration's supported dehydration behavior, not just
+  passing a promise into arbitrary JSON.
+  `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 
 - Set freshness by resource. Global infinite `staleTime` plus disabled refetch triggers is allowed
   only with complete explicit invalidation. Retain useful rows during background refresh;
@@ -52,9 +55,11 @@ uses one input/default while the browser uses another creates two cache entries 
 despite apparently successful hydration.
 
 - Keep every server QueryClient inside its request. A prefetching Server Component can own a local
-  client and dehydrate it at its boundary. Alternatively, share a request-local client through React
-  `cache` when the integration needs shared prefetch state. Each boundary dehydrates the client that
-  actually received its prefetches. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
+  client and dehydrate it at its boundary.
+  `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
+- Alternatively, share a request-local client through React `cache` when the integration needs
+  shared prefetch state. Each boundary dehydrates the client that actually received its prefetches.
+  `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 - Construct a stable browser instance that survives ordinary component rerenders and the provider's
   supported suspension behavior. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 - Prefetch only data that materially helps the upcoming screen. Do not prefetch an entire history
@@ -132,8 +137,10 @@ payload size without breaking shared reads.
   serialize that result again at dehydration. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 - When using SuperJSON for hydration, assign `superjson.serialize` and `superjson.deserialize`
   directly to the corresponding hooks. Keep the complete serialized payload, including any `meta`.
-  Do not use the string APIs for these object-payload hooks or add a forwarding wrapper. A tRPC
-  transport transformer does not automatically configure this separate hydration boundary. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
+  `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
+- Do not use the string APIs for these object-payload hooks or add a forwarding wrapper. A tRPC
+  transport transformer does not automatically configure this separate hydration boundary.
+  `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 - Preserve Next.js control-flow errors during server rendering. Configure `shouldRedactErrors`
   according to the installed Next.js integration; use its `false` setting only within the supported
   framework path that handles server error redaction. Keep raw internal errors out of independently
@@ -143,7 +150,7 @@ payload size without breaking shared reads.
   release, with deliberate rejection handling. A suppressed promise rejection does not prove that
   required data loaded or that the route can safely continue. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 
-Prefer explicit prefetching for routes where nested queries would otherwise wait on one another. If `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
+Prefer explicit prefetching for routes where nested queries otherwise wait on one another. If `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 using `@tanstack/react-query-next-experimental`, configure ReactQueryStreamedHydration within the
 provider and check both direct visits and client navigation. Removing explicit prefetching can
 restore code-and-data waterfalls on later navigation. Follow the
@@ -179,7 +186,7 @@ inactive data the app can afford to keep. These settings solve different problem
 | `staleTime: 'static'`                                          | For a supporting release, prevents invalidation-driven and automatic staleness-based refetches; use only for values fixed for that cache lifetime |
 | `gcTime`                                                       | How long unused query data remains before garbage collection; does not set freshness or limit an active history                                   |
 | `refetchOnMount`, `refetchOnWindowFocus`, `refetchOnReconnect` | Events that can refresh stale data; tune them for the resource instead of disabling them globally to hide duplicate requests                      |
-| `refetchInterval`                                              | Independent polling schedule; bound its cost and stop it when the interaction no longer needs polling                                             |
+| `refetchInterval`                                              | Independent polling schedule; bound its cost and stop it when the interaction stops needing polling                                             |
 
 Do not classify revocable permissions or changing account state as static reference data. Browser `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 cache freshness never replaces server authorization. Invalidate or replace the relevant identity's
@@ -222,7 +229,7 @@ consistent. Bound the number of queries; hundreds of parallel requests still cre
 
 A dependent query waits for the identifier or value it actually needs. Do not invent placeholder
 identifiers to trigger it sooner. On the server, avoid awaiting a parent prefetch before rendering a
-child whose independent prefetch could already have started. Check request timing during client
+child whose independent prefetch may already have started. Check request timing during client
 navigation as well as direct load. See
 [parallel queries](https://tanstack.com/query/latest/docs/framework/react/guides/parallel-queries).
 
@@ -286,14 +293,13 @@ consumer's subscription without creating a duplicate store or changing the share
 selectors pure. Validate fetched data in `queryFn` or its response parser; returning an Error object
 from `select` does not turn the fetch into a failed query.
 
-Use a stable selector reference when a costly transformation would otherwise rerun on every render. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
+Use a stable selector reference when a costly transformation otherwise reruns on every render. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 Extract a dependency-free selector, or use a callback with its actual dependencies. Keep simple
 selectors readable and optimize from measured work.
 
 Read the result properties the component needs. Object rest destructuring reads the remaining `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
-properties and defeats tracked-property optimization. The complete hook result object is not
-referentially stable; depend on the specific data, status, or function a callback needs instead of
-putting that result object in an effect dependency list. Keep automatic property tracking unless a
+properties and defeats tracked-property optimization. The complete hook result object is not referentially stable. Depend on the specific data, status, or
+function a callback needs, not on that result object in an effect dependency list. Keep automatic property tracking unless a
 measured requirement justifies explicit `notifyOnChangeProps` configuration. See
 [render optimizations](https://tanstack.com/query/latest/docs/framework/react/guides/render-optimizations).
 
@@ -334,8 +340,9 @@ replace the observer for those callbacks. Reserve them for optional view-specifi
 
 Expect mutations to finish out of submission order. Use a resource-specific `scope.id` when
 supported and when those writes need a client-side queue. Keep independent resources concurrent. The
-queue does not coordinate other browsers or replace server transactions and version checks. Handle
-paused work distinctly from active network work. Mutations have a separate retry policy from
+queue does not coordinate other browsers or replace server transactions and version checks.
+
+Paused work is handled distinctly from active network work. Mutations have a separate retry policy from
 queries; enable mutation retries only for an idempotent operation. See
 [mutation lifecycles](https://tanstack.com/query/latest/docs/framework/react/guides/mutations).
 
@@ -363,14 +370,14 @@ immutable transformations, and keep stable record IDs for rendered rows.
 - Treat `cancelRefetch` as coordination of repeated fetch calls. With `false`, a call during an
   existing fetch does not start another independent fetch. With the default `true`, repeated calls
   can replace in-flight work. Do not use either setting as a parallel-page-fetch switch. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
-- Use `maxPages` when long sessions could retain excessive history or make refreshes expensive.
+- Use `maxPages` when long sessions can retain excessive history or make refreshes expensive.
   Refetching an infinite query rebuilds retained pages sequentially from its first retained page.
   Bound both the retained data and the work needed to refresh it. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 - Configure previous-page fetching when the user needs to return to pages evicted from the start.
   Keep the virtualizer's stable visible anchor when the retained window changes. Evicting data and
   unmounting DOM rows are separate operations. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 - When removing a cache entry, expect pagination to restart from its initial page. Do not keep a
-  global cursor pointing beyond pages that the query no longer holds. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
+  global cursor pointing beyond pages that the query does not hold. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 
 Check background refresh during a scroll-triggered load, page eviction followed by reverse loading, `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 and duplicate records after a concurrent write. Consult
@@ -422,9 +429,11 @@ selection separate from server data. A virtualized list does not need its own du
   merge temporary records without creating duplicates or discarding newer local changes. A
   successful database write does not update local state merely because `mutateAsync` resolved. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 - Preserve required invalidation and reconciliation when adding per-call callbacks. Await the
-  relevant invalidation work when the UI promises fresh data before ending its pending state. If a
-  refresh fails after a committed write, retain the write's success and offer a refresh retry;
-  repeating the mutation could duplicate it. `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
+  relevant invalidation work when the UI promises fresh data before ending its pending state.
+  `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
+- If a refresh fails after a committed write, retain the write's success and offer a refresh retry;
+  repeating the mutation can duplicate it.
+  `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 - Propagate save failures through a rejected promise or an explicit result that every caller
   handles. An error callback followed by an ordinary successful return can make a failed save look
   complete. Retain recoverable draft content and distinguish retrying persistence from starting a

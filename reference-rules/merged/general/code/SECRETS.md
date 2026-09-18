@@ -6,7 +6,7 @@ title: Secrets
 
 # Secrets
 
-## Secrets in Code and Configuration
+## Secrets in code and configuration
 
 - Never hardcode API keys, tokens, passwords, or secrets anywhere in the codebase. `enforced-by: secrets/gitleaks`
 - Use environment variables for all secrets. Reference them through config modules, not directly in business logic. `enforced-by: secrets/gitleaks`
@@ -14,7 +14,7 @@ title: Secrets
 - Never put real secrets in `.env.example`. `enforced-by: secrets/gitleaks`
 - If package publishing is ever introduced, use an explicit package file allowlist; ignored files can still leak through packaging defaults. `unenforced`
 
-## Secrets in Logs
+## Secrets in logs
 
 Never log API keys, provider tokens, auth headers, bearer tokens, database `enforced-by: secrets/gitleaks`
 service-role keys, reporting tokens, raw user content, full request bodies with
@@ -65,7 +65,7 @@ Use angle brackets so a reader can see the replacement boundary. Use uppercase `
 words joined by underscores. Explain each placeholder before or immediately
 after the example.
 
-Do not use a realistic token-shaped value that a scanner or reader could mistake `enforced-by: secrets/gitleaks`
+Do not use a realistic token-shaped value that a scanner or reader can mistake `enforced-by: secrets/gitleaks`
 for a credential.
 
 Use reserved example domains:

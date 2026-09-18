@@ -15,7 +15,7 @@ The FastAPI rules span two files: this one (structure, routers, parameters, sche
 errors) and Runtime (forms and files, encoding, async, dependencies, security, streaming, background
 tasks, middleware, docs, tests).
 
-## FastAPI Source Decisions
+## FastAPI source decisions
 
 Rules:
 
@@ -39,7 +39,7 @@ Rules:
 - Do not add a FastAPI dependency, middleware, background task, or router when a
   plain Python function is enough. `enforced-by: python/ruff FAST`
 
-## FastAPI Application Structure
+## FastAPI application structure
 
 Rules:
 
@@ -96,7 +96,7 @@ app.include_router(
 )
 ```
 
-## FastAPI Routers
+## FastAPI routers
 
 Rules:
 
@@ -146,7 +146,7 @@ app.include_router(items.router)
 app.include_router(users.router)
 ```
 
-## FastAPI Path Operations
+## FastAPI path operations
 
 Rules:
 
@@ -177,7 +177,7 @@ async def read_item(item_id: str) -> Item:
     return item
 ```
 
-## FastAPI Parameters and Validation
+## FastAPI parameters and validation
 
 Rules:
 
@@ -197,8 +197,7 @@ Rules:
   on the request data. `enforced-by: python/ruff FAST`
 - Use dependencies, not validators, for validation that needs a database,
   service call, filesystem access, authorization state, or other external I/O. `unenforced`
-- Declare fixed routes before parameterized routes that could otherwise match
-  the same path. `unenforced`
+- Declare fixed routes before parameterized routes that otherwise match the same path. `unenforced`
 - Do not define two path operations for the same method and path. `unenforced`
 - Use `str, Enum` path parameter types for documented string choices. `unenforced`
 - Use the `{name:path}` path convertor only when a path parameter is genuinely
@@ -253,7 +252,7 @@ async def read_user(user_id: str) -> User:
     return get_user(user_id)
 ```
 
-## FastAPI Request and Response Schemas
+## FastAPI request and response schemas
 
 Rules:
 
@@ -263,8 +262,7 @@ Rules:
 - Declare required body fields without defaults. `unenforced`
 - Declare optional or nullable body fields with explicit defaults and `None`
   annotations where applicable. `unenforced`
-- Prefer `Field(default_factory=...)` for mutable defaults, even when Pydantic
-  would copy mutable defaults. `enforced-by: python/ruff FAST`
+- Prefer `Field(default_factory=...)` for mutable defaults, even when Pydantic copies mutable defaults. `enforced-by: python/ruff FAST`
 - Use `Field` constraints on model attributes when the constraint belongs to the
   schema contract. `enforced-by: python/ruff FAST`
 - Use separate schema classes for create, read, and update shapes when their
@@ -318,7 +316,7 @@ async def patch_item(item_id: str, item: ItemUpdate) -> Item:
     return stored_item.model_copy(update=update_data)
 ```
 
-## FastAPI Schema Fields and Examples
+## FastAPI schema fields and examples
 
 Rules:
 
@@ -407,7 +405,7 @@ async def update_prompt(
     return save_prompt(session_id=session_id, prompt=prompt)
 ```
 
-## FastAPI Nested and Special Types
+## FastAPI nested and special types
 
 Rules:
 
@@ -466,7 +464,7 @@ async def create_index_weights(weights: dict[int, float]) -> dict[int, float]:
     return weights
 ```
 
-## FastAPI Headers and Cookies
+## FastAPI headers and cookies
 
 Rules:
 
@@ -544,7 +542,7 @@ async def read_items(cookies: Annotated[SessionCookies, Cookie()]) -> list[Item]
     return list_items(session_id=cookies.session_id)
 ```
 
-## FastAPI Response Models
+## FastAPI response models
 
 Rules:
 
@@ -557,8 +555,7 @@ Rules:
 - Prefer returning an instance of the public response model when that is simple
   and keeps type checking precise. `unenforced`
 - Use `-> Any` with `response_model=...` only at a FastAPI boundary where the
-  returned object intentionally differs from the response schema and adapting it
-  first would add noise without improving safety. `unenforced`
+  returned object intentionally differs from the response schema and adapting it first adds noise without improving safety. `unenforced`
 - Never reuse an input schema containing passwords, tokens, secrets, or private
   fields as the response schema. `enforced-by: python/ruff FAST`
 - Use separate input and output models when request and response fields differ. `unenforced`
@@ -618,7 +615,7 @@ async def get_portal(teleport: bool = False) -> Response | dict[str, str]:
     return {"message": "Portal ready"}
 ```
 
-## FastAPI Status Codes and Errors
+## FastAPI status codes and errors
 
 Rules:
 

@@ -6,7 +6,7 @@ title: GitHub Actions
 
 # GitHub Actions
 
-## Workflow Shape
+## Workflow shape
 
 - One workflow per purpose (`ci.yml`, `release.yml`, `deploy.yml`). File names are kebab-case. `enforced-by: config-files/actions`
 - Every job has `timeout-minutes`. Every workflow that can run twice for one ref has a

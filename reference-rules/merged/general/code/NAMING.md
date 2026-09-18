@@ -9,14 +9,14 @@ title: Naming
 The naming rules span two files: this one (principles, vocabulary, functions, booleans) and Naming
 Files (casing across languages, files and directories, boundaries and external names, tests).
 
-## Authority and Quality Enforcement
+## Authority and quality enforcement
 
 Naming decisions must satisfy both this guide and the quality tooling.
 
-- Follow this file when choosing names for files, directories, classes, structs,
-  protocols, type aliases, interfaces, enums, functions, methods, parameters,
-  variables, constants, SQL identifiers, storage objects, migration files, test
-  helpers, and documentation examples. `unenforced`
+- Follow this file when choosing names for files, directories, classes, structs, protocols, type
+  aliases, interfaces, and enums. It covers functions, methods, parameters, variables, constants,
+  SQL identifiers, storage objects, migration files, test helpers, and documentation examples too.
+  `unenforced`
 - Also follow the workspace naming quality checks. `unenforced`
 - Also follow the banned-term and language policy checks for the affected
   scope. `enforced-by: naming/identifiers`
@@ -43,7 +43,7 @@ Choose the clearest domain name, then run the affected quality checks and adjust
 the name if the current naming or banned-term policy rejects it.
 ```
 
-## General Naming Rules
+## General naming rules
 
 Names are a design tool. A name lets a reader understand the concept,
 scope, role, and expected value without reading the implementation first.
@@ -111,7 +111,7 @@ const users = getUsers();
 const customer = getCustomer();
 ```
 
-### Role Instead of Type
+### Role instead of type
 
 Names explain what the value means in the domain.
 
@@ -149,10 +149,9 @@ const sessionSummary = buildSessionSummary(session);
 const usersById = usersById;
 ```
 
-### Avoid Redundant Context
+### Avoid redundant context
 
-Let the owner provide context. Add context only when the name would otherwise be `unenforced`
-ambiguous outside the owner.
+Let the owner provide context. Add context only when the name is ambiguous outside the owner without it. `unenforced`
 
 Bad:
 
@@ -200,7 +199,7 @@ struct ProfileViewState {
 }
 ```
 
-### Avoid Type and Shape Duplication
+### Avoid type and shape duplication
 
 Do not repeat information already expressed by the type system or declaration. `unenforced`
 
@@ -238,7 +237,7 @@ let usersById: [User.ID: User] = usersById
 let avatarURL: URL? = profile.avatarURL
 ```
 
-### Avoid Vague and Inflated Words
+### Avoid vague and inflated words
 
 Do not use vague words to avoid naming the real responsibility. Common bad `enforced-by: naming/identifiers`
 patterns include names that describe generic assistance, movement, or quality
@@ -282,12 +281,12 @@ Allowed framework or domain terms must be precise:
 - `Service` is not valid for app-owned names unless quality has an explicit
   exact exemption for that name. Prefer a more specific role. `enforced-by: naming/identifiers`
 
-## Vocabulary and Role Words
+## Vocabulary and role words
 
 Choose suffixes and role words deterministically. A deterministic suffix tells a `enforced-by: naming/identifiers`
 reader what kind of boundary or owner they are looking at.
 
-### Preferred Role Words
+### Preferred role words
 
 Use these meanings consistently:
 
@@ -375,7 +374,7 @@ final class LoginCoordinator { }
 Apple's `FileManager` type name is an external platform name. Do not copy the
 suffix for local application owners.
 
-### Helper and Utility
+### Helper and utility
 
 Do not create `Helper`, `Helpers`, `Utility`, `Utilities`, `Util`, `Utils`, `enforced-by: naming/identifiers`
 `Common`, `Shared`, `Base`, or `Core` dumping grounds. Name the capability.
@@ -398,7 +397,7 @@ email-address-validation.ts
 AuthenticatedProfileViewModel.swift
 ```
 
-## Functions and Methods
+## Functions and methods
 
 Function and method names describe the action and the domain being acted
 on without repeating context already supplied by the owner.
@@ -437,7 +436,7 @@ Rules:
 - Use item/options parameters when positional arguments become ambiguous. `unenforced`
 - Avoid positional boolean parameters. `unenforced`
 
-### Retrieval and CRUD Operations
+### Retrieval and CRUD operations
 
 Application-owned retrieval, state, database, and storage boundaries use the
 `get`, `set`, `insert`, `update`, and `delete` vocabulary. The noun and return
@@ -452,8 +451,7 @@ Rules:
   `getChatConfig`, `getSession`, `getSessions`, and `getPaginatedSessions`. `unenforced`
 - Let the return type communicate optionality. A lookup returning `T | null`
   still uses `get`, not a separate verb. `unenforced`
-- A `get` boundary may populate its owning runtime state when returning the raw
-  source would leak boundary mechanics, such as `getTestEnv()` loading the
+- A `get` boundary may populate its owning runtime state when returning the raw source leaks boundary mechanics, such as `getTestEnv()` loading the
   dynamic test environment. `unenforced`
 - Do not use `read`, `find`, `fetch`, `load`, or `list` as alternate retrieval
   verbs in application-owned APIs. `enforced-by: naming/identifiers`
@@ -549,7 +547,7 @@ function createMenu(options: MenuOptions) {
 }
 ```
 
-### One Concept per Function Name
+### One concept per function name
 
 If the function name needs `and`, `or`, `with`, `plus`, or a vague umbrella
 verb, the function may own too many concepts.
@@ -574,7 +572,7 @@ async function saveProfile(profile: Profile): Promise<void> {
 }
 ```
 
-### Boundary Names
+### Boundary names
 
 At boundaries, name the conversion explicitly.
 
@@ -608,7 +606,7 @@ function parseSubmitOrderRequest(input: unknown): SubmitOrderRequest {
 }
 ```
 
-### Boundary Shape Suffixes
+### Boundary shape suffixes
 
 Use suffixes such as `Row`, `DTO`, `Request`, and `Response` only where they `unenforced`
 describe the declared shape. Do not carry the suffix into every function that
@@ -658,7 +656,7 @@ function mapUser(row: UserRow): User {
 }
 ```
 
-## Booleans and Predicates
+## Booleans and predicates
 
 Boolean names use positive states. Stored values stay concise; predicates state
 the question they answer.
@@ -677,7 +675,7 @@ Rules:
   framework or protocol requirements covered by an explicit quality exemption. `unenforced`
 - Avoid negative names such as `isNotReady` or `isEmailNotUsed` when the
   positive form is clearer. `unenforced`
-- Do not name booleans like nouns that could be non-boolean values. `unenforced`
+- Do not name booleans like nouns that read as non-boolean values. `unenforced`
 - Prefer the boolean name that matches the branch without double negation. `unenforced`
 
 Bad:

@@ -58,7 +58,7 @@ main "$@"
 
 Libraries must not call `main`.
 
-## Variables and Constants
+## Variables and constants
 
 Rules:
 
@@ -114,7 +114,7 @@ export output="$(some_command)"
 The exit code is the `local` builtin's status, not reliably the command
 substitution status.
 
-## Quoting and Expansion
+## Quoting and expansion
 
 Rules:
 
@@ -158,7 +158,7 @@ filename="archive.tar.gz"
 base="${filename%.tar.gz}"
 ```
 
-## Arrays and Argument Lists
+## Arrays and argument lists
 
 Use arrays for command arguments. `unenforced`
 
@@ -340,7 +340,7 @@ index=$(( index + 1 ))
 generate_result >"${output_file}"
 ```
 
-## Loops and Input
+## Loops and input
 
 Rules:
 
@@ -392,7 +392,7 @@ done
 
 Do not use `seq` for simple Bash counters. `enforced-by: bash/shellcheck`
 
-## Delimited Data and IFS
+## Delimited data and IFS
 
 Rules:
 
@@ -434,7 +434,7 @@ while IFS= read -r host; do
 done < <(aws_command_that_prints_one_host_per_line)
 ```
 
-## Paths, Globs, and File Names
+## Paths, globs, and file names
 
 Rules:
 
@@ -515,7 +515,7 @@ When using `cd` in command substitution, clear `CDPATH`:
 repo_root="$(CDPATH= cd -- "${SCRIPT_DIR}/.." && pwd -P)" || return 1
 ```
 
-## Command Substitution
+## Command substitution
 
 Rules:
 
@@ -543,7 +543,7 @@ content_with_sentinel="$(some_command; printf x)" || return 1
 content="${content_with_sentinel%x}"
 ```
 
-## Pipelines and Redirection
+## Pipelines and redirection
 
 Rules:
 

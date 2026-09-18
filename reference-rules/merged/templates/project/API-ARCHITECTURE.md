@@ -9,7 +9,7 @@ title: API Architecture
 Project template. Copy into `rules/project/` when the repository is an Express API organized as a modular monolith with app, modules, platform, config, env and types owners. Edit it to match the project;
 gspot never upgrades a project file.
 
-## Core API Philosophy
+## Core API philosophy
 
 The API is a modular monolith: one deployable Node, Express, and
 TypeScript service, with clear owners inside the service instead of distributed
@@ -51,7 +51,7 @@ In this API, separation means HTTP adapters, domain modules, platform
 boundaries, configuration ownership, and generated public contracts each have
 clear responsibilities.
 
-## API Architecture
+## API architecture
 
 Use these ownership boundaries:
 
@@ -65,7 +65,7 @@ Use these ownership boundaries:
 | Public contracts  | Generated OpenAPI document assembly and shared public schemas.                  |
 | Shared types      | Runtime-free type definitions with no side effects.                             |
 
-## Ownership Map
+## Ownership map
 
 ```text
                  types
@@ -117,7 +117,7 @@ export async function releaseProviderResource(providerResourceId: ProviderResour
 }
 ```
 
-## Module Boundaries
+## Module boundaries
 
 Feature behavior belongs in `modules/<feature>/`. Provider mechanics belong in
 `platform/<provider>/`. Database shape belongs in `platform/db`. HTTP details
@@ -175,7 +175,7 @@ import { submitOrder } from '@/modules/orders/submit.js';
 import { listOrderItems } from '@/platform/db/queries/order-items.js';
 ```
 
-## Endpoint Structure
+## Endpoint structure
 
 Endpoint-owned HTTP files live together under the endpoint owner.
 
@@ -206,7 +206,7 @@ route.ts
   map result to sendOk/sendError
 ```
 
-## Entry Points
+## Entry points
 
 An entry point is any external trigger that asks this service to do work:
 HTTP routes, webhooks, queue consumers, scheduled jobs, process startup hooks,
@@ -260,7 +260,7 @@ queue.on('message', async (message) => {
 ```
 
 
-## Domain Logic
+## Domain logic
 
 Modules receive explicit domain inputs, not Express objects. Domain code returns
 typed results for expected business outcomes. It throws for exceptional
@@ -293,7 +293,7 @@ export type SubmitOrderResult =
     | { success: false; error: SubmitOrderFailure };
 ```
 
-## Services and Cross-Module Communication
+## Services and cross-module communication
 
 Cross-module calls preserve ownership. If one module needs another
 module's context, call a function owned by that module instead of reaching into
@@ -315,7 +315,7 @@ const order = await getOrderRowById(orderId);
 const activeOrder = await resolveActiveOrder(orderId);
 ```
 
-## Data Access
+## Data access
 
 Database code belongs in `platform/db`. Query files read. Mutation files write.
 Query and mutation functions expose domain-useful return shapes.
@@ -342,7 +342,7 @@ if (error) throw error;
 const items = await listOrderItems(orderId);
 ```
 
-## Provider Integrations
+## Provider integrations
 
 Provider APIs, webhooks, storage services, real-time transports, and cache
 mechanics belong in `platform/`. Modules build domain or provider intent.
@@ -369,7 +369,7 @@ await fetch(env.PROVIDER_API_URL, {
 const result = await createProviderOperation(request, trace);
 ```
 
-## Configuration and Environment
+## Configuration and environment
 
 `process.env` is allowed only in `env/`. Other code imports typed env values
 from `env/` or constants from `config/`.
@@ -416,7 +416,7 @@ function validateProviderConfig(value: Record<string, unknown>, ctx: z.Refinemen
 ```
 
 
-## Production Operations
+## Production operations
 
 The API behaves like a stateless containerized service. Local process
 state is allowed only when a platform runtime owner controls lifecycle,
@@ -449,7 +449,7 @@ const activeOrders = new Map<string, OrderState>();
 const activeOrder = await resolveActiveOrder(orderId);
 ```
 
-## nginx and Runtime
+## nginx and runtime
 
 nginx handles edge concerns, not application behavior. Compose owns local and
 deployment wiring. Keep health and readiness probe behavior lightweight.

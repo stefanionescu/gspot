@@ -9,7 +9,7 @@ title: iOS Architecture
 Project template. Copy into `rules/project/` when the repository is a SwiftUI application that picks MVVM with Clean Architecture boundaries. Edit it to match the project;
 gspot never upgrades a project file.
 
-## Core iOS Philosophy
+## Core iOS philosophy
 
 Architecture must make the app's domain obvious. A reader sees what the
 app does, not only framework buckets such as `Views`, `ViewModels`, `Managers`,
@@ -30,7 +30,7 @@ Simple screens may stay simple, but they must not bypass dependency boundaries.
 A small view can call a small ViewModel or use case; it never reaches into a
 network client, database, SDK singleton, or process-global framework state.
 
-## Architecture Standard
+## Architecture standard
 
 Use these default layers:
 
@@ -75,7 +75,7 @@ Dependency rules:
 - Cross-feature imports are forbidden unless the imported code is a stable
   domain or UI primitive promoted to a shared owner.
 
-## Feature Organization
+## Feature organization
 
 Organize by feature or bounded context first, then by layer only when the
 feature is large enough.
@@ -115,13 +115,12 @@ Rules:
 - Reusable visual primitives belong in a design system or UI foundation owner.
 - Domain values and policies belong in a domain/core owner.
 - SDK and OS wrappers belong in infrastructure/platform owners.
-- Do not move code to shared locations just because a second caller might appear
-  later.
+- Do not move code to shared locations for a second caller that does not exist yet.
 - Do not introduce generic buckets as a substitute for ownership.
 - Follow the naming rules for feature folder names, role suffixes,
   extension filenames, shared-code names, and generic bucket names.
 
-## Layers and Dependency Direction
+## Layers and dependency direction
 
 Good dependency path:
 
@@ -272,7 +271,7 @@ MVVM anti-patterns:
 - ViewModel-per-subview when the subview is just visual composition.
 - ViewModel protocols created only for mocks.
 
-## Domain Layer
+## Domain layer
 
 Domain code represents the app's business concepts and rules.
 
@@ -293,7 +292,7 @@ Rules:
 - Domain never contains formatting for UI copy, localized strings, colors,
   images, layout, or accessibility.
 
-### Model Structure
+### Model structure
 
 Rules:
 
@@ -337,7 +336,7 @@ struct MessageDraft {
 `MessageDraft` does not pretend to be a complete `Message`. DTOs can remain
 optional-heavy; domain models enforce stronger invariants after mapping.
 
-## Use Cases
+## Use cases
 
 A use case represents an application operation, not a generic service bucket.
 
@@ -356,7 +355,7 @@ Rules:
   presentation in use cases.
 - Do not put raw networking, database queries, or SDK mechanics in use cases.
 
-### Input and Validation
+### Input and validation
 
 Rules:
 
@@ -411,7 +410,7 @@ Rules:
 - Repositories are not a substitute for use cases. Business workflows belong in
   use cases or domain services, not infrastructure repositories.
 
-## DTOs and Mapping
+## DTOs and mapping
 
 DTOs mirror external wire or persistence shape.
 
@@ -440,7 +439,7 @@ Rules:
 - Domain models may conform to `Codable` only when serialization is a true domain
   requirement or stable app-owned persistence contract.
 
-## Dependency Injection
+## Dependency injection
 
 Use initializer injection by default.
 
@@ -459,7 +458,7 @@ Rules:
 - Test factories can exist for complex object graphs, but production code
   uses explicit initializers.
 
-### Scoped Factories
+### Scoped factories
 
 Composition roots may use factories or builders to create feature object graphs.
 
@@ -555,7 +554,7 @@ struct MessageTimestampFormatter {
 }
 ```
 
-## Protocols and Abstractions
+## Protocols and abstractions
 
 Protocols define boundaries and capabilities. They are not a default wrapper for
 every concrete type.
@@ -618,7 +617,7 @@ struct ImageTransform {
 }
 ```
 
-## State Management
+## State management
 
 Rules:
 
@@ -639,7 +638,7 @@ Rules:
   mutually exclusive.
 - Keep UI-local transient state out of Domain.
 
-## Navigation and Coordinators
+## Navigation and coordinators
 
 SwiftUI navigation APIs render navigation. Presentation owns navigation state and
 flow decisions.
@@ -723,7 +722,7 @@ Testing rules:
 - Do not unit test SwiftUI's `NavigationStack` internals.
 - Use UI tests only for critical navigation paths that must work end to end.
 
-## Services and Platform Boundaries
+## Services and platform boundaries
 
 A service owns a higher-level capability, stateful coordination, external
 communication, or OS/SDK integration.
@@ -744,7 +743,7 @@ Rules:
   audio session, camera, microphone, and location access must be wrapped or
   injected.
 
-## Networking and API Clients
+## Networking and API clients
 
 Network clients belong in Infrastructure and own HTTP mechanics. Domain and
 Presentation see domain operations and domain results, not transport

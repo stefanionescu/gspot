@@ -81,7 +81,7 @@ describe('POST /reports', () => {
 });
 ```
 
-## Testing Data and Infrastructure
+## Testing data and infrastructure
 
 Tests own the data they rely on. Build subjects through builders under `tests/support/` with a
 unique per-run suffix.
@@ -124,7 +124,7 @@ it('reads a created order', async () => {
 });
 ```
 
-## Network and Provider Testing
+## Network and provider testing
 
 Block unmocked external HTTP by default (`vi.stubGlobal('fetch', ...)` or an interceptor that `enforced-by: typescript/eslint`
 rejects unknown hosts). Assert the outbound contract this API owns.
@@ -177,7 +177,7 @@ mockProvider
     .reply(200, { status: 'ok' });
 ```
 
-## Vitest Mocking Patterns
+## Vitest mocking patterns
 
 Use mocks to isolate boundaries and simulate external behavior. Do not use `enforced-by: typescript/eslint`
 mocks to prove private implementation details.
@@ -196,7 +196,7 @@ Rules:
 - Restore environment variables, globals, fake timers, and spies in cleanup. `enforced-by: typescript/eslint`
 - Avoid surprising global auto-mocks. `enforced-by: typescript/eslint`
 - Use `vi.mocked()` for typed mock access. `enforced-by: typescript/eslint`
-- Use partial mocks sparingly and only when a full boundary replacement would hide too much useful behavior. `enforced-by: typescript/eslint`
+- Use partial mocks sparingly and only when a full boundary replacement hides too much useful behavior. `enforced-by: typescript/eslint`
 - Do not mock the candidate under test. `enforced-by: typescript/eslint`
 
 Mock global fetch:

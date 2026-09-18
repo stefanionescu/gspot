@@ -6,7 +6,7 @@ title: tRPC
 
 # tRPC
 
-## tRPC and TanStack Query
+## tRPC and TanStack query
 
 - Use `@trpc/tanstack-react-query`. When replacing a classic integration, update providers,
   consumers, query keys, and hydration together and remove the classic client in the same change.
@@ -87,7 +87,7 @@ enough to the data access that an alternate caller cannot bypass them. Validate 
 selected tenant against the verified session rather than accepting a tenant header as authority.
 
 Use consistent error categories. Return safe field information for validation failures. For access `enforced-by: typescript/eslint boundaries/element-types`
-denials, hide resource existence when revealing it would expose private information. Keep the cause
+denials, hide resource existence when revealing it exposes private information. Keep the cause
 of an internal failure in server diagnostics. Send stable error codes for the UI to translate, and
 keep database diagnostics and raw exception text on the server.
 
@@ -116,7 +116,7 @@ and `useTRPCClient` belong to this integration; keep them separate from the serv
 factory. Import query and mutation hooks from `@tanstack/react-query`.
 
 Reuse the application's QueryClient and QueryClientProvider. Pass that same client to TRPCProvider,
-alongside a stable tRPC transport client. Two independent query clients would split cache updates
+alongside a stable tRPC transport client. Two independent query clients split cache updates
 from the components that need them. Keep browser singleton initialization out of server request
 state, and ensure initial suspension cannot discard the active browser cache.
 
@@ -136,7 +136,7 @@ Use the generated interfaces for each operation:
 Keep keys generated from the same integration and input contract as their consumers. A regular query `enforced-by: typescript/eslint boundaries/element-types`
 value and an infinite query's pages have different shapes. Use the matching key factory when
 reading, updating, or cancelling either cache entry. Configure distinct supported key prefixes when
-multiple API roots share a QueryClient and could otherwise produce the same keys.
+multiple API roots share a QueryClient and otherwise produce the same keys.
 
 For conditional reads, use the hook's supported disabling mechanism. Use `skipToken` with supported
 ordinary queries; for a suspense query that needs a missing identifier, render its consumer only
@@ -171,9 +171,11 @@ inferred type to browser code.
   string lengths, page sizes, and operation-specific constraints at the procedure boundary. A
   browser form validator improves feedback but does not replace server validation. `enforced-by: typescript/eslint boundaries/element-types`
 - Compose object input schemas only when their fields have a clear owner. Chained `.input()` parsers
-  merge object results, and later values can overwrite earlier properties. Keep authorization
-  identifiers consistent across parsing and access checks. Do not redefine a checked tenant field
-  with a later transformation that changes which tenant the resolver receives. `enforced-by: typescript/eslint boundaries/element-types`
+  merge object results, and later values can overwrite earlier properties.
+  `enforced-by: typescript/eslint boundaries/element-types`
+- Keep authorization identifiers consistent across parsing and access checks. Do not redefine a
+  checked tenant field with a later transformation that changes which tenant the resolver receives.
+  `enforced-by: typescript/eslint boundaries/element-types`
 - Keep queries free of durable side effects. Use mutations for writes, and enforce transactions and
   idempotency in the shared operation when a retry or repeated submission can duplicate work. `enforced-by: typescript/eslint boundaries/element-types`
 - Return the result of `opts.next()` from middleware that permits execution. Preserve its typed
@@ -186,9 +188,10 @@ inferred type to browser code.
   middleware to the supported composition API when updating that code. `enforced-by: typescript/eslint boundaries/element-types`
 - Define `.output()` where a runtime response contract needs enforcement, such as a provider result
   or a public DTO. Select safe output fields before validation and choose the schema's handling of
-  extra fields deliberately. Inferred return types alone neither validate external data nor remove
-  private fields. Treat output-validation failure as an internal failure, with diagnostics on the
-  server and a safe client response. `enforced-by: typescript/eslint boundaries/element-types`
+  extra fields deliberately. `enforced-by: typescript/eslint boundaries/element-types`
+- Inferred return types alone neither validate external data nor remove private fields. Treat
+  output-validation failure as an internal failure, with diagnostics on the server and a safe client
+  response. `enforced-by: typescript/eslint boundaries/element-types`
 - Infer extracted resolver options from the relevant procedure builder when the helper actually
   needs the whole tRPC contract. Give domain operations narrower explicit arguments when they only
   need an authorized resource and validated values. Avoid spreading transport dependencies through
@@ -294,7 +297,9 @@ and the server's allowed origins together. Preserve the mutation's CSRF protecti
 Treat HTTP response caching as a separate policy from TanStack freshness. Enable shared caching only `enforced-by: typescript/eslint boundaries/element-types`
 for explicitly public reads whose complete response is safe for every recipient of that cache key.
 Evaluate every procedure in a batch. Keep responses containing private data, mutations, errors, or
-session-cookie changes out of shared caches. A procedure name containing `public` is not evidence
+session-cookie changes out of shared caches.
+
+A procedure name containing `public` is not evidence
 that its output is safe to cache. Check the selected adapter's `responseMeta` timing before making
 cache decisions from procedure results. See [response caching](https://trpc.io/docs/server/caching).
 
@@ -348,7 +353,9 @@ collection. See [subscription consumption](https://trpc.io/docs/client/tanstack-
 Route subscriptions to `httpSubscriptionLink` or `wsLink` through the appropriate branch. For SSE,
 use same-origin cookies or the supported EventSource credentials configuration. Native browser
 EventSource does not offer arbitrary request-header configuration like fetch. Use a compatible
-implementation when custom headers are required. Re-establish the subscription when identity or
+implementation when custom headers are required.
+
+Re-establish the subscription when identity or
 resource changes, and verify authorization on the new connection. Check connection-duration limits
 and keepalive settings for the deployment. See
 [HTTP subscriptions](https://trpc.io/docs/client/links/httpSubscriptionLink).
@@ -369,7 +376,7 @@ and keepalive settings for the deployment. See
 Verify disconnect cleanup, replay, and identity changes against the `enforced-by: typescript/eslint boundaries/element-types`
 [producer and recovery contract](https://trpc.io/docs/server/subscriptions).
 
-## Use tRPC-backed Server Actions
+## Use tRPC-backed server actions
 
 Choose the mutation entry point from the interaction. TanStack `useMutation` fits client cache `enforced-by: typescript/eslint boundaries/element-types`
 updates, optimistic state, and query-driven pending or failure UI. A Server Action fits an
@@ -388,7 +395,7 @@ calls an action programmatically depends on JavaScript.
 
 Give actions stable typed metadata for tracing. After a committed write, perform the required `enforced-by: typescript/eslint boundaries/element-types`
 Next.js revalidation and any client-query reconciliation. Refreshing one cache does not invalidate
-the other. Keep redirects outside error handling that would swallow Next.js control flow.
+the other. Keep redirects outside error handling that swallows Next.js control flow.
 
 ## References
 

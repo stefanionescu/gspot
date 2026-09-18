@@ -19,7 +19,7 @@ title: Playwright
 - A test never reads or writes production data. The base URL and credentials come from the
   configuration owner, per environment. `unenforced`
 
-## Fixtures and Page Objects
+## Fixtures and page objects
 
 - Shared setup is a fixture under `tests/support/`. A page object exposes intents
   (`submitOrder()`), not selectors. `unenforced`

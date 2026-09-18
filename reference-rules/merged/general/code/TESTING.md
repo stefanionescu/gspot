@@ -6,11 +6,11 @@ title: Testing
 
 # Testing
 
-## Testing Philosophy
+## Testing philosophy
 
 Tests exist to catch bugs. A test that cannot fail when someone introduces a bug is wasted code.
 
-### What Makes a Good Test
+### What makes a good test
 
 - It tests behavior, not implementation. Assert on what the code does, not how it does it. `unenforced`
 - It breaks when a real bug is introduced. If you can delete a line of production code and every test still passes, the tests are insufficient. `unenforced`
@@ -18,7 +18,7 @@ Tests exist to catch bugs. A test that cannot fail when someone introduces a bug
 - It tests edge cases that matter: empty inputs, null values, boundary conditions, error paths. `unenforced`
 - Its name identifies the scenario and expected outcome. `unenforced`
 
-### What Makes a Bad Test
+### What makes a bad test
 
 - Testing that a mock returns what you told it to return. `unenforced`
 - Testing implementation details (internal method calls, private state, call order) that change during refactors. `unenforced`
@@ -26,7 +26,7 @@ Tests exist to catch bugs. A test that cannot fail when someone introduces a bug
 - Tests with no assertions or with assertions that verify nothing useful. `enforced-by: typescript/eslint vitest/expect-expect`
 - Snapshot tests that nobody reviews when they change. `enforced-by: typescript/eslint vitest/prefer-strict-equal`
 
-### Test Behavior, Not Values
+### Test behavior, not values
 
 Never write a test that asserts a parameter, config value, or return value equals a specific hardcoded literal. These tests break the moment the value changes and catch zero bugs. They test configuration, not whether the system works correctly. `unenforced`
 
@@ -59,11 +59,11 @@ Never write a test that asserts a parameter, config value, or return value equal
 - Restore any environment variable, global, fake timer, or spy changed by a test. `unenforced`
 - Do not add test-only auth backdoors, magic headers, or bypass routes. `unenforced`
 - Do not assert only that collaborators were called. Assert the outcome and the externally visible side effects. `enforced-by: typescript/eslint vitest/expect-expect`
-- Do not commit `.only`, `.skip` placeholders, or todo tests. `enforced-by: typescript/eslint vitest/no-focused-tests`
+- Do not commit `.only`, `.skip` placeholders, or `test.todo` entries. `enforced-by: typescript/eslint vitest/no-focused-tests`
 - Cover expected errors and unknown internal errors when the change touches error handling. `unenforced`
 - Bash has no test suites. Bash verification is ShellCheck, shfmt, `bash -n`, and review. `enforced-by: structure/shell-script-policy`
 
-## Placement and Names
+## Placement and names
 
 - Tests live under `tests/` or beside the unit they test. The directory is `tests/`, never `__tests__`, `test/`, or `spec/`. `enforced-by: naming/identifiers`
 - Support code (builders, fakes, servers, database helpers) lives under `tests/support/`. There is no `fixtures/`, `mocks/`, `helpers/`, or `utils/` directory. `enforced-by: naming/identifiers`
@@ -72,7 +72,7 @@ Never write a test that asserts a parameter, config value, or return value equal
 - A test name is a sentence that states the scenario and the expected outcome. Never `test1`, `works`, `edge cases`, `happy path`. `enforced-by: naming/identifiers`
 - Group with `describe` (or the language equivalent) by unit, then by scenario. `unenforced`
 
-## Test Data
+## Test data
 
 Tests own the data they rely on. A test is understandable and repeatable without depending on execution order or a mystery seed state.
 
@@ -90,7 +90,7 @@ Tests own the data they rely on. A test is understandable and repeatable without
 - Test databases may use relaxed durability only inside explicit test infrastructure. Never copy those settings into production configuration. `unenforced`
 - Clean up only through established test infrastructure; do not add ad hoc production cleanup code. `unenforced`
 
-## Network and Provider Boundaries
+## Network and provider boundaries
 
 Outbound network behavior is isolated by default. Tests fail when the code tries to reach an unexpected external service.
 
@@ -116,9 +116,9 @@ Use mocks to isolate boundaries and simulate external behavior. Do not use mocks
 - Reset or redefine common mocks before each test. `unenforced`
 - Avoid surprising global auto-mocks. `unenforced`
 - Use the runner's typed mock helpers; never cast a mock to `any`. `enforced-by: typescript/eslint @typescript-eslint/no-explicit-any`
-- Use partial mocks sparingly and only when a full boundary replacement would hide too much useful behavior. `unenforced`
+- Use partial mocks sparingly and only when a full boundary replacement hides too much useful behavior. `unenforced`
 
-## Outcomes to Cover
+## Outcomes to cover
 
 When a behavior changes, consider every outcome it can have:
 

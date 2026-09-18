@@ -6,11 +6,12 @@ title: Bash
 
 # Bash
 
-The Bash rules span three files: this one (scope, files, structure, options, output, comments,
-formatting), Language (functions, variables, quoting, arrays, conditionals, arithmetic, loops, paths),
-and Safety (commands, processes, network, secrets, temporary files, security, portability).
+The Bash rules span three files. This one covers scope, files, structure, options, output, comments,
+and formatting. Language covers functions, variables, quoting, arrays, conditionals, arithmetic,
+loops, and paths. Safety covers commands, processes, network, secrets, temporary files, security,
+and portability.
 
-## Core Bash Philosophy
+## Core Bash philosophy
 
 Rules:
 
@@ -31,9 +32,9 @@ Rules:
   reviewed Bash script. `enforced-by: structure/shell-script-policy`
 - When writing shell orchestration, write Bash. Do not create another scripting
   language file as an escape hatch for shell work. `enforced-by: structure/shell-script-policy`
-- If scripting logic is too complex for Bash, simplify the Bash workflow, split
-  it into smaller Bash scripts, or move the behavior into product-owned
-  application code as part of a deliberate feature change. `unenforced`
+- If scripting logic is too complex for Bash, simplify the workflow or split it into smaller
+  scripts. Otherwise move the behavior into product-owned application code as part of a deliberate
+  feature change. `unenforced`
 
 Good Bash:
 
@@ -61,7 +62,7 @@ main() {
 main "$@"
 ```
 
-## When to Use Bash
+## When to use Bash
 
 Use Bash when the script mostly:
 
@@ -83,12 +84,11 @@ Do not use Bash for:
 - security-sensitive parsing of untrusted input; `unenforced`
 - behavior that needs typed contracts. `enforced-by: structure/shell-script-policy`
 
-Do not create non-Bash scripts as an escape hatch. If a workflow needs nested `enforced-by: structure/shell-script-policy`
-maps, large arrays, state machines, non-trivial validation, complex retries,
-concurrent work, or domain rules, reduce the scripting scope or implement the
-behavior in the owning application code.
+Do not create non-Bash scripts as an escape hatch. A workflow that needs nested maps, large arrays, `enforced-by: structure/shell-script-policy`
+state machines, non-trivial validation, complex retries, concurrent work, or domain rules is too big
+for a script. Reduce the scripting scope or implement the behavior in the owning application code.
 
-## File Types and Invocation
+## File types and invocation
 
 Executable scripts:
 
@@ -154,7 +154,7 @@ guide does not apply except for general quoting and security principles.
 SUID and SGID are forbidden on shell scripts. Use `sudo` or a platform-specific
 privilege boundary instead.
 
-## File Encoding and Line Endings
+## File encoding and line endings
 
 Rules:
 
@@ -176,11 +176,11 @@ mv -- "${script}.tmp" "${script}"
 A file that starts with a BOM before `#!` may fail to execute as a script. Treat
 that the same as a broken shebang.
 
-## Runtime Compatibility
+## Runtime compatibility
 
-macOS ships Bash 3.2 by default. The header's `Runtime:` line is the contract the gate reads:
-a file declaring `Bash 3.2+` may not use Bash 4+ and Bash 5+ features; a file declaring
-`Bash 4.0+` or later may, and fails before any other work when the running Bash is older:
+macOS ships Bash 3.2 by default. The header's `Runtime:` line is the contract the gate reads. A file
+declaring `Bash 3.2+` may not use Bash 4+ and Bash 5+ features. A file declaring `Bash 4.0+` may use
+them, and fails before any other work when the running Bash is older. The gated features are:
 
 - associative arrays; `enforced-by: structure/shell-interpreter`
 - `readarray` and `mapfile`; `enforced-by: bash/shellcheck`
@@ -207,14 +207,14 @@ require_bash_4() {
 
 State the requirement in the file header and fail before doing work. `enforced-by: structure/shell-interpreter`
 
-## Deprecated and Forbidden Syntax
+## Deprecated and forbidden syntax
 
 Use the modern, explicit Bash form even when an older spelling still works. `unenforced`
 
 Forbidden forms:
 
 - Arithmetic expansion: do not use `$[ ... ]`. Use `$(( ... ))`. `enforced-by: bash/shellcheck`
-- Command substitution: do not use legacy backtick substitution. Use `$(...)`. `enforced-by: bash/shellcheck`
+- Command substitution: do not use backtick substitution. Use `$(...)`. `enforced-by: bash/shellcheck`
 - Arithmetic command: do not use `let`. Use `(( ... ))` or assignment with
   `$(( ... ))`. `enforced-by: bash/shellcheck`
 - Declarations: do not use `typeset`. Use `local`, `declare`, `readonly`, or
@@ -228,7 +228,7 @@ Forbidden forms:
   `>file 2>&1`. `enforced-by: bash/shellcheck`
 - Combined pipeline shorthand: do not use `cmd |& other`. Use
   `cmd 2>&1 | other`. `unenforced`
-- Legacy test composition: do not use `test -a`, `test -o`, `[ ... -a ... ]`,
+- Test composition: do not use `test -a`, `test -o`, `[ ... -a ... ]`,
   `[ ... -o ... ]`, or grouping operators inside `[ ... ]`. Use `[[ ... ]]`,
   explicit `if` branches, or `case`. `enforced-by: bash/shellcheck`
 - `ERR` traps: do not use `trap ERR` as general error handling. Use explicit
@@ -248,7 +248,7 @@ run() {
 }
 ```
 
-## Script Structure
+## Script structure
 
 Order files like this:
 
@@ -323,7 +323,7 @@ Rules:
 - Use explicit `exit 0` only when the final command's status is not the program
   result and success has already been established. `enforced-by: structure/shell-interpreter`
 
-## Shell Options
+## Shell options
 
 Use shell options deliberately. `enforced-by: structure/shell-interpreter`
 
@@ -429,11 +429,11 @@ after the first match can create false failures under `pipefail`.
 - Use `${name:?message}` for required configuration at a clear boundary. `enforced-by: structure/shell-config-defaults`
 - Do not use unguarded `${1}` when an argument may be missing. Use `${1:-}`. `enforced-by: structure/shell-config-defaults`
 - Be careful with arrays under `set -u`; check lengths before indexing. `enforced-by: structure/shell-interpreter`
-- If empty arrays are meaningful, require Bash 4.4 or newer before relying on
+- If empty arrays are meaningful, require Bash 4.4+ before relying on
   their behavior under `set -u`. Bash 3.2-compatible scripts must guard array
   access explicitly. `enforced-by: structure/shell-interpreter`
 
-## Output, Logging, and Errors
+## Output, logging, and errors
 
 STDOUT is for script output that another command may consume. STDERR is for
 status, warnings, prompts, and errors.
@@ -497,7 +497,7 @@ log_status() {
 }
 ```
 
-## Literal Text and Here Documents
+## Literal text and here documents
 
 Rules:
 
@@ -531,7 +531,7 @@ Running ${step_name} for ${model_variant}.
 EOF
 ```
 
-## Comments and Documentation
+## Comments and documentation
 
 Every Bash file starts with a short file header after the shebang:
 
@@ -574,7 +574,7 @@ Rules:
 - Document behavior, not history. `enforced-by: structure/doc-comment`
 - Comments explain why a shell pattern is needed when the code is not obvious. `unenforced`
 - Do not comment every line. `enforced-by: structure/doc-comment`
-- A TODO is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an
+- A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an
   expiry date, never a person. `enforced-by: structure/doc-comment`
 - Suppressions must explain the real constraint and stay as narrow as
   possible. `enforced-by: integrity/suppressions`
@@ -642,7 +642,7 @@ generate_results \
   | uniq
 ```
 
-## Review Checklist
+## Review checklist
 
 Before `gspot check`, read the change against these questions:
 
@@ -673,7 +673,7 @@ Before `gspot check`, read the change against these questions:
 - Broken symlinks, home-relative paths, and no-match globs are handled `enforced-by: bash/shellcheck`
 - `IFS`, `read`, and delimited-data handling do not drop meaningful data. `enforced-by: bash/shellcheck`
 - Privileged redirection and globbing happen at the intended privilege level. `enforced-by: bash/shellcheck`
-- Process command does not rely on `ps | grep`. `unenforced`
+- Process control does not rely on `ps | grep`. `unenforced`
 - Files have UTF-8 without BOM and LF endings. `enforced-by: structure/shell-interpreter`
 - macOS/Linux portability is acceptable for the script's runtime. `enforced-by: structure/shell-interpreter`
 - The owning shell lint command passes or remaining findings are documented. `unenforced`
@@ -683,6 +683,6 @@ Before `gspot check`, read the change against these questions:
 - Every repository function dependency is sourced directly. `enforced-by: structure/shell-interpreter`
 - No source-only barrel or one-function, one-caller pseudo-module remains. `unenforced`
 - `cd`, quantization, engine-build, runtime, publishing, upload, and `enforced-by: bash/shellcheck`
-- Deprecated syntax such as `$[ ... ]`, backticks, `let`, `typeset`, `function`, `&>`, `|&`, and legacy `[ ... -a ... ]` forms is absent. `enforced-by: bash/shellcheck`
+- Deprecated syntax such as `$[ ... ]`, backticks, `let`, `typeset`, `function`, `&>`, `|&`, and the `[ ... -a ... ]` forms is absent. `enforced-by: bash/shellcheck`
 - Downloads, generated files, and structured replacements validate temporary data before replacing known-good files. `unenforced`
 - Network, remote, mounted-filesystem, and readiness commands have bounded timeouts where they can hang. `enforced-by: structure/shell-ssh-blocks`
