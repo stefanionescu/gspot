@@ -159,6 +159,7 @@ stage = "commit"
 runs = "once"
 command = ["tsc", "-p", "{config:jsconfig}", "--pretty", "false"]
 tool = "tsc"
+claims = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
 inspection = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks plain JavaScript through its JSDoc comments."

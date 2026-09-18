@@ -19,13 +19,19 @@ function argumentCount(rest: string): number {
     return count;
 }
 
+// `name() {` declares the function and `name=value` assigns; neither is a call.
+function isCallTail(rest: string): boolean {
+    const tail = rest.trimStart();
+    return !tail.startsWith('=') && !tail.startsWith('(');
+}
+
 function callOn(line: string, names: Set<string>): { name: string; count: number } | undefined {
     let code = withoutComment(line).trim();
     while (FLOW_PREFIX.test(code)) code = code.replace(FLOW_PREFIX, '');
     const match = CALL.exec(code);
     const name = match?.[1];
     const rest = match?.[2] ?? '';
-    if (name === undefined || !names.has(name) || rest.trimStart().startsWith('=')) return undefined;
+    if (name === undefined || !names.has(name) || !isCallTail(rest)) return undefined;
     return { name, count: argumentCount(rest) };
 }
 

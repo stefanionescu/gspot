@@ -2,7 +2,7 @@
     "$schema": "https://unpkg.com/knip@6/schema.json",
     "entry": <%= json([...new Set([...(tool('knip').entry ?? []), ...(has('nextjs') ? [] : ['src/main.{ts,js}', 'src/index.{ts,js}', 'src/server.{ts,js}', 'scripts/**/*.{ts,js,mjs}', '**/*.{test,spec}.{ts,tsx,js}', 'tests/**/*.{ts,js}', 'build.ts', 'publish.ts'])])]) %>,
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
-    "ignore": <%= json([...(has('commits') ? ['.gspot/commitlint.config.cjs'] : []), ...(tool('knip').ignore ?? []).flatMap((entry) => entry.paths ?? []), ...policy.declares.flatMap((entry) => entry.paths)]) %>,
+    "ignore": <%= json(['.gspot/**', 'eslint.config.{js,mjs,cjs}', ...(tool('knip').ignore ?? []).flatMap((entry) => entry.paths ?? []), ...policy.declares.flatMap((entry) => entry.paths)]) %>,
     "ignoreDependencies": <%= json(["@gspot/eslint-plugin", "eslint-config-prettier", "prettier", "@socketsecurity/bun-security-scanner", ...(settings['tools.knip.ignore_dependencies'] ?? []).map((entry) => typeof entry === 'string' ? entry : entry.name)]) %>,
     "ignoreBinaries": <%= json([...tools, "vale", "git", "mise", "bunx", "npx"]) %>,
     "ignoreExportsUsedInFile": true,

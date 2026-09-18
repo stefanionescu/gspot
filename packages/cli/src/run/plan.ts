@@ -115,7 +115,13 @@ function projectFiles(context: PlanContext, scopeForFiles: string): TrackedFile[
 function claimedFor(context: PlanContext, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
     const { session, scope } = context;
     const { spec, manifest } = entry;
-    if (spec.runs !== 'per-file-list') return projectFiles(context, scopeForFiles);
+    if (spec.runs !== 'per-file-list') {
+        // A check that walks the scope still needs a reason to run: with claims of its own, at least one file they name.
+        const hasNothingClaimed =
+            spec.claims !== undefined &&
+            claimedByClaims(spec.claims, scope.selected, session.repository.files, scopeForFiles).length === 0;
+        return hasNothingClaimed ? [] : projectFiles(context, scopeForFiles);
+    }
     if (!manifest) return session.repository.files.filter((file) => pathMatcher(spec.claims?.paths ?? [])(file.path));
     if (spec.claims) return claimedByClaims(spec.claims, scope.selected, session.repository.files, scopeForFiles);
     return claimedFiles(manifest, scope.selected, session.repository.files, scopeForFiles);

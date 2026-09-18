@@ -20,7 +20,8 @@
     ],
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
     "ignore": [
-        ".gspot/commitlint.config.cjs",
+        ".gspot/**",
+        "eslint.config.{js,mjs,cjs}",
         "packages/cli/grammars/swift.wasm",
         "schema/**",
         "docs/public/schema/**"

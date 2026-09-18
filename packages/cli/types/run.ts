@@ -162,3 +162,13 @@ export type SpawnOutcome = { code: number; stdout: string; stderr: string };
 
 /** A local npm registry the release tests publish into. */
 export type Registry = { url: string; npmrc: string; work: string; stop: () => void };
+
+/** One planted defect: the files that hold it, the check that finds it, and what the check says. */
+export type PlantedCase = {
+    id: string;
+    files: Record<string, string>;
+    expected: string;
+    policy?: string;
+    policyEdit?: [string, string];
+    executable?: string[];
+};

@@ -1,6 +1,6 @@
 // Runs the development gspot and git in a planted repository.
 import { join } from 'node:path';
-import type { SpawnOutcome } from '#types/run.ts';
+import type { PlantedCase, SpawnOutcome } from '#types/run.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 const root = new URL('../..', import.meta.url).pathname;
@@ -75,4 +75,29 @@ export function commitAll(cwd: string): void {
     git(cwd, ['init', '-q']);
     git(cwd, ['add', '-A']);
     git(cwd, ['commit', '-qm', 'init']);
+}
+
+/**
+ * Plants one defect in an installed repository, runs its check alone, and restores the repository.
+ * @param cwd the planted repository, already installed
+ * @param planted the defect
+ * @param environment extra variables, such as the PATH of the tools
+ * @returns the exit code and the output of the check
+ */
+export async function runPlanted(
+    cwd: string,
+    planted: PlantedCase,
+    environment: Record<string, string>,
+): Promise<SpawnOutcome> {
+    const policyPath = join(cwd, 'gspot.toml');
+    const policy = await Bun.file(policyPath).text();
+    for (const [path, text] of Object.entries(planted.files)) await Bun.write(join(cwd, path), text);
+    const executables = planted.executable ?? [];
+    for (const path of executables) Bun.spawnSync(['chmod', '+x', join(cwd, path)]);
+    if (planted.policy !== undefined) await Bun.write(policyPath, `${policy}\n${planted.policy}`);
+    if (planted.policyEdit !== undefined) await Bun.write(policyPath, policy.replace(...planted.policyEdit));
+    const outcome = run(cwd, ['check', planted.id, '--no-cache'], environment);
+    for (const path of Object.keys(planted.files)) Bun.spawnSync(['rm', '-f', join(cwd, path)]);
+    await Bun.write(policyPath, policy);
+    return outcome;
 }
