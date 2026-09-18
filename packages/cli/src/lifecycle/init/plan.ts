@@ -87,7 +87,7 @@ export function buildProposal(
  * @returns the plan
  */
 export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
-    const { root, tooling, everySelected, how, answers, carried, policyLines } = inputs;
+    const { root, tooling, everySelected, how, answers, carried, policyLines, profile } = inputs;
     const agentRows = answers.isRules
         ? [
               { path: 'CLAUDE.md  AGENTS.md', note: 'one managed block each' },
@@ -95,6 +95,7 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
           ]
         : [];
     return {
+        ...(profile ? { profile } : {}),
         presets: everySelected.map((manifest) => ({
             id: manifest.preset.id,
             how: how.get(manifest.preset.id) ?? 'required',

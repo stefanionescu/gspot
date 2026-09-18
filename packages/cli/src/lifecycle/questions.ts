@@ -1,11 +1,12 @@
 // The questions init asks, each answered by a flag or the terminal, with the default read from the repository.
 import { join } from 'node:path';
+import type { Manifest } from '#types/manifest.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import type { FormatSettings } from '#types/config.ts';
 import { shippedFormat } from '#cli/presets/listing.ts';
 import type { ExistingTooling } from '#types/repository.ts';
-import { askChoice, isConfirmed } from '#cli/output/prompts.ts';
-import type { InitAnswers, InitOptions } from '#types/lifecycle.ts';
+import { askChoice, askMany, isConfirmed } from '#cli/output/prompts.ts';
+import type { InitAnswers, InitOptions, InitSelection } from '#types/lifecycle.ts';
 
 const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
     { value: 'gspot', label: 'gspot writes .gspot/hooks' },
@@ -110,6 +111,34 @@ async function askFormat(
             options.yes,
         ));
     return keep === 'keep' ? differing : undefined;
+}
+
+/**
+ * Asks which presets to install: what init selected starts selected, every other shipped preset is offered.
+ * @param options the init flags
+ * @param selection what init selected from detection and recommendations
+ * @param manifests every preset manifest
+ * @returns the preset ids the person kept, or undefined when the question was not asked
+ */
+export async function askPresets(
+    options: InitOptions,
+    selection: InitSelection,
+    manifests: Map<string, Manifest>,
+): Promise<string[] | undefined> {
+    if (options.yes || options.presets !== undefined || options.profile !== undefined) return undefined;
+    const choices = manifests
+        .values()
+        .map((manifest) => {
+            const how = selection.how.get(manifest.preset.id);
+            const hint =
+                how === 'required' ? 'required by another selected preset' : (how ?? manifest.preset.description);
+            return { value: manifest.preset.id, label: manifest.preset.id, hint };
+        })
+        .toArray();
+    const initial = [...selection.selectedIds];
+    const kept = await askMany('Which presets?', choices, initial, options.yes);
+    const isUnchanged = kept.length === initial.length && kept.every((id) => selection.selectedIds.has(id));
+    return isUnchanged ? undefined : kept;
 }
 
 /**

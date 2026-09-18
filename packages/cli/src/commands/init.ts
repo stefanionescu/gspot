@@ -4,7 +4,7 @@ import type { Command } from 'commander';
 import type { InitOptions } from '#types/lifecycle.ts';
 import { initCommand } from '#cli/lifecycle/init/command.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { commaList, directoryOf, listFlag, textFlag } from '#cli/commands/flags.ts';
+import { commaList, directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 
 function formatChoice(flags: Record<string, unknown>): InitOptions['format'] {
     if (flags['keepFormat'] === true) return 'keep';
@@ -35,6 +35,7 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         json: global['json'] === true,
         install: flags['install'] !== false,
         allowDirty: flags['allowDirty'] === true,
+        ...textEntry(flags, 'from', 'from'),
         projectTemplates: flags['projectTemplates'] === true,
         ...given,
     };
@@ -49,6 +50,7 @@ export function registerInit(program: Command): void {
         .command('init')
         .description('Read this repository, propose a policy, and write it after a yes')
         .option('--yes', 'Take every proposal without asking')
+        .option('--from <profile>', 'Install from a profile: a path, an https URL or github:owner/repo')
         .option('--presets <ids>', 'The root presets, comma separated, instead of the detected ones', commaList)
         .option('--without <ids>', 'Presets to leave out of the proposal, comma separated', commaList)
         .option(

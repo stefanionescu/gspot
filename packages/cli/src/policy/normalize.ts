@@ -208,7 +208,7 @@ export function normalize(raw: RawPolicy): Policy {
         tools: (raw.tools ?? {}) as Policy['tools'],
         ignores: compactAll(raw.ignore),
         declares: compactAll(raw.declare),
-        checks: compactAll(raw.check),
+        checks: (raw.check ?? []).map((entry) => compact({ ...entry, output: entry.output && compact(entry.output) })),
         ...normalizeScalars(raw),
         scopeTables,
     };

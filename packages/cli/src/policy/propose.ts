@@ -47,6 +47,22 @@ function ignoreTables(carried: CarriedLists): TomlTable[] {
     }));
 }
 
+const PROFILE_HEAD = new Set(['version', 'profile', 'selection', 'presets']);
+
+function asTable(value: unknown): TomlTable {
+    return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as TomlTable) : {};
+}
+
+// A profile's tables are copied in; a table init also writes (tools, format) keeps both, the profile's keys first.
+function mergeProfile(document: TomlTable, tables: TomlTable | undefined): void {
+    const entries = Object.entries(tables ?? {}).filter(([key]) => !PROFILE_HEAD.has(key));
+    for (const [key, value] of entries) {
+        const existing = document[key];
+        const isBothTables = Object.keys(asTable(existing)).length > 0 && Object.keys(asTable(value)).length > 0;
+        document[key] = isBothTables ? { ...asTable(value), ...asTable(existing) } : value;
+    }
+}
+
 /**
  * The gspot.toml text for a proposal.
  * @param proposal the proposal
@@ -57,11 +73,12 @@ export function proposeText(proposal: Proposal): string {
     const tools = toolTables(proposal.carried, proposal.commitScopes);
     if (Object.keys(tools).length > 0) document['tools'] = tools;
     if (proposal.carried.ignores.length > 0) document['ignore'] = ignoreTables(proposal.carried);
-    document['hooks'] = { tool: proposal.hooks };
-    document['ci'] = { provider: proposal.ci };
-    document['rules'] = { install: proposal.rules, directory: '.gspot/rules' };
-    document['inspection'] = { strict: false };
-    document['runner'] = { surface: proposal.runner };
+    mergeProfile(document, proposal.profileTables);
+    document['hooks'] = { ...asTable(document['hooks']), tool: proposal.hooks };
+    document['ci'] = { ...asTable(document['ci']), provider: proposal.ci };
+    document['rules'] = { directory: '.gspot/rules', ...asTable(document['rules']), install: proposal.rules };
+    document['inspection'] = { strict: false, ...asTable(document['inspection']) };
+    document['runner'] = { ...asTable(document['runner']), surface: proposal.runner };
     const body = stringify(document);
     const ended = body.endsWith('\n') ? body : `${body}\n`;
     return `${PREFACE}${ended}`;

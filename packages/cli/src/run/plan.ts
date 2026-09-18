@@ -71,6 +71,7 @@ function fromRepoCheck(entry: RepositoryCheck): CheckSpec {
     if (entry.count_regex !== undefined) spec.count_regex = entry.count_regex;
     if (entry.requires !== undefined) spec.requires = entry.requires;
     if (entry.platform !== undefined) spec.platform = entry.platform;
+    if (entry.output !== undefined) spec.output = entry.output;
     return spec;
 }
 

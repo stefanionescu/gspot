@@ -35,6 +35,19 @@ function detectedNotSelected(
         }));
 }
 
+function recommendedNotSelected(session: Session, selected: Set<string>): ChangeReport['recommendedNotSelected'] {
+    const rows = new Map<string, ChangeReport['recommendedNotSelected'][number]>();
+    for (const manifest of everyManifest(session))
+        for (const id of manifest.preset.recommends)
+            if (!selected.has(id) && !rows.has(id))
+                rows.set(id, {
+                    preset: id,
+                    evidence: `recommended by ${manifest.preset.id}`,
+                    command: `gspot add ${id}`,
+                });
+    return rows.values().toArray();
+}
+
 function configurationRow(session: Session, config: ExistingTool, selected: Set<string>): ChangeRow {
     if (isOwned(config.tool, selected))
         return {
@@ -97,6 +110,7 @@ export function changeReport(session: Session): ChangeReport {
     const tooling = existingTooling(session.root, session.repository.files, session.repository.scopes, facts);
     return {
         detectedNotSelected: detectedNotSelected(session, facts, selected),
+        recommendedNotSelected: recommendedNotSelected(session, selected),
         configurationNotOwned: configurationNotOwned(session, tooling, selected),
         changedOutsideGspot: [...hookRows(session, tooling), ...workflowRows(session, tooling)],
         pinnedTwice: pinnedTwice(session.root, everyManifest(session)).map((pin) => ({

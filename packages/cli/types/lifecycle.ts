@@ -1,3 +1,4 @@
+import type { Profile } from '#types/profile.ts';
 import type { BaselineFile } from '#types/run.ts';
 // init, upgrade and uninstall: their options, the selection, the questions, the takeover plan and the carried lists.
 import type { RunRecord } from '#types/record.ts';
@@ -6,6 +7,7 @@ import type { Manifest, Proposal, UnknownLanguage } from '#types/manifest.ts';
 import type { ExistingTooling, ManifestFacts, Repository, ScopeEntry, TrackedFile } from '#types/repository.ts';
 
 export type TakeoverPlan = {
+    profile?: { name: string; digest: string; selection: string; detected: string[] };
     presets: { id: string; how: PresetReason; checks: number }[];
     write: { path: string; note: string }[];
     remove: { path: string; note: string }[];
@@ -31,6 +33,9 @@ export type InitOptions = {
     rules?: 'yes' | 'no';
     format?: 'keep' | 'shipped';
     runner?: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none';
+    from?: string;
+    profile?: Profile;
+    isListExact?: boolean;
     install: boolean;
     allowDirty: boolean;
     projectTemplates: boolean;
@@ -118,6 +123,7 @@ export type InitPrepared = {
 
 /** The inputs to the init plan. */
 export type InitPlanInputs = {
+    profile?: TakeoverPlan['profile'];
     root: string;
     tooling: ExistingTooling;
     everySelected: Manifest[];

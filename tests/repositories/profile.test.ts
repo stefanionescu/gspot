@@ -1,0 +1,92 @@
+// Planted repositories: a profile saved in one repository installs the same policy in another, and a bad one stops init.
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
+import { createFixture } from 'fs-fixture';
+import { describe, expect, test } from 'bun:test';
+import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
+
+const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };
+
+async function tables(root: string): Promise<Record<string, unknown>> {
+    return Bun.TOML.parse(await Bun.file(join(root, 'gspot.toml')).text()) as Record<string, unknown>;
+}
+
+describe('profiles', () => {
+    test(
+        'profile save in one repository and init --from in another give the same tables',
+        async () => {
+            await using first = await createFixture({ 'scripts/a.sh': script });
+            commitAll(first.path);
+            run(
+                first.path,
+                [
+                    'init',
+                    '--yes',
+                    '--presets',
+                    'bash',
+                    '--without',
+                    'naming',
+                    '--runner',
+                    'none',
+                    '--ci',
+                    'none',
+                    '--hooks',
+                    'none',
+                    '--no-install',
+                ],
+                TOOLS,
+            );
+            run(first.path, ['set', 'format.indent_width', '2'], TOOLS);
+            run(
+                first.path,
+                [
+                    'ignore',
+                    'bash/shellcheck',
+                    '--paths',
+                    'scripts/**',
+                    '--rule',
+                    'SC2086',
+                    '--reason',
+                    'A path entry that stays here.',
+                ],
+                TOOLS,
+            );
+            const saved = run(first.path, ['profile', 'save', 'house.profile.toml'], TOOLS);
+            expect(saved.code).toBe(0);
+            expect(saved.stdout).toContain('left out  [[ignore]]: 1 entries');
+
+            await using second = await createFixture({ 'tools/b.sh': script, 'index.ts': 'export const b = 1;\n' });
+            commitAll(second.path);
+            const from = join(first.path, 'house.profile.toml');
+            const init = run(second.path, ['init', '--yes', '--from', from, '--no-install'], TOOLS);
+            expect(init.stdout).toContain('profile    house');
+            expect(init.stdout).toContain('detected, not in the profile: typescript');
+            const [one, two] = [await tables(first.path), await tables(second.path)];
+            expect(two['presets']).toEqual(one['presets']);
+            expect(two['format']).toEqual({ indent_width: 2 });
+            expect(two['hooks']).toEqual(one['hooks']);
+            expect(two['ignore']).toBeUndefined();
+        },
+        PLANTED_TIMEOUT_MS,
+    );
+
+    test(
+        'a profile with a wrong value, an unknown preset and a path stops init before anything is written',
+        async () => {
+            await using fixture = await createFixture({
+                'scripts/a.sh': script,
+                'bad.profile.toml':
+                    'version = 1\nprofile = "bad"\nselection = "sometimes"\npresets = ["spelling"]\n\n[[tools.typos.exclude]]\npaths = ["a/**"]\nreason = "A reason that says something."\n',
+            });
+            commitAll(fixture.path);
+            const init = run(fixture.path, ['init', '--yes', '--from', 'bad.profile.toml'], TOOLS);
+            expect(init.code).toBe(2);
+            expect(init.stderr).toContain('selection');
+            expect(init.stderr).toContain('Did you mean `spelling`');
+            expect(init.stderr).toContain('a profile carries no path');
+            expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
+            expect(run(fixture.path, ['profile', 'check', 'bad.profile.toml'], TOOLS).code).toBe(2);
+        },
+        PLANTED_TIMEOUT_MS,
+    );
+});

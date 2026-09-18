@@ -22,6 +22,14 @@ function presetSection(rows: TakeoverPlan['presets']): string[] {
     return ['presets', ...lines, ''];
 }
 
+function profileSection(profile: TakeoverPlan['profile']): string[] {
+    if (!profile) return [];
+    const detected = profile.detected.map(
+        (id) => `  detected, not in the profile: ${id}  (add it afterwards: gspot add ${id})`,
+    );
+    return [`profile    ${profile.name}  sha256 ${profile.digest}  selection ${profile.selection}`, ...detected, ''];
+}
+
 function carriedSection(rows: TakeoverPlan['carried']): string[] {
     if (rows.length === 0) return [];
     const width = Math.max(...rows.map((row) => row.from.length)) + COLUMN_GAP;
@@ -47,6 +55,7 @@ function baselineLine(baselines: TakeoverPlan['baselines']): string {
 export function initPlanText(plan: TakeoverPlan): string {
     const { dim } = paint();
     const lines = [
+        ...profileSection(plan.profile),
         ...presetSection(plan.presets),
         ...section('write', plan.write),
         ...section(`delete ${dim('(git keeps them: git show HEAD:<path>)')}`, plan.remove),

@@ -14,6 +14,7 @@ gspot init [options]
 | Flag                  | Meaning                                                                                    |
 | --------------------- | ------------------------------------------------------------------------------------------ |
 | `--yes`               | Take every proposal without asking                                                         |
+| `--from <profile>`    | Install from a profile: a path, an https URL or github:owner/repo                          |
 | `--presets <ids>`     | The root presets, comma separated, instead of the detected ones                            |
 | `--without <ids>`     | Presets to leave out of the proposal, comma separated                                      |
 | `--scope <path=ids>`  | A scope and its presets; repeat for each scope                                             |

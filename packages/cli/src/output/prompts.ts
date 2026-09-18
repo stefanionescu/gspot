@@ -1,7 +1,7 @@
 import type { Choice } from '#types/output.ts';
-// The clack questions, asked only in a terminal and never under --yes.
-import { confirm, select } from '@clack/prompts';
 import { isCi } from '#cli/platform/environment.ts';
+// The clack questions, asked only in a terminal and never under --yes.
+import { confirm, multiselect, select } from '@clack/prompts';
 
 /** Thrown when a question cannot be answered: no terminal to ask in, or the person cancelled. The command exits 2. */
 export class PromptError extends Error {
@@ -89,6 +89,31 @@ export async function askChoice<T extends string>(
         ...(choice.hint === undefined ? {} : { hint: choice.hint }),
     })) as Parameters<typeof select<T>>[0]['options'];
     const answer = await select<T>({ message: question, options, initialValue: initial });
+    if (typeof answer === 'symbol') throw PromptError.cancelled(question);
+    return answer;
+}
+
+/**
+ * Several choices from a list. Under --yes, or with no terminal, the initial values stand.
+ * @param question the question
+ * @param choices the values with their labels
+ * @param initial the values selected at the start
+ * @param isYes whether --yes was given
+ * @returns the values the person kept
+ */
+export async function askMany<T extends string>(
+    question: string,
+    choices: Choice<T>[],
+    initial: T[],
+    isYes: boolean,
+): Promise<T[]> {
+    if (isYes || !canAsk()) return initial;
+    const options = choices.map((choice) => ({
+        value: choice.value,
+        label: choice.label,
+        ...(choice.hint === undefined ? {} : { hint: choice.hint }),
+    })) as Parameters<typeof multiselect<T>>[0]['options'];
+    const answer = await multiselect<T>({ message: question, options, initialValues: initial, required: false });
     if (typeof answer === 'symbol') throw PromptError.cancelled(question);
     return answer;
 }

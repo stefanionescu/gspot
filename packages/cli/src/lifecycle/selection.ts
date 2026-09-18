@@ -46,10 +46,12 @@ function isRootCandidate(context: InitContext, preset: string, hasScopes: boolea
 
 function rootSelection(context: InitContext, rootProposals: { preset: string }[], hasScopes: boolean): string[] {
     const without = new Set(context.options.without);
-    if (context.options.presets) return context.options.presets.filter((id) => id !== NO_PRESETS && !without.has(id));
-    return rootProposals
+    const named = context.options.presets?.filter((id) => id !== NO_PRESETS && !without.has(id));
+    if (named && context.options.profile?.tables.selection !== 'detect') return named;
+    const detected = rootProposals
         .filter((proposal) => isRootCandidate(context, proposal.preset, hasScopes, without))
         .map((proposal) => proposal.preset);
+    return [...new Set([...(named ?? []), ...detected])];
 }
 
 function isScopeCandidate(context: InitContext, preset: string, without: Set<string>): boolean {
@@ -137,6 +139,12 @@ function recommendedAdded(ids: string[], manifests: Map<string, Manifest>, witho
     return [...new Set([...ids, ...recommended.filter((id) => !without.has(id))])];
 }
 
+// An exact list (a profile that says so, or the answer to the selection question) gains no recommendation.
+function listedPresets(options: InitInputs['options'], ids: string[], manifests: Map<string, Manifest>): string[] {
+    const isExact = options.profile?.tables.selection === 'exact' || options.isListExact === true;
+    return isExact ? ids : recommendedAdded(ids, manifests, new Set(options.without));
+}
+
 function reasonFor(id: string, sets: { named: Set<string>; chosen: Set<string>; listed: Set<string> }): PresetReason {
     if (sets.named.has(id)) return 'named';
     if (sets.chosen.has(id)) return 'detected';
@@ -172,15 +180,14 @@ export function selectForInit(inputs: InitInputs): InitSelection {
             scopeProposals.set(scope.path, scopeSelection(context, scope, scopeFlags.get(scope.path), proposedRoot));
     const inScopes = new Set(scopeProposals.values().toArray().flat());
     const keptRoot = hasScopes ? rootLanguagesKept(context, proposedRoot, scopes, inScopes) : proposedRoot;
-    const rootIds = recommendedAdded([...keptRoot, ...inScopes], manifests, new Set(options.without)).filter(
-        (id) => !inScopes.has(id),
-    );
+    const rootIds = listedPresets(options, [...keptRoot, ...inScopes], manifests).filter((id) => !inScopes.has(id));
     assertNoneRequired(options, [...rootIds, ...inScopes], manifests);
     const selectedIds = closure([...rootIds, ...inScopes], manifests);
-    const named = new Set(options.presets ?? scopeFlags.values().toArray().flat());
-    const chosen = new Set([...keptRoot, ...inScopes]);
-    const how = new Map<string, PresetReason>();
-    for (const id of selectedIds)
-        how.set(id, reasonFor(id, { named, chosen, listed: new Set([...rootIds, ...inScopes]) }));
+    const sets = {
+        named: new Set(options.presets ?? scopeFlags.values().toArray().flat()),
+        chosen: new Set([...keptRoot, ...inScopes]),
+        listed: new Set([...rootIds, ...inScopes]),
+    };
+    const how = new Map([...selectedIds].map((id) => [id, reasonFor(id, sets)]));
     return { scopes, rootIds, scopeProposals, selectedIds, rootProposals, how };
 }

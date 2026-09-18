@@ -10,6 +10,7 @@ const KNOWN_ERRORS = new Set([
     'VersionPinError',
     'NoTerminalError',
     'PromptError',
+    'ProfileError',
 ]);
 
 function printResult(result: CommandResult, isJson: boolean): void {

@@ -18,7 +18,7 @@ async function build(): Promise<void> {
             naming: name,
             format,
             target: 'node',
-            external: ['@typescript-eslint/utils'],
+            external: ['@typescript-eslint/utils', 'picomatch'],
             minify: false,
             sourcemap: 'none',
         });
@@ -26,7 +26,7 @@ async function build(): Promise<void> {
     }
     writeFileSync(
         join(distribution, 'plugin.d.ts'),
-        "import type { TSESLint } from '@typescript-eslint/utils';\n\ndeclare const plugin: { meta: { name: string; version: string }; rules: Record<string, TSESLint.RuleModule<string, readonly unknown[]>> };\nexport default plugin;\n",
+        "import type { TSESLint } from '@typescript-eslint/utils';\n\ndeclare const plugin: { meta: { name: string; version: string }; rules: Record<string, TSESLint.RuleModule<string, readonly unknown[]>>; configs: { recommended: TSESLint.FlatConfig.Config } };\nexport default plugin;\n",
     );
     console.log('built packages/eslint-plugin/dist/plugin.js and plugin.cjs');
 }

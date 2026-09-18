@@ -1,4 +1,5 @@
 // Index and barrel detection, file classes, directory reads and the small glob matcher the rules share.
+import picomatch from 'picomatch';
 import { posix } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
@@ -16,53 +17,10 @@ const INDEX_BASENAMES = new Set([
 ]);
 const STDIN_NAMES = new Set(['', '<input>', '<text>']);
 const FILE_SCHEME = 'file://';
-const DOUBLE_STAR_SLASH = 3;
-const DOUBLE_STAR = 2;
 const DECLARATION_SUFFIX = '.d.ts';
-const REGEX_SPECIALS = /[.+^$()|[\]\\]/gu;
 
 const directoryCache = new Map<string, DirectoryEntry[]>();
-const globCache = new Map<string, RegExp>();
-
-function escaped(text: string): string {
-    return text.replaceAll(REGEX_SPECIALS, String.raw`\$&`);
-}
-
-function starSource(glob: string, at: number): { source: string; next: number } {
-    if (glob[at + 1] !== '*') return { source: '[^/]*', next: at + 1 };
-    const isSlash = glob[at + 2] === '/';
-    return { source: isSlash ? '(?:.*/)?' : '.*', next: at + (isSlash ? DOUBLE_STAR_SLASH : DOUBLE_STAR) };
-}
-
-function braceSource(glob: string, at: number): { source: string; next: number } {
-    const end = glob.indexOf('}', at);
-    if (end === -1) return { source: escaped('{'), next: at + 1 };
-    const options = glob
-        .slice(at + 1, end)
-        .split(',')
-        .map((option) => escaped(option))
-        .join('|');
-    return { source: `(?:${options})`, next: end + 1 };
-}
-
-function pieceSource(glob: string, at: number): { source: string; next: number } {
-    const char = glob[at] ?? '';
-    if (char === '*') return starSource(glob, at);
-    if (char === '?') return { source: '[^/]', next: at + 1 };
-    if (char === '{') return braceSource(glob, at);
-    return { source: escaped(char), next: at + 1 };
-}
-
-function globToRegex(glob: string): RegExp {
-    let source = '';
-    let cursor = 0;
-    while (cursor < glob.length) {
-        const piece = pieceSource(glob, cursor);
-        source += piece.source;
-        cursor = piece.next;
-    }
-    return new RegExp(`^${source}$`, 'u');
-}
+const globCache = new Map<string, (path: string) => boolean>();
 
 function aliasTarget(source: string, prefix: string, target: string): string | undefined {
     const clean = prefix.endsWith('*') ? prefix.slice(0, -1) : prefix;
@@ -175,12 +133,12 @@ export function resetDirectoryCache(): void {
  * @returns whether the glob matches the whole path
  */
 export function isGlobMatch(path: string, glob: string): boolean {
-    let regex = globCache.get(glob);
-    if (!regex) {
-        regex = globToRegex(glob);
-        globCache.set(glob, regex);
+    let isMatch = globCache.get(glob);
+    if (!isMatch) {
+        isMatch = picomatch(glob, { dot: true });
+        globCache.set(glob, isMatch);
     }
-    return regex.test(path);
+    return isMatch(path);
 }
 
 /**
@@ -190,7 +148,9 @@ export function isGlobMatch(path: string, glob: string): boolean {
  * @returns whether one of them matches
  */
 export function isAnyGlobMatch(path: string, globs: readonly string[]): boolean {
-    return globs.some((glob) => isGlobMatch(path, glob));
+    const excluded = globs.filter((glob) => glob.startsWith('!')).map((glob) => glob.slice(1));
+    const included = globs.filter((glob) => !glob.startsWith('!'));
+    return included.some((glob) => isGlobMatch(path, glob)) && excluded.every((glob) => !isGlobMatch(path, glob));
 }
 
 /**

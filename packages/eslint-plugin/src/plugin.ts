@@ -56,9 +56,23 @@ const rules = {
     'types-placement': typesPlacement,
 };
 
+// The rules for a project that allows re-exports in index files only; the recommended set bans re-exports outright.
+const INDEX_ONLY_RULES = new Set(['no-reexports-outside-index', 'no-duplicate-barrel-exports', 'max-barrel-reexports']);
+
+const base = { meta: { name: packageManifest.name, version: packageManifest.version }, rules };
+
+const recommendedRules = Object.fromEntries(
+    Object.keys(rules)
+        .filter((name) => !INDEX_ONLY_RULES.has(name))
+        .map((name) => [`gspot/${name}`, 'error' as const]),
+);
+
 const plugin = {
-    meta: { name: packageManifest.name, version: packageManifest.version },
-    rules,
+    ...base,
+    configs: {
+        /** Every rule on at its shipped options: `export default [gspot.configs.recommended]`. */
+        recommended: { name: 'gspot/recommended', plugins: { gspot: base }, rules: recommendedRules },
+    },
 };
 
 export default plugin;

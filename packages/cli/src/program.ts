@@ -15,6 +15,7 @@ import { registerIgnore } from '#cli/commands/ignore.ts';
 import { registerRemove } from '#cli/commands/remove.ts';
 import { registerDeclare } from '#cli/commands/declare.ts';
 import { registerExplain } from '#cli/commands/explain.ts';
+import { registerProfile } from '#cli/commands/profile.ts';
 import { registerUpgrade } from '#cli/commands/upgrade.ts';
 import { installCompletion } from '#cli/output/completion.ts';
 import { registerUninstall } from '#cli/commands/uninstall.ts';
@@ -77,6 +78,7 @@ export function buildProgram(): Command {
     registerDoctor(program);
     registerUpgrade(program);
     registerUninstall(program);
+    registerProfile(program);
     installCompletion(program);
     return program;
 }

@@ -20,6 +20,7 @@ export type CoverageReport = {
 
 export type ChangeReport = {
     detectedNotSelected: { preset: string; evidence: string; command: string }[];
+    recommendedNotSelected: { preset: string; evidence: string; command: string }[];
     configurationNotOwned: { path: string; note: string; command: string }[];
     changedOutsideGspot: { path: string; note: string; command: string }[];
     pinnedTwice: { tool: string; version: string; places: string[]; command: string }[];
@@ -45,7 +46,11 @@ export type DoctorReport = {
 };
 
 /** The change sections that share one row shape. */
-export type ChangeKey = 'detectedNotSelected' | 'configurationNotOwned' | 'changedOutsideGspot';
+export type ChangeKey =
+    | 'detectedNotSelected'
+    | 'recommendedNotSelected'
+    | 'configurationNotOwned'
+    | 'changedOutsideGspot';
 
 /** One row of the change report: a path, what is wrong with it, and the command that fixes it. */
 export type ChangeRow = { path: string; note: string; command: string };

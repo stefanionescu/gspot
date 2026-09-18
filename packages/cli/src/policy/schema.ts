@@ -142,6 +142,14 @@ const declareSchema = z.strictObject({
     reason: text.optional(),
 });
 
+const checkOutput = z.strictObject({
+    format: z.enum(['regex', 'grouped', 'eslint-json', 'lines', 'none']),
+    pattern: text.optional(),
+    file_pattern: text.optional(),
+    fixable: text.optional(),
+    message: text.optional(),
+});
+
 const checkSchema = z.strictObject({
     id: text,
     command: textListNonEmpty,
@@ -152,6 +160,7 @@ const checkSchema = z.strictObject({
     requires: z.enum(['build', 'docker', 'network']).optional(),
     platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
     summary: text.optional(),
+    output: checkOutput.optional(),
 });
 
 const hooksSchema = z.strictObject({ tool: z.enum(['gspot', 'lefthook', 'husky', 'none']).optional() });

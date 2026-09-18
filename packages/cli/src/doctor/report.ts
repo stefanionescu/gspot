@@ -20,6 +20,7 @@ const PARTIAL_SHOWN = 8;
 
 const CHANGE_SECTIONS: { key: ChangeKey; title: string }[] = [
     { key: 'detectedNotSelected', title: 'detected, not selected' },
+    { key: 'recommendedNotSelected', title: 'recommended, not selected' },
     { key: 'configurationNotOwned', title: 'configuration not owned' },
     { key: 'changedOutsideGspot', title: 'changed outside gspot' },
 ];

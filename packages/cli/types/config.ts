@@ -1,7 +1,7 @@
-// The shape of gspot.toml after load: every reasoned key is normalized to { value, reason }.
 import type { z } from 'zod';
-import type { SettingSpec } from '#types/manifest.ts';
+// The shape of gspot.toml after load: every reasoned key is normalized to { value, reason }.
 import type { CarriedLists } from '#types/lifecycle.ts';
+import type { OutputFormat, SettingSpec } from '#types/manifest.ts';
 import type { policySchema, scopeSchema } from '#cli/policy/schema.ts';
 
 export type Reasoned<T> = { value: T; reason?: string };
@@ -114,6 +114,7 @@ export type RepositoryCheck = {
     requires?: 'build' | 'docker' | 'network';
     platform?: string[];
     summary?: string;
+    output?: OutputFormat;
 };
 
 export type ScopeEntry = { path: string; presets: string[] };
@@ -169,6 +170,7 @@ export type MergedView = {
 };
 
 export type Proposal = {
+    profileTables?: TomlTable;
     presets: string[];
     scopes: { path: string; presets: string[] }[];
     carried: CarriedLists;

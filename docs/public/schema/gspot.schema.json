@@ -1689,6 +1689,37 @@
                     },
                     "summary": {
                         "type": "string"
+                    },
+                    "output": {
+                        "type": "object",
+                        "properties": {
+                            "format": {
+                                "type": "string",
+                                "enum": [
+                                    "regex",
+                                    "grouped",
+                                    "eslint-json",
+                                    "lines",
+                                    "none"
+                                ]
+                            },
+                            "pattern": {
+                                "type": "string"
+                            },
+                            "file_pattern": {
+                                "type": "string"
+                            },
+                            "fixable": {
+                                "type": "string"
+                            },
+                            "message": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "format"
+                        ],
+                        "additionalProperties": false
                     }
                 },
                 "required": [
