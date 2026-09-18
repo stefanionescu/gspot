@@ -26,7 +26,37 @@ const RANGED =
 const PUBLIC_ROOT =
     '{\n    "name": "planted",\n    "version": "1.0.0",\n    "packageManager": "bun@1.3.11",\n    "workspaces": ["packages/*"]\n}\n';
 
+// The scheme arrives as an argument, because a fixer rewrites a plain-text URL without TLS into one with it.
+function lockfileFrom(scheme: string): string {
+    return `{\n    "packages": { "node_modules/a": { "resolved": "${scheme}://registry.example.test/a/-/a-1.0.0.tgz" } }\n}\n`;
+}
+
 const CASES: PlantedCase[] = [
+    {
+        id: 'integrity/install-policy',
+        files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 3600\n' },
+        expected: 'the policy asks for 604800 seconds',
+    },
+    {
+        id: 'integrity/install-policy',
+        files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 604800\n' },
+        policy: '[tools.install]\nsecurity_scanner = "@socketsecurity/bun-security-scanner"\n',
+        expected: 'scanner is not @socketsecurity/bun-security-scanner',
+    },
+    {
+        id: 'integrity/lockfile-hosts',
+        files: {
+            'package-lock.json': lockfileFrom('http'),
+        },
+        expected: 'is not HTTPS',
+    },
+    {
+        id: 'integrity/lockfile-hosts',
+        files: {
+            'package-lock.json': lockfileFrom('https'),
+        },
+        expected: 'registry.example.test is not an allowed registry host',
+    },
     {
         id: 'integrity/manifest-policy',
         files: { 'package.json': RANGED },

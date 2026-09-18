@@ -113,3 +113,9 @@ export const FROZEN_INSTALLS: Record<string, string[]> = {
     'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile', '--lockfile-only'],
     'uv.lock': ['uv', 'lock', '--check'],
 };
+
+/** Seconds in one day, for the release age the package manager counts in seconds. */
+export const SECONDS_PER_DAY = 86_400;
+
+/** A URL inside a lockfile, up to the quote, the space or the bracket that ends it. */
+export const LOCKFILE_URL = /\b(?:https?|git\+https?|git\+ssh|git):\/\/[^\s"',)\]]+/gu;

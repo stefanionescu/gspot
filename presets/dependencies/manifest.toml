@@ -86,6 +86,50 @@ summary = "Checks that every lockfile matches its manifest, by asking the packag
 why = "A lockfile that lags its manifest installs versions nobody reviewed the moment someone runs a plain install."
 fix = "Run the install of the package manager once and commit the lockfile it writes."
 
+[[checks]]
+id = "integrity/install-policy"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "install-policy"
+claims = {filenames = ["bunfig.toml", "bun.lock", "bun.lockb", "package.json"]}
+inspection = ["consistency"]
+summary = "Checks that the install configuration waits out a minimum release age, and names the security scanner the policy asks for."
+why = "Most malicious releases are pulled within days, so a package nobody installs in its first week rarely harms anybody."
+fix = "Set [install] minimumReleaseAge in bunfig.toml to the seconds the message names, and the scanner under [install.security]."
+
+[[checks]]
+id = "integrity/lockfile-hosts"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "lockfile-hosts"
+inspection = ["consistency"]
+summary = "Checks that every URL in a lockfile is HTTPS and points at an allowed registry host."
+why = "A lockfile line that resolves from another host installs code nobody chose, and a review rarely reads lockfiles."
+fix = "Install the package from the registry again, or add the host to tools.dependencies.registry_hosts."
+
+[[settings]]
+name = "tools.install.min_release_age_days"
+kind = "number"
+direction = "floor"
+default = 7
+summary = "The fewest days a release has existed before the package manager installs it."
+
+[[settings]]
+name = "tools.install.security_scanner"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The security scanner the install configuration names; empty asks for none."
+
+[[settings]]
+name = "tools.dependencies.registry_hosts"
+kind = "list"
+direction = "neutral"
+default = ["registry.npmjs.org", "registry.yarnpkg.com", "codeload.github.com", "github.com"]
+summary = "The hosts a lockfile may resolve packages from."
+
 [[settings]]
 name = "tools.osv.ignore"
 kind = "list"

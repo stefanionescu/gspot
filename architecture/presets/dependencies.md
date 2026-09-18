@@ -12,7 +12,7 @@ Every manifest and lockfile: `package.json`, `bun.lock`, `package-lock.json`, `p
 
 ## Tools
 
-osv-scanner, knip, deptry, syncpack, eslint-plugin-package-json, lockfile-lint.
+osv-scanner, knip, deptry, syncpack, eslint-plugin-package-json.
 
 ## Generated configuration
 
@@ -28,7 +28,7 @@ osv-scanner, knip, deptry, syncpack, eslint-plugin-package-json, lockfile-lint.
 | ---------------------------------- | ------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | `dependencies/osv`                 | push, network                                                      | `osv-scanner --config .gspot/osv-scanner.toml --lockfile <each>`; Python advisories come from `uv.lock` here                                                                                                                                                                                                                               |
 | `dependencies/syncpack`            | push                                                               | `syncpack lint --config .gspot/syncpack.json`                                                                                                                                                                                                                                                                                              |
-| `dependencies/lockfile-lint`       | commit                                                             | registries over HTTPS, allowed hosts only                                                                                                                                                                                                                                                                                                  |
+| `integrity/lockfile-hosts`         | commit                                                             | every URL in a text lockfile is HTTPS and on `tools.dependencies.registry_hosts`; built in, because lockfile-lint reads no `bun.lock`                                                                                                                                                                                                      |
 | `integrity/lockfile-fresh`         | commit when a manifest or lockfile is staged; push                 | `bun install --frozen-lockfile --dry-run` (or npm, pnpm, yarn equivalents), `uv lock --check`                                                                                                                                                                                                                                              |
 | `integrity/manifest-policy`        | commit                                                             | exact versions (no `^`, `~`, ranges); keys ordered by `package-json/order-properties`; one `packageManager`, equal across workspace packages; root packages private; no foreign lockfiles; `engines` agree with `.nvmrc`, `.node-version` and the mise pin; scripts policy from `[tools.package-json] scripts` (`any`, `wrappers`, `none`) |
 | `integrity/install-policy`         | commit when a manifest, lockfile or install config is staged; push | minimum release age at or above `[tools.install] min_release_age_days`; the security scanner declared where the manager supports one; the installed tree equals the lockfile version for version; every peer dependency satisfied                                                                                                          |
@@ -44,7 +44,7 @@ The exact-version rule belongs to `package.json` and its workspace packages only
 `tools.osv.ignore` (id, reason, review_by), `tools.dependencies.aligned` (pairs), `tools.dependencies.pip_install_allowed`
 (paths), `tools.package-json.scripts`, `tools.package-json.allowed_scripts`, `tools.package-json.indent`,
 `tools.install.min_release_age_days` (default 7), `tools.install.security_scanner`,
-`tools.lockfile-lint.hosts`, `limits.file_size_kb`.
+`tools.dependencies.registry_hosts`, `limits.file_size_kb`.
 
 ## Rule files
 

@@ -25,9 +25,14 @@ Kind: concern. Selected by default.
 | [`dependencies/syncpack`](/reference/rules/dependencies/syncpack/)         | push   | Checks that every workspace package resolves each dependency to one version.                                                  |
 | [`integrity/manifest-policy`](/reference/rules/integrity/manifest-policy/) | commit | Checks every package.json: exact versions, one packageManager across the workspace, a private root, and one kind of lockfile. |
 | [`integrity/lockfile-fresh`](/reference/rules/integrity/lockfile-fresh/)   | push   | Checks that every lockfile matches its manifest, by asking the package manager to install from it without changing it.        |
+| [`integrity/install-policy`](/reference/rules/integrity/install-policy/)   | commit | Checks that the install configuration waits out a minimum release age, and names the security scanner the policy asks for.    |
+| [`integrity/lockfile-hosts`](/reference/rules/integrity/lockfile-hosts/)   | commit | Checks that every URL in a lockfile is HTTPS and points at an allowed registry host.                                          |
 
 ## Settings
 
+- `tools.install.min_release_age_days`: The fewest days a release has existed before the package manager installs it.
+- `tools.install.security_scanner`: The security scanner the install configuration names; empty asks for none.
+- `tools.dependencies.registry_hosts`: The hosts a lockfile may resolve packages from.
 - `tools.osv.ignore`: Advisories accepted until a review date: the id, the reason, and that date.
 - `tools.dependencies.ranges_allowed`: Manifests that may hold version ranges, such as a library others install, each with a reason.
 

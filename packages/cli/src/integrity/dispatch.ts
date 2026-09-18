@@ -13,7 +13,9 @@ import { taskPolicy } from '#cli/integrity/task-policy.ts';
 import { readmeShape } from '#cli/integrity/readme/shape.ts';
 import { suppressions } from '#cli/integrity/suppressions.ts';
 import { docsHeadings } from '#cli/integrity/docs-headings.ts';
-import { lockfileFresh } from '#cli/integrity/lockfile-fresh.ts';
+import { installPolicy } from '#cli/integrity/install-policy.ts';
+import { lockfileFresh } from '#cli/integrity/lockfile/fresh.ts';
+import { lockfileHosts } from '#cli/integrity/lockfile/hosts.ts';
 import { readmePresent } from '#cli/integrity/readme/present.ts';
 import { generatedDrift } from '#cli/integrity/generated-drift.ts';
 import { manifestPolicy } from '#cli/integrity/manifest-policy.ts';
@@ -44,6 +46,8 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'install-policy': installPolicy,
+    'lockfile-hosts': lockfileHosts,
     codeql,
     'gitleaks-baseline': gitleaksBaseline,
 };
