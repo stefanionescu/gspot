@@ -14,3 +14,9 @@ declare module '@npmcli/package-json' {
     }
     export default PackageJson;
 }
+
+// The Emscripten factory inside the libpg-query package, which ships no types for it.
+declare module 'libpg-query/wasm/libpg-query.js' {
+    const createModule: (options: { wasmBinary: Uint8Array }) => Promise<unknown>;
+    export default createModule;
+}

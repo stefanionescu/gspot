@@ -28,6 +28,7 @@ import { configurationPurity } from '#cli/integrity/config-purity.ts';
 import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
 import { gitleaksBaseline } from '#cli/integrity/gitleaks-baseline.ts';
 import { trackedDependencies } from '#cli/integrity/tracked-dependencies.ts';
+import { sqlBlockComments, sqlFileLength, sqlSyntax } from '#cli/sql/checks.ts';
 
 const checks: Record<string, IntegrityCheck> = {
     'generated-drift': generatedDrift,
@@ -49,6 +50,9 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'sql-syntax': sqlSyntax,
+    'sql-block-comments': sqlBlockComments,
+    'sql-file-length': sqlFileLength,
     'nginx-test': nginxTest,
     dockerignore,
     'trivy-image': trivyImage,

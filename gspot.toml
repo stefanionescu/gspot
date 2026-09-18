@@ -62,6 +62,12 @@ names = ["packageManager"]
 exclude = true
 reason = "package.json names the key packageManager, and the code reads it under that name."
 
+[[naming.rules]]
+paths = ["packages/cli/types/sql.ts"]
+names = ["lengthBytesUTF8", "stringToUTF8", "UTF8ToString", "_malloc", "_free", "_wasm_parse_query_raw", "_wasm_free_parse_result", "stmt_location", "stmt_len"]
+exclude = true
+reason = "Emscripten and libpg-query name these members, and the type spells them as the module exports them."
+
 [architecture]
 roles = {env = "packages/cli/src/platform/environment.ts"}
 

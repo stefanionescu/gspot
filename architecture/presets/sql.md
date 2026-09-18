@@ -42,13 +42,13 @@ them.
 
 ## Checks
 
-| Id                                | Stage  | Command                                                                                               |
-| --------------------------------- | ------ | ----------------------------------------------------------------------------------------------------- |
-| `sql/sqlfluff`                    | commit | `sqlfluff lint --config .gspot/sqlfluff.cfg --nofail=false {files}`; fix `sqlfluff fix`, order format |
-| `sql/syntax`                      | commit | `libpg-query` parse; a parse error is a finding                                                       |
-| `structure/file-length`           | commit | code lines                                                                                            |
-| `naming/identifiers`              | commit | schemas, tables, columns, functions, parameters, indexes, triggers, policies                          |
-| `structure/sql-no-block-comments` | commit | `/* */` refused so the prose engine reads every comment                                               |
+| Id                   | Stage  | Command                                                                                               |
+| -------------------- | ------ | ----------------------------------------------------------------------------------------------------- |
+| `sql/sqlfluff`       | commit | `sqlfluff lint --config .gspot/sqlfluff.cfg --nofail=false {files}`; fix `sqlfluff fix`, order format |
+| `sql/syntax`         | commit | `libpg-query` parse when the dialect is `postgres` or `ansi`; a parse error is a finding              |
+| `sql/file-length`    | commit | code lines against `limits.sql.file_lines` (default 400)                                              |
+| `naming/identifiers` | commit | schemas, tables, columns, functions, parameters, indexes, triggers, policies                          |
+| `sql/block-comments` | commit | `/* */` refused so the prose engine reads every comment                                               |
 
 ## Settings
 

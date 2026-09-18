@@ -1,6 +1,7 @@
 import type { Identifier } from '#types/naming.ts';
 import { grammarFor, parserFor } from '#cli/naming/parsers.ts';
 // The identifiers of one file: parse it with the grammar its language names and run that language's extractor.
+import { sqlIdentifiers } from '#cli/naming/extractors/sql.ts';
 import { bashIdentifiers } from '#cli/naming/extractors/bash.ts';
 import { typescriptIdentifiers } from '#cli/naming/extractors/typescript.ts';
 
@@ -12,6 +13,7 @@ import { typescriptIdentifiers } from '#cli/naming/extractors/typescript.ts';
  * @returns the identifiers
  */
 export async function identifiersOf(file: string, text: string, language: string): Promise<Identifier[]> {
+    if (language === 'sql') return sqlIdentifiers(file, text);
     const grammar = grammarFor(file, language);
     if (grammar === undefined) return [];
     const parser = await parserFor(grammar);

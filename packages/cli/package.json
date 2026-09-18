@@ -24,6 +24,7 @@
         "globby": "16.2.4",
         "jsonc-parser": "3.3.1",
         "latest-version": "9.0.0",
+        "libpg-query": "18.1.4",
         "linguist-languages": "9.5.0",
         "node-sarif-builder": "5.0.0",
         "nypm": "0.6.10",
