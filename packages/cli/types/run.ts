@@ -114,7 +114,14 @@ export type EslintEntry = {
     severity: number;
 };
 
-export type Substitutions = { files: string[]; scope: string; root: string; messageFile?: string; indent: number };
+export type Substitutions = {
+    files: string[];
+    scope: string;
+    root: string;
+    messageFile?: string;
+    mergeBase?: string;
+    indent: number;
+};
 
 /** What one tool run accumulates across its spawns. */
 export type ToolRun = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };

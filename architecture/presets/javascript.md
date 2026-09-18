@@ -39,7 +39,7 @@ files under `[architecture] types_directory`.
 
 `sourceType`
 follows the Node resolution: the nearest `package.json` `type`, then `.mjs` and `.cjs`.
-Import aliases are what the runtime resolves: `package.json` `imports` and tsconfig `paths`.
+The rendered knip ignore list carries `.gspot/commitlint.config.cjs` when the commits preset is selected, because commitlint loads that file by path and knip cannot see it. Import aliases are what the runtime resolves: `package.json` `imports` and tsconfig `paths`.
 `gspot set tools.eslint.globals "<glob>" browser` overrides one file class, and `gspot why
 <file>` prints the runtime a file got and why.
 

@@ -31,3 +31,15 @@ export function changedSince(root: string, reference: string): string[] {
     const working = paths(git(root, ['diff', '--name-only', '--diff-filter=ACMRT', '-z']));
     return [...new Set([...committed, ...working])].toSorted((a, b) => a.localeCompare(b));
 }
+
+/**
+ * Where a push starts: the merge base with the upstream branch, or the root commit when the branch has none.
+ * @param root the repository root
+ * @returns the commit the pushed range starts after
+ */
+export function pushBase(root: string): string {
+    const upstream = git(root, ['merge-base', 'HEAD', '@{upstream}'])?.trim();
+    if (upstream !== undefined && upstream !== '') return upstream;
+    const first = git(root, ['rev-list', '--max-parents=0', 'HEAD'])?.trim().split('\n').at(-1);
+    return first ?? 'HEAD';
+}

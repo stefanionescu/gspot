@@ -508,3 +508,17 @@ of the rule needs. The markers, the map, the count files, the scripts that wrote
 
 Supersedes [D-17](#d-17-every-rule-statement-names-its-check). Rejected: keeping
 the map without the markers, which is the same coupling one file away.
+
+## D-74 The commits preset writes the conventional rules itself
+
+Recorded 2026-09-18. The rendered `commitlint.config.cjs` carries the conventional rule set in
+full instead of extending `@commitlint/config-conventional`. An extended package has to be
+resolvable from the configuration file, which fails when mise installs the commitlint binary
+outside a `node_modules` tree. The file is CommonJS so it loads under any `package.json` type.
+
+The limits follow the corpus (`GIT.md`, `COMMITLINT.md`): header 72, body line 72, the nine
+types, a scope from the repository's scopes. `subject-case` refuses start, pascal, and upper
+case rather than demanding one case. The commitlint `sentence-case` check rejects a subject that
+names `ESLint`. The push check starts at the merge base with the upstream branch, so history
+from before the preset is never judged. Rejected: `subject-max-length` 100 and
+`header-max-length` 120 from a reference repository, which loosen what the corpus states.

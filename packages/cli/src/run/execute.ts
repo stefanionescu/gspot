@@ -17,7 +17,7 @@ import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
 import { textHash, cacheKey, fileHash, readCached, writeCached } from '#cli/run/cache.ts';
 import type { Filtered, Filtering, IgnoreUse, RunOptions, RunOutcome, Session, PlannedCheck } from '#types/run.ts';
 
-const NEVER_CACHED = new Set(['integrity/generated-drift']);
+const NEVER_CACHED = new Set(['integrity/generated-drift', 'commits/commitlint', 'commits/range']);
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
 const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
 const DOCKER = { name: 'docker', provider: 'host' as const, windows: true, installers: {} };

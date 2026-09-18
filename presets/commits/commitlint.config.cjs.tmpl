@@ -1,0 +1,29 @@
+<%
+const types = settings['tools.commitlint.types'] ?? ['feat', 'fix', 'refactor', 'perf', 'docs', 'test', 'build', 'ci', 'chore'];
+const named = settings['tools.commitlint.scopes'] ?? [];
+const derived = scopes.map((entry) => entry.path.split('/').at(-1)).concat(['root', 'hooks', 'deps']);
+const allowed = named.length > 0 ? named : scopes.length > 0 ? derived : [];
+const off = rulesOff('commits/commitlint');
+const rules = {
+    'type-enum': [2, 'always', types],
+    'type-case': [2, 'always', 'lower-case'],
+    'type-empty': [2, 'never'],
+    'scope-case': [2, 'always', 'kebab-case'],
+    'subject-empty': [2, 'never'],
+    'subject-full-stop': [2, 'never', '.'],
+    'subject-case': [2, 'never', ['start-case', 'pascal-case', 'upper-case']],
+    'header-max-length': [2, 'always', 72],
+    'body-leading-blank': [2, 'always'],
+    'body-max-line-length': [2, 'always', 72],
+    'footer-leading-blank': [2, 'always'],
+};
+if (allowed.length > 0) {
+    rules['scope-enum'] = [2, 'always', allowed];
+    rules['scope-empty'] = [2, 'never'];
+}
+const custom = tool('commitlint').rules;
+if (custom && typeof custom === 'object') for (const [name, value] of Object.entries(custom)) rules[name] = value;
+for (const name of off) rules[name] = [0];
+%>module.exports = {
+    rules: <%= json(rules) %>,
+};

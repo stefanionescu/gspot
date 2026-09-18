@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { probeTool } from '#cli/doctor/probes.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
+import { pushBase } from '#cli/repository/staged.ts';
 import type { SpawnResult } from '#types/platform.ts';
 import { parseOutput } from '#cli/run/parse-output.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
@@ -65,7 +66,8 @@ function substituteOne(session: Session, planned: PlannedCheck, part: string, su
         .replaceAll('{scope}', () => (sub.scope === '' ? '.' : sub.scope))
         .replaceAll('{root}', () => sub.root)
         .replaceAll('{indent}', () => String(sub.indent))
-        .replaceAll('{message_file}', () => sub.messageFile ?? '');
+        .replaceAll('{message_file}', () => sub.messageFile ?? '')
+        .replaceAll('{merge_base}', () => sub.mergeBase ?? '');
 }
 
 function firstLine(result: SpawnResult, placeholder: string): string {
@@ -170,6 +172,7 @@ function prepare(session: Session, planned: PlannedCheck, command: string[], too
         indent: scope.view.format.indent_width,
     };
     if (planned.messageFile !== undefined) sub.messageFile = planned.messageFile;
+    if (command.some((part) => part.includes('{merge_base}'))) sub.mergeBase = pushBase(session.root);
     const argv = substitute(session, planned, command, sub);
     if (toolPath !== undefined) argv[0] = toolPath;
     return { root: session.root, cwd, argv, commands: perFileCommands(argv, command, files) };

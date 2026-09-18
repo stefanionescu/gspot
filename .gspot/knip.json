@@ -15,7 +15,7 @@
         "publish.ts"
     ],
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
-    "ignore": [],
+    "ignore": [".gspot/commitlint.config.cjs"],
     "ignoreDependencies": [
         "@gspot/eslint-plugin",
         "eslint-config-prettier",
@@ -35,6 +35,7 @@
         "@gspot/eslint-plugin",
         "ast-grep",
         "bash",
+        "commitlint",
         "ec",
         "eslint",
         "eslint-config-prettier",
