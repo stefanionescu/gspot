@@ -1,6 +1,6 @@
 [preset]
 id = "docs"
-kind = "repository"
+kind = "concern"
 title = "Docs"
 default = true
 description = "Documentation integrity: links and anchors, banned headings, stale paths, the README of every scope, and its shape."
@@ -24,7 +24,7 @@ target = ".gspot/lychee.toml"
 [[checks]]
 id = "docs/links"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["lychee", "--config", "{config:lychee}", "--offline", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
 exclude_setting = "tools.lychee.exclude_paths"
 inspection = ["links"]
@@ -36,7 +36,7 @@ fix = "Point the link at the file or heading that exists, or delete it."
 [[checks]]
 id = "docs/links-external"
 stage = "manual"
-takes = "files"
+runs = "per-file-list"
 requires = "network"
 command = ["lychee", "--config", "{config:lychee}", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
 exclude_setting = "tools.lychee.exclude_paths"
@@ -64,7 +64,7 @@ analysis = "stale-paths"
 inspection = ["links"]
 summary = "Checks that every path a Markdown file names is tracked, and every mise run or bun run names a task that exists."
 why = "A path in the docs that nothing tracks sends the reader to a file that is gone."
-fix = "Fix the path or the task name, or add the pattern with a reason under tools.docs.path_exceptions."
+fix = "Fix the path or the task name, or add the pattern with a reason under tools.docs.paths_allowed."
 
 [[checks]]
 id = "docs/readme-present"
@@ -94,7 +94,7 @@ default = []
 summary = "Files the link checks skip, each with a reason: the pages of a site whose links resolve only once it is built."
 
 [[settings]]
-name = "tools.docs.path_exceptions"
+name = "tools.docs.paths_allowed"
 kind = "list"
 direction = "loosening"
 default = []
@@ -135,5 +135,5 @@ direction = "loosening"
 default = []
 summary = "URL patterns lychee skips, each with a reason."
 
-[rules]
+[rule_files]
 general = ["general/prose/DOCS.md", "general/prose/DOCS-FORMAT.md", "general/prose/DOCS-CONTENT.md", "general/prose/DOCS-MEDIA.md", "general/prose/DOCS-SURFACES.md", "general/prose/DOCS-REVIEW.md", "general/prose/WRITING.md", "general/code/COMMENTS.md"]

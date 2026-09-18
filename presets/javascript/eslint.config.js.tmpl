@@ -339,7 +339,7 @@ const boundaryConfigs = [
             'boundaries/ignore': ['**/*.test.*', '**/*.spec.*'],
         },
         rules: {
-            'boundaries/element-types': ['error', { default: 'disallow', rules: <%= json(scoped.allow.map((entry) => ({ from: entry.from, allow: entry.to }))) %> }],
+            'boundaries/element-types': ['error', { default: 'disallow', rules: <%= json(scoped.edges_allowed.map((entry) => ({ from: entry.from, allow: entry.to }))) %> }],
         },
     },
 <% } %>];

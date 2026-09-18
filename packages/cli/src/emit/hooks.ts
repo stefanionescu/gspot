@@ -8,7 +8,7 @@ const HOOK_NAMES: HookName[] = ['pre-commit', 'pre-push', 'commit-msg'];
 const HOOK_ARGS: Record<HookName, string> = {
     'pre-commit': 'check --staged',
     'pre-push': 'check',
-    'commit-msg': 'check --stage message --message-file',
+    'commit-msg': 'check --at message --message-file',
 };
 const RUNNER_EXEC: Record<string, string> = {
     mise: 'mise exec -- gspot',
@@ -123,6 +123,6 @@ export function lefthookBlock(surface: string, binaryPath?: string): LefthookBlo
     return {
         'pre-commit': { commands: { gspot: { run: `${exec} check --staged` } } },
         'pre-push': { commands: { gspot: { run: `${exec} check` } } },
-        'commit-msg': { commands: { gspot: { run: `${exec} check --stage message --message-file {1}` } } },
+        'commit-msg': { commands: { gspot: { run: `${exec} check --at message --message-file {1}` } } },
     };
 }

@@ -13,7 +13,7 @@ function selectionFor(session: Session, file: TrackedFile): ScopeSelection | und
 }
 
 function requiredKinds(owners: Manifest[], extension: string): Set<string> {
-    return new Set(owners.flatMap((owner) => owner.required[extension] ?? []));
+    return new Set(owners.flatMap((owner) => owner.inspections[extension] ?? []));
 }
 
 function providedKinds(selected: Manifest[]): Set<string> {

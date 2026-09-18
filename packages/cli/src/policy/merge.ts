@@ -8,7 +8,7 @@ import type {
     IgnoreEntry,
     Policy,
     PolicyScopeLayer,
-    SettingsSurface,
+    ExposedSettings,
 } from '#types/config.ts';
 
 const FORMAT_DEFAULTS: FormatSettings = {
@@ -90,7 +90,7 @@ function extraOf(tables: Record<string, unknown>[]): Record<string, unknown> | u
  * @returns the view the templates read
  */
 export function mergeForScope(
-    surface: SettingsSurface,
+    surface: ExposedSettings,
     policy: Policy,
     selected: Manifest[],
     scope: string,

@@ -1,6 +1,6 @@
 [preset]
 id = "naming"
-kind = "repository"
+kind = "concern"
 title = "Naming"
 description = "The naming engine: banned terms, case rules, length and word ceilings over every identifier, file, and folder."
 
@@ -135,5 +135,5 @@ direction = "ceiling"
 default = 7
 summary = "The most words one SQL identifier may have."
 
-[rules]
+[rule_files]
 general = ["general/code/NAMING.md", "general/code/NAMING-FILES.md"]

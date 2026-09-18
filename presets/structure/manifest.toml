@@ -1,6 +1,6 @@
 [preset]
 id = "structure"
-kind = "repository"
+kind = "concern"
 title = "Structure"
 description = "The structural rules no standard linter ships, over every language: wrappers, barrels, lone files, private-first order, and the size limits."
 
@@ -64,7 +64,7 @@ fix = "Name the folder after what it holds, or allow it with a reason under stru
 [[checks]]
 id = "integrity/baselines-current"
 stage = "commit"
-takes = "project"
+runs = "per-scope"
 engine = "integrity"
 analysis = "baselines-current"
 inspection = ["consistency"]
@@ -75,7 +75,7 @@ fix = "Run gspot apply --baseline to remove the stale baseline or prune the supp
 [[checks]]
 id = "integrity/config-purity"
 stage = "commit"
-takes = "project"
+runs = "once"
 engine = "integrity"
 analysis = "config-purity"
 inspection = ["structure"]
@@ -86,7 +86,7 @@ fix = "Move the logic into a module under src and keep the literal in the config
 [[checks]]
 id = "integrity/suppressions"
 stage = "commit"
-takes = "project"
+runs = "once"
 engine = "integrity"
 analysis = "suppressions"
 inspection = ["structure"]
@@ -97,7 +97,7 @@ fix = "Write the reason in the comment (after two dashes for eslint-disable and 
 [[checks]]
 id = "integrity/allowlists-match"
 stage = "commit"
-takes = "project"
+runs = "once"
 engine = "integrity"
 analysis = "allowlists-match"
 inspection = ["consistency"]
@@ -108,7 +108,7 @@ fix = "Remove the entry, or fix its pattern."
 [[checks]]
 id = "integrity/task-policy"
 stage = "commit"
-takes = "project"
+runs = "once"
 engine = "integrity"
 analysis = "task-policy"
 inspection = ["consistency"]
@@ -119,7 +119,7 @@ fix = "Run gspot apply; it rewrites the tasks and the hooks and sets core.hooksP
 [[checks]]
 id = "integrity/large-files"
 stage = "commit"
-takes = "project"
+runs = "once"
 engine = "integrity"
 analysis = "large-files"
 inspection = ["consistency"]
@@ -426,7 +426,7 @@ default = []
 summary = "Functions allowed to forward their arguments to one call, each with a file, a name, and a reason."
 
 [[settings]]
-name = "structure.trivial_exemptions"
+name = "structure.trivial_allowed"
 kind = "list"
 direction = "loosening"
 default = []
@@ -479,5 +479,5 @@ direction = "tightening"
 default = []
 summary = "Which element may import which; an element imports only itself unless a row says otherwise."
 
-[rules]
+[rule_files]
 general = ["general/agent/WORKING.md"]

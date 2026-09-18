@@ -1,7 +1,5 @@
 // Type aliases of the commands modules.
 
-export type Result = { text: string; json: unknown; exitCode: number };
-
 /** The flags every writing command shares. */
 export type WriteOptions = { cwd: string; isDryRun: boolean };
 

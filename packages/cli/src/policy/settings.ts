@@ -3,7 +3,7 @@ import * as messages from '#cli/policy/messages.ts';
 import type { Manifest, SettingSpec } from '#types/manifest.ts';
 
 import type {
-    PlainValue,
+    WrittenValue,
     PolicyLayer,
     SettingState,
     SpecMatch,
@@ -12,7 +12,7 @@ import type {
     Policy,
     Reasoned,
     ResolvedSetting,
-    SettingsSurface,
+    ExposedSettings,
 } from '#types/config.ts';
 
 const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
@@ -31,12 +31,12 @@ function isReasoned(value: unknown): value is Reasoned<unknown> {
     );
 }
 
-function plain(value: unknown): PlainValue {
+function plain(value: unknown): WrittenValue {
     if (!isReasoned(value)) return { value };
     return value.reason === undefined ? { value: value.value } : { value: value.value, reason: value.reason };
 }
 
-function plainIfPresent(value: unknown): PlainValue | undefined {
+function plainIfPresent(value: unknown): WrittenValue | undefined {
     return value === undefined ? undefined : plain(value);
 }
 
@@ -82,7 +82,7 @@ function toolKeys(policy: Partial<Policy>): string[] {
     return keys;
 }
 
-function addDefault(surface: SettingsSurface, manifest: Manifest, spec: SettingSpec): void {
+function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingSpec): void {
     if (spec.default === undefined) return;
     const previous = surface.defaults.get(spec.name);
     const isConflict =
@@ -97,7 +97,7 @@ function addDefault(surface: SettingsSurface, manifest: Manifest, spec: SettingS
     surface.defaults.set(spec.name, { value: spec.default, preset: manifest.preset.id });
 }
 
-function addEnabledSpecs(surface: SettingsSurface, manifest: Manifest): void {
+function addEnabledSpecs(surface: ExposedSettings, manifest: Manifest): void {
     for (const tool of manifest.tools) {
         const enabledKey = `tools.${tool.name}.enabled`;
         if (surface.specs.has(enabledKey)) continue;
@@ -113,7 +113,7 @@ function addEnabledSpecs(surface: SettingsSurface, manifest: Manifest): void {
 }
 
 function languageSpec(
-    surface: SettingsSurface,
+    surface: ExposedSettings,
     key: string,
     table: string,
     language: string,
@@ -127,7 +127,7 @@ function languageSpec(
 }
 
 function groupedSpec(
-    surface: SettingsSurface,
+    surface: ExposedSettings,
     key: string,
     table: string,
     language: string,
@@ -141,7 +141,7 @@ function groupedSpec(
 }
 
 function categorySpec(
-    surface: SettingsSurface,
+    surface: ExposedSettings,
     language: string,
     category: string,
     name: string,
@@ -152,7 +152,7 @@ function categorySpec(
     return isCovered ? { spec: base, language, category } : undefined;
 }
 
-function limitValue(policy: Partial<Policy>, rest: string[]): PlainValue | undefined {
+function limitValue(policy: Partial<Policy>, rest: string[]): WrittenValue | undefined {
     const [first, second] = rest;
     if (first === undefined) return undefined;
     const entry = second === undefined ? policy.limits?.root[first] : policy.limits?.groups[first]?.[second];
@@ -163,12 +163,12 @@ function languageValue(
     language: NamingLanguageTable,
     slot: string,
     categorySlot: string | undefined,
-): PlainValue | undefined {
+): WrittenValue | undefined {
     if (categorySlot === undefined) return plainIfPresent(asRecord(language)?.[slot]);
     return plainIfPresent(asRecord(language.categories[slot])?.[categorySlot]);
 }
 
-function namingValue(policy: Partial<Policy>, rest: string[]): PlainValue | undefined {
+function namingValue(policy: Partial<Policy>, rest: string[]): WrittenValue | undefined {
     const naming = policy.naming;
     const [languageName, slot, categorySlot] = rest;
     if (!naming || languageName === undefined) return undefined;
@@ -246,8 +246,8 @@ export function writtenKeys(policy: Partial<Policy>): string[] {
  * @param selected the manifests of the selection, in order
  * @returns the specs, their defaults and the conflicts found on the way
  */
-export function buildSurface(selected: Manifest[]): SettingsSurface {
-    const surface: SettingsSurface = { specs: new Map(), defaults: new Map(), problems: [] };
+export function exposedSettings(selected: Manifest[]): ExposedSettings {
+    const surface: ExposedSettings = { specs: new Map(), defaults: new Map(), problems: [] };
     for (const manifest of selected) {
         for (const spec of manifest.settings) {
             if (!surface.specs.has(spec.name)) surface.specs.set(spec.name, spec);
@@ -264,7 +264,7 @@ export function buildSurface(selected: Manifest[]): SettingsSurface {
  * @param key the dotted key as written
  * @returns the spec with the language and category the key names, or undefined when nothing exposes it
  */
-export function specFor(surface: SettingsSurface, key: string): SpecMatch | undefined {
+export function specFor(surface: ExposedSettings, key: string): SpecMatch | undefined {
     const direct = surface.specs.get(key);
     if (direct) return { spec: direct };
     const [table, language, ...rest] = key.split('.');
@@ -278,7 +278,7 @@ export function specFor(surface: SettingsSurface, key: string): SpecMatch | unde
  * @param key the dotted key
  * @returns the value with its reason, or undefined when the key is not written
  */
-export function policyValue(policy: Partial<Policy>, key: string): PlainValue | undefined {
+export function policyValue(policy: Partial<Policy>, key: string): WrittenValue | undefined {
     const [table, ...rest] = key.split('.');
     if (table === 'limits') return limitValue(policy, rest);
     if (table === 'naming') return namingValue(policy, rest);
@@ -295,7 +295,7 @@ export function policyValue(policy: Partial<Policy>, key: string): PlainValue | 
  * @returns the value with where it came from, or undefined when nothing exposes the key
  */
 export function settingValue(
-    surface: SettingsSurface,
+    surface: ExposedSettings,
     policy: Policy,
     key: string,
     scope?: string,
@@ -328,7 +328,7 @@ export function settingValue(
  * @param scope the scope path whose table applies last, if any
  * @returns the resolved settings in key order
  */
-export function listSettings(surface: SettingsSurface, policy: Policy, scope?: string): ResolvedSetting[] {
+export function listSettings(surface: ExposedSettings, policy: Policy, scope?: string): ResolvedSetting[] {
     const keys = surface.specs
         .keys()
         .toArray()

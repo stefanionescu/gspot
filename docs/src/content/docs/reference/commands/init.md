@@ -22,8 +22,9 @@ gspot init [options]
 | `--allow-dirty`       | Run although the working tree has uncommitted changes                                      |
 | `--hooks <tool>`      | Where hooks go                                                                             |
 | `--ci <provider>`     | Write a CI workflow                                                                        |
-| `--rules <choice>`    | Install the agent rule files                                                               |
-| `--format <choice>`   | Keep your formatter settings, or take the shipped ones                                     |
+| `--no-rules`          | Leave the agent rule files out                                                             |
+| `--keep-format`       | Keep your formatter settings                                                               |
+| `--shipped-format`    | Take the shipped formatter settings                                                        |
 | `--project-templates` | Copy the project templates that match into the project rule layer                          |
 | `--runner <surface>`  | The task runner surface                                                                    |
 | `--dry-run`           | Print the plan and write nothing                                                           |

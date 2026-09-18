@@ -5,7 +5,7 @@ description: "The structural rules no standard linter ships, over every language
 
 The structural rules no standard linter ships, over every language: wrappers, barrels, lone files, private-first order, and the size limits.
 
-Kind: repository.
+Kind: concern.
 
 ## Tools
 
@@ -68,7 +68,7 @@ Kind: repository.
 - `limits.install.min_release_age_days`: How many days a package must have been published before the package manager installs it.
 - `structure.reexports`: Whether re-exports are allowed: none, or index-only for libraries with barrels.
 - `structure.call_through_allowed`: Functions allowed to forward their arguments to one call, each with a file, a name, and a reason.
-- `structure.trivial_exemptions`: Small single-use functions allowed to stay, by path and name, each with a reason.
+- `structure.trivial_allowed`: Small single-use functions allowed to stay, by path and name, each with a reason.
 - `structure.single_file_folder_allowed`: Folders allowed to hold one file, by path, each with a reason.
 - `structure.prefix_collision_allowed`: Folders where sibling files may share a prefix, by path, each with a reason.
 - `structure.folder_name_allowed`: Folder names from the banned list that this repository keeps, by path, each with a reason.

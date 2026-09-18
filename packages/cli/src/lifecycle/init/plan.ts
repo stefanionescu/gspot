@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { Proposal } from '#types/config.ts';
 import type { Manifest } from '#types/manifest.ts';
-import { noLongerRuns } from '#cli/emit/takeover.ts';
 import type { ScopeEntry } from '#types/repository.ts';
+import { noLongerRuns } from '#cli/lifecycle/takeover.ts';
 import { pinnedTwice, collectPins, npmPins } from '#cli/emit/runner-surface.ts';
-import type { CarriedLists, InitAnswers, InitPlanInputs, InitSelection, TakeoverPlan } from '#types/emit.ts';
+import type { CarriedLists, InitAnswers, InitPlanInputs, InitSelection, TakeoverPlan } from '#types/lifecycle.ts';
 
 const TYPES_DIRECTORIES = ['types', 'src/types', 'api/types'];
 const PACKAGE_RUNNERS = new Set(['bun', 'npm', 'pnpm']);

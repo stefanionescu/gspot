@@ -36,18 +36,21 @@ function input(root: string, checks: Partial<CheckSpec>[]): EngineInput {
 describe('baselines-current', () => {
     test('a baseline for a check that no longer runs and a suppression for a deleted file are reported', async () => {
         await using fixture = await createFixture({
-            '.gspot/baseline/old.check.rule.json': JSON.stringify({
+            '.gspot/baselines/old.check.rule.json': JSON.stringify({
                 check: 'old/check',
                 rule: 'rule',
                 count: 1,
                 recorded: '2026-09-18',
                 paths: { 'src/kept.ts': 1 },
             }),
-            '.gspot/baseline/eslint.json': JSON.stringify({ 'src/kept.ts': { rule: { count: 1 } }, 'src/gone.ts': {} }),
+            '.gspot/baselines/eslint.json': JSON.stringify({
+                'src/kept.ts': { rule: { count: 1 } },
+                'src/gone.ts': {},
+            }),
         });
         mkdirSync(join(fixture.path, 'src'), { recursive: true });
         const found = await baselinesCurrent(
-            input(fixture.path, [{ id: 'typescript/eslint', baseline_file: '.gspot/baseline/eslint.json' }]),
+            input(fixture.path, [{ id: 'typescript/eslint', baseline_file: '.gspot/baselines/eslint.json' }]),
         );
         expect(found.map((finding) => [finding.rule, finding.message.split(' ', 1)[0]])).toEqual([
             ['unknown-check', 'The'],

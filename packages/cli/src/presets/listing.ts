@@ -1,5 +1,5 @@
 // The list explain <preset> and the docs generator read.
-import { presetManifests } from '#cli/presets/read.ts';
+import { presetManifests } from '#cli/presets/read-manifests.ts';
 import type { ListingRow, CheckSpec, Manifest } from '#types/manifest.ts';
 
 /**
@@ -17,7 +17,7 @@ export function toRow(manifest: Manifest): ListingRow {
         tools: manifest.tools.map((tool) => (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`)),
         checks: manifest.checks.map((check) => ({ id: check.id, stage: check.stage })),
         settings: manifest.settings.map((setting) => setting.name),
-        rules: Object.values(manifest.rules).flat(),
+        rules: Object.values(manifest.rule_files).flat(),
         default: manifest.preset.default,
         proposed: manifest.preset.proposed,
     };

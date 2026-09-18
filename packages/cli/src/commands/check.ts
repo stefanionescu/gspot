@@ -1,8 +1,8 @@
 // gspot check
 import { Option } from 'commander';
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
-import { checkCommand } from '#cli/run/check.ts';
+import { checkCommand } from '#cli/run/check-command.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
 import type { StageFilter, CheckOptions } from '#types/run.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 
@@ -11,7 +11,7 @@ function optionsFrom(
     flags: Record<string, unknown>,
     global: Record<string, unknown>,
 ): CheckOptions {
-    const stage = textFlag(flags, 'stage') as StageFilter | undefined;
+    const stage = textFlag(flags, 'at') as StageFilter | undefined;
     const scope = textFlag(flags, 'scope');
     return {
         cwd: directoryOf(global),
@@ -42,7 +42,7 @@ export function registerCheck(program: Command): void {
         .option('--since <ref>', 'Commit and push stages over files changed since a git ref')
         .option('--fix', 'Run every fixer in order, then the checks again')
         .option('--dry-run', 'With --fix, print the diff of every fix and write nothing')
-        .addOption(new Option('--stage <stage>', 'One stage').choices(['commit', 'push', 'manual', 'message']))
+        .addOption(new Option('--at <stage>', 'One stage').choices(['commit', 'push', 'manual', 'message']))
         .option('--scope <path>', 'One scope only')
         .option(
             '--skip <check-id>',
@@ -53,6 +53,6 @@ export function registerCheck(program: Command): void {
         .option('--no-cache', 'Run every check even when its inputs are unchanged')
         .action(async (checkId: string | undefined, flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await emit(() => checkCommand(optionsFrom(checkId, flags, global)), global);
+            await printCommand(() => checkCommand(optionsFrom(checkId, flags, global)), global);
         });
 }

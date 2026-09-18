@@ -1,6 +1,6 @@
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
-import { readPolicy, parseLocalText, parsePolicyText, PolicyError } from '#cli/policy/read.ts';
+import { readPolicy, parseLocalText, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
 
 const minimal = 'version = 1\npresets = ["bash"]\n';
 

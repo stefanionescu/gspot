@@ -1,10 +1,10 @@
 // What changed in the repository after init: presets detected and not selected, configuration not owned, hooks or CI changed by hand, duplicate pins.
 import type { Session } from '#types/run.ts';
 import { emitAll } from '#cli/emit/targets.ts';
-import { isOwned } from '#cli/emit/takeover.ts';
 import { head } from '#cli/repository/tracked.ts';
 import { hasHeader } from '#cli/emit/templates.ts';
 import { everyManifest } from '#cli/run/session.ts';
+import { isOwned } from '#cli/lifecycle/takeover.ts';
 import { detectPresets } from '#cli/presets/detect.ts';
 import { pinnedTwice } from '#cli/emit/runner-surface.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
@@ -26,7 +26,7 @@ function detectedNotSelected(
         .filter((proposal) => !selected.has(proposal.preset))
         .filter((proposal) => {
             const manifest = session.manifests.get(proposal.preset);
-            return manifest?.preset.default !== true && manifest?.preset.kind !== 'repository';
+            return manifest?.preset.default !== true && manifest?.preset.kind !== 'concern';
         })
         .map((proposal) => ({
             preset: proposal.preset,

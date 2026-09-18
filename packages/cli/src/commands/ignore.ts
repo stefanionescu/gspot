@@ -1,7 +1,7 @@
 // gspot ignore
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
-import { ignoreCommand } from '#cli/policy/commands.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import { ignoreCommand } from '#cli/policy/ignore-command.ts';
 import { directoryOf, listFlag, textEntry } from '#cli/commands/flags.ts';
 
 /**
@@ -20,7 +20,7 @@ export function registerIgnore(program: Command): void {
         .action(async (checkId: string, flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             const paths = listFlag(flags, 'paths');
-            await emit(
+            await printCommand(
                 () =>
                     ignoreCommand({
                         cwd: directoryOf(global),

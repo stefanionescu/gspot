@@ -1,6 +1,6 @@
 [preset]
 id = "prose"
-kind = "repository"
+kind = "concern"
 title = "Prose"
 requires = ["markdown"]
 description = "Vale over every comment and every documentation file, with the gspot style, and the upstream packages."
@@ -45,7 +45,7 @@ fix = "Delete the directive and change the text, or disable the rule with a reas
 [[checks]]
 id = "prose/messages"
 stage = "commit"
-rules = "typescript/eslint"
+reported_by = "typescript/eslint"
 inspection = ["prose"]
 summary = "Checks the strings Vale cannot see: error messages start with a capital letter, client messages name no identifier, log messages are stable."
 why = "A message is prose a person reads under stress; an interpolated identifier in it leaks internals and breaks searching the logs."
@@ -54,7 +54,7 @@ fix = "Capitalize the message, move the value into its own field, and keep the l
 [[checks]]
 id = "prose/doc-tags"
 stage = "commit"
-rules = "typescript/eslint"
+reported_by = "typescript/eslint"
 inspection = ["prose"]
 summary = "Checks that doc comments carry no types, which the language already states."
 why = "A type in a doc tag drifts from the signature and says nothing the reader cannot see."
@@ -74,5 +74,5 @@ direction = "loosening"
 default = []
 summary = "Vale rules this repository turns off, each with a reason."
 
-[rules]
+[rule_files]
 general = ["general/prose/WRITING.md", "general/code/COMMENTS.md"]

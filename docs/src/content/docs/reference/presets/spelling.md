@@ -5,7 +5,7 @@ description: "typos over every text file, with the words this repository allows 
 
 typos over every text file, with the words this repository allows and the reason for each.
 
-Kind: repository. Selected by default.
+Kind: concern. Selected by default.
 
 ## Tools
 

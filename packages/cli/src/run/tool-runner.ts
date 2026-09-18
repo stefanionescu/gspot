@@ -9,7 +9,7 @@ import type { SpawnResult } from '#types/platform.ts';
 import { parseOutput } from '#cli/run/parse-output.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
 import type { ToolPin, CheckSpec, ConfigurationTarget } from '#types/manifest.ts';
-import type { ToolRun, Prepared, Substitutions, Session, PlannedCheck } from '#types/run.ts';
+import type { ToolRunState, PreparedCommand, Substitutions, Session, PlannedCheck } from '#types/run.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
 
@@ -112,7 +112,7 @@ function missingResult(
 
 function workingDirectory(session: Session, planned: PlannedCheck): string {
     const { spec, scope } = planned;
-    const isInScope = spec.cwd === 'scope' || (spec.takes === 'project' && spec.cwd !== 'root');
+    const isInScope = spec.cwd === 'scope' || (spec.runs === 'per-scope' && spec.cwd !== 'root');
     return isInScope ? join(session.root, scope.scope.path) : session.root;
 }
 
@@ -151,7 +151,13 @@ function unexplainedFailure(spec: CheckSpec, tool: ToolPin, result: SpawnResult,
     return { check: spec.id, file: file?.replaceAll('\\', '/') ?? '', message: text, help: spec.fix, fixable: false };
 }
 
-function markFailure(spec: CheckSpec, tool: ToolPin, result: SpawnResult, parsed: Finding[], state: ToolRun): void {
+function markFailure(
+    spec: CheckSpec,
+    tool: ToolPin,
+    result: SpawnResult,
+    parsed: Finding[],
+    state: ToolRunState,
+): void {
     if (spec.count_regex !== undefined) {
         if (countMatches(spec, result) > 0) state.isFailed = true;
         return;
@@ -165,7 +171,13 @@ function isPerFile(spec: CheckSpec): boolean {
     return spec.command?.includes('{file}') ?? false;
 }
 
-function collect(planned: PlannedCheck, tool: ToolPin, command: string[], result: SpawnResult, state: ToolRun): void {
+function collect(
+    planned: PlannedCheck,
+    tool: ToolPin,
+    command: string[],
+    result: SpawnResult,
+    state: ToolRunState,
+): void {
     const { spec, scope } = planned;
     const parsed = parseOutput(spec, result.stdout, result.stderr, state.root);
     if (parsed.length === 0 && result.code !== 0 && isPerFile(spec))
@@ -175,7 +187,12 @@ function collect(planned: PlannedCheck, tool: ToolPin, command: string[], result
     markFailure(spec, tool, result, parsed, state);
 }
 
-function prepare(session: Session, planned: PlannedCheck, command: string[], toolPath: string | undefined): Prepared {
+function prepare(
+    session: Session,
+    planned: PlannedCheck,
+    command: string[],
+    toolPath: string | undefined,
+): PreparedCommand {
     const { scope } = planned;
     const cwd = workingDirectory(session, planned);
     const relative = relativizer(session, planned, cwd);
@@ -193,7 +210,13 @@ function prepare(session: Session, planned: PlannedCheck, command: string[], too
     return { root: session.root, cwd, argv, commands: perFileCommands(argv, command, files) };
 }
 
-function finished(base: CheckResult, spec: CheckSpec, state: ToolRun, argv: string[], started: number): CheckResult {
+function finished(
+    base: CheckResult,
+    spec: CheckSpec,
+    state: ToolRunState,
+    argv: string[],
+    started: number,
+): CheckResult {
     const isEveryFindingKept = state.isFailed || spec.count_regex !== undefined;
     const findings = isEveryFindingKept
         ? state.findings
@@ -205,12 +228,12 @@ function finished(base: CheckResult, spec: CheckSpec, state: ToolRun, argv: stri
 async function runCommands(
     planned: PlannedCheck,
     tool: ToolPin,
-    prepared: Prepared,
+    prepared: PreparedCommand,
     base: CheckResult,
 ): Promise<CheckResult> {
     const { spec } = planned;
     const { cwd, argv } = prepared;
-    const state: ToolRun = { root: prepared.root, cwd, findings: [], isFailed: false };
+    const state: ToolRunState = { root: prepared.root, cwd, findings: [], isFailed: false };
     const started = performance.now();
     for (const command of prepared.commands) {
         const result = await run(command, { cwd, env: TOOL_ENV });

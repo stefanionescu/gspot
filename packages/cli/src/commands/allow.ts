@@ -1,7 +1,7 @@
 // gspot allow
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
 import { allowCommand } from '#cli/policy/allow-command.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
 import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 
 /**
@@ -18,7 +18,7 @@ export function registerAllow(program: Command): void {
         .option('--dry-run', 'Print what would be written and write nothing')
         .action(async (list: string, items: string[], flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await emit(
+            await printCommand(
                 () =>
                     allowCommand({
                         cwd: directoryOf(global),

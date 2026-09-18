@@ -32,7 +32,7 @@ capitalisation = "capitalisation"
 extend-exclude = [
     "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved",
     "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css",
-    ".gspot/cache/", ".gspot/vale/", ".gspot/last.json", ".gspot/last.sarif", ".gspot/baseline/",
+    ".gspot/cache/", ".gspot/vale/", ".gspot/last.json", ".gspot/last.sarif", ".gspot/baselines/",
     "prose/styles/gspot/us-english.yml",
     "packages/cli/grammars/swift.wasm",
 ]

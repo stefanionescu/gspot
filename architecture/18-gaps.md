@@ -90,9 +90,7 @@ Each row was reproduced by running the command in the second column.
 | K-29 | No coverage is measured. No test runs a compiled binary with the present assets.                                                                                                                                                                            | `bunfig.toml`, `.github/workflows/ci.yml`                 |
 | K-30 | The root README lists 14 commands and leaves out `completion`. [02-cli.md](02-cli.md) counts sixteen with `profile` (D-79). The manual also holds a page for the hidden `complete` command.                                                                 | `README.md`, `docs/`                                      |
 | K-31 | `coverage.partial` in the run record is always 0.                                                                                                                                                                                                           | `run/execute.ts`                                          |
-| K-32 | The `docs/generated` check tells the reader to run `bun docs/generate.ts`. The script is `docs/reference-pages.ts`.                                                                                                                                         | `docs/reference-pages.ts`                                 |
 | K-33 | The code reads `GSPOT_JOBS`, which [02-cli.md](02-cli.md) did not list, and no code reads `GSPOT_LOG`, which it listed. The specification now lists `GSPOT_BIN` and `GSPOT_JOBS`.                                                                           | `platform/environment.ts`                                 |
-| K-34 | Six words carry more than one meaning, four ideas have several names, and ten names say the wrong thing. [19-names.md](19-names.md) holds each one with its one name (D-92).                                                                                | the whole tree                                            |
 | K-35 | The enforcement ledger lands `ansible-lint` on `config-files/ansible-lint`, and no preset ships the check. The GitHub Actions rule file installs with the cloudflare preset only. Swift tests have no preset (D-93). The specification now holds all three. | `presets/config-files`, `presets/xctest`                  |
 
 A person can turn the naming check off today with `gspot ignore naming/identifiers` and a reason,
@@ -185,7 +183,7 @@ The other rows need no decision. Each one is a defect against text this folder a
 - K-1 to K-4, K-8, K-10, K-11, K-15 and K-16;
 - K-23 to K-26, K-28 and K-30 to K-33.
 
-K-34 is decided in D-92 and K-35 in D-93.
+K-35 is decided in D-93.
 
 ## Not read
 

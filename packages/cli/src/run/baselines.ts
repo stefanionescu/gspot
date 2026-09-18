@@ -1,4 +1,4 @@
-// The gspot count files under .gspot/baseline/; the verdict against them; apply --baseline.
+// The gspot count files under .gspot/baselines/; the verdict against them; apply --lower-baselines.
 import { join } from 'node:path';
 import type { Finding } from '#types/finding.ts';
 import type { BaselineVerdict } from '#types/record.ts';
@@ -16,7 +16,7 @@ const JSON_INDENT = 4;
 const UNSAFE_RULE_CHARS = /[^\w.-]/gu;
 
 function dir(root: string): string {
-    return join(root, '.gspot', 'baseline');
+    return join(root, '.gspot', 'baselines');
 }
 
 function keyOf(check: string, rule: string | undefined): string {

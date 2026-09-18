@@ -1,6 +1,6 @@
 // The init, upgrade and --dry-run plans as text.
 import { paint } from '#cli/output/messages.ts';
-import type { TakeoverPlan } from '#types/emit.ts';
+import type { TakeoverPlan } from '#types/lifecycle.ts';
 
 const COLUMN_GAP = 2;
 

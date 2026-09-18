@@ -1,8 +1,8 @@
 // gspot doctor
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
 import { doctorCommand } from '#cli/doctor/command.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
 
 /**
  * Registers doctor.
@@ -16,7 +16,7 @@ export function registerDoctor(program: Command): void {
         .option('--offline', 'Skip the one lookup for a newer gspot')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await emit(
+            await printCommand(
                 () =>
                     doctorCommand({
                         cwd: directoryOf(global),

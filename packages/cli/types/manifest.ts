@@ -2,7 +2,7 @@ import type { z } from 'zod';
 import type { manifestSchema } from '#cli/presets/manifest-schema.ts';
 // The shape of a preset manifest.toml after validation.
 
-export type PresetKind = 'language' | 'framework' | 'platform' | 'tool' | 'library' | 'database' | 'repository';
+export type PresetKind = 'language' | 'framework' | 'platform' | 'tool' | 'library' | 'database' | 'concern';
 
 export type Stage = 'commit' | 'push' | 'manual' | 'message';
 
@@ -78,7 +78,7 @@ export type ConfigurationTarget = {
 export type CheckSpec = {
     id: string;
     stage: Stage;
-    takes: 'files' | 'project';
+    runs: 'per-file-list' | 'per-scope' | 'once';
     command?: string[];
     fix_command?: string[];
     fix_order?: FixOrder;
@@ -87,7 +87,7 @@ export type CheckSpec = {
     prune_command?: string[];
     engine?: string;
     analysis?: string;
-    rules?: string;
+    reported_by?: string;
     limit?: string;
     count_regex?: string;
     tool_errors?: string;
@@ -97,7 +97,6 @@ export type CheckSpec = {
     claims?: Claims;
     output?: OutputFormat;
     cwd?: 'root' | 'scope';
-    whole?: boolean;
     exclude_setting?: string;
     inspection: string[];
     summary: string;
@@ -128,8 +127,8 @@ export type Manifest = {
     configs: ConfigurationTarget[];
     checks: CheckSpec[];
     settings: SettingSpec[];
-    required: Record<string, string[]>;
-    rules: Record<string, string[]>;
+    inspections: Record<string, string[]>;
+    rule_files: Record<string, string[]>;
     dir: string;
 };
 
@@ -152,8 +151,6 @@ export type Proposal = { preset: string; evidence: string; kind: string; count?:
 export type UnknownLanguage = { language: string; extensions: string[]; count: number };
 
 export type LinguistEntry = { extensions?: readonly string[]; type?: string; filenames?: readonly string[] };
-
-export type Compact<T> = { [K in keyof T]: Exclude<T[K], undefined> };
 
 /** manifest.toml as the schema accepts it. */
 export type RawManifest = z.infer<typeof manifestSchema>;

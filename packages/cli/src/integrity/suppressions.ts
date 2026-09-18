@@ -68,7 +68,6 @@ function fileFindings(input: EngineInput, file: TrackedFile, style: string, form
  * @returns the findings
  */
 export function suppressions(input: EngineInput): Promise<Finding[]> {
-    if (input.scope !== '') return Promise.resolve([]);
     const findings = input.session.repository.files
         .filter((file) => file.nature === 'source' && file.tags.includes('text'))
         .flatMap((file) => {

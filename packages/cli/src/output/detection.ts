@@ -1,6 +1,6 @@
 // The header init prints: what it found in the repository, one row per kind.
 import type { Proposal } from '#types/manifest.ts';
-import type { DetectionSummary } from '#types/emit.ts';
+import type { DetectionSummary } from '#types/lifecycle.ts';
 
 const LABEL_WIDTH = 13;
 const GAP_WIDTH = 3;

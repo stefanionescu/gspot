@@ -2,11 +2,11 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { parse as parseYaml } from 'yaml';
-import type { Raw } from '#types/config.ts';
 import { parse as parseToml } from 'smol-toml';
+import type { TomlTable } from '#types/config.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { CARRIED_REASON } from '#config/reasons.ts';
-import type { CarryPush, CarriedLists } from '#types/emit.ts';
+import type { CarryPush, CarriedLists } from '#types/lifecycle.ts';
 
 const CHECK_BY_TOOL: Record<string, string> = {
     shellcheck: 'bash/shellcheck',
@@ -63,8 +63,8 @@ function readText(root: string, path: string): string {
     }
 }
 
-function asRaw(value: unknown): Raw | undefined {
-    return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as Raw) : undefined;
+function asRaw(value: unknown): TomlTable | undefined {
+    return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as TomlTable) : undefined;
 }
 
 function asList(value: unknown): unknown[] {
@@ -79,7 +79,7 @@ function asText(value: unknown): string | undefined {
     return typeof value === 'string' ? value : undefined;
 }
 
-function tryParseToml(text: string): Raw | undefined {
+function tryParseToml(text: string): TomlTable | undefined {
     try {
         return parseToml(text);
     } catch {
@@ -87,7 +87,7 @@ function tryParseToml(text: string): Raw | undefined {
     }
 }
 
-function tryParseYaml(text: string): Raw | undefined {
+function tryParseYaml(text: string): TomlTable | undefined {
     try {
         return asRaw(parseYaml(text));
     } catch {
@@ -95,7 +95,7 @@ function tryParseYaml(text: string): Raw | undefined {
     }
 }
 
-function tryParseJson(text: string): Raw | undefined {
+function tryParseJson(text: string): TomlTable | undefined {
     try {
         return asRaw(JSON.parse(text));
     } catch {
@@ -126,7 +126,7 @@ function isDefaultExclude(pattern: string): boolean {
     return TYPOS_DEFAULT_EXCLUDES.some((known) => pattern.includes(known));
 }
 
-function carryTyposWords(lines: string[], words: Raw, path: string, lists: CarriedLists): void {
+function carryTyposWords(lines: string[], words: TomlTable, path: string, lists: CarriedLists): void {
     for (const word of Object.keys(words)) {
         const index = lines.findIndex((line) => isKeyLine(line, word));
         const comment = index === -1 ? undefined : commentAbove(lines, index);
@@ -226,12 +226,12 @@ function disabledSqlfluff(text: string, push: CarryPush): void {
     }
 }
 
-function disabledFromList(parsed: Raw | undefined, key: string, push: CarryPush): void {
+function disabledFromList(parsed: TomlTable | undefined, key: string, push: CarryPush): void {
     const rules = asStrings(parsed?.[key]);
     for (const rule of rules) push(rule);
 }
 
-function parseByExtension(path: string, text: string): Raw | undefined {
+function parseByExtension(path: string, text: string): TomlTable | undefined {
     const isYaml = path.endsWith('.yaml') || path.endsWith('.yml');
     return isYaml ? tryParseYaml(text) : asRaw(parseJsonc(text));
 }
@@ -266,7 +266,7 @@ function disabledEslint(text: string, push: CarryPush): void {
     }
 }
 
-function ruffLintTable(parsed: Raw): Raw {
+function ruffLintTable(parsed: TomlTable): TomlTable {
     return asRaw(asRaw(asRaw(parsed['tool'])?.['ruff'])?.['lint']) ?? asRaw(parsed['lint']) ?? parsed;
 }
 

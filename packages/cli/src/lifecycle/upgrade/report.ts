@@ -2,11 +2,12 @@
 import { join } from 'node:path';
 import type { Session } from '#types/run.ts';
 import { parse as parseToml } from 'smol-toml';
+import type { DriftEntry } from '#types/emit.ts';
 import type { ToolPin } from '#types/manifest.ts';
 import { computeDrift } from '#cli/emit/drift.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { changeReport } from '#cli/doctor/changes.ts';
-import type { DriftEntry, UpgradeReport } from '#types/emit.ts';
+import type { UpgradeReport } from '#types/lifecycle.ts';
 
 const MISE_PATH = '.config/mise/conf.d/gspot.toml';
 const PACKAGE_PATH = 'package.json';

@@ -53,7 +53,7 @@ Kind: language. Requires: `structure`, `naming`, `formatting`, `spelling`.
 - `tools.bash.config_owners`: The scripts allowed to read environment variables with defaults; every other script reads them through these.
 - `tools.bash.architecture_roots`: The directories whose scripts carry a Boundary header and source annotations.
 - `tools.bash.safety.owners`: The scripts allowed to delete recursively or kill processes; everything else is refused.
-- `tools.bash.allowed_default_fragments`: Variable defaults of the form name:-value that appear outside the configuration owners.
+- `tools.bash.default_fragments_allowed`: Variable defaults of the form name:-value that appear outside the configuration owners.
 - `tools.bash.runtime_header`: The platforms the fourth header line of every script names.
 
 ## Rule files

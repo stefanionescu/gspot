@@ -20,8 +20,7 @@ describe('the bash planted repository', () => {
                 'none',
                 '--ci',
                 'none',
-                '--rules',
-                'no',
+                '--no-rules',
                 '--no-install',
                 '--hooks',
                 'gspot',
@@ -62,8 +61,7 @@ describe('the bash planted repository', () => {
                 'none',
                 '--ci',
                 'none',
-                '--rules',
-                'no',
+                '--no-rules',
                 '--no-install',
             ]);
             await Bun.write(join(fixture.path, 'scripts', 'bad.sh'), '#!/usr/bin/env bash\necho $1\n');
@@ -100,8 +98,7 @@ describe('the bash planted repository', () => {
                 'none',
                 '--ci',
                 'none',
-                '--rules',
-                'no',
+                '--no-rules',
                 '--no-install',
             ]);
             const bunDir = join(process.execPath, '..');
@@ -130,8 +127,7 @@ describe('the bash planted repository', () => {
                 'none',
                 '--ci',
                 'none',
-                '--rules',
-                'no',
+                '--no-rules',
                 '--no-install',
             ]);
             await Bun.write(join(fixture.path, '.gspot', 'version'), '9.9.9\n');

@@ -1,7 +1,7 @@
 // gspot declare
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
-import { declareCommand } from '#cli/policy/commands.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import { declareCommand } from '#cli/policy/declare-command.ts';
 import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 
 /**
@@ -19,7 +19,7 @@ export function registerDeclare(program: Command): void {
         .option('--dry-run', 'Print what would be written and write nothing')
         .action(async (paths: string[], flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await emit(
+            await printCommand(
                 () =>
                     declareCommand({
                         cwd: directoryOf(global),

@@ -1,8 +1,8 @@
 // gspot uninstall
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
-import { uninstallCommand } from '#cli/emit/uninstall.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
+import { uninstallCommand } from '#cli/lifecycle/uninstall-command.ts';
 
 /**
  * Registers uninstall.
@@ -17,7 +17,7 @@ export function registerUninstall(program: Command): void {
         .option('--dry-run', 'Print the plan and remove nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await emit(
+            await printCommand(
                 () =>
                     uninstallCommand({
                         cwd: directoryOf(global),

@@ -26,7 +26,7 @@ stub = {path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"extend
 [[checks]]
 id = "markdown/markdownlint"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["markdownlint-cli2", "--no-globs", "--config", "{config:markdownlint}", "{files}"]
 fix_command = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config:markdownlint}", "{files}"]
 fix_order = "format"
@@ -39,7 +39,7 @@ fix = "Run gspot check --fix for the rules that fix themselves; read the rule na
 [[checks]]
 id = "markdown/prettier"
 stage = "commit"
-rules = "formatting/prettier"
+reported_by = "formatting/prettier"
 inspection = ["format"]
 summary = "Checks that every Markdown file is formatted the way Prettier formats it."
 why = "One formatter keeps a diff about the words, not the table padding."
@@ -61,5 +61,5 @@ kind = "table"
 direction = "per-rule"
 summary = "Options per markdownlint rule, by rule id; turning a rule off is gspot ignore --rule."
 
-[rules]
+[rule_files]
 language = ["general/prose/DOCS-FORMAT.md"]

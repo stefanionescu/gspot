@@ -109,7 +109,6 @@ async function fileFindings(input: EngineInput, file: TrackedFile, language: str
  * @returns the findings
  */
 export async function configurationPurity(input: EngineInput): Promise<Finding[]> {
-    if (input.scope !== '') return [];
     const isConfig = pathMatcher(configurationRolePaths(input));
     const findings: Finding[] = [];
     for (const file of input.session.repository.files) {

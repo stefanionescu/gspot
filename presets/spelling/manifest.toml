@@ -1,6 +1,6 @@
 [preset]
 id = "spelling"
-kind = "repository"
+kind = "concern"
 title = "Spelling"
 default = true
 description = "typos over every text file, with the words this repository allows and the reason for each."
@@ -27,7 +27,7 @@ stub = {path = "typos.toml", copy = true}
 [[checks]]
 id = "spelling/typos"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["typos", "--config", "{config:typos}", "--format", "brief", "--color", "never", "{files}"]
 fix_command = ["typos", "--config", "{config:typos}", "--write-changes", "--color", "never", "{files}"]
 fix_order = "codemod"

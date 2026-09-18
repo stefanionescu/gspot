@@ -5,7 +5,7 @@ description: "Documentation integrity: links and anchors, banned headings, stale
 
 Documentation integrity: links and anchors, banned headings, stale paths, the README of every scope, and its shape.
 
-Kind: repository. Selected by default.
+Kind: concern. Selected by default.
 
 ## Tools
 
@@ -29,7 +29,7 @@ Kind: repository. Selected by default.
 ## Settings
 
 - `tools.lychee.exclude_paths`: Files the link checks skip, each with a reason: the pages of a site whose links resolve only once it is built.
-- `tools.docs.path_exceptions`: Path patterns the stale-paths check skips, each with a reason.
+- `tools.docs.paths_allowed`: Path patterns the stale-paths check skips, each with a reason.
 - `tools.docs.banned_headings`: Headings this repository bans beyond the shipped list.
 - `tools.docs.require_license`: Whether the root must carry a LICENSE file.
 - `tools.docs.readme_shape`: Whether the README shape check runs; false with a reason turns it off.

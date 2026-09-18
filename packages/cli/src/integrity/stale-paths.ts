@@ -149,7 +149,7 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
  * @returns the findings
  */
 export function stalePaths(input: EngineInput): Promise<Finding[]> {
-    const exceptions = (input.view.tool('docs')['path_exceptions'] as { patterns: string[] }[] | undefined) ?? [];
+    const exceptions = (input.view.tool('docs')['paths_allowed'] as { patterns: string[] }[] | undefined) ?? [];
     const isException = pathMatcher(exceptions.flatMap((entry) => entry.patterns));
     const index: PathIndex = { known: knownPaths(input), tasks: tasksOf(input.root), isException };
     const findings = input.files

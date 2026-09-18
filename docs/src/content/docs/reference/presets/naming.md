@@ -5,7 +5,7 @@ description: "The naming engine: banned terms, case rules, length and word ceili
 
 The naming engine: banned terms, case rules, length and word ceilings over every identifier, file, and folder.
 
-Kind: repository.
+Kind: concern.
 
 ## Checks
 

@@ -8,8 +8,8 @@ import { removeHooksPath } from '#cli/emit/hooks.ts';
 import { withoutBlock } from '#cli/emit/managed-blocks.ts';
 import type { Session, CommandResult } from '#types/run.ts';
 import { head, findRoot } from '#cli/repository/tracked.ts';
-import type { UninstallOptions, UninstallPlan } from '#types/emit.ts';
 import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import type { UninstallOptions, UninstallPlan } from '#types/lifecycle.ts';
 
 const HEAD_BYTES = 600;
 const BLOCK_FILES = ['.gitignore', 'CLAUDE.md', 'AGENTS.md'];

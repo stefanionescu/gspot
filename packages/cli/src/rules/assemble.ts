@@ -25,7 +25,7 @@ function agentLayerFiles(): { source: string; layer: string; preset: string }[] 
 
 function manifestFiles(session: Session): { source: string; layer: string; preset: string }[] {
     return everyManifest(session).flatMap((manifest) =>
-        Object.entries(manifest.rules).flatMap(([layer, paths]) =>
+        Object.entries(manifest.rule_files).flatMap(([layer, paths]) =>
             paths.map((source) => ({ source, layer, preset: manifest.preset.id })),
         ),
     );

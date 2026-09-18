@@ -15,7 +15,7 @@ import { hasPackagePins, emitAll } from '#cli/emit/targets.ts';
 import { markExecutable } from '#cli/platform/executable-bit.ts';
 import { openSession, everyManifest } from '#cli/run/session.ts';
 import { hasPackages, installPackages } from '#cli/prose/vale.ts';
-import { isLefthookHeld, usesLefthook } from '#cli/emit/lefthook.ts';
+import { isLefthookHeld, lefthookText } from '#cli/emit/lefthook.ts';
 import { installHooksPath, removeHooksPath } from '#cli/emit/hooks.ts';
 import type { Session, CommandResult, PlannedCheck } from '#types/run.ts';
 import { assetPath, listAssets, readAsset } from '#cli/platform/assets.ts';
@@ -81,7 +81,7 @@ function writeLefthook(session: Session, rendered: RenderedSet, report: ApplyRep
     const { lefthook } = rendered;
     if (!lefthook || isLefthookHeld(session.root, lefthook.path, lefthook.block)) return;
     const full = join(session.root, lefthook.path);
-    writeFileSync(full, usesLefthook(existingText(full), lefthook.block));
+    writeFileSync(full, lefthookText(existingText(full), lefthook.block));
     report.written.push(lefthook.path);
 }
 
@@ -255,7 +255,7 @@ export async function applyAll(session: Session, binaryPath?: string): Promise<A
 }
 
 /**
- * Runs apply: `--check` reports drift, `--baseline` lowers the baselines to the last run, otherwise everything is written.
+ * Runs apply: `--check` reports drift, `--lower-baselines` lowers the baselines to the last run, otherwise everything is written.
  * @param options the parsed flags
  * @returns the command result
  */
@@ -264,7 +264,7 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
     assertPinMatches(root);
     const session = await openSession(root);
     if (options.check) return checkDrift(session);
-    if (options.baseline) return lowerFromLastRun(root, session);
+    if (options.lowerBaselines) return lowerFromLastRun(root, session);
     const report = await applyAll(session, options.binaryPath);
     return { text: reportText(report), json: report, exitCode: 0 };
 }

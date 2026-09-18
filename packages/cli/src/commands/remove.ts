@@ -1,7 +1,7 @@
 // gspot remove
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
-import { removeCommand } from '#cli/policy/commands.ts';
+import { removeCommand } from '#cli/policy/add-command.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
 import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 
 /**
@@ -16,7 +16,7 @@ export function registerRemove(program: Command): void {
         .option('--dry-run', 'Print what would be written and write nothing')
         .action(async (preset: string, flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await emit(
+            await printCommand(
                 () =>
                     removeCommand({
                         cwd: directoryOf(global),

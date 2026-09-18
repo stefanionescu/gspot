@@ -4,7 +4,7 @@ import { compileTerms } from '#cli/naming/match.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { settingValue } from '#cli/policy/settings.ts';
-import type { NamingSettings, NamingRule, Policy, SettingsSurface } from '#types/config.ts';
+import type { NamingSettings, NamingRule, Policy, ExposedSettings } from '#types/config.ts';
 
 import type {
     CategoryLimits,
@@ -71,18 +71,18 @@ function reservedTerms(shipped: ShippedPolicy, naming: NamingSettings): Map<stri
     return reserved;
 }
 
-function numberSetting(surface: SettingsSurface, policy: Policy, scope: string, key: string): number | undefined {
+function numberSetting(surface: ExposedSettings, policy: Policy, scope: string, key: string): number | undefined {
     const found = settingValue(surface, policy, key, scope);
     return typeof found?.value === 'number' ? found.value : undefined;
 }
 
-function listSetting(surface: SettingsSurface, policy: Policy, scope: string, key: string): string[] | undefined {
+function listSetting(surface: ExposedSettings, policy: Policy, scope: string, key: string): string[] | undefined {
     const found = settingValue(surface, policy, key, scope);
     return Array.isArray(found?.value) ? (found.value as string[]) : undefined;
 }
 
 function readerOf(
-    surface: SettingsSurface,
+    surface: ExposedSettings,
     policy: Policy,
     scope: string,
 ): { number: (key: string) => number | undefined; list: (key: string) => string[] | undefined } {
@@ -104,7 +104,7 @@ function ceilingFor(
 
 function limitsReader(
     shipped: ShippedPolicy,
-    surface: SettingsSurface,
+    surface: ExposedSettings,
     policy: Policy,
     scope: string,
 ): EffectivePolicy['limitsFor'] {
@@ -142,7 +142,7 @@ export function shippedPolicy(): ShippedPolicy {
  * @param scope the scope path, '' for the root
  * @returns the effective policy
  */
-export function effectivePolicy(surface: SettingsSurface, policy: Policy, scope: string): EffectivePolicy {
+export function effectivePolicy(surface: ExposedSettings, policy: Policy, scope: string): EffectivePolicy {
     const shipped = shippedPolicy();
     const naming = { ...policy.naming, ...policy.scopeTables[scope]?.naming };
     const terms = [...groupTerms(shipped, naming), ...compileTerms(naming.banned_terms, 'naming.banned_terms')];

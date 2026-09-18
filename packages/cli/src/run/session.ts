@@ -1,14 +1,14 @@
-// One session per command: the policy, the manifests, the repository, the selection and the merged view per scope.
-import { readPolicy } from '#cli/policy/read.ts';
 import type { Manifest } from '#types/manifest.ts';
 import { mergeForScope } from '#cli/policy/merge.ts';
-import { buildSurface } from '#cli/policy/settings.ts';
-import { presetManifests } from '#cli/presets/read.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+// One session per command: the policy, the manifests, the repository, the selection and the merged view per scope.
+import { readPolicy } from '#cli/policy/read-policy.ts';
 import { selectForScope } from '#cli/presets/select.ts';
 import { readRepository } from '#cli/repository/tree.ts';
+import { exposedSettings } from '#cli/policy/settings.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
-import { assertPolicyComplete } from '#cli/policy/validate.ts';
+import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 
 /**
  * Opens a session on a repository that has gspot.toml. Throws PolicyError or SelectionError.
@@ -22,7 +22,7 @@ export async function openSession(root: string): Promise<Session> {
     const repo = await readRepository(root, policyFiles.policy.declares, policyFiles.policy.scopes);
     const scopes: ScopeSelection[] = repo.scopes.map((scope) => {
         const selected = selectForScope(policyFiles.policy.presets, scope.presets, manifests);
-        const surface = buildSurface(selected);
+        const surface = exposedSettings(selected);
         const view = mergeForScope(surface, policyFiles.policy, selected, scope.path);
         return { scope, selected, surface, view };
     });

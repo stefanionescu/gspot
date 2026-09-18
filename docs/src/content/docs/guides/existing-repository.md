@@ -37,5 +37,5 @@ you have read it.
 ## The first run
 
 After the write, `init` runs every check once. A check with findings gets a baseline, so the
-gate passes that day and fails when a count grows. `gspot apply --baseline` lowers a baseline
+gate passes that day and fails when a count grows. `gspot apply --lower-baselines` lowers a baseline
 as findings are fixed; it never raises one.

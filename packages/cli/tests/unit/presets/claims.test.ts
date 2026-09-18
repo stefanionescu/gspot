@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-import { presetManifests } from '#cli/presets/read.ts';
 import { selectPresets } from '#cli/presets/select.ts';
 import type { TrackedFile } from '#types/repository.ts';
+import { presetManifests } from '#cli/presets/read-manifests.ts';
 import { claimedFiles, isClaimed, pathMatcher } from '#cli/presets/claims.ts';
 import { detectPresets, shebangInterpreter, unknownLanguages } from '#cli/presets/detect.ts';
 

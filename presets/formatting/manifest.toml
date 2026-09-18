@@ -1,6 +1,6 @@
 [preset]
 id = "formatting"
-kind = "repository"
+kind = "concern"
 title = "Formatting"
 description = "One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint."
 
@@ -37,7 +37,7 @@ target = ".prettierignore"
 [[checks]]
 id = "formatting/prettier"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["prettier", "--check", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 fix_command = ["prettier", "--write", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 fix_order = "format"
@@ -51,7 +51,7 @@ fix = "Run gspot check --fix to format every file, or prettier --write on one fi
 [[checks]]
 id = "formatting/editorconfig-checker"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["ec", "-no-color", "-disable-indent-size", "{files}"]
 tool = "ec"
 inspection = ["format"]

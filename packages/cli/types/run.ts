@@ -3,7 +3,7 @@ import type { BaselineVerdict, RunRecord } from '#types/record.ts';
 import type { TrackedFile, Repository, ScopeEntry } from '#types/repository.ts';
 // Type aliases of the run modules.
 import type { CheckSpec, Manifest, OutputFormat, ToolPin } from '#types/manifest.ts';
-import type { IgnoreEntry, PolicyFiles, MergedView, SettingsSurface } from '#types/config.ts';
+import type { IgnoreEntry, PolicyFiles, MergedView, ExposedSettings } from '#types/config.ts';
 
 export type BaselineFile = {
     check: string;
@@ -91,7 +91,7 @@ export type PlannedCheck = {
 export type ScopeSelection = {
     scope: ScopeEntry;
     selected: Manifest[];
-    surface: SettingsSurface;
+    surface: ExposedSettings;
     view: MergedView;
 };
 
@@ -124,22 +124,22 @@ export type Substitutions = {
 };
 
 /** What one tool run accumulates across its spawns. */
-export type ToolRun = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
+export type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
 
 /** One file entry from the ESLint JSON formatter. */
 export type EslintFile = { filePath: string; messages: EslintEntry[] };
 
 /** A tool command expanded and ready to spawn: once, or once per file. */
-export type Prepared = { root: string; cwd: string; argv: string[]; commands: string[][] };
+export type PreparedCommand = { root: string; cwd: string; argv: string[]; commands: string[][] };
 
 /** What the regex output parser needs per line: the format, the compiled fixable pattern and the help text. */
 export type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; help: string };
 
 /** What the run filters findings through: the baseline files, the [[ignore]] entries and the staged paths. */
-export type Filtering = { baselines: BaselineFile[]; ignores: IgnoreEntry[]; staged: Set<string> | undefined };
+export type FilterInputs = { baselines: BaselineFile[]; ignores: IgnoreEntry[]; staged: Set<string> | undefined };
 
 /** What filtering one check's findings produced. */
-export type Filtered = { verdicts: BaselineVerdict[]; uses: IgnoreUse[] };
+export type FilterVerdicts = { verdicts: BaselineVerdict[]; uses: IgnoreUse[] };
 
 /** One check to plan: its spec and the manifest it came from, none for a [[check]] entry. */
 export type PlanEntry = { spec: CheckSpec; manifest?: Manifest };
@@ -158,7 +158,7 @@ export type PlanContext = {
 export type RuleCount = { check: string; rule: string; count: number; paths: Record<string, number> };
 
 /** What a spawned command left behind, for tests. */
-export type Outcome = { code: number; stdout: string; stderr: string };
+export type SpawnOutcome = { code: number; stdout: string; stderr: string };
 
 /** A local npm registry the release tests publish into. */
 export type Registry = { url: string; npmrc: string; work: string; stop: () => void };

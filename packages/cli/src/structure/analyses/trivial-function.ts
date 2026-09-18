@@ -15,7 +15,7 @@ const DEFAULT_STATEMENTS = 2;
  */
 export const trivialFunction: Analysis = async (context, shell) => {
     const ceiling = context.limit('trivial_statements') ?? DEFAULT_STATEMENTS;
-    const exemptions = context.input.session.policyFiles.policy.structure.trivial_exemptions.filter(
+    const exemptions = context.input.session.policyFiles.policy.structure.trivial_allowed.filter(
         (entry) => entry.language === undefined || entry.language === 'bash',
     );
     const index = await shell();

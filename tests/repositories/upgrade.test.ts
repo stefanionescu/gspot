@@ -5,19 +5,7 @@ import { describe, expect, test } from 'bun:test';
 import { appendFileSync, chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { git, PLANTED_TIMEOUT_MS, run, script } from '#tests/harness/planted.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--presets',
-    'bash',
-    '--runner',
-    'none',
-    '--ci',
-    'none',
-    '--rules',
-    'no',
-    '--no-install',
-];
+const INIT = ['init', '--yes', '--presets', 'bash', '--runner', 'none', '--ci', 'none', '--no-rules', '--no-install'];
 
 describe('upgrade', () => {
     test(

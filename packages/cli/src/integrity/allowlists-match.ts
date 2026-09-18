@@ -19,7 +19,7 @@ function toolPatterns(tools: Record<string, Record<string, unknown>>): PathPatte
     return Object.entries(tools).flatMap(([tool, table]) =>
         Object.entries(table).flatMap(([setting, value]) => {
             const paths = listed(value, 'paths');
-            const patterns = tool === 'docs' && setting === 'path_exceptions' ? listed(value, 'patterns') : [];
+            const patterns = tool === 'docs' && setting === 'paths_allowed' ? listed(value, 'patterns') : [];
             return [...paths, ...patterns].map((pattern) => ({ pattern, where: `tools.${tool}.${setting}` }));
         }),
     );
@@ -57,7 +57,6 @@ function matchCandidates(paths: string[]): string[] {
  * @returns the findings
  */
 export function allowlistsMatch(input: EngineInput): Promise<Finding[]> {
-    if (input.scope !== '') return Promise.resolve([]);
     const candidates = matchCandidates(input.session.repository.files.map((file) => file.path));
     const findings = policyPatterns(input)
         .filter((entry) => !candidates.some(pathMatcher([entry.pattern])))

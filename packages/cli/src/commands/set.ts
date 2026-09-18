@@ -1,7 +1,7 @@
 // gspot set
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
 import { setCommand } from '#cli/policy/set-command.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
 import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 
 /**
@@ -20,7 +20,7 @@ export function registerSet(program: Command): void {
         .option('--dry-run', 'Print what would be written and write nothing')
         .action(async (key: string, items: string[], flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await emit(
+            await printCommand(
                 () =>
                     setCommand({
                         cwd: directoryOf(global),

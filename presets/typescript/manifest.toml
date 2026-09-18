@@ -39,7 +39,7 @@ per_scope = true
 [[checks]]
 id = "typescript/tsc"
 stage = "commit"
-takes = "project"
+runs = "per-scope"
 cwd = "scope"
 command = ["tsc", "--noEmit", "-p", "tsconfig.json", "--pretty", "false"]
 inspection = ["types", "syntax"]
@@ -51,9 +51,9 @@ fix = "Read the first error tsc prints and fix that file; later errors are often
 [[checks]]
 id = "typescript/eslint"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{suppressions}", "--format", "json", "{files}"]
-baseline_file = ".gspot/baseline/eslint.json"
+baseline_file = ".gspot/baselines/eslint.json"
 baseline_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--suppress-all", "--suppressions-location", "{baseline}", "{files}"]
 prune_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--prune-suppressions", "--suppressions-location", "{baseline}", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
@@ -90,11 +90,11 @@ direction = "neutral"
 default = {}
 summary = "The path aliases every tsconfig gets, in tsconfig paths form; read from the existing tsconfig at init."
 
-[required]
+[inspections]
 ".ts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".tsx" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".mts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".cts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 
-[rules]
+[rule_files]
 language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]

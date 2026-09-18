@@ -5,7 +5,7 @@ description: "Vale over every comment and every documentation file, with the gsp
 
 Vale over every comment and every documentation file, with the gspot style, and the upstream packages.
 
-Kind: repository. Requires: `markdown`.
+Kind: concern. Requires: `markdown`.
 
 ## Tools
 

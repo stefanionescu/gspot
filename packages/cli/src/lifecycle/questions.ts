@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
 import type { FormatSettings } from '#types/config.ts';
 import type { ExistingTooling } from '#types/repository.ts';
-import type { InitAnswers, InitOptions } from '#types/emit.ts';
 import { askChoice, isConfirmed } from '#cli/output/prompts.ts';
+import type { InitAnswers, InitOptions } from '#types/lifecycle.ts';
 
 const SHIPPED_TAB_WIDTH = 4;
 const SHIPPED_PRINT_WIDTH = 120;
@@ -82,7 +82,7 @@ async function askCi(root: string, options: InitOptions, tooling: ExistingToolin
 
 async function isRulesWanted(options: InitOptions): Promise<boolean> {
     if (options.rules !== undefined) return options.rules === 'yes';
-    return isConfirmed('Install agent rule files?', '--rules yes|no', true, options.yes);
+    return isConfirmed('Install agent rule files?', '--no-rules', true, options.yes);
 }
 
 async function askRunner(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['runner']> {
@@ -102,7 +102,7 @@ async function askFormat(
         options.format ??
         (await askChoice<'keep' | 'shipped'>(
             'Your formatter settings differ from the shipped ones. Keep yours?',
-            '--format keep|shipped',
+            '--keep-format or --shipped-format',
             [
                 { value: 'keep', label: `keep (${shown})` },
                 { value: 'shipped', label: 'take the shipped values' },

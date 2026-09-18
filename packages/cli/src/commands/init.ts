@@ -1,11 +1,16 @@
 // gspot init
 import { Option } from 'commander';
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
-import type { InitOptions } from '#types/emit.ts';
-import { initCommand } from '#cli/emit/install.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
+import type { InitOptions } from '#types/lifecycle.ts';
+import { initCommand } from '#cli/lifecycle/init/command.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
 import { commaList, directoryOf, listFlag, textFlag } from '#cli/commands/flags.ts';
+
+function formatChoice(flags: Record<string, unknown>): InitOptions['format'] {
+    if (flags['keepFormat'] === true) return 'keep';
+    return flags['shippedFormat'] === true ? 'shipped' : undefined;
+}
 
 function optionsFrom(flags: Record<string, unknown>, global: Record<string, unknown>): InitOptions {
     const binary = binaryPath();
@@ -18,9 +23,9 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
     const choices = {
         hooks: textFlag(flags, 'hooks') as InitOptions['hooks'],
         ci: textFlag(flags, 'ci') as InitOptions['ci'],
-        rules: textFlag(flags, 'rules') as InitOptions['rules'],
-        format: textFlag(flags, 'format') as InitOptions['format'],
         runner: textFlag(flags, 'runner') as InitOptions['runner'],
+        rules: flags['rules'] === false ? ('no' as const) : undefined,
+        format: formatChoice(flags),
     };
     const given: Partial<InitOptions> = Object.fromEntries(
         [...Object.entries(lists), ...Object.entries(choices)].filter(([, value]) => value !== undefined),
@@ -63,13 +68,9 @@ export function registerInit(program: Command): void {
         .option('--allow-dirty', 'Run although the working tree has uncommitted changes')
         .addOption(new Option('--hooks <tool>', 'Where hooks go').choices(['gspot', 'lefthook', 'husky', 'none']))
         .addOption(new Option('--ci <provider>', 'Write a CI workflow').choices(['github', 'none']))
-        .addOption(new Option('--rules <choice>', 'Install the agent rule files').choices(['yes', 'no']))
-        .addOption(
-            new Option('--format <choice>', 'Keep your formatter settings, or take the shipped ones').choices([
-                'keep',
-                'shipped',
-            ]),
-        )
+        .option('--no-rules', 'Leave the agent rule files out')
+        .addOption(new Option('--keep-format', 'Keep your formatter settings').conflicts('shippedFormat'))
+        .addOption(new Option('--shipped-format', 'Take the shipped formatter settings').conflicts('keepFormat'))
         .option('--project-templates', 'Copy the project templates that match into the project rule layer')
         .addOption(
             new Option('--runner <surface>', 'The task runner surface').choices([
@@ -84,6 +85,6 @@ export function registerInit(program: Command): void {
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await emit(() => initCommand(optionsFrom(flags, global)), global);
+            await printCommand(() => initCommand(optionsFrom(flags, global)), global);
         });
 }

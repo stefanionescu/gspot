@@ -15,7 +15,16 @@ import { stageLimiter } from '#cli/run/concurrency.ts';
 import { applyBaselines, readBaselines } from '#cli/run/baselines.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
 import { textHash, cacheKey, fileHash, readCached, writeCached } from '#cli/run/cache.ts';
-import type { Filtered, Filtering, IgnoreUse, RunOptions, RunOutcome, Session, PlannedCheck } from '#types/run.ts';
+
+import type {
+    FilterVerdicts,
+    FilterInputs,
+    IgnoreUse,
+    RunOptions,
+    RunOutcome,
+    Session,
+    PlannedCheck,
+} from '#types/run.ts';
 
 const NEVER_CACHED = new Set(['integrity/generated-drift', 'commits/commitlint', 'commits/range']);
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
@@ -48,7 +57,7 @@ function baselineHash(session: Session, planned: PlannedCheck): string {
 
 function keyFor(session: Session, planned: PlannedCheck, config: string): string | undefined {
     if (NEVER_CACHED.has(planned.id) || planned.spec.requires !== undefined) return undefined;
-    if (planned.spec.takes === 'project' && planned.files.length === 0) return undefined;
+    if (planned.spec.runs !== 'per-file-list' && planned.files.length === 0) return undefined;
     const files = planned.files.map((file) => ({ path: file.path, hash: fileHash(session.root, file.path) }));
     return cacheKey({
         id: planned.id,
@@ -124,7 +133,7 @@ function census(session: Session, files: { path: string }[]): Record<string, num
     return counts;
 }
 
-function filterResult(root: string, check: PlannedCheck, result: CheckResult, filtering: Filtering): Filtered {
+function filterResult(root: string, check: PlannedCheck, result: CheckResult, filtering: FilterInputs): FilterVerdicts {
     const inline = applyInlineIgnores(root, result.findings);
     const ignored = applyIgnores(
         inline,
@@ -169,7 +178,7 @@ function filterAll(
     root: string,
     active: PlannedCheck[],
     results: CheckResult[],
-    filtering: Filtering,
+    filtering: FilterInputs,
     uses: Map<string, IgnoreUse>,
 ): RunRecord['baselines'] {
     const verdicts: RunRecord['baselines'] = [];
@@ -177,7 +186,7 @@ function filterAll(
         const check = active[index];
         if (!check) continue;
         if (RAN_STATUSES.has(result.status)) {
-            const filtered: Filtered = filterResult(root, check, result, filtering);
+            const filtered: FilterVerdicts = filterResult(root, check, result, filtering);
             verdicts.push(...filtered.verdicts);
             mergeUses(uses, filtered.uses);
         }
@@ -213,7 +222,7 @@ export async function executeRun(session: Session, options: RunOptions): Promise
         active.map((check) => limiter(() => runOne(session, check, options, config, staged))),
     );
     const { ignores } = session.policyFiles.policy;
-    const filtering: Filtering = { baselines: readBaselines(session.root), ignores, staged };
+    const filtering: FilterInputs = { baselines: readBaselines(session.root), ignores, staged };
     const uses = new Map<string, IgnoreUse>(ignores.map((entry) => [JSON.stringify(entry), { entry, matched: 0 }]));
     const verdicts = filterAll(session.root, active, results, filtering, uses);
     const failed = [

@@ -1,7 +1,7 @@
 // The shape of gspot.toml after load: every reasoned key is normalized to { value, reason }.
 import type { z } from 'zod';
-import type { CarriedLists } from '#types/emit.ts';
 import type { SettingSpec } from '#types/manifest.ts';
+import type { CarriedLists } from '#types/lifecycle.ts';
 import type { policySchema, scopeSchema } from '#cli/policy/schema.ts';
 
 export type Reasoned<T> = { value: T; reason?: string };
@@ -53,20 +53,20 @@ export type ArchitectureAllow = { from: string; to: string[]; reason?: string };
 export type ArchitectureSettings = {
     types_directory?: string;
     elements: ArchitectureElement[];
-    allow: ArchitectureAllow[];
+    edges_allowed: ArchitectureAllow[];
     roles: Record<string, string | string[]>;
     contracts: Record<string, unknown>[];
     package_roots?: string[];
     route_directories?: string[];
     shared_directories?: string[];
     feature_contracts?: string[];
-    allowed_imports: { from: string; to: string; reason: string }[];
+    imports_allowed: { from: string; to: string; reason: string }[];
 };
 
 export type StructureSettings = {
     reexports: 'none' | 'index-only';
     call_through_allowed: { file: string; name: string; reason: string }[];
-    trivial_exemptions: { language?: string; path: string; names: string[]; reason: string }[];
+    trivial_allowed: { language?: string; path: string; names: string[]; reason: string }[];
     single_file_folder_allowed: { paths: string[]; reason: string }[];
     prefix_collision_allowed: { paths: string[]; reason: string }[];
     folder_name_allowed: { paths: string[]; reason: string }[];
@@ -136,7 +136,7 @@ export type Policy = {
     ci: { provider: 'github' | 'none'; platforms: string[] };
     rules: { install: boolean; directory: string; project?: string };
     editor: { vscode: boolean };
-    coverage: { strict: boolean };
+    inspection: { strict: boolean };
     runner: { surface: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none' };
     scopeTables: Record<string, Partial<Policy>>;
 };
@@ -150,9 +150,9 @@ export type PolicyFiles = {
     text: string;
 };
 
-export type Raw = Record<string, unknown>;
+export type TomlTable = Record<string, unknown>;
 
-export type Compact<T> = { [K in keyof T]: Exclude<T[K], undefined> };
+export type Defined<T> = { [K in keyof T]: Exclude<T[K], undefined> };
 
 export type MergedView = {
     scope: string;
@@ -190,18 +190,18 @@ export type ResolvedSetting = {
     scope?: string;
 };
 
-export type SettingsSurface = {
+export type ExposedSettings = {
     specs: Map<string, SettingSpec>;
     defaults: Map<string, { value: unknown; preset: string }>;
     problems: string[];
 };
 
-export type Mutation = (raw: Raw) => void;
+export type Mutation = (raw: TomlTable) => void;
 
 export type WriteResult = { text: string; policy: Policy; changed: boolean };
 
 /** A written value with its reason, once the reasoned form is unwrapped. */
-export type PlainValue = { value: unknown; reason?: string };
+export type WrittenValue = { value: unknown; reason?: string };
 
 /** One layer of policy that a key is resolved through: the root table or one scope table. */
 export type PolicyLayer = { table: Partial<Policy>; name: string };
@@ -234,4 +234,4 @@ export type RawNaming = NonNullable<RawPolicy['naming']>;
 export type RunnerSurface = 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none';
 
 /** What resolving a value for one scope needs. */
-export type PolicyScopeLayer = { surface: SettingsSurface; policy: Policy; scope: string };
+export type PolicyScopeLayer = { surface: ExposedSettings; policy: Policy; scope: string };

@@ -5,7 +5,7 @@ import type {
     RawNaming,
     RawPolicy,
     RawScope,
-    Compact,
+    Defined,
     Limits,
     NamingCategoryTable,
     NamingSettings,
@@ -71,13 +71,13 @@ function trimTrailingSlashes(path: string): string {
     return path.slice(0, end);
 }
 
-function normalizeScalars(raw: RawPolicy): Pick<Policy, 'hooks' | 'ci' | 'rules' | 'editor' | 'coverage' | 'runner'> {
+function normalizeScalars(raw: RawPolicy): Pick<Policy, 'hooks' | 'ci' | 'rules' | 'editor' | 'inspection' | 'runner'> {
     return {
         hooks: defaulted<Policy['hooks']>(raw.hooks, { tool: 'gspot' }),
         ci: defaulted<Policy['ci']>(raw.ci, { provider: 'none', platforms: ['ubuntu'] }),
         rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules' }),
         editor: defaulted<Policy['editor']>(raw.editor, { vscode: false }),
-        coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
+        inspection: defaulted<Policy['inspection']>(raw.inspection, { strict: false }),
         runner: defaulted<Policy['runner']>(raw.runner, { surface: 'none' }),
     };
 }
@@ -87,8 +87,8 @@ function normalizeScalars(raw: RawPolicy): Pick<Policy, 'hooks' | 'ci' | 'rules'
  * @param value any object
  * @returns the same object without its undefined entries
  */
-export function compact<T extends object>(value: T): Compact<T> {
-    return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Compact<T>;
+export function compact<T extends object>(value: T): Defined<T> {
+    return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Defined<T>;
 }
 
 /**
@@ -96,7 +96,7 @@ export function compact<T extends object>(value: T): Compact<T> {
  * @param entries the entries as written
  * @returns the compacted objects
  */
-export function compactAll<T extends object>(entries: T[] | undefined): Compact<T>[] {
+export function compactAll<T extends object>(entries: T[] | undefined): Defined<T>[] {
     return (entries ?? []).map((value) => compact(value));
 }
 
@@ -164,8 +164,8 @@ export function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
  * @returns the architecture configuration
  */
 export function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['architecture'] {
-    const filled = defaulted(raw, { elements: [], allow: [], roles: {}, contracts: [], allowed_imports: [] });
-    return compact({ ...filled, allow: compactAll(filled.allow) });
+    const filled = defaulted(raw, { elements: [], edges_allowed: [], roles: {}, contracts: [], imports_allowed: [] });
+    return compact({ ...filled, edges_allowed: compactAll(filled.edges_allowed) });
 }
 
 /**
@@ -177,13 +177,13 @@ export function normalizeStructure(raw: RawPolicy['structure']): Policy['structu
     const filled = defaulted<Policy['structure']>(raw, {
         reexports: 'none',
         call_through_allowed: [],
-        trivial_exemptions: [],
+        trivial_allowed: [],
         single_file_folder_allowed: [],
         prefix_collision_allowed: [],
         folder_name_allowed: [],
         python: {},
     });
-    return { ...filled, trivial_exemptions: compactAll(filled.trivial_exemptions) };
+    return { ...filled, trivial_allowed: compactAll(filled.trivial_allowed) };
 }
 
 /**

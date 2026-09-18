@@ -28,7 +28,7 @@ provider = "github"
 install = true
 directory = ".gspot/rules"
 
-[coverage]
+[inspection]
 strict = false
 
 [runner]
@@ -37,7 +37,7 @@ surface = "mise"
 [tools]
 
 [tools.docs]
-path_exceptions = [
+paths_allowed = [
     {patterns = ["rules/**"], reason = "The rule corpus is generic text installed into other repositories; it names nothing in this one."},
     {patterns = ["architecture/**"], reason = "The architecture names files in other repositories and files that are not built yet."},
     {patterns = ["docs/**"], reason = "The manual names files in the reader's repository and check ids written with a slash."},

@@ -1,16 +1,16 @@
 // upgrade: report what a version changes, move the pin, re-render, baseline what arrives, install.
 import { run } from '#cli/platform/spawn.ts';
-import { applyAll } from '#cli/emit/apply.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { UpgradeOptions } from '#types/emit.ts';
 import { isConfirmed } from '#cli/output/prompts.ts';
+import { applyAll } from '#cli/emit/apply-command.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import type { UpgradeOptions } from '#types/lifecycle.ts';
 import { newerVersion } from '#cli/doctor/newer-version.ts';
 import type { BaselineFile, CommandResult } from '#types/run.ts';
 import { writeBaselines, isBaselineAllowed } from '#cli/run/baselines.ts';
-import { upgradeReport, upgradeReportLines } from '#cli/emit/upgrade/report.ts';
 import { GSPOT_VERSION, pinnedVersion, writePin } from '#cli/run/version-pin.ts';
+import { upgradeReport, upgradeReportLines } from '#cli/lifecycle/upgrade/report.ts';
 
 function otherBinaryText(target: string): string {
     return `This binary is ${GSPOT_VERSION}. Install gspot ${target} first (mise use ubi:stefanionescu/gspot@${target}, or your package manager), then run gspot upgrade --to ${target} with it.`;

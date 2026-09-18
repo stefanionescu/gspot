@@ -10,7 +10,7 @@ import type { LefthookBlock } from '#types/emit.ts';
  * @param block the commands per hook
  * @returns the new text
  */
-export function usesLefthook(existing: string, block: LefthookBlock): string {
+export function lefthookText(existing: string, block: LefthookBlock): string {
     const document = parseDocument(existing.trim() === '' ? '{}' : existing);
     for (const [hook, { commands }] of Object.entries(block))
         for (const [name, command] of Object.entries(commands)) document.setIn([hook, 'commands', name], command);

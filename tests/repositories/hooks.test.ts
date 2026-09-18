@@ -21,8 +21,7 @@ describe('the gspot hook', () => {
                 'none',
                 '--ci',
                 'none',
-                '--rules',
-                'no',
+                '--no-rules',
                 '--no-install',
             ]);
             await Bun.write(join(fixture.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');

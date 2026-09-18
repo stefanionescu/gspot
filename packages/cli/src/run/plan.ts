@@ -49,7 +49,7 @@ function fromRepoCheck(entry: RepositoryCheck): CheckSpec {
     const spec: CheckSpec = {
         id: entry.id,
         stage: entry.stage,
-        takes: 'files',
+        runs: 'per-file-list',
         command: entry.command,
         inspection: [],
         summary: entry.summary ?? `Runs the repository's own check ${entry.id}.`,
@@ -75,7 +75,7 @@ function fromRepoCheck(entry: RepositoryCheck): CheckSpec {
 }
 
 function isRepositoryWide(manifest: Manifest): boolean {
-    return manifest.preset.kind === 'repository' && !manifest.claims.from_languages;
+    return manifest.preset.kind === 'concern' && !manifest.claims.from_languages;
 }
 
 function manifestEntries(manifest: Manifest, seenRepoChecks: Set<string>): PlanEntry[] {
@@ -114,7 +114,7 @@ function projectFiles(context: PlanContext, scopeForFiles: string): TrackedFile[
 function claimedFor(context: PlanContext, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
     const { session, scope } = context;
     const { spec, manifest } = entry;
-    if (spec.takes === 'project') return projectFiles(context, scopeForFiles);
+    if (spec.runs !== 'per-file-list') return projectFiles(context, scopeForFiles);
     if (!manifest) return session.repository.files.filter((file) => pathMatcher(spec.claims?.paths ?? [])(file.path));
     if (spec.claims) return claimedByClaims(spec.claims, scope.selected, session.repository.files, scopeForFiles);
     return claimedFiles(manifest, scope.selected, session.repository.files, scopeForFiles);
@@ -144,7 +144,7 @@ function narrowed(context: PlanContext, entry: PlanEntry, files: TrackedFile[]):
     if (!narrow) return files;
     const inNarrowed = files.filter((file) => narrow.has(file.path));
     const isTouched = isPolicyTouched(narrow);
-    if (entry.spec.takes !== 'files') return !isTouched && inNarrowed.length === 0 ? [] : files;
+    if (entry.spec.runs !== 'per-file-list') return !isTouched && inNarrowed.length === 0 ? [] : files;
     if (!isTouched || !entry.manifest || inNarrowed.length > 0) return inNarrowed;
     return reclaimed(context, entry);
 }
@@ -152,7 +152,8 @@ function narrowed(context: PlanContext, entry: PlanEntry, files: TrackedFile[]):
 function filesFor(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean): TrackedFile[] {
     const { scope, children } = context;
     const { spec, manifest } = entry;
-    const isWhole = isWholeCheck || spec.takes === 'project' || (manifest !== undefined && isRepositoryWide(manifest));
+    const isWhole =
+        isWholeCheck || spec.runs !== 'per-file-list' || (manifest !== undefined && isRepositoryWide(manifest));
     let files = claimedFor(context, entry, isWholeCheck ? '' : scope.scope.path);
     if (!isWhole) files = files.filter((file) => isOutsideChildren(file, children));
     return narrowed(context, entry, withoutExcluded(files, spec, scope));
@@ -172,7 +173,7 @@ function skipFor(
     options: PlanOptions,
     platform: string,
 ): PlannedCheck['skip'] {
-    if (spec.rules !== undefined) return { source: 'rules', note: `its findings come from ${spec.rules}` };
+    if (spec.reported_by !== undefined) return { source: 'rules', note: `its findings come from ${spec.reported_by}` };
     const platformSkip = platformSkipFor(spec, tool, platform);
     if (platformSkip !== undefined) return platformSkip;
     if (options.localSkips.includes(spec.id)) return { source: 'local', note: 'skipped by gspot.local.toml' };
@@ -189,7 +190,7 @@ function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean):
         scope: isWholeCheck ? rootScope : scope,
         spec,
         files: filesFor(context, entry, isWholeCheck),
-        projectWide: spec.takes === 'project',
+        projectWide: spec.runs !== 'per-file-list',
     };
     if (manifest) check.manifest = manifest;
     const tool = spec.engine === undefined ? toolFor(spec, manifest, session) : undefined;
@@ -209,7 +210,7 @@ function planScope(context: PlanContext, seenRepoChecks: Set<string>, wholeSeen:
     const planned: PlannedCheck[] = [];
     for (const entry of entriesFor(context.session, context.scope, seenRepoChecks)) {
         if (!isWanted(entry.spec, context.options)) continue;
-        const isWholeCheck = entry.spec.whole === true;
+        const isWholeCheck = entry.spec.runs === 'once';
         if (isWholeCheck && wholeSeen.has(entry.spec.id)) continue;
         if (isWholeCheck) wholeSeen.add(entry.spec.id);
         planned.push(planOne(context, entry, isWholeCheck));

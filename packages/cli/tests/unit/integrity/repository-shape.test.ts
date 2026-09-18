@@ -43,15 +43,15 @@ const policy: Partial<Policy> = {
     structure: {
         reexports: 'none',
         call_through_allowed: [],
-        trivial_exemptions: [],
+        trivial_allowed: [],
         single_file_folder_allowed: [{ paths: ['src'], reason: 'A test reason.' }],
         prefix_collision_allowed: [],
         folder_name_allowed: [],
         python: {},
     },
     naming: naming as NamingSettings,
-    tools: { docs: { path_exceptions: [{ patterns: ['docs/**'], reason: 'A test reason.' }] } },
-    architecture: { elements: [], allow: [], roles: { config: 'config' }, contracts: [], allowed_imports: [] },
+    tools: { docs: { paths_allowed: [{ patterns: ['docs/**'], reason: 'A test reason.' }] } },
+    architecture: { elements: [], edges_allowed: [], roles: { config: 'config' }, contracts: [], imports_allowed: [] },
 };
 
 describe('the repository-shape analyses', () => {

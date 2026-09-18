@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { compileTerms } from '#cli/naming/match.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import { nameProblems } from '#cli/naming/validate.ts';
+import { nameProblems } from '#cli/naming/validate-name.ts';
 import type { EffectivePolicy, Identifier } from '#types/naming.ts';
 
 function caseFor(language: string, category: string): string[] {

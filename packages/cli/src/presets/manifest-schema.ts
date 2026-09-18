@@ -65,7 +65,7 @@ const stringListTable = z.record(z.string(), z.array(z.string()));
 const checkSchema = z.strictObject({
     id: z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/),
     stage: z.enum(['commit', 'push', 'manual', 'message']),
-    takes: z.enum(['files', 'project']).default('files'),
+    runs: z.enum(['per-file-list', 'per-scope', 'once']).default('per-file-list'),
     command: z.array(z.string()).optional(),
     fix_command: z.array(z.string()).optional(),
     fix_order: z.enum(['codemod', 'imports', 'manifest', 'format']).optional(),
@@ -74,7 +74,7 @@ const checkSchema = z.strictObject({
     prune_command: z.array(z.string()).optional(),
     engine: z.string().optional(),
     analysis: z.string().optional(),
-    rules: z.string().optional(),
+    reported_by: z.string().optional(),
     limit: z.string().optional(),
     count_regex: z.string().optional(),
     tool_errors: z.string().optional(),
@@ -84,7 +84,6 @@ const checkSchema = z.strictObject({
     claims: claimsSchema.optional(),
     output: outputSchema.optional(),
     cwd: z.enum(['root', 'scope']).optional(),
-    whole: z.boolean().optional(),
     exclude_setting: z.string().optional(),
     inspection: stringList,
     summary: sentence,
@@ -106,7 +105,7 @@ const settingSchema = z.strictObject({
 export const manifestSchema = z.strictObject({
     preset: z.strictObject({
         id: z.string().regex(/^[a-z0-9-]+$/),
-        kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'repository']),
+        kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'concern']),
         title: z.string(),
         requires: stringList,
         conflicts: stringList,
@@ -136,6 +135,6 @@ export const manifestSchema = z.strictObject({
     configs: z.array(configSchema).default([]),
     checks: z.array(checkSchema).default([]),
     settings: z.array(settingSchema).default([]),
-    required: stringListTable.default({}),
-    rules: stringListTable.default({}),
+    inspections: stringListTable.default({}),
+    rule_files: stringListTable.default({}),
 });

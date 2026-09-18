@@ -1,15 +1,15 @@
-// gspot allow: the seven allow lists, each with the key it writes and the shape of one entry.
-import { PolicyError } from '#cli/policy/read.ts';
 import type { CommandResult } from '#types/run.ts';
-import type { Raw, Mutation } from '#types/config.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+// gspot allow: the seven allow lists, each with the key it writes and the shape of one entry.
+import { PolicyError } from '#cli/policy/read-policy.ts';
 import { appendList, tableAt } from '#cli/policy/write.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
+import type { TomlTable, Mutation } from '#types/config.ts';
 import type { AllowList, AllowOptions } from '#types/commands.ts';
-import { commit, refuseBadReason, requireReason } from '#cli/policy/commands.ts';
+import { commitPolicy, refuseBadReason, requireReason } from '#cli/policy/commit-policy.ts';
 
-const paths = (entry: unknown): string[] => (entry as Raw)['paths'] as string[];
-const field = (name: string) => (entry: unknown, value: string) => (entry as Raw)[name] === value;
+const paths = (entry: unknown): string[] => (entry as TomlTable)['paths'] as string[];
+const field = (name: string) => (entry: unknown, value: string) => (entry as TomlTable)[name] === value;
 
 const ALLOW_LISTS: Record<string, AllowList> = {
     typos: {
@@ -87,11 +87,16 @@ export async function allowCommand(o: AllowOptions): Promise<CommandResult> {
     assertPinMatches(root);
     const spec = listSpec(o.list);
     if (o.remove)
-        return commit(root, removeEntries(spec, o.items), o.isDryRun, `removed ${o.items.join(', ')} from ${spec.key}`);
+        return commitPolicy(
+            root,
+            removeEntries(spec, o.items),
+            o.isDryRun,
+            `removed ${o.items.join(', ')} from ${spec.key}`,
+        );
     const where = `gspot allow ${o.list}`;
     if (spec.isReasonRequired) requireReason(o.reason, where, `${where} ${o.items.join(' ')} --reason "..."`);
     else refuseBadReason(o.reason, where);
     const entries = spec.shape(o.items, o.reason, o.license === undefined ? {} : { license: o.license });
     const shown = entries.map((entry) => JSON.stringify(entry)).join(', ');
-    return commit(root, appendList(spec.key, entries), o.isDryRun, `${spec.key} += ${shown}`);
+    return commitPolicy(root, appendList(spec.key, entries), o.isDryRun, `${spec.key} += ${shown}`);
 }

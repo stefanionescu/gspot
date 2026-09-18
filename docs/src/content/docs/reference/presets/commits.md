@@ -5,7 +5,7 @@ description: "commitlint over every commit message: conventional types, the repo
 
 commitlint over every commit message: conventional types, the repository's scopes, and the corpus limits.
 
-Kind: repository. Selected by default.
+Kind: concern. Selected by default.
 
 ## Tools
 

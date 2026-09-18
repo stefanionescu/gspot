@@ -5,10 +5,10 @@ import { probeTool } from '#cli/doctor/probes.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Explanation } from '#types/output.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { presetManifests } from '#cli/presets/read.ts';
 import type { ResolvedSetting } from '#types/config.ts';
 import { allChecks, toRow } from '#cli/presets/listing.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
+import { presetManifests } from '#cli/presets/read-manifests.ts';
 import type { CheckSpec, ListingRow, SettingSpec } from '#types/manifest.ts';
 
 const TOOL_TIMEOUT_MS = 10_000;
@@ -66,7 +66,7 @@ function checkExplanation(session: Session | undefined, id: string): Explanation
     const settings = preset.settings
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
         .map((setting) => setting.name);
-    const rules = Object.values(preset.rules).flat();
+    const rules = Object.values(preset.rule_files).flat();
     const lines = [
         `${id}  (${preset.preset.id} preset, ${check.stage} stage)`,
         '',

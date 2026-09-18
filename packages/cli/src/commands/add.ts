@@ -1,7 +1,7 @@
 // gspot add
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
-import { addCommand } from '#cli/policy/commands.ts';
+import { addCommand } from '#cli/policy/add-command.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
 import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 
 /**
@@ -16,7 +16,7 @@ export function registerAdd(program: Command): void {
         .option('--dry-run', 'Print what would be written and write nothing')
         .action(async (presets: string[], flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await emit(
+            await printCommand(
                 () =>
                     addCommand({
                         cwd: directoryOf(global),

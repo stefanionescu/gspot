@@ -7,7 +7,7 @@ import { describe, expect, test } from 'bun:test';
 import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
 
 const SYSTEM_BASH = '/bin/bash';
-const QUIET = ['--runner', 'none', '--ci', 'none', '--rules', 'no', '--no-install'];
+const QUIET = ['--runner', 'none', '--ci', 'none', '--no-rules', '--no-install'];
 
 describe('init refusals', () => {
     test(
@@ -19,7 +19,7 @@ describe('init refusals', () => {
             expect(result.code).toBe(2);
             expect(result.stderr).toContain('Allowed choices are gspot, lefthook, husky, none');
             expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
-            expect(run(fixture.path, ['check', '--stage', 'later']).code).toBe(2);
+            expect(run(fixture.path, ['check', '--at', 'later']).code).toBe(2);
         },
         PLANTED_TIMEOUT_MS,
     );

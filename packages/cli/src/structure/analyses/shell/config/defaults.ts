@@ -10,7 +10,7 @@ import { DEFAULT_EXPANSION } from '#config/shell.ts';
  */
 export const shellConfigDefaults: Analysis = async (context, shell) => {
     const owners = new Set(context.bashSetting('config_owners') as string[] | undefined);
-    const fragments = context.bashList('allowed_default_fragments');
+    const fragments = context.bashList('default_fragments_allowed');
     const index = await shell();
     return index.files.flatMap((file) => {
         if (owners.has(file.path)) return [];

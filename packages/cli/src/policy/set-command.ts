@@ -1,16 +1,16 @@
-// gspot set: one setting at a time, checked against the surface, with a reason when the change loosens.
-import { PolicyError } from '#cli/policy/read.ts';
 import { openSession } from '#cli/run/session.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { SetOptions } from '#types/commands.ts';
-import type { Raw, Mutation } from '#types/config.ts';
 import type { SettingSpec } from '#types/manifest.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+// gspot set: one setting at a time, checked against the surface, with a reason when the change loosens.
+import { PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
+import type { TomlTable, Mutation } from '#types/config.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
 import type { CommandResult, ScopeSelection, Session } from '#types/run.ts';
-import { commit, refuseBadReason, requireReason } from '#cli/policy/commands.ts';
 import { appendList, deleteKey, removeFromList, setKey } from '#cli/policy/write.ts';
+import { commitPolicy, refuseBadReason, requireReason } from '#cli/policy/commit-policy.ts';
 
 const NEAR_LIMIT = 12;
 const RULE_KEY_DEPTH = 3;
@@ -42,9 +42,9 @@ function unknownSetting(selection: ScopeSelection, key: string): PolicyError {
     return new PolicyError([messages.settingNotExposed(key, known.length > 0 ? known : all.slice(0, NEAR_LIMIT))]);
 }
 
-function holderFor(raw: Raw, scope: string | undefined): Raw {
+function holderFor(raw: TomlTable, scope: string | undefined): TomlTable {
     if (scope === undefined) return raw;
-    const scopes = (raw['scope'] as Raw[] | undefined) ?? [];
+    const scopes = (raw['scope'] as TomlTable[] | undefined) ?? [];
     const holder = scopes.find((entry) => entry['path'] === scope);
     if (!holder) throw new PolicyError([messages.scopeMissing(scope)]);
     return holder;
@@ -126,7 +126,12 @@ function writeValue(
         requireReason(o.reason, where, `${where} ${o.items.join(' ')} --reason "..."`);
     else refuseBadReason(o.reason, where);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
-    return commit(root, setMutation(o, isList, value), o.isDryRun, describeSet(session, selection, o, shown, value));
+    return commitPolicy(
+        root,
+        setMutation(o, isList, value),
+        o.isDryRun,
+        describeSet(session, selection, o, shown, value),
+    );
 }
 
 /**
@@ -147,5 +152,5 @@ export async function setCommand(o: SetOptions): Promise<CommandResult> {
     const mutation: Mutation = (raw) => {
         deleteKey(o.key)(holderFor(raw, o.scope));
     };
-    return commit(root, mutation, o.isDryRun, `${shown} back to the shipped default`);
+    return commitPolicy(root, mutation, o.isDryRun, `${shown} back to the shipped default`);
 }

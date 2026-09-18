@@ -13,8 +13,7 @@ const INIT = [
     'none',
     '--ci',
     'none',
-    '--rules',
-    'no',
+    '--no-rules',
     '--no-install',
 ];
 

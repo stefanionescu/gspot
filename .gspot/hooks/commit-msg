@@ -10,7 +10,7 @@ main() {
     if [[ ${#gspot_command[@]} -eq 0 ]]; then
         gspot_command=('mise' 'exec' '--' 'gspot')
     fi
-    exec "${gspot_command[@]}" check --stage message --message-file "$1"
+    exec "${gspot_command[@]}" check --at message --message-file "$1"
 }
 
 main "$@"

@@ -80,7 +80,8 @@ packages/cli/
 │   ├── presets/                manifests
 │   ├── repository/             what is in the tree
 │   ├── run/                    running checks
-│   ├── emit/                   writing the files gspot owns
+│   ├── emit/                   rendering and writing the files gspot owns
+│   ├── lifecycle/              init, upgrade and uninstall
 │   ├── structure/              the structure engine
 │   ├── naming/                 the naming engine
 │   ├── prose/                  the prose engine
@@ -99,7 +100,7 @@ packages/cli/
 
 Fourteen files, one per command, each under sixty lines: `init.ts`, `check.ts`, `apply.ts`,
 `ignore.ts`, `add.ts`, `remove.ts`, `allow.ts`, `set.ts`, `declare.ts`, `why.ts`, `explain.ts`,
-`doctor.ts`, `upgrade.ts`, `uninstall.ts`. Two more files sit beside them. `emit.ts` is the one function that prints a result as text or JSON and turns the errors gspot raises into exit 2. `flags.ts` holds the readers for the flag values commander hands over (`textFlag`, `listFlag`, `directoryOf`).
+`doctor.ts`, `upgrade.ts`, `uninstall.ts`. Two more files sit beside them. `print-result.ts` is the one function that prints a result as text or JSON and turns the errors gspot raises into exit 2. `flags.ts` holds the readers for the flag values commander hands over (`textFlag`, `listFlag`, `directoryOf`).
 
 Completion registers
 itself from `output/completion.ts` in `program.ts`, so it has no command file. A command file
@@ -126,28 +127,28 @@ algorithm's own constant stays where it is used (D-22).
 
 ### `src/policy/`
 
-| File              | Holds                                                                                                                                                                                                     |
-| ----------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `validate.ts`     | the whole validation a load performs after the schema: the selection and the settings surface; `write.ts` and the session both call it                                                                    |
-| `near.ts`         | closest-match suggestions for a mistyped preset, check, or setting                                                                                                                                        |
-| `propose.ts`      | the proposed `gspot.toml` at `init`: selection, scopes, carried lists, choices                                                                                                                            |
-| `commands.ts`     | the writing commands as functions: `ignore`, `add`, `remove`, `declare`, and the commit step `set` and `allow` share; `allow-command.ts` and `set-command.ts` hold those two, `declare`                   |
-| `schema.ts`       | the zod schema of `gspot.toml`: presets, scopes, limits (root and per language), naming, architecture, structure, tools, ignore, declare, check, hooks, ci, rules, editor, coverage, runner               |
-| `local-schema.ts` | the one-key schema of `gspot.local.toml`                                                                                                                                                                  |
-| `read.ts`         | read, parse (smol-toml), validate; `normalize.ts` fills the Policy shape and `problems.ts` holds the reason, selector and scope checks; every load error through `zod-validation-error` and `messages.ts` |
-| `merge.ts`        | preset default, framework override, scope table, root table; lists append, scalars replace, conflicts fail                                                                                                |
-| `write.ts`        | the one writer the six commands share: `toml-patch` append, replace, remove; validate as load; run apply                                                                                                  |
-| `loosening.ts`    | the loosening-needs-a-reason rule, reading `config/reasons.ts`                                                                                                                                            |
-| `settings.ts`     | the settings surface: every key, its direction, its default, its source, for `set`; `audit.ts` checks every written key against it, `doctor --settings` and the docs                                      |
-| `messages.ts`     | every load and write message in plain English, one function per message, tested                                                                                                                           |
-| `json-schema.ts`  | `z.toJSONSchema` into `schema/gspot.schema.json` and `run-record.schema.json`                                                                                                                             |
+| File                                                                            | Holds                                                                                                                                                                                                     |
+| ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `validate-policy.ts`                                                            | the whole validation a load performs after the schema: the selection and the settings surface; `write.ts` and the session both call it                                                                    |
+| `near.ts`                                                                       | closest-match suggestions for a mistyped preset, check, or setting                                                                                                                                        |
+| `propose.ts`                                                                    | the proposed `gspot.toml` at `init`: selection, scopes, carried lists, choices                                                                                                                            |
+| `ignore-command.ts`, `add-command.ts`, `declare-command.ts`, `commit-policy.ts` | the writing commands as functions, one file for each verb, and the commit step they share; `allow-command.ts` and `set-command.ts` hold those two, `declare`                                              |
+| `schema.ts`                                                                     | the zod schema of `gspot.toml`: presets, scopes, limits (root and per language), naming, architecture, structure, tools, ignore, declare, check, hooks, ci, rules, editor, coverage, runner               |
+| `local-schema.ts`                                                               | the one-key schema of `gspot.local.toml`                                                                                                                                                                  |
+| `read-policy.ts`                                                                | read, parse (smol-toml), validate; `normalize.ts` fills the Policy shape and `problems.ts` holds the reason, selector and scope checks; every load error through `zod-validation-error` and `messages.ts` |
+| `merge.ts`                                                                      | preset default, framework override, scope table, root table; lists append, scalars replace, conflicts fail                                                                                                |
+| `write.ts`                                                                      | the one writer the six commands share: `toml-patch` append, replace, remove; validate as load; run apply                                                                                                  |
+| `loosening.ts`                                                                  | the loosening-needs-a-reason rule, reading `config/reasons.ts`                                                                                                                                            |
+| `settings.ts`                                                                   | the settings surface: every key, its direction, its default, its source, for `set`; `audit.ts` checks every written key against it, `doctor --settings` and the docs                                      |
+| `messages.ts`                                                                   | every load and write message in plain English, one function per message, tested                                                                                                                           |
+| `json-schema.ts`                                                                | `z.toJSONSchema` into `schema/gspot.schema.json` and `run-record.schema.json`                                                                                                                             |
 
 ### `src/presets/`
 
 | File                 | Holds                                                                                                                                                                   |
 | -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `manifest-schema.ts` | the zod schema of `manifest.toml`: preset, detect, claims (extensions, filenames, tags), tools, configs, checks with `summary`, `why`, `fix`, settings, required, rules |
-| `read.ts`            | read every embedded manifest, validate, refuse a check without a stage or a config without a reader                                                                     |
+| `read-manifests.ts`  | read every embedded manifest, validate, refuse a check without a stage or a config without a reader                                                                     |
 | `select.ts`          | selection: requires, transitive, the recommended presets (D-80), conflicts, order                                                                                       |
 | `detect.ts`          | the detection table: extensions, shebangs, tags, manifests, dependencies; names unknown languages through `linguist-languages`                                          |
 | `claims.ts`          | which selected preset claims which file, per scope                                                                                                                      |
@@ -186,21 +187,34 @@ algorithm's own constant stays where it is used (D-22).
 
 ### `src/emit/`
 
-| File                                      | Holds                                                                                                                                                                                                                                                                                        |
-| ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `templates.ts`                            | render a preset template through `eta` with the merged settings; the generated-file header                                                                                                                                                                                                   |
-| `apply.ts`                                | write every generated file, block and merge; remove strays; set the hooks path; the `apply` command as a function: `--check`, `--lower-baselines`, `--project-templates`                                                                                                                     |
-| `install.ts`                              | the `init` command as a function; `selection.ts` (what init selects), `questions.ts` (the prompts), `init-plan.ts` (the proposal and the plan), `first-run.ts` (package.json pins, the install, the first run and its baselines); detection, questions, plan, write, install step, baselines |
-| `upgrade/command.ts`, `upgrade/report.ts` | the `upgrade` command as a function, and the report it prints: pins, generated files, the rules they carry, rule files, presets on offer, extra keys with a slot                                                                                                                             |
-| `targets.ts`                              | every generated file for the selection: path, template, stub                                                                                                                                                                                                                                 |
-| `stubs.ts`                                | one-line stubs at conventional paths; `jsonc-parser` for `tsconfig.json` `extends`                                                                                                                                                                                                           |
-| `managed-blocks.ts`                       | marker blocks in `CLAUDE.md`, `AGENTS.md`, `.gitignore`, `.editorconfig`, `.vscode/*.json` (`jsonc-parser`), `lefthook.yml` (`yaml`)                                                                                                                                                         |
-| `hooks.ts`                                | `.gspot/hooks/*`, `core.hooksPath`, the husky and lefthook forms, executable bits through git                                                                                                                                                                                                |
-| `runner-surface.ts`                       | `.config/mise/conf.d/gspot.toml`, `package.json` scripts and devDependencies (`nypm`, `@npmcli/package-json`), the uv dependency group                                                                                                                                                       |
-| `workflow.ts`                             | `.github/workflows/gspot.yml`                                                                                                                                                                                                                                                                |
-| `drift.ts`                                | `apply --check`: render in memory, find generated files by header, compare bytes, print the diff                                                                                                                                                                                             |
-| `takeover.ts`                             | delete the old configuration, list what no longer runs; `carry.ts` reads the exception lists (typos, gitleaks, osv, licenses, disabled rules as ignores), print the plan lines                                                                                                               |
-| `uninstall.ts`                            | the inverse of `init`                                                                                                                                                                                                                                                                        |
+Rendering and writing the files gspot owns. `emit` means this and nothing else (D-92).
+
+| File                | Holds                                                                                                             |
+| ------------------- | ----------------------------------------------------------------------------------------------------------------- |
+| `templates.ts`      | render a preset template through `eta` with the merged settings; the generated-file header                        |
+| `apply-command.ts`  | write every generated file, block and merge; remove strays; set the hooks path; the `apply` command as a function |
+| `targets.ts`        | every generated file for the selection: path, template, stub                                                      |
+| `stubs.ts`          | one-line stubs at conventional paths; `jsonc-parser` for `tsconfig.json` `extends`                                |
+| `managed-blocks.ts` | marker blocks in `CLAUDE.md`, `AGENTS.md` and `.gitignore`                                                        |
+| `hooks.ts`          | `.gspot/hooks/*`, `core.hooksPath`, the husky and lefthook forms                                                  |
+| `lefthook.ts`       | the gspot commands inside `lefthook.yml`, edited through the `yaml` document                                      |
+| `runner-surface.ts` | `.config/mise/conf.d/gspot.toml`, `package.json` scripts and devDependencies                                      |
+| `workflow.ts`       | `.github/workflows/gspot.yml`                                                                                     |
+| `drift.ts`          | `apply --check`: render in memory, find generated files by header, compare bytes, print the diff                  |
+| `json-format.ts`    | generated JSON laid out the way the repository's Prettier settings lay it out                                     |
+
+### `src/lifecycle/`
+
+What happens to a repository once: `init`, `upgrade`, `uninstall`.
+
+| File                                      | Holds                                                                                                                             |
+| ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
+| `init/command.ts`, `init/plan.ts`         | the `init` command as a function: the guard, the write order of D-83; the proposal and the plan it prints                         |
+| `selection.ts`, `questions.ts`            | what `init` selects from detection and flags; the prompts                                                                         |
+| `install-tools.ts`, `first-check.ts`      | the `package.json` pins and the tool install; the first check and the baselines it writes. `init` and `upgrade` share both        |
+| `takeover.ts`, `carry.ts`                 | which old configuration files are replaced, what no longer runs; the exception lists and disabled rules carried into `gspot.toml` |
+| `upgrade/command.ts`, `upgrade/report.ts` | the `upgrade` command as a function, and the report it prints                                                                     |
+| `uninstall-command.ts`                    | the inverse of `init`                                                                                                             |
 
 ### `src/structure/`
 
@@ -239,9 +253,9 @@ naming/
 ├── policy.ts                   the policy schema; loads presets/naming/policy.json and [naming]
 ├── split.ts                    scule splitByCase plus the per-language acronym rule
 ├── match.ts                    whole-part matching, reserved terms, external names, contract properties
-├── validate.ts                 case, length, words, digits, duplicate words, structural prefixes, path rules
+├── validate-name.ts            case, length, words, digits, duplicate words, structural prefixes, path rules
 ├── paths.ts                    file stems and directory names; migration names; Next.js segments
-├── report.ts                   the finding text with the policy source
+├── name-finding.ts             the finding text with the policy source
 └── extractors/                 one per language, tree-sitter queries to categorized identifiers
     ├── typescript.ts           also covers javascript
     ├── python.ts
@@ -292,7 +306,7 @@ exports one function that takes the repository and returns findings, and has one
 
 - `reporter.ts`: check lines, findings, `help:` lines, reproduce lines, the summary; columns from the longest id.
 - `messages.ts`: `consola` on stderr with levels.
-- `plan.ts`: the `init`, `upgrade` and `--dry-run` plans.
+- `plan-text.ts`: the `init`, `upgrade` and `--dry-run` plans.
 - `detection.ts`: the header `init` prints.
 - `json.ts`: the documented object per command.
 - `prompts.ts`: the clack questions, skipped without a terminal.

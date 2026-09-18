@@ -1,8 +1,8 @@
 // The proposed gspot.toml at init: the selection, the scopes, the carried lists, the choices.
 import { stringify } from 'smol-toml';
 import { SCHEMA_LINE } from '#config/markers.ts';
-import type { CarriedLists } from '#types/emit.ts';
-import type { Raw, Proposal } from '#types/config.ts';
+import type { CarriedLists } from '#types/lifecycle.ts';
+import type { TomlTable, Proposal } from '#types/config.ts';
 
 const PREFACE = [
     SCHEMA_LINE,
@@ -13,13 +13,13 @@ const PREFACE = [
     '',
 ].join('\n');
 
-function nonEmpty(table: Record<string, unknown[]>): Raw | undefined {
+function nonEmpty(table: Record<string, unknown[]>): TomlTable | undefined {
     const kept = Object.entries(table).filter(([, list]) => list.length > 0);
     return kept.length === 0 ? undefined : Object.fromEntries(kept);
 }
 
-function toolTables(carried: CarriedLists, commitScopes: string[] | undefined): Raw {
-    const tables: Record<string, Raw | undefined> = {
+function toolTables(carried: CarriedLists, commitScopes: string[] | undefined): TomlTable {
+    const tables: Record<string, TomlTable | undefined> = {
         typos: nonEmpty({ words: carried.typosWords, exclude: carried.typosExcludes }),
         gitleaks: nonEmpty({ allow: carried.gitleaksAllow }),
         osv: nonEmpty({ ignore: carried.osvIgnores }),
@@ -29,8 +29,8 @@ function toolTables(carried: CarriedLists, commitScopes: string[] | undefined): 
     return Object.fromEntries(Object.entries(tables).filter(([, table]) => table !== undefined));
 }
 
-function headTables(proposal: Proposal): Raw {
-    const document: Raw = { version: 1, presets: proposal.presets };
+function headTables(proposal: Proposal): TomlTable {
+    const document: TomlTable = { version: 1, presets: proposal.presets };
     if (proposal.scopes.length > 0)
         document['scope'] = proposal.scopes.map((scope) => ({ path: scope.path, presets: scope.presets }));
     if (proposal.format !== undefined && Object.keys(proposal.format).length > 0) document['format'] = proposal.format;
@@ -38,7 +38,7 @@ function headTables(proposal: Proposal): Raw {
     return document;
 }
 
-function ignoreTables(carried: CarriedLists): Raw[] {
+function ignoreTables(carried: CarriedLists): TomlTable[] {
     return carried.ignores.map((entry) => ({
         check: entry.check,
         rule: entry.rule,
@@ -60,7 +60,7 @@ export function proposeText(proposal: Proposal): string {
     document['hooks'] = { tool: proposal.hooks };
     document['ci'] = { provider: proposal.ci };
     document['rules'] = { install: proposal.rules, directory: '.gspot/rules' };
-    document['coverage'] = { strict: false };
+    document['inspection'] = { strict: false };
     document['runner'] = { surface: proposal.runner };
     const body = stringify(document);
     const ended = body.endsWith('\n') ? body : `${body}\n`;

@@ -20,7 +20,7 @@ function countFindings(input: EngineInput): Finding[] {
         .filter((baseline) => !known.has(baseline.check))
         .map((baseline) => ({
             check: input.spec.id,
-            file: `.gspot/baseline/${fileName(baseline.check, baseline.rule)}`,
+            file: `.gspot/baselines/${fileName(baseline.check, baseline.rule)}`,
             line: 1,
             rule: 'unknown-check',
             message: `The baseline for ${baseline.check}:${baseline.rule} names a check that does not run here.`,
@@ -49,7 +49,7 @@ function stalePaths(input: EngineInput, file: SuppressionFile): Finding[] {
             file: file.path,
             line: 1,
             rule: 'stale-suppression',
-            message: `${entry} has suppressions and is not tracked; run gspot apply --baseline to prune.`,
+            message: `${entry} has suppressions and is not tracked; run gspot apply --lower-baselines to prune.`,
             fixable: false,
         }));
 }

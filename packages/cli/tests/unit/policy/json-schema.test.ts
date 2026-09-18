@@ -22,7 +22,7 @@ describe('the JSON schema of gspot.toml', () => {
             'ci',
             'rules',
             'editor',
-            'coverage',
+            'inspection',
             'runner',
         ])
             expect(properties).toHaveProperty(key);

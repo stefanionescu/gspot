@@ -123,9 +123,9 @@ header = false
 [[checks]]
 id = "javascript/eslint"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{suppressions}", "--format", "json", "{files}"]
-baseline_file = ".gspot/baseline/eslint.json"
+baseline_file = ".gspot/baselines/eslint.json"
 baseline_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--suppress-all", "--suppressions-location", "{baseline}", "{files}"]
 prune_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--prune-suppressions", "--suppressions-location", "{baseline}", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
@@ -141,10 +141,9 @@ fix = "Run gspot check --fix for the rules that fix themselves, then read each r
 [[checks]]
 id = "javascript/checkjs"
 stage = "commit"
-takes = "project"
+runs = "once"
 command = ["tsc", "-p", "{config:jsconfig}", "--pretty", "false"]
 tool = "tsc"
-whole = true
 inspection = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks plain JavaScript through its JSDoc comments."
@@ -154,7 +153,7 @@ fix = "Add or fix the JSDoc type the checker names; gspot explain tsc/TS2345 lin
 [[checks]]
 id = "javascript/knip"
 stage = "push"
-takes = "project"
+runs = "per-scope"
 command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "compact", "{workspace:--workspace}"]
 cwd = "root"
 inspection = ["dependencies"]
@@ -233,12 +232,12 @@ direction = "loosening"
 default = []
 summary = "Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses."
 
-[required]
+[inspections]
 ".js" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".mjs" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".cjs" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".jsx" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 
-[rules]
+[rule_files]
 language = ["language/JAVASCRIPT.md", "language/naming/JAVASCRIPT.md"]
 runtime = ["runtime/node/NODE.md"]

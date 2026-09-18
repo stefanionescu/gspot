@@ -82,14 +82,14 @@ const roleGlobs = z.union([text, textList]);
 const architectureSchema = z.strictObject({
     types_directory: text.optional(),
     elements: z.array(element).optional(),
-    allow: z.array(allowedEdge).optional(),
+    edges_allowed: z.array(allowedEdge).optional(),
     roles: z.record(text, roleGlobs).optional(),
     contracts: z.array(anyTable).optional(),
     package_roots: textList.optional(),
     route_directories: textList.optional(),
     shared_directories: textList.optional(),
     feature_contracts: textList.optional(),
-    allowed_imports: z.array(allowedImport).optional(),
+    imports_allowed: z.array(allowedImport).optional(),
 });
 
 const reasonedPaths = z.strictObject({ paths: textListNonEmpty, reason: text });
@@ -101,7 +101,7 @@ const trivialExemption = z.strictObject({ language: text.optional(), path: text,
 const structureSchema = z.strictObject({
     reexports: z.enum(['none', 'index-only']).optional(),
     call_through_allowed: z.array(callThrough).optional(),
-    trivial_exemptions: z.array(trivialExemption).optional(),
+    trivial_allowed: z.array(trivialExemption).optional(),
     single_file_folder_allowed: z.array(reasonedPaths).optional(),
     prefix_collision_allowed: z.array(reasonedPaths).optional(),
     folder_name_allowed: z.array(reasonedPaths).optional(),
@@ -167,7 +167,7 @@ const rulesSchema = z.strictObject({ install: flag.optional(), directory: text.o
 
 const editorSchema = z.strictObject({ vscode: flag.optional() });
 
-const coverageSchema = z.strictObject({ strict: flag.optional() });
+const inspectionSchema = z.strictObject({ strict: flag.optional() });
 
 const runnerSchema = z.strictObject({ surface: z.enum(['mise', 'npm', 'bun', 'pnpm', 'uv', 'none']).optional() });
 
@@ -199,6 +199,6 @@ export const policySchema = z.strictObject({
     ci: ciSchema.optional(),
     rules: rulesSchema.optional(),
     editor: editorSchema.optional(),
-    coverage: coverageSchema.optional(),
+    inspection: inspectionSchema.optional(),
     runner: runnerSchema.optional(),
 });

@@ -4,7 +4,7 @@ import type { Command } from 'commander';
 import { format, type Options } from 'prettier';
 import { buildProgram } from '@gspot/cli/src/program.ts';
 import { allChecks } from '@gspot/cli/src/presets/listing.ts';
-import { presetManifests } from '@gspot/cli/src/presets/read.ts';
+import { presetManifests } from '@gspot/cli/src/presets/read-manifests.ts';
 import type { CheckSpec, Manifest, SettingSpec } from '@gspot/cli/types/manifest.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
@@ -70,7 +70,7 @@ function presetPage(manifest: Manifest): string {
         tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
     );
     const targets = manifest.configs.map((config) => `\`${config.target}\``);
-    const rules = Object.values(manifest.rules).flatMap((files) => files.map((file) => `\`${file}\``));
+    const rules = Object.values(manifest.rule_files).flatMap((files) => files.map((file) => `\`${file}\``));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);
     const requires = preset.requires.map((id) => `\`${id}\``).join(', ');
     const opening = [
@@ -206,7 +206,7 @@ function check(wanted: Map<string, string>): number {
         console.log(`${String(wanted.size)} reference pages match the binary`);
         return 0;
     }
-    console.log(`${problems.join('\n')}\nRun bun docs/generate.ts to rewrite the reference pages.`);
+    console.log(`${problems.join('\n')}\nRun bun docs/reference-pages.ts to rewrite the reference pages.`);
     return 1;
 }
 

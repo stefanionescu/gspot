@@ -73,6 +73,5 @@ function hookFindings(input: EngineInput): Finding[] {
  * @returns the findings
  */
 export function taskPolicy(input: EngineInput): Promise<Finding[]> {
-    if (input.scope !== '') return Promise.resolve([]);
     return Promise.resolve([...taskFindings(input), ...hookFindings(input)]);
 }

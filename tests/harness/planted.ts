@@ -1,6 +1,6 @@
 // Runs the development gspot and git in a planted repository.
 import { join } from 'node:path';
-import type { Outcome } from '#types/run.ts';
+import type { SpawnOutcome } from '#types/run.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 const root = new URL('../..', import.meta.url).pathname;
@@ -22,7 +22,7 @@ export const script =
  * @param environment extra variables
  * @returns the exit code and both streams
  */
-export function run(cwd: string, argv: string[], environment: Record<string, string> = {}): Outcome {
+export function run(cwd: string, argv: string[], environment: Record<string, string> = {}): SpawnOutcome {
     const result = Bun.spawnSync(['bun', gspot, ...argv], {
         cwd,
         env: { ...environmentVariables(), NO_COLOR: '1', CI: '1', ...environment },
@@ -39,7 +39,7 @@ export function run(cwd: string, argv: string[], environment: Record<string, str
  * @param environment extra variables
  * @returns the exit code and both streams
  */
-export function git(cwd: string, argv: string[], environment: Record<string, string> = {}): Outcome {
+export function git(cwd: string, argv: string[], environment: Record<string, string> = {}): SpawnOutcome {
     const result = Bun.spawnSync(['git', '-c', 'user.email=t@t', '-c', 'user.name=t', ...argv], {
         cwd,
         env: { ...environmentVariables(), ...environment },

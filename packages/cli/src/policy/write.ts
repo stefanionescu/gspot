@@ -1,12 +1,12 @@
 // The one writer the six commands share: patch gspot.toml keeping comments and order, validate as load does, write.
 import { patch } from '@decimalturn/toml-patch';
 import { readFileSync, writeFileSync } from 'node:fs';
-import { assertPolicyComplete } from '#cli/policy/validate.ts';
-import { parsePolicyText, policyPath } from '#cli/policy/read.ts';
-import type { Raw, Mutation, WriteResult } from '#types/config.ts';
+import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
+import type { TomlTable, Mutation, WriteResult } from '#types/config.ts';
+import { parsePolicyText, policyPath } from '#cli/policy/read-policy.ts';
 import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
 
-function isTable(value: unknown): value is Raw {
+function isTable(value: unknown): value is TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
 }
 
@@ -22,11 +22,11 @@ function splitKey(key: string): { path: string[]; name: string } {
 
 function listItemKey(item: unknown): string {
     const isNamed = typeof item === 'object' && item !== null && 'name' in item;
-    return JSON.stringify(isNamed ? (item as Raw)['name'] : item);
+    return JSON.stringify(isNamed ? (item as TomlTable)['name'] : item);
 }
 
-function tablesAlong(raw: Raw, path: string[]): Raw[] | undefined {
-    const tables: Raw[] = [raw];
+function tablesAlong(raw: TomlTable, path: string[]): TomlTable[] | undefined {
+    const tables: TomlTable[] = [raw];
     for (const part of path) {
         const next = tables.at(-1)?.[part];
         if (!isTable(next)) return undefined;
@@ -35,7 +35,7 @@ function tablesAlong(raw: Raw, path: string[]): Raw[] | undefined {
     return tables;
 }
 
-function pruneEmpty(tables: Raw[], path: string[]): void {
+function pruneEmpty(tables: TomlTable[], path: string[]): void {
     for (let index = tables.length - 1; index > 0; index -= 1) {
         const table = tables[index];
         const parent = tables[index - 1];
@@ -52,8 +52,8 @@ function pruneEmpty(tables: Raw[], path: string[]): void {
  * @param canCreate when true, missing tables are created on the way
  * @returns the table at the end of the path, or undefined when the path is missing or runs through a value
  */
-export function tableAt(raw: Raw, path: string[], canCreate: boolean): Raw | undefined {
-    let current: Raw = raw;
+export function tableAt(raw: TomlTable, path: string[], canCreate: boolean): TomlTable | undefined {
+    let current: TomlTable = raw;
     for (const part of path) {
         let next = current[part];
         if (next === undefined) {
@@ -77,7 +77,7 @@ export function tableAt(raw: Raw, path: string[], canCreate: boolean): Raw | und
 export function writePolicy(root: string, mutate: Mutation, isDryRun = false): WriteResult {
     const path = policyPath(root);
     const text = readFileSync(path, 'utf8');
-    const raw = parseToml(text) as Raw;
+    const raw = parseToml(text) as TomlTable;
     const before = new Set(Object.keys(raw));
     mutate(raw);
     // toml-patch cannot add an array of tables that was not there; seed the text with it first.
@@ -100,9 +100,9 @@ export function writePolicy(root: string, mutate: Mutation, isDryRun = false): W
  * @param entry the table to append
  * @returns the mutation
  */
-export function appendEntry(table: string, entry: Raw): Mutation {
+export function appendEntry(table: string, entry: TomlTable): Mutation {
     return (raw) => {
-        const list = (raw[table] as Raw[] | undefined) ?? [];
+        const list = (raw[table] as TomlTable[] | undefined) ?? [];
         list.push(entry);
         raw[table] = list;
     };
@@ -116,9 +116,13 @@ export function appendEntry(table: string, entry: Raw): Mutation {
  * @param counter.removed the count, written by the mutation
  * @returns the mutation
  */
-export function removeEntries(table: string, isMatch: (entry: Raw) => boolean, counter: { removed: number }): Mutation {
+export function removeEntries(
+    table: string,
+    isMatch: (entry: TomlTable) => boolean,
+    counter: { removed: number },
+): Mutation {
     return (raw) => {
-        const list = (raw[table] as Raw[] | undefined) ?? [];
+        const list = (raw[table] as TomlTable[] | undefined) ?? [];
         const kept = list.filter((entry) => !isMatch(entry));
         counter.removed = list.length - kept.length;
         if (kept.length === 0) Reflect.deleteProperty(raw, table);

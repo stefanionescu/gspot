@@ -1,18 +1,18 @@
 // gspot why
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
-import type { Result } from '#types/commands.ts';
 import { openSession } from '#cli/run/session.ts';
 import { whyText, why } from '#cli/output/why.ts';
+import type { CommandResult } from '#types/run.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
 
 function trimmedPath(path: string): string {
     const withoutDot = path.startsWith('./') ? path.slice('./'.length) : path;
     return withoutDot.endsWith('/') ? withoutDot.slice(0, -1) : withoutDot;
 }
 
-async function whyResult(directory: string, path: string): Promise<Result> {
+async function whyResult(directory: string, path: string): Promise<CommandResult> {
     const session = await openSession(findRoot(directory));
     const report = why(session, trimmedPath(path));
     if ('error' in report) return { text: `${report.error}\n`, json: report, exitCode: 2 };
@@ -31,6 +31,6 @@ export function registerWhy(program: Command): void {
         )
         .action(async (path: string, _flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await emit(() => whyResult(directoryOf(global), path), global);
+            await printCommand(() => whyResult(directoryOf(global), path), global);
         });
 }

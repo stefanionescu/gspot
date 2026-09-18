@@ -13,8 +13,7 @@ const INIT = [
     'none',
     '--ci',
     'none',
-    '--rules',
-    'no',
+    '--no-rules',
     '--no-install',
 ];
 
@@ -44,7 +43,7 @@ describe('the config-files preset', () => {
                 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n',
             );
             git(fixture.path, ['add', '-A']);
-            const keys = run(fixture.path, ['check', 'config-files/env-example', '--stage', 'push']);
+            const keys = run(fixture.path, ['check', 'config-files/env-example', '--at', 'push']);
             expect(keys.code).toBe(1);
             expect(keys.stdout).toContain('HOST');
             expect(keys.stdout).not.toContain('PORT is read');

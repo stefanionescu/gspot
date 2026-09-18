@@ -687,8 +687,7 @@ manifest. Rejected: rows kept ready for later phases, which read as working feat
 ## D-92 One word, one meaning
 
 A word carries one meaning in the code, the setting keys, the manifest keys, the flags, and the
-folders. [19-names.md](https://github.com/stefanionescu/gspot/blob/main/architecture/19-names.md) lists the words that carried more, the ideas that had several
-names, and the names that said the wrong thing, each with its one name. The glossary in the
+folders. [19-names.md](https://github.com/stefanionescu/gspot/blob/main/architecture/19-names.md) holds the rules a name follows and the renames still to apply. The glossary in the
 README of this folder holds the words that stay. Rejected: keeping a name because it passes the
 naming policy. The policy measures length, case and banned terms, and none of those sees a word
 used twice.

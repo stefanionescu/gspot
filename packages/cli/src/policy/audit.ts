@@ -2,12 +2,12 @@
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { PlainValue, Policy, SettingsSurface } from '#types/config.ts';
+import type { WrittenValue, Policy, ExposedSettings } from '#types/config.ts';
 import { asRecord, policyValue, specFor, writtenKeys } from '#cli/policy/settings.ts';
 
 const LIMITS_PREFIX = 'limits.';
 
-function unknownKeyProblem(surface: SettingsSurface, key: string): string {
+function unknownKeyProblem(surface: ExposedSettings, key: string): string {
     const all = surface.specs.keys().toArray();
     if (key.startsWith(LIMITS_PREFIX)) {
         const limits = all.filter((candidate) => candidate.startsWith(LIMITS_PREFIX));
@@ -41,7 +41,7 @@ function listItemProblems(key: string, items: unknown): string[] {
 
 function looseningProblem(
     key: string,
-    written: PlainValue,
+    written: WrittenValue,
     shipped: unknown,
     scope: string | undefined,
 ): string | undefined {
@@ -53,7 +53,7 @@ function looseningProblem(
 }
 
 function keyProblems(
-    surface: SettingsSurface,
+    surface: ExposedSettings,
     table: Partial<Policy>,
     scope: string | undefined,
     key: string,
@@ -69,7 +69,7 @@ function keyProblems(
     return problem === undefined ? [] : [problem];
 }
 
-function extraProblems(surface: SettingsSurface, table: Partial<Policy>): string[] {
+function extraProblems(surface: ExposedSettings, table: Partial<Policy>): string[] {
     const problems: string[] = [];
     const tools = table.tools ?? {};
     for (const [tool, toolTable] of Object.entries(tools)) {
@@ -87,7 +87,7 @@ function extraProblems(surface: SettingsSurface, table: Partial<Policy>): string
  * @param policy the loaded policy
  * @returns the problems in plain English, empty when the policy is sound
  */
-export function validateAgainstSurface(surface: SettingsSurface, policy: Policy): string[] {
+export function validateAgainstSurface(surface: ExposedSettings, policy: Policy): string[] {
     const problems = [...surface.problems];
     const tables: { table: Partial<Policy>; scope?: string }[] = [
         { table: policy },

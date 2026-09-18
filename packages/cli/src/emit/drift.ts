@@ -17,7 +17,7 @@ const HEAD_BYTES = 600;
 const DIFF_CONTEXT = 2;
 
 function isStrayCandidate(path: string): boolean {
-    return !(path.startsWith('.gspot/cache/') || path.startsWith('.gspot/baseline/') || NEVER_STRAY.has(path));
+    return !(path.startsWith('.gspot/cache/') || path.startsWith('.gspot/baselines/') || NEVER_STRAY.has(path));
 }
 
 function patch(path: string, before: string, after: string, beforeName: string): string {

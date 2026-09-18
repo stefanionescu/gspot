@@ -55,7 +55,7 @@ describe('writePolicy', () => {
 
     test('a dry run writes nothing', async () => {
         await using fixture = await createFixture({ 'gspot.toml': text });
-        const result = writePolicy(fixture.path, setKey('coverage.strict', true), true);
+        const result = writePolicy(fixture.path, setKey('inspection.strict', true), true);
         expect(result.changed).toBe(true);
         expect(readFileSync(join(fixture.path, 'gspot.toml'), 'utf8')).toBe(text);
     });

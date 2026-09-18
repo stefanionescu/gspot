@@ -5,7 +5,7 @@ description: "One [format] block every formatter reads, so indentation cannot di
 
 One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint.
 
-Kind: repository.
+Kind: concern.
 
 ## Tools
 

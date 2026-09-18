@@ -1,5 +1,6 @@
 // Read every embedded manifest, validate it, and refuse the shapes the design forbids.
 import { parse as parseToml } from 'smol-toml';
+import { compact } from '#cli/policy/normalize.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { manifestSchema } from '#cli/presets/manifest-schema.ts';
 
@@ -8,7 +9,6 @@ import type {
     RawConfiguration,
     RawManifest,
     RawTool,
-    Compact,
     CheckSpec,
     ConfigurationTarget,
     Manifest,
@@ -20,10 +20,6 @@ const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
 const GSPOT_DIRECTORY = '.gspot/';
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
-
-function compact<T extends object>(value: T): Compact<T> {
-    return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Compact<T>;
-}
 
 function configurationName(target: string): string {
     const bare = target.startsWith(GSPOT_DIRECTORY) ? target.slice(GSPOT_DIRECTORY.length) : target;
@@ -72,13 +68,13 @@ function isIdleManual(check: RawCheck): boolean {
     return (
         check.stage === 'manual' &&
         check.requires === undefined &&
-        check.takes === 'files' &&
+        check.runs === 'per-file-list' &&
         check.command === undefined
     );
 }
 
 function hasNoRunner(check: RawCheck): boolean {
-    return check.command === undefined && check.engine === undefined && check.rules === undefined;
+    return check.command === undefined && check.engine === undefined && check.reported_by === undefined;
 }
 
 function checkProblems(check: RawCheck): string[] {
@@ -170,8 +166,8 @@ export function parseManifest(text: string, dir: string): Manifest {
         configs: raw.configs.map((config) => toConfiguration(config)),
         checks: raw.checks.map((check) => toCheck(check)),
         settings: raw.settings.map((setting) => compact(setting)),
-        required: raw.required,
-        rules: raw.rules,
+        inspections: raw.inspections,
+        rule_files: raw.rule_files,
         dir,
     };
 }

@@ -1,6 +1,6 @@
 // What every command does with its result: print text or JSON, set the exit code, turn errors into exit 2.
 import { printJson } from '#cli/output/json.ts';
-import type { Result } from '#types/commands.ts';
+import type { CommandResult } from '#types/run.ts';
 import { fail, print } from '#cli/output/messages.ts';
 
 const KNOWN_ERRORS = new Set([
@@ -12,7 +12,7 @@ const KNOWN_ERRORS = new Set([
     'PromptError',
 ]);
 
-function printResult(result: Result, isJson: boolean): void {
+function printResult(result: CommandResult, isJson: boolean): void {
     if (isJson) printJson(result.json);
     else if (result.text !== '') print(result.text);
     process.exitCode = result.exitCode;
@@ -29,7 +29,10 @@ function printError(error: Error, isJson: boolean): void {
  * @param command the command function
  * @param global the global flags
  */
-export async function emit(command: () => Promise<Result>, global: Record<string, unknown>): Promise<void> {
+export async function printCommand(
+    command: () => Promise<CommandResult>,
+    global: Record<string, unknown>,
+): Promise<void> {
     const isJson = global['json'] === true;
     try {
         printResult(await command(), isJson);

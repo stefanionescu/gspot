@@ -1,9 +1,9 @@
 // gspot upgrade
 import type { Command } from 'commander';
-import { emit } from '#cli/commands/emit.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
-import { upgradeCommand } from '#cli/emit/upgrade/command.ts';
+import { printCommand } from '#cli/commands/print-result.ts';
 import { directoryOf, textEntry } from '#cli/commands/flags.ts';
+import { upgradeCommand } from '#cli/lifecycle/upgrade/command.ts';
 
 /**
  * Registers upgrade.
@@ -22,7 +22,7 @@ export function registerUpgrade(program: Command): void {
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             const binary = binaryPath();
-            await emit(
+            await printCommand(
                 () =>
                     upgradeCommand({
                         cwd: directoryOf(global),

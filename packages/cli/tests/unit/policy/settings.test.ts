@@ -1,12 +1,12 @@
 import { describe, expect, test } from 'bun:test';
-import { parsePolicyText } from '#cli/policy/read.ts';
-import { presetManifests } from '#cli/presets/read.ts';
 import { selectPresets } from '#cli/presets/select.ts';
+import { parsePolicyText } from '#cli/policy/read-policy.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
-import { buildSurface, listSettings, settingValue, specFor } from '#cli/policy/settings.ts';
+import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { exposedSettings, listSettings, settingValue, specFor } from '#cli/policy/settings.ts';
 
 const selected = selectPresets(['bash'], presetManifests());
-const surface = buildSurface(selected);
+const surface = exposedSettings(selected);
 
 describe('the settings surface', () => {
     test('exposes the limits the structure preset declares, with their defaults', () => {

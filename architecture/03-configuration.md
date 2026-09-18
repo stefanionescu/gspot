@@ -224,7 +224,7 @@ surface = "mise"           # mise | npm | bun | pnpm | uv | none
   prefers the editor edits the file; the result is the same and is validated on the next load.
 - Presets are bare names. A preset that does not exist fails to load, with the near matches.
 - A setting a selected preset does not expose fails to load, with the settings that exist under
-  that table. The settings catalog is finite and `gspot doctor --settings` prints it.
+  that table. The list of exposed settings is finite and `gspot doctor --settings` prints it.
 - A `[[scope]]` path names a directory that exists. Scopes do not nest.
 - Every `[[ignore]]` carries a `reason` that is a sentence. `N/A`, `TBD`, `-` and an empty
   string are refused. Every ignore prints on every run with `--verbose` and is counted in the

@@ -10,6 +10,6 @@
 export function reproduceLine(id: string, scope: string, stage?: string): string {
     const parts = ['gspot check', id];
     if (scope !== '') parts.push('--scope', scope);
-    if (stage !== undefined && stage !== 'commit' && stage !== 'push') parts.push('--stage', stage);
+    if (stage !== undefined && stage !== 'commit' && stage !== 'push') parts.push('--at', stage);
     return parts.join(' ');
 }

@@ -78,7 +78,6 @@ table is done, because each new preset inherits the same defects and the same mi
 | The plugin stands alone (K-27, D-88)                                                                         | a planted repository with the plugin and one line of configuration reports a finding                                                        |
 | `[[check]]` takes `output` (K-21, D-90)                                                                      | a planted `[[check]]` with a `regex` format reports file and line                                                                           |
 | Tests (G-2, K-23, K-28, K-29)                                                                                | every shipped check id is named in a test that plants its defect; coverage prints in CI                                                     |
-| Names (K-34, D-92)                                                                                           | every row of [19-names.md](19-names.md) is applied in the code, the presets and the manual, and the row is deleted                          |
 | Documentation (G-10, K-30)                                                                                   | the root README follows its template; every command page has a worked example; guides for customization and profiles exist                  |
 
 Acceptance: the worktree harness runs `init --yes` and `check` on yap-landing and on the

@@ -1,9 +1,9 @@
 // Takeover at init: delete the old configuration of every owned tool, carry the exception lists, list what stops running.
 import { join } from 'node:path';
-import { carryFrom } from '#cli/emit/carry.ts';
+import { carryFrom } from '#cli/lifecycle/carry.ts';
 import { existsSync, rmSync, statSync } from 'node:fs';
 import type { ExistingTooling } from '#types/repository.ts';
-import type { CarriedLists, TakeoverPlan } from '#types/emit.ts';
+import type { CarriedLists, TakeoverPlan } from '#types/lifecycle.ts';
 
 const DELETED_ALONGSIDE_OWNER: Record<string, string> = {
     prettierignore: 'formatting',

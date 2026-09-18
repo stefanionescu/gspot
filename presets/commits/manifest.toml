@@ -1,6 +1,6 @@
 [preset]
 id = "commits"
-kind = "repository"
+kind = "concern"
 title = "Commits"
 default = true
 description = "commitlint over every commit message: conventional types, the repository's scopes, and the corpus limits."
@@ -23,7 +23,7 @@ stub = {path = ".commitlintrc.json", body = "{\n    \"extends\": [\"./.gspot/com
 [[checks]]
 id = "commits/commitlint"
 stage = "message"
-takes = "files"
+runs = "per-file-list"
 command = ["commitlint", "--config", "{config:commitlint}", "--edit", "{message_file}"]
 output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
 inspection = []
@@ -34,7 +34,7 @@ fix = "Write <type>(<scope>): <subject>, with a type from the list and a subject
 [[checks]]
 id = "commits/range"
 stage = "push"
-takes = "project"
+runs = "per-scope"
 command = ["commitlint", "--config", "{config:commitlint}", "--from", "{merge_base}", "--to", "HEAD"]
 output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
 inspection = []
@@ -62,6 +62,6 @@ kind = "table"
 direction = "per-rule"
 summary = "Options per commitlint rule, by rule name; turning a rule off is gspot ignore --rule."
 
-[rules]
+[rule_files]
 general = ["general/agent/GIT.md"]
 tool = ["tool/commitlint/COMMITLINT.md"]

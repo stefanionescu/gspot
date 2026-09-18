@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import type { Manifest } from '#types/manifest.ts';
 import { selectPresets } from '#cli/presets/select.ts';
-import { parseManifest, presetManifests } from '#cli/presets/read.ts';
+import { parseManifest, presetManifests } from '#cli/presets/read-manifests.ts';
 
 function manifest(id: string, requires: string[] = [], conflicts: string[] = []): Manifest {
     return parseManifest(

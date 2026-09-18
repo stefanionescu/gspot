@@ -44,7 +44,7 @@ stub = {path = ".shellcheckrc", copy = true}
 [[checks]]
 id = "bash/syntax"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["bash", "-n", "{file}"]
 inspection = ["syntax"]
 output = {format = "regex", pattern = "^(?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$"}
@@ -55,7 +55,7 @@ fix = "Open the file at the line bash names and fix the quoting, bracket, or key
 [[checks]]
 id = "bash/shellcheck"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
 inspection = ["style", "security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
@@ -66,7 +66,7 @@ fix = "Read the SC code in the finding; gspot explain shellcheck/SC2086 links to
 [[checks]]
 id = "bash/shfmt"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
 fix_command = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
 fix_order = "format"
@@ -354,7 +354,7 @@ default = []
 summary = "The scripts allowed to delete recursively or kill processes; everything else is refused."
 
 [[settings]]
-name = "tools.bash.allowed_default_fragments"
+name = "tools.bash.default_fragments_allowed"
 kind = "list"
 direction = "loosening"
 default = []
@@ -367,9 +367,9 @@ direction = "neutral"
 default = "macOS and Linux"
 summary = "The platforms the fourth header line of every script names."
 
-[required]
+[inspections]
 ".sh" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
 ".bash" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
 
-[rules]
+[rule_files]
 language = ["language/BASH.md", "language/bash/LANGUAGE.md", "language/bash/SAFETY.md", "language/bash/OPERATIONS.md", "language/naming/BASH.md"]

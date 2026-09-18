@@ -1,6 +1,6 @@
 [preset]
 id = "config-files"
-kind = "repository"
+kind = "concern"
 title = "Configuration Files"
 default = true
 requires = ["formatting", "spelling"]
@@ -84,8 +84,8 @@ stub = {path = ".v8rrc.yml", copy = true}
 [[checks]]
 id = "config-files/json"
 stage = "commit"
-takes = "files"
-rules = "formatting/prettier"
+runs = "per-file-list"
+reported_by = "formatting/prettier"
 claims = {extensions = [".json", ".jsonc", ".json5"]}
 inspection = ["format", "syntax"]
 summary = "Parses and formats every JSON file through Prettier."
@@ -95,7 +95,7 @@ fix = "Run gspot check --fix, or fix the syntax error Prettier names."
 [[checks]]
 id = "config-files/toml"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["taplo", "check", "--config", "{config:taplo}", "--colors", "never", "--no-schema", "{files}"]
 claims = {extensions = [".toml"]}
 inspection = ["syntax"]
@@ -107,7 +107,7 @@ fix = "Fix the line taplo names."
 [[checks]]
 id = "config-files/toml-format"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "--check", "{files}"]
 fix_command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "{files}"]
 fix_order = "format"
@@ -121,7 +121,7 @@ fix = "Run gspot check --fix."
 [[checks]]
 id = "config-files/yaml"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["yamllint", "-c", "{config:yamllint}", "-f", "parsable", "-s", "{files}"]
 claims = {extensions = [".yaml", ".yml"]}
 inspection = ["syntax", "style"]
@@ -133,7 +133,7 @@ fix = "Fix the line yamllint names, or set the rule's options with gspot set too
 [[checks]]
 id = "config-files/schema"
 stage = "push"
-takes = "files"
+runs = "per-file-list"
 requires = "network"
 command = ["v8r", "--config", "{config:v8r}", "--ignore-errors", "--format", "text", "{files}"]
 claims = {extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"]}
@@ -146,7 +146,7 @@ fix = "Fix the key v8r names, or map the file to its schema under tools.v8r.sche
 [[checks]]
 id = "config-files/actions"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["actionlint", "-no-color", "{files}"]
 claims = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 inspection = ["syntax", "style"]
@@ -158,7 +158,7 @@ fix = "Fix the line actionlint names."
 [[checks]]
 id = "config-files/actions-security"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["zizmor", "--offline", "--no-progress", "--format", "github", "{files}"]
 claims = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
 inspection = ["security"]
@@ -170,7 +170,7 @@ fix = "Apply the fix zizmor names, or turn one audit off with gspot ignore confi
 [[checks]]
 id = "config-files/dotenv"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["dotenv-linter", "check", "--plain", "--skip-updates", "{files}"]
 fix_command = ["dotenv-linter", "fix", "--plain", "--no-backup", "--skip-updates", "{files}"]
 fix_order = "format"
@@ -184,7 +184,7 @@ fix = "Run gspot check --fix, or fix the line dotenv-linter names."
 [[checks]]
 id = "config-files/env-example"
 stage = "push"
-takes = "project"
+runs = "per-scope"
 engine = "integrity"
 analysis = "env-example"
 inspection = ["consistency"]
@@ -195,7 +195,7 @@ fix = "Add the key to the template (.env.example or the files under tools.dotenv
 [[checks]]
 id = "config-files/plist"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 platform = ["macos"]
 command = ["plutil", "-lint", "{files}"]
 claims = {extensions = [".plist", ".entitlements"]}
@@ -208,7 +208,7 @@ fix = "Fix the element plutil names."
 [[checks]]
 id = "config-files/xml"
 stage = "commit"
-takes = "files"
+runs = "per-file-list"
 command = ["xmllint", "--noout", "{files}"]
 claims = {extensions = [".xml", ".storyboard", ".xib"]}
 inspection = ["syntax"]
@@ -250,7 +250,7 @@ direction = "neutral"
 default = ""
 summary = "The name of the function the code reads environment variables through, on top of process.env and os.environ; empty means those two alone."
 
-[required]
+[inspections]
 ".json" = ["format", "syntax", "schema", "spelling"]
 ".jsonc" = ["format", "syntax", "spelling"]
 ".json5" = ["format", "syntax", "spelling"]
@@ -261,7 +261,7 @@ summary = "The name of the function the code reads environment variables through
 ".entitlements" = ["syntax"]
 ".xml" = ["syntax"]
 
-[rules]
+[rule_files]
 general = ["general/code/CONFIGURATION.md"]
 language = ["language/YAML.md"]
 tool = ["tool/tasks/TASKS.md"]
