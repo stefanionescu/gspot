@@ -1,6 +1,6 @@
 # `prose`
 
-Kind: repository. Requires: markdown. Runs Vale over every comment and every documentation file.
+Kind: concern. Requires: markdown. Runs Vale over every comment and every documentation file.
 
 ## Claims
 

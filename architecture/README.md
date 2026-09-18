@@ -38,38 +38,46 @@ Every repository on the same gspot version runs the same rules. Upgrading gspot 
 | [15-prior-art.md](15-prior-art.md)                   | What gspot copies from tools people already use, and which libraries it reuses instead of writing its own                                         |
 | [16-file-tree.md](16-file-tree.md)                   | Every folder and file in gspot's repository, and what each holds                                                                                  |
 | [17-migration.md](17-migration.md)                   | The two goals; what `init` replaces, carries, deletes and leaves in a repository that has its own linting, with yap-swift-app worked file by file |
+| [18-gaps.md](18-gaps.md)                             | Where the repository differs from this folder, with evidence, and the order in which the gaps close                                               |
+| [19-names.md](19-names.md)                           | The names that change, and the one meaning each word keeps                                                                                        |
 | [presets/README.md](presets/README.md)               | One page per preset                                                                                                                               |
 
-Read 01 to 05 to understand the tool. Read 06 to 09 to understand the rules. Read 10 to 17 to
+Read 01 to 05 to understand the tool. Read 06 to 09 to understand the rules. Read 10 to 19 to
 build it.
 
 ## Glossary
 
 One word, one meaning, everywhere in this folder, and in the code.
 
-| Term                | Meaning                                                                                                                                                                                                           |
-| ------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| preset              | A named bundle of tools, configuration, checks, settings and rule files for one language, framework, platform, tool, library, database, or repository concern. The unit a person selects.                         |
-| check               | One command or one built-in analysis that produces findings over a set of files. The unit that runs and the unit a person turns off.                                                                              |
-| finding             | One location and one message from one check.                                                                                                                                                                      |
-| engine              | Code inside gspot that produces findings without an external tool, or that drives one.                                                                                                                            |
-| policy              | The repository's selection and settings, held in `gspot.toml`.                                                                                                                                                    |
-| baseline            | A recorded finding count per rule that `check` compares against. It falls and never rises.                                                                                                                        |
-| ignore              | An entry in `gspot.toml` that turns a check off for named paths, with a reason.                                                                                                                                   |
-| scope               | A subtree of the repository with its own preset selection.                                                                                                                                                        |
-| stage               | When a check runs: `commit`, `push` or `manual`.                                                                                                                                                                  |
-| rule file           | A Markdown file an agent reads before editing.                                                                                                                                                                    |
-| layer               | The level a rule file belongs to: general, language, framework, library, tool, platform, database, project.                                                                                                       |
-| generated file      | A file gspot writes and rewrites. It carries a header saying so and a person never edits it.                                                                                                                      |
-| file set            | The files git tracks or would track (`git ls-files --cached --others --exclude-standard`), minus what natures, and ignores remove. Every check receives a list drawn from it.                                     |
-| owned tool          | A tool whose configuration gspot writes.                                                                                                                                                                          |
-| drift               | A difference between two things that are meant to agree: a generated file and its render, a lockfile and its manifest, a document, and the tree it describes.                                                     |
-| private declaration | A declaration a file keeps to itself: a `_` name in Python or Bash, a non-exported declaration in TypeScript or JavaScript, a `private` or `fileprivate` one in Swift. Private declarations come first in a file. |
-| install policy      | The package manager's own supply-chain settings: minimum release age, security scanner, lockfile agreement.                                                                                                       |
-| project template    | A rule file gspot copies into the project layer once and never upgrades.                                                                                                                                          |
-| slop                | Code, names or prose that add nothing: wrappers, hedges, marketing words, defensive guards for impossible states, restated comments.                                                                              |
-| version pin         | The gspot version a repository runs, in `.gspot/version` and the runner surface. A binary of another version refuses to check or apply.                                                                           |
-| takeover            | What `init` does to a tool's existing configuration: deletes it, writes gspot's, carries the exception lists.                                                                                                     |
+| Term                | Meaning                                                                                                                                                                                                                |
+| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| preset              | A named bundle of tools, configuration, checks, settings and rule files for one language, framework, platform, tool, library, database, or repository concern. The unit a person selects.                              |
+| check               | One command or one built-in analysis that produces findings over a set of files. The unit that runs and the unit a person turns off.                                                                                   |
+| finding             | One location and one message from one check.                                                                                                                                                                           |
+| engine              | Code inside gspot that produces findings without an external tool, or that drives one.                                                                                                                                 |
+| policy              | The repository's selection and settings, held in `gspot.toml`.                                                                                                                                                         |
+| baseline            | A recorded finding count per rule that `check` compares against. It falls and never rises.                                                                                                                             |
+| ignore              | An entry in `gspot.toml` that turns a check off for named paths, with a reason.                                                                                                                                        |
+| scope               | A subtree of the repository with its own preset selection.                                                                                                                                                             |
+| stage               | When a check runs: `commit`, `push` or `manual`.                                                                                                                                                                       |
+| rule file           | A Markdown file an agent reads before editing.                                                                                                                                                                         |
+| layer               | The level a rule file belongs to: general, language, framework, library, tool, platform, database, project.                                                                                                            |
+| generated file      | A file gspot writes and rewrites. It carries a header saying so and a person never edits it.                                                                                                                           |
+| file set            | The files git tracks or would track (`git ls-files --cached --others --exclude-standard`), minus what natures, and ignores remove. Every check receives a list drawn from it.                                          |
+| owned tool          | A tool whose configuration gspot writes.                                                                                                                                                                               |
+| drift               | A difference between two things that are meant to agree: a generated file and its render, a lockfile and its manifest, a document, and the tree it describes.                                                          |
+| private declaration | A declaration a file keeps to itself: a `_` name in Python or Bash, a non-exported declaration in TypeScript or JavaScript, a `private` or `fileprivate` one in Swift. Private declarations come first in a file.      |
+| install policy      | The package manager's own supply-chain settings: minimum release age, security scanner, lockfile agreement.                                                                                                            |
+| project template    | A rule file gspot copies into the project layer once and never upgrades.                                                                                                                                               |
+| slop                | Code, names or prose that add nothing: wrappers, hedges, marketing words, defensive guards for impossible states, restated comments.                                                                                   |
+| version pin         | The gspot version a repository runs, in `.gspot/version` and the runner surface. A binary of another version refuses to check or apply.                                                                                |
+| takeover            | What `init` does to a tool's existing configuration: deletes it, writes gspot's, carries the exception lists.                                                                                                          |
+| settings catalog    | Every setting key the selected presets expose, with its direction and shipped default.                                                                                                                                 |
+| runner surface      | Where the pinned tools and the gspot tasks are written: mise, npm, bun, pnpm, uv, or none.                                                                                                                             |
+| inspection          | One kind of look a file receives: format, syntax, style, types, structure, naming, prose, spelling, schema. `[inspection] strict` fails a file that misses a required one. The word coverage means test coverage only. |
+| concern             | The preset kind for something that spans languages: structure, naming, secrets, security, dependencies, licenses, commits, docs.                                                                                       |
+| allowed list        | A list of entries, each with a reason, that a gspot check skips. Its key ends in `_allowed`. A tool's own option keeps the tool's word.                                                                                |
+| profile             | A policy with no path in it, carried between repositories.                                                                                                                                                             |
 
 ## How this folder is maintained
 

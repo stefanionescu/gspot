@@ -6,12 +6,13 @@ This document decides every command, flag, output line, and exit code. Each is o
 ## Commands
 
 ```text
-gspot init      [--yes] [--presets <ids>] [--without <ids>] [--scope <path=ids>] [--own <tools>] [--no-install]
-                [--hooks gspot|lefthook|husky|none] [--ci github|none] [--rules yes|no] [--format keep|shipped]
+gspot init      [--yes] [--from <profile>] [--presets <ids>|none] [--without <ids>] [--scope <path=ids>]
+                [--own <tools>] [--no-install] [--allow-dirty]
+                [--hooks gspot|lefthook|husky|none] [--ci github|none] [--no-rules] [--keep-format | --shipped-format]
                 [--project-templates] [--runner mise|npm|bun|pnpm|uv|none]
 gspot check     [<check-id>] [--staged] [--since <ref>] [--fix] [--dry-run]
-                [--stage commit|push|manual] [--scope <path>] [--skip <check-id>]
-gspot apply      [--check] [--baseline] [--project-templates]
+                [--at commit|push|manual|message] [--scope <path>] [--skip <check-id>]
+gspot apply      [--check] [--lower-baselines] [--project-templates]
 gspot ignore    <check-id> [--paths <glob>...] [--rule <rule>] [--reason <text>] [--remove]
 gspot add       <preset>... [--scope <path>]
 gspot remove    <preset> [--scope <path>]
@@ -23,14 +24,15 @@ gspot explain   <check-id> | <tool>/<rule> | <preset> | <setting-key>
 gspot doctor    [--settings]
 gspot upgrade   [--check] [--to <version>] [--yes] [--no-install]
 gspot uninstall [--keep-hooks]
+gspot profile   save <file> | check <profile>
 gspot completion <bash|zsh|fish|powershell>
 
 global: --help  --version  --json  --quiet  --verbose  --no-color  -C <dir>
-env:    NO_COLOR  CI  GSPOT_LOG
+env:    NO_COLOR  CI  GSPOT_BIN  GSPOT_JOBS
 exit:   0 passed   1 findings   2 gspot did not run
 ```
 
-Fifteen commands in v1. `check --watch` follows in v1.1. Six of them write `gspot.toml`
+Sixteen commands in v1 (D-79). `check --watch` follows in v1.1. Six of them write `gspot.toml`
 (`ignore`, `add`, `remove`, `allow`, `set`, `declare`); together they cover every setting the
 file has, so nobody has to type TOML to change policy. Hand edits stay valid and are checked on
 load. `completion` prints the shell script `@bomb.sh/tab` generates from the command tree, so
@@ -100,16 +102,16 @@ no gspot preset      qlty  lychee
 Asked in this order, in a terminal, through `@clack/prompts`. Each has a flag. `--yes` takes
 every proposal. With no terminal and no flag for a question, gspot exits 2, and names the flag.
 
-| Question                                                                                                 | Proposal                                                                  | Flag                          |
-| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------- | -------- | ----- | ----- |
-| Scopes and presets per scope                                                                             | From detection                                                            | `--presets`, `--scope`        |
-| Own these tools? (one yes or no per tool)                                                                | Yes for every tool gspot has a preset for                                 | `--own <tool,...>` or `--yes` |
-| Extensions nothing claims: declare or leave                                                              | Leave, listed in `doctor`                                                 | `--yes`                       |
-| Install git hooks?                                                                                       | Yes when hooks exist; else yes                                            | `--hooks gspot                | lefthook | husky | none` |
-| Write a CI workflow?                                                                                     | Yes when `.github/` exists with no lint job; else no                      | `--ci github                  | none`    |
-| Install agent rule files?                                                                                | Yes                                                                       | `--rules yes                  | no`      |
-| Task runner surface                                                                                      | The runner detected; `none` when none                                     | `--runner`                    |
-| Keep your formatting? (asked only when an existing formatter config differs from the shipped `[format]`) | Keep: your indent and width go into `[format]` and nothing is reformatted | `--format keep                | shipped` |
+| Question                                                                                                 | Proposal                                                                  | Flag                                |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------------- | -------- | ----- | ----- |
+| Scopes and presets per scope                                                                             | From detection                                                            | `--presets`, `--scope`              |
+| Own these tools? (one yes or no per tool)                                                                | Yes for every tool gspot has a preset for                                 | `--own <tool,...>` or `--yes`       |
+| Extensions nothing claims: declare or leave                                                              | Leave, listed in `doctor`                                                 | `--yes`                             |
+| Install git hooks?                                                                                       | Yes when hooks exist; else yes                                            | `--hooks gspot                      | lefthook | husky | none` |
+| Write a CI workflow?                                                                                     | Yes when `.github/` exists with no lint job; else no                      | `--ci github                        | none`    |
+| Install agent rule files?                                                                                | Yes                                                                       | `--no-rules`                        |
+| Task runner surface                                                                                      | The runner detected; `none` when none                                     | `--runner`                          |
+| Keep your formatting? (asked only when an existing formatter config differs from the shipped `[format]`) | Keep: your indent and width go into `[format]` and nothing is reformatted | `--keep-format`, `--shipped-format` |
 
 ### The plan
 
@@ -206,6 +208,39 @@ block between markers. An existing rules directory is left alone; the rule files
 `init` refuses to run when `gspot.toml` exists and points at `gspot doctor`, which prints what
 has changed in the repository after the install and the command that applies each change.
 
+`init` also refuses, with exit 2 and nothing written, in these cases:
+
+- A choice flag holds a value outside its list (`--hooks`, `--ci`, `--runner`, `--no-rules`,
+  `--at`). The message names the flag and the allowed values. `check --at` follows the
+  same rule.
+- `--presets` or `--without` names a preset that does not exist. The message names the near
+  matches.
+- `--without` names a preset that a selected preset requires. The message prints the chain, such
+  as `typescript requires javascript`.
+- The working tree has uncommitted changes and `--allow-dirty` is absent. The migration is one
+  diff, and git is the only rollback `init` has.
+- `--from` names a profile that does not load or does not validate.
+
+### Order of writes
+
+`init` writes before it deletes (D-83). The order is fixed:
+
+1. Validate every flag, the profile and the proposed `gspot.toml` in memory.
+2. Write `gspot.toml`, `.gspot/` and the stubs.
+3. Run the install step and the first check.
+4. Delete the files takeover replaces.
+
+A failure in step 2 or 3 leaves every old configuration file in place, and the message says so.
+
+### The selection question
+
+The first question lists every detected preset, selected, and every other shipped preset,
+unselected, in one multiple-choice prompt. A preset that another selected preset requires shows
+as locked, with the preset that requires it. A recommended preset shows as selected and can be
+cleared. `--yes`, `--presets` and `--from` skip the question. The plan that follows names every
+selected preset, how it was selected (detected, required, recommended, named), and its number of
+checks.
+
 ## `check`
 
 Runs checks and prints findings.
@@ -215,7 +250,7 @@ Runs checks and prints findings.
 | `gspot check`                     | Every check in every scope, `commit` and `push` stages. Whole tree.                                          |
 | `gspot check --staged`            | `commit` stage over staged files. The pre-commit form.                                                       |
 | `gspot check --since origin/main` | `commit` and `push` stages over files changed since a ref. The pull-request form.                            |
-| `gspot check --stage manual`      | The checks that need the network or minutes: CodeQL, external links, container scans.                        |
+| `gspot check --at manual`         | The checks that need the network or minutes: CodeQL, external links, container scans.                        |
 | `gspot check typescript/eslint`   | One check.                                                                                                   |
 | `gspot check --scope api`         | One scope.                                                                                                   |
 | `gspot check --fix`               | Every fixer in order (codemods, imports, manifests, formatters), then the checks again to prove convergence. |
@@ -274,7 +309,7 @@ Re-renders every generated file from `gspot.toml`. Idempotent. Run after any edi
 - Writes `.gspot/<tool>.<ext>` for every owned tool, stubs at conventional paths, hooks, the runner surface, and the CI workflow when enabled. When `[rules] install = true`, it also writes the agent rule files under `[rules] directory` and the managed block in `CLAUDE.md` and `AGENTS.md` ([09-rules.md](09-rules.md) has the assembly).
 - `--check` renders in memory and compares bytes for the configuration and the rule files. A difference fails with a diff and two ways forward: move the change into `gspot.toml`, or run `apply` to discard it.
 - `--check` also prints the count of rule statements no check enforces. `check` runs this assertion at the `commit` stage.
-- `--baseline` rewrites every baseline from `.gspot/last.json`. Counts fall; a count that rose
+- `--lower-baselines` rewrites every baseline from `.gspot/last.json`. Counts fall; a count that rose
   fails.
 - `--project-templates` copies the project templates that match the selection into the project
   rule layer, once each; a template that already exists there is never rewritten.
@@ -319,7 +354,7 @@ the finding gone. `--remove` deletes the matching entry.
 `gspot set limits.function_lines 80 --reason "Route tables are one ordered list each."` writes one
 setting: any `[limits]` key, root or per language (`limits.python.file_lines`), any tool slot,
 any `[architecture]`, `[structure]`, `[naming]` (including the per-language ceilings
-`naming.python.max_words`), `[rules]`, `[hooks]`, `[ci]`, `[editor]`, `[coverage]` or `[runner]`
+`naming.python.max_words`), `[rules]`, `[hooks]`, `[ci]`, `[editor]`, `[inspection]` or `[runner]`
 key. The key is the dotted path `doctor --settings` prints. A loosening (raising a limit, turning
 a tool off, removing a group) requires the reason; a tightening does not. `--scope` targets a
 scope table. An unknown key fails with the keys that exist under that table.
@@ -402,7 +437,7 @@ rules      14 files
 gspot      0.4.0 pinned and running (0.5.0 available: gspot upgrade --check)
 ```
 
-Exit 0 unless a tool is missing or outdated. Coverage is information here. `[coverage] strict =
+Exit 0 unless a tool is missing or outdated. Coverage is information here. `[inspection] strict =
 true` in `gspot.toml` turns unchecked files into a failing check. Nothing `doctor` prints is
 applied; every remedy is a second command, so running `doctor` can never overwrite a decision.
 
@@ -427,7 +462,35 @@ downward included.
 ## `uninstall`
 
 Removes what `init` wrote: `.gspot/`, the stubs, the managed blocks, the runner surface, the
-workflow, and `core.hooksPath`. Leaves `gspot.toml` and the project rule layer. Restores nothing.
+workflow, and `core.hooksPath`. The runner surface includes the devDependencies and the scripts
+gspot added to `package.json`, the lines it added under `.husky/`, and its commands in
+`lefthook.yml`. Leaves `gspot.toml` and the project rule layer. Restores nothing.
+
+## `profile`
+
+A profile is a policy a person carries between repositories (D-79). The file format is in
+[03-configuration.md](03-configuration.md).
+
+`gspot profile save <file>` writes a profile from the policy of this repository. It keeps the
+presets, `[limits]`, `[naming]` lists, `[format]`, `[prose]`, `[tools]` settings, `[hooks]`,
+`[ci]`, `[rules]` and `[runner]`. It leaves out `[[scope]]`, `[[ignore]]`, `[[declare]]`,
+`[[check]]` and every entry that names a path, and it prints each entry it left out.
+
+`gspot profile check <profile>` loads and validates a profile and prints every problem in one
+pass. It writes nothing and needs no repository.
+
+`gspot init --from <profile>` takes a path, an `https` URL, or `github:owner/repo[/path][@ref]`.
+A remote profile is fetched once, and its SHA-256 is printed in the plan. `init` validates the
+profile exactly as `profile check` does before it reads the repository. Flags given beside
+`--from` win over the profile.
+
+```text
+$ gspot init --from github:alex-garcia/house-style
+profile    house-style  sha256 9f2c...  selection exact
+presets    typescript (named)  javascript (required)  formatting (named)  spelling (named)
+skipped    naming, structure  (recommended by typescript, not in the profile)
+detected   bash 3 files  (not in the profile; add it with gspot add bash)
+```
 
 ## Global behavior
 

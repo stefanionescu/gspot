@@ -1,6 +1,6 @@
 # `spelling`
 
-Kind: repository. Selected by default. Required by every language preset.
+Kind: concern. Selected by default. Required by every language preset.
 
 ## Claims
 

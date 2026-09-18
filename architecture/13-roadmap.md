@@ -1,25 +1,27 @@
 # Build Order
 
 This document decides the build order, the v1 cut, and what "done" means for each phase. Each phase ends with a repository passing under gspot with no rule lost. This repository comes first, then yap-swift-app in a detached worktree, then the other reference repositories through
-planted repositories of their shape (D-62). The order is 0, 1, 4, 2, 3, 5, 6, with the corpus
-assembler pulled forward into the Swift phase because the managed blocks need it.
+planted repositories of their shape (D-62). Phases 0, 1 and 6 are built. The order from here is the hardening phase, then 5, 2, 4, and 3
+(D-82). The Swift application needs the security presets, SQL, Supabase, Docker, and nginx before
+the Swift presets can close its acceptance run.
 
 ## Status
 
 Updated with every commit, so this table says what is built. Done means the code exists, has
-tests, and runs in the gate of this repository. Last update: 2026-09-18.
+tests, and runs in the gate of this repository. [18-gaps.md](18-gaps.md) lists what falls short of that. Last update: 2026-09-18.
 
 | Area                                  | State                                                                                                                                                                                                                                                                                                                                                                                                  |
 | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Phase 0                               | Done. Policy, presets, repository model, runner, emit, hooks, doctor, the commands, the bash, structure, naming, formatting and spelling presets, the build, the npm launcher, planted tests.                                                                                                                                                                                                          |
+| Phase 0                               | Code done, tests partial ([18-gaps.md](18-gaps.md), G-2). Policy, presets, repository model, runner, emit, hooks, doctor, the commands, the bash, structure, naming, formatting and spelling presets, the build, the npm launcher, planted tests.                                                                                                                                                      |
 | ESLint plugin, typescript, javascript | Done.                                                                                                                                                                                                                                                                                                                                                                                                  |
-| Naming engine                         | Done: bash, TypeScript, JavaScript and Python extractors, paths, the policy schema check.                                                                                                                                                                                                                                                                                                              |
-| Structure engine                      | Done: the directory family and the whole shell family, ast-grep counts. Swift, Python and SQL analyses not started.                                                                                                                                                                                                                                                                                    |
+| Naming engine                         | Done: bash, TypeScript and JavaScript extractors, paths, the policy schema check. The Python extractor is not built; `python.wasm` is embedded and unused.                                                                                                                                                                                                                                             |
+| Structure engine                      | Code done: the directory family and the whole shell family, ast-grep counts. No test plants a defect for a shell check ([18-gaps.md](18-gaps.md), K-23). Swift, Python and SQL analyses not started.                                                                                                                                                                                                   |
 | Prose engine                          | Done: Vale by path and by stdin grammar, source bans, vocabulary, the 30 rules rendered with the docs ceilings. The prose, markdown and docs presets exist.                                                                                                                                                                                                                                            |
 | Integrity                             | Done: `generated-drift`, `docs-headings`, `stale-paths`, `fences`, `readme-present`, `readme-shape`, `tsconfig-options`, `env-example`, `baselines-current`, `config-purity`, `suppressions`, `allowlists-match`, `task-policy`, `large-files`. Owed with their presets: `manifest-policy`, `lockfile-fresh`, `install-policy` (dependencies), `required-rules` (typescript, push), `generated-fresh`. |
 | Corpus (Phase 6)                      | Done: the corpus lives in `rules/`, the corpus lint runs in `apply --check`; the enforcement markers are gone (D-73).                                                                                                                                                                                                                                                                                  |
 | Self-lint                             | Done: `gspot check` passes 75 checks with no `[[ignore]]` (D-27). Kept green from here on.                                                                                                                                                                                                                                                                                                             |
-| Phase 1                               | Done: the commits and config-files presets, ESLint suppression baselines (D-54), `upgrade` with its report, the takeover planted test, the docs site (`docs/`, Starlight, generated reference, six guides, `llms.txt`).                                                                                                                                                                                |
+| Phase 1                               | Code done, tests partial: three of the 12 presets have a planted repository, and the acceptance harness does not exist ([18-gaps.md](18-gaps.md), G-2). Built: the commits and config-files presets, ESLint suppression baselines (D-54), `upgrade` with its report, the takeover planted test, the docs site (`docs/`, Starlight, generated reference, six guides, `llms.txt`).                       |
+| Hardening                             | Not started. The deliverables are the table below.                                                                                                                                                                                                                                                                                                                                                     |
 | Phases 2 to 5, Phase 7                | Not started.                                                                                                                                                                                                                                                                                                                                                                                           |
 
 ## Phase 0: the skeleton
@@ -27,7 +29,7 @@ tests, and runs in the gate of this repository. Last update: 2026-09-18.
 | Deliverable                                                                                                   | Done when                                                                                                                                                                                                           |
 | ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | The binary builds for five targets with embedded assets                                                       | `gspot --version` runs from a release asset on macOS, Linux, and Windows                                                                                                                                            |
-| Result cache                                                                                                  | a second `check --staged` with no changes runs no tool                                                                                                                                                              |
+| Result cache                                                                                                  | a second `check --staged` with no changes runs no check; each tool still answers `--version` for the cache key                                                                                                      |
 | `gspot.toml` schema, load, merge, error messages                                                              | every message in [03-configuration.md](03-configuration.md) has a test                                                                                                                                              |
 | Tracked files, natures, scopes, staged files                                                                  | the four reference repositories list correctly                                                                                                                                                                      |
 | Tool runner with file lists, concurrency, missing-tool handling                                               | a planted repository with one missing tool fails with the hint                                                                                                                                                      |
@@ -56,6 +58,33 @@ tests, and runs in the gate of this repository. Last update: 2026-09-18.
 Acceptance: the worktree harness on yap-landing shows every finding its JavaScript and shell
 checks report under a gspot check, plus the additions; the repository itself is untouched.
 
+## Hardening: before any new preset
+
+Every row closes rows of [18-gaps.md](18-gaps.md). No preset of a later phase starts before this
+table is done, because each new preset inherits the same defects and the same missing tests.
+
+| Deliverable                                                                                                  | Done when                                                                                                                                   |
+| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| A first install works on a stranger's machine (B-1 to B-5, D-83, D-85)                                       | the hooks pass under `/bin/bash` on macOS; a wrong flag value exits 2; a failed `init` leaves the old files; the uv surface runs `uv sync`  |
+| Repository hygiene (G-1, G-11, G-12)                                                                         | `git ls-files` lists no `node_modules` path; one vale pin                                                                                   |
+| Release safety (B-6, B-7, D-84)                                                                              | a tag that differs from the version fails the workflow; `tests/release` and the compiled-binary test run in it                              |
+| The schema files (G-3)                                                                                       | both files are tracked, a check fails on drift, the manual serves them                                                                      |
+| One owner for each concept (K-1 to K-4, K-8, K-14, D-91)                                                     | one install step, one first-baseline step, one copy of each helper and default; no row names a preset that does not ship                    |
+| Scale (B-8, K-5 to K-7, D-89)                                                                                | a planted scope of 5,000 files checks; a tool that hangs ends as an `error` result                                                          |
+| The binary carries nothing of this repository (K-18, D-86)                                                   | `apply --check` in a planted repository runs no corpus lint                                                                                 |
+| Selection: `recommends`, `--presets none`, the selection question, the plan names presets (G-5 to G-7, D-80) | `init --without naming` installs no naming check; `init --presets none` writes rule files only                                              |
+| Profiles (G-8, D-79)                                                                                         | `profile save` in one planted repository and `init --from` in another give the same `gspot.toml` tables; a bad key exits 2 before any write |
+| Rule files stand alone (G-4, K-19, K-20, D-81)                                                               | the corpus lint finds no `gspot` and no tool name; `[rules] exclude` leaves a file out                                                      |
+| `doctor` (G-9, K-9, D-87)                                                                                    | no installed library reads `missing`; a version off the pin fails                                                                           |
+| The plugin stands alone (K-27, D-88)                                                                         | a planted repository with the plugin and one line of configuration reports a finding                                                        |
+| `[[check]]` takes `output` (K-21, D-90)                                                                      | a planted `[[check]]` with a `regex` format reports file and line                                                                           |
+| Tests (G-2, K-23, K-28, K-29)                                                                                | every shipped check id is named in a test that plants its defect; coverage prints in CI                                                     |
+| Names (K-34, D-92)                                                                                           | every row of [19-names.md](19-names.md) is applied in the code, the presets and the manual, and the row is deleted                          |
+| Documentation (G-10, K-30)                                                                                   | the root README follows its template; every command page has a worked example; guides for customization and profiles exist                  |
+
+Acceptance: the worktree harness runs `init --yes` and `check` on yap-landing and on the
+TypeScript, shell and Markdown files of yap-swift-app, and both repositories stay untouched.
+
 ## Phase 2: Python, SQL, containers
 
 | Deliverable                                                                                 | Done when                                                    |
@@ -83,11 +112,14 @@ Acceptance: the worktree harness on slopshop, on the yap-landing site checks, an
 
 ## Phase 4: Swift
 
-| Deliverable                                                                                                    | Done when                           |
-| -------------------------------------------------------------------------------------------------------------- | ----------------------------------- |
-| swift and xcode presets: SwiftLint two configs, SwiftFormat, Periphery, analyze after build, iOS Semgrep rules | the ledger's Swift section is green |
-| Swift naming extractor and trivial-function analysis                                                           | parity on the frozen source         |
-| macOS job in the workflow                                                                                      | runs green                          |
+| Deliverable                                                                                                            | Done when                                                                                                                                                           |
+| ---------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| swift, xcode and xctest presets: SwiftLint two configs, SwiftFormat, Periphery, analyze after build, iOS Semgrep rules | the ledger's Swift section is green; the rendered `.gspot/swiftlint.yml` and `.gspot/swiftformat` hold the rule sets listed in [presets/swift.md](presets/swift.md) |
+| Swift naming extractor and trivial-function analysis                                                                   | parity on the frozen source                                                                                                                                         |
+| macOS job in the workflow                                                                                              | runs green                                                                                                                                                          |
+
+Phase 4 starts after Phases 5 and 2, which ship the security, SQL, Supabase, Docker, and nginx
+presets this acceptance run needs.
 
 Acceptance: the worktree harness on yap-swift-app across its three scopes, with the numbers in
 [17-migration.md](17-migration.md) as the pass condition. Every check in `quality/` maps to a gspot check, the 29 configuration files are replaced or carried, and the 35 lint tasks and the 15 duplicate pins are listed. The repository is read, never written; its own gate keeps running
@@ -98,7 +130,7 @@ until its owners migrate it.
 | Deliverable                                                                                        | Done when                                 |
 | -------------------------------------------------------------------------------------------------- | ----------------------------------------- |
 | prose preset: Vale driver, `gspot` style, packages, vocabulary, stdin grammars, adjacent selectors | the 30 rules fire on planted defects      |
-| secrets, vulnerabilities, dependencies, licenses, duplication presets wired (Semgrep runs)         | each at its stage on a planted repository |
+| secrets, security, dependencies, licenses, duplication presets wired (Semgrep runs)                | each at its stage on a planted repository |
 | `check --watch`                                                                                    | v1.1                                      |
 
 ## Phase 6: the corpus
@@ -133,7 +165,7 @@ repository) and reports the rest as unchecked.
 
 ## The v1 cut
 
-Phases 0 through 6, whole (D-61). v1 ships when every preset, the prose engine, the corpus
+Phases 0 through 6 and the hardening phase, whole (D-61, D-82). v1 ships when every preset, the prose engine, the corpus
 assembler, CodeQL at its `manual` stage and the upgrade path pass on the planted repositories and
 the six acceptance shapes. That is a gspot that installs in a Python API, a Swift app, an
 Express and Supabase monorepo, a static site, a Next.js app and a ComfyUI custom node. It replaces six quality folders, installs the agent rule files, upgrades itself, explains every finding, and

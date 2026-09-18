@@ -50,7 +50,7 @@ file with `'use server'`. Client files: any file with `'use client'`.
 | `architecture.route_directories`                   | `app`, `pages`                                                          |
 | `architecture.shared_directories`                  | `components`, `lib`, `hooks`, `config`, `validators`, `types`, `server` |
 | `architecture.feature_contracts`                   | `index`, `public`, `contracts`                                          |
-| `architecture.allowed_imports` (from, to, reason)  | none                                                                    |
+| `architecture.imports_allowed` (from, to, reason)  | none                                                                    |
 | `tools.next.translations` (directory, base locale) | detected from next-intl configuration                                   |
 | `tools.next.build_in_gate`                         | false                                                                   |
 | `tools.eslint.restricted_imports` (name, message)  | none; the reference picture-component rule is one entry                 |

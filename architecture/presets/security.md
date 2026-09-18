@@ -1,6 +1,6 @@
-# `vulnerabilities`
+# `security`
 
-Kind: repository. Static analysis for security patterns, per language. One SAST tool.
+Kind: concern. Static analysis for security patterns, per language. One SAST tool.
 
 ## Claims
 

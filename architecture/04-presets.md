@@ -27,15 +27,15 @@ runs, settings it exposes, and rule files it installs. It contributes nothing it
 Seven kinds. The kind names the folder under `presets/` in this documentation and a `kind` field in
 the manifest. Preset ids are bare names; the kind is not part of the id.
 
-| Kind       | Selected by                                    | Claims files by                           | Examples                                                                                                                                      |
-| ---------- | ---------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
-| language   | an extension in the tree                       | extension, filename, shebang              | typescript, python, swift, bash, sql, css, html, markdown                                                                                     |
-| framework  | a dependency                                   | path convention the framework dictates    | nextjs, express, fastapi                                                                                                                      |
-| platform   | the platform's config file                     | the platform's layout                     | supabase, cloudflare                                                                                                                          |
-| tool       | the tool's own file                            | the tool's files                          | docker, nginx, xcode, vitest, pytest                                                                                                          |
-| library    | a dependency                                   | none; adds rules to the language's checks | zod, drizzle, trpc, tanstack-query, zustand, react-hook-form, i18n                                                                            |
-| database   | a dialect or connection                        | migration and schema files                | postgres                                                                                                                                      |
-| repository | the person, for a concern that spans languages | the whole tree                            | structure, naming, prose, secrets, vulnerabilities, dependencies, licenses, commits, duplication, formatting, docs, config-files, static-site |
+| Kind      | Selected by                                    | Claims files by                           | Examples                                                                                                                               |
+| --------- | ---------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
+| language  | an extension in the tree                       | extension, filename, shebang              | typescript, python, swift, bash, sql, css, html, markdown                                                                              |
+| framework | a dependency                                   | path convention the framework dictates    | nextjs, express, fastapi                                                                                                               |
+| platform  | the platform's config file                     | the platform's layout                     | supabase, cloudflare                                                                                                                   |
+| tool      | the tool's own file                            | the tool's files                          | docker, nginx, xcode, vitest, pytest                                                                                                   |
+| library   | a dependency                                   | none; adds rules to the language's checks | zod, drizzle, trpc, tanstack-query, zustand, react-hook-form, i18n                                                                     |
+| database  | a dialect or connection                        | migration and schema files                | postgres                                                                                                                               |
+| concern   | the person, for a concern that spans languages | the whole tree                            | structure, naming, prose, secrets, security, dependencies, licenses, commits, duplication, formatting, docs, config-files, static-site |
 
 ## Manifest
 
@@ -44,7 +44,8 @@ the manifest. Preset ids are bare names; the kind is not part of the id.
 id       = "typescript"
 kind     = "language"
 title    = "TypeScript"
-requires = ["javascript", "structure", "naming", "formatting"]
+requires = ["javascript"]
+recommends = ["structure", "naming", "formatting", "spelling"]
 conflicts = []
 
 [detect]
@@ -80,7 +81,7 @@ stub     = { path = "tsconfig.json", merge = { extends = "./.gspot/tsconfig.base
 [[checks]]
 id      = "typescript/tsc"
 stage   = "commit"
-takes   = "project"                 # project | files
+runs    = "per-scope"               # per-file-list | per-scope | once
 command = ["tsc", "--noEmit", "-p", "{stub:tsconfig.json}"]
 summary = "Checks that every TypeScript file type-checks with the strict compiler options."
 why     = "A file that does not type-check can crash at run time in a way the editor already knew about."
@@ -89,7 +90,7 @@ fix     = "Read the first error tsc prints and fix that file; later errors are o
 [[checks]]
 id      = "typescript/eslint"
 stage   = "commit"
-takes   = "files"
+runs    = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"               # codemod | imports | manifest | format
@@ -100,7 +101,7 @@ fix     = "Run gspot check --fix for the rules that fix themselves, then read ea
 [[checks]]
 id       = "typescript/knip"
 stage    = "push"
-takes    = "project"
+runs     = "per-scope"
 command  = ["knip", "--config", "{config:knip}"]
 summary  = "Finds files, exports and dependencies nothing uses."
 why      = "Dead code is read, maintained and shipped for nobody."
@@ -117,19 +118,40 @@ name      = "tools.typescript.paths"
 kind      = "table"
 direction = "neutral"
 
-[required]
+[inspections]
 ".ts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 
-[rules]
+[rule_files]
 language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
 ```
 
 ### Field rules
 
 - `id` is a bare kebab-case name and matches the folder name.
-- `requires` pulls presets in. `structure`, `naming` and `formatting` are required by every
-  language preset. A required preset that is missing fails to load.
+- `requires` pulls presets in, and a person cannot drop them. It holds what the preset cannot
+  work without: `typescript` requires `javascript`, because its configuration is a fragment of
+  the JavaScript one. A required preset that is missing fails to load.
+- `recommends` names presets that `init` selects with this one and a person can drop (D-80).
+  Every language preset recommends `structure`, `naming`, `formatting` and `spelling`.
+  `gspot remove naming`, `init --without naming` and a profile that leaves `naming` out all work.
+- A check whose engine belongs to a dropped preset does not run. `doctor` lists the recommended
+  presets that are not selected.
+- `[[tools]]` rows take `kind = "binary"` (the default) or `kind = "library"` (D-87). `doctor`
+  looks for a library at `node_modules/<npm name>/package.json`, in the root and in each scope,
+  and reads its version there. A library is never spawned.
 - `conflicts` names presets that cannot be selected together.
+- `runs` says how a check receives files. `per-file-list` passes the claimed files of each scope.
+  `per-scope` runs once in each scope with no file list. `once` runs one time over the whole
+  repository, from the root. It replaces `takes`, `whole` and the scope guard inside a check.
+- `reported_by` names the check whose run carries this check's findings, such as
+  `markdown/prettier`, which `formatting/prettier` reports. The check shows as skipped with that
+  note.
+- `[inspections]` lists, for each extension, the inspection kinds a file of that extension must
+  receive. `doctor` reports a file that misses one as partly checked.
+- `[rule_files]` lists the corpus files the preset installs, by layer.
+- A check id is `<family>/<name>`. The family is the engine or the tool family that produces the
+  finding (`structure`, `naming`, `integrity`, `prose`, `security`, or the preset's own id), not
+  always the preset. `gspot explain <check-id>` prints the preset that ships it.
 - `detect` proposes the preset at `init` and in `doctor`. Detection never selects.
 - `claims` decides which files the preset's checks receive. A `filenames` claim matches at any
   depth (`_headers` under `public/` is `_headers`); an `extensions` claim likewise. A file claimed by no selected preset is unchecked.
@@ -144,13 +166,13 @@ language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
   without it) and `fix` (what to do), written for a person who does not code. The loader refuses an empty one.
 - `explain`, the finding line and the generated page under `docs/rules/` print
   them; nothing else describes a check.
-- `takes = "files"` receives the claimed file list as `{files}`. `takes = "project"` runs once from the scope root and reports its own inputs. Its cache key and file count cover every
+- `runs = "per-file-list"` receives the claimed file list as `{files}`. `runs = "per-scope"` runs once from the scope root and reports its own inputs. Its cache key and file count cover every
   tracked text file under the scope, child scopes included, because the tool reads the project
   rather than the claimed files.
-- A check whose tool owns its baseline names `baseline_file`, `baseline_command` (run at `init` when the check has findings, instead of a count file) and `prune_command` (run by `apply --baseline`). `{baseline}` expands to the file's path; `{suppressions}` expands to the flags that read it, and to nothing while the file does not exist.
+- A check whose tool owns its baseline names `baseline_file`, `baseline_command` (run at `init` when the check has findings, instead of a count file) and `prune_command` (run by `apply --lower-baselines`). `{baseline}` expands to the file's path; `{suppressions}` expands to the flags that read it, and to nothing while the file does not exist.
 - A check with `fix_command` names its `fix_order`. `fix` is the prose that tells a person what to do; `fix_command` is what `check --fix` runs.
 - A check whose exit code does not reflect findings declares `count_regex`.
-- `[required]` names, per extension, the inspection kinds a file needs to count as fully
+- `[inspections]` names, per extension, the inspection kinds a file needs to count as fully
   checked. `doctor` reports files that fall short. Kinds: `format`, `syntax`, `schema`, `style`,
   `types`, `structure`, `naming`, `prose`, `spelling`, `security`, `dependencies`,
   `duplication`, `links`, `freshness`.
@@ -191,14 +213,17 @@ being written.
 ```text
 selected = presets in gspot.toml
          + every preset they require, transitively
-         + structure, naming, formatting when any language preset is present
+
+at init   = detected presets, or the profile's presets
+         + every preset they recommend, minus --without and the cleared choices
+         + every preset they require, transitively
 ```
 
 Order is the order of first mention, dependencies first. Settings merge in that order. A circular
 `requires` fails to load.
 
 A scope's selection is the root selection plus the scope's own. A check runs once per scope
-over that scope's files. Root-only presets (repository kind) run once over the whole tree.
+over that scope's files. Root-only presets (concern kind) run once over the whole tree.
 
 ## Detection
 

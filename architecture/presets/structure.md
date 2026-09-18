@@ -1,6 +1,6 @@
 # `structure`
 
-Kind: repository. Required by every language preset. Runs the structural rules no standard
+Kind: concern. Required by every language preset. Runs the structural rules no standard
 linter ships, over every language, from one engine and one `[limits]` table.
 
 ## Claims
@@ -53,7 +53,7 @@ Every file a language preset claims. The engine dispatches by grammar.
 ## Settings
 
 Every `[limits]` key in the ledger, at the root or under a language table (`limits.python.file_lines`); `structure.reexports` (`none`, `index-only`);
-`structure.trivial_exemptions` (language, path, names, reason); `structure.single_file_folder_allowed`
+`structure.trivial_allowed` (language, path, names, reason); `structure.single_file_folder_allowed`
 (paths, reason); `structure.prefix_collision_allowed` (paths, reason); `structure.call_through_allowed`
 (file, name, reason); `structure.folder_name_allowed` (paths, reason); `architecture.types_directory`;
 `architecture.roles`. Every allowance is a loosening and prints.

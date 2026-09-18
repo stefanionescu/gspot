@@ -1,6 +1,6 @@
 # `config-files`
 
-Kind: repository. Requires: formatting, spelling. Claims every data and configuration file no
+Kind: concern. Requires: formatting, spelling. Claims every data and configuration file no
 language owns, so `.toml`, `.yaml` and `.json` files stop being spell-checked only.
 
 ## Detects and claims
@@ -13,7 +13,8 @@ language owns, so `.toml`, `.yaml` and `.json` files stop being spell-checked on
 
 ## Tools
 
-taplo, yamllint, v8r, actionlint, zizmor, dotenv-linter, plutil (host, macOS), xmllint (host).
+taplo, yamllint, v8r, actionlint, zizmor, dotenv-linter, ansible-lint, plutil (host, macOS),
+xmllint (host).
 Prettier comes from the formatting preset.
 
 ## Generated configuration
@@ -41,6 +42,7 @@ and bare tool runs find it.
 | `config-files/dotenv`           | commit        | `dotenv-linter check {files}` over tracked environment files (`.env*`, `.dev.vars*`); fix, order format                                          |
 | `config-files/env-example`      | push          | engine: every key the code reads through `process.env`, `os.environ` or the declared accessor appears in a template                              |
 | `config-files/plist`            | commit, macOS | `plutil -lint {files}` over `.plist` and `.entitlements`                                                                                         |
+| `config-files/ansible-lint`     | commit        | `ansible-lint {files}` over playbooks and roles, when `ansible.cfg` or a file with a top-level `hosts:` key exists; a platform skip on Windows   |
 | `config-files/xml`              | commit        | `xmllint --noout {files}` over `.xml`, `.storyboard` and `.xib`                                                                                  |
 
 `config-files/env-example` searches the whole scope for reads and compares them with the
@@ -56,4 +58,5 @@ variables, on top of `process.env` and `os.environ`).
 
 ## Rule files
 
-`general/code/CONFIGURATION.md`, `language/YAML.md`, `tool/tasks/TASKS.md`.
+`general/code/CONFIGURATION.md`, `language/YAML.md`, `tool/tasks/TASKS.md`;
+`tool/github-actions/GITHUB-ACTIONS.md` when `.github/workflows/` holds a workflow.

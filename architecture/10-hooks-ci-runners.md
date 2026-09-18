@@ -6,12 +6,12 @@ This document decides where checks run: git hooks, the CI workflow, and the task
 
 Every check declares one stage. The stage decides which hook runs it.
 
-| Stage     | Runs                                                                                                                                                                                              | Over                                                                         | Hook                                                   |
-| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ |
-| `commit`  | checks that need only the source: formatters, linters, type checks, structure, naming, integrity                                                                                                  | staged files; project-wide checks run when any staged file is in their scope | pre-commit                                             |
-| `push`    | everything in `commit` plus checks that need a build, a daemon or the network: container scans, dependency audits, dead-code analysis, link crawls, generated-file freshness, coverage thresholds | the whole tree                                                               | pre-push                                               |
-| `manual`  | checks that take minutes or need credentials: CodeQL, external link verification, image scans                                                                                                     | the whole tree                                                               | none; `gspot check --stage manual` and the CI workflow |
-| `message` | commitlint                                                                                                                                                                                        | the commit message                                                           | commit-msg                                             |
+| Stage     | Runs                                                                                                                                                                                              | Over                                                                         | Hook                                                |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | --------------------------------------------------- |
+| `commit`  | checks that need only the source: formatters, linters, type checks, structure, naming, integrity                                                                                                  | staged files; project-wide checks run when any staged file is in their scope | pre-commit                                          |
+| `push`    | everything in `commit` plus checks that need a build, a daemon or the network: container scans, dependency audits, dead-code analysis, link crawls, generated-file freshness, coverage thresholds | the whole tree                                                               | pre-push                                            |
+| `manual`  | checks that take minutes or need credentials: CodeQL, external link verification, image scans                                                                                                     | the whole tree                                                               | none; `gspot check --at manual` and the CI workflow |
+| `message` | commitlint                                                                                                                                                                                        | the commit message                                                           | commit-msg                                          |
 
 A check requires nothing, or one of `build`, `docker`, `network`. A requirement puts the check in
 `push` at least. A `docker` requirement with no daemon fails; there is no silent pass.
@@ -45,15 +45,18 @@ unstaged changes` so nobody mistakes the verdict for a verdict on the commit alo
 | `husky`    | `.husky/pre-commit`, `pre-push`, `commit-msg` lines                                       | `.husky/` exists      |
 | `none`     | nothing                                                                                   | the person says no    |
 
+The hook runs under the Bash 3.2 that macOS ships, because `#!/usr/bin/env bash` finds that one
+on a machine with no newer Bash (D-85). The body uses no option and no syntax newer than 3.2. A
+planted test runs each hook under `/bin/bash` on macOS.
+
 The gspot hook body:
 
 ```bash
 #!/usr/bin/env bash
 #
 # Written by gspot. Run `gspot uninstall` to remove.
-# Runtime: Bash 4.0+, macOS and Linux.
+# Runtime: Bash 3.2+, macOS and Linux.
 set -euo pipefail
-shopt -s inherit_errexit
 
 main() {
     local -a gspot_command
@@ -137,7 +140,7 @@ jobs:
       - uses: jdx/mise-action@<pinned sha>
       - run: mise run gspot:setup
       - run: gspot check --json > gspot.json
-      - run: gspot check --stage manual
+      - run: gspot check --at manual
         if: github.event_name == 'push' && github.ref == 'refs/heads/main'
       - uses: github/codeql-action/upload-sarif@<pinned sha>
         if: always()
@@ -155,7 +158,22 @@ run over the workflow in the `config-files` preset. The workflow is a generated 
 the header and `apply --check` guards it.
 
 Without mise in the repository the workflow installs gspot from the release asset by version and
-runs `gspot doctor` first so a missing tool fails with its install hint.
+runs `gspot doctor` first so a missing tool fails with its install hint. The step maps the
+runner to the asset name, because `uname -m` prints `x86_64` and `aarch64` and the assets end in
+`x64` and `arm64`. It downloads `checksums.txt` from the same release and stops when the SHA-256
+differs. The Windows job downloads `gspot-windows-x64.exe` with PowerShell into the workspace,
+not into `/usr/local/bin`.
+
+| Runner          | Asset                   |
+| --------------- | ----------------------- |
+| Linux, x86_64   | `gspot-linux-x64`       |
+| Linux, aarch64  | `gspot-linux-arm64`     |
+| macOS, arm64    | `gspot-darwin-arm64`    |
+| macOS, x86_64   | `gspot-darwin-x64`      |
+| Windows, x86_64 | `gspot-windows-x64.exe` |
+
+The `manual` stage runs on the default branch, which the workflow reads from
+`github.event.repository.default_branch`, not from a branch name.
 
 ## Reproduce lines
 

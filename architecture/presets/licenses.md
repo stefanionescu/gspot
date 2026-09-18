@@ -1,6 +1,6 @@
 # `licenses`
 
-Kind: repository. Selected by default when a manifest exists.
+Kind: concern. Selected by default when a manifest exists.
 
 ## Claims
 

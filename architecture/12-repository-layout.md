@@ -67,7 +67,7 @@ ask.
 | SARIF for CI                                          | `node-sarif-builder`                                                 | the `.gspot/last.sarif` rendering                                                                                                    |
 | Shell completions                                     | `@bomb.sh/tab` with its commander adapter                            | `gspot completion <shell>`; the same library Wrangler, Nuxt, Astro, and Vitest use                                                   |
 | JSON schema for `gspot.toml`                          | zod v4 `z.toJSONSchema`                                              | `gspot.schema.json`, published to SchemaStore each release                                                                           |
-| Baselines where the tool has its own                  | ESLint bulk suppressions, `basedpyright --writebaseline`             | gspot drives the tool's file under `.gspot/baseline/`; the editor honors the same file                                               |
+| Baselines where the tool has its own                  | ESLint bulk suppressions, `basedpyright --writebaseline`             | gspot drives the tool's file under `.gspot/baselines/`; the editor honors the same file                                              |
 | Split identifiers into parts                          | `scule` (`splitByCase`, the case functions)                          | the naming engine's splitter; the whole-part matcher stays gspot's (D-08)                                                            |
 | Find workspace packages                               | `@manypkg/get-packages`                                              | npm, pnpm, yarn, bun, Lerna and Rush workspaces from one call; scopes come from its answer                                           |
 | Read and write JSON with comments                     | `jsonc-parser` (`modify`, `applyEdits`)                              | the `tsconfig.json` `extends` stub and the `.vscode/*.json` managed entries without losing a comment                                 |
@@ -107,8 +107,19 @@ library is maintained and does the whole job.
 - The npm release publishes one platform package per target plus the launcher package, all at one version.
 - The launcher resolves the installed platform package by `process.platform` and `process.arch`, and fails with the install hint when none is present.
 - `@gspot/eslint-plugin` builds with `bun build` to ESM and CommonJS, versioned with the binary.
+- The plugin exports `configs.recommended`, a flat config with every rule on at its shipped
+  options, so a person who installs the plugin alone writes one line (D-88).
+- The plugin matches paths with `picomatch`, the matcher the binary uses, so one pattern in
+  `gspot.toml` means one thing.
 
 ## Release
+
+The version has one source: `version` in `packages/cli/package.json` (D-84). The build passes it
+to the binary with `--define`, the plugin build writes it into `meta.version`, and `publish.ts`
+reads it for every npm manifest. The release workflow fails when the tag differs from it. The
+workflow sets `GSPOT_RELEASE_TEST=1` and runs `tests/release` against the binaries it built,
+before it publishes. One more test starts the compiled binary of the runner's platform in a
+planted repository and runs `init --yes` and `check`.
 
 Nothing in the release path is code gspot wrote:
 
@@ -145,6 +156,9 @@ Tests never call the network. Tools run in CI through mise pins; a missing tool 
 run, never skips it. The acceptance suite needs the reference repositories checked out beside
 gspot and is the one suite that runs outside CI. A `--json` test asserts the documented shape
 of every command's JSON output, because agents drive gspot through it.
+
+`bun test --coverage` runs in CI and the summary is part of the run. A check id that no test
+names fails the unit test `every shipped check has a test`, which walks `presets/*/manifest.toml`.
 
 ## Self-lint
 

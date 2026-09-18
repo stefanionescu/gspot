@@ -1,6 +1,6 @@
 # `commits`
 
-Kind: repository. Selected by default.
+Kind: concern. Selected by default.
 
 ## Tools
 

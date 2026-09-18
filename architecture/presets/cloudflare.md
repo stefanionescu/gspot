@@ -37,4 +37,4 @@ rule file states them.
 
 ## Rule files
 
-`runtime/workers/WORKERS.md`; `tool/github-actions/GITHUB-ACTIONS.md` when workflows deploy.
+`runtime/workers/WORKERS.md`. The config-files preset installs the GitHub Actions rule file.

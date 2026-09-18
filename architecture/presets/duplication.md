@@ -1,6 +1,6 @@
 # `duplication`
 
-Kind: repository. Copy-paste detection across every language.
+Kind: concern. Copy-paste detection across every language.
 
 ## Tools
 

@@ -1,6 +1,6 @@
 # `static-site`
 
-Kind: repository. Requires: html, css, javascript. For a site built to a directory and served
+Kind: concern. Requires: html, css, javascript. For a site built to a directory and served
 as files: the checks that only make sense over built output.
 
 ## Detects and claims

@@ -16,7 +16,7 @@ arranged by layer:
 | runtime    | `runtime/<name>/`                       | `NODE.md`, `BUN.md`, `DENO.md`, `BROWSER.md`, `WORKERS.md`                                                                                                                                                                                                                             | detected runtime                       |
 | framework  | `framework/<name>/`                     | `NEXTJS.md` with `SECURITY.md`, `REACT.md`, `EXPRESS.md` with `API.md` and `OPENAPI.md`, `FASTAPI.md` with `RUNTIME.md`, `SWIFTUI.md`, `UIKIT.md`                                                                                                                                      | the framework preset                   |
 | library    | `library/<name>/`                       | `ZOD.md`, `DRIZZLE.md`, `TRPC.md`, `TANSTACKQUERY.md`, `ZUSTAND.md`, `REACTHOOKFORM.md`, `NEXTINTL.md`                                                                                                                                                                                 | the library preset                     |
-| tool       | `tool/<name>/`                          | `DOCKER.md`, `NGINX.md`, `VITEST.md`, `PLAYWRIGHT.md`, `GITHUB-ACTIONS.md`, `XCODE.md`, `TAILWIND.md`, `COMMITLINT.md`, `TASKS.md`                                                                                                                                                     | the tool preset                        |
+| tool       | `tool/<name>/`                          | `DOCKER.md`, `NGINX.md`, `VITEST.md`, `PLAYWRIGHT.md`, `GITHUB-ACTIONS.md`, `XCODE.md`, `XCTEST.md` (owed with the xctest preset), `TAILWIND.md`, `COMMITLINT.md`, `TASKS.md`                                                                                                          | the tool preset                        |
 | platform   | `platform/supabase/`                    | `SUPABASE.md`                                                                                                                                                                                                                                                                          | the platform preset                    |
 | database   | `database/postgres/`                    | `POSTGRES.md`                                                                                                                                                                                                                                                                          | the database preset                    |
 | shared     | `shared/`                               | `http/HTTP.md`, `i18n/I18N.md`                                                                                                                                                                                                                                                         | any preset that lists the shared block |
@@ -24,7 +24,7 @@ arranged by layer:
 | templates  | `templates/docs/`, `templates/project/` | document templates; project architecture templates                                                                                                                                                                                                                                     | offered once at init, never upgraded   |
 | project    | the repository's own                    | whatever the team writes                                                                                                                                                                                                                                                               | never written by gspot                 |
 
-Each preset manifest names its files under `[rules]`. A file belongs to exactly one preset.
+Each preset manifest names its files under `[rule_files]`. A file belongs to exactly one preset.
 
 The agent layer tells the agent how to work in a repository; the code and prose layers say
 what the code and text must look like. The split matters because the agent files are installed
@@ -106,8 +106,11 @@ title: Python            # equals the H1
 
 ## Rules say nothing about tooling
 
-A rule file states the rule and nothing else. It names no check, no tool, and no enforcement
-state (D-73). What the gate enforces is the ledger's business ([06-enforcement-ledger.md](06-enforcement-ledger.md)), not the reader's.
+A rule file states the rule and nothing else. It names no check, no tool, no enforcement state
+(D-73), and not gspot (D-81). Where a rule needs the idea, it names the checks of the
+repository and nothing more specific. A person who installs the rule files alone reads nothing about a tool they do not
+have. The corpus lint fails on `gspot` and on the name of any tool a preset pins, outside a code
+fence. What the gate enforces is the ledger's business ([06-enforcement-ledger.md](06-enforcement-ledger.md)), not the reader's.
 
 ## Size
 
@@ -147,14 +150,26 @@ Run `gspot check --staged` before committing. Change policy with `gspot set`, `g
 <!-- <<< gspot managed <<< -->
 ```
 
+The closing paragraph depends on what is installed (D-81). With at least one check selected it
+reads as above. With rule files alone (`presets = []`) it keeps only the sentence about
+subagents, and adds: "These files are installed copies. Change `[rules]` in `gspot.toml` and run
+`gspot apply`, and never edit files under the rules directory."
+
+`[rules] exclude` leaves files out. An entry is a file path under the corpus
+(`general/code/ACCESSIBILITY.md`) or a layer folder (`library`). An entry that matches no corpus
+file fails the load with the near matches. `general/agent/WORKING.md` and
+`general/prose/WRITING.md` cannot be excluded while the block tells the reader to open them first.
+
 The block is regenerated on every `apply`; text outside the markers is never read or moved. The
 table lists layers by area, names each file, and states precedence. When the repository has a
 project rule directory (`[rules] project = "rules/project"`), the block links it last.
 
 ## Corpus lint
 
-`gspot apply --check` lints the corpus the binary carries (`packages/cli/src/rules/lint.ts`)
-so every change to the corpus goes through the gate of this repository:
+The corpus lint belongs to this repository, not to the binary's commands (D-86). It runs as the
+`[[check]]` entry `corpus/lint` in this repository's `gspot.toml`, at the commit stage, over
+`rules/**`. `gspot apply --check` in another repository reports drift and nothing else. The word
+lists below live beside the script under `packages/cli/corpus-lint/` and are not embedded:
 
 - Front matter present; layer matches the path; preset is an id or `none`; title equals the H1.
 
@@ -164,6 +179,7 @@ so every change to the corpus goes through the gate of this repository:
   repository, product, layout path, or deployment target outside code formatting.
 - Every fenced code block has a language tag from the allowed set and is closed.
 - The corruption phrase list from the repair pass returns nothing.
+- No file names gspot or a pinned tool outside a code fence.
 - Vale with the `gspot` style under `prose/styles/gspot/` (30 rules, every alert an error) when
   the binary is installed.
 

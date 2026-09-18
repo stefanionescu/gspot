@@ -25,7 +25,7 @@ a fixer exists. The reporter, the baseline and the ignore filter never know whic
 Runs external tools. Owns nothing about what they find.
 
 - **File lists, always.** gspot computes the file set (the files git tracks or is about to track, filtered by claims, scope, declarations and ignores) and passes it to the tool.
-- **Tools that walk the tree** (`takes = "project"`) receive a generated ignore file that mirrors git's ignored set and the declarations. gspot compares what the tool reported against the list it expected.
+- **Tools that walk the tree** (`runs = "per-scope"` or `"once"`) receive a generated ignore file that mirrors git's ignored set and the declarations. gspot compares what the tool reported against the list it expected.
 - **Explicit configuration.** Every tool receives its config path by flag. Discovery is for
   editors; the runner never relies on it.
 - **Concurrency.** Checks within a stage run in parallel up to the CPU count. Checks that share a

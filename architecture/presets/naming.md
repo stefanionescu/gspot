@@ -1,6 +1,6 @@
 # `naming`
 
-Kind: repository. Required by every language preset. Runs the naming engine over every language
+Kind: concern. Required by every language preset. Runs the naming engine over every language
 with the shipped policy in [../08-naming-policy.md](../08-naming-policy.md).
 
 ## Claims

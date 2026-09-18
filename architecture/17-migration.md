@@ -308,6 +308,46 @@ enforced still runs, at the strictest value observed, behind a baseline that onl
 Changing anything is one `gspot set`, `allow` or `ignore` line, and `gspot explain` says what
 every finding means and what to do.
 
+## What the yap-swift-app migration waits for
+
+The migration deletes `quality/`, `.githooks/`, 35 tasks, `LINTING.md` and the old `rules/`. It
+runs only when every check that folder performs has a gspot check that passed in the acceptance
+harness. These presets close it, in the build order of [13-roadmap.md](13-roadmap.md):
+
+| Scope or concern | Presets it needs                                                           | Phase   | Ships today |
+| ---------------- | -------------------------------------------------------------------------- | ------- | ----------- |
+| every scope      | bash, typescript, javascript, markdown, prose, commits, config-files, docs | 0 and 1 | yes         |
+| every scope      | secrets, security, dependencies, licenses, duplication                     | 5       | no          |
+| `supabase/`      | sql, postgres, supabase                                                    | 2       | no          |
+| `api/`           | express, docker, nginx                                                     | 2       | no          |
+| `ios/`           | swift, xcode, xctest                                                       | 4       | no          |
+
+Three exception files live under `quality/config/security/`, where takeover does not look, so
+step 0 below moves them first:
+
+- the Semgrep project and pattern lists;
+- the CodeQL false-positive list;
+- the Trivy settings.
+  `bearer.yml` is deleted with its ignores carried to
+  Semgrep, as [presets/security.md](presets/security.md) says.
+
+Until Phase 4 closes, gspot can take over the TypeScript, shell, Markdown, commit and
+configuration checks of that repository and nothing else, and `quality/` stays.
+
+## Dependencies that need no preset
+
+These appear in the four reference repositories and get no preset, because no reference
+repository holds a rule file or a lint rule for them:
+
+- API libraries: pino, Sentry, prom-client, helmet, opossum, `ws`, sharp, onnxruntime.
+- Python libraries: `websockets`, OpenTelemetry, Hugging Face, vLLM, TensorRT.
+- Web libraries and build tools: Radix UI, markdown-it, esbuild.
+
+The WebSocket lines of the reference rule files live in the project templates
+`API-ARCHITECTURE.md` and `INFERENCE-VOCABULARY.md`, and in `TRPC.md`. The three `.vtt` caption
+files in slopshop stay unclaimed, and `doctor` lists them. `@eslint/json` is a dependency in two
+repositories, and no configuration uses it.
+
 ## How the migration runs
 
 0. When exception lists live inside the lint folder rather than at conventional paths (a `shellcheckrc`, an osv config, a gitleaks allowlist, a license policy), `git mv` them to the conventional path. Takeover carries them from there and does not search for them.

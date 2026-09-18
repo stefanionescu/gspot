@@ -34,6 +34,30 @@ manager's install) or move the pin (`gspot upgrade --to <this version>`). `init`
 A newer gspot is announced in three places and nowhere else: the last line of `init`, `doctor`,
 and `upgrade --check`. `check`, `apply` and the hooks never look.
 
+## Where gspot is published
+
+A person outside this repository installs gspot from one of three places, and all three carry the
+same version from one release run:
+
+| Place          | Holds                                                                                    | Used by                                                          |
+| -------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
+| GitHub release | the five binaries and `checksums.txt`, each binary attested                              | `mise use ubi:stefanionescu/gspot`, the workflow without mise    |
+| npm            | `gspot`, one `@gspot/cli-<os>-<cpu>` package for each target, and `@gspot/eslint-plugin` | `bunx gspot`, `npx gspot`, the ESLint configuration gspot writes |
+| `gspot.dev`    | the manual, `schema/gspot.schema.json` and `schema/run-record.schema.json`               | the `#:schema` line of every `gspot.toml`, editors, SchemaStore  |
+
+Until a release exists, a repository on another machine or a CI runner cannot install gspot, and
+the ESLint configuration cannot resolve `@gspot/eslint-plugin`. On the machine that holds this
+repository, `GSPOT_BIN` names the source entry (`bun <path>/packages/cli/src/main.ts`), the hooks
+read it, and nothing needs publishing. The acceptance runs use that.
+
+The first release needs these, in this order:
+
+1. The npm organization `gspot` and the package name `gspot`.
+2. A public repository, or a token that `ubi` and the workflow can read.
+3. Trusted publishing set up for each package.
+4. The domain serving `docs/dist`.
+5. The hardening phase of [13-roadmap.md](13-roadmap.md) closed.
+
 ## Pins
 
 Every preset lists its tools with one version and the name under each installer:
@@ -190,7 +214,7 @@ the release note. Nothing migrates `gspot.toml` automatically.
 `gspot upgrade --to 0.4.0` re-renders from the older version. Because generated files, baselines
 and rule files are tracked, `git revert` of the upgrade commit followed by `gspot apply` also
 restores the previous state. A baseline written by the newer version for a rule the older one
-lacks is reported by `apply --check` and removed by `apply --baseline`.
+lacks is reported by `apply --check` and removed by `apply --lower-baselines`.
 
 ## Network
 

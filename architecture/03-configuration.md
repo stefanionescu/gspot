@@ -11,7 +11,7 @@ This document decides the one file a person edits, the files gspot owns, and how
 | `.gspot/<tool>.<ext>`                              | gspot                              | yes     | Generated tool configuration. Header names the writer.                                                                                                                                                                  |
 | `.gspot/version`                                   | gspot                              | yes     | The gspot version this repository runs. One line. Written by `init`, moved by `upgrade`.                                                                                                                                |
 | `.gspot/hooks/*`                                   | gspot                              | yes     | Git hooks.                                                                                                                                                                                                              |
-| `.gspot/baseline/*.json`                           | gspot                              | yes     | Recorded finding counts.                                                                                                                                                                                                |
+| `.gspot/baselines/*.json`                          | gspot                              | yes     | Recorded finding counts.                                                                                                                                                                                                |
 | `.gspot/rules/**`                                  | gspot                              | yes     | Installed agent rule files.                                                                                                                                                                                             |
 | `.gspot/cache/**`                                  | gspot                              | no      | Check results keyed on inputs.                                                                                                                                                                                          |
 | `.gspot/last.json`                                 | gspot                              | no      | The last run.                                                                                                                                                                                                           |
@@ -205,11 +205,12 @@ provider = "github"        # github | none
 install   = true
 directory = ".gspot/rules"
 project   = "rules/project"
+exclude   = []             # rule files or layer folders to leave out: "general/code/ACCESSIBILITY.md", "library"
 
 [editor]
 vscode = true              # writes managed blocks into .vscode/settings.json and extensions.json
 
-[coverage]
+[inspection]
 strict = false             # true: unchecked files fail `check`
 
 [runner]
@@ -223,7 +224,7 @@ surface = "mise"           # mise | npm | bun | pnpm | uv | none
   prefers the editor edits the file; the result is the same and is validated on the next load.
 - Presets are bare names. A preset that does not exist fails to load, with the near matches.
 - A setting a selected preset does not expose fails to load, with the settings that exist under
-  that table. The surface is finite and `gspot doctor --settings` prints it.
+  that table. The settings catalog is finite and `gspot doctor --settings` prints it.
 - A `[[scope]]` path names a directory that exists. Scopes do not nest.
 - Every `[[ignore]]` carries a `reason` that is a sentence. `N/A`, `TBD`, `-` and an empty
   string are refused. Every ignore prints on every run with `--verbose` and is counted in the
@@ -291,6 +292,43 @@ slot covers yet, so a missing slot never blocks a person. Every `extra` table pr
 release adds a slot for a key an `extra` table holds, so the key moves up and the escape hatch
 empties over time. A key in `extra` that a slot already covers fails to load and names the slot.
 
+## Profiles
+
+A profile is a TOML file with the schema of `gspot.toml` and three differences (D-79):
+
+| Difference | Rule                                                                                                                                         |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
+| Head       | `profile = "<name>"` and `selection = "exact"` or `"detect"` stand beside `version` and `presets`.                                           |
+| Left out   | `[[scope]]`, `[[ignore]]`, `[[declare]]`, `[[check]]` and any list entry with `paths` are refused, because a path belongs to one repository. |
+| Reasons    | A loosened setting keeps its reason. The reason travels with the profile.                                                                    |
+
+`selection = "exact"` installs the named presets and the presets they require, and nothing else.
+Detection still runs, and the plan lists what it found and did not install. `selection =
+"detect"` adds the detected presets to the named ones. A profile with no tool settings takes
+every shipped default.
+
+```toml
+version   = 1
+profile   = "house-style"
+selection = "exact"
+presets   = ["typescript", "formatting", "spelling", "markdown", "commits"]
+
+[format]
+indent_width = 2
+
+[rules]
+install = true
+exclude = ["general/code/ACCESSIBILITY.md"]
+
+[hooks]
+tool = "lefthook"
+```
+
+`init --from` copies the profile's tables into the new `gspot.toml`. The repository does not
+point back at the profile, so the policy stays one file and a later change to the profile
+changes nothing here. Rejected: an `extends` key, which makes every check run depend on a second
+file and, for a URL, on the network.
+
 ## Merge order
 
 For every setting:
@@ -318,16 +356,16 @@ values fail at load with both presets named; a person resolves it with an explic
 ```
 
 - `init` writes one file per rule that has findings. The gate passes that day.
-- Where a tool has its own baseline mechanism, gspot drives it instead of counting. ESLint has bulk suppressions (`--suppress-all` at `init`, `--suppressions-location .gspot/baseline/eslint.json` on every run, `--prune-suppressions` under `apply --baseline`); basedpyright has `--writebaseline` with the file under `.gspot/baseline/`.
+- Where a tool has its own baseline mechanism, gspot drives it instead of counting. ESLint has bulk suppressions (`--suppress-all` at `init`, `--suppressions-location .gspot/baselines/eslint.json` on every run, `--prune-suppressions` under `apply --lower-baselines`); basedpyright has `--writebaseline` with the file under `.gspot/baselines/`.
 - The tool then honors
   the same file in the editor, so the editor and the gate agree. Every other check uses the count
   file above. The person sees one command either way.
 - `check` fails when the count exceeds the baseline, or when a touched file's own count grows.
   A count below the baseline passes and prints.
-- `apply --baseline` lowers every baseline to the last run's counts. It never raises one.
+- `apply --lower-baselines` lowers every baseline to the last run's counts. It never raises one.
 - Format, syntax, and schema findings never baseline. A formatter run fixes them in one commit.
 - A baseline for a rule that has been removed is reported by `apply --check` and removed by
-  `apply --baseline`.
+  `apply --lower-baselines`.
 
 ## `gspot.local.toml`
 
@@ -348,10 +386,10 @@ a generated-file banner the preset knows, and a content sniff for binaries, in t
 | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | source    | everything the selected presets claim for its extension                                                                                                                                                                                                        |
 | generated | secrets, freshness (run `produced_by` and diff). Freshness applies to tracked files only: a generated file that git ignores (`next-env.d.ts`, `cloudflare-env.d.ts`) is regenerated by the build and has nothing to compare, so the check skips it and says so |
-| vendored  | secrets, licenses, vulnerabilities                                                                                                                                                                                                                             |
+| vendored  | secrets, licenses, security                                                                                                                                                                                                                                    |
 | binary    | secrets, size limit unless under LFS                                                                                                                                                                                                                           |
 
-A source file no preset claims is `unchecked`. `doctor` lists it. With `[coverage] strict = true`
+A source file no preset claims is `unchecked`. `doctor` lists it. With `[inspection] strict = true`
 it fails `check`.
 
 ## Path selectors

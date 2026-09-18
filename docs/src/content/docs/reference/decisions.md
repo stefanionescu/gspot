@@ -583,3 +583,119 @@ scope's `tsconfig.json` uses the Bundler resolution the Astro plugins need.
 
 Rejected: a generated header, which takes the check texts out of the prose gate, and Markdown
 links with file extensions, which the site does not serve.
+
+## D-79 A profile carries a policy between repositories
+
+Recorded 2026-09-18. A profile is a TOML file with the schema of `gspot.toml`, a `profile` name,
+a `selection` mode, and no entry that names a path. `gspot profile save` writes one,
+`gspot profile check` validates one, and `gspot init --from` installs from one, by path, `https`
+URL or `github:owner/repo`.
+
+`init` validates the profile before it reads the repository and
+prints every problem in one pass. `selection = "exact"` installs the named presets and what they
+require, and nothing else. `init` copies the tables, and the repository keeps no link to the
+profile. Sixteen commands. Rejected: an `extends` key, which makes every run depend on a second
+file, and a user-level default profile, which makes two machines install two policies from one
+command.
+
+## D-80 `requires` is what breaks, `recommends` is what ships together
+
+A preset requires only what it cannot run without. Every language preset recommends `structure`,
+`naming`, `formatting` and `spelling`, and `init` selects them unless the person clears them.
+`--without`, `gspot remove` and a profile drop a recommended preset. Dropping a required one
+fails with the chain.
+
+Amends the field rules in [04-presets.md](https://github.com/stefanionescu/gspot/blob/main/architecture/04-presets.md). Rejected: keeping
+the four as requirements and pointing people at `gspot ignore`. That leaves the tools installed
+and the configuration written, with one ignore entry for each check.
+
+## D-81 The rule files and the checks install apart
+
+`init --presets none` installs the rule files and no check. `init --rules no` installs the checks
+and no rule file. The rule files do not name gspot, the managed block mentions `gspot check` only
+when a check is selected, and `[rules] exclude` leaves files or layers out. Amends D-73.
+Rejected: one boolean for the whole corpus, which makes a library carry the accessibility and
+command-line rules it has no use for.
+
+## D-82 The build order is hardening, 5, 2, 4, 3
+
+The build order in `13-roadmap.md` is: the hardening phase, then Phase 5
+(security), Phase 2 (Python, SQL, containers), Phase 4 (Swift) and Phase 3 (the web). The
+acceptance run on yap-swift-app needs the security presets, SQL, Supabase, Docker, and nginx
+before the Swift presets can close it. Amends D-62. Rejected: Swift first, which ends with a
+repository whose secrets, advisories, licenses, and migrations nothing checks.
+
+## D-83 `init` validates, writes, runs, then deletes
+
+`init` checks every flag against its list and refuses a working tree with uncommitted changes
+unless `--allow-dirty` is given. It writes the new files, runs the install and the first check,
+and deletes the replaced files last. A failure before the last step leaves the old configuration in place.
+Rejected: a backup folder, which git already is.
+
+## D-84 The version has one source
+
+`version` in `packages/cli/package.json` is the version of the binary, the plugin, and every npm
+package. The build defines it into the binary. The release workflow fails when the tag differs.
+Rejected: a literal in the source, which a tag does not change.
+
+## D-85 Hooks run under Bash 3.2, and the workflow names assets by table
+
+The hook body uses nothing newer than Bash 3.2. The workflow without mise maps the runner to the
+asset name and verifies the SHA-256 against `checksums.txt`. Rejected: requiring Bash 4 for the
+hook, which stops every commit on a Mac with no second Bash.
+
+## D-86 The binary carries nothing about this repository
+
+The corpus lint, the layer boundary word list and the corruption phrase list are a `[[check]]`
+of this repository. `apply --check` reports drift only. Rejected: linting the embedded corpus in
+every repository, which spends a Vale run on text the person cannot change.
+
+## D-87 A tool row is a binary or a library
+
+`kind = "library"` marks an npm package that is imported, not run. `doctor` reads its version
+from `node_modules`. A version that differs from the pin fails `doctor`, newer or older, because
+a pin that is not held is not a pin. A binary file with no secrets preset selected reads `not
+checked`.
+
+## D-88 The plugin stands alone
+
+`@gspot/eslint-plugin` exports `configs.recommended` and matches paths with `picomatch`.
+Rejected: a matcher of its own, which gives one pattern two meanings.
+
+## D-89 File lists are batched and every spawn ends
+
+A `{files}` expansion is split so that no command line passes 100,000 bytes, or 30,000 on
+Windows. The batches of one check run in order and their findings join. Every tool run has a
+timeout from `limits.tool_seconds` (default 600, a ceiling), and a run that passes it is an
+`error` result that names the tool. A fixer that exits with an error is reported, not counted as
+run. `check --fix --dry-run` copies the claimed files and the generated configuration, and links
+`node_modules` and `.venv` instead of copying them.
+
+## D-90 `[[check]]` is the extension point, and it can parse
+
+A `[[check]]` entry takes `output`, with the formats a manifest has (`regex`, `grouped`, `lines`,
+`eslint-json`, `none`). Rejected for v1: preset folders in the repository. A preset outside the binary is not
+covered by the version pin, and the pin is what makes two repositories run the same rules.
+
+## D-91 Code for a preset arrives with the preset
+
+A table row, a carry reader, an allow list or a workflow job that serves a preset ships in the
+commit that ships the preset. `gspot allow` lists only the lists of selected presets. The core
+names no preset id: what a preset adds to the workflow, the hooks or `apply` is a key in its
+manifest. Rejected: rows kept ready for later phases, which read as working features and are not.
+
+## D-92 One word, one meaning
+
+A word carries one meaning in the code, the setting keys, the manifest keys, the flags, and the
+folders. [19-names.md](https://github.com/stefanionescu/gspot/blob/main/architecture/19-names.md) lists the words that carried more, the ideas that had several
+names, and the names that said the wrong thing, each with its one name. The glossary in the
+README of this folder holds the words that stay. Rejected: keeping a name because it passes the
+naming policy. The policy measures length, case and banned terms, and none of those sees a word
+used twice.
+
+## D-93 Swift tests get a preset
+
+`xctest` covers XCTest, Swift Testing and snapshot tests, as `vitest` and `pytest` cover theirs.
+It checks disabled tests for a reason, sleeps, a recording mode left on, snapshot references
+with no test, and coverage. Rejected: leaving tests to the five SwiftLint test rules, which see
+one file at a time and no snapshot folder.
