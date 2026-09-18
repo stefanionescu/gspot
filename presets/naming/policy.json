@@ -90,6 +90,7 @@
                 "belt and suspenders",
                 "fallback",
                 "load bearing",
+                "load-bearing",
                 "loadbearing"
             ]
         },
@@ -420,6 +421,12 @@
             "structuralPrefix": "^_+"
         },
         {
+            "paths": ["**"],
+            "languages": ["typescript", "javascript"],
+            "categories": ["parameters", "variables"],
+            "structuralPrefix": "^_+"
+        },
+        {
             "paths": ["**/.githooks/**", "**/.gspot/hooks/**", "**/.husky/**", "**/hooks/**"],
             "categories": ["files"],
             "names": [
@@ -466,6 +473,26 @@
             "paths": ["**/.mise/tasks/**", "**/scripts/steps/**"],
             "categories": ["files"],
             "structuralPrefix": "^\\d{2}-"
+        },
+        {
+            "paths": ["**/*.md"],
+            "categories": ["files"],
+            "structuralPrefix": "^\\d{2}-",
+            "reason": "Documents read in order carry a two-digit prefix."
+        },
+        {
+            "paths": ["**"],
+            "categories": ["directories", "files"],
+            "names": ["i18n", "I18N", "l10n", "L10N", "a11y", "A11Y"],
+            "exclude": true,
+            "reason": "Numeronyms are words."
+        },
+        {
+            "paths": ["**/ADVANCED.md"],
+            "categories": ["files"],
+            "names": ["ADVANCED"],
+            "exclude": true,
+            "reason": "The docs template names the advanced guide."
         }
     ]
 }

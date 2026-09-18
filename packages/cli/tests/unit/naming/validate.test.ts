@@ -1,0 +1,113 @@
+import { describe, expect, test } from 'bun:test';
+import { compileTerms } from '#cli/naming/match.ts';
+import { pathMatcher } from '#cli/presets/claims.ts';
+import { nameProblems } from '#cli/naming/validate.ts';
+import type { EffectivePolicy, Identifier } from '#types/naming.ts';
+
+function caseFor(language: string, category: string): string[] {
+    if (category === 'types') return ['pascal'];
+    return language === 'bash' ? ['snake'] : ['camel'];
+}
+
+const policy: EffectivePolicy = {
+    terms: compileTerms(['enhanced', 'handler', 'fixture'], 'marketing group'),
+    reserved: new Map([['config', ['configuration directory', 'configuration variable']]]),
+    external: new Set(['setTimeout']),
+    allowed: new Map([['enhancedThing', 'a reason']]),
+    contractProperties: new Map([['api/route.ts', new Set(['Retry-After'])]]),
+    rules: [
+        {
+            isPath: pathMatcher(['**']),
+            languages: undefined,
+            categories: new Set(['variables']),
+            names: new Set(['i', '_']),
+            isExcluding: true,
+            isDigitsAllowed: false,
+            isDuplicatesAllowed: false,
+            structuralPrefix: undefined,
+            caseNames: undefined,
+            source: 'shipped rule 1',
+        },
+        {
+            isPath: pathMatcher(['**/e2e/**']),
+            languages: undefined,
+            categories: undefined,
+            names: undefined,
+            isExcluding: false,
+            isDigitsAllowed: true,
+            isDuplicatesAllowed: false,
+            structuralPrefix: undefined,
+            caseNames: undefined,
+            source: 'shipped rule 2',
+        },
+        {
+            isPath: pathMatcher(['**/*.sh']),
+            languages: new Set(['bash']),
+            categories: new Set(['functions']),
+            names: undefined,
+            isExcluding: false,
+            isDigitsAllowed: false,
+            isDuplicatesAllowed: false,
+            structuralPrefix: /^_+/u,
+            caseNames: undefined,
+            source: 'shipped rule 3',
+        },
+    ],
+    languages: {},
+    limitsFor: (language, category) => ({
+        caseNames: caseFor(language, category),
+        maxChars: 20,
+        maxWords: 3,
+    }),
+    isDigitsBanned: true,
+    isDuplicatesBanned: true,
+};
+
+const plain = { policy, isReactFile: false, isTestFile: false };
+
+function identifier(name: string, category = 'functions', file = 'src/a.ts', language = 'typescript'): Identifier {
+    return { file, line: 1, column: 1, language, category, kind: `${language} ${category}`, name };
+}
+
+describe('nameProblems', () => {
+    test('reports every problem a name has, with the policy source', () => {
+        const rules = nameProblems(identifier('enhancedHandler2UserUser'), plain).map((problem) => problem.rule);
+        expect(rules).toEqual(['digits', 'length', 'words', 'duplicate-words', 'banned-term']);
+        expect(
+            nameProblems(identifier('enhancedHandler2UserUser'), plain).find(
+                (problem) => problem.rule === 'banned-term',
+            )?.source,
+        ).toBe('marketing group');
+    });
+
+    test('case follows the category, and file stems are checked by dot segment', () => {
+        expect(nameProblems(identifier('my_type', 'types'), plain)[0]?.rule).toBe('case');
+        expect(
+            nameProblems(identifier('bash.test', 'files'), {
+                ...plain,
+                policy: { ...policy, limitsFor: () => ({ caseNames: ['kebab'], maxChars: 35, maxWords: 4 }) },
+            }),
+        ).toEqual([]);
+    });
+
+    test('exclusions, digit allowances, structural prefixes and exemptions apply', () => {
+        expect(nameProblems(identifier('i', 'variables'), plain)).toEqual([]);
+        expect(nameProblems(identifier('user2', 'variables', 'tests/e2e/a.ts'), plain)).toEqual([]);
+        expect(nameProblems(identifier('_private_step', 'functions', 'scripts/a.sh', 'bash'), plain)).toEqual([]);
+        expect(nameProblems(identifier('setTimeout'), plain)).toEqual([]);
+        expect(nameProblems(identifier('enhancedThing'), plain)).toEqual([]);
+        expect(
+            nameProblems(identifier('Retry-After', 'properties', 'api/route.ts'), plain).map((problem) => problem.rule),
+        ).toEqual(['case']);
+    });
+
+    test('a reserved term is allowed only in its named uses', () => {
+        expect(nameProblems(identifier('config', 'variables'), plain)).toEqual([]);
+        expect(nameProblems(identifier('configOf'), plain)[0]?.rule).toBe('reserved-term');
+    });
+
+    test('handle leads a name only in a React file', () => {
+        expect(nameProblems(identifier('handleSubmit'), plain)[0]?.rule).toBe('callback-verb');
+        expect(nameProblems(identifier('handleSubmit'), { policy, isReactFile: true, isTestFile: false })).toEqual([]);
+    });
+});
