@@ -62,12 +62,15 @@ content with no counterpart. The repair pass restored each into the file named.
 | Static site: boundaries, build, routes, HTML, CSS and content naming, tests and fixtures naming | `repository/static-site/STATIC-SITE.md`, `language/naming/HTML.md`, `language/naming/CSS.md`, `general/code/TESTING.md` |
 | The iOS and API architecture, Supabase deployment, inference vocabulary | `templates/project/` |
 
-The completeness check below is clean as of 2026-09-18: 7,616 source statements, 6,551 matched
-exactly or as duplicates, 220 matched at the fuzzy ratio, 490 listed in `DROPPED.md`, 355
-dropped with a recorded reason (292 decisions, 38 restatements, 17 superseded, 8 owned by a
-formatter), none unresolved. The reasons live in `reference-rules/DROPPED.md` and
-`reference-rules/lint/dropped-manual.json`. What Phase 6 still owes is code, not editing: the
-assembler, the corpus lint inside the binary, and a Vale run in the gate.
+Both guards are clean as of 2026-09-18. The completeness check: 7,616 source statements, 6,443
+matched exactly or as duplicates, 255 at the fuzzy ratio, 354 listed in `DROPPED.md`, 564 with
+a recorded reason (including the 48 statements the prose pass split into shorter ones), none
+unresolved. The reasons live in `reference-rules/DROPPED.md` and
+`reference-rules/lint/dropped-manual.json`. Vale with the thirty `gspot` rules: no findings
+over the 98 files, after a pass that changed 379 headings to sentence case, split 64 long list
+items and 28 long sentences and paragraphs, and stated 63 conditional modals as facts, with no
+rule dropped. The enforcement markers: 5,303 statements, 2,354 unenforced. What Phase 6 still
+owes is code, not editing: the assembler and the corpus lint inside the binary.
 
 The guard is mechanical: a completeness check normalises every statement (sentence or list
 item) in the four source corpora and asserts it appears in the merged corpus or a project
