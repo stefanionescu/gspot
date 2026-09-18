@@ -1,27 +1,19 @@
 // Identifiers a SQL file declares: schemas, tables, columns, functions, parameters, indexes, triggers and policies.
 import type { Identifier } from '#types/naming.ts';
+import { nodesOf, partsOf, textOf } from '#cli/sql/tree.ts';
 import { positionAt, sqlFile } from '#cli/sql/statements.ts';
 import type { SqlNamed, SqlNode, SqlStatementView } from '#types/sql.ts';
 
-function nodes(value: unknown, kind: string): SqlNode[] {
-    const list = Array.isArray(value) ? (value as SqlNode[]) : [];
-    return list.flatMap((item) => (item[kind] === undefined ? [] : [item[kind] as SqlNode]));
-}
-
-function text(value: unknown): string {
-    return typeof value === 'string' ? value : '';
-}
-
 function columns(elements: unknown): SqlNamed[] {
-    return nodes(elements, 'ColumnDef').map((column) => ({ category: 'columns', name: text(column['colname']) }));
+    return nodesOf(elements, 'ColumnDef').map((column) => ({ category: 'columns', name: textOf(column['colname']) }));
 }
 
 function lastName(parts: unknown): string {
-    return text(nodes(parts, 'String').at(-1)?.['sval']);
+    return partsOf(parts).at(-1) ?? '';
 }
 
 function addedColumns(fields: SqlNode): SqlNamed[] {
-    return nodes(fields['cmds'], 'AlterTableCmd')
+    return nodesOf(fields['cmds'], 'AlterTableCmd')
         .filter((command) => command['subtype'] === 'AT_AddColumn')
         .flatMap((command) => columns([command['def']]));
 }
@@ -38,21 +30,21 @@ const LABELS: Record<string, string> = {
 };
 
 const READERS: Record<string, (fields: SqlNode) => SqlNamed[]> = {
-    CreateSchemaStmt: (fields) => [{ category: 'schemas', name: text(fields['schemaname']) }],
+    CreateSchemaStmt: (fields) => [{ category: 'schemas', name: textOf(fields['schemaname']) }],
     CreateStmt: (fields) => [
-        { category: 'tables', name: text((fields['relation'] as SqlNode | undefined)?.['relname']) },
+        { category: 'tables', name: textOf((fields['relation'] as SqlNode | undefined)?.['relname']) },
         ...columns(fields['tableElts']),
     ],
-    ViewStmt: (fields) => [{ category: 'tables', name: text((fields['view'] as SqlNode | undefined)?.['relname']) }],
+    ViewStmt: (fields) => [{ category: 'tables', name: textOf((fields['view'] as SqlNode | undefined)?.['relname']) }],
     AlterTableStmt: addedColumns,
-    IndexStmt: (fields) => [{ category: 'indexes', name: text(fields['idxname']) }],
-    CreateTrigStmt: (fields) => [{ category: 'triggers', name: text(fields['trigname']) }],
-    CreatePolicyStmt: (fields) => [{ category: 'policies', name: text(fields['policy_name']) }],
+    IndexStmt: (fields) => [{ category: 'indexes', name: textOf(fields['idxname']) }],
+    CreateTrigStmt: (fields) => [{ category: 'triggers', name: textOf(fields['trigname']) }],
+    CreatePolicyStmt: (fields) => [{ category: 'policies', name: textOf(fields['policy_name']) }],
     CreateFunctionStmt: (fields) => [
         { category: 'functions', name: lastName(fields['funcname']) },
-        ...nodes(fields['parameters'], 'FunctionParameter').map((parameter) => ({
+        ...nodesOf(fields['parameters'], 'FunctionParameter').map((parameter) => ({
             category: 'parameters',
-            name: text(parameter['name']),
+            name: textOf(parameter['name']),
         })),
     ],
 };

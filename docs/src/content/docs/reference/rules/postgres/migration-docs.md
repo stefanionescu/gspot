@@ -1,0 +1,22 @@
+---
+title: "postgres/migration-docs"
+description: "Checks the documented migration layout when tools.postgres.migration_docs asks for it: a boxed header, boxed sections, and a labeled block above each table and function."
+---
+
+Checks the documented migration layout when tools.postgres.migration_docs asks for it: a boxed header, boxed sections, and a labeled block above each table and function.
+
+## Why
+
+A migration is read years later by someone deciding whether a table can go, and the purpose line is what they look for.
+
+## What to do
+
+Write the header, put each statement under its section, and label tables and functions with their purpose.
+
+## Where it runs
+
+- Preset: [the postgres preset](/reference/presets/postgres/)
+- Stage: commit
+- Engine: integrity
+
+Turn it off for a path with a reason: `gspot ignore postgres/migration-docs --paths <glob> --reason "<why>"`.

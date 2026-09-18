@@ -13,6 +13,7 @@ import { taskPolicy } from '#cli/integrity/task-policy.ts';
 import { readmeShape } from '#cli/integrity/readme/shape.ts';
 import { suppressions } from '#cli/integrity/suppressions.ts';
 import { docsHeadings } from '#cli/integrity/docs-headings.ts';
+import { migrationDocs } from '#cli/postgres/migration-docs.ts';
 import { nginxTest } from '#cli/integrity/nginx/config-test.ts';
 import { installPolicy } from '#cli/integrity/install-policy.ts';
 import { lockfileFresh } from '#cli/integrity/lockfile/fresh.ts';
@@ -27,8 +28,10 @@ import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
 import { configurationPurity } from '#cli/integrity/config-purity.ts';
 import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
 import { gitleaksBaseline } from '#cli/integrity/gitleaks-baseline.ts';
+import { migrationOrder, migrationsFrozen } from '#cli/postgres/history.ts';
 import { trackedDependencies } from '#cli/integrity/tracked-dependencies.ts';
 import { sqlBlockComments, sqlFileLength, sqlSyntax } from '#cli/sql/checks.ts';
+import { definerSearchPath, explicitGrants, foreignKeyIndexes, rlsPresent } from '#cli/postgres/schema/checks.ts';
 
 const checks: Record<string, IntegrityCheck> = {
     'generated-drift': generatedDrift,
@@ -50,6 +53,13 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'postgres-rls': rlsPresent,
+    'postgres-grants': explicitGrants,
+    'postgres-definer': definerSearchPath,
+    'postgres-foreign-keys': foreignKeyIndexes,
+    'postgres-order': migrationOrder,
+    'postgres-frozen': migrationsFrozen,
+    'postgres-docs': migrationDocs,
     'sql-syntax': sqlSyntax,
     'sql-block-comments': sqlBlockComments,
     'sql-file-length': sqlFileLength,

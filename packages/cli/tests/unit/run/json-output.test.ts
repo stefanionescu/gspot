@@ -35,6 +35,17 @@ describe('parseJson', () => {
         expect([finding?.file, finding?.line, finding?.rule]).toEqual(['a.sql', 3, 'LT01']);
     });
 
+    test('a tool that counts lines from zero names its base', () => {
+        const stdout = JSON.stringify([{ file: 'a.sql', line: 0, column: 18, rule_name: 'r', message: 'm' }]);
+        const output = {
+            format: 'json' as const,
+            line_base: 0 as const,
+            fields: { file: 'file', line: 'line', column: 'column', rule: 'rule_name', message: 'message' },
+        };
+        const [finding] = parseJson('postgres/squawk', output, stdout, 'help');
+        expect([finding?.line, finding?.column]).toEqual([1, 19]);
+    });
+
     test('text that is not JSON becomes one finding that shows it', () => {
         const findings = parseJson('x/y', { format: 'json' }, '{ broken', 'help');
         expect(findings[0]?.message).toBe('{ broken');

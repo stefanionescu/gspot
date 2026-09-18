@@ -1,0 +1,42 @@
+---
+title: "Postgres"
+description: "Postgres migrations: squawk for the changes that lock or break, ordered versions, and migrations that never change after they run. The schema checks ask for row security, explicit grants, and an index under every foreign key."
+---
+
+Postgres migrations: squawk for the changes that lock or break, ordered versions, and migrations that never change after they run. The schema checks ask for row security, explicit grants, and an index under every foreign key.
+
+Kind: database. Requires: `sql`.
+
+## Tools
+
+- squawk 2.64.0
+
+## Generated configuration
+
+- `.gspot/squawk.toml`
+
+## Checks
+
+| Check                                                                                              | Stage  | What it finds                                                                                                                                                             |
+| -------------------------------------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`postgres/squawk`](/reference/rules/postgres/squawk/)                                             | commit | Reads every migration for the change that locks a table, rewrites it, or breaks the running application.                                                                  |
+| [`postgres/migration-order`](/reference/rules/postgres/migration-order/)                           | commit | Checks that every migration has a version, that no two share one, and that a new migration sorts after the committed ones.                                                |
+| [`postgres/migrations-frozen`](/reference/rules/postgres/migrations-frozen/)                       | commit | Checks that no migration at or before tools.squawk.frozen_through differs from its committed text.                                                                        |
+| [`postgres/rls-present`](/reference/rules/postgres/rls-present/)                                   | commit | Checks that every table in a client schema enables row level security and has a policy in some migration.                                                                 |
+| [`postgres/explicit-grants`](/reference/rules/postgres/explicit-grants/)                           | commit | Refuses a grant of every privilege in a migration.                                                                                                                        |
+| [`postgres/security-definer-search-path`](/reference/rules/postgres/security-definer-search-path/) | commit | Checks that every SECURITY DEFINER function sets its search_path.                                                                                                         |
+| [`postgres/index-covers-foreign-key`](/reference/rules/postgres/index-covers-foreign-key/)         | commit | Checks that an index, a primary key, or a unique key leads with every foreign key column.                                                                                 |
+| [`postgres/migration-docs`](/reference/rules/postgres/migration-docs/)                             | commit | Checks the documented migration layout when tools.postgres.migration_docs asks for it: a boxed header, boxed sections, and a labeled block above each table and function. |
+
+## Settings
+
+- `tools.squawk.assume_in_transaction`: Whether the migration runner wraps every migration in a transaction; the supabase preset turns it on.
+- `tools.squawk.frozen_through`: The version through which migrations have run everywhere: none, all, or a version. Squawk skips them, and they may not change.
+- `tools.postgres.migrations_dir`: The migrations folder; empty searches supabase/migrations, db/migrations, and migrations.
+- `tools.postgres.client_schemas`: The schemas clients reach, where every table needs row level security.
+- `tools.postgres.migration_docs`: Whether migrations follow the documented layout.
+- `tools.postgres.doc_sections`: The section names a documented migration may box.
+
+## Rule files
+
+- `database/postgres/POSTGRES.md`

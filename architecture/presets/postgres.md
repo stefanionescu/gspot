@@ -28,18 +28,19 @@ squawk, sqlfluff with dialect `postgres`, `libpg-query` inside gspot.
 | `postgres/squawk`                       | commit | `squawk --config .gspot/squawk.toml {migrations after frozen_through}`                                                                                                                                                                                           |
 | `postgres/migrations-frozen`            | commit | a migration at or before `frozen_through` differs from its committed bytes at that version: fail                                                                                                                                                                 |
 | `postgres/migration-order`              | commit | timestamps ascend; no two migrations share a timestamp                                                                                                                                                                                                           |
-| `structure/sql-migration-docs`          | commit | boxed header with `-- Migration: <file>` and `-- Purpose:`; section headings boxed; `CREATE SCHEMA`, `TABLE`, `INDEX`, `FUNCTION`, `TRIGGER`, `EXTENSION` under their section; entity labels with purpose and separators; `-- Row Level Security` capitalization |
+| `postgres/migration-docs`               | commit | boxed header with `-- Migration: <file>` and `-- Purpose:`; section headings boxed; `CREATE SCHEMA`, `TABLE`, `INDEX`, `FUNCTION`, `TRIGGER`, `EXTENSION` under their section; entity labels with purpose and separators; `-- Row Level Security` capitalization |
 | `postgres/rls-present`                  | commit | every `CREATE TABLE` in a schema exposed to clients has `ENABLE ROW LEVEL SECURITY` and at least one policy in the same or a later migration                                                                                                                     |
 | `postgres/explicit-grants`              | commit | no `GRANT ALL`; grants name columns or a role the repository declares                                                                                                                                                                                            |
 | `postgres/security-definer-search-path` | commit | every `SECURITY DEFINER` function sets `search_path`                                                                                                                                                                                                             |
 | `postgres/index-covers-foreign-key`     | commit | every foreign key column has an index                                                                                                                                                                                                                            |
-| `naming/identifiers`                    | commit | the SQL categories; `uuid_v7` suffix rule                                                                                                                                                                                                                        |
+| `naming/identifiers`                    | commit | the SQL categories                                                                                                                                                                                                                                               |
 
 ## Settings
 
 `tools.squawk.assume_in_transaction` (default `true` under supabase), `tools.squawk.frozen_through` (`none`, `all`, or a version), `tools.postgres.migrations_dir`,
-`tools.postgres.client_schemas` (default `public`), `tools.postgres.doc_sections` (the section
-name list).
+`tools.postgres.client_schemas` (default `public`), `tools.postgres.migration_docs` (default
+`false`; the documented layout is a house style a repository opts into), and
+`tools.postgres.doc_sections` (the section name list).
 
 ## Rule files
 

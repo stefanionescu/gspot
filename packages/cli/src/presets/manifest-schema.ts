@@ -16,6 +16,7 @@ const outputSchema = z.strictObject({
     format: z.enum(['regex', 'grouped', 'eslint-json', 'json', 'lines', 'none']),
     items: z.string().optional(),
     children: z.string().optional(),
+    line_base: z.union([z.literal(0), z.literal(1)]).optional(),
     fields: z
         .strictObject({
             file: z.string().optional(),

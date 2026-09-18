@@ -23,24 +23,22 @@ function text(value: unknown): string | undefined {
     return typeof value === 'string' || typeof value === 'number' ? String(value) : undefined;
 }
 
-function firstLinePosition(finding: Finding, line: string | undefined, column: string | undefined): void {
-    if (line !== undefined && Number(line) > 0) finding.line = Number(line);
-    if (column !== undefined && Number(column) > 0) finding.column = Number(column);
+// A tool that counts from zero names its base, and the finding counts from one.
+function firstLinePosition(finding: Finding, base: number, line: string | undefined, column: string | undefined): void {
+    if (line !== undefined && Number(line) >= base) finding.line = Number(line) - base + 1;
+    if (column !== undefined && Number(column) >= base) finding.column = Number(column) - base + 1;
 }
 
-function jsonFinding(
-    check: string,
-    help: string,
-    fields: Record<string, string | undefined>,
-    sources: unknown[],
-): Finding {
+function jsonFinding(shape: { check: string; help: string; output: OutputFormat }, sources: unknown[]): Finding {
+    const { check, help, output } = shape;
+    const fields: Record<string, string | undefined> = output.fields ?? {};
     const read = (name: string): string | undefined => {
         const path = fields[name];
         if (path === undefined) return undefined;
         return sources.map((source) => text(at(source, path))).find((found) => found !== undefined);
     };
     const finding: Finding = { check, file: read('file') ?? '', message: read('message') ?? '', help, fixable: false };
-    firstLinePosition(finding, read('line'), read('column'));
+    firstLinePosition(finding, output.line_base ?? 1, read('line'), read('column'));
     const rule = read('rule');
     if (rule !== undefined) finding.rule = rule;
     return finding;
@@ -63,10 +61,10 @@ export function parseJson(check: string, output: OutputFormat, stdout: string, h
     } catch {
         return [{ check, file: '', message: stdout.trim().slice(0, UNPARSED_LIMIT), help, fixable: false }];
     }
-    const fields = output.fields ?? {};
+    const shape = { check, help, output };
     return listAt(parsed, output.items).flatMap((item) =>
         output.children === undefined
-            ? [jsonFinding(check, help, fields, [item])]
-            : listAt(item, output.children).map((child) => jsonFinding(check, help, fields, [child, item])),
+            ? [jsonFinding(shape, [item])]
+            : listAt(item, output.children).map((child) => jsonFinding(shape, [child, item])),
     );
 }
