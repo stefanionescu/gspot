@@ -296,7 +296,7 @@ For every video:
 - Provide a transcript or equivalent text for unique information. `unenforced`
 - State the publication date when staleness is likely. `enforced-by: prose/vale gspot.dates`
 - Link instead of embedding unless the embed provides a clear reader benefit. `unenforced`
-- Use "privacy-enhanced" embedding when the platform supports it. `unenforced`
+- Use `privacy-enhanced` embedding when the platform supports it. `unenforced`
 - Do not commit large video files to the product repository without an
   established asset workflow. `unenforced`
 

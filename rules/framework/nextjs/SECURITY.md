@@ -178,7 +178,7 @@ must use server-compatible telemetry, not import a module that initializes a bro
   `resend.emails.send` can return `{ data, error }`; an awaited call is not by itself proof of
   acceptance. Return success only after confirming the provider result, and distinguish acceptance
   from delivery. See [Resend's Next.js example](https://resend.com/docs/send-with-nextjs). `unenforced`
-- Restrict email recipients and sender identity on the server, validate reply-to input, and apply
+- Restrict email recipients and sender identity on the server, validate `reply-to` input, and apply
   abuse controls to public feedback or OTP operations. Keep provider errors out of public responses. `unenforced`
 
 ### Endpoint and streaming lifecycle

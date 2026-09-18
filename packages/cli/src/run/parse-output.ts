@@ -143,7 +143,7 @@ function parseLines(check: string, text: string, help: string): Finding[] {
  * @param spec the check
  * @param stdout what the tool printed
  * @param stderr what the tool printed on its error stream
- * @param root the repository root, to make ESLint's absolute paths relative
+ * @param root the repository root, to make the absolute paths ESLint prints relative
  * @returns the findings
  */
 export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, root: string): Finding[] {

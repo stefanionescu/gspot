@@ -119,7 +119,7 @@ export type Substitutions = { files: string[]; scope: string; root: string; mess
 /** What one tool run accumulates across its spawns. */
 export type ToolRun = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
 
-/** One file entry of ESLint's JSON formatter. */
+/** One file entry from the ESLint JSON formatter. */
 export type EslintFile = { filePath: string; messages: EslintEntry[] };
 
 /** A tool command expanded and ready to spawn: once, or once per file. */

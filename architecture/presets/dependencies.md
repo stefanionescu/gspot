@@ -37,10 +37,7 @@ osv-scanner, knip, deptry, syncpack, eslint-plugin-package-json, lockfile-lint.
 | `typescript/knip`, `python/deptry` | push                                                               | unused dependencies and exports                                                                                                                                                                                                                                                                                                            |
 | `dependencies/swift`               | push                                                               | `Package.resolved` is present and matches `Package.swift`; osv-scanner has no Swift extractor and `doctor` says so                                                                                                                                                                                                                         |
 
-The exact-version rule belongs to `package.json` and its workspace packages only. Python
-dependencies keep their ranges in `pyproject.toml`, because a Python package installed into
-someone else's environment (a plugin, a ComfyUI custom node, a library) must declare ranges;
-the pins live in `uv.lock`, and `integrity/lockfile-fresh` is the check that they hold.
+The exact-version rule belongs to `package.json` and its workspace packages only. Python dependencies keep their ranges in `pyproject.toml`. A Python package installed into someone else's environment (a plugin, a ComfyUI custom node, a library) must declare ranges. The pins live in `uv.lock`, and `integrity/lockfile-fresh` is the check that they hold.
 
 ## Settings
 

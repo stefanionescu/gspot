@@ -37,5 +37,5 @@ hold for any framework are in the shared i18n rules; these add what the library 
   rich-text tags go through the library's rendering API, never string concatenation. `enforced-by: integrity/locales`
 - Rich-text tags map to trusted components declared at the call site. `enforced-by: integrity/locales`
 - A missing key throws in development and is reported in production through the library's
-  `onError` hook. There is no silent fallback to the key name. `enforced-by: integrity/locales`
+  `onError` hook. The key name is never a silent fallback. `enforced-by: integrity/locales`
 - Catalogs for every supported locale change in the same commit as the call site. `enforced-by: integrity/locales`

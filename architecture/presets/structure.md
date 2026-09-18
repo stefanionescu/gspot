@@ -54,7 +54,7 @@ Every `[limits]` key in the ledger, at the root or under a language table (`limi
 
 ## Rule files
 
-`general/agent/WORKING.md` carries the intent each rule enforces; `general/code/NAMING.md` "Files and
-Directories" states the folder, stem, and collision rules; `general/code/CONFIGURATION.md` states the
-environment owner rule; each language file states its private-first, private-prefix, types, and
-re-export rules.
+- `general/agent/WORKING.md` carries the intent each rule enforces.
+- `general/code/NAMING.md` "Files and Directories" states the folder, stem, and collision rules.
+- `general/code/CONFIGURATION.md` states the environment owner rule.
+- Each language file states its private-first, private-prefix, types, and re-export rules.

@@ -41,7 +41,7 @@ Never write a test that asserts a parameter, config value, or return value equal
 
 **What not to test:**
 
-- That a specific parameter is set to a specific value (e.g., `expect(config.temperature).toBe(0.7)`). `unenforced`
+- That a specific parameter is set to a specific value (for example `expect(config.temperature).toBe(0.7)`). `unenforced`
 - That a function returns an exact hardcoded object when the object is just configuration. `unenforced`
 - That an artifact field has a specific default value by reading it back and comparing. `unenforced`
 
@@ -66,7 +66,7 @@ Never write a test that asserts a parameter, config value, or return value equal
 ## Placement and names
 
 - Tests live under `tests/` or beside the unit they test. The directory is `tests/`, never `__tests__`, `test/`, or `spec/`. `enforced-by: naming/identifiers`
-- Support code (builders, fakes, servers, database helpers) lives under `tests/support/`. There is no `fixtures/`, `mocks/`, `helpers/`, or `utils/` directory. `enforced-by: naming/identifiers`
+- Support code (builders, fakes, servers, database helpers) lives under `tests/support/`. No `fixtures/`, `mocks/`, `helpers/`, or `utils/` directory exists. `enforced-by: naming/identifiers`
 - Support code is not test code: it has no assertions and no `describe`, `it`, or `test` blocks. `enforced-by: typescript/eslint vitest/expect-expect`
 - File names follow the language: `<name>.test.ts`, never `.spec`; `test_<module>.py` mirroring the package path; `<Type>Tests.swift`; pgTAP files under `tests/` named for the table or function under test. `enforced-by: naming/identifiers`
 - A test name is a sentence that states the scenario and the expected outcome. Never `test1`, `works`, `edge cases`, `happy path`. `enforced-by: naming/identifiers`

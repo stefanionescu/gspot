@@ -12,11 +12,7 @@ Kind: language. Requires: javascript, structure, naming, formatting, spelling.
 
 ## Tools
 
-typescript, eslint, typescript-eslint, @gspot/eslint-plugin, eslint-plugin-sonarjs,
-eslint-plugin-unicorn, eslint-plugin-security, eslint-plugin-n, eslint-plugin-jsdoc,
-eslint-plugin-regexp, eslint-plugin-import-x, @eslint-community/eslint-plugin-eslint-comments,
-eslint-plugin-boundaries, eslint-plugin-package-json, eslint-config-prettier, knip. Versions in
-the ledger.
+`typescript`, `eslint`, `typescript-eslint`, `@gspot/eslint-plugin`, `eslint-plugin-sonarjs`, `eslint-plugin-unicorn`, `eslint-plugin-security`, `eslint-plugin-n`, `eslint-plugin-jsdoc`, `eslint-plugin-regexp`, `eslint-plugin-import-x`, `@eslint-community/eslint-plugin-eslint-comments`, `eslint-plugin-boundaries`, `eslint-plugin-package-json`, `eslint-config-prettier`, `knip`. Versions in the ledger.
 
 ## Generated configuration
 
@@ -51,9 +47,14 @@ the ledger.
 
 ## Import direction
 
-Four rules from `[architecture] roles`, always on: types import only types; runtime never
-imports tests or support; tests and support import runtime only through element contracts or
-types; config and env never import runtime. `[structure] reexports = "none"` (the default for
+Four rules from `[architecture] roles`, always on:
+
+- types import only types;
+- runtime never imports tests or support;
+- tests and support import runtime only through element contracts or types;
+- config and env never import runtime.
+
+`[structure] reexports = "none"` (the default for
 application scopes) refuses every re-export in source; `index-only` allows index barrels.
 
 ## Settings

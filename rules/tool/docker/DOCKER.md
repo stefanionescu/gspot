@@ -387,7 +387,7 @@ Rules:
     - clear runtime locks/timers where appropriate `unenforced`
     - log result `unenforced`
     - exit `unenforced`
-- Health/readiness probes must reflect shutdown state. `enforced-by: docker/hadolint`
+- Health/readiness probes must reflect that the service is stopping. `enforced-by: docker/hadolint`
 - Keep Docker stop timeout, orchestrator grace period, server keep-alive, and app shutdown timeout aligned. `enforced-by: docker/hadolint`
 - Shutdown must be idempotent. `enforced-by: docker/hadolint`
 
@@ -524,7 +524,7 @@ Rules:
 - Compose production bind-mounting source directories `unenforced`
 - Dockerfile changes that silently change Node major version `unenforced`
 
-## Docker RUN blocks
+## Docker `RUN` blocks
 
 Dockerfiles are not Bash scripts, but shell behavior inside `RUN` lines must
 follow this guide when Bash is used.

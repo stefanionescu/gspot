@@ -86,7 +86,7 @@ skip elsewhere as platform skips. `shellcheck`, `shfmt`, `typos`, `ruff`, `based
 `gitleaks`, `osv-scanner`, `hadolint`, `semgrep`, `vale`, `lychee`, `taplo`, `actionlint` and the
 npm tools run natively on Windows.
 
-mise is recommended and proposed first because it handles every backend from one file, npm and pipx packages included. A Python repository then needs no `package.json` to run ESLint over its scripts. Without mise, gspot writes to the runner the repository has and reports the rest.
+mise is recommended and proposed first because it handles every backend from one file, and that includes npm and pipx packages. A Python repository then needs no `package.json` to run ESLint over its scripts. Without mise, gspot writes to the runner the repository has and reports the rest.
 
 The ESLint plugins the generated config imports are npm tools. In a JavaScript repository they
 are devDependencies. In a repository without one, mise installs them under `npm:` and gspot

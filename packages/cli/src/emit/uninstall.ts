@@ -47,7 +47,7 @@ function planText(plan: UninstallPlan): string {
 }
 
 /**
- * What uninstall would remove: everything the selection renders, plus any file that carries the header.
+ * What uninstall removes: everything the selection renders, plus any file that carries the header.
  * @param session the session
  * @param isHooksKept whether --keep-hooks leaves core.hooksPath alone
  * @returns the paths to remove, the files whose managed block goes, and whether the hooks path is unset

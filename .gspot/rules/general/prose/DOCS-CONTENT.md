@@ -124,7 +124,7 @@ token that has deployment access.
 ```
 
 Do not mix placeholder styles such as `YOUR_PROJECT`, `{project}`, and `enforced-by: prose/vale gspot.placeholders`
-`project-name` on the same page.
+`project-name` on one page.
 
 Do not format a placeholder as a value a reader can run unchanged. `enforced-by: prose/vale gspot.modals`
 
@@ -268,7 +268,7 @@ Start the step with a clear label:
 1. Recommended. Create a backup before applying the migration.
 ```
 
-Do not use "should" to make the reader guess whether the step is required. `enforced-by: prose/vale gspot.modals`
+Do not use `should` to make the reader guess whether the step is required. `enforced-by: prose/vale gspot.modals`
 
 ### Put conditions before actions
 

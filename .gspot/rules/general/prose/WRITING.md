@@ -6,7 +6,7 @@ title: Writing
 
 # Writing
 
-All project-authored text must conform to ISO 24495-1:2023. This requirement
+All project-authored text must conform to `ISO 24495-1:2023`. This requirement
 applies to README files, guides, Markdown, comments, docstrings, interface help,
 tooltips, labels, errors, workflow notes, examples, and generated text.
 
@@ -160,7 +160,7 @@ This powerful cache easily makes the application much faster.
 Write the full form in every document, comment, error message, and commit message. A negative `unenforced`
 must be unmistakable, and the prose checker cannot tell a tutorial from a reference.
 
-Use "Do not delete the primary key", not "Don't delete the primary key." `unenforced`
+Use `Do not delete the primary key`, not `Don't delete the primary key`. `unenforced`
 
 ### Use precise modal verbs
 
@@ -180,14 +180,14 @@ Use:
 You can store the cache on a separate volume.
 ```
 
-Avoid "may," "might," "could," "would," and "should" when the reader cannot tell `enforced-by: prose/vale gspot.modals`
+Avoid `may`, `might`, `could`, `would`, and `should` when the reader cannot tell `enforced-by: prose/vale gspot.modals`
 whether an action is required, recommended, or optional.
 
 Label recommendations and optional steps explicitly.
 
-### Use US english by default
+### Use American English by default
 
-Use US English spelling, grammar, and punctuation unless the project has chosen `enforced-by: prose/vale gspot.dashes`
+Use American English spelling, grammar, and punctuation unless the project has chosen `enforced-by: prose/vale gspot.dashes`
 another documented language standard.
 
 Do not mix dialects within one documentation set. `unenforced`
@@ -354,7 +354,7 @@ Use "because" for cause. `unenforced`
 Use "after" or "from" for time.
 Use "while" only for simultaneous actions.
 
-Do not rely on "since" when it can mean time or cause. `enforced-by: prose/vale gspot.modals`
+Do not rely on `since` when it can mean time or cause. `enforced-by: prose/vale gspot.modals`
 
 ### Spell out abbreviations
 
@@ -603,7 +603,7 @@ general promise.
 State the applicable version, platform, plan, role, or deployment mode when the `unenforced`
 behavior is not universal.
 
-Use "version 3.2 or later," not "version 3.2 or above." `enforced-by: prose/vale gspot.version-range`
+Use `version 3.2 or later`, not `version 3.2 or above`. `enforced-by: prose/vale gspot.version-range`
 
 Do not put temporary version details into a timeless conceptual explanation `unenforced`
 without marking their scope.

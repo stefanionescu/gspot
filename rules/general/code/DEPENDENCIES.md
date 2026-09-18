@@ -30,7 +30,7 @@ title: Dependencies
 
 - A dependency's license is on the allowlist. A new license needs a decision, not a suppression. `enforced-by: licenses/npm`
 - A known vulnerability without a fixed release carries an ignore entry with a reason and the
-  advisory ID. There is no blanket ignore. `enforced-by: dependencies/osv`
+  advisory ID. No blanket ignore exists. `enforced-by: dependencies/osv`
 - Vendored code is declared as vendored, carries its upstream version and license, and is patched
   only by rebase. `enforced-by: licenses/npm`
 - No compatibility shim around a dependency upgrade. Update every call site in the same change. `unenforced`

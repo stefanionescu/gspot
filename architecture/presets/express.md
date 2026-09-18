@@ -16,10 +16,7 @@ spectral (for an OpenAPI document when one exists), the Semgrep API rule pack.
 
 ## Generated configuration
 
-The scope's ESLint config gains: `n/no-process-exit` on, `security/*` on, and three
-`no-restricted-syntax` selectors from the prose plan (error messages start uppercase, client
-messages carry no interpolated identifiers, log calls take a stable message and a fields
-object). Boundaries from `[architecture]` when the scope declares elements.
+The scope's ESLint config gains `n/no-process-exit`, `security/*`, and three `no-restricted-syntax` selectors from the prose plan. The selectors say that error messages start uppercase, client messages carry no interpolated identifiers, and log calls take a stable message and a fields object. Boundaries from `[architecture]` when the scope declares elements.
 
 `.gspot/spectral.yaml` extends `spectral:oas` when an OpenAPI file is declared.
 

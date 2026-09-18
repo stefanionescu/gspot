@@ -7,7 +7,7 @@ import type { Repository, TrackedFile } from '#types/repository.ts';
 import { isGitRepository, trackedEntries } from '#cli/repository/tracked.ts';
 
 /**
- * Reads the tree once: every tracked or would-be-tracked file with its nature and tags.
+ * Reads the tree once: every tracked or about-to-be-tracked file with its nature and tags.
  * @param root the repository root
  * @param declares the [[declare]] entries
  * @param scopeEntries the [[scope]] entries

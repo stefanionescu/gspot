@@ -583,7 +583,7 @@ Rules:
 - Use protocols or generics when they express a real relationship the compiler
   must enforce, such as a cell type and its cell model, a repository
   capability, or a transport boundary.
-- Do not add protocols or generics just to look "Swifty".
+- Do not add protocols or generics just to look "Swifty."
 - Do not erase types unless the caller genuinely needs a homogeneous collection
   or a boundary.
 - Prefer local type erasure over app-wide type-erased abstractions.

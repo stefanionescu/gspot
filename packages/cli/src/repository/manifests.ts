@@ -145,7 +145,7 @@ const READERS: Record<string, (root: string, path: string) => ManifestFacts | un
  * Facts from every manifest in the tree.
  * @param root the repository root
  * @param files the tracked files
- * @returns one facts entry per manifest that could be read
+ * @returns one facts entry per readable manifest
  */
 export function readManifests(root: string, files: TrackedFile[]): ManifestFacts[] {
     return files

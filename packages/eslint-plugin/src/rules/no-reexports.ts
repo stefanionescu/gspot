@@ -1,6 +1,6 @@
 import { createRule } from '#plugin/rule.ts';
 import { optionsSchema } from '#plugin/options.ts';
-// Any re-export in application source when [structure] reexports = "none".
+// Any re-export in application source when the reexports setting is none.
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
 import type { NoReexportsOptions } from '#plugin-types/options.ts';
 

@@ -89,7 +89,7 @@ function isUnderVendoredDirectory(path: string): boolean {
 }
 
 /**
- * Whether a path is a Vale package file: under the styles folder and not gspot's own style or vocabulary.
+ * Whether a path is a Vale package file: under the styles folder and not the gspot style or vocabulary.
  * @param path the file, relative to the root
  * @returns true for a package file
  */
@@ -98,7 +98,7 @@ export function isValePackageFile(path: string): boolean {
 }
 
 /**
- * Decides the nature of one path in the order the design fixes: declarations, .gitattributes, gspot's own installs, banners, vendored directories, the binary sniff.
+ * Decides the nature of one path in the order the design fixes: declarations, .gitattributes, the gspot installs, banners, vendored directories, the binary sniff.
  * @param root the repository root
  * @param path the file, relative to the root
  * @param declares the [[declare]] entries

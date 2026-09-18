@@ -1,5 +1,5 @@
 import type { Analysis } from '#types/structure.ts';
-// The destructive and silencing forms a script may not use outside its owners. Searched: shellcheck, semgrep; the ownership is gspot's.
+// The destructive and silencing forms a script may not use outside its owners. Searched: shellcheck, semgrep; the ownership rule is original.
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { withoutComment } from '#cli/structure/code-lines.ts';
 import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES, UNCHECKED_CD } from '#config/shell.ts';

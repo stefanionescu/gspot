@@ -1,4 +1,4 @@
-// What changed in the repository since init: presets detected and not selected, configuration not owned, hooks or CI changed by hand, duplicate pins.
+// What changed in the repository after init: presets detected and not selected, configuration not owned, hooks or CI changed by hand, duplicate pins.
 import type { Session } from '#types/run.ts';
 import { emitAll } from '#cli/emit/targets.ts';
 import { isOwned } from '#cli/emit/takeover.ts';
@@ -89,7 +89,7 @@ function workflowRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
 /**
  * The change report for a session.
  * @param session the session
- * @returns what changed since init, by kind
+ * @returns what changed after init, by kind
  */
 export function changeReport(session: Session): ChangeReport {
     const facts = readManifests(session.root, session.repository.files);

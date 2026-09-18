@@ -24,4 +24,4 @@ Rules that hold because the code runs in a browser.
 
 - Never assign untrusted content to `innerHTML`, `outerHTML`, `document.write`, or any other sink
   that parses HTML. Set text, or pass the content through a reviewed sanitizer. `enforced-by: structure/html-scripts`
-- Build a URL for navigation or fetch from values the application controls. `enforced-by: structure/html-scripts`
+- Build navigation and fetch URLs from values the application controls. `enforced-by: structure/html-scripts`

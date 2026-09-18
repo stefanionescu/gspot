@@ -1,8 +1,6 @@
 # Presets
 
-One page per preset. Each page states what the preset detects and claims, the tools it pins,
-the configuration it renders, the checks it runs with their stage, the settings it exposes, and
-the rule files it installs. The manifest format is in [../04-presets.md](../04-presets.md).
+One page per preset. Each page states what the preset detects and claims, the tools it pins, and the configuration it renders. It also lists the checks it runs with their stage, the settings it exposes, and the rule files it installs. The manifest format is in [../04-presets.md](../04-presets.md).
 
 ## Languages
 

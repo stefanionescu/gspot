@@ -17,7 +17,7 @@ A suppression turns a rule off for one place. Every one is counted and every one
   everyone and say so. `enforced-by: integrity/suppressions`
 - Do not leave a suppression whose cause is gone. A suppression that suppresses nothing is a
   finding of its own. `enforced-by: integrity/suppressions`
-- There is no ticket field. A field nobody fills honestly is worse than no field. `unenforced`
+- No ticket field exists. A field nobody fills honestly is worse than no field. `unenforced`
 
 Every language has its own syntax for this, and the rule is the same in all of them. The forms are `unenforced`
 the ESLint disable comment, the Ruff `noqa`, the type-checker ignore, the SwiftLint disable, the

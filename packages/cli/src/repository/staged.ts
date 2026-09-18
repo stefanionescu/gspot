@@ -20,7 +20,7 @@ export function stagedFiles(root: string): StagedSet {
 }
 
 /**
- * Files changed since a ref, for the pull-request form.
+ * Files changed relative to a ref, for the pull-request form.
  * @param root the repository root
  * @param reference the git ref to compare against
  * @returns the paths, sorted

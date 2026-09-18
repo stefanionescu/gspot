@@ -30,8 +30,7 @@ A check requires nothing, or one of `build`, `docker`, `network`. A requirement 
 Editing `gspot.toml` or a generated config re-runs every check in the scopes it governs. A lint
 policy change never waits for push to be checked.
 
-Staged mode reads the working-tree content of each staged path, not the staged blob. There is
-no stash dance: it is the one thing hooks get wrong most, and the cost is one honest line. When a
+Staged mode reads the working-tree content of each staged path, not the staged blob. No stash dance happens: it is the one thing hooks get wrong most, and the cost is one honest line. When a
 staged file also has unstaged changes, the output says `checked working tree; N files have
 unstaged changes` so nobody mistakes the verdict for a verdict on the commit alone.
 
@@ -90,8 +89,7 @@ files work. gspot marks them executable through `git update-index --chmod=+x` ra
 file-system bit, which Windows lacks. The hook resolves the binary through `GSPOT_BIN` or the
 runner's exec, never through a hard-coded Unix path.
 
-Skips: `gspot.local.toml` `skip` for one machine, `--skip` for one run. Both print. There are no
-environment variables that turn a hook off; `--no-verify` is git's own bypass and CI is the
+Skips: `gspot.local.toml` `skip` for one machine, `--skip` for one run. Both print. No environment variable turns a hook off; `--no-verify` is git's own bypass and CI is the
 second line.
 
 ## Task runner surface

@@ -209,7 +209,7 @@ async function runCommands(
 }
 
 /**
- * Expands the placeholders of a manifest command into argv. {files} expands to every file, in the platform's form.
+ * Expands the placeholders of a manifest command into argv. the files placeholder expands to every file, in the platform's form.
  * @param session the session
  * @param planned the check being run
  * @param command the command as the manifest wrote it

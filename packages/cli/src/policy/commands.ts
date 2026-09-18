@@ -102,7 +102,7 @@ function declareEntry(o: DeclareOptions): { entry: Raw; lines: string[] } {
 }
 
 /**
- * Applies one mutation to gspot.toml and runs apply, or prints what would change on a dry run.
+ * Applies one mutation to gspot.toml and runs apply, or prints the change on a dry run.
  * @param root the repository root
  * @param mutation the change to the raw document
  * @param isDryRun when true nothing is written and apply does not run
@@ -131,7 +131,7 @@ export async function commit(
  * Refuses a missing or placeholder reason.
  * @param reason the reason the user gave, if any
  * @param where the command the reason belongs to, for the message
- * @param command the full command line that would carry the reason
+ * @param command the full command line that carries the reason
  */
 export function requireReason(reason: string | undefined, where: string, command: string): void {
     if (reason === undefined) throw new PolicyError([messages.missingReason(where, command)]);

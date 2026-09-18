@@ -27,8 +27,8 @@ stub = { path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"exten
 id = "markdown/markdownlint"
 stage = "commit"
 takes = "files"
-command = ["markdownlint-cli2", "--config", "{config:markdownlint}", "{files}"]
-fix_command = ["markdownlint-cli2", "--fix", "--config", "{config:markdownlint}", "{files}"]
+command = ["markdownlint-cli2", "--no-globs", "--config", "{config:markdownlint}", "{files}"]
+fix_command = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config:markdownlint}", "{files}"]
 fix_order = "format"
 inspection = ["style"]
 output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+)(?::(?<column>\\d+))? (?<rule>MD\\d+)\\/(?<message>.*)$" }

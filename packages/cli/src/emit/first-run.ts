@@ -122,7 +122,7 @@ export async function firstRun(root: string): Promise<FirstRun> {
 }
 
 /**
- * The lines init prints after the first run: what was written, the install note, the baselines, the checks that could not run.
+ * The lines init prints after the first run: what was written, the install note, the baselines, the checks that did not run.
  * @param first the first run
  * @param installNote what the install step did
  * @returns the lines and how many checks are missing a tool or broke

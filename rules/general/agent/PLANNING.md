@@ -113,7 +113,6 @@ Rules:
 - Include all constraints, assumptions, and dependencies that affect execution. `unenforced`
 - Include edge cases or failure modes only when they are part of the real
   requested work. `unenforced`
-- Do not leave placeholders such as "update accordingly", "adjust imports", or
-  "fix any errors". `unenforced`
+- Do not leave placeholders such as `update accordingly`, `adjust imports`, or `fix any errors`. `unenforced`
 - Do not rely on the implementer to infer omitted code, omitted commands, or
   omitted asset operations. `unenforced`

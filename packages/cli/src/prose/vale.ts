@@ -102,7 +102,7 @@ export async function installPackages(root: string): Promise<string | undefined>
 }
 
 /**
- * Parses Vale's line output.
+ * Parses the Vale line output.
  * @param stdout the output
  * @returns the alerts
  */

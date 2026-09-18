@@ -221,7 +221,7 @@ function planScope(context: PlanContext, seenRepoChecks: Set<string>, wholeSeen:
 /**
  * Plans every check for the run.
  * @param session the session
- * @param options stage, scope, only, skips, and the staged or since file sets
+ * @param options stage, scope, only, skips, and the staged or ref-relative file sets
  * @returns the planned checks in scope order
  */
 export function planRun(session: Session, options: PlanOptions): PlannedCheck[] {

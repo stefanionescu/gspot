@@ -370,8 +370,7 @@ Rules:
   and can be used anywhere the base class is expected. `unenforced`
 - Follow the Liskov substitution principle: callers that accept the base class
   must be able to interact correctly with the subclass. `unenforced`
-- Keep strict specialization hierarchies shallow and physically close together
-  together. `unenforced`
+- Keep strict specialization hierarchies shallow and physically close together. `unenforced`
 - Do not model variants as one class with a type field and many optional fields
   that only apply for some type values. `unenforced`
 - Make invalid states unrepresentable. `unenforced`

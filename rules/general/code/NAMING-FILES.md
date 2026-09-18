@@ -159,7 +159,7 @@ Rules:
   `happy path`, `works`, `test1`, and `underTest` are banned. `unenforced`
 - Support code lives under `tests/support/`; `fixtures/`, `mocks/`, `helpers/`, and `utils/`
   are banned directory names in test trees. `unenforced`
-- Test file names follow the language table in "Casing Across Languages". `unenforced`
+- Test file names follow the language table in "Casing Across Languages." `unenforced`
 
 Bad:
 
@@ -203,7 +203,7 @@ Before `gspot check`, read the change against these questions:
 - Does the name avoid vague role words unless the role is real? `unenforced`
 - Does the name use the language-specific case rule? `unenforced`
 - Does the file or directory name describe ownership? `unenforced`
-- Does the function name name the action and domain item? `unenforced`
+- Does the function name state the action and domain item? `unenforced`
 - Do application-owned retrieval operations consistently use `get`? `unenforced`
 - Does each boolean read as a positive assertion? `unenforced`
 - Are external names isolated to boundary types? `unenforced`

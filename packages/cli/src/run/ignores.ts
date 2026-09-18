@@ -103,7 +103,7 @@ export function inlineIgnores(root: string, path: string): InlineIgnore[] {
 }
 
 /**
- * Applies inline ignores to findings from gspot's own engines. A suppression without a reason becomes a finding itself.
+ * Applies inline ignores to findings from the gspot engines. A suppression without a reason becomes a finding itself.
  * @param root the repository root
  * @param findings the findings before ignores
  * @returns the findings kept, plus one per inline ignore that has no reason

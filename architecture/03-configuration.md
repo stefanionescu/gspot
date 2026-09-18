@@ -30,8 +30,7 @@ Every generated file opens with a header:
 # Change policy: gspot set / allow / ignore, or edit gspot.toml, then run: gspot apply
 ```
 
-JSON files carry the same text under a `"_gspot"` key, except a JSON file whose reader refuses
-unknown keys (the Prettier one), which carries none and is known from the rendered list. `apply --check`
+JSON files carry the same text under a `"_gspot"` key. The exception is a JSON file whose reader refuses unknown keys (the Prettier one); it carries none and is known from the rendered list. `apply --check`
 compares every rendered file with the disk and finds strays by the header, so a renamed or copied generated file is still caught. gspot writes them read-only where the platform allows, as projen does.
 
 ## `gspot.toml`
@@ -242,9 +241,8 @@ surface = "mise"           # mise | npm | bun | pnpm | uv | none
   load and names the `ignore` line.
 - The `marketing` and `defensive` term groups cannot be removed as groups. Individual names in
   them take scoped `allowed` entries.
-- `[[check]]` entries have `id`, `command`, `paths`, `stage`, and optionally `fix`, `count_regex`,
-  `requires` (`build`, `docker`, `network`) and `platform` (`macos`, `linux`, `windows`; a check
-  whose platform is not this machine's is a platform skip and prints so). A `[[check]]` is how a
+- `[[check]]` entries have `id`, `command`, `paths`, `stage`, and optionally `fix`, `count_regex`, `requires` (`build`, `docker`, `network`) and `platform` (`macos`, `linux`, `windows`; a check whose platform is not this machine's is a platform skip and prints so).
+- A `[[check]]` is how a
   repository runs anything gspot does not ship: a second type-check project under a different
   dependency set, a generator, a product test. It joins the graph like a preset check, and no
   preset grows a slot for it.
@@ -289,8 +287,7 @@ with no slots for its common options is incomplete.
 
 Every tool also exposes `[tools.<name>.extra]`: a table rendered verbatim into the tool's
 configuration, after the slots, with a required `reason`. It is the escape hatch for an option no
-slot covers yet, so a missing slot never blocks a person. Every `extra` table prints on every
-run, `doctor --settings` lists it under "not a slot", and `upgrade --check` reports when a new
+slot covers yet, so a missing slot never blocks a person. Every `extra` table prints on every run, and `doctor --settings` lists it under "not a slot." `upgrade --check` reports when a new
 release adds a slot for a key an `extra` table holds, so the key moves up and the escape hatch
 empties over time. A key in `extra` that a slot already covers fails to load and names the slot.
 
@@ -321,10 +318,8 @@ values fail at load with both presets named; a person resolves it with an explic
 ```
 
 - `init` writes one file per rule that has findings. The gate passes that day.
-- Where a tool has its own baseline mechanism, gspot drives it instead of counting: ESLint's
-  bulk suppressions (`--suppress-all` at `init`, `--suppressions-location
-.gspot/baseline/eslint.json` on every run, `--prune-suppressions` under `apply --baseline`) and
-  basedpyright's `--writebaseline` with the file under `.gspot/baseline/`. The tool then honors
+- Where a tool has its own baseline mechanism, gspot drives it instead of counting. ESLint has bulk suppressions (`--suppress-all` at `init`, `--suppressions-location .gspot/baseline/eslint.json` on every run, `--prune-suppressions` under `apply --baseline`); basedpyright has `--writebaseline` with the file under `.gspot/baseline/`.
+- The tool then honors
   the same file in the editor, so the editor and the gate agree. Every other check uses the count
   file above. The person sees one command either way.
 - `check` fails when the count exceeds the baseline, or when a touched file's own count grows.

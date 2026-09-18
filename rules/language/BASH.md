@@ -33,7 +33,7 @@ Rules:
 - When writing shell orchestration, write Bash. Do not create another scripting
   language file as an escape hatch for shell work. `enforced-by: structure/shell-script-policy`
 - If scripting logic is too complex for Bash, simplify the workflow or split it into smaller
-  scripts. Otherwise move the behavior into product-owned application code as part of a deliberate
+  scripts. Otherwise, move the behavior into product-owned application code as part of a deliberate
   feature change. `unenforced`
 
 Good Bash:

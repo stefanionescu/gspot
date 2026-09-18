@@ -17,13 +17,9 @@ trailing_comma = "all"
 semicolons    = true
 ```
 
-Defaults are the values three of four reference repositories share. They are the one policy
-`init` does not impose: when an existing formatter configuration (Prettier, `.editorconfig`,
-Ruff format, SwiftFormat) differs from them, `init` asks whether to keep the repository's values
-or take the shipped ones, and `--yes` keeps them (D-58). Either answer is written to `[format]`
+Defaults are the values three of four reference repositories share. They are the one policy `init` does not impose. When an existing formatter configuration (Prettier, `.editorconfig`, Ruff format, SwiftFormat) differs from them, `init` asks whether to keep the repository's values or take the shipped ones. `--yes` keeps them (D-58). Either answer is written to `[format]`
 and is one `gspot set format.indent_width 4` away from the other. The reason is stated once:
-formatting has no strictest value, and reformatting every file is the most disruptive thing
-`init` could do unasked.
+formatting has no strictest value, and reformatting every file is the most disruptive thing `init` can do unasked.
 
 ## Generated configuration
 

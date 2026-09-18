@@ -1,4 +1,4 @@
-// gspot's count files under .gspot/baseline/; the verdict against them; apply --baseline.
+// The gspot count files under .gspot/baseline/; the verdict against them; apply --baseline.
 import { join } from 'node:path';
 import type { Finding } from '#types/finding.ts';
 import type { BaselineVerdict } from '#types/record.ts';
@@ -156,7 +156,7 @@ export function applyBaselines(
 }
 
 /**
- * Lowers every baseline to the last run's counts; never raises one; removes files for rules with no findings and rules that no longer exist.
+ * Lowers every baseline to the last run's counts; never raises one; removes files for rules with no findings and rules that are gone.
  * @param root the repository root
  * @param findings the findings of the last run
  * @param existingChecks the ids of the checks that still exist

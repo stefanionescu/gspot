@@ -211,7 +211,7 @@ Use retries for:
 
 - retryable network pulls; `unenforced`
 - readiness polling; `unenforced`
-- "eventually consistent" provider APIs; `unenforced`
+- `eventually consistent` provider APIs; `unenforced`
 - remote service startup checks. `enforced-by: structure/shell-ssh-blocks`
 
 Do not use retries to mask:

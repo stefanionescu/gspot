@@ -1,4 +1,4 @@
-// Where gspot's own data lives: the repository during development, embedded files in the binary.
+// Where the gspot data lives: the repository during development, embedded files in the binary.
 import { toPosix } from '#cli/platform/paths.ts';
 import { dirname, join, relative } from 'node:path';
 import { GRAMMAR_SOURCES } from '#config/grammars.ts';

@@ -45,7 +45,7 @@ adds routing, server components, and caching on top of these.
 - Memoize when measurements show expensive work or a consumer needs a stable reference. Use refs for
   mutable controller values and state for values displayed in the UI.
   `enforced-by: typescript/eslint react-hooks/rules-of-hooks`
-- Give each state value one owner: URL for navigation, query cache for server snapshots, form/local
+- Give each state value one owner: URL state for navigation, query cache for server snapshots, form/local
   state for editing, and client store for truly shared client state.
   `enforced-by: typescript/eslint react-hooks/exhaustive-deps`
 - Streaming/normalized stores need explicit reconciliation. Reset private state across identity and

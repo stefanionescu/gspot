@@ -31,7 +31,7 @@ The files this preset claims get the `worker` runtime (the rule in [javascript.m
 
 ## Settings
 
-none of its own. The security-header check belongs to static-site, because a framework app sets
+none of its own. The security-header check belongs to static-site. A framework app sets
 its page headers in its own configuration, which gspot does not parse for values; the framework's
 rule file states them.
 

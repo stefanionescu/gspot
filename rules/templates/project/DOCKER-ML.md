@@ -195,7 +195,7 @@ TRT artifacts and vLLM model artifacts are not interchangeable. A Docker change
 that touches one stack must not quietly change the other stack's artifact
 contract.
 
-## Hugging face downloads
+## Hugging Face downloads
 
 Rules:
 

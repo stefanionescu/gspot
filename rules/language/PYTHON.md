@@ -358,8 +358,7 @@ Rules:
   exceptions when they are part of the interface. `unenforced`
 - Do not document exceptions raised only when callers violate the documented
   contract. `unenforced`
-- Summary lines are imperative: "Return the total token budget.", not "Returns the total
-  token budget." `enforced-by: python/ruff D`
+- Summary lines are imperative: `Return the total token budget.`, not `Returns the total token budget.` `enforced-by: python/ruff D`
 
 Good one-line docstring:
 
@@ -451,7 +450,7 @@ Rules:
   section. `enforced-by: python/ruff D`
 - Exception class docstrings describe the condition represented by the
   exception, not the raising site. `enforced-by: python/ruff D`
-- Do not write "Class that..." as the summary. `enforced-by: python/ruff D`
+- Do not write `Class that...` as the summary. `enforced-by: python/ruff D`
 
 Good:
 
@@ -484,7 +483,7 @@ Rules:
 
 - Property docstrings describe the attribute, not the method action. `enforced-by: python/ruff D`
 - Use attribute-style wording. `unenforced`
-- Do not write "Returns..." for a property unless the surrounding file already
+- Do not write `Returns...` for a property unless the surrounding file already
   uses that style. `enforced-by: python/ruff-format`
 
 Good:

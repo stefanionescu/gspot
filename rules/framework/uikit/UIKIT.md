@@ -57,7 +57,7 @@ Rules:
 Responsibilities:
 
 - `UIViewController` owns lifecycle, table/collection view installation,
-  dependency wiring, binding, reload/apply-snapshot calls, navigation handoff,
+  dependency wiring, binding, reload or snapshot calls, navigation handoff,
   and retaining data source/delegate objects. `enforced-by: swift/swiftlint`
 - `DataSource` owns section/row counts, item lookup, cell registration,
   dequeueing, and cell configuration. `unenforced`

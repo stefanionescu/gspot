@@ -22,7 +22,7 @@ title: tRPC
 
 - Keep context creation read-only when used during RSC rendering. Account creation, anonymous
   sign-in, cookie writes, or durable initialization belong in an authorized mutation/action/handler
-  that can perform them. Do not silently sign in while reading route data. `enforced-by: typescript/eslint boundaries/element-types`
+  that can perform them. Do not sign in silently during route data reads. `enforced-by: typescript/eslint boundaries/element-types`
 
 - Validate procedure input, clamp pagination limits, and select output fields. Infer client
   input/output types from the router with type-only imports. Privileged router implementations
@@ -179,8 +179,7 @@ inferred type to browser code.
 - Keep queries free of durable side effects. Use mutations for writes, and enforce transactions and
   idempotency in the shared operation when a retry or repeated submission can duplicate work. `enforced-by: typescript/eslint boundaries/element-types`
 - Return the result of `opts.next()` from middleware that permits execution. Preserve its typed
-  context extensions. For timing and diagnostics, inspect `result.ok`; a failed procedure can arrive
-  as a result rather than a thrown exception. Log stable procedure paths, request IDs, durations,
+  context extensions. For timing and diagnostics, inspect `result.ok`; a failed procedure can arrive as a returned value rather than a thrown exception. Log stable procedure paths, request IDs, durations,
   and safe error categories. `enforced-by: typescript/eslint boundaries/element-types`
 - Use `.concat()` when building a reusable partial procedure with explicit context, input, and
   metadata requirements. Within an application, start with its shared base procedures. Compose

@@ -8,4 +8,4 @@ an optional dependency and nothing runs at install time.
 bunx gspot init
 ```
 
-The manual is at https://gspot.dev.
+The manual is at <https://gspot.dev>.

@@ -59,7 +59,7 @@ function block(value: unknown, depth: number, format: JsonFormat, taken: number)
 }
 
 /**
- * The JSON text Prettier would leave a value as, ending in a newline.
+ * The JSON text Prettier produces for a value, ending in a newline.
  * @param value the data
  * @param format the print width and the indent width
  * @returns the text

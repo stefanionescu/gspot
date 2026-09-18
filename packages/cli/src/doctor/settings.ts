@@ -33,7 +33,7 @@ function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
 }
 
 /**
- * Every setting per scope, plus every extra table under "not a slot".
+ * Every setting per scope, plus every extra table under "not a slot."
  * @param session the session
  * @returns the rows and the extra tables
  */

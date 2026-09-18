@@ -1,5 +1,5 @@
 // Builds one executable per target with grammars, presets, prose, rules and schema embedded.
-// Usage: bun packages/cli/build.ts [--target <bun-target>]... [--out dist]
+// Usage: bun packages/cli/build.ts [--target <bun-target>] [--out dist]; --target repeats.
 import { dirname, join, relative } from 'node:path';
 import { GRAMMAR_SOURCES } from '#config/grammars.ts';
 import { policyJsonSchemaText } from '#cli/policy/json-schema.ts';

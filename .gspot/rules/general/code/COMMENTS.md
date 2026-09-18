@@ -8,7 +8,7 @@ title: Comments
 
 ## Present state only
 
-Comments and documentation describe what the code does right now. Never write "was removed", "deleted", "renamed", "refactored", or how the code "used to" work. No changelogs in comments.
+Comments and documentation describe what the code does right now. Never write `was removed`, `deleted`, `renamed`, `refactored`, or how the code `used to` work. No changelogs in comments.
 
 Bad: `# Removed the old checkpoint loader.`
 Good: `# Loads model checkpoints from the configured artifact directory.`
@@ -33,9 +33,9 @@ Keep comments concise and focused on intent ("why"), not narration ("what"). Do 
 
 Comments and doc comments must never contain:
 
-- **Code change history.** No "changed X to Y", "replaced old Z", "updated to use W", "refactored from". Git tracks history. `enforced-by: prose/vale gspot.present-state`
-- **What was done to variables or code.** No "added this field", "moved this constant", "renamed from oldName". Describe the present purpose. `enforced-by: prose/vale gspot.present-state`
-- **File or variable locations.** Do not say "defined in X.ts" or "see the value in config.Y" unless the reference is essential for understanding. Code is searchable; stale path references are not. `unenforced`
+- **Code change history.** No `changed X to Y`, `replaced old Z`, `updated to use W`, `refactored from`. Git tracks history. `enforced-by: prose/vale gspot.present-state`
+- **What was done to variables or code.** No `added this field`, `moved this constant`, `renamed from oldName`. Describe the present purpose. `enforced-by: prose/vale gspot.present-state`
+- **File or variable locations.** Do not say `defined in X.ts` or `see the value in config.Y` unless the reference is essential for understanding. Code is searchable; stale path references are not. `unenforced`
 
 Good doc comments describe what a function does, what its parameters mean, and what it returns. They do not narrate how the function came to exist or what it replaced.
 
@@ -46,7 +46,7 @@ Regardless of language or visibility, add a comment when a function:
 - Handles edge cases or non-obvious failure modes. `unenforced`
 - Has concurrency, cancellation, or isolation requirements. `unenforced`
 - Makes security or privacy decisions. `unenforced`
-- Encodes domain invariants ("must be monotonic", "idempotent", "retry-safe"). `unenforced`
+- Encodes domain invariants (`must be monotonic`, `idempotent`, `retry-safe`). `unenforced`
 - Sits on a performance-sensitive hot path. `unenforced`
 - Takes a reader more than ten seconds to understand from the signature and body alone. `unenforced`
 

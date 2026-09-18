@@ -30,7 +30,7 @@ Rules:
 - Disallow source distributions for deployment installs with
   `--only-binary :all:` when all required packages publish compatible wheels. `enforced-by: integrity/dependency-ownership`
 - If a package must be installed from source, treat that as a deliberate
-  supply-chain exception. Keep the build environment explicit and reviewed. `unenforced`
+  supply chain exception. Keep the build environment explicit and reviewed. `unenforced`
 - Do not rely on hashes embedded in package-index download URLs as the integrity
   control for deployment installs. The hash must be local to the requirements or
   lock material used by the install. `enforced-by: integrity/dependency-ownership`
@@ -41,12 +41,12 @@ Rules:
   resolved dependency tree. `enforced-by: integrity/dependency-ownership`
 - Install the local project through pip, not direct setuptools commands. `unenforced`
 - When project dependencies are already installed from a pinned and hashed
-  requirements file, install the local project with `python -m pip install `enforced-by: integrity/dependency-ownership`
---no-deps .` or the editable equivalent for development workflows.
+  requirements file, install the local project with `python -m pip install .`. `enforced-by: integrity/dependency-ownership`
+  --no-deps .` or the editable equivalent for development workflows.
 - Do not call `python setup.py install`, `python setup.py develop`, or
   `easy_install`. `enforced-by: integrity/dependency-ownership`
 - Do not weaken install security in a deploy script just to make an install pass.
-  Fix the requirements or document the supply-chain exception. `enforced-by: integrity/dependency-ownership`
+  Fix the requirements or document the supply chain exception. `enforced-by: integrity/dependency-ownership`
 - Do not add or regenerate dependency locks, hashes, or requirements files unless
   the requested task includes dependency maintenance. `enforced-by: integrity/dependency-ownership`
 

@@ -263,6 +263,6 @@ export const INSTALLED_PREFIXES = [
     '.gspot/vale/styles/config/vocabularies/gspot/',
 ];
 
-/** Where Vale packages land; everything there except gspot's own style and vocabulary is vendored. */
+/** Where Vale packages land; everything there except the gspot style and vocabulary is vendored. */
 export const VALE_STYLES_PREFIX = '.gspot/vale/styles/';
 export const VALE_OWN_PREFIXES = ['.gspot/vale/styles/gspot/', '.gspot/vale/styles/config/vocabularies/gspot/'];

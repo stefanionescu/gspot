@@ -1,4 +1,4 @@
-// The file set: what git tracks or would track, or a gitignore-honoring walk without git.
+// The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
 import { globby } from 'globby';
 import { join } from 'node:path';
 import { git } from '#cli/platform/spawn.ts';
@@ -71,7 +71,7 @@ export function findRoot(start: string): string {
 }
 
 /**
- * Tracked and would-be-tracked files, root-relative posix, sorted. Falls back to a gitignore walk without git.
+ * Tracked and about-to-be-tracked files, root-relative posix, sorted. Falls back to a gitignore walk without git.
  * @param root the repository root
  * @returns the entries with size, executable bit and symlink flag
  */

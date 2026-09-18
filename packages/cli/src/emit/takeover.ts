@@ -1,4 +1,4 @@
-// Takeover at init: delete the old configuration of every owned tool, carry the exception lists, list what no longer runs.
+// Takeover at init: delete the old configuration of every owned tool, carry the exception lists, list what stops running.
 import { join } from 'node:path';
 import { carryFrom } from '#cli/emit/carry.ts';
 import { existsSync, rmSync, statSync } from 'node:fs';
@@ -90,7 +90,7 @@ export function collectCarried(root: string, tooling: ExistingTooling, selected:
 }
 
 /**
- * The "no longer runs; delete when ready" list: hook directories, lint folders, lint-only manifests, duplicate pins.
+ * The delete-when-ready list: hook directories, lint folders, lint-only manifests, duplicate pins.
  * @param tooling the configuration files, hooks and lint folders found
  * @param duplicatePins the tools pinned both by gspot and elsewhere
  * @returns the paths with a note each

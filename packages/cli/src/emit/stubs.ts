@@ -1,4 +1,4 @@
-// One-line stubs at conventional paths, so editors and bare tool invocations find gspot's configuration.
+// One-line stubs at conventional paths, so editors and bare tool invocations find the gspot configuration.
 import { toPosix } from '#cli/platform/paths.ts';
 import type { StubSpec } from '#types/manifest.ts';
 import { existsSync, readFileSync } from 'node:fs';
@@ -27,7 +27,7 @@ export function relativeTarget(stubPath: string, targetPath: string): string {
 }
 
 /**
- * Renders a body stub: the body with {target} replaced, under the header.
+ * Renders a body stub: the body with the target placeholder replaced, under the header.
  * @param stub the stub spec
  * @param stubPath the stub's path
  * @param targetPath the generated file's path
@@ -48,7 +48,7 @@ export function bodyStub(
 }
 
 /**
- * Renders a merge stub: the existing JSON file with the merge keys set, comments kept. The file is the person's; only the named keys are gspot's.
+ * Renders a merge stub: the existing JSON file with the merge keys set, comments kept. The file is the person's; only the named keys belong to gspot.
  * @param root the repository root
  * @param stub the stub spec
  * @param stubPath the stub's path

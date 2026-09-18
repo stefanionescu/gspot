@@ -14,7 +14,7 @@ title: Configuration
 - The owner parses and validates every value once at startup and exposes a typed, immutable
   configuration object. Everything downstream receives typed values as parameters or imports. `unenforced`
 - A missing required value fails startup with the variable's name in the message and never its
-  value. There is no fallback for a secret and no fake default that looks real. `enforced-by: security/semgrep`
+  value. A secret has no fallback and no fake default that looks real. `enforced-by: security/semgrep`
 - Parse strings deliberately: booleans from an explicit accepted set, numbers with bounds, URLs
   through the URL parser, lists with a declared separator. An empty string is missing, not a value. `unenforced`
 - Group constants by domain (`providerConfig`, `retryPolicy`), not in one bag. Do not add a

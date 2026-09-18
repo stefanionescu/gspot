@@ -130,7 +130,7 @@ function versionLine(report: DoctorReport): string {
 }
 
 /**
- * Builds the report: tool probes, coverage, changes since the install, hooks, CI, rules and versions.
+ * Builds the report: tool probes, coverage, changes after the install, hooks, CI, rules and versions.
  * @param session the session
  * @param pinned the version `.gspot/version` pins, if any
  * @param newer a newer released version, if one is known

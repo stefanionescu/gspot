@@ -67,20 +67,20 @@ name. One term list serves identifiers, file names, and prose.
 
 ### Slop in comments and prose
 
-| Pattern                                                                        | Check                                                                                                                                           |
-| ------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
-| A comment that narrates history (`previously`, `refactored from`, `no longer`) | Vale `gspot.present-state`                                                                                                                      |
-| A comment that promises the future (`will be added`, `TODO`)                   | Vale `gspot.future`; `unicorn/expiring-todo-comments`; Ruff `TD`, `FIX`; Vale `proselint.Annotations`                                           |
-| A hedge (`probably`, `should`, `may`, `if needed`)                             | Vale `gspot.modals`, `gspot.hedging`                                                                                                            |
-| A marketing word (`robust`, `seamless`, `simply`)                              | Vale `gspot.marketing`                                                                                                                          |
-| An idiom (`belt and suspenders`, `sanity check`)                               | Vale `gspot.idioms`                                                                                                                             |
-| A path in prose that goes stale                                                | Vale `gspot.file-paths`, `gspot.locations`; `integrity/stale-paths`                                                                             |
-| A doc comment that restates the signature                                      | `jsdoc/no-types`, `jsdoc/require-description` with `descriptionStyle`; `structure/placeholder-docstring` (`Handle `, `Provide `, `Returns the`) |
-| A vague shell summary (`performs`, `handles`)                                  | `structure/doc-comment` vague-word list                                                                                                         |
-| Commented-out code                                                             | `sonarjs/no-commented-code`, Ruff `ERA001`                                                                                                      |
-| A doc heading that describes the tree (`Project structure`)                    | Vale `gspot.heading-names`, `integrity/docs-headings`                                                                                           |
-| Decorative symbols and emoji                                                   | Vale `gspot.symbols`                                                                                                                            |
-| Em dashes and typographic dashes                                               | Vale `gspot.dashes`, shell doc style                                                                                                            |
+| Pattern                                                                        | Check                                                                                                                                                     |
+| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| A comment that narrates history (`previously`, `refactored from`, `no longer`) | Vale `gspot.present-state`                                                                                                                                |
+| A comment that promises the future (`will be added`, `TODO`)                   | Vale `gspot.future`; `unicorn/expiring-todo-comments`; Ruff `TD`, `FIX`; Vale `proselint.Annotations`                                                     |
+| A hedge (`probably`, `should`, `may`, `if needed`)                             | Vale `gspot.modals`, `gspot.hedging`                                                                                                                      |
+| A marketing word (`robust`, `seamless`, `simply`)                              | Vale `gspot.marketing`                                                                                                                                    |
+| An idiom (`belt and suspenders`, `sanity check`)                               | Vale `gspot.idioms`                                                                                                                                       |
+| A path in prose that goes stale                                                | Vale `gspot.file-paths`, `gspot.locations`; `integrity/stale-paths`                                                                                       |
+| A doc comment that restates the signature                                      | `jsdoc/no-types`, `jsdoc/require-description` with `descriptionStyle`; `structure/placeholder-docstring` (a `Handle`, `Provide` or `Returns the` opening) |
+| A vague shell summary (`performs`, `handles`)                                  | `structure/doc-comment` vague-word list                                                                                                                   |
+| Commented-out code                                                             | `sonarjs/no-commented-code`, Ruff `ERA001`                                                                                                                |
+| A doc heading that describes the tree (`Project structure`)                    | Vale `gspot.heading-names`, `integrity/docs-headings`                                                                                                     |
+| Decorative symbols and emoji                                                   | Vale `gspot.symbols`                                                                                                                                      |
+| Em dashes and typographic dashes                                               | Vale `gspot.dashes`, shell doc style                                                                                                                      |
 
 ### Slop in tests
 

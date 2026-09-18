@@ -1,4 +1,4 @@
-// The index block for `CLAUDE.md` and `AGENTS.md`.
+// The index block for the agent instruction files.
 import type { Session } from '#types/run.ts';
 import type { RuleFile } from '#types/rules.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';

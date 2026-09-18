@@ -95,7 +95,7 @@ function isContractSignature(node: Node): boolean {
     );
 }
 
-// `const { existsSync } = require('node:fs')` and `const { default: X } = await import(...)` bind names another module declared.
+// `const { existsSync } = require('node:fs')` and `const { default: X } = await import('x')` bind names another module declared.
 function isImportBinding(node: Node): boolean {
     const value = node.childForFieldName('value');
     if (value === null) return false;

@@ -17,14 +17,13 @@ eslint-config-next, @eslint/compat, eslint-plugin-react-hooks (through next), es
 
 ## Generated configuration
 
-The typescript flat config gains, in order: `eslint-config-next` core-web-vitals and typescript
-(wrapped by `@eslint/compat` on ESLint 10), the `[architecture]` boundaries (route, feature,
-shared), `gspot/require-server-only` over server files, `gspot/no-client-environment` over every
-file, `react-hooks/*`, `react/no-array-index-key`, `react/no-danger`,
-`@next/next/no-async-client-component`, and the framework-entry overrides that turn off
-`no-trivial-files`, `no-export-only-files`, `no-reexports-outside-index` and
-`no-single-file-folders` for `page`, `layout`, `template`, `default`, `loading`, `error`,
-`not-found`, `global-error`, `route`, `middleware` and `proxy` files.
+The typescript flat config gains, in order:
+
+- `eslint-config-next` core-web-vitals and typescript (wrapped by `@eslint/compat` on ESLint 10);
+- the `[architecture]` boundaries (route, feature, shared);
+- `gspot/require-server-only` over server files and `gspot/no-client-environment` over every file;
+- `react-hooks/*`, `react/no-array-index-key`, `react/no-danger`, `@next/next/no-async-client-component`;
+- the framework-entry overrides that turn off `no-trivial-files`, `no-export-only-files`, `no-reexports-outside-index` and `no-single-file-folders` for `page`, `layout`, `template`, `default`, `loading`, `error`, `not-found`, `global-error`, `route`, `middleware` and `proxy` files.
 
 Server files: `**/server/**`, `**/*.server.*`, `features/*/server/**`, `lib/**/server.*`, and any
 file with `'use server'`. Client files: any file with `'use client'`.

@@ -299,7 +299,7 @@ Use these meanings consistently:
 | `Formatter`  | Converts a value into a display or wire representation.              |
 | `Parser`     | Converts raw input into structured data.                             |
 | `Validator`  | Checks a value and returns or throws validation failure.             |
-| `Mapper`     | Converts between explicit layers, such as DTO, or record to domain.   |
+| `Mapper`     | Converts between explicit layers, such as DTO, or record to domain.  |
 | `Store`      | Owns local mutable state or persistence mechanics.                   |
 | `Provider`   | Supplies a capability or value, especially when the source may vary. |
 | `Adapter`    | Bridges one interface or framework shape to another.                 |

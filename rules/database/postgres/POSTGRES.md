@@ -117,7 +117,7 @@ Trigger creation must have a descriptive comment within five lines above the
 - Service-role writes still need explicit table grants. Do not use service role
   as a substitute for precise grants. `enforced-by: postgres/squawk`
 - Use `security_invoker = true` for views in exposed schemas on Postgres 15+
-  when the view needs to respect underlying table RLS. Otherwise revoke access or
+  when the view needs to respect underlying table RLS. Otherwise, revoke access or
   keep the view out of exposed schemas. `unenforced`
 
 ## Database functions

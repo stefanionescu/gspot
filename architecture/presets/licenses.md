@@ -14,8 +14,7 @@ license-checker-rseidelsohn (npm), pip-licenses (Python).
 
 `.gspot/licenses.json`: the allowlist and exact-version exceptions.
 
-Shipped allowlist: MIT, ISC, BSD-2-Clause, BSD-3-Clause, Apache-2.0, 0BSD, CC0-1.0, CC-BY-3.0,
-CC-BY-4.0, Unlicense, BlueOak-1.0.0, Python-2.0.
+Shipped allowlist: `MIT`, `ISC`, `BSD-2-Clause`, `BSD-3-Clause`, `Apache-2.0`, `0BSD`, `CC0-1.0`, `CC-BY-3.0`, `CC-BY-4.0`, `Unlicense`, `BlueOak-1.0.0`, `Python-2.0`.
 
 ## Checks
 

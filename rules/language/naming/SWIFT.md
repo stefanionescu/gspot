@@ -23,7 +23,7 @@ Rules:
   constants. `enforced-by: naming/identifiers`
 - Do not use leading underscores, suffixes, or prefixes as access control. Use
   Swift access modifiers instead. `unenforced`
-- Use US English spellings to match Apple APIs. `unenforced`
+- Use American English spellings to match Apple APIs. `unenforced`
 - Treat common initialisms consistently and readably at call sites, such as
   `URL`, `ID`, `API`, `HTTP`, and `JSON`. `unenforced`
 - Do not include `optional` or `maybe` in optional variable names. `unenforced`

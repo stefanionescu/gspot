@@ -1,4 +1,4 @@
-// The proposal init writes and the plan it prints: what is written, removed, carried, changed, and no longer runs.
+// The proposal init writes and the plan it prints: what is written, removed, carried, changed, and stops running.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { Proposal } from '#types/config.ts';

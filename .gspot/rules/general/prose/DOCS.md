@@ -57,13 +57,13 @@ inspecting implementation source:
 
 1. What is this project or component? `unenforced`
 1. What problem does it solve? `unenforced`
-1. Is it suitable for my need? `unenforced`
-1. What do I need before I use it? `unenforced`
-1. How do I install or access it? `unenforced`
+1. Is it suitable for the reader's need? `unenforced`
+1. What does the reader need before using it? `unenforced`
+1. How is it installed or accessed? `unenforced`
 1. What does normal use look like? `unenforced`
 1. What are its important limits and risks? `unenforced`
-1. Where do I find exact reference information? `unenforced`
-1. How do I diagnose common failures? `unenforced`
+1. Where is the exact reference information? `unenforced`
+1. How are common failures diagnosed? `unenforced`
 1. How is the project licensed and maintained? `unenforced`
 
 Documentation must be:

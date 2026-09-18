@@ -73,7 +73,7 @@ export function withoutDeclaration(code: string): string {
 /**
  * True when a code line computes a directory constant from the script's own location.
  * @param code a code line
- * @returns whether it is the shape `NAME=$(cd ... BASH_SOURCE[0] ... pwd)`
+ * @returns whether it is the shape `NAME=$(cd <the directory of BASH_SOURCE[0]> && pwd)`
  */
 export function isDirectoryConstant(code: string): boolean {
     return (
