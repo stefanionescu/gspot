@@ -283,7 +283,7 @@ Source: `LA quality/site/`, `LA quality/config/`, `LA .stylelintrc.json`, `LA _h
 | linkinator internal crawl at push, external at manual with status overrides and skip patterns | `static-site/links-internal`, `static-site/links-external` |
 | Lizard complexity for plain JavaScript, with the `.whitelizard` baseline | `sonarjs/cognitive-complexity` over every JavaScript file ESLint sees; the baseline file becomes a gspot baseline; Lizard is cut |
 | Semgrep landing rules (10) | `security/semgrep` |
-| `_headers` sets `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, cache rules for HTML | `integrity/security-headers` |
+| `_headers` sets `X-Frame-Options`, `X-Content-Type-Options`, `Referrer-Policy`, cache rules for HTML | `integrity/security-headers` (static-site; a framework app's headers live in its configuration and its rule file) |
 | knip with entry points | `javascript/knip` |
 | SVG normalisation | `assets/svgo` |
 | build reproducibility (build twice, compare) | `static-site/build-reproducible` |

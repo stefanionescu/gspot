@@ -399,3 +399,11 @@ chosen is written to `[format]` and can be changed with one `gspot set`. Rejecte
 shipping 4 spaces and 120 columns, which reformats a stranger's whole repository on the first
 commit and buries the real diff; rejected: always keeping, which never lets a repository
 converge on one style and contradicts D-20 for the one setting where "strictest" has no meaning.
+
+## D-59 The file set is what git tracks or would track
+
+`git ls-files --cached --others --exclude-standard`: tracked files plus files git would track,
+minus what `.gitignore` excludes. A file the developer created and has not staged is checked by
+`gspot check`, so a whole-tree pass is a promise the commit hook keeps. Rejected: tracked files
+only, which passed a whole-tree run and then failed the pre-commit hook on the new file the run
+never saw.

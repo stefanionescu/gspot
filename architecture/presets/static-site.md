@@ -31,10 +31,11 @@ not used.
 | `static-site/size` | push, build | `size-limit` against `[tools.site] size_limits` |
 | `static-site/sitemap` | push, build | every route in the sitemap is in the output; every HTML page is in the sitemap unless excluded |
 | `static-site/webmanifest` | commit | validates against the schema |
+| `integrity/security-headers` | commit | `_headers` sets `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`; HTML paths carry a revalidating `Cache-Control`; hashed assets are immutable. Here because a site of files has no other place to set headers; a framework app sets them in its configuration |
 
 ## Settings
 
-`tools.site.output`, `tools.site.build`, `tools.site.serve`, `tools.site.seed_routes`,
+`tools.site.required_headers` (name, value pattern), `tools.site.html_paths`, `tools.site.output`, `tools.site.build`, `tools.site.serve`, `tools.site.seed_routes`,
 `tools.site.size_limits`, `tools.purgecss.safelist` (reason), `tools.linkinator.skip` (pattern,
 reason), `tools.linkinator.status_overrides`.
 

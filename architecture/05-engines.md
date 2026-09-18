@@ -24,7 +24,7 @@ a fixer exists. The reporter, the baseline and the ignore filter never know whic
 
 Runs external tools. Owns nothing about what they find.
 
-- **File lists, always.** gspot computes the file set (tracked files, filtered by claims, scope,
+- **File lists, always.** gspot computes the file set (the files git tracks or would track, filtered by claims, scope,
   declarations and ignores) and passes it to the tool. A tool that walks the tree itself
   (`takes = "project"`) receives a generated ignore file that mirrors git's ignored set and the
   declarations, and gspot compares what the tool reported against the list it expected.

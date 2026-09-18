@@ -63,8 +63,9 @@ Reads the repository, proposes a policy, writes it after a yes.
 
 ### What it reads
 
-1. The tracked file list (`git ls-files`), or a walk that honours `.gitignore` when there is no
-   git repository.
+1. The files git tracks or would track (`git ls-files --cached --others --exclude-standard`),
+   so a file created and not yet staged is checked too; or a walk that honours `.gitignore`
+   when there is no git repository.
 2. Manifests: `package.json`, `pyproject.toml`, `requirements*.txt`, `Package.swift`, `*.xcodeproj`,
    `go.mod`, `Cargo.toml`, `Gemfile`, `supabase/config.toml`, `wrangler.*`, `next.config.*`,
    `Dockerfile*`, `docker-compose*`, `nginx.conf`.

@@ -33,7 +33,7 @@ xmllint (host).
 | `config-files/yaml` | commit | `yamllint -c .gspot/yamllint.yml {files}` |
 | `config-files/schema` | commit | `v8r` over files with a known schema |
 | `config-files/actions` | commit | `actionlint` and `zizmor` over `.github/workflows/*` |
-| `config-files/dotenv` | commit | `dotenv-linter` over tracked `.env*`; a tracked `.env*` file holds keys only unless declared a template |
+| `config-files/dotenv` | commit | `dotenv-linter` over tracked environment files (`.env*`, `.dev.vars*`); a tracked one holds keys only unless declared a template |
 | `config-files/env-example` | push | every key the code reads through the declared accessor appears in the template |
 | `config-files/plist` | commit, macos | `plutil -lint`; `plutil -convert xml1` round trip |
 | `config-files/xml` | commit | `xmllint --noout` |

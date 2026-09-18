@@ -131,7 +131,8 @@ language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
   language preset. A required preset that is missing fails to load.
 - `conflicts` names presets that cannot be selected together.
 - `detect` proposes the preset at `init` and in `doctor`. Detection never selects.
-- `claims` decides which files the preset's checks receive. A file claimed by no selected preset
+- `claims` decides which files the preset's checks receive. A `filenames` claim matches at any
+  depth (`_headers` under `public/` is `_headers`); an `extensions` claim likewise. A file claimed by no selected preset
   is unchecked. Besides `extensions` and `filenames`, `claims` may name `tags`, computed the way
   pre-commit's `identify` library does from extension, shebang, executable bit and content
   (`shell`, `python`, `node`, `executable`, `text`, `binary`), so hooks and task files with no

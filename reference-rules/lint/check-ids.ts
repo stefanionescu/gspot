@@ -26,7 +26,7 @@ function walk(dir: string, out: string[] = []): string[] {
 const ids = new Set<string>();
 for (const file of walk(ROOT)) {
   const text = readFileSync(file, "utf8");
-  for (const match of text.matchAll(/`([a-z][a-z-]*)\/([a-z0-9][a-z0-9.-]*)`/g)) {
+  for (const match of text.matchAll(/`([a-z][a-z-]*)\/([a-z0-9][a-z0-9-]*)`/g)) {
     if (KINDS.has(match[1])) ids.add(`${match[1]}/${match[2]}`);
   }
 }

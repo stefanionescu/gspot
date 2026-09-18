@@ -129,7 +129,7 @@ logic lives here.
 
 | File | Holds |
 | --- | --- |
-| `tracked.ts` | `git ls-files --stage -z`, symlinks and submodules; the `globby` walk with `ignore` when there is no repository |
+| `tracked.ts` | `git ls-files --cached --others --exclude-standard -z` (tracked or would be tracked), symlinks and submodules; the `globby` walk with `ignore` when there is no repository |
 | `natures.ts` | source, generated, vendored, binary from `[[declare]]`, `.gitattributes`, banners and a content sniff |
 | `tags.ts` | file tags the way `identify` computes them: extension, shebang, executable bit, content |
 | `scopes.ts` | scopes from `[[scope]]` and from workspaces (`@manypkg/get-packages`, uv, Cargo) |

@@ -5,7 +5,7 @@ repository that already has home-grown linting, and what that repository looks l
 migration is done. yap-swift-app is worked first because it has the most to replace;
 yap-text-inference second because its policy lives in `pyproject.toml` and inside the lint
 folder, which is the harder case; yap-landing third because one language runs in three
-runtimes there. The other reference repositories follow in one table.
+runtimes there; slopshop fourth as the framework app. The two ComfyUI nodes follow in one table.
 
 ## The two goals
 
@@ -218,13 +218,67 @@ What this repository taught, and the general rule each lesson landed as:
 - **Nothing else changed.** Large media, lint-only manifests, wrapper scripts, license globs and
   duplicate pins each met an existing rule.
 
+## slopshop in numbers
+
+A Next.js 16 app on Cloudflare through OpenNext: TypeScript and TSX, CSS modules, next-intl
+locales, zod, zustand, react-hook-form, a `_headers` file under `public/`, 93 MB of tracked
+video, two generated type files that git ignores, and a lint folder that also holds a product
+deploy script. Its own checks were the source for most Next.js rows in the ledger, so the
+question here is not coverage but whether the general rules hold on a framework app.
+
+| Today | Count | After `init --yes` and the delete-when-ready step |
+| --- | --- | --- |
+| Root lint config files | 8 (`.commitlintrc.json`, `.editorconfig`, `.license-checker.json`, `.markdownlint-cli2.jsonc`, `.prettierrc.json`, `.prettierignore`, `eslint.config.mjs`, `typos.toml`) | none hand-written; stubs for commitlint, markdownlint, prettier, eslint and typos |
+| `quality/` | 83 files, 416 KB, its own `package.json`, and one product script (`workspace/deploy/videos.mjs`) | deleted after the deploy script moves out; the manifest is listed as one whose dependencies are all pinned tools |
+| `package.json` `devDependencies` | 49, about 30 of them linters, plugins and quality-tool libraries | "pinned twice" once gspot pins them; Next, React, OpenNext and the app's own tooling stay |
+| `.mise/tasks/` | 28, of which 21 are lint, format, fix, typecheck, dependencies, security or hook tasks | the 5 deploy tasks, `next/build` and `repo/setup` stay; the person deletes 21 |
+| `.githooks/` | 3 | deleted; `.gspot/hooks/` |
+| `mise.toml` `[tools]` | 7 pins, 5 of them linters | bun and node stay; `doctor` lists the 5 |
+| `rules/` | 15 files in `general/` and `nextjs/`; its `CLAUDE.md` table is the model for gspot's managed block | one managed block each; the old `rules/` deleted once the completeness check is clean |
+| `README.md` | 34 `mise run` mentions in the quality table | rewritten to `gspot check`; `integrity/stale-paths` fails until it is |
+
+## slopshop, file by file
+
+| File | Verb | What happens |
+| --- | --- | --- |
+| `eslint.config.mjs` | replace | a three-line import of `quality/eslint/index.mjs` becomes the stub importing `.gspot/eslint.config.js`; the nextjs preset adds `eslint-config-next` through `@eslint/compat` on ESLint 10, the boundaries, `require-server-only`, `no-client-environment`, the entry-file overrides and the i18n rules |
+| `tsconfig.json` | change | `extends` repointed to `.gspot/tsconfig.base.json`; `paths`, `include` (with `.next/types/**`), `jsx` and the `next` plugin stay |
+| `.prettierrc.json`, `.editorconfig`, `.markdownlint-cli2.jsonc`, `.commitlintrc.json` | replace | every value is the shipped default except MD049 off and MD050 asterisk (one `gspot set` each if wanted) and `scope-empty: never` with no enum, which becomes "scope optional" unless the person sets the rule back |
+| `.prettierignore` | replace | natures: `.next/`, `.open-next/`, `.wrangler/`, `next-env.d.ts`, `cloudflare-env.d.ts` are untracked or generated |
+| `.license-checker.json` | replace, carry | `MIT-0` is not in the shipped allowlist: `gspot set tools.licenses.allow MIT-0`; the three excluded packages (sharp's libvips, axe-core, sonarjs) become exceptions with their reported licenses |
+| `typos.toml` | replace, carry | two words carried |
+| `quality/stylelint/config.json` | carry after step 0 | off the conventional path; `git mv` to `.stylelintrc.json` first, then its `null` rules become ignores |
+| `next.config.ts`, `open-next.config.ts`, `wrangler.jsonc` | leave | `integrity/next-config` (no secret in `env`, no `ignoreBuildErrors`); `cloudflare/wrangler-config` against the published schema. The CSP and page headers in `next.config.ts` are the app's; the Next.js rule file states them and gspot does not parse them |
+| `public/_headers` | leave | claimed by filename at any depth; `cloudflare/headers-syntax` parses it. It carries `nosniff` and cache rules only, because the page headers come from `next.config.ts`; the security-header check is a static-site check and does not run here |
+| `cloudflare-env.d.ts`, `next-env.d.ts` | leave | generated and gitignored, so no freshness check runs; the build regenerates them |
+| `content/videos/*.mp4` (10 files, 93 MB, tracked, no LFS) | leave, fail | `integrity/large-files` fails until they are under LFS or `gspot ignore integrity/large-files --paths "content/videos/**" --reason "..."` |
+| `content/legal/en.json`, `src/lib/intl/translations/en.json` | leave | the second is the locale catalog (`integrity/locales`); the first is content, checked by `config-files/json` and typos |
+| `src/app/**` route groups and segments (`(app)`, `[policy]`, `[id]`, `[file]`) | leave | the naming policy strips brackets and parentheses; `integrity/route-segments` checks no segment holds both `page` and `route` |
+| `src/types`, `src/config`, `src/server`, `src/features/*`, `src/components`, `src/validators` | leave | `init` proposes `types_directory = "src/types"` from what exists; the nextjs preset's shared and feature directories are the defaults |
+| `quality/workspace/deploy/videos.mjs` | move, then delete the folder | a product deploy script inside the lint folder. The person moves it out before deleting `quality/`; gspot lists the folder and never reads inside it to decide |
+| `DELIVEROO/`, `SHEIN/`, `TIKTOK/`, `UBEREATS/`, `WHATNOT/` | untracked | reference captures, gitignored; nothing |
+| `.dev.vars*` | untracked | Wrangler's environment file, guarded like `.env*` |
+| `.githooks/`, `.mise/tasks/` (21), `mise.toml` pins (5) | delete, list | as in the other repositories |
+
+What this repository taught, and the general rule each lesson landed as:
+
+- **The file set is what git tracks or would track** (D-59). A file created and not yet staged
+  is checked by `gspot check`, so a whole-tree pass is a promise the commit hook keeps.
+- **A freshness check runs only over tracked generated files.** An ignored generated file is
+  the build's; there is nothing to compare.
+- **Security headers are a static-site concern.** A site of files has `_headers` and nothing
+  else; a framework app sets headers in its configuration, which the framework's rule file
+  states and gspot does not parse. The check moved to the static-site preset.
+- **Environment-file patterns are shipped data.** `.dev.vars*` joined `.env*`; a new platform
+  adds a pattern, never code.
+- **A filename claim matches at any depth.**
+
 ## The other reference repositories
 
-yap-swift-app, yap-text-inference and yap-landing are worked above. The remaining three:
+yap-swift-app, yap-text-inference, yap-landing and slopshop are worked above. The remaining two:
 
 | Repository | Shape | Root lint configs | `quality/` | Hooks | Lint-related tasks | Lint pins in `mise.toml` | Old `rules/` |
 | --- | --- | --- | --- | --- | --- | --- | --- |
-| slopshop | Next.js on Cloudflare | 8 (`.commitlintrc.json`, `.editorconfig`, `.license-checker.json`, `.markdownlint-cli2.jsonc`, `.prettierrc.json`, `.prettierignore`, `eslint.config.mjs`, `typos.toml`) | 83 files, 416 KB | 3 | 20 of 28 | 4 of 7 | 2 folders |
 | comfyui-reactor-connector | Python custom node with a `web/` front end | 7 (`.markdownlint-cli2.yaml`, `.prettierrc.json`, `.prettierignore`, `.stylelintrc.json`, `.typos.toml`, `pyrightconfig.json`, `tsconfig.json`) plus the `pyproject.toml` tool tables | 225 files, 2.0 MB | 3 | 27 of 36 | 8 of 12 | 8 files |
 | comfyui-live-shopping | same shape | 7 | 221 files, 1.9 MB | 3 | 27 of 36 | 8 of 12 | 8 files |
 
@@ -256,7 +310,9 @@ every finding means and what to do.
 
 0. When exception lists live inside the lint folder rather than at conventional paths (a
    `shellcheckrc`, an osv config, a gitleaks allowlist, a license policy), `git mv` them to the
-   conventional path so takeover carries them. gspot does not search for them.
+   conventional path so takeover carries them. gspot does not search for them. Move anything in
+   the lint folder that is not linting (a deploy script, a generator) out of it now, because the
+   folder is deleted whole in step 3.
 1. `gspot init` in a branch. Read the plan: the delete, carry, change and "no longer runs"
    sections. Say yes.
 2. `gspot check`. Everything passes through baselines; read the counts.

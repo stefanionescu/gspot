@@ -61,6 +61,7 @@ One word, one meaning, everywhere in this folder and in the code.
 | rule file | A Markdown file an agent reads before editing. |
 | layer | The level a rule file belongs to: general, language, framework, library, tool, platform, database, project. |
 | generated file | A file gspot writes and rewrites. It carries a header saying so and a person never edits it. |
+| file set | The files git tracks or would track (`git ls-files --cached --others --exclude-standard`), minus what natures and ignores remove. Every check receives a list drawn from it. |
 | owned tool | A tool whose configuration gspot writes. |
 | drift | A difference between two things that are meant to agree: a generated file and its render, a lockfile and its manifest, a document and the tree it describes. |
 | private declaration | A declaration a file keeps to itself: a `_` name in Python or Bash, a non-exported declaration in TypeScript or JavaScript, a `private` or `fileprivate` one in Swift. Private declarations come first in a file. |

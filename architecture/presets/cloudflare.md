@@ -26,13 +26,14 @@ The files this preset claims get the `worker` runtime (the rule in [javascript.m
 | `cloudflare/wrangler-config` | commit | `wrangler.*` validates against the published schema |
 | `cloudflare/headers-syntax` | commit | `_headers` parses: a path line followed by indented header lines |
 | `cloudflare/redirects-syntax` | commit | `_redirects` parses: source, destination, optional status |
-| `integrity/security-headers` | commit | `_headers` sets `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`; HTML paths carry a revalidating `Cache-Control`; hashed assets are immutable |
-| `cloudflare/env-types-fresh` | push | `wrangler types` leaves `cloudflare-env.d.ts` unchanged |
+| `cloudflare/env-types-fresh` | push | `wrangler types` leaves `cloudflare-env.d.ts` unchanged, when the file is tracked; an ignored one is skipped and printed |
 | `security/semgrep` workers pack | push | no wildcard CORS origin, no unvalidated `request.json()`, no DOM HTML sinks, no user-controlled fetch |
 
 ## Settings
 
-`tools.cloudflare.required_headers` (name, value pattern), `tools.cloudflare.html_paths`.
+none of its own. The security-header check belongs to static-site, because a framework app sets
+its page headers in its own configuration, which gspot does not parse for values; the framework's
+rule file states them.
 
 ## Rule files
 
