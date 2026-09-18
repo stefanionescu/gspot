@@ -1,7 +1,6 @@
 extends: existence
 message: "Placeholder style '%s'. Use <UPPER_SNAKE_CASE> in angle brackets."
 level: error
-scope: raw
 nonword: true
 tokens:
   - "\\bYOUR_[A-Z_]+\\b"

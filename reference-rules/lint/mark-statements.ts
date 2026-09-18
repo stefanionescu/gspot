@@ -76,7 +76,7 @@ for (const file of walk(CORPUS)) {
     statements++;
     const existing = block[block.length - 1].match(MARKER);
     if (CHECK) {
-      if (!existing) unmarked++;
+      if (!existing) { unmarked++; console.log(`${rel}:${i + 1} has no marker`); }
       else if (existing[0].includes("enforced-by")) {
         const id = existing[0].replace(/.*enforced-by: /, "").replace(/`.*$/, "").trim().split(" ")[0];
         if (!knownIds.has(id)) badIds.add(id);
@@ -96,7 +96,7 @@ for (const file of walk(CORPUS)) {
 
 const total = Object.values(counts).reduce((a, c) => a + c.statements, 0);
 const totalUnenforced = Object.values(counts).reduce((a, c) => a + c.unenforced, 0);
-if (!CHECK) writeFileSync(OUT_FILE, JSON.stringify(counts, null, 2) + "\n");
+writeFileSync(OUT_FILE, JSON.stringify(counts, null, 2) + "\n");
 console.log(`${total} statements, ${totalUnenforced} unenforced (${Math.round((100 * totalUnenforced) / total)}%)`);
 if (CHECK) {
   if (unmarked) console.log(`${unmarked} statements without a marker`);

@@ -5,4 +5,4 @@ nonword: true
 tokens:
   - "\\bv?\\d+\\.x\\b"
   - "\\d+\\+ or (later|newer)"
-  - "\\bor (later|newer|higher)\\b"
+  - "\\bor (later|newer|higher)(?![-\\w])"

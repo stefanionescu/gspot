@@ -4,7 +4,7 @@
     "unenforced": 17
   },
   "repository/static-site/STATIC-SITE.md": {
-    "statements": 24,
+    "statements": 25,
     "unenforced": 0
   },
   "framework/express/API.md": {
@@ -20,7 +20,7 @@
     "unenforced": 1
   },
   "framework/uikit/UIKIT.md": {
-    "statements": 40,
+    "statements": 42,
     "unenforced": 13
   },
   "framework/fastapi/RUNTIME.md": {
@@ -32,15 +32,15 @@
     "unenforced": 90
   },
   "framework/nextjs/NEXTJS.md": {
-    "statements": 131,
-    "unenforced": 40
+    "statements": 147,
+    "unenforced": 44
   },
   "framework/nextjs/SECURITY.md": {
-    "statements": 64,
-    "unenforced": 64
+    "statements": 71,
+    "unenforced": 71
   },
   "framework/react/REACT.md": {
-    "statements": 31,
+    "statements": 33,
     "unenforced": 3
   },
   "framework/swiftui/SWIFTUI.md": {
@@ -172,23 +172,23 @@
     "unenforced": 0
   },
   "library/zod/ZOD.md": {
-    "statements": 70,
+    "statements": 80,
     "unenforced": 0
   },
   "library/trpc/TRPC.md": {
-    "statements": 56,
+    "statements": 58,
     "unenforced": 0
   },
   "library/tanstack-query/TANSTACKQUERY.md": {
-    "statements": 65,
+    "statements": 69,
     "unenforced": 0
   },
   "library/react-hook-form/REACTHOOKFORM.md": {
-    "statements": 94,
+    "statements": 95,
     "unenforced": 0
   },
   "library/zustand/ZUSTAND.md": {
-    "statements": 25,
+    "statements": 26,
     "unenforced": 0
   },
   "library/next-intl/NEXTINTL.md": {
@@ -204,7 +204,7 @@
     "unenforced": 12
   },
   "language/PYTHON.md": {
-    "statements": 231,
+    "statements": 232,
     "unenforced": 67
   },
   "language/YAML.md": {
@@ -300,7 +300,7 @@
     "unenforced": 4
   },
   "shared/i18n/I18N.md": {
-    "statements": 30,
+    "statements": 32,
     "unenforced": 0
   },
   "tool/xcode/XCODE.md": {
@@ -312,7 +312,7 @@
     "unenforced": 0
   },
   "tool/docker/DOCKER.md": {
-    "statements": 215,
+    "statements": 216,
     "unenforced": 97
   },
   "tool/commitlint/COMMITLINT.md": {

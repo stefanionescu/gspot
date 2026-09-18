@@ -157,3 +157,39 @@ exceptions:
   - CRLF
   - PL
   - OK
+  - README
+  - ADVANCED
+  - LICENSE
+  - CHANGELOG
+  - CONTRIBUTING
+  - LLM
+  - LLMs
+  - MVC
+  - MVP
+  - VIPER
+  - VIP
+  - TCA
+  - GRDB
+  - JSPB
+  - IME
+  - GUID
+  - PII
+  - OIDC
+  - SSH
+  - XML
+  - AOT
+  - JIT
+  - SWC
+  - ABC
+  - ASD
+  - RUN
+  - NAME
+  - PYPI
+  - NPM
+  - FAST
+  - SIM
+  - PLR
+  - TRY
+  - ANN
+  - ARG
+  - EOL

@@ -89,3 +89,15 @@ exceptions:
   - Edge
   - Deno
   - Compose
+  - iOS
+  - JSDoc
+  - ViewModel
+  - RUN
+  - BuildKit
+  - ViewModels
+  - IndexPath
+  - EventSource
+  - QueryClient
+  - SuperJSON
+  - tsconfig
+  - gspot
