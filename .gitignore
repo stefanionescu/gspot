@@ -6,15 +6,22 @@ Thumbs.db
 .idea/
 
 # Dependencies
-/node_modules/
+node_modules/
 
 # Build output
-/dist/
 *.tsbuildinfo
 
+# Test coverage
+coverage/
+
 # Local environment
-.env.local
+.env
+.env.*
+!.env.example
 *.local
+
+# Editor settings
+.vscode/
 
 # Logs and crash output
 *.log

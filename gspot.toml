@@ -47,7 +47,7 @@ path_exceptions = [
 exclude_paths = [{paths = ["docs/src/content/docs/**"], reason = "The site links are root-relative and resolve once Starlight builds it; its build validates them."}]
 
 [tools.typos]
-words = [{word = "udid", reason = "Apple's device identifier API name."}, {word = "certifi", reason = "The Python certificate package name."}, {word = "axe", reason = "The axe-core accessibility package name."}, {word = "Virtua", reason = "The Virtua list virtualisation library."}, {word = "virtua", reason = "The Virtua list virtualisation library."}, {word = "synchronise", reason = "British spellings the naming policy bans on purpose."}, {word = "synchronised", reason = "British spellings the naming policy bans on purpose."}, {word = "materialise", reason = "British spellings the naming policy bans on purpose."}, {word = "IFEs", reason = "The ESLint option name for immediately invoked functions."}, {word = "IIF", reason = "The word typos sees inside the ESLint option IIFEs."}]
+words = [{word = "udid", reason = "Apple's device identifier API name."}, {word = "certifi", reason = "The Python certificate package name."}, {word = "axe", reason = "The axe-core accessibility package name."}, {word = "Virtua", reason = "The Virtua list virtualisation library."}, {word = "virtua", reason = "The Virtua list virtualisation library."}, {word = "synchronise", reason = "British spellings the naming policy bans on purpose."}, {word = "synchronised", reason = "British spellings the naming policy bans on purpose."}, {word = "materialise", reason = "British spellings the naming policy bans on purpose."}, {word = "IFEs", reason = "The ESLint option name for immediately invoked functions."}, {word = "IIF", reason = "The word typos sees inside the ESLint option IIFEs."}, {word = "capitalisation", reason = "The sqlfluff rule group is spelled capitalisation in its own configuration keys."}]
 exclude = [{paths = ["prose/styles/gspot/us-english.yml"], reason = "A list of British spellings mapped to their US forms."}]
 
 [architecture]
@@ -83,3 +83,8 @@ command = ["bun", "docs/reference-pages.ts", "--check"]
 paths = ["docs/src/content/docs/reference/**", "presets/**", "architecture/14-decisions.md", "packages/cli/src/commands/**"]
 stage = "commit"
 summary = "Checks that the reference pages of the manual match what the binary carries."
+
+[[declare]]
+paths = ["packages/cli/grammars/swift.wasm"]
+vendored = true
+reason = "The Swift grammar has no npm package with a prebuilt WASM file, so the build of tree-sitter-swift is kept in the tree."

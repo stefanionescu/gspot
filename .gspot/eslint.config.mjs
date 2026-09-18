@@ -486,7 +486,8 @@ export default [
     "**/dist/**",
     "**/build/**",
     "**/coverage/**",
-    ".gspot/**"
+    ".gspot/**",
+    "packages/cli/grammars/swift.wasm"
 ] },
     { files: CODE, ...eslint.configs.recommended },
     { files: CODE, ...sonarjs.configs.recommended },

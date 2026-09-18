@@ -17,7 +17,7 @@
         "publish.ts"
     ],
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
-    "ignore": [".gspot/commitlint.config.cjs"],
+    "ignore": [".gspot/commitlint.config.cjs", "packages/cli/grammars/swift.wasm"],
     "ignoreDependencies": [
         "@gspot/eslint-plugin",
         "eslint-config-prettier",

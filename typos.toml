@@ -25,6 +25,8 @@ materialise = "materialise"
 IFEs = "IFEs"
 # The word typos sees inside the ESLint option IIFEs.
 IIF = "IIF"
+# The sqlfluff rule group is spelled capitalisation in its own configuration keys.
+capitalisation = "capitalisation"
 
 [files]
 extend-exclude = [
@@ -32,4 +34,5 @@ extend-exclude = [
     "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css",
     ".gspot/cache/", ".gspot/vale/", ".gspot/last.json", ".gspot/last.sarif", ".gspot/baseline/",
     "prose/styles/gspot/us-english.yml",
+    "packages/cli/grammars/swift.wasm",
 ]
