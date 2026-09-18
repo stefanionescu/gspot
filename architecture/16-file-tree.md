@@ -259,7 +259,7 @@ accept list).
 
 ### `src/integrity/`
 
-`dispatch.ts` chooses the analysis a check names; then one file per check, named after the id: `allowlists-resolve.ts`, `baselines-current.ts`,
+`dispatch.ts` chooses the analysis a check names; then one file per check, named after the id: `allowlists-match.ts`, `baselines-current.ts`,
 `config-purity.ts`, `css-usage.ts`, `dependency-alignment.ts`, `dependency-ownership.ts`,
 `docs-headings.ts`, `docs-links.ts`, `env-files.ts`, `generated-drift.ts`,
 `generated-fresh.ts`, `gitleaks-baseline.ts`, `install-policy.ts`, `large-files.ts`,

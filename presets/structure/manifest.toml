@@ -72,6 +72,61 @@ summary = "Checks that every baseline names a check that still runs and that eve
 why = "A baseline for a check that is gone hides nothing and misleads the reader; a suppression for a deleted file is a count nobody lowered."
 fix = "Run gspot apply --baseline to remove the stale baseline or prune the suppressions."
 
+[[checks]]
+id = "integrity/config-purity"
+stage = "commit"
+takes = "project"
+engine = "integrity"
+analysis = "config-purity"
+inspection = ["structure"]
+summary = "Checks that every module under the config role holds literals only: no function, no control flow, no call, no value import from outside the config roots."
+why = "A configuration module with logic in it is code nobody tests, hidden where reviewers expect a table."
+fix = "Move the logic into a module under src and keep the literal in the config module, or take the folder out of the config role."
+
+[[checks]]
+id = "integrity/suppressions"
+stage = "commit"
+takes = "project"
+engine = "integrity"
+analysis = "suppressions"
+inspection = ["structure"]
+summary = "Counts every inline suppression by form and reports each one that carries no reason; nosemgrep is refused outright."
+why = "A suppression without a reason is a finding hidden for good; a census that grows without a baseline update is debt nobody agreed to."
+fix = "Write the reason in the comment (after -- for eslint-disable and gspot-ignore, after a colon for ts-expect-error), or fix the finding and drop the suppression."
+
+[[checks]]
+id = "integrity/allowlists-match"
+stage = "commit"
+takes = "project"
+engine = "integrity"
+analysis = "allowlists-match"
+inspection = ["consistency"]
+summary = "Checks that every path pattern in gspot.toml matches at least one tracked file."
+why = "An ignore, declaration or allowance that matches nothing is a leftover that misleads the next reader."
+fix = "Remove the entry, or fix its pattern."
+
+[[checks]]
+id = "integrity/task-policy"
+stage = "commit"
+takes = "project"
+engine = "integrity"
+analysis = "task-policy"
+inspection = ["consistency"]
+summary = "Checks that the runner surface holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath."
+why = "A missing task or a hook nobody points at means the gate runs only when someone remembers to."
+fix = "Run gspot apply; it rewrites the tasks and the hooks and sets core.hooksPath."
+
+[[checks]]
+id = "integrity/large-files"
+stage = "commit"
+takes = "project"
+engine = "integrity"
+analysis = "large-files"
+inspection = ["consistency"]
+summary = "Checks that every tracked file over the size limit is stored through LFS or declared with a reason."
+why = "A large file in plain git history stays in every clone for good."
+fix = "Track the file with git lfs, declare it with gspot declare <path> --reason, or raise limits.file_size_kb with a reason."
+
 [[settings]]
 name = "limits.file_lines"
 kind = "number"

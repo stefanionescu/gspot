@@ -89,6 +89,16 @@ function isUnderVendoredDirectory(path: string): boolean {
 }
 
 /**
+ * Whether git stores the file through LFS, by its attributes.
+ * @param root the repository root
+ * @param path the file, relative to the root
+ * @returns true under an lfs filter
+ */
+export function isUnderLfs(root: string, path: string): boolean {
+    return attributesFor(root, path).some((attribute) => attribute.startsWith('filter=lfs'));
+}
+
+/**
  * Whether a path is a Vale package file: under the styles folder and not the gspot style or vocabulary.
  * @param path the file, relative to the root
  * @returns true for a package file

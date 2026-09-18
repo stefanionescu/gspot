@@ -4,12 +4,17 @@ import type { Finding } from '#types/finding.ts';
 import { fences } from '#cli/integrity/fences.ts';
 import type { IntegrityCheck } from '#types/integrity.ts';
 import { envExample } from '#cli/integrity/env-example.ts';
+import { largeFiles } from '#cli/integrity/large-files.ts';
 import { stalePaths } from '#cli/integrity/stale-paths.ts';
+import { taskPolicy } from '#cli/integrity/task-policy.ts';
 import { readmeShape } from '#cli/integrity/readme/shape.ts';
+import { suppressions } from '#cli/integrity/suppressions.ts';
 import { docsHeadings } from '#cli/integrity/docs-headings.ts';
 import { readmePresent } from '#cli/integrity/readme/present.ts';
 import { generatedDrift } from '#cli/integrity/generated-drift.ts';
+import { allowlistsMatch } from '#cli/integrity/allowlists-match.ts';
 import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
+import { configurationPurity } from '#cli/integrity/config-purity.ts';
 import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
 
 const checks: Record<string, IntegrityCheck> = {
@@ -22,6 +27,11 @@ const checks: Record<string, IntegrityCheck> = {
     fences,
     'env-example': envExample,
     'baselines-current': baselinesCurrent,
+    'config-purity': configurationPurity,
+    suppressions,
+    'allowlists-match': allowlistsMatch,
+    'task-policy': taskPolicy,
+    'large-files': largeFiles,
 };
 
 /**

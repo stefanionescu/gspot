@@ -29,3 +29,9 @@ export type EnvRead = { key: string; line: number };
 
 /** A tool's own suppressions file: its path from the root and the scope it belongs to (the root, until a tool runs per scope). */
 export type SuppressionFile = { path: string; scope: string };
+
+/** A path pattern the policy holds and where it sits. */
+export type PathPattern = { pattern: string; where: string };
+
+/** One inline suppression form: its name, the directive that marks it, how a reason is written after it, and whether it is refused outright. */
+export type SuppressionForm = { form: string; marker: RegExp; reason: RegExp; isForbidden?: boolean };

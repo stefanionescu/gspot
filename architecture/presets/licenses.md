@@ -18,11 +18,11 @@ Shipped allowlist: `MIT`, `ISC`, `BSD-2-Clause`, `BSD-3-Clause`, `Apache-2.0`, `
 
 ## Checks
 
-| Id                             | Stage  | Command                                                                                                                                                                                                                 |
-| ------------------------------ | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `licenses/npm`                 | push   | `license-checker-rseidelsohn --json --excludePrivatePackages --start <scope>` per workspace package; gspot compares every reported license against the allowlist and the exceptions; zero packages scanned is a failure |
-| `licenses/pip`                 | push   | `pip-licenses --format=json`; the same comparison                                                                                                                                                                       |
-| `integrity/allowlists-resolve` | commit | every exception names `name@exact.version` that the lockfile holds                                                                                                                                                      |
+| Id                           | Stage  | Command                                                                                                                                                                                                                 |
+| ---------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `licenses/npm`               | push   | `license-checker-rseidelsohn --json --excludePrivatePackages --start <scope>` per workspace package; gspot compares every reported license against the allowlist and the exceptions; zero packages scanned is a failure |
+| `licenses/pip`               | push   | `pip-licenses --format=json`; the same comparison                                                                                                                                                                       |
+| `integrity/allowlists-match` | commit | every exception names `name@exact.version` that the lockfile holds                                                                                                                                                      |
 
 An exception passes only when the package reports the license the exception names. A package whose
 reported license differs from its exception fails with both licenses in the message, so a license
