@@ -134,7 +134,7 @@ export type Policy = {
     checks: RepositoryCheck[];
     hooks: { tool: 'gspot' | 'lefthook' | 'husky' | 'none' };
     ci: { provider: 'github' | 'none'; platforms: string[] };
-    rules: { install: boolean; directory: string; project?: string };
+    rules: { install: boolean; directory: string; project?: string; exclude: string[] };
     editor: { vscode: boolean };
     inspection: { strict: boolean };
     runner: { surface: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none' };

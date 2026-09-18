@@ -61,7 +61,7 @@ Asset change:
 
 ## Verification steps
 
-A plan lists `gspot check --staged` as its last step. It adds test work or other verification
+A plan lists the checks of the repository, run over the staged files, as its last step. It adds test work or other verification
 only when the user asked for it, scoped to the change in the plan.
 
 ## Implementation order

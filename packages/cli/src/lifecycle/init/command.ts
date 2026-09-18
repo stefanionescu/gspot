@@ -71,6 +71,7 @@ async function prepare(root: string, options: InitOptions): Promise<InitPrepared
         root,
         tooling,
         everySelected,
+        how: selection.how,
         answers,
         carried,
         policyLines: policyText.split('\n').length,

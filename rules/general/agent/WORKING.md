@@ -46,13 +46,15 @@ owner. A new file comes with the reason the owning module grows that way.
 
 ## Verification and tests
 
-The gate runs at commit and push. Run `gspot check --staged` before committing and fix what it
-reports. Do not run verification broader than the change: no full test suites, builds, scans, or
-Docker checks unless the user asks for them or the gate runs them.
+The checks of the repository run at commit and at push. Run them over the staged files before
+committing. Fix what they report. The instruction file of the repository names the command.
+
+Do not run verification broader than the change. Run no full test suite, build, scan, or Docker
+check unless the user asks for it or the checks of the repository include it.
 
 Create or update tests only when the user asks for tests. When implementation work reveals that
 tests need updates, report that follow-up instead of editing tests unasked. Tests that exist are held to the
-testing rules and the gate's assertion, focus, and coverage checks.
+testing rules and to the assertion, focus, and coverage checks of the repository.
 
 ## No defensive logic
 

@@ -6,6 +6,7 @@ import type { Manifest, Proposal, UnknownLanguage } from '#types/manifest.ts';
 import type { ExistingTooling, ManifestFacts, Repository, ScopeEntry, TrackedFile } from '#types/repository.ts';
 
 export type TakeoverPlan = {
+    presets: { id: string; how: PresetReason; checks: number }[];
     write: { path: string; note: string }[];
     remove: { path: string; note: string }[];
     unread: { path: string; note: string }[];
@@ -86,7 +87,11 @@ export type InitSelection = {
     scopeProposals: Map<string, string[]>;
     selectedIds: Set<string>;
     rootProposals: Proposal[];
+    how: Map<string, PresetReason>;
 };
+
+/** Why init selected a preset. */
+export type PresetReason = 'named' | 'detected' | 'recommended' | 'required';
 
 /** The answers init collects from flags or the terminal. */
 export type InitAnswers = {
@@ -116,6 +121,7 @@ export type InitPlanInputs = {
     root: string;
     tooling: ExistingTooling;
     everySelected: Manifest[];
+    how: Map<string, PresetReason>;
     answers: InitAnswers;
     carried: CarriedLists;
     policyLines: number;

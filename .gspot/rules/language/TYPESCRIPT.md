@@ -98,7 +98,7 @@ Follow the import extension policy of the runtime this code targets. It is state
 
 No re-exports in application source: no `export { x } from`, no `export * from`, no index
 barrels. Import the module that declares the symbol. A library scope may allow re-exports in
-index files only, through the `[structure] reexports` setting.
+index files only, as a recorded project choice.
 
 ## Type placement
 
@@ -116,7 +116,7 @@ Rules:
 - A component's props type, a function's options type, and a module's result type all live in
   `types/`, named for the contract (`types/orders.ts` holds `SubmitOrderRequest`).
 - The exceptions are framework-generated `*.d.ts` files and a Zod schema module that exports
-  `z.infer` of its own schema, each declared through the gate's ignore list with a reason.
+  `z.infer` of its own schema, each recorded as an exception with a reason.
 
 ## Values, literals, and coercion
 
@@ -390,7 +390,7 @@ export function parseOrder(input: unknown): Order {
 
 The following external-guide rules are not adopted:
 
-- Do not copy Google's full formatting rules. Prettier and lint own formatting.
+- Do not copy Google's full formatting rules. The formatter and the linter own formatting.
 - Do not require interfaces over type aliases.
 - Do not add Angular, Polymer, JSPB proto, or Google-internal conformance rules.
 - Do not globally ban default exports where ecosystem config files need them.

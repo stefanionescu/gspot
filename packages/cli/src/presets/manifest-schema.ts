@@ -109,6 +109,7 @@ export const manifestSchema = z.strictObject({
         kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'concern']),
         title: z.string(),
         requires: stringList,
+        recommends: stringList,
         conflicts: stringList,
         default: z.boolean().default(false),
         proposed: z.boolean().default(false),

@@ -101,3 +101,12 @@ export const FENCE_LANGUAGES = [
 
 /** No corpus file exceeds this many lines. */
 export const RULE_FILE_LINE_CEILING = 800;
+
+/** What ties a rule file to gspot or claims enforcement; a rule file stands without either (D-81). */
+export const INDEPENDENCE_TERMS = [
+    /\bgspot\b/iu,
+    /\bthe gate\b/iu,
+    /\benforced by\b/iu,
+    /\b(?:structure|naming|prose|integrity) engine\b/iu,
+    /\[(?:tools|limits|naming|structure|architecture|format)[.\] ]/u,
+];

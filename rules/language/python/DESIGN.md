@@ -28,7 +28,7 @@ Rules:
 Rules:
 
 - Keep functions small and focused.
-- The gate limits function and method length to the configured limit.
+- Function and method length stay under the configured limit.
 - If a function approaches the limit, consider extracting real sub-operations.
 - Do not split a function into meaningless helpers only to satisfy the count.
 - Extract helpers when the extracted operation has a clear name and contract.

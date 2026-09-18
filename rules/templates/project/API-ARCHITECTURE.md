@@ -20,7 +20,7 @@ transport adapters, not business logic containers. Zod contracts are the runtime
 boundary for public input. Platform integrations are isolated behind `platform/`.
 
 Do not add speculative abstractions. Do not add defensive logic for impossible
-states. Do not add verification steps beyond `gspot check --staged`.
+states. Do not add verification steps beyond the checks of the repository.
 
 ```text
 External client

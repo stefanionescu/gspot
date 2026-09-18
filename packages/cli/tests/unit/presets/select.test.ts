@@ -12,9 +12,17 @@ function manifest(id: string, requires: string[] = [], conflicts: string[] = [])
 
 describe('selectPresets', () => {
     test('pulls required presets in, dependencies first, in order of first mention', () => {
-        const ids = selectPresets(['bash'], presetManifests()).map((entry) => entry.preset.id);
-        expect(ids.indexOf('structure')).toBeLessThan(ids.indexOf('bash'));
-        for (const id of ['structure', 'naming', 'formatting', 'spelling', 'bash']) expect(ids).toContain(id);
+        const ids = selectPresets(['typescript'], presetManifests()).map((entry) => entry.preset.id);
+        expect(ids.indexOf('structure')).toBeLessThan(ids.indexOf('javascript'));
+        expect(ids.indexOf('javascript')).toBeLessThan(ids.indexOf('typescript'));
+        expect(ids).toEqual(['structure', 'javascript', 'typescript']);
+    });
+
+    test('a recommended preset is not pulled in by selection; init adds it and a person can drop it', () => {
+        const manifests = presetManifests();
+        expect(manifests.get('typescript')?.preset.recommends).toEqual(['naming', 'formatting', 'spelling']);
+        const ids = selectPresets(['bash'], manifests).map((entry) => entry.preset.id);
+        expect(ids).not.toContain('naming');
     });
 
     test('an unknown preset names the near matches', () => {

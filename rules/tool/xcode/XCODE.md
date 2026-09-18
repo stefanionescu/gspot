@@ -35,7 +35,7 @@ title: Xcode
 - Every run-script phase declares its input and output files so the build system can skip it.
 - No network access, no code generation without declared outputs, and no `try!` or force unwrap
   in build tooling.
-- SwiftLint and SwiftFormat run through the gate, not as build phases that fail the build twice.
+- The linter and the formatter run before commit, not as build phases that fail the build twice.
 
 ## Packages
 

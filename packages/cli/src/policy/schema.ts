@@ -163,7 +163,12 @@ const ciSchema = z.strictObject({
     platforms: z.array(ciPlatform).optional(),
 });
 
-const rulesSchema = z.strictObject({ install: flag.optional(), directory: text.optional(), project: text.optional() });
+const rulesSchema = z.strictObject({
+    install: flag.optional(),
+    directory: text.optional(),
+    project: text.optional(),
+    exclude: textList.optional(),
+});
 
 const editorSchema = z.strictObject({ vscode: flag.optional() });
 

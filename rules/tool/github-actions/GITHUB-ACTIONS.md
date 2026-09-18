@@ -12,7 +12,7 @@ title: GitHub Actions
 - Every job has `timeout-minutes`. Every workflow that can run twice for one ref has a
   `concurrency` group with `cancel-in-progress` for pull requests.
 - Jobs run on a pinned runner image (`ubuntu-24.04`), not `ubuntu-latest`.
-- Steps that run project commands call the task runner (`mise run check`, `gspot check`), not a
+- Steps that run project commands call the task runner (`mise run check`), not a
   copy of the command. The workflow does not own logic the repository already has.
 - No `continue-on-error` without a reason comment. No `if: always()` on a step that publishes
   results of a failed job.

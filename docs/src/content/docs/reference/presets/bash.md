@@ -5,7 +5,7 @@ description: "Shell scripts, hooks and task files: ShellCheck, shfmt, a syntax p
 
 Shell scripts, hooks and task files: ShellCheck, shfmt, a syntax pass, and the structure rules for shell.
 
-Kind: language. Requires: `structure`, `naming`, `formatting`, `spelling`.
+Kind: language. Requires: `structure`.
 
 ## Tools
 

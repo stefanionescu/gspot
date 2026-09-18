@@ -2,7 +2,8 @@
 id = "markdown"
 kind = "language"
 title = "Markdown"
-requires = ["docs", "formatting", "spelling"]
+requires = ["formatting"]
+recommends = ["docs", "spelling"]
 description = "Markdown files: markdownlint, Prettier, every fenced block parsing in its language, and the docs and prose checks."
 
 [detect]

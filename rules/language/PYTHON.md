@@ -187,8 +187,8 @@ Rules:
 - Group imports in PEP 8 sections separated by one blank line: `__future__`, standard library,
   third-party, first-party, local. Sort alphabetically within a section, `import x` before
   `from x import y`, names inside a grouped import sorted alphabetically.
-- A project that prefers one flat block sorted by rendered line length declares it with
-  `[tools.ruff] import_sort = "length"`; the formatter then owns that order.
+- A project that prefers one flat block sorted by rendered line length declares that choice in
+  its linter configuration; the formatter then owns that order.
 - Apply the same ordering inside a top-level bare `if TYPE_CHECKING:` body.
 - Put a blank line after the last import.
 - Use one import per line for ordinary imports.
@@ -658,7 +658,7 @@ def test_parse_prompt_rejects_unexpected_entry() -> None:
 
 ## Review checklist
 
-Before `gspot check`, read the change against these questions:
+Before you run the checks of the repository, read the change against these questions:
 
 - Does the code follow local project rules over generic style preferences?
 - Are imports top-level, grouped, sorted, and free of cycles?
@@ -714,7 +714,7 @@ disagree, the decision is:
 | ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Style authority          | These rules and the configured tools win over the source guides.                                                                                                                                                                                            |
 | Line length              | The formatter's configured line length, not PEP 8's 79 or Google's 80.                                                                                                                                                                                      |
-| Formatter and linters    | Ruff format, Ruff lint, basedpyright, import-linter, and the structure engine. Pylint guidance from Google maps to these tools.                                                                                                                             |
+| Formatter and linters    | Ruff format, Ruff lint, basedpyright, and import-linter. Pylint guidance from Google maps to these tools.                                                                                                                                                   |
 | Runtime                  | The project's declared Python version, stated once in the runtime pin.                                                                                                                                                                                      |
 | Future imports           | Prefer `from __future__ import annotations`.                                                                                                                                                                                                                |
 | Quotes                   | Double quotes; docstrings always triple double quotes.                                                                                                                                                                                                      |

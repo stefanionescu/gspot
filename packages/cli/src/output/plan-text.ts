@@ -10,6 +10,18 @@ function section(title: string, rows: { path: string; note: string }[]): string[
     return [title, ...rows.map((row) => `  ${row.path.padEnd(width)}${row.note}`), ''];
 }
 
+const PRESET_WIDTH = 16;
+const REASON_WIDTH = 12;
+
+function presetSection(rows: TakeoverPlan['presets']): string[] {
+    if (rows.length === 0) return ['presets', '  none: the rule files install alone', ''];
+    const lines = rows.map((row) => {
+        const noun = row.checks === 1 ? 'check' : 'checks';
+        return `  ${row.id.padEnd(PRESET_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun}`;
+    });
+    return ['presets', ...lines, ''];
+}
+
 function carriedSection(rows: TakeoverPlan['carried']): string[] {
     if (rows.length === 0) return [];
     const width = Math.max(...rows.map((row) => row.from.length)) + COLUMN_GAP;
@@ -35,6 +47,7 @@ function baselineLine(baselines: TakeoverPlan['baselines']): string {
 export function initPlanText(plan: TakeoverPlan): string {
     const { dim } = paint();
     const lines = [
+        ...presetSection(plan.presets),
         ...section('write', plan.write),
         ...section(`delete ${dim('(git keeps them: git show HEAD:<path>)')}`, plan.remove),
         ...section('could not read; fix the file and carry its exceptions by hand', plan.unread),

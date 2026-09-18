@@ -5,7 +5,7 @@ description: "ESLint with the shipped rule set over every JavaScript file, type 
 
 ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code.
 
-Kind: language. Requires: `structure`, `naming`, `formatting`, `spelling`.
+Kind: language. Requires: `structure`.
 
 ## Tools
 

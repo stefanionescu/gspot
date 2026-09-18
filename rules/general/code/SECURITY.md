@@ -63,5 +63,5 @@ title: Security
 ## Supply chain
 
 - Pin dependencies and actions exactly; install with a frozen lockfile; respect the minimum release
-  age; scan in the gate.
+  age; scan dependencies for known advisories before every push.
 - Verify checksums or signatures of downloaded binaries. Never pipe a download into an interpreter.

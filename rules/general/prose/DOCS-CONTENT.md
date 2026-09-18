@@ -202,7 +202,7 @@ Do not rely on a warning after the command.
 Prefer examples that can be exercised by automated documentation checks or by a
 normal project workflow.
 
-Repositories validate important examples in the gate where the example can run.
+Repositories validate important examples automatically where the example can run.
 
 Do not pin volatile output unless the exact output is part of the public
 contract.

@@ -195,7 +195,7 @@ func testSubmitButtonTappedShowsValidationErrorWhenEmailIsInvalid() async throws
 
 ## Review checklist
 
-Before `gspot check`, read the change against these questions:
+Before you run the checks of the repository, read the change against these questions:
 
 - Does the name describe the role or domain concept instead of the type shape?
 - Is the name clear at the call site?

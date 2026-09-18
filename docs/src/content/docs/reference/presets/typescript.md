@@ -5,7 +5,7 @@ description: "The strict compiler, ESLint with typescript-eslint and the gspot s
 
 The strict compiler, ESLint with typescript-eslint and the gspot structural rules over every TypeScript file, and knip for dead code.
 
-Kind: language. Requires: `javascript`, `structure`, `naming`, `formatting`, `spelling`.
+Kind: language. Requires: `javascript`, `structure`.
 
 ## Tools
 

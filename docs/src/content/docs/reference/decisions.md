@@ -600,8 +600,10 @@ command.
 
 ## D-80 `requires` is what breaks, `recommends` is what ships together
 
-A preset requires only what it cannot run without. Every language preset recommends `structure`,
-`naming`, `formatting` and `spelling`, and `init` selects them unless the person clears them.
+A preset requires only what it cannot run without. Every language preset requires `structure`,
+which owns the limits, and recommends `naming`, `formatting` and `spelling`.
+
+`init` selects the recommended presets unless the person clears them.
 `--without`, `gspot remove` and a profile drop a recommended preset. Dropping a required one
 fails with the chain.
 
@@ -611,9 +613,14 @@ and the configuration written, with one ignore entry for each check.
 
 ## D-81 The rule files and the checks install apart
 
-`init --presets none` installs the rule files and no check. `init --rules no` installs the checks
-and no rule file. The rule files do not name gspot, the managed block mentions `gspot check` only
-when a check is selected, and `[rules] exclude` leaves files or layers out. Amends D-73.
+`init --presets none` installs the rule files and no check. `init --no-rules` installs the checks
+and no rule file.
+
+The rule files do not name gspot, its engines or its setting keys, and claim no
+enforcement. A tool may appear as a standard or as the subject of a rule. The managed block
+mentions `gspot check` only when a check is selected, and `[rules] exclude` leaves files or
+layers out. Amends D-73.
+
 Rejected: one boolean for the whole corpus, which makes a library carry the accessibility and
 command-line rules it has no use for.
 

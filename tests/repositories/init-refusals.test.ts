@@ -32,9 +32,17 @@ describe('init refusals', () => {
             const unknown = run(fixture.path, ['init', '--yes', '--presets', 'bassh', ...QUIET]);
             expect(unknown.code).toBe(2);
             expect(unknown.stderr).toContain('Did you mean `bash`');
-            const required = run(fixture.path, ['init', '--yes', '--presets', 'bash', '--without', 'naming', ...QUIET]);
+            const required = run(fixture.path, [
+                'init',
+                '--yes',
+                '--presets',
+                'bash',
+                '--without',
+                'structure',
+                ...QUIET,
+            ]);
             expect(required.code).toBe(2);
-            expect(required.stderr).toContain('bash requires naming');
+            expect(required.stderr).toContain('bash requires structure');
             expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
         },
         PLANTED_TIMEOUT_MS,
@@ -74,4 +82,21 @@ describe('init refusals', () => {
             expect(result.stdout.toString()).toContain('check');
         }
     });
+
+    test(
+        'a recommended preset is installed unless --without names it',
+        async () => {
+            await using fixture = await createFixture({ 'scripts/a.sh': script });
+            commitAll(fixture.path);
+            const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
+            run(fixture.path, ['init', '--yes', '--presets', 'bash', '--without', 'naming', ...QUIET], environment);
+            const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
+            expect(policy).toContain('"formatting"');
+            expect(policy).not.toContain('"naming"');
+            const check = run(fixture.path, ['check', 'naming/identifiers'], environment);
+            expect(check.code).toBe(2);
+            expect(check.stdout).toContain('No selected preset runs a check called `naming/identifiers`');
+        },
+        PLANTED_TIMEOUT_MS,
+    );
 });

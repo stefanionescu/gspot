@@ -36,7 +36,7 @@ title: nginx
 - Proxy headers forward `Host`, `X-Forwarded-For`, `X-Forwarded-Proto`, and `X-Request-ID`; the
   application trusts them only from this proxy.
 - Static assets are served with immutable caching when hashed and no caching when not.
-- Configuration lives in the repository, is linted in the gate, and is reloaded through the
+- Configuration lives in the repository, is linted before commit, and is reloaded through the
   deployment flow, never edited on the host.
 
 ## Images

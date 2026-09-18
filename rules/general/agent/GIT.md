@@ -29,7 +29,8 @@ When `git status` or the worktree shows changes you did not make, do not panic. 
 - The subject is an imperative sentence under 72 characters, no trailing period, no ticket number.
 - The body says what changed and why, wrapped at 72 columns. It does not narrate the diff.
 - Footers reference issues (`Refs: #123`, `Closes: #123`) and breaking changes (`BREAKING CHANGE: ...`).
-- Run `gspot check --staged` before committing. Never bypass hooks with `--no-verify`.
+- Run the checks of the repository over the staged files before committing. Never bypass hooks
+  with `--no-verify`.
 
 ## Branches
 

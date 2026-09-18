@@ -455,7 +455,7 @@ CMD ["node", "--max-old-space-size=384", "dist/src/main.js"]
 
 Rules:
 
-- Hadolint lints every Dockerfile in the gate.
+- Every Dockerfile is linted before commit.
 - Trivy scans the final runtime image in CI, not only source dependencies.
 - Scanner findings require triage:
     - base image vulnerability
@@ -566,7 +566,7 @@ The copied script must pass ShellCheck and follow this guide.
 
 ## Review checklist
 
-Before `gspot check`, read the change against these questions:
+Before you run the checks of the repository, read the change against these questions:
 
 - Does the change touch the correct image stack?
 - Is shared behavior truly shared?

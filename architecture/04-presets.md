@@ -44,8 +44,8 @@ the manifest. Preset ids are bare names; the kind is not part of the id.
 id       = "typescript"
 kind     = "language"
 title    = "TypeScript"
-requires = ["javascript"]
-recommends = ["structure", "naming", "formatting", "spelling"]
+requires = ["javascript", "structure"]
+recommends = ["naming", "formatting", "spelling"]
 conflicts = []
 
 [detect]
@@ -132,7 +132,8 @@ language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
   work without: `typescript` requires `javascript`, because its configuration is a fragment of
   the JavaScript one. A required preset that is missing fails to load.
 - `recommends` names presets that `init` selects with this one and a person can drop (D-80).
-  Every language preset recommends `structure`, `naming`, `formatting` and `spelling`.
+  Every language preset recommends `naming`, `formatting` and `spelling`. `structure` stays
+  required, because it owns the `limits.*` settings the language configurations read.
   `gspot remove naming`, `init --without naming` and a profile that leaves `naming` out all work.
 - A check whose engine belongs to a dropped preset does not run. `doctor` lists the recommended
   presets that are not selected.

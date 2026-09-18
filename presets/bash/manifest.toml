@@ -2,7 +2,8 @@
 id = "bash"
 kind = "language"
 title = "Bash"
-requires = ["structure", "naming", "formatting", "spelling"]
+requires = ["structure"]
+recommends = ["naming", "formatting", "spelling"]
 description = "Shell scripts, hooks and task files: ShellCheck, shfmt, a syntax pass, and the structure rules for shell."
 
 [detect]

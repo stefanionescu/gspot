@@ -7,7 +7,7 @@ title: Documentation Format
 # Documentation Format
 
 Portable Markdown, page structure, text formatting, lists, tables, and alerts. The formatter and
-markdownlint own mechanical layout; these rules say what to write.
+the Markdown linter own mechanical layout; these rules say what to write.
 
 ## Use portable Markdown
 

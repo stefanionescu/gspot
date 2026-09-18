@@ -2,6 +2,7 @@
 import type { Policy } from '#types/config.ts';
 import { selectForScope } from '#cli/presets/select.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
+import { excludeProblems } from '#cli/rules/assemble.ts';
 import { exposedSettings } from '#cli/policy/settings.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
@@ -14,7 +15,10 @@ export function assertPolicyComplete(policy: Policy): void {
     const manifests = presetManifests();
     const problems: string[] = [];
     const rootSelected = selectForScope(policy.presets, [], manifests);
-    problems.push(...validateAgainstSurface(exposedSettings(rootSelected), policy));
+    problems.push(
+        ...excludeProblems(policy.rules.exclude),
+        ...validateAgainstSurface(exposedSettings(rootSelected), policy),
+    );
     for (const scope of policy.scopes) selectForScope(policy.presets, scope.presets, manifests);
     if (problems.length > 0) throw new PolicyError([...new Set(problems)]);
 }

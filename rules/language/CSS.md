@@ -23,7 +23,7 @@ title: CSS
   states and pseudo-elements.
 - Class names are kebab-case and describe the component or state they style (`order-card`,
   `is-active`), never the visual (`red-text`, `mt-4`) unless the utility system owns that name.
-- Every class defined is used, and every class used is defined. The gate checks both directions.
+- Every class defined is used, and every class used is defined.
 
 ## Layout and values
 

@@ -5,7 +5,7 @@ description: "Every data and configuration file no language owns: JSON, TOML, YA
 
 Every data and configuration file no language owns: JSON, TOML, YAML, workflows, environment files, plists and XML, each parsed and linted by the tool for its format.
 
-Kind: concern. Requires: `formatting`, `spelling`. Selected by default.
+Kind: concern. Requires: `formatting`. Selected by default.
 
 ## Tools
 

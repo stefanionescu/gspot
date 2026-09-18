@@ -106,11 +106,14 @@ title: Python            # equals the H1
 
 ## Rules say nothing about tooling
 
-A rule file states the rule and nothing else. It names no check, no tool, no enforcement state
-(D-73), and not gspot (D-81). Where a rule needs the idea, it names the checks of the
-repository and nothing more specific. A person who installs the rule files alone reads nothing about a tool they do not
-have. The corpus lint fails on `gspot` and on the name of any tool a preset pins, outside a code
-fence. What the gate enforces is the ledger's business ([06-enforcement-ledger.md](06-enforcement-ledger.md)), not the reader's.
+A rule file states the rule and nothing else. It names no check and no enforcement state (D-73).
+It does not name gspot, an engine of gspot, or a key of `gspot.toml`, and it does not say that
+anything is enforced (D-81). Where a rule needs the idea, it names the checks of the repository.
+
+A rule may name a tool as a standard, such as a script that passes ShellCheck, or as its subject,
+such as a suppression comment. A person who installs the rule files alone reads nothing about a
+setup they do not have. The rules lint of this repository fails on each of those patterns outside
+inline code. What the gate enforces is the ledger's business ([06-enforcement-ledger.md](06-enforcement-ledger.md)), not the reader's.
 
 ## Size
 
@@ -179,7 +182,7 @@ lists below live beside the script under `packages/cli/rules-lint/` and are not 
   repository, product, layout path, or deployment target outside code formatting.
 - Every fenced code block has a language tag from the allowed set and is closed.
 - The corruption phrase list from the repair pass returns nothing.
-- No file names gspot or a pinned tool outside a code fence.
+- No file names gspot, one of its engines or a `gspot.toml` table, or says `enforced by`.
 - Vale with the `gspot` style under `prose/styles/gspot/` (30 rules, every alert an error) when
   the binary is installed.
 

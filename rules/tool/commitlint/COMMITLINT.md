@@ -6,7 +6,7 @@ title: Commit Messages
 
 # Commit Messages
 
-Enforced by commitlint at the commit-message hook.
+The format of every commit message in the repository.
 
 - Format: `<type>(<scope>): <subject>`, then a blank line, then the body, then footers.
 - Types: `feat`, `fix`, `refactor`, `perf`, `docs`, `test`, `build`, `ci`, `chore`. No other

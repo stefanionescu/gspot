@@ -2,7 +2,8 @@
 id = "javascript"
 kind = "language"
 title = "JavaScript"
-requires = ["structure", "naming", "formatting", "spelling"]
+requires = ["structure"]
+recommends = ["naming", "formatting", "spelling"]
 description = "ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code."
 
 [detect]

@@ -6,7 +6,7 @@ title: Documentation Review
 
 # Documentation Review
 
-The review passes an agent runs over changed documentation before `gspot check`, and the
+The review passes an agent runs over changed documentation before the checks of the repository, and the
 definition of done.
 
 ## Review documentation systematically

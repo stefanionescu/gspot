@@ -8,6 +8,7 @@ import {
     BOUNDARY_TERMS,
     RULE_LAYERS,
     CORRUPTION_TERMS,
+    INDEPENDENCE_TERMS,
     FENCE_LANGUAGES,
     RULE_FILE_LINE_CEILING,
 } from '#rules-lint/terms.ts';
@@ -15,6 +16,7 @@ import {
 const RULE_LINK =
     /\]\((?:\.\.\/)*(?:general|language|runtime|framework|library|tool|platform|database|shared|repository)\/[^)]+\.md\)/u;
 const INLINE_CODE = /`[^`]*`/u;
+const INLINE_CODE_SPANS = /`[^`]*`/gu;
 const EM_DASH = '—';
 const VALE_FIELDS = 4;
 const layerNames = new Set(RULE_LAYERS);
@@ -49,6 +51,17 @@ function boundaryFindings(file: string, line: string, number: number, layer: str
     }));
 }
 
+// A template is copied into a project and may say where it came from; every other file stands without gspot.
+function independenceFindings(file: string, line: string, number: number, layer: string): RuleFinding[] {
+    if (layer === 'template') return [];
+    const prose = line.replaceAll(INLINE_CODE_SPANS, '');
+    return INDEPENDENCE_TERMS.filter((term) => term.test(prose)).map((term) => ({
+        file,
+        line: number,
+        message: `names gspot or claims enforcement: '${term.source}'; a rule file states the rule and nothing else`,
+    }));
+}
+
 function proseLineFindings(file: string, line: string, number: number, layer: string): RuleFinding[] {
     const residue = CORRUPTION_TERMS.filter((term) => term.test(line)).map((term) => ({
         file,
@@ -57,7 +70,13 @@ function proseLineFindings(file: string, line: string, number: number, layer: st
     }));
     const link = RULE_LINK.test(line) ? [{ file, line: number, message: 'link to another rule file' }] : [];
     const dash = line.includes(EM_DASH) ? [{ file, line: number, message: 'em dash' }] : [];
-    return [...residue, ...link, ...dash, ...boundaryFindings(file, line, number, layer)];
+    return [
+        ...residue,
+        ...link,
+        ...dash,
+        ...boundaryFindings(file, line, number, layer),
+        ...independenceFindings(file, line, number, layer),
+    ];
 }
 
 function fenceStep(walk: FenceWalk, line: string, number: number): void {

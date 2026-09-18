@@ -13,7 +13,7 @@ targets, or whichever runner the repository declares.
   with a colon namespace (`check`, `check:fix`, `build`, `dev`, `deploy:staging`).
 - A task is a wrapper: it calls the tool or the script with fixed arguments. Logic longer than
   one command lives in a script that follows the shell rules.
-- The required tasks exist in every repository: `check` (runs `gspot check`), `check:fix`,
+- The required tasks exist in every repository: `check` (runs every check of the repository), `check:fix`,
   `build` where there is a build, `dev` where there is a server, `test` where there are tests.
 - `package.json` scripts in the root manifest are limited to the approved wrapper set the
   repository configures; a non-root package never wraps `mise run`. No section-marker scripts

@@ -2,7 +2,8 @@
 id = "typescript"
 kind = "language"
 title = "TypeScript"
-requires = ["javascript", "structure", "naming", "formatting", "spelling"]
+requires = ["javascript", "structure"]
+recommends = ["naming", "formatting", "spelling"]
 description = "The strict compiler, ESLint with typescript-eslint and the gspot structural rules over every TypeScript file, and knip for dead code."
 
 [detect]

@@ -6,8 +6,10 @@ import type { Manifest } from '#types/manifest.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { detectPresets } from '#cli/presets/detect.ts';
 import type { ScopeEntry, TrackedFile } from '#types/repository.ts';
-import type { InitContext, InitInputs, InitSelection } from '#types/lifecycle.ts';
 import { requireChain, SelectionError, selectPresets } from '#cli/presets/select.ts';
+import type { InitContext, InitInputs, InitSelection, PresetReason } from '#types/lifecycle.ts';
+
+const NO_PRESETS = 'none';
 
 function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {
     const map = new Map<string, string[]>();
@@ -44,7 +46,7 @@ function isRootCandidate(context: InitContext, preset: string, hasScopes: boolea
 
 function rootSelection(context: InitContext, rootProposals: { preset: string }[], hasScopes: boolean): string[] {
     const without = new Set(context.options.without);
-    if (context.options.presets) return context.options.presets.filter((id) => !without.has(id));
+    if (context.options.presets) return context.options.presets.filter((id) => id !== NO_PRESETS && !without.has(id));
     return rootProposals
         .filter((proposal) => isRootCandidate(context, proposal.preset, hasScopes, without))
         .map((proposal) => proposal.preset);
@@ -118,7 +120,7 @@ function assertKnown(
     scopeFlags: Map<string, string[]>,
     manifests: Map<string, Manifest>,
 ): void {
-    const presets = options.presets ?? [];
+    const presets = (options.presets ?? []).filter((id) => id !== NO_PRESETS);
     const without = options.without ?? [];
     const unknown = unknownProblems([...presets, ...without, ...scopeFlags.values().toArray().flat()], manifests);
     if (unknown.length > 0) throw new SelectionError(unknown);
@@ -127,6 +129,18 @@ function assertKnown(
 function assertNoneRequired(options: InitInputs['options'], named: string[], manifests: Map<string, Manifest>): void {
     const left = withoutProblems(options.without ?? [], named, manifests);
     if (left.length > 0) throw new SelectionError(left);
+}
+
+// The presets a selection recommends, minus the ones the person left out; a recommendation recommends nothing further.
+function recommendedAdded(ids: string[], manifests: Map<string, Manifest>, without: Set<string>): string[] {
+    const recommended = ids.flatMap((id) => manifests.get(id)?.preset.recommends ?? []);
+    return [...new Set([...ids, ...recommended.filter((id) => !without.has(id))])];
+}
+
+function reasonFor(id: string, sets: { named: Set<string>; chosen: Set<string>; listed: Set<string> }): PresetReason {
+    if (sets.named.has(id)) return 'named';
+    if (sets.chosen.has(id)) return 'detected';
+    return sets.listed.has(id) ? 'recommended' : 'required';
 }
 
 function closure(ids: Iterable<string>, manifests: Map<string, Manifest>): Set<string> {
@@ -157,8 +171,16 @@ export function selectForInit(inputs: InitInputs): InitSelection {
         if (scope.path !== '')
             scopeProposals.set(scope.path, scopeSelection(context, scope, scopeFlags.get(scope.path), proposedRoot));
     const inScopes = new Set(scopeProposals.values().toArray().flat());
-    const rootIds = hasScopes ? rootLanguagesKept(context, proposedRoot, scopes, inScopes) : proposedRoot;
+    const keptRoot = hasScopes ? rootLanguagesKept(context, proposedRoot, scopes, inScopes) : proposedRoot;
+    const rootIds = recommendedAdded([...keptRoot, ...inScopes], manifests, new Set(options.without)).filter(
+        (id) => !inScopes.has(id),
+    );
     assertNoneRequired(options, [...rootIds, ...inScopes], manifests);
     const selectedIds = closure([...rootIds, ...inScopes], manifests);
-    return { scopes, rootIds, scopeProposals, selectedIds, rootProposals };
+    const named = new Set(options.presets ?? scopeFlags.values().toArray().flat());
+    const chosen = new Set([...keptRoot, ...inScopes]);
+    const how = new Map<string, PresetReason>();
+    for (const id of selectedIds)
+        how.set(id, reasonFor(id, { named, chosen, listed: new Set([...rootIds, ...inScopes]) }));
+    return { scopes, rootIds, scopeProposals, selectedIds, rootProposals, how };
 }

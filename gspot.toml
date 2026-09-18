@@ -4,7 +4,7 @@
 # gspot set, allow, ignore, declare, add, remove. Run gspot explain <anything> for what it means.
 
 version = 1
-presets = ["bash", "spelling", "typescript", "markdown", "prose", "commits", "config-files"]
+presets = ["bash", "spelling", "typescript", "markdown", "prose", "commits", "config-files", "naming", "formatting", "docs"]
 
 [[scope]]
 path = "packages/cli"

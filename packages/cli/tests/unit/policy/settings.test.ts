@@ -5,7 +5,7 @@ import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
 import { exposedSettings, listSettings, settingValue, specFor } from '#cli/policy/settings.ts';
 
-const selected = selectPresets(['bash'], presetManifests());
+const selected = selectPresets(['bash', 'naming', 'formatting', 'spelling'], presetManifests());
 const surface = exposedSettings(selected);
 
 describe('the settings surface', () => {

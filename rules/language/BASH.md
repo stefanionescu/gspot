@@ -178,9 +178,9 @@ that the same as a broken shebang.
 
 ## Runtime compatibility
 
-macOS ships Bash 3.2 by default. The header's `Runtime:` line is the contract the gate reads. A file
+macOS ships Bash 3.2 by default. The header's `Runtime:` line is the contract. A file
 declaring `Bash 3.2+` may not use Bash 4+ and Bash 5+ features. A file declaring `Bash 4.0+` may use
-them, and fails before any other work when the running Bash is older. The gated features are:
+them, and fails before any other work when the running Bash is older. The features that Bash 3.2 lacks are:
 
 - associative arrays;
 - `readarray` and `mapfile`;
@@ -644,7 +644,7 @@ generate_results \
 
 ## Review checklist
 
-Before `gspot check`, read the change against these questions:
+Before you run the checks of the repository, read the change against these questions:
 
 - The file has the correct shebang and header.
 - The script uses Bash only where Bash is intended.

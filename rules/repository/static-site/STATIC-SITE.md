@@ -25,7 +25,7 @@ Rules for a repository whose product is generated HTML served from a CDN or an e
 ## Build
 
 - The build is deterministic: the same inputs produce byte-identical output. Two consecutive
-  builds diff clean, and the gate checks it.
+  builds diff clean.
 - Asset names are content-hashed where the pipeline expects hashes; templates reference assets
   through placeholders the build resolves, never hard-coded hashed names.
 - Public paths are normalized before writing output. Every internal link and asset reference

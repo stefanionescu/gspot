@@ -5,7 +5,7 @@ description: "Markdown files: markdownlint, Prettier, every fenced block parsing
 
 Markdown files: markdownlint, Prettier, every fenced block parsing in its language, and the docs and prose checks.
 
-Kind: language. Requires: `docs`, `formatting`, `spelling`.
+Kind: language. Requires: `formatting`.
 
 ## Tools
 

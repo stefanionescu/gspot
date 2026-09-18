@@ -50,7 +50,7 @@ These rules align with Supabase CLI and platform behavior:
    storage assets, config, Edge Function code, or deployment scripts.
 3. Make the smallest durable change that preserves the ownership model.
 4. Regenerate derived files when required.
-5. Run `gspot check --staged`.
+5. Run the checks of the repository over the staged files.
 
 Use raw SQL migrations for schema, RLS, grants, triggers, functions, extensions,
 cron, storage bucket settings, and other database-owned behavior. Use
@@ -231,7 +231,7 @@ functions/generated-types/
 
 ## Review checklist
 
-Before `gspot check`, read the change against these questions:
+Before you run the checks of the repository, read the change against these questions:
 
 - The established layout is used and no parallel source roots were introduced.
 - New migrations are correctly named, ordered, documented, and forward-only.
