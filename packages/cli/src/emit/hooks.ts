@@ -32,7 +32,7 @@ export function runnerExec(surface: string, binaryPath?: string): string {
  * @param name the hook
  * @param surface the runner surface
  * @param binaryPath the gspot binary to call when there is no runner
- * @returns the script text
+ * @returns the script text; only commit-msg forwards an argument (the message file), because git hands pre-push the remote name and URL
  */
 export function hookBody(name: HookName, surface: string, binaryPath?: string): string {
     const lfs =
@@ -58,7 +58,7 @@ export function hookBody(name: HookName, surface: string, binaryPath?: string): 
         `        gspot_command=(${exec})`,
         '    fi',
         ...lfs,
-        `    exec "\${gspot_command[@]}" ${HOOK_ARGS[name]} "$@"`,
+        `    exec "\${gspot_command[@]}" ${HOOK_ARGS[name]}${name === 'commit-msg' ? ' "$1"' : ''}`,
         '}',
         '',
         'main "$@"',

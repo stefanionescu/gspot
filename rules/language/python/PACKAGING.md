@@ -41,8 +41,7 @@ Rules:
   resolved dependency tree. `enforced-by: integrity/dependency-ownership`
 - Install the local project through pip, not direct setuptools commands. `unenforced`
 - When project dependencies are already installed from a pinned and hashed
-  requirements file, install the local project with `python -m pip install .`. `enforced-by: integrity/dependency-ownership`
-  --no-deps .` or the editable equivalent for development workflows.
+  requirements file, install the local project with `python -m pip install --no-deps .` or the editable equivalent for development workflows. `enforced-by: integrity/dependency-ownership`
 - Do not call `python setup.py install`, `python setup.py develop`, or
   `easy_install`. `enforced-by: integrity/dependency-ownership`
 - Do not weaken install security in a deploy script just to make an install pass.
