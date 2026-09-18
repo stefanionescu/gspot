@@ -124,11 +124,13 @@ repository) and reports the rest as unchecked.
 
 ## The v1 cut
 
-Phases 0 through 4, plus the secrets, dependencies and licenses presets from phase 5. That is a
-gspot that installs in a Python API, a Swift app, an Express and Supabase monorepo, a static
-site, a Next.js app and a ComfyUI custom node, replaces six quality folders, upgrades itself,
-explains every finding, and passes on day one through baselines. Prose, the corpus and CodeQL
-follow in v1.1 and v1.2.
+Phases 0 through 6, whole (D-61). v1 ships when every preset, the prose engine, the corpus
+assembler, CodeQL at its `manual` stage and the upgrade path pass on the planted repositories and
+the six acceptance shapes. That is a gspot that installs in a Python API, a Swift app, an
+Express and Supabase monorepo, a static site, a Next.js app and a ComfyUI custom node, replaces
+six quality folders, installs the agent rule files, upgrades itself, explains every finding, and
+passes on day one through baselines. Only `check --watch`, the Homebrew tap and Phase 7 follow
+v1.
 
 The reference repositories are never modified. Every acceptance run happens in a detached
 `git worktree` that is removed afterwards; migrating a repository to gspot is a separate,

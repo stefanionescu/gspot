@@ -402,7 +402,7 @@ The versions the four repositories pin today, taken as the initial preset pins:
 | vale | 3.21.0 | swiftlint | 0.63.2 |
 | swiftformat | 0.61.1 | periphery | 3.6.0 |
 | sqlfluff | 4.0.0 | ansible-core | 2.19.4 |
-| ast-grep | pinned at implementation | ruff, basedpyright, deptry, vulture, pydoclint, import-linter, pip-licenses, pyproject-fmt, validate-pyproject | pinned at implementation from `uv.lock` |
+| ast-grep | the latest stable release on the day the preset is written, recorded in the manifest, moved only by a gspot release | ruff, basedpyright, deptry, vulture, pydoclint, import-linter, pip-licenses, pyproject-fmt, validate-pyproject | the same rule, starting from the versions the reference `uv.lock` files resolve |
 
 Where two repositories pin different versions, the preset takes the newer one and the ledger
 records the older as the floor `doctor` accepts. Tools the reference repositories pinned and

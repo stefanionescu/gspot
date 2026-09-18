@@ -5,7 +5,8 @@ repository that already has home-grown linting, and what that repository looks l
 migration is done. yap-swift-app is worked first because it has the most to replace;
 yap-text-inference second because its policy lives in `pyproject.toml` and inside the lint
 folder, which is the harder case; yap-landing third because one language runs in three
-runtimes there; slopshop fourth as the framework app. The two ComfyUI nodes follow in one table.
+runtimes there; slopshop fourth as the framework app; the two ComfyUI nodes last, in one section,
+because they share one shape.
 
 ## The two goals
 
@@ -273,20 +274,39 @@ What this repository taught, and the general rule each lesson landed as:
   adds a pattern, never code.
 - **A filename claim matches at any depth.**
 
-## The other reference repositories
+## The ComfyUI nodes
 
-yap-swift-app, yap-text-inference, yap-landing and slopshop are worked above. The remaining two:
+comfyui-reactor-connector and comfyui-live-shopping are one shape: a Python package whose root
+is the repository (`__init__.py` at the top), a TypeScript front end under `web/` whose bundled
+output is committed, ComfyUI workflow exports as data, and the same `quality/` folder as
+yap-text-inference. One section covers both, with a column where they differ.
 
-| Repository | Shape | Root lint configs | `quality/` | Hooks | Lint-related tasks | Lint pins in `mise.toml` | Old `rules/` |
-| --- | --- | --- | --- | --- | --- | --- | --- |
-| comfyui-reactor-connector | Python custom node with a `web/` front end | 7 (`.markdownlint-cli2.yaml`, `.prettierrc.json`, `.prettierignore`, `.stylelintrc.json`, `.typos.toml`, `pyrightconfig.json`, `tsconfig.json`) plus the `pyproject.toml` tool tables | 225 files, 2.0 MB | 3 | 27 of 36 | 8 of 12 | 8 files |
-| comfyui-live-shopping | same shape | 7 | 221 files, 1.9 MB | 3 | 27 of 36 | 8 of 12 | 8 files |
+| Item | reactor-connector | live-shopping | What happens |
+| --- | --- | --- | --- |
+| Root configs | 10: `.markdownlint-cli2.yaml`, `.prettierrc.json`, `.prettierignore`, `.stylelintrc.json`, `.typos.toml`, `pyrightconfig.json`, `tsconfig.json`, `requirements.txt`, `.comfyignore`, `.gitattributes` | same | the seven lint configs become stubs; `requirements.txt` is declared generated (`produced_by` the `repo:deps:export` task) so `integrity/generated-fresh` checks it and `dependency-ownership` accepts it; `.comfyignore` and `.gitattributes` are the person's |
+| `pyproject.toml` tables | ruff with `per-file-ignores`, interrogate, deptry, vulture, bandit, importlinter with six contracts, `[tool.comfy]`, `[tool.reactor-comfy]` | same without `reactor-comfy` | as yap-text-inference: the owned tables are rewritten from `gspot.toml`, interrogate and bandit go, the contracts are re-declared by hand in `[architecture.contracts]`, the `per-file-ignores` become `[[ignore]]` entries, the product tables are untouched |
+| `quality/` | 225 files, 2.0 MB, its own `package.json` | 220 files, 1.9 MB | deleted; the manifest is listed; `quality/web/links/check.mjs` is a link check the docs preset runs |
+| `web/` | 30 TypeScript files, 2 CSS, 18 Markdown node docs; `web/extension.js` and `web/extension.css` are committed bundles built from `web/scripts` and `web/styles` by `comfy:frontend:build` | 28, 3, 25; the same bundles | `gspot declare web/extension.js web/extension.css --produced-by "mise run comfy:frontend:build"`: the bundles are generated, checked for freshness, linted by nothing. The sources get the typescript preset with the `#web/*` alias from tsconfig `paths`. Nothing in the tree references the bundle (ComfyUI's page loads it), so the runtime is one line: `gspot set tools.eslint.globals "web/**" browser` |
+| `workflows/*.json` and their images | yes | yes, in `character/` and `product/` | product data, not configuration: `gspot declare "workflows/**/*.json" --produced-by "mise run comfy:workflows:build"` (both repositories have the task), or an `[[ignore]]` on `config-files/json` with a reason |
+| `locales/en/*.json` | yes | none | plain JSON; neither next-intl nor i18next is a dependency, so no i18n preset; `config-files/json` and typos check them |
+| `__init__.py`, `__main__.py` at the root | both | `__init__.py` | the python preset claims them; `__init__` and `__main__` are shipped exclusions in the naming policy; `structure/single-file-folder` does not fire on a package root |
+| `.mise/tasks/` | 36; the `comfy/*` build, package, publish and model tasks stay | 36 | the person deletes the lint, format, type, deps, security, licenses, audit and hook tasks |
+| `.githooks/`, `mise.toml` pins | 3 hooks; 12 pins, 8 linters (bearer and codeql among them) | same | as the other repositories |
+| `rules/`, `CLAUDE.md`, `AGENTS.md` | 8 files; both agent files | 8 files; `AGENTS.md` only | one managed block each; `init` creates `CLAUDE.md` where it is absent |
+| Docs | `ADVANCED.md` names 24 `mise run` commands | `README.md` 2, `ADVANCED.md` 9 | rewritten to `gspot check`; `integrity/stale-paths` fails until they are |
 
-Across the six repositories: 946 files of home-grown lint code, about 8.5 MB, six sets of
-hooks, roughly 140 task files and 54 dotfiles do one job that gspot does once. The `pyproject.toml`
-tool tables in the Python repositories are replaced the same way as dotfiles: the tables gspot
-owns (`ruff`, `importlinter`, `deptry`, `vulture`, `pytest.ini_options`) are rewritten from
-`gspot.toml` through a comment-preserving TOML edit, and every other table stays.
+What these taught, as rules already in the design: a committed bundle is a declared generated
+file; product data files are declared or ignored by path; a front end that a host page outside
+the repository loads gets its runtime from one `set` line, because nothing in the tree references
+it. No change to the architecture.
+
+## Across the six repositories
+
+946 files of home-grown lint code, about 8.5 MB, six sets of hooks, roughly 140 task files and
+54 dotfiles do one job that gspot does once. The `pyproject.toml` tool tables in the Python
+repositories are replaced the same way as dotfiles: the tables gspot owns (`ruff`, `importlinter`,
+`deptry`, `vulture`, `pytest.ini_options`) are rewritten from `gspot.toml` through a
+comment-preserving TOML edit, and every other table stays.
 
 ## The end state for a stranger's repository
 

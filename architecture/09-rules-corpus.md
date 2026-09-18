@@ -62,9 +62,12 @@ content with no counterpart. The repair pass restored each into the file named.
 | Static site: boundaries, build, routes, HTML, CSS and content naming, tests and fixtures naming | `repository/static-site/STATIC-SITE.md`, `language/naming/HTML.md`, `language/naming/CSS.md`, `general/code/TESTING.md` |
 | The iOS and API architecture, Supabase deployment, inference vocabulary | `templates/project/` |
 
-Still to restore, guarded by the completeness check below: the Bash module ownership, CI script
-and long-running pipeline sections; the TypeScript "rules not adopted" list; the Python src layout
-and packaging sections; the per-file review checklists.
+The completeness check below is clean as of 2026-09-18: 7,616 source statements, 6,551 matched
+exactly or as duplicates, 220 matched at the fuzzy ratio, 490 listed in `DROPPED.md`, 355
+dropped with a recorded reason (292 decisions, 38 restatements, 17 superseded, 8 owned by a
+formatter), none unresolved. The reasons live in `reference-rules/DROPPED.md` and
+`reference-rules/lint/dropped-manual.json`. What Phase 6 still owes is code, not editing: the
+assembler, the corpus lint inside the binary, and a Vale run in the gate.
 
 The guard is mechanical: a completeness check normalises every statement (sentence or list
 item) in the four source corpora and asserts it appears in the merged corpus or a project

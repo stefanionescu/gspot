@@ -417,3 +417,10 @@ schema and writer live in `src/policy/`, so `config` means one thing. An algorit
 stays inline (D-22). Rejected: literals scattered through the engines, which is what the reference
 audit found and what made a regex change a hunt; rejected: hoisting every constant, which D-22
 already refused.
+
+## D-61 One release, whole
+
+v1 is Phases 0 through 6. Rejected: the earlier cut that shipped after Phase 4 and deferred
+prose, the corpus and CodeQL, which handed every early adopter a second migration when the agent
+rule files arrived, and which put the part of gspot that makes it more than a linter runner into
+"later".

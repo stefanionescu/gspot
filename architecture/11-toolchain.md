@@ -12,7 +12,7 @@ them:
 
 | Way | Command | For |
 | --- | --- | --- |
-| mise | `mise use -g ubi:<org>/gspot` for a global copy; `.mise/conf.d/gspot.toml` pins it per repository | any repository; the only way that needs no Node for a Python or Swift repository |
+| mise | `mise use -g ubi:stefanionescu/gspot` for a global copy; `.mise/conf.d/gspot.toml` pins it per repository | any repository; the only way that needs no Node for a Python or Swift repository |
 | npm, bun, pnpm | `bunx gspot init`, `npx gspot init`; `devDependencies.gspot` pins it per repository. The `gspot` package is a launcher over per-platform packages (`@gspot/cli-<os>-<arch>`) listed as `optionalDependencies`, so the install downloads nothing and runs no script | JavaScript repositories, with nothing installed globally |
 | release asset | download `gspot-<os>-<arch>` from the release page and put it on `PATH` | machines with neither |
 
