@@ -33,6 +33,7 @@ function runOnWindows(
             cwd: options.cwd,
             env: environment(options.env),
             stdio: ['pipe', 'pipe', 'pipe'],
+            ...(options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs }),
         });
         const out: Buffer[] = [];
         const error: Buffer[] = [];
@@ -45,8 +46,9 @@ function runOnWindows(
         child.on('error', (spawnError: NodeJS.ErrnoException) => {
             settle(failed(spawnError, started));
         });
-        child.on('close', (code) => {
+        child.on('close', (code, signal) => {
             settle({
+                isTimedOut: signal !== null && options.timeoutMs !== undefined,
                 code: code ?? FAILED_CODE,
                 stdout: Buffer.concat(out).toString('utf8'),
                 stderr: Buffer.concat(error).toString('utf8'),
@@ -67,10 +69,12 @@ async function spawnBun(command: string[], options: SpawnOptions, started: numbe
         stdout: 'pipe',
         stderr: 'pipe',
     });
+    const state = { isTimedOut: false };
     const timer =
         options.timeoutMs === undefined
             ? undefined
             : setTimeout(() => {
+                  state.isTimedOut = true;
                   proc.kill();
               }, options.timeoutMs);
     const [stdout, stderr, code] = await Promise.all([
@@ -79,7 +83,14 @@ async function spawnBun(command: string[], options: SpawnOptions, started: numbe
         proc.exited,
     ]);
     if (timer !== undefined) clearTimeout(timer);
-    return { code, stdout, stderr, missing: false, duration: performance.now() - started };
+    return {
+        code,
+        stdout,
+        stderr,
+        missing: false,
+        duration: performance.now() - started,
+        isTimedOut: state.isTimedOut,
+    };
 }
 
 function runBlockingOnWindows(executable: string, argv: string[], options: SpawnOptions, started: number): SpawnResult {
@@ -88,6 +99,7 @@ function runBlockingOnWindows(executable: string, argv: string[], options: Spawn
         env: environment(options.env),
         input: options.stdin,
         encoding: 'utf8',
+        ...(options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs }),
     });
     const isMissing = (result.error as NodeJS.ErrnoException | undefined)?.code === 'ENOENT';
     return {
@@ -106,8 +118,10 @@ function spawnBunBlocking(command: string[], options: SpawnOptions, started: num
         stdin: options.stdin === undefined ? 'ignore' : new TextEncoder().encode(options.stdin),
         stdout: 'pipe',
         stderr: 'pipe',
+        ...(options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs }),
     });
     return {
+        isTimedOut: result.exitedDueToTimeout === true,
         code: result.exitCode,
         stdout: result.stdout.toString(),
         stderr: result.stderr.toString(),

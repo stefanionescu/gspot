@@ -65,11 +65,11 @@ lib = ["ESNext"]
 
 [tools.eslint]
 import_style = {"**/*" = "ts"}
-script_files = ["packages/npm/**", "packages/cli/build.ts", "packages/cli/publish.ts", "packages/eslint-plugin/build.ts", "docs/reference-pages.ts"]
+script_files = ["packages/npm/**", "packages/cli/build.ts", "packages/cli/publish.ts", "packages/cli/schemas.ts", "packages/eslint-plugin/build.ts", "docs/reference-pages.ts"]
 globals = {"packages/npm/**" = "commonjs"}
 
 [tools.knip]
-entry = ["**/build.ts", "**/publish.ts", "packages/npm/gspot/gspot.js", "docs/reference-pages.ts", "docs/astro.config.ts", "docs/src/content.config.ts"]
+entry = ["**/build.ts", "**/publish.ts", "packages/cli/schemas.ts", "packages/npm/gspot/gspot.js", "docs/reference-pages.ts", "docs/astro.config.ts", "docs/src/content.config.ts"]
 ignore_dependencies = [{name = "verdaccio", reason = "The release test starts it through bunx, which knip cannot see."}, {name = "tree-sitter-bash", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-css", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-html", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-javascript", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-python", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-typescript", reason = "The grammar WASM file is read from the package, not imported."}]
 
 [structure]
@@ -88,3 +88,15 @@ summary = "Checks that the reference pages of the manual match what the binary c
 paths = ["packages/cli/grammars/swift.wasm"]
 vendored = true
 reason = "The Swift grammar has no npm package with a prebuilt WASM file, so the build of tree-sitter-swift is kept in the tree."
+
+# The published JSON schemas are written from the zod schemas; this says whether they still match.
+[[check]]
+id = "schema/generated"
+command = ["bun", "packages/cli/schemas.ts", "--check"]
+paths = ["schema/**", "docs/public/schema/**", "packages/cli/src/policy/schema.ts", "packages/cli/src/run/record/schema.ts"]
+stage = "commit"
+summary = "Checks that the published JSON schemas match the zod schemas the binary reads with."
+
+[[declare]]
+paths = ["schema/**", "docs/public/schema/**"]
+produced_by = "bun packages/cli/schemas.ts"

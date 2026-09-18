@@ -22,6 +22,19 @@ const TAIL_LINES = 20;
 
 const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
 
+const FILES_PLACEHOLDER = '{files}';
+
+// Under the argument limit of every platform: Linux and macOS allow far more, Windows allows 32,767 characters.
+const WINDOWS_COMMAND_BYTES = 30_000;
+
+const UNIX_COMMAND_BYTES = 100_000;
+
+const COMMAND_BYTES = process.platform === 'win32' ? WINDOWS_COMMAND_BYTES : UNIX_COMMAND_BYTES;
+
+const DEFAULT_TOOL_SECONDS = 600;
+
+const MILLISECONDS = 1000;
+
 function allConfigs(session: Session, planned: PlannedCheck): ConfigurationTarget[] {
     const own = planned.manifest?.configs ?? [];
     const every = session.manifests
@@ -182,6 +195,21 @@ function collect(
     markFailure(spec, tool, result, parsed, state);
 }
 
+function batchedCommands(
+    session: Session,
+    planned: PlannedCheck,
+    command: string[],
+    sub: Substitutions,
+    toolPath: string | undefined,
+): string[][] {
+    const fixed = substitute(session, planned, command, { ...sub, files: [] }).join(' ').length;
+    return fileBatches(sub.files, COMMAND_BYTES - fixed).map((files) => {
+        const argv = substitute(session, planned, command, { ...sub, files });
+        if (toolPath !== undefined) argv[0] = toolPath;
+        return argv;
+    });
+}
+
 function prepare(
     session: Session,
     planned: PlannedCheck,
@@ -202,7 +230,10 @@ function prepare(
     if (command.some((part) => part.includes('{merge_base}'))) sub.mergeBase = pushBase(session.root);
     const argv = substitute(session, planned, command, sub);
     if (toolPath !== undefined) argv[0] = toolPath;
-    return { root: session.root, cwd, argv, commands: perFileCommands(argv, command, files) };
+    const commands = command.includes(FILES_PLACEHOLDER)
+        ? batchedCommands(session, planned, command, sub, toolPath)
+        : perFileCommands(argv, command, files);
+    return { root: session.root, cwd, argv, commands };
 }
 
 function finished(
@@ -231,7 +262,12 @@ async function runCommands(
     const state: ToolRunState = { root: prepared.root, cwd, findings: [], isFailed: false };
     const started = performance.now();
     for (const command of prepared.commands) {
-        const result = await run(command, { cwd, env: TOOL_ENV });
+        const seconds = planned.scope.view.limit('tool_seconds') ?? DEFAULT_TOOL_SECONDS;
+        const result = await run(command, { cwd, env: TOOL_ENV, timeoutMs: seconds * MILLISECONDS });
+        if (result.isTimedOut === true) {
+            const note = `${tool.name} ran past ${String(seconds)} seconds and was stopped; raise limits.tool_seconds with a reason, or run it at a later stage`;
+            return { ...base, status: 'error', duration: performance.now() - started, note, command: argv };
+        }
         if (result.missing)
             return { ...base, status: 'missing', note: `${tool.name} could not be started: ${result.stderr.trim()}` };
         if (isBroken(spec, result)) {
@@ -242,6 +278,29 @@ async function runCommands(
         collect(planned, tool, command, result, state);
     }
     return finished(base, spec, state, argv, started);
+}
+
+/**
+ * Splits a file list so that no command line passes the byte budget; one batch when the list fits.
+ * @param files the file paths
+ * @param budget the bytes the file arguments may take
+ * @returns the batches, in order
+ */
+export function fileBatches(files: string[], budget: number): string[][] {
+    const batches: string[][] = [[]];
+    let used = 0;
+    for (const file of files) {
+        const size = file.length + 1;
+        const current = batches.at(-1) ?? [];
+        if (used + size > budget && current.length > 0) {
+            batches.push([file]);
+            used = size;
+        } else {
+            current.push(file);
+            used += size;
+        }
+    }
+    return batches;
 }
 
 /**

@@ -1,6 +1,5 @@
 // gspot upgrade
 import type { Command } from 'commander';
-import { binaryPath } from '#cli/platform/assets.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 import { upgradeCommand } from '#cli/lifecycle/upgrade/command.ts';
@@ -21,7 +20,6 @@ export function registerUpgrade(program: Command): void {
         .option('--no-install', 'Skip the install step and print the command instead')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            const binary = binaryPath();
             await printCommand(
                 () =>
                     upgradeCommand({
@@ -30,7 +28,6 @@ export function registerUpgrade(program: Command): void {
                         yes: flags['yes'] === true,
                         install: flags['install'] !== false,
                         ...textEntry(flags, 'to', 'to'),
-                        ...(binary === undefined ? {} : { binaryPath: binary }),
                     }),
                 global,
             );

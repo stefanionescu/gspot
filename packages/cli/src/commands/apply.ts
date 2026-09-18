@@ -1,6 +1,5 @@
 // gspot apply
 import type { Command } from 'commander';
-import { binaryPath } from '#cli/platform/assets.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
 import { applyCommand } from '#cli/emit/apply-command.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
@@ -18,7 +17,6 @@ export function registerApply(program: Command): void {
         .option('--project-templates', 'Copy the project templates that match into the project rule layer, once')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            const binary = binaryPath();
             await printCommand(
                 () =>
                     applyCommand({
@@ -26,7 +24,6 @@ export function registerApply(program: Command): void {
                         check: flags['check'] === true,
                         lowerBaselines: flags['lowerBaselines'] === true,
                         projectTemplates: flags['projectTemplates'] === true,
-                        ...(binary === undefined ? {} : { binaryPath: binary }),
                     }),
                 global,
             );

@@ -56,7 +56,7 @@ export type RunOptions = PlanOptions & { fix: boolean; isDryRun: boolean; noCach
 
 export type RunOutcome = { record: RunRecord; planned: PlannedCheck[]; fixes?: FixReport };
 
-export type FixReport = { ran: { id: string; files: number }[]; changed: string[]; diffs: string[] };
+export type FixReport = { ran: { id: string; files: number }[]; changed: string[]; diffs: string[]; failed: string[] };
 
 export type IgnoreUse = { entry: IgnoreEntry; matched: number };
 

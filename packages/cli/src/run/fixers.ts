@@ -8,7 +8,7 @@ import { byFixOrder } from '#cli/run/concurrency.ts';
 import { substitute } from '#cli/run/tool-runner.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import type { FixReport, Session, PlannedCheck } from '#types/run.ts';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 
 const DIFF_CONTEXT = 3;
 const SCRATCH_EXTRAS = ['gspot.toml', 'package.json', 'tsconfig.json', 'pyproject.toml'];
@@ -25,7 +25,7 @@ function fixable(planned: PlannedCheck[]): PlannedCheck[] {
     return ordered.map(({ order: _order, ...check }) => check);
 }
 
-async function didRunFixer(session: Session, planned: PlannedCheck, root: string): Promise<boolean> {
+async function didRunFixer(session: Session, planned: PlannedCheck, root: string, failed: string[]): Promise<boolean> {
     const { spec, tool } = planned;
     if (tool === undefined || spec.fix_command === undefined) return false;
     const probe = probeTool(session.root, tool);
@@ -37,7 +37,8 @@ async function didRunFixer(session: Session, planned: PlannedCheck, root: string
         indent: planned.scope.view.format.indent_width,
     });
     argv[0] = probe.path;
-    await run(argv, { cwd: root, env: { NO_COLOR: '1' } });
+    const result = await run(argv, { cwd: root, env: { NO_COLOR: '1' } });
+    if (result.missing || result.isTimedOut === true) failed.push(`${planned.id}: ${tool.name} did not run`);
     return true;
 }
 
@@ -63,13 +64,7 @@ function scratchCopy(session: Session, paths: string[]): string {
         cpSync(source, join(scratch, path));
     }
     for (const dir of SCRATCH_DIRECTORIES)
-        if (existsSync(join(session.root, dir)))
-            cpSync(join(session.root, dir), join(scratch, dir), {
-                recursive: true,
-                dereference: false,
-                errorOnExist: false,
-                force: false,
-            });
+        if (existsSync(join(session.root, dir))) symlinkSync(join(session.root, dir), join(scratch, dir), 'dir');
     return scratch;
 }
 
@@ -95,11 +90,12 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], isD
     const root = scratch ?? session.root;
     const before = contentsOf(root, paths);
     const ran: FixReport['ran'] = [];
+    const failed: string[] = [];
     for (const check of checks)
-        if (await didRunFixer(session, check, root)) ran.push({ id: check.id, files: check.files.length });
+        if (await didRunFixer(session, check, root, failed)) ran.push({ id: check.id, files: check.files.length });
     const after = contentsOf(root, paths);
     const changed = paths.filter((path) => (before.get(path) ?? '') !== (after.get(path) ?? ''));
     const diffs = isDryRun ? changed.map((path) => diffOf(path, before.get(path) ?? '', after.get(path) ?? '')) : [];
     if (scratch !== undefined) rmSync(scratch, { recursive: true, force: true });
-    return { ran, changed, diffs };
+    return { ran, changed, diffs, failed };
 }

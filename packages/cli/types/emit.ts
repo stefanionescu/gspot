@@ -36,7 +36,6 @@ export type ApplyOptions = {
     check: boolean;
     lowerBaselines: boolean;
     projectTemplates: boolean;
-    binaryPath?: string;
 };
 
 export type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };

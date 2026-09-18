@@ -2,7 +2,6 @@
 // Usage: bun packages/cli/build.ts [--target <bun-target>] [--out dist]; --target repeats.
 import { dirname, join, relative } from 'node:path';
 import { GRAMMAR_SOURCES } from '#config/grammars.ts';
-import { policyJsonSchemaText } from '#cli/policy/json-schema.ts';
 import { existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync, copyFileSync } from 'node:fs';
 
 const here = dirname(new URL(import.meta.url).pathname);
@@ -32,12 +31,6 @@ function walk(dir: string, out: string[] = []): string[] {
 function packageFile(relativePath: string): string | undefined {
     const candidates = [join(here, 'node_modules', relativePath), join(root, 'node_modules', relativePath)];
     return candidates.find((candidate) => existsSync(candidate));
-}
-
-// Writes schema/gspot.schema.json from the zod schema, so the published file never drifts from the reader.
-function writeSchema(): void {
-    mkdirSync(join(root, 'schema'), { recursive: true });
-    writeFileSync(join(root, 'schema', 'gspot.schema.json'), policyJsonSchemaText());
 }
 
 // Copies the grammar WASM files from their packages into grammars/. The Swift grammar is vendored by hand.
@@ -86,7 +79,6 @@ function writeEntry(): string {
 }
 
 function build(targets: string[], out: string): void {
-    writeSchema();
     const missing = collectGrammars();
     if (missing.length > 0)
         console.error('Grammars without a prebuilt file (vendor them by hand):', missing.join(', '));

@@ -2,10 +2,11 @@
 import { join } from 'node:path';
 import * as messages from '#cli/policy/messages.ts';
 import { VERSION_FILE_LINE } from '#config/markers.ts';
+import packageManifest from '#package' with { type: 'json' };
 import { existsSync, readFileSync, writeFileSync, mkdirSync } from 'node:fs';
 
-/** The version of this build. */
-export const GSPOT_VERSION = '0.1.0';
+/** The version of this build: the one source is packages/cli/package.json (D-84). */
+export const { version: GSPOT_VERSION } = packageManifest;
 
 /** Thrown when the repository pins another version than the running binary. */
 export class VersionPinError extends Error {

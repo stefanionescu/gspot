@@ -4,13 +4,13 @@ import { styleFiles } from '#cli/prose/vale.ts';
 import type { MergedView } from '#types/config.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { everyManifest } from '#cli/run/session.ts';
-import { readAsset } from '#cli/platform/assets.ts';
 import { workflowFile } from '#cli/emit/workflow.ts';
 import { assembleRules } from '#cli/rules/assemble.ts';
 import { bodyStub, mergeStub } from '#cli/emit/stubs.ts';
 import { managedBlock } from '#cli/rules/managed-block.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
 import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
+import { binaryPath, readAsset } from '#cli/platform/assets.ts';
 import type { ConfigurationTarget, Manifest } from '#types/manifest.ts';
 import { GENERATED_JSON_KEY, VERSION_FILE_LINE } from '#config/markers.ts';
 import { gspotHooks, huskyLines, lefthookBlock } from '#cli/emit/hooks.ts';
@@ -100,15 +100,15 @@ function configurationFiles(
     }
 }
 
-function hookOutputs(session: Session, out: RenderedSet, binaryPath: string | undefined): void {
+function hookOutputs(session: Session, out: RenderedSet, binary: string | undefined): void {
     const { policy } = session.policyFiles;
     switch (policy.hooks.tool) {
         case 'gspot': {
-            out.files.push(...gspotHooks(policy.runner.surface, binaryPath));
+            out.files.push(...gspotHooks(policy.runner.surface, binary));
             break;
         }
         case 'husky': {
-            for (const line of huskyLines(policy.runner.surface, binaryPath))
+            for (const line of huskyLines(policy.runner.surface, binary))
                 out.blocks.push({ path: line.path, block: line.line, style: 'hash' });
             break;
         }
@@ -117,7 +117,7 @@ function hookOutputs(session: Session, out: RenderedSet, binaryPath: string | un
                 !existsSync(join(session.root, 'lefthook.yml')) && existsSync(join(session.root, '.lefthook.yml'));
             out.lefthook = {
                 path: isDotted ? '.lefthook.yml' : 'lefthook.yml',
-                block: lefthookBlock(policy.runner.surface, binaryPath),
+                block: lefthookBlock(policy.runner.surface, binary),
             };
 
             break;
@@ -202,10 +202,10 @@ export function hasPackagePins(root: string, output: PackageOutput): boolean {
 /**
  * Renders every generated file, block and merge for the session, in memory.
  * @param session the session
- * @param binaryPath the gspot binary the hooks call, when not on PATH
  * @returns the files, blocks, merges and package edits
  */
-export function emitAll(session: Session, binaryPath?: string): RenderedSet {
+export function emitAll(session: Session): RenderedSet {
+    const binary = binaryPath();
     const out: RenderedSet = { files: [], blocks: [], merges: [], packages: [] };
     out.files.push({
         path: '.gspot/version',
@@ -216,7 +216,7 @@ export function emitAll(session: Session, binaryPath?: string): RenderedSet {
     const seen = new Set<string>();
     for (const selection of session.scopes)
         for (const manifest of selection.selected) configurationFiles(session, selection, manifest, out, seen);
-    hookOutputs(session, out, binaryPath);
+    hookOutputs(session, out, binary);
     runnerOutputs(session, out);
     workflowOutput(session, out);
     out.files.push(...assembleRules(session));

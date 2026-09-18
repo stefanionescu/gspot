@@ -3,6 +3,7 @@
     "entry": [
         "**/build.ts",
         "**/publish.ts",
+        "packages/cli/schemas.ts",
         "packages/npm/gspot/gspot.js",
         "docs/reference-pages.ts",
         "docs/astro.config.ts",
@@ -17,7 +18,12 @@
         "publish.ts"
     ],
     "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
-    "ignore": [".gspot/commitlint.config.cjs", "packages/cli/grammars/swift.wasm"],
+    "ignore": [
+        ".gspot/commitlint.config.cjs",
+        "packages/cli/grammars/swift.wasm",
+        "schema/**",
+        "docs/public/schema/**"
+    ],
     "ignoreDependencies": [
         "@gspot/eslint-plugin",
         "eslint-config-prettier",
@@ -82,6 +88,7 @@
             "entry": [
                 "**/build.ts",
                 "**/publish.ts",
+                "packages/cli/schemas.ts",
                 "packages/npm/gspot/gspot.js",
                 "docs/reference-pages.ts",
                 "docs/astro.config.ts",
@@ -100,6 +107,7 @@
             "entry": [
                 "**/build.ts",
                 "**/publish.ts",
+                "schemas.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/plugin.{ts,js}",

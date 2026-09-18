@@ -14,4 +14,6 @@ package-lock.json
 pnpm-lock.yaml
 yarn.lock
 packages/cli/grammars/swift.wasm
+schema/**
+docs/public/schema/**
 

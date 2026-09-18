@@ -18,7 +18,8 @@
     "imports": {
         "#plugin/*": "./src/*",
         "#plugin-types/*": "./types/*",
-        "#plugin-tests/*": "./tests/*"
+        "#plugin-tests/*": "./tests/*",
+        "#plugin-package": "./package.json"
     },
     "files": [
         "dist"

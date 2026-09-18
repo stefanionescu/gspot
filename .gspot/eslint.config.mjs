@@ -36,6 +36,7 @@ const SCRIPTS = [
     "packages/npm/**",
     "packages/cli/build.ts",
     "packages/cli/publish.ts",
+    "packages/cli/schemas.ts",
     "packages/eslint-plugin/build.ts",
     "docs/reference-pages.ts"
 ];
@@ -385,7 +386,8 @@ const scopeAliasOverrides = [
                     "aliases": {
                         "#cli/": "packages/cli/src/",
                         "#config/": "packages/cli/config/",
-                        "#types/": "packages/cli/types/"
+                        "#types/": "packages/cli/types/",
+                        "#package": "packages/cli/package.json"
                     }
                 }
             ],
@@ -419,7 +421,8 @@ const scopeAliasOverrides = [
                     "aliases": {
                         "#cli/": "packages/cli/src/",
                         "#config/": "packages/cli/config/",
-                        "#types/": "packages/cli/types/"
+                        "#types/": "packages/cli/types/",
+                        "#package": "packages/cli/package.json"
                     },
                     "scope": "packages/cli"
                 }
@@ -437,7 +440,8 @@ const scopeAliasOverrides = [
                     "aliases": {
                         "#plugin/": "packages/eslint-plugin/src/",
                         "#plugin-types/": "packages/eslint-plugin/types/",
-                        "#plugin-tests/": "packages/eslint-plugin/tests/"
+                        "#plugin-tests/": "packages/eslint-plugin/tests/",
+                        "#plugin-package": "packages/eslint-plugin/package.json"
                     }
                 }
             ],
@@ -471,7 +475,8 @@ const scopeAliasOverrides = [
                     "aliases": {
                         "#plugin/": "packages/eslint-plugin/src/",
                         "#plugin-types/": "packages/eslint-plugin/types/",
-                        "#plugin-tests/": "packages/eslint-plugin/tests/"
+                        "#plugin-tests/": "packages/eslint-plugin/tests/",
+                        "#plugin-package": "packages/eslint-plugin/package.json"
                     },
                     "scope": "packages/eslint-plugin"
                 }
@@ -487,7 +492,9 @@ export default [
     "**/build/**",
     "**/coverage/**",
     ".gspot/**",
-    "packages/cli/grammars/swift.wasm"
+    "packages/cli/grammars/swift.wasm",
+    "schema/**",
+    "docs/public/schema/**"
 ] },
     { files: CODE, ...eslint.configs.recommended },
     { files: CODE, ...sonarjs.configs.recommended },

@@ -37,6 +37,9 @@ jobs:
               with:
                   cache: false
             - run: bun install --frozen-lockfile
+            - run: test "v$(bun -e 'console.log(require("./packages/cli/package.json").version)')" = "$TAG"
+              env:
+                  TAG: ${{ github.ref_name }}
             - run: bun packages/cli/build.ts --target "$TARGET"
               env:
                   TARGET: ${{ matrix.target }}
@@ -65,6 +68,9 @@ jobs:
                   path: dist
                   merge-multiple: true
             - run: bun install --frozen-lockfile
+            - run: bun test tests/release
+              env:
+                  GSPOT_RELEASE_TEST: '1'
             - run: bun packages/cli/publish.ts --tag "$TAG"
               env:
                   NPM_CONFIG_PROVENANCE: 'true'

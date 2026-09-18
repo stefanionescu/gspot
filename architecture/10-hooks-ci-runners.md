@@ -182,10 +182,15 @@ Every failing check prints the command that runs it alone: `gspot check typescri
 
 ## The run record
 
-Every run writes `.gspot/last.json`: version, stage, start time, duration, checks with status
-(`ran`, `skipped`, `missing`), file counts, finding counts, duration; coverage counts; ignores
-applied; baselines with counts; suppressions by form. `gspot check --json` prints it. The CI
-workflow uploads a SARIF rendering (`node-sarif-builder`) with locations for tools that give them.
+Every run writes `.gspot/last.json`, and `gspot check --json` prints the same record. Its shape
+is published as `schema/run-record.schema.json`. The record holds:
+
+- the version, the stage, the start time and the duration;
+- each check with its status, file count, findings and duration;
+- the inspection counts: source files checked and unchecked;
+- the ignores applied, the baselines with their counts, and the suppressions by form.
+  The CI
+  workflow uploads a SARIF rendering (`node-sarif-builder`) with locations for tools that give them.
 
 A hook never runs `--fix`. When a person runs `gspot check --fix` themselves with files staged,
 the fixes land in the working tree and are not staged for them. That is how the lint-staged `--fail-on-changes` option behaves. The output names the files that changed.

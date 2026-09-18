@@ -45,7 +45,7 @@ async function applyUpgrade(
 ): Promise<CommandResult> {
     writePin(root, target);
     const session = await openSession(root);
-    const synced = await applyAll(session, options.binaryPath);
+    const synced = await applyAll(session);
     const { surface } = session.policyFiles.policy.runner;
     const installNote = await installTools(root, surface, synced, options.install);
     const { baselines: written } = await firstRun(root);

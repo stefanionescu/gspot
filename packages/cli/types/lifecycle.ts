@@ -32,7 +32,6 @@ export type InitOptions = {
     install: boolean;
     allowDirty: boolean;
     projectTemplates: boolean;
-    binaryPath?: string;
 };
 
 export type InitResult = { text: string; json: Record<string, unknown>; exitCode: number };
@@ -61,7 +60,6 @@ export type UpgradeOptions = {
     to?: string;
     yes: boolean;
     install: boolean;
-    binaryPath?: string;
 };
 
 /** Adds one carried ignore: a rule the old configuration turned off, with the paths it applied to when it had any. */

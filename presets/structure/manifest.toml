@@ -293,6 +293,13 @@ default = 120
 summary = "The most characters on one line."
 
 [[settings]]
+name = "limits.tool_seconds"
+kind = "number"
+direction = "ceiling"
+default = 600
+summary = "The longest one tool run may take, in seconds. gspot stops a longer run and reports an error."
+
+[[settings]]
 name = "limits.file_size_kb"
 kind = "number"
 direction = "ceiling"

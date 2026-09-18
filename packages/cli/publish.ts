@@ -104,6 +104,11 @@ function writeChecksums(distribution: string): void {
     const tag = flag('--tag') ?? '';
     const version = tag.replace(/^v/, '');
     if (!VERSION_SHAPE.test(version)) throw new Error('--tag v<version> is required');
+    const built = (JSON.parse(readFileSync(join(here, 'package.json'), 'utf8')) as { version: string }).version;
+    if (built !== version)
+        throw new Error(
+            `The tag says ${version} and packages/cli/package.json says ${built}; the binary carries ${built}.`,
+        );
     const registry = flag('--registry');
     const isDryRun = argv.includes('--dry-run');
     const distribution = join(root, 'dist');

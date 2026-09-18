@@ -4,6 +4,7 @@ import { noCallThrough } from '#plugin/rules/no-call-through.ts';
 import { typesPlacement } from '#plugin/rules/types-placement.ts';
 import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
 import { noTrivialFiles } from '#plugin/rules/no-trivial-files.ts';
+import packageManifest from '#plugin-package' with { type: 'json' };
 import { importDirection } from '#plugin/rules/import-direction.ts';
 import { importPathStyle } from '#plugin/rules/import-path-style.ts';
 import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
@@ -56,7 +57,7 @@ const rules = {
 };
 
 const plugin = {
-    meta: { name: '@gspot/eslint-plugin', version: '0.1.0' },
+    meta: { name: packageManifest.name, version: packageManifest.version },
     rules,
 };
 

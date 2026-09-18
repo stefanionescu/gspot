@@ -1,0 +1,1797 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://gspot.dev/schema/gspot.schema.json",
+    "title": "gspot.toml",
+    "description": "The policy of one repository under gspot: presets, scopes, limits, naming, tools, ignores, declarations and hooks.",
+    "type": "object",
+    "properties": {
+        "version": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+        },
+        "presets": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "scope": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "path": {
+                        "type": "string"
+                    },
+                    "presets": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "limits": {
+                        "type": "object",
+                        "propertyNames": {
+                            "type": "string"
+                        },
+                        "additionalProperties": {
+                            "anyOf": [
+                                {
+                                    "anyOf": [
+                                        {
+                                            "type": "number"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": {
+                                                    "type": "number"
+                                                },
+                                                "reason": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "value",
+                                                "reason"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    ]
+                                },
+                                {
+                                    "type": "object",
+                                    "propertyNames": {
+                                        "type": "string"
+                                    },
+                                    "additionalProperties": {
+                                        "anyOf": [
+                                            {
+                                                "type": "number"
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "number"
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "reason"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    }
+                                }
+                            ]
+                        }
+                    },
+                    "naming": {
+                        "type": "object",
+                        "properties": {
+                            "banned_terms": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "allowed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "name",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "external": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "reserved": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "term": {
+                                            "type": "string"
+                                        },
+                                        "allowed_for": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "term",
+                                        "allowed_for"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "remove_groups": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "group": {
+                                            "type": "string"
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "group",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "contract_properties": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "file": {
+                                            "type": "string"
+                                        },
+                                        "names": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "file",
+                                        "names"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "rules": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "paths": {
+                                            "minItems": 1,
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "languages": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "categories": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "names": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "structural_prefix": {
+                                            "type": "string"
+                                        },
+                                        "allow_digits": {
+                                            "type": "boolean"
+                                        },
+                                        "allow_duplicate_words": {
+                                            "type": "boolean"
+                                        },
+                                        "exclude": {
+                                            "type": "boolean"
+                                        },
+                                        "case": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "paths"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        },
+                        "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                                "max_chars": {
+                                    "anyOf": [
+                                        {
+                                            "type": "number"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": {
+                                                    "type": "number"
+                                                },
+                                                "reason": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "value",
+                                                "reason"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    ]
+                                },
+                                "max_words": {
+                                    "anyOf": [
+                                        {
+                                            "type": "number"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": {
+                                                    "type": "number"
+                                                },
+                                                "reason": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "value",
+                                                "reason"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    ]
+                                },
+                                "case": {
+                                    "anyOf": [
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "reason": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "value",
+                                                "reason"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    ]
+                                }
+                            },
+                            "additionalProperties": {
+                                "type": "object",
+                                "properties": {
+                                    "max_chars": {
+                                        "anyOf": [
+                                            {
+                                                "type": "number"
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "number"
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "reason"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    },
+                                    "max_words": {
+                                        "anyOf": [
+                                            {
+                                                "type": "number"
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "number"
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "reason"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    },
+                                    "case": {
+                                        "anyOf": [
+                                            {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "reason"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "architecture": {
+                        "type": "object",
+                        "properties": {
+                            "types_directory": {
+                                "type": "string"
+                            },
+                            "elements": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "paths": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "name",
+                                        "paths"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "edges_allowed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "from": {
+                                            "type": "string"
+                                        },
+                                        "to": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "from",
+                                        "to"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "roles": {
+                                "type": "object",
+                                "propertyNames": {
+                                    "type": "string"
+                                },
+                                "additionalProperties": {
+                                    "anyOf": [
+                                        {
+                                            "type": "string"
+                                        },
+                                        {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        }
+                                    ]
+                                }
+                            },
+                            "contracts": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                        "type": "string"
+                                    },
+                                    "additionalProperties": {}
+                                }
+                            },
+                            "package_roots": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "route_directories": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "shared_directories": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "feature_contracts": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "imports_allowed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "from": {
+                                            "type": "string"
+                                        },
+                                        "to": {
+                                            "type": "string"
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "from",
+                                        "to",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "structure": {
+                        "type": "object",
+                        "properties": {
+                            "reexports": {
+                                "type": "string",
+                                "enum": [
+                                    "none",
+                                    "index-only"
+                                ]
+                            },
+                            "call_through_allowed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "file": {
+                                            "type": "string"
+                                        },
+                                        "name": {
+                                            "type": "string"
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "file",
+                                        "name",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "trivial_allowed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "language": {
+                                            "type": "string"
+                                        },
+                                        "path": {
+                                            "type": "string"
+                                        },
+                                        "names": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "path",
+                                        "names",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "single_file_folder_allowed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "paths": {
+                                            "minItems": 1,
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "paths",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "prefix_collision_allowed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "paths": {
+                                            "minItems": 1,
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "paths",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "folder_name_allowed": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "paths": {
+                                            "minItems": 1,
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "paths",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            },
+                            "python": {
+                                "type": "object",
+                                "propertyNames": {
+                                    "type": "string"
+                                },
+                                "additionalProperties": {}
+                            }
+                        },
+                        "additionalProperties": false
+                    },
+                    "tools": {
+                        "type": "object",
+                        "propertyNames": {
+                            "type": "string"
+                        },
+                        "additionalProperties": {
+                            "type": "object",
+                            "properties": {
+                                "enabled": {
+                                    "anyOf": [
+                                        {
+                                            "type": "boolean"
+                                        },
+                                        {
+                                            "type": "object",
+                                            "properties": {
+                                                "value": {
+                                                    "type": "boolean"
+                                                },
+                                                "reason": {
+                                                    "type": "string"
+                                                }
+                                            },
+                                            "required": [
+                                                "value",
+                                                "reason"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    ]
+                                },
+                                "extra": {
+                                    "type": "object",
+                                    "properties": {
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "reason"
+                                    ],
+                                    "additionalProperties": {}
+                                }
+                            },
+                            "additionalProperties": {}
+                        }
+                    },
+                    "format": {
+                        "type": "object",
+                        "properties": {
+                            "indent_style": {
+                                "type": "string",
+                                "enum": [
+                                    "space",
+                                    "tab"
+                                ]
+                            },
+                            "indent_width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 8
+                            },
+                            "print_width": {
+                                "type": "integer",
+                                "minimum": 40,
+                                "maximum": 400
+                            },
+                            "line_ending": {
+                                "type": "string",
+                                "enum": [
+                                    "lf",
+                                    "crlf"
+                                ]
+                            },
+                            "newline_at_end": {
+                                "type": "boolean"
+                            },
+                            "quotes": {
+                                "type": "string",
+                                "enum": [
+                                    "single",
+                                    "double"
+                                ]
+                            },
+                            "trailing_comma": {
+                                "type": "string",
+                                "enum": [
+                                    "all",
+                                    "es5",
+                                    "none"
+                                ]
+                            },
+                            "semicolons": {
+                                "type": "boolean"
+                            }
+                        },
+                        "additionalProperties": false
+                    }
+                },
+                "required": [
+                    "path"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "limits": {
+            "type": "object",
+            "propertyNames": {
+                "type": "string"
+            },
+            "additionalProperties": {
+                "anyOf": [
+                    {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "value": {
+                                        "type": "number"
+                                    },
+                                    "reason": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "value",
+                                    "reason"
+                                ],
+                                "additionalProperties": false
+                            }
+                        ]
+                    },
+                    {
+                        "type": "object",
+                        "propertyNames": {
+                            "type": "string"
+                        },
+                        "additionalProperties": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "type": "number"
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        }
+                    }
+                ]
+            }
+        },
+        "naming": {
+            "type": "object",
+            "properties": {
+                "banned_terms": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "allowed": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "reason"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "external": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "reserved": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "term": {
+                                "type": "string"
+                            },
+                            "allowed_for": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": [
+                            "term",
+                            "allowed_for"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "remove_groups": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "group": {
+                                "type": "string"
+                            },
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "group",
+                            "reason"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "contract_properties": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "file": {
+                                "type": "string"
+                            },
+                            "names": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": [
+                            "file",
+                            "names"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "rules": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "paths": {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "languages": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "categories": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "names": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "structural_prefix": {
+                                "type": "string"
+                            },
+                            "allow_digits": {
+                                "type": "boolean"
+                            },
+                            "allow_duplicate_words": {
+                                "type": "boolean"
+                            },
+                            "exclude": {
+                                "type": "boolean"
+                            },
+                            "case": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "paths"
+                        ],
+                        "additionalProperties": false
+                    }
+                }
+            },
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "max_chars": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "value": {
+                                        "type": "number"
+                                    },
+                                    "reason": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "value",
+                                    "reason"
+                                ],
+                                "additionalProperties": false
+                            }
+                        ]
+                    },
+                    "max_words": {
+                        "anyOf": [
+                            {
+                                "type": "number"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "value": {
+                                        "type": "number"
+                                    },
+                                    "reason": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "value",
+                                    "reason"
+                                ],
+                                "additionalProperties": false
+                            }
+                        ]
+                    },
+                    "case": {
+                        "anyOf": [
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "value": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "reason": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "value",
+                                    "reason"
+                                ],
+                                "additionalProperties": false
+                            }
+                        ]
+                    }
+                },
+                "additionalProperties": {
+                    "type": "object",
+                    "properties": {
+                        "max_chars": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "type": "number"
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        },
+                        "max_words": {
+                            "anyOf": [
+                                {
+                                    "type": "number"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "type": "number"
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        },
+                        "case": {
+                            "anyOf": [
+                                {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "string"
+                                    }
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        }
+                    },
+                    "additionalProperties": false
+                }
+            }
+        },
+        "architecture": {
+            "type": "object",
+            "properties": {
+                "types_directory": {
+                    "type": "string"
+                },
+                "elements": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "name": {
+                                "type": "string"
+                            },
+                            "paths": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        },
+                        "required": [
+                            "name",
+                            "paths"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "edges_allowed": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "from": {
+                                "type": "string"
+                            },
+                            "to": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "from",
+                            "to"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "roles": {
+                    "type": "object",
+                    "propertyNames": {
+                        "type": "string"
+                    },
+                    "additionalProperties": {
+                        "anyOf": [
+                            {
+                                "type": "string"
+                            },
+                            {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            }
+                        ]
+                    }
+                },
+                "contracts": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "propertyNames": {
+                            "type": "string"
+                        },
+                        "additionalProperties": {}
+                    }
+                },
+                "package_roots": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "route_directories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "shared_directories": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "feature_contracts": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "imports_allowed": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "from": {
+                                "type": "string"
+                            },
+                            "to": {
+                                "type": "string"
+                            },
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "from",
+                            "to",
+                            "reason"
+                        ],
+                        "additionalProperties": false
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "structure": {
+            "type": "object",
+            "properties": {
+                "reexports": {
+                    "type": "string",
+                    "enum": [
+                        "none",
+                        "index-only"
+                    ]
+                },
+                "call_through_allowed": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "file": {
+                                "type": "string"
+                            },
+                            "name": {
+                                "type": "string"
+                            },
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "file",
+                            "name",
+                            "reason"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "trivial_allowed": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "language": {
+                                "type": "string"
+                            },
+                            "path": {
+                                "type": "string"
+                            },
+                            "names": {
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "path",
+                            "names",
+                            "reason"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "single_file_folder_allowed": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "paths": {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "paths",
+                            "reason"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "prefix_collision_allowed": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "paths": {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "paths",
+                            "reason"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "folder_name_allowed": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "paths": {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                    "type": "string"
+                                }
+                            },
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "paths",
+                            "reason"
+                        ],
+                        "additionalProperties": false
+                    }
+                },
+                "python": {
+                    "type": "object",
+                    "propertyNames": {
+                        "type": "string"
+                    },
+                    "additionalProperties": {}
+                }
+            },
+            "additionalProperties": false
+        },
+        "tools": {
+            "type": "object",
+            "propertyNames": {
+                "type": "string"
+            },
+            "additionalProperties": {
+                "type": "object",
+                "properties": {
+                    "enabled": {
+                        "anyOf": [
+                            {
+                                "type": "boolean"
+                            },
+                            {
+                                "type": "object",
+                                "properties": {
+                                    "value": {
+                                        "type": "boolean"
+                                    },
+                                    "reason": {
+                                        "type": "string"
+                                    }
+                                },
+                                "required": [
+                                    "value",
+                                    "reason"
+                                ],
+                                "additionalProperties": false
+                            }
+                        ]
+                    },
+                    "extra": {
+                        "type": "object",
+                        "properties": {
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "reason"
+                        ],
+                        "additionalProperties": {}
+                    }
+                },
+                "additionalProperties": {}
+            }
+        },
+        "format": {
+            "type": "object",
+            "properties": {
+                "indent_style": {
+                    "type": "string",
+                    "enum": [
+                        "space",
+                        "tab"
+                    ]
+                },
+                "indent_width": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 8
+                },
+                "print_width": {
+                    "type": "integer",
+                    "minimum": 40,
+                    "maximum": 400
+                },
+                "line_ending": {
+                    "type": "string",
+                    "enum": [
+                        "lf",
+                        "crlf"
+                    ]
+                },
+                "newline_at_end": {
+                    "type": "boolean"
+                },
+                "quotes": {
+                    "type": "string",
+                    "enum": [
+                        "single",
+                        "double"
+                    ]
+                },
+                "trailing_comma": {
+                    "type": "string",
+                    "enum": [
+                        "all",
+                        "es5",
+                        "none"
+                    ]
+                },
+                "semicolons": {
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": false
+        },
+        "prose": {
+            "type": "object",
+            "properties": {
+                "vocabulary": {
+                    "type": "array",
+                    "items": {
+                        "type": "string"
+                    }
+                },
+                "disabled": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "rule": {
+                                "type": "string"
+                            },
+                            "reason": {
+                                "type": "string"
+                            }
+                        },
+                        "required": [
+                            "rule",
+                            "reason"
+                        ],
+                        "additionalProperties": false
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "ignore": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "check": {
+                        "type": "string"
+                    },
+                    "rule": {
+                        "type": "string"
+                    },
+                    "finding": {
+                        "type": "string"
+                    },
+                    "paths": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "check",
+                    "reason"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "declare": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "paths": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "produced_by": {
+                        "type": "string"
+                    },
+                    "vendored": {
+                        "type": "boolean"
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "paths"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "check": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "command": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "paths": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "stage": {
+                        "type": "string",
+                        "enum": [
+                            "commit",
+                            "push",
+                            "manual"
+                        ]
+                    },
+                    "fix": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "count_regex": {
+                        "type": "string"
+                    },
+                    "requires": {
+                        "type": "string",
+                        "enum": [
+                            "build",
+                            "docker",
+                            "network"
+                        ]
+                    },
+                    "platform": {
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "enum": [
+                                "macos",
+                                "linux",
+                                "windows"
+                            ]
+                        }
+                    },
+                    "summary": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "id",
+                    "command",
+                    "paths",
+                    "stage"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "hooks": {
+            "type": "object",
+            "properties": {
+                "tool": {
+                    "type": "string",
+                    "enum": [
+                        "gspot",
+                        "lefthook",
+                        "husky",
+                        "none"
+                    ]
+                }
+            },
+            "additionalProperties": false
+        },
+        "ci": {
+            "type": "object",
+            "properties": {
+                "provider": {
+                    "type": "string",
+                    "enum": [
+                        "github",
+                        "none"
+                    ]
+                },
+                "platforms": {
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "enum": [
+                            "ubuntu",
+                            "macos",
+                            "windows"
+                        ]
+                    }
+                }
+            },
+            "additionalProperties": false
+        },
+        "rules": {
+            "type": "object",
+            "properties": {
+                "install": {
+                    "type": "boolean"
+                },
+                "directory": {
+                    "type": "string"
+                },
+                "project": {
+                    "type": "string"
+                }
+            },
+            "additionalProperties": false
+        },
+        "editor": {
+            "type": "object",
+            "properties": {
+                "vscode": {
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": false
+        },
+        "inspection": {
+            "type": "object",
+            "properties": {
+                "strict": {
+                    "type": "boolean"
+                }
+            },
+            "additionalProperties": false
+        },
+        "runner": {
+            "type": "object",
+            "properties": {
+                "surface": {
+                    "type": "string",
+                    "enum": [
+                        "mise",
+                        "npm",
+                        "bun",
+                        "pnpm",
+                        "uv",
+                        "none"
+                    ]
+                }
+            },
+            "additionalProperties": false
+        }
+    },
+    "required": [
+        "version"
+    ],
+    "additionalProperties": false
+}

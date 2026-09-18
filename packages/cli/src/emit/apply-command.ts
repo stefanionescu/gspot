@@ -230,13 +230,12 @@ export function didWrite(root: string, path: string, content: string, isReadOnly
 /**
  * Renders and writes everything. Idempotent.
  * @param session the session
- * @param binaryPath the gspot binary the hooks call, when not on PATH
  * @returns what was written, unchanged, removed, and which blocks and packages changed
  */
-export async function applyAll(session: Session, binaryPath?: string): Promise<ApplyReport> {
+export async function applyAll(session: Session): Promise<ApplyReport> {
     const report: ApplyReport = { written: [], unchanged: [], removed: [], blocks: [], packages: [], notes: [] };
     const drift = computeDrift(session);
-    const rendered = emitAll(session, binaryPath);
+    const rendered = emitAll(session);
     writeFiles(session, rendered, report);
     writeBlocks(session, rendered, report);
     writeMerges(session, rendered, report);
@@ -265,6 +264,6 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
     const session = await openSession(root);
     if (options.check) return checkDrift(session);
     if (options.lowerBaselines) return lowerFromLastRun(root, session);
-    const report = await applyAll(session, options.binaryPath);
+    const report = await applyAll(session);
     return { text: reportText(report), json: report, exitCode: 0 };
 }

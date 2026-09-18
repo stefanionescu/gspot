@@ -49,6 +49,7 @@ Kind: concern.
 - `limits.trivial_statements`: A function with this many statements or fewer, used once, is reported as trivial.
 - `limits.trivial_ast_nodes`: A function with this many syntax nodes or fewer, used once, is reported as trivial.
 - `limits.line_length`: The most characters on one line.
+- `limits.tool_seconds`: The longest one tool run may take, in seconds. gspot stops a longer run and reports an error.
 - `limits.file_size_kb`: The largest tracked file, in kilobytes, outside LFS, or a declaration.
 - `limits.bash.file_lines`: The most code lines a shell script may have.
 - `limits.bash.function_lines`: The most code lines one shell function may have.

@@ -1,0 +1,285 @@
+{
+    "$schema": "https://json-schema.org/draft/2020-12/schema",
+    "$id": "https://gspot.dev/schema/run-record.schema.json",
+    "title": "gspot run record",
+    "description": "What gspot check --json prints and .gspot/last.json holds: every check with its findings, the baselines, the ignores and the exit code.",
+    "type": "object",
+    "properties": {
+        "version": {
+            "type": "string"
+        },
+        "stage": {
+            "type": "string"
+        },
+        "started": {
+            "type": "string"
+        },
+        "duration": {
+            "type": "number"
+        },
+        "root": {
+            "type": "string"
+        },
+        "checks": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "id": {
+                        "type": "string"
+                    },
+                    "scope": {
+                        "type": "string"
+                    },
+                    "status": {
+                        "type": "string",
+                        "enum": [
+                            "ok",
+                            "fail",
+                            "cache",
+                            "missing",
+                            "skipped",
+                            "error"
+                        ]
+                    },
+                    "files": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                    },
+                    "duration": {
+                        "type": "number"
+                    },
+                    "findings": {
+                        "type": "array",
+                        "items": {
+                            "type": "object",
+                            "properties": {
+                                "check": {
+                                    "type": "string"
+                                },
+                                "file": {
+                                    "type": "string"
+                                },
+                                "line": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                },
+                                "column": {
+                                    "type": "integer",
+                                    "minimum": -9007199254740991,
+                                    "maximum": 9007199254740991
+                                },
+                                "rule": {
+                                    "type": "string"
+                                },
+                                "message": {
+                                    "type": "string"
+                                },
+                                "help": {
+                                    "type": "string"
+                                },
+                                "fixable": {
+                                    "type": "boolean"
+                                }
+                            },
+                            "required": [
+                                "check",
+                                "file",
+                                "message",
+                                "fixable"
+                            ],
+                            "additionalProperties": false
+                        }
+                    },
+                    "note": {
+                        "type": "string"
+                    },
+                    "reproduce": {
+                        "type": "string"
+                    },
+                    "command": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "baselined": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                    }
+                },
+                "required": [
+                    "id",
+                    "scope",
+                    "status",
+                    "files",
+                    "duration",
+                    "findings",
+                    "baselined"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "baselines": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "check": {
+                        "type": "string"
+                    },
+                    "rule": {
+                        "type": "string"
+                    },
+                    "count": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                    },
+                    "baseline": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                    },
+                    "held": {
+                        "type": "boolean"
+                    }
+                },
+                "required": [
+                    "check",
+                    "rule",
+                    "count",
+                    "baseline",
+                    "held"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "ignores": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "check": {
+                        "type": "string"
+                    },
+                    "rule": {
+                        "type": "string"
+                    },
+                    "paths": {
+                        "type": "array",
+                        "items": {
+                            "type": "string"
+                        }
+                    },
+                    "reason": {
+                        "type": "string"
+                    },
+                    "matched": {
+                        "type": "integer",
+                        "minimum": -9007199254740991,
+                        "maximum": 9007199254740991
+                    }
+                },
+                "required": [
+                    "check",
+                    "reason",
+                    "matched"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "skips": {
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "check": {
+                        "type": "string"
+                    },
+                    "source": {
+                        "type": "string",
+                        "enum": [
+                            "local",
+                            "flag",
+                            "platform",
+                            "rules"
+                        ]
+                    }
+                },
+                "required": [
+                    "check",
+                    "source"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "inspection": {
+            "type": "object",
+            "properties": {
+                "checked": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                },
+                "unchecked": {
+                    "type": "integer",
+                    "minimum": -9007199254740991,
+                    "maximum": 9007199254740991
+                }
+            },
+            "required": [
+                "checked",
+                "unchecked"
+            ],
+            "additionalProperties": false
+        },
+        "suppressions": {
+            "type": "object",
+            "propertyNames": {
+                "type": "string"
+            },
+            "additionalProperties": {
+                "type": "integer",
+                "minimum": -9007199254740991,
+                "maximum": 9007199254740991
+            }
+        },
+        "unstaged": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+        },
+        "failed": {
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "exitCode": {
+            "type": "integer",
+            "minimum": -9007199254740991,
+            "maximum": 9007199254740991
+        }
+    },
+    "required": [
+        "version",
+        "stage",
+        "started",
+        "duration",
+        "root",
+        "checks",
+        "baselines",
+        "ignores",
+        "skips",
+        "inspection",
+        "suppressions",
+        "unstaged",
+        "failed",
+        "exitCode"
+    ],
+    "additionalProperties": false
+}

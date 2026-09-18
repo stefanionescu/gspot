@@ -98,7 +98,7 @@ async function write(
         opened.scopes.flatMap((scope) => scope.selected),
     );
     const session = await openSession(root);
-    const synced = await applyAll(session, options.binaryPath);
+    const synced = await applyAll(session);
     const installNote = await installTools(root, prepared.runner, synced, options.install);
     const first = await firstRun(root);
     const rendered = new Set([...synced.written, ...synced.unchanged]);
@@ -107,7 +107,7 @@ async function write(
         prepared.removed.filter((entry) => !rendered.has(entry.path)),
     );
     // The replaced files are gone from the file set now, so the render that names source files is taken once more.
-    await applyAll(await openSession(root), options.binaryPath);
+    await applyAll(await openSession(root));
     const summary = firstRunSummary(first, installNote);
     const newer = await newerVersion(GSPOT_VERSION);
     const { dim } = paint();

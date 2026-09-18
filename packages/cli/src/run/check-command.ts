@@ -60,6 +60,7 @@ function runOptions(
 }
 
 function fixSummary(fixes: FixReport, isDryRun: boolean, text: string): string {
+    for (const line of fixes.failed) warn(`a fixer failed: ${line}`);
     const count = fixes.changed.length;
     if (isDryRun) {
         const verdict = count === 0 ? 'no fixer changes anything' : `${String(count)} file(s) would change`;

@@ -1,7 +1,6 @@
 // gspot init
 import { Option } from 'commander';
 import type { Command } from 'commander';
-import { binaryPath } from '#cli/platform/assets.ts';
 import type { InitOptions } from '#types/lifecycle.ts';
 import { initCommand } from '#cli/lifecycle/init/command.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
@@ -13,7 +12,6 @@ function formatChoice(flags: Record<string, unknown>): InitOptions['format'] {
 }
 
 function optionsFrom(flags: Record<string, unknown>, global: Record<string, unknown>): InitOptions {
-    const binary = binaryPath();
     const lists = {
         presets: listFlag(flags, 'presets'),
         without: listFlag(flags, 'without'),
@@ -39,7 +37,6 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         allowDirty: flags['allowDirty'] === true,
         projectTemplates: flags['projectTemplates'] === true,
         ...given,
-        ...(binary === undefined ? {} : { binaryPath: binary }),
     };
 }
 

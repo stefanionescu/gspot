@@ -6,7 +6,8 @@
     "imports": {
         "#cli/*": "./src/*",
         "#config/*": "./config/*",
-        "#types/*": "./types/*"
+        "#types/*": "./types/*",
+        "#package": "./package.json"
     },
     "dependencies": {
         "@bomb.sh/tab": "0.0.22",

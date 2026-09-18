@@ -35,4 +35,6 @@ extend-exclude = [
     ".gspot/cache/", ".gspot/vale/", ".gspot/last.json", ".gspot/last.sarif", ".gspot/baselines/",
     "prose/styles/gspot/us-english.yml",
     "packages/cli/grammars/swift.wasm",
+    "schema/**",
+    "docs/public/schema/**",
 ]

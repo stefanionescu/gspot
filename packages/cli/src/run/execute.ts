@@ -3,7 +3,6 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { planRun } from '#cli/run/plan.ts';
 import { applyFixers } from '#cli/run/fixers.ts';
-import { writeRecord } from '#cli/run/record.ts';
 import type { RunRecord } from '#types/record.ts';
 import type { CheckResult } from '#types/finding.ts';
 import { runEngineCheck } from '#cli/run/engines.ts';
@@ -11,6 +10,7 @@ import { reproduceLine } from '#cli/run/reproduce.ts';
 import { SUPPRESSION_FORMS } from '#config/markers.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { stageLimiter } from '#cli/run/concurrency.ts';
+import { writeRecord } from '#cli/run/record/write.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import { applyBaselines, readBaselines } from '#cli/run/baselines.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
@@ -241,7 +241,7 @@ export async function executeRun(session: Session, options: RunOptions): Promise
         baselines: verdicts,
         ignores: ignoreRows(uses),
         skips: skipRows(planned),
-        coverage: { checked: checkedSources.length, unchecked: sources.length - checkedSources.length, partial: 0 },
+        inspection: { checked: checkedSources.length, unchecked: sources.length - checkedSources.length },
         suppressions: census(session, checkedSources),
         unstaged: 0,
         failed,

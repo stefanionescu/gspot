@@ -20,7 +20,7 @@ export type RunRecord = {
     baselines: BaselineVerdict[];
     ignores: { check: string; rule?: string; paths?: string[]; reason: string; matched: number }[];
     skips: { check: string; source: 'local' | 'flag' | 'platform' | 'rules' }[];
-    coverage: { checked: number; unchecked: number; partial: number };
+    inspection: { checked: number; unchecked: number };
     suppressions: Record<string, number>;
     unstaged: number;
     failed: string[];
