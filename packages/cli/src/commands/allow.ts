@@ -11,7 +11,7 @@ import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 export function registerAllow(program: Command): void {
     program
         .command('allow <list> <value...>')
-        .description('Add to an allow list: typos, typos-exclude, licenses, naming, naming-external, gitleaks or osv')
+        .description('Add to an allow list: typos, typos-exclude, licenses, naming, naming-external, gitleaks, or osv')
         .option('--reason <text>', 'Why; required for every list but typos words')
         .option('--license <spdx>', 'For licenses: the license the package reports')
         .option('--remove', 'Delete the matching entry instead')

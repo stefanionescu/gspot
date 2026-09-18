@@ -27,7 +27,7 @@ takes = "files"
 command = ["commitlint", "--config", "{config:commitlint}", "--edit", "{message_file}"]
 output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
 inspection = []
-summary = "Checks the commit message being written: a conventional type, a known scope, a short subject and a wrapped body."
+summary = "Checks the commit message being written: a conventional type, a known scope, a short subject, and a wrapped body."
 why = "A history of typed, scoped subjects is what release notes, blame and bisect are read from; a free-form message hides the change."
 fix = "Write <type>(<scope>): <subject>, with a type from the list and a subject under 72 characters, or change the list with gspot set tools.commitlint.types."
 
@@ -54,7 +54,7 @@ name = "tools.commitlint.scopes"
 kind = "list"
 direction = "neutral"
 default = []
-summary = "The commit scopes the scope-enum rule allows; empty means the last segment of every scope path plus root, hooks and deps, and no enum at all when the repository has no scopes."
+summary = "The commit scopes the scope-enum rule allows. Empty means the last segment of every scope path plus root, hooks, and deps; a repository with no scopes gets no enum."
 
 [[settings]]
 name = "tools.commitlint.rules"

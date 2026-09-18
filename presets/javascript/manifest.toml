@@ -159,8 +159,8 @@ command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "
 cwd = "root"
 inspection = ["dependencies"]
 output = {format = "regex", pattern = "^(?<file>[^:\\s]+)(?::\\s*(?<message>.*))?$"}
-summary = "Finds files, exports and dependencies nothing uses."
-why = "Dead code is read, maintained and shipped for nobody."
+summary = "Finds files, exports, and dependencies nothing uses."
+why = "Dead code is read, maintained, and shipped for nobody."
 fix = "Delete what knip names, or add a knip entry point with gspot set tools.knip.entry if the file is loaded in a way knip cannot see."
 
 [[settings]]
@@ -196,7 +196,7 @@ name = "tools.eslint.globals"
 kind = "table"
 direction = "neutral"
 default = {}
-summary = "The runtime per file class when the tree does not say: a glob to node, browser, worker or commonjs."
+summary = "The runtime per file class when the tree does not say: a glob to node, browser, worker, or commonjs."
 
 [[settings]]
 name = "tools.eslint.node_version"
@@ -210,7 +210,7 @@ name = "tools.eslint.restricted_imports"
 kind = "list"
 direction = "tightening"
 default = []
-summary = "Imports this repository refuses, each with a name and a message."
+summary = "Imports this repository refuses, each with a name, and a message."
 
 [[settings]]
 name = "tools.knip.entry"

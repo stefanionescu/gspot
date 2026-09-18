@@ -1,0 +1,70 @@
+---
+title: "Engines"
+description: "The checks gspot runs itself, by engine: structure, naming, prose and integrity."
+---
+
+gspot runs external tools for what they do well and its own engines for the rest. Each engine is a set of checks; every check explains itself on its own page.
+
+## Integrity
+
+| Check                                                                          | Stage  | What it finds                                                                                                                                             |
+| ------------------------------------------------------------------------------ | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`config-files/env-example`](/reference/rules/config-files/env-example/)       | push   | Checks that every environment variable the code reads appears in the environment template.                                                                |
+| [`integrity/docs-headings`](/reference/rules/integrity/docs-headings/)         | commit | Finds a heading from the banned list, such as Table of contents, or Project structure.                                                                    |
+| [`integrity/stale-paths`](/reference/rules/integrity/stale-paths/)             | commit | Checks that every path a Markdown file names is tracked, and every mise run or bun run names a task that exists.                                          |
+| [`docs/readme-present`](/reference/rules/docs/readme-present/)                 | commit | Checks that every scope has a README.md and the root has a LICENSE.                                                                                       |
+| [`docs/readme-shape`](/reference/rules/docs/readme-shape/)                     | commit | Checks the shape of every README: one H1, an opening paragraph, a Contents list when long, a section on getting started.                                  |
+| [`markdown/fences`](/reference/rules/markdown/fences/)                         | commit | Checks that every fenced code block with a language tag parses in that language.                                                                          |
+| [`integrity/baselines-current`](/reference/rules/integrity/baselines-current/) | commit | Checks that every baseline names a check that still runs and that every file in a tool's suppressions file is still tracked.                              |
+| [`integrity/config-purity`](/reference/rules/integrity/config-purity/)         | commit | Checks that every module under the config role holds literals only: no function, no control flow, no call, no value import from outside the config roots. |
+| [`integrity/suppressions`](/reference/rules/integrity/suppressions/)           | commit | Counts every inline suppression by form and reports each one that carries no reason; nosemgrep is refused outright.                                       |
+| [`integrity/allowlists-match`](/reference/rules/integrity/allowlists-match/)   | commit | Checks that every path pattern in gspot.toml matches at least one tracked file.                                                                           |
+| [`integrity/task-policy`](/reference/rules/integrity/task-policy/)             | commit | Checks that the runner surface holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath.         |
+| [`integrity/large-files`](/reference/rules/integrity/large-files/)             | commit | Checks that every tracked file over the size limit is stored through LFS or declared with a reason.                                                       |
+| [`integrity/tsconfig-options`](/reference/rules/integrity/tsconfig-options/)   | commit | Checks that every tsconfig still turns on the strict options the preset requires.                                                                         |
+
+## Naming
+
+| Check                                                            | Stage  | What it finds                                                                                                        |
+| ---------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
+| [`naming/identifiers`](/reference/rules/naming/identifiers/)     | commit | Checks every identifier against the naming policy: banned terms, case, length, and word count.                       |
+| [`naming/paths`](/reference/rules/naming/paths/)                 | commit | Checks every file stem and folder name against the language's case rules and the banned terms.                       |
+| [`naming/policy-schema`](/reference/rules/naming/policy-schema/) | commit | Checks that the naming settings in gspot.toml are valid and that every allowed name and path rule matches something. |
+
+## Prose
+
+| Check                                                      | Stage  | What it finds                                                                                                         |
+| ---------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------- |
+| [`prose/vale`](/reference/rules/prose/vale/)               | commit | Runs Vale over comments, and documentation with the gspot style, and the upstream packages; every alert is a finding. |
+| [`prose/source-bans`](/reference/rules/prose/source-bans/) | commit | Finds Vale directives inside Markdown and block comments in SQL, which take text away from the prose check.           |
+
+## Structure
+
+| Check                                                                                          | Stage  | What it finds                                                                                                                                                                |
+| ---------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`structure/shell-interpreter`](/reference/rules/structure/shell-interpreter/)                 | commit | Checks the contract every Bash script keeps: the four-line header, strict mode, one main called last, readonly constants, declarative libraries, cleaned-up temporary files. |
+| [`structure/doc-comment`](/reference/rules/structure/doc-comment/)                             | commit | Checks that every shell function announces itself in a comment above it that says more than its name.                                                                        |
+| [`structure/duplicate-functions`](/reference/rules/structure/duplicate-functions/)             | commit | Finds shell functions with the same body in the same scope.                                                                                                                  |
+| [`structure/unused-functions`](/reference/rules/structure/unused-functions/)                   | commit | Finds shell functions no script in the scope calls.                                                                                                                          |
+| [`structure/dead-parameters`](/reference/rules/structure/dead-parameters/)                     | commit | Finds shell functions called with arguments they never read.                                                                                                                 |
+| [`structure/private-prefix`](/reference/rules/structure/private-prefix/)                       | commit | Checks that a shell function no other file calls starts with an underscore, and that an underscore function is not called from outside.                                      |
+| [`structure/private-before-public`](/reference/rules/structure/private-before-public/)         | commit | Checks that underscore functions come before the public ones and main comes last.                                                                                            |
+| [`structure/trivial-function`](/reference/rules/structure/trivial-function/)                   | commit | Finds a shell function used once whose body fits the trivial ceiling.                                                                                                        |
+| [`structure/call-through`](/reference/rules/structure/call-through/)                           | commit | Finds a shell function whose whole body forwards its arguments to one command.                                                                                               |
+| [`structure/file-length`](/reference/rules/structure/file-length/)                             | commit | Checks that no shell script has more code lines than the ceiling.                                                                                                            |
+| [`structure/function-length`](/reference/rules/structure/function-length/)                     | commit | Checks that no shell function has more code lines than the ceiling.                                                                                                          |
+| [`structure/shell-script-policy`](/reference/rules/structure/shell-script-policy/)             | commit | Finds forwarding wrappers, compatibility aliases, and inline Node in shell scripts.                                                                                          |
+| [`structure/shell-embeds`](/reference/rules/structure/shell-embeds/)                           | commit | Finds inline Python, Node and generated-script heredocs in shell scripts.                                                                                                    |
+| [`structure/shell-ssh-blocks`](/reference/rules/structure/shell-ssh-blocks/)                   | commit | Checks that multi-line ssh blocks are named, documented, and inside a function.                                                                                              |
+| [`structure/shell-config-defaults`](/reference/rules/structure/shell-config-defaults/)         | commit | Finds variable defaults of the form name:-value outside the configuration owners.                                                                                            |
+| [`structure/shell-config-guards`](/reference/rules/structure/shell-config-guards/)             | commit | Checks that every configuration owner opens with one include guard nobody else uses.                                                                                         |
+| [`structure/shell-boundaries`](/reference/rules/structure/shell-boundaries/)                   | commit | Checks that scripts under the architecture roots declare their boundary and source what they call.                                                                           |
+| [`structure/env-access-owner`](/reference/rules/structure/env-access-owner/)                   | commit | Checks that environment variables the owner declares are read elsewhere only through it.                                                                                     |
+| [`structure/shell-branches`](/reference/rules/structure/shell-branches/)                       | commit | Counts the branches in each shell function against the ceiling.                                                                                                              |
+| [`structure/shell-nesting`](/reference/rules/structure/shell-nesting/)                         | commit | Measures how deep control flow nests in each shell function against the ceiling.                                                                                             |
+| [`structure/shell-mutable-assignments`](/reference/rules/structure/shell-mutable-assignments/) | commit | Counts the variable assignments in each shell function against the ceiling.                                                                                                  |
+| [`structure/shell-safety`](/reference/rules/structure/shell-safety/)                           | commit | Finds discarded failures, broad process kills, recursive deletes outside their owners, unchecked cd, and sourced state files.                                                |
+| [`structure/single-file-folder`](/reference/rules/structure/single-file-folder/)               | commit | Finds a folder that holds one code file and nothing else.                                                                                                                    |
+| [`structure/prefix-collisions`](/reference/rules/structure/prefix-collisions/)                 | commit | Finds sibling files that share a name prefix, like asset-card, asset-list and asset-row in one folder.                                                                       |
+| [`structure/file-directory-collision`](/reference/rules/structure/file-directory-collision/)   | commit | Finds a file and a folder in the same place with the same stem, like turn.ts beside turn/.                                                                                   |
+| [`structure/folder-names`](/reference/rules/structure/folder-names/)                           | commit | Finds a folder named after a container word like common, core, helpers or utils, or after a language.                                                                        |

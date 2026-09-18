@@ -2,7 +2,7 @@
 id = "naming"
 kind = "repository"
 title = "Naming"
-description = "The naming engine: banned terms, case rules, length and word ceilings over every identifier, file and folder."
+description = "The naming engine: banned terms, case rules, length and word ceilings over every identifier, file, and folder."
 
 [claims]
 from_languages = true
@@ -14,8 +14,8 @@ engine = "naming"
 analysis = "identifiers"
 inspection = ["naming"]
 searched = ["eslint-plugin-unicorn prevent-abbreviations", "ls-lint", "ruff N", "swiftlint identifier_name"]
-summary = "Checks every identifier against the naming policy: banned terms, case, length and word count."
-why = "Slop announces itself in the name: enhancedHandler, ensureConfigIfNeeded and utils are the sign of code that adds nothing."
+summary = "Checks every identifier against the naming policy: banned terms, case, length, and word count."
+why = "Slop announces itself in the name: `enhancedHandler`, `ensureConfigIfNeeded` and `utils` are the sign of code that adds nothing."
 fix = "Rename after what the thing is or does. Allow one exact name with gspot allow naming <name> --reason, or adjust a ceiling with gspot set naming.<language>.max_words."
 
 [[checks]]
@@ -26,7 +26,7 @@ analysis = "paths"
 inspection = ["naming"]
 searched = ["ls-lint", "eslint-plugin-unicorn filename-case"]
 summary = "Checks every file stem and folder name against the language's case rules and the banned terms."
-why = "A file named enhanced-utils.ts is a home for code nobody placed; the case rule keeps imports predictable."
+why = "A file named `enhanced-utils.ts` is a home for code nobody placed; the case rule keeps imports predictable."
 fix = "Rename the file or folder, or add a path rule under [[naming.rules]] with a reason."
 
 [[checks]]
@@ -58,7 +58,7 @@ name = "naming.external"
 kind = "list"
 direction = "loosening"
 default = []
-summary = "Names a platform or framework fixes, matched whole and never checked."
+summary = "Names a platform or framework fixes, matched whole, and never checked."
 
 [[settings]]
 name = "naming.reserved"

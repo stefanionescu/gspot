@@ -162,7 +162,7 @@ cannot follow fails the gate the same way a long function does.
 
 `docs/` is the user manual. Two kinds of page:
 
-- **Generated**, from the same data the binary uses, so they cannot drift. Generated pages carry the header and `apply --check` guards them.
+- **Generated**, from the same data the binary uses, so they cannot drift. `docs/reference-pages.ts` writes them and, with `--check`, the repository check `docs/generated` fails when they differ (D-78).
     - the command reference, from commander;
     - the settings reference, from the schema (`doctor --settings` prints the same keys);
     - one page per preset, from its manifest;

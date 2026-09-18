@@ -3,7 +3,7 @@ id = "prose"
 kind = "repository"
 title = "Prose"
 requires = ["markdown"]
-description = "Vale over every comment and every documentation file, with the gspot style and the upstream packages."
+description = "Vale over every comment and every documentation file, with the gspot style, and the upstream packages."
 
 [claims]
 extensions = [".md", ".mdx", ".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".swift", ".sh", ".bash", ".zsh", ".py", ".sql", ".pgsql", ".psql"]
@@ -28,7 +28,7 @@ stage = "commit"
 engine = "prose"
 analysis = "vale"
 inspection = ["prose"]
-summary = "Runs Vale over comments and documentation with the gspot style and the upstream packages; every alert is a finding."
+summary = "Runs Vale over comments, and documentation with the gspot style, and the upstream packages; every alert is a finding."
 why = "Prose that hedges, markets or wanders is read by everyone who reads the code, and nothing else checks it."
 fix = "Rewrite the sentence the alert names, add a real name to prose.vocabulary, or turn one rule off with a reason under prose.disabled."
 
@@ -40,7 +40,7 @@ analysis = "source-bans"
 inspection = ["prose"]
 summary = "Finds Vale directives inside Markdown and block comments in SQL, which take text away from the prose check."
 why = "A directive in the text turns a rule off for everyone silently; a block comment is invisible to Vale."
-fix = "Delete the directive and change the text, or disable the rule with a reason; write SQL comments as -- lines."
+fix = "Delete the directive and change the text, or disable the rule with a reason; write SQL comments with two dashes."
 
 [[checks]]
 id = "prose/messages"

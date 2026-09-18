@@ -1,0 +1,37 @@
+---
+title: "Naming"
+description: "The naming engine: banned terms, case rules, length and word ceilings over every identifier, file, and folder."
+---
+
+The naming engine: banned terms, case rules, length and word ceilings over every identifier, file, and folder.
+
+Kind: repository.
+
+## Checks
+
+| Check                                                            | Stage  | What it finds                                                                                                        |
+| ---------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------- |
+| [`naming/identifiers`](/reference/rules/naming/identifiers/)     | commit | Checks every identifier against the naming policy: banned terms, case, length, and word count.                       |
+| [`naming/paths`](/reference/rules/naming/paths/)                 | commit | Checks every file stem and folder name against the language's case rules and the banned terms.                       |
+| [`naming/policy-schema`](/reference/rules/naming/policy-schema/) | commit | Checks that the naming settings in gspot.toml are valid and that every allowed name and path rule matches something. |
+
+## Settings
+
+- `naming.banned_terms`: Words this repository bans in identifiers, beyond the shipped groups.
+- `naming.allowed`: Exact identifiers allowed despite the policy, each with a reason.
+- `naming.external`: Names a platform or framework fixes, matched whole, and never checked.
+- `naming.reserved`: Terms banned except in the named uses.
+- `naming.remove_groups`: Removable term groups this repository drops, each with a reason. The marketing and defensive groups never drop.
+- `naming.contract_properties`: Property keys a protocol or format fixes, exempt in one named file.
+- `naming.max_chars`: The most characters one identifier may have.
+- `naming.max_words`: The most words one identifier may have.
+- `naming.case`: The case patterns one identifier category accepts: camel, pascal, kebab, snake, upper-snake, pascal-plus.
+- `naming.swift.max_chars`: The most characters one Swift identifier may have.
+- `naming.swift.max_words`: The most words one Swift identifier may have.
+- `naming.sql.max_chars`: The most characters one SQL identifier may have.
+- `naming.sql.max_words`: The most words one SQL identifier may have.
+
+## Rule files
+
+- `general/code/NAMING.md`
+- `general/code/NAMING-FILES.md`

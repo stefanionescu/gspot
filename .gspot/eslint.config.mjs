@@ -37,7 +37,7 @@ const SCRIPTS = [
     "packages/cli/build.ts",
     "packages/cli/publish.ts",
     "packages/eslint-plugin/build.ts",
-    "docs/generate.ts"
+    "docs/reference-pages.ts"
 ];
 const ALIASES = {
     "#cli/": "packages/cli/src/",
@@ -117,14 +117,16 @@ const gspotRules = {
 ] }],
     'gspot/no-prefix-collisions': ['error', { threshold: limits.prefixCollisions, allow: [
     "packages/eslint-plugin/src/rules/**",
-    "packages/eslint-plugin/tests/rules/**"
+    "packages/eslint-plugin/tests/rules/**",
+    "docs/src"
 ] }],
     'gspot/header-comments-before-imports': 'error',
     'gspot/import-layout': 'error',
     'gspot/no-cross-folder-imports': ['error', { aliases: ALIASES }],
     'gspot/no-cross-project-imports': ['error', { scopes: [
     "packages/cli",
-    "packages/eslint-plugin"
+    "packages/eslint-plugin",
+    "docs"
 ] }],
     'gspot/tests-directory-contents': ['error', { harnessDirectory: "tests/support" }],
     'gspot/registry-instance-only': 'error',

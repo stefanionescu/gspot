@@ -2,7 +2,7 @@
 id = "formatting"
 kind = "repository"
 title = "Formatting"
-description = "One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff and markdownlint."
+description = "One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint."
 
 [claims]
 extensions = [".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".json", ".jsonc", ".json5", ".md", ".mdx", ".css", ".scss", ".html", ".yml", ".yaml", ".vue", ".graphql"]
@@ -107,7 +107,7 @@ name = "format.trailing_comma"
 kind = "string"
 direction = "neutral"
 default = "all"
-summary = "Where trailing commas go: all, es5 or none."
+summary = "Where trailing commas go: all, es5, or none."
 
 [[settings]]
 name = "format.semicolons"

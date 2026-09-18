@@ -34,7 +34,7 @@ fix_order = "codemod"
 inspection = ["spelling"]
 exclude_setting = "tools.typos.exclude"
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*)$"}
-summary = "Finds misspelled words in code, comments and documentation."
+summary = "Finds misspelled words in code, comments, and documentation."
 why = "A typo in an identifier spreads to every caller; in prose it costs the reader a second look."
 fix = "Fix the spelling, or allow the word with gspot allow typos <word> when it is a real name."
 
@@ -43,7 +43,7 @@ name = "tools.typos.words"
 kind = "list"
 direction = "loosening"
 default = []
-summary = "Words typos would flag that this repository uses on purpose, each with a reason (the word itself counts)."
+summary = "Words typos flags that this repository uses on purpose, each with a reason (the word itself counts)."
 
 [[settings]]
 name = "tools.typos.exclude"

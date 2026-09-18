@@ -49,6 +49,8 @@ gspot.local.toml
 
 # Build output of the workspace packages
 /packages/*/dist/
+/docs/dist/
+/docs/.astro/
 
 # Scratch scripts of the session
 /packages/cli/scratch/

@@ -1,0 +1,34 @@
+---
+title: "Commits"
+description: "commitlint over every commit message: conventional types, the repository's scopes, and the corpus limits."
+---
+
+commitlint over every commit message: conventional types, the repository's scopes, and the corpus limits.
+
+Kind: repository. Selected by default.
+
+## Tools
+
+- commitlint 21.2.2
+
+## Generated configuration
+
+- `.gspot/commitlint.config.cjs`
+
+## Checks
+
+| Check                                                        | Stage   | What it finds                                                                                                     |
+| ------------------------------------------------------------ | ------- | ----------------------------------------------------------------------------------------------------------------- |
+| [`commits/commitlint`](/reference/rules/commits/commitlint/) | message | Checks the commit message being written: a conventional type, a known scope, a short subject, and a wrapped body. |
+| [`commits/range`](/reference/rules/commits/range/)           | push    | Checks every commit message about to be pushed, from the merge base with the upstream branch to HEAD.             |
+
+## Settings
+
+- `tools.commitlint.types`: The commit types the type-enum rule allows.
+- `tools.commitlint.scopes`: The commit scopes the scope-enum rule allows. Empty means the last segment of every scope path plus root, hooks, and deps; a repository with no scopes gets no enum.
+- `tools.commitlint.rules`: Options per commitlint rule, by rule name; turning a rule off is gspot ignore --rule.
+
+## Rule files
+
+- `general/agent/GIT.md`
+- `tool/commitlint/COMMITLINT.md`

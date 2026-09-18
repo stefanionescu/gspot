@@ -130,7 +130,7 @@ export const DISABLED_UPSTREAM_RULES: [string, string][] = [
 
 /** What Vale never reads: URLs, tool directives and doc tags. Code spans and fences are the Markdown parser's job; a backtick pattern here swallowed whole fenced blocks. */
 export const TOKEN_IGNORES = [
-    String.raw`(https?://\S+)`,
+    String.raw`(https?://[^\s)]+)`,
     String.raw`(eslint-disable[^\n]*)`,
     String.raw`(@ts-expect-error[^\n]*)`,
     String.raw`(@ts-ignore[^\n]*)`,

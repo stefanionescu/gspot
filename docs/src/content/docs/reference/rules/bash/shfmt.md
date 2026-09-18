@@ -1,0 +1,22 @@
+---
+title: "bash/shfmt"
+description: "Checks that every shell script is formatted the way shfmt formats it."
+---
+
+Checks that every shell script is formatted the way shfmt formats it.
+
+## Why
+
+One formatter means diffs show what changed, not how someone's editor indents.
+
+## What to do
+
+Run gspot check --fix to format every script, or shfmt -w on one file.
+
+## Where it runs
+
+- Preset: [the bash preset](/reference/presets/bash/)
+- Stage: commit
+- Tool: shfmt
+
+Turn it off for a path with a reason: `gspot ignore bash/shfmt --paths <glob> --reason "<why>"`.

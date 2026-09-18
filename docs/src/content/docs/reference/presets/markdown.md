@@ -1,0 +1,32 @@
+---
+title: "Markdown"
+description: "Markdown files: markdownlint, Prettier, every fenced block parsing in its language, and the docs and prose checks."
+---
+
+Markdown files: markdownlint, Prettier, every fenced block parsing in its language, and the docs and prose checks.
+
+Kind: language. Requires: `docs`, `formatting`, `spelling`.
+
+## Tools
+
+- markdownlint-cli2 0.23.2
+
+## Generated configuration
+
+- `.gspot/markdownlint.jsonc`
+
+## Checks
+
+| Check                                                              | Stage  | What it finds                                                                    |
+| ------------------------------------------------------------------ | ------ | -------------------------------------------------------------------------------- |
+| [`markdown/markdownlint`](/reference/rules/markdown/markdownlint/) | commit | Checks every Markdown file against markdownlint with the shipped rule set.       |
+| [`markdown/prettier`](/reference/rules/markdown/prettier/)         | commit | Checks that every Markdown file is formatted the way Prettier formats it.        |
+| [`markdown/fences`](/reference/rules/markdown/fences/)             | commit | Checks that every fenced code block with a language tag parses in that language. |
+
+## Settings
+
+- `tools.markdownlint.rules`: Options per markdownlint rule, by rule id; turning a rule off is gspot ignore --rule.
+
+## Rule files
+
+- `general/prose/DOCS-FORMAT.md`

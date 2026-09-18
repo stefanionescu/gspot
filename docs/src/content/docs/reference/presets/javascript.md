@@ -1,0 +1,61 @@
+---
+title: "JavaScript"
+description: "ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code."
+---
+
+ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code.
+
+Kind: language. Requires: `structure`, `naming`, `formatting`, `spelling`.
+
+## Tools
+
+- eslint 10.10.0
+- @eslint/js 10.0.1
+- @gspot/eslint-plugin 0.1.0
+- eslint-plugin-sonarjs 4.2.0
+- eslint-plugin-unicorn 74.0.0
+- eslint-plugin-security 4.0.1
+- eslint-plugin-n 18.3.0
+- eslint-plugin-jsdoc 64.3.9
+- eslint-plugin-regexp 3.3.0
+- eslint-plugin-import-x 4.17.1
+- @eslint-community/eslint-plugin-eslint-comments 4.8.0
+- eslint-plugin-boundaries 7.2.0
+- eslint-plugin-package-json 1.8.0
+- eslint-config-prettier 10.1.8
+- globals 17.12.0
+- knip 6.35.1
+- typescript 5.9.3
+
+## Generated configuration
+
+- `.gspot/eslint.config.mjs`
+- `.gspot/jsconfig.json`
+- `.gspot/knip.json`
+
+## Checks
+
+| Check                                                        | Stage  | What it finds                                                     |
+| ------------------------------------------------------------ | ------ | ----------------------------------------------------------------- |
+| [`javascript/eslint`](/reference/rules/javascript/eslint/)   | commit | Runs ESLint with the shipped rule set over every JavaScript file. |
+| [`javascript/checkjs`](/reference/rules/javascript/checkjs/) | commit | Type-checks plain JavaScript through its JSDoc comments.          |
+| [`javascript/knip`](/reference/rules/javascript/knip/)       | push   | Finds files, exports, and dependencies nothing uses.              |
+
+## Settings
+
+- `tools.eslint.rules`: Rule options and rules turned on, by ESLint rule id; a rule turned off is a gspot ignore --rule.
+- `tools.eslint.import_style`: The import suffix style per file class: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code.
+- `tools.eslint.test_files`: The globs that count as test files for the test overrides.
+- `tools.eslint.script_files`: The globs that count as scripts: no-process-exit off, every unused argument reported.
+- `tools.eslint.globals`: The runtime per file class when the tree does not say: a glob to node, browser, worker, or commonjs.
+- `tools.eslint.node_version`: The Node version the n plugin checks builtins against; detected from engines at init.
+- `tools.eslint.restricted_imports`: Imports this repository refuses, each with a name, and a message.
+- `tools.knip.entry`: Entry points knip starts from beyond the ones the framework preset declares.
+- `tools.knip.ignore`: Files knip leaves out, each with a reason.
+- `tools.knip.ignore_dependencies`: Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses.
+
+## Rule files
+
+- `language/JAVASCRIPT.md`
+- `language/naming/JAVASCRIPT.md`
+- `runtime/node/NODE.md`

@@ -92,7 +92,7 @@ analysis = "suppressions"
 inspection = ["structure"]
 summary = "Counts every inline suppression by form and reports each one that carries no reason; nosemgrep is refused outright."
 why = "A suppression without a reason is a finding hidden for good; a census that grows without a baseline update is debt nobody agreed to."
-fix = "Write the reason in the comment (after -- for eslint-disable and gspot-ignore, after a colon for ts-expect-error), or fix the finding and drop the suppression."
+fix = "Write the reason in the comment (after two dashes for eslint-disable and gspot-ignore, after a colon for ts-expect-error), or fix the finding and drop the suppression."
 
 [[checks]]
 id = "integrity/allowlists-match"
@@ -297,7 +297,7 @@ name = "limits.file_size_kb"
 kind = "number"
 direction = "ceiling"
 default = 1024
-summary = "The largest tracked file, in kilobytes, outside LFS or a declaration."
+summary = "The largest tracked file, in kilobytes, outside LFS, or a declaration."
 
 [[settings]]
 name = "limits.bash.file_lines"
@@ -423,7 +423,7 @@ name = "structure.call_through_allowed"
 kind = "list"
 direction = "loosening"
 default = []
-summary = "Functions allowed to forward their arguments to one call, each with a file, a name and a reason."
+summary = "Functions allowed to forward their arguments to one call, each with a file, a name, and a reason."
 
 [[settings]]
 name = "structure.trivial_exemptions"

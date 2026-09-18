@@ -461,9 +461,9 @@ prose/
 
 ```text
 docs/
-├── astro.config.mjs            Starlight with starlight-llms-txt
+├── astro.config.ts             Starlight with starlight-llms-txt
 ├── package.json
-├── generate.ts                 writes the reference pages from the binary's own data; run before build and by apply --check in gspot's repository
+├── reference-pages.ts          writes the reference pages from the binary's own data; run before build, and with --check by the docs/generated check
 ├── public/
 │   ├── gspot.schema.json       copied from schema/ at build
 │   └── favicon.svg
@@ -473,10 +473,10 @@ docs/
     │   ├── install.md
     │   ├── existing-repository.md
     │   ├── you-got-a-finding.md
-    │   ├── monorepos-and-scopes.md
+    │   ├── scopes.md
     │   ├── without-mise.md
-    │   └── working-with-an-agent.md
-    └── reference/              generated; every file carries the header
+    │   └── agents.md
+        └── reference/              generated; source nature, so the prose engine reads the check texts; docs/generated catches drift
         ├── commands/           one page per command, from commander
         ├── settings.md         every key from policy/settings.ts
         ├── presets/            one page per preset, from its manifest
@@ -530,7 +530,7 @@ tests/
 │   ├── expected/               the reference extractors' and analyses' record sets
 │   └── run.test.ts             gspot's record set is a superset
 ├── performance/
-│   ├── generate.ts             a 1,000-file scope
+│   ├── reference-pages.ts             a 1,000-file scope
 │   └── run.test.ts             ten staged files under 5 s warm and 30 s cold
 └── release/
     ├── publish.test.ts         publish the launcher and platform packages locally and read them back
@@ -541,7 +541,7 @@ Unit tests live beside their package (`packages/cli/tests/unit/`, `packages/esli
 
 ## What is not in the tree
 
-- No `scripts/` folder: build steps are `build.ts` in each package and `docs/generate.ts`;
+- No `scripts/` folder: build steps are `build.ts` in each package and `docs/reference-pages.ts`;
   release steps are the workflow.
 - No `src/index.ts` or barrel anywhere; `plugin.ts` is the ESLint plugin's entry because ESLint
   needs an object, and `main.ts` is the binary's.

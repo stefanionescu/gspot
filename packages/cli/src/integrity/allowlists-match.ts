@@ -14,14 +14,14 @@ function listed(value: unknown, key: string): string[] {
     });
 }
 
+// Tool exclusions list paths; only the docs path exceptions list patterns that are paths (lychee's exclude is URL regexes).
 function toolPatterns(tools: Record<string, Record<string, unknown>>): PathPattern[] {
     return Object.entries(tools).flatMap(([tool, table]) =>
-        Object.entries(table).flatMap(([setting, value]) =>
-            [...listed(value, 'paths'), ...listed(value, 'patterns')].map((pattern) => ({
-                pattern,
-                where: `tools.${tool}.${setting}`,
-            })),
-        ),
+        Object.entries(table).flatMap(([setting, value]) => {
+            const paths = listed(value, 'paths');
+            const patterns = tool === 'docs' && setting === 'path_exceptions' ? listed(value, 'patterns') : [];
+            return [...paths, ...patterns].map((pattern) => ({ pattern, where: `tools.${tool}.${setting}` }));
+        }),
     );
 }
 

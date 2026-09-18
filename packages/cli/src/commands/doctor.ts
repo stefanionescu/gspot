@@ -11,7 +11,7 @@ import { doctorCommand } from '#cli/doctor/command.ts';
 export function registerDoctor(program: Command): void {
     program
         .command('doctor')
-        .description('Report the tools, the unchecked files, and what changed in the repository since init')
+        .description('Report the tools, the unchecked files, and what changed in the repository after init')
         .option('--settings', 'Print every setting the selection exposes, its value and where it came from')
         .option('--offline', 'Skip the one lookup for a newer gspot')
         .action(async (flags: Record<string, unknown>, command: Command) => {

@@ -73,6 +73,7 @@ module.exports = {
         [
             "cli",
             "eslint-plugin",
+            "docs",
             "root",
             "hooks",
             "deps"

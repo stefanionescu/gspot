@@ -26,6 +26,7 @@ id = "docs/links"
 stage = "commit"
 takes = "files"
 command = ["lychee", "--config", "{config:lychee}", "--offline", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
+exclude_setting = "tools.lychee.exclude_paths"
 inspection = ["links"]
 output = {format = "regex", pattern = "^\\[(?<rule>[A-Z]+)\\] (?<file>[^ ]+) \\| (?<message>.*)$"}
 summary = "Checks that every relative link names a tracked file and every anchor names a heading."
@@ -38,6 +39,7 @@ stage = "manual"
 takes = "files"
 requires = "network"
 command = ["lychee", "--config", "{config:lychee}", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
+exclude_setting = "tools.lychee.exclude_paths"
 inspection = ["links"]
 output = {format = "regex", pattern = "^\\[(?<rule>[A-Z]+)\\] (?<file>[^ ]+) \\| (?<message>.*)$"}
 summary = "Checks every external link over the network."
@@ -50,7 +52,7 @@ stage = "commit"
 engine = "integrity"
 analysis = "docs-headings"
 inspection = ["structure"]
-summary = "Finds a heading from the banned list, such as Table of contents or Project structure."
+summary = "Finds a heading from the banned list, such as Table of contents, or Project structure."
 why = "An inventory heading promises a map that goes stale; the reader wanted an explanation."
 fix = "Replace the section with prose that explains, or delete it."
 
@@ -83,6 +85,13 @@ inspection = ["structure"]
 summary = "Checks the shape of every README: one H1, an opening paragraph, a Contents list when long, a section on getting started."
 why = "A README with the right shape answers what this is and how to start before the reader scrolls."
 fix = "Add the missing piece; turn the check off with a reason under tools.docs.readme_shape when the shape does not fit."
+
+[[settings]]
+name = "tools.lychee.exclude_paths"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Files the link checks skip, each with a reason: the pages of a site whose links resolve only once it is built."
 
 [[settings]]
 name = "tools.docs.path_exceptions"

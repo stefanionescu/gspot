@@ -9,5 +9,5 @@ import type { Command } from 'commander';
 export function installCompletion(program: Command): void {
     tab(program, { completionCommandName: 'completion' });
     const completion = program.commands.find((command) => command.name() === 'completion');
-    completion?.description('Print the shell completion script for bash, zsh, fish or powershell');
+    completion?.description('Print the shell completion script for bash, zsh, fish, or powershell');
 }

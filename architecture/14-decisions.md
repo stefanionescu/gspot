@@ -497,7 +497,9 @@ Seventy more upstream rules are off, each with its reason in the rendered `vale.
 - rules that report the same thing under three names (the Oxford comma, ellipses, spacing, quotes);
 - rules that misread technical words (`disabled` as a slur, `primitive` as a type, `swallow` as profanity).
 
-Tables are a skipped scope. A ledger cell is a list of identifiers and rule names, not a sentence, and the rules that judge prose have nothing to say about it. The `future` rule matches `is planned`, `are planned`, `planned for` and `planned to`, not the bare word, because a planned check is what the planner produces. No token ignore covers code spans: the Markdown parser drops code, and a backtick pattern swallowed every fenced block, so the code spans after it were read as prose. Rejected: a baseline for the 1,345 semicolons, which hides the corpus's own unenforced rule. Also rejected: trimming the packages, because the rules that stay (the Oxford comma, `there is`, repeated words, the Harper grammar rules) find real slips.
+Tables are a skipped scope. A ledger cell is a list of identifiers and rule names, not a sentence, and the rules that judge prose have nothing to say about it. The `future` rule matches `is planned`, `are planned`, `planned for` and `planned to`, not the bare word, because a planned check is what the planner produces. No token ignore covers code spans: the Markdown parser drops code, and a backtick pattern swallowed every fenced block, so the code spans after it were read as prose.
+
+The URL token ignore stops at a closing parenthesis, because a link target that swallowed its `)` left the code spans after it read as prose. Rejected: a baseline for the 1,345 semicolons, which hides the corpus's own unenforced rule. Also rejected: trimming the packages, because the rules that stay (the Oxford comma, `there is`, repeated words, the Harper grammar rules) find real slips.
 
 ## D-73 Rule files name no check
 
@@ -561,3 +563,20 @@ and the `extra` keys that now have a slot.
 Two lines of the earlier report are gone: the coverage change and the refusal when the target
 claims fewer files, both of which need the older binary's claim set. Rejected: embedding every
 past manifest in the binary, which grows without bound for a report nobody reads twice.
+
+## D-78 The reference pages of the manual stay source files
+
+Recorded 2026-09-18, with the docs site. `docs/reference-pages.ts` writes one page per command,
+preset, check and setting, plus the engines page and the decision log, from the binary's own
+data. It formats each page with Prettier so the tree stays stable. The pages carry no generated header on purpose. The check texts (`summary`, `why`, `fix`) live
+in TOML manifests, which the prose engine cannot read. The generated Markdown is where Vale
+reads them.
+
+Drift is caught by the repository check `docs/generated`, which runs the writer with `--check`
+at the commit stage. Root-relative links inside the site are validated by the Starlight build
+through `starlight-links-validator`, and lychee excludes them. The `docs/` folder is a scope
+with the typescript preset alone. The site's own configuration files are TypeScript, and the
+scope's `tsconfig.json` uses the Bundler resolution the Astro plugins need.
+
+Rejected: a generated header, which takes the check texts out of the prose gate, and Markdown
+links with file extensions, which the site does not serve.

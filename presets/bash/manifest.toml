@@ -50,7 +50,7 @@ inspection = ["syntax"]
 output = {format = "regex", pattern = "^(?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$"}
 summary = "Checks that every shell script parses before anything else runs it."
 why = "A script with a syntax error stops at the broken line, sometimes after it has already done half its work."
-fix = "Open the file at the line bash names and fix the quoting, bracket or keyword it complains about."
+fix = "Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about."
 
 [[checks]]
 id = "bash/shellcheck"
@@ -59,7 +59,7 @@ takes = "files"
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
 inspection = ["style", "security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
-summary = "Runs ShellCheck with every rule on, over every shell script and the files they source."
+summary = "Runs ShellCheck with every rule on, over every shell script, and the files they source."
 why = "ShellCheck catches the quoting, globbing and exit-status mistakes that make shell scripts fail on the one input nobody tested."
 fix = "Read the SC code in the finding; gspot explain shellcheck/SC2086 links to its page. Turn one code off with gspot ignore bash/shellcheck --rule SC2086 --reason."
 
@@ -85,7 +85,7 @@ inspection = ["structure"]
 searched = ["shellcheck", "shfmt", "bashate"]
 summary = "Checks the contract every Bash script keeps: the four-line header, strict mode, one main called last, readonly constants, declarative libraries, cleaned-up temporary files."
 why = "A script that skips strict mode or hides its runtime fails on the machine where it matters, silently."
-fix = "Open with the shebang, a bare #, one line saying what the script does and the Runtime line; run set -euo pipefail and shopt -s inherit_errexit first; end an executable with main \"$@\"."
+fix = "Open with the shebang, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail and shopt -s inherit_errexit first, and end an executable with a call to main."
 
 [[checks]]
 id = "structure/doc-comment"
@@ -208,7 +208,7 @@ engine = "structure"
 analysis = "shell-script-policy"
 inspection = ["structure"]
 searched = ["shellcheck", "semgrep"]
-summary = "Finds forwarding wrappers, compatibility aliases and inline Node in shell scripts."
+summary = "Finds forwarding wrappers, compatibility aliases, and inline Node in shell scripts."
 why = "A wrapper is a second entry point that drifts from the first; inline Node is a second language nobody lints."
 fix = "Call the target script directly, delete the alias, and move the Node code into a .js file."
 
@@ -230,7 +230,7 @@ engine = "structure"
 analysis = "shell-ssh-blocks"
 inspection = ["structure"]
 searched = ["shellcheck"]
-summary = "Checks that multi-line ssh blocks are named, documented and inside a function."
+summary = "Checks that multi-line ssh blocks are named, documented, and inside a function."
 why = "A remote command block with no name is the hardest thing in a script to test or reuse."
 fix = "Move the block into a named function and write \"# name - what it does\" above it."
 
@@ -241,7 +241,7 @@ engine = "structure"
 analysis = "shell-config-defaults"
 inspection = ["structure"]
 searched = ["shellcheck"]
-summary = "Finds variable defaults like ${VAR:-x} outside the configuration owners."
+summary = "Finds variable defaults of the form name:-value outside the configuration owners."
 why = "A default set in three places is three settings with one name."
 fix = "Set the default in a configuration owner named under tools.bash.config_owners and read the variable everywhere else."
 
@@ -265,7 +265,7 @@ inspection = ["structure"]
 searched = ["shellcheck source="]
 summary = "Checks that scripts under the architecture roots declare their boundary and source what they call."
 why = "A script that works only because another file was sourced first breaks when the order changes."
-fix = "Add \"# Boundary: ...\" to the header, annotate every source with # shellcheck source=, and source the file a function comes from."
+fix = "Add a Boundary line to the header comment, annotate every source with # shellcheck source=, and source the file a function comes from."
 
 [[checks]]
 id = "structure/env-access-owner"
@@ -321,7 +321,7 @@ engine = "structure"
 analysis = "shell-safety"
 inspection = ["structure", "security"]
 searched = ["shellcheck", "semgrep"]
-summary = "Finds discarded failures, broad process kills, recursive deletes outside their owners, unchecked cd and sourced state files."
+summary = "Finds discarded failures, broad process kills, recursive deletes outside their owners, unchecked cd, and sourced state files."
 why = "Each of these is a way a script destroys something it did not mean to and says nothing."
 fix = "Handle the failure, check the cd, and move the delete or kill into a script named under tools.bash.safety.owners."
 
@@ -358,7 +358,7 @@ name = "tools.bash.allowed_default_fragments"
 kind = "list"
 direction = "loosening"
 default = []
-summary = "Variable defaults like ${VAR:-x} that may appear outside the configuration owners."
+summary = "Variable defaults of the form name:-value that appear outside the configuration owners."
 
 [[settings]]
 name = "tools.bash.runtime_header"

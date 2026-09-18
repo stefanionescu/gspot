@@ -1,0 +1,18 @@
+{
+    "extends": "../.gspot/docs/tsconfig.base.json",
+    "compilerOptions": {
+        "jsx": "preserve",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "types": ["astro/client", "bun"],
+        "allowJs": true
+    },
+    "include": [
+        ".astro/types.d.ts",
+        "../packages/cli/types/modules.d.ts",
+        "src/**/*",
+        "astro.config.ts",
+        "reference-pages.ts"
+    ],
+    "exclude": ["dist"]
+}
