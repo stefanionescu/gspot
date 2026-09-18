@@ -1,0 +1,49 @@
+// Planted repository for the duplication preset: one block copied into a second file.
+import { join } from 'node:path';
+import { createFixture } from 'fs-fixture';
+import { describe, expect, test } from 'bun:test';
+import { commitAll, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
+
+const NPM_BIN = join(import.meta.dir, '../../node_modules/.bin');
+const INIT = [
+    'init',
+    '--yes',
+    '--presets',
+    'bash,duplication',
+    '--without',
+    'naming',
+    '--runner',
+    'none',
+    '--ci',
+    'none',
+    '--hooks',
+    'none',
+    '--no-rules',
+    '--no-install',
+];
+const STEPS = Array.from(
+    { length: 30 },
+    (_, index) => `    printf 'step %s of %s\\n' "${String(index)}" "$total"\n    total=$((total + ${String(index)}))`,
+).join('\n');
+const copied = (name: string): string =>
+    `#!/usr/bin/env bash\nset -euo pipefail\n\n${name}() {\n    local total=0\n${STEPS}\n    printf '%s\\n' "$total"\n}\n\n${name}\n`;
+
+describe('the duplication preset', () => {
+    test(
+        'a block copied between two files is a finding on the file that holds it',
+        async () => {
+            await using fixture = await createFixture({ 'scripts/first.sh': copied('count_first') });
+            commitAll(fixture.path);
+            const environment = { PATH: `${NPM_BIN}:${toolsPath(['shellcheck', 'shfmt', 'typos', 'ec'])}` };
+            run(fixture.path, INIT, environment);
+            const clean = run(fixture.path, ['check', 'duplication/jscpd', '--no-cache'], environment);
+            expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+            await Bun.write(`${fixture.path}/scripts/second.sh`, copied('count_second'));
+            commitAll(fixture.path);
+            const found = run(fixture.path, ['check', 'duplication/jscpd', '--no-cache'], environment);
+            expect(found.code, found.stdout + found.stderr).toBe(1);
+            expect(found.stdout).toContain('scripts/first.sh');
+        },
+        PLANTED_TIMEOUT_MS * 2,
+    );
+});

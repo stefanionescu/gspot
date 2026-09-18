@@ -3,6 +3,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { fences } from '#cli/integrity/fences.ts';
 import { envFiles } from '#cli/integrity/env/files.ts';
+import { licensesNpm } from '#cli/integrity/licenses.ts';
 import type { IntegrityCheck } from '#types/integrity.ts';
 import { envExample } from '#cli/integrity/env/example.ts';
 import { largeFiles } from '#cli/integrity/large-files.ts';
@@ -11,8 +12,10 @@ import { taskPolicy } from '#cli/integrity/task-policy.ts';
 import { readmeShape } from '#cli/integrity/readme/shape.ts';
 import { suppressions } from '#cli/integrity/suppressions.ts';
 import { docsHeadings } from '#cli/integrity/docs-headings.ts';
+import { lockfileFresh } from '#cli/integrity/lockfile-fresh.ts';
 import { readmePresent } from '#cli/integrity/readme/present.ts';
 import { generatedDrift } from '#cli/integrity/generated-drift.ts';
+import { manifestPolicy } from '#cli/integrity/manifest-policy.ts';
 import { allowlistsMatch } from '#cli/integrity/allowlists-match.ts';
 import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
 import { configurationPurity } from '#cli/integrity/config-purity.ts';
@@ -37,6 +40,9 @@ const checks: Record<string, IntegrityCheck> = {
     'large-files': largeFiles,
     'tracked-dependencies': trackedDependencies,
     'env-files': envFiles,
+    'manifest-policy': manifestPolicy,
+    'lockfile-fresh': lockfileFresh,
+    'licenses-npm': licensesNpm,
     'gitleaks-baseline': gitleaksBaseline,
 };
 

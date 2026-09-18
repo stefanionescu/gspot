@@ -1,0 +1,9 @@
+{
+    "mode": "strict",
+    "minLines": <%= settings['limits.duplication.min_lines'] ?? 8 %>,
+    "minTokens": <%= settings['limits.duplication.min_tokens'] ?? 40 %>,
+    "threshold": <%= settings['limits.duplication.threshold_percent'] ?? 4 %>,
+    "reporters": ["console"],
+    "absolute": true,
+    "gitignore": true
+}

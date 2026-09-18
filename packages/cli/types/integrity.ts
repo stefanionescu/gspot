@@ -41,3 +41,22 @@ export type GitleaksFinding = { Fingerprint: string; File: string; RuleID: strin
 
 /** The reason for one reviewed baseline entry. */
 export type BaselineReason = { fingerprint: string; reason: string };
+
+/** The keys of a package.json the manifest policy reads. */
+export type PackageManifest = {
+    private?: boolean;
+    packageManager?: string;
+    workspaces?: unknown;
+    dependencies?: Record<string, string>;
+    devDependencies?: Record<string, string>;
+    optionalDependencies?: Record<string, string>;
+};
+
+/** What the npm license checker prints: one entry for each installed package, by name and version. */
+export type LicenseReport = Record<string, { licenses?: string | string[] }>;
+
+/** One package accepted under a license outside the allowed list. */
+export type LicenseException = { package: string; license: string; reason: string };
+
+/** Builds one finding of a check from the file, the rule and the text. */
+export type Reporter = (file: string, rule: string, text: string) => Finding;

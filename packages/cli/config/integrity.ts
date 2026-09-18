@@ -87,3 +87,29 @@ export const DEPENDENCY_FOLDERS = [
     'DerivedData',
     '.build',
 ];
+
+/** The tables of a package.json that hold versions. */
+export const DEPENDENCY_TABLES = ['dependencies', 'devDependencies', 'optionalDependencies'] as const;
+
+/** One exact version: digits and dots, with an optional prerelease or build tag. */
+export const EXACT_VERSION = /^\d+\.\d+\.\d+$|^\d+\.\d+\.\d+[-+][\w.+-]+$/u;
+
+/** A version that names no registry range: a workspace, a file, a link, a git source or a catalog. */
+export const NON_REGISTRY_VERSION = /^(?:workspace:|file:|link:|git\+|github:|https?:|catalog:|npm:)/u;
+
+/** The lockfile names, by the package manager that writes each. */
+export const LOCKFILES: Record<string, string> = {
+    'bun.lock': 'bun',
+    'bun.lockb': 'bun',
+    'package-lock.json': 'npm',
+    'pnpm-lock.yaml': 'pnpm',
+    'yarn.lock': 'yarn',
+};
+
+/** The command that installs from a lockfile and fails when the lockfile is out of date. */
+export const FROZEN_INSTALLS: Record<string, string[]> = {
+    'bun.lock': ['bun', 'install', '--frozen-lockfile', '--dry-run'],
+    'package-lock.json': ['npm', 'ci', '--dry-run', '--ignore-scripts'],
+    'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile', '--lockfile-only'],
+    'uv.lock': ['uv', 'lock', '--check'],
+};

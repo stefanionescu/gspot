@@ -1,0 +1,6 @@
+<% for (const entry of (settings['tools.osv.ignore'] ?? [])) { %>
+[[IgnoredVulns]]
+id = <%= tomlString(entry.id) %>
+<% if (entry.review_by) { %>ignoreUntil = <%= entry.review_by %>
+<% } %>reason = <%= tomlString(entry.reason) %>
+<% } %>

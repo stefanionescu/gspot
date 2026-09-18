@@ -5,15 +5,23 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 
 const root = new URL('../..', import.meta.url).pathname;
 
+// Deletes the files a case removes, and returns what they held.
+async function takenOut(cwd: string, gone: string[]): Promise<Map<string, string>> {
+    const removed = new Map<string, string>();
+    for (const path of gone) removed.set(path, await Bun.file(join(cwd, path)).text());
+    for (const path of gone) Bun.spawnSync(['rm', '-f', join(cwd, path)]);
+    return removed;
+}
+
 // Writes the defect into the repository and returns the function that takes it out again.
 async function plant(cwd: string, planted: PlantedCase): Promise<() => Promise<void>> {
     const policyPath = join(cwd, 'gspot.toml');
     const policy = await Bun.file(policyPath).text();
-    const removed = new Map<string, string>();
-    const gone = planted.removed ?? [];
-    for (const path of gone) removed.set(path, await Bun.file(join(cwd, path)).text());
-    for (const path of removed.keys()) Bun.spawnSync(['rm', '-f', join(cwd, path)]);
-    for (const [path, text] of Object.entries(planted.files)) await Bun.write(join(cwd, path), text);
+    const removed = await takenOut(cwd, planted.removed ?? []);
+    const planting = Object.entries(planted.files);
+    for (const [path] of planting)
+        if (await Bun.file(join(cwd, path)).exists()) removed.set(path, await Bun.file(join(cwd, path)).text());
+    for (const [path, text] of planting) await Bun.write(join(cwd, path), text);
     const executables = planted.executable ?? [];
     for (const path of executables) Bun.spawnSync(['chmod', '+x', join(cwd, path)]);
     await Bun.write(policyPath, plantedPolicy(policy, planted));

@@ -1,0 +1,104 @@
+[preset]
+id = "dependencies"
+kind = "concern"
+title = "Dependencies"
+default = true
+description = "Dependency health: known advisories, one version for each dependency, exact pins, one package manager, and a lockfile that matches its manifest."
+
+[detect]
+filenames = ["package.json", "pyproject.toml", "Package.swift", "Cargo.toml", "go.mod", "Gemfile"]
+
+[claims]
+filenames = ["package.json", "bun.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "bunfig.toml", ".npmrc", "pnpm-workspace.yaml", "pyproject.toml", "uv.lock", "requirements*.txt", "Package.swift", "Package.resolved", "Cargo.toml", "Cargo.lock", "go.mod", "go.sum", "Gemfile.lock"]
+natures = ["source", "generated"]
+
+[[tools]]
+name = "osv-scanner"
+version = "2.6.0"
+floor = "2.0.0"
+mise = "osv-scanner"
+brew = "osv-scanner"
+github = "google/osv-scanner"
+winget = "Google.OSVScanner"
+scoop = "osv-scanner"
+
+[[tools]]
+name = "syncpack"
+version = "15.3.3"
+npm = "syncpack"
+mise = "npm:syncpack"
+
+[[configs]]
+template = "osv-scanner.toml.tmpl"
+target = ".gspot/osv-scanner.toml"
+stub = {path = "osv-scanner.toml", copy = true}
+
+[[configs]]
+template = "syncpack.json.tmpl"
+target = ".gspot/syncpack.json"
+header = false
+
+[[checks]]
+id = "dependencies/osv"
+stage = "push"
+runs = "once"
+requires = "network"
+command = ["osv-scanner", "scan", "source", "--config", "{config:osv-scanner}", "--format", "gh-annotations", "--recursive", "{root}"]
+inspection = ["advisories"]
+output = {format = "regex", pattern = "^::error file=(?<file>[^:]+)::(?<message>.*)$"}
+summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
+why = "A dependency with a published advisory is an attack someone already wrote down."
+fix = "Upgrade the package the finding names. When no fix exists, record the advisory with gspot allow osv <id> --reason, and a date to look again."
+
+[[checks]]
+id = "dependencies/syncpack"
+stage = "push"
+runs = "once"
+command = ["syncpack", "lint", "--config", "{config:syncpack}"]
+tool = "syncpack"
+claims = {filenames = ["package.json"]}
+inspection = ["consistency"]
+output = {format = "lines"}
+summary = "Checks that every workspace package resolves each dependency to one version."
+why = "Two versions of one dependency in a workspace mean two behaviors, and a bug that appears in one package only."
+fix = "Run syncpack fix-mismatches with the gspot configuration, or align the versions by hand."
+
+[[checks]]
+id = "integrity/manifest-policy"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "manifest-policy"
+claims = {filenames = ["package.json"]}
+inspection = ["consistency"]
+summary = "Checks every package.json: exact versions, one packageManager across the workspace, a private root, and one kind of lockfile."
+why = "A version range installs a different tree tomorrow, and two package managers produce two trees today."
+fix = "Pin the version the lockfile holds, name one packageManager, mark a workspace root private, and delete the lockfile of the manager the repository does not use."
+
+[[checks]]
+id = "integrity/lockfile-fresh"
+stage = "push"
+runs = "once"
+engine = "integrity"
+analysis = "lockfile-fresh"
+inspection = ["consistency"]
+summary = "Checks that every lockfile matches its manifest, by asking the package manager to install from it without changing it."
+why = "A lockfile that lags its manifest installs versions nobody reviewed the moment someone runs a plain install."
+fix = "Run the install of the package manager once and commit the lockfile it writes."
+
+[[settings]]
+name = "tools.osv.ignore"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Advisories accepted until a review date: the id, the reason, and that date."
+
+[[settings]]
+name = "tools.dependencies.ranges_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Manifests that may hold version ranges, such as a library others install, each with a reason."
+
+[rule_files]
+code = ["general/code/DEPENDENCIES.md"]
