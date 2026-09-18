@@ -8,7 +8,7 @@ description = "The structural rules no standard linter ships, over every languag
 from_languages = true
 
 [[tools]]
-name = "sg"
+name = "ast-grep"
 version = "0.45.3"
 npm = "@ast-grep/cli"
 mise = "ast-grep"
@@ -321,21 +321,21 @@ summary = "The most duplicated code a repository may hold, as a percentage."
 name = "limits.docs.sentence_words"
 kind = "number"
 direction = "ceiling"
-default = 25
+default = 30
 summary = "The most words one sentence of documentation may have."
 
 [[settings]]
 name = "limits.docs.list_item_words"
 kind = "number"
 direction = "ceiling"
-default = 20
+default = 45
 summary = "The most words one list item may have."
 
 [[settings]]
 name = "limits.docs.paragraph_sentences"
 kind = "number"
 direction = "ceiling"
-default = 4
+default = 6
 summary = "The most sentences one paragraph may have."
 
 [[settings]]

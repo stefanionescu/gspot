@@ -1,0 +1,74 @@
+// A shell function called with arguments it never reads. Searched: shellcheck; it does not follow calls.
+import { withoutComment } from '#cli/structure/code-lines.ts';
+import type { Analysis, ShellIndex } from '#types/structure.ts';
+import { markedNames } from '#cli/structure/analyses/unused-functions.ts';
+import { CALL_ENDINGS, FLOW_PREFIX, MARKERS, POSITIONAL_PARAMETERS } from '#config/shell.ts';
+
+const CALL = /^([A-Za-z_]\w*)\b(.*)$/u;
+const OPERATORS = [' && ', ' || ', ' | ', ';'];
+
+function argumentCount(rest: string): number {
+    const cut = OPERATORS.map((token) => rest.indexOf(token)).filter((position) => position >= 0);
+    const truncated = (cut.length === 0 ? rest : rest.slice(0, Math.min(...cut))).trim();
+    let count = 0;
+    for (const word of truncated.split(/\s+/u)) {
+        if (word === '') continue;
+        if (CALL_ENDINGS.includes(word)) break;
+        count += 1;
+    }
+    return count;
+}
+
+function callOn(line: string, names: Set<string>): { name: string; count: number } | undefined {
+    let code = withoutComment(line).trim();
+    while (FLOW_PREFIX.test(code)) code = code.replace(FLOW_PREFIX, '');
+    const match = CALL.exec(code);
+    const name = match?.[1];
+    const rest = match?.[2] ?? '';
+    if (name === undefined || !names.has(name) || rest.trimStart().startsWith('=')) return undefined;
+    return { name, count: argumentCount(rest) };
+}
+
+function widestCalls(index: ShellIndex, names: Set<string>): Map<string, number> {
+    const widest = new Map<string, number>();
+    for (const file of index.files) {
+        for (const line of file.lines) {
+            const call = callOn(line, names);
+            if (call !== undefined) widest.set(call.name, Math.max(widest.get(call.name) ?? 0, call.count));
+        }
+    }
+    return widest;
+}
+
+function isReadingPositional(body: string[]): boolean {
+    const code = body.map((line) => withoutComment(line)).join('\n');
+    return POSITIONAL_PARAMETERS.some((pattern) => pattern.test(code));
+}
+
+/**
+ * One finding per function that is called with arguments somewhere but never reads a positional parameter.
+ * @param context the check context
+ * @param shell the shell index
+ * @returns the findings
+ */
+export const deadParameters: Analysis = async (context, shell) => {
+    const index = await shell();
+    const names = new Set(index.files.flatMap((file) => file.functions.map((entry) => entry.name)));
+    const widest = widestCalls(index, names);
+    return index.files.flatMap((file) => {
+        if (file.text.includes(MARKERS.deadParameters)) return [];
+        const allowed = markedNames(file, MARKERS.deadParameter);
+        return file.functions.flatMap((entry) => {
+            const width = widest.get(entry.name) ?? 0;
+            if (width === 0 || allowed.has(entry.name) || isReadingPositional(entry.body)) return [];
+            return [
+                context.report(
+                    file.path,
+                    entry.start,
+                    'unread-arguments',
+                    `${entry.name} is called with up to ${String(width)} argument(s) but reads no positional parameter.`,
+                ),
+            ];
+        });
+    });
+};

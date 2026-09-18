@@ -8,4 +8,3 @@ rule:
         - kind: case_item
         - kind: while_statement
         - kind: for_statement
-        - kind: until_statement
