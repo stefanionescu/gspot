@@ -44,7 +44,14 @@ install script runs, so `npx`, `--ignore-scripts`, proxies and offline mirrors a
   header comment and in the preset manifest.
 - No folder is named `util`, `helper`, `common`, `shared`, `core`, `lib` or `misc`. The naming
   policy gspot ships refuses them, and gspot lints itself.
-- A constant with one reader is inline. `config/` holds the schema, not tunables.
+- `packages/cli/config/` holds the literal tables gspot ships in code: the regexes and pattern
+  lists (shebangs, generated-file banners, environment-file names), the marker strings and header
+  templates, the refused reasons, the file-tag table. Files there hold literals only, and
+  `integrity/config-purity` guards them in gspot's own gate, because gspot's `gspot.toml` names
+  the directory as its `config` role. An algorithm's own constant (an index, a loop bound) stays
+  inline; nothing forces hoisting (D-22). The `gspot.toml` schema, loader, merge and writer live
+  in `src/policy/`, named after what the file is called in the glossary, so `config` means one
+  thing in this repository.
 
 ## Libraries
 

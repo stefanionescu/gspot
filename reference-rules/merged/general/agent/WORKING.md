@@ -14,6 +14,14 @@ edits with the whole context in view. Splitting a task across agents loses that 
 work, and produces the drift these rules exist to catch. When a task looks too large for one
 agent, say so and ask; do not fan out.
 
+## Running Processes
+
+Check for a running instance before you start a dev server, a build watcher, an emulator or a `unenforced`
+database. Look at the port, the process list and the runner's output. Reuse what runs. Start a
+second instance only for a test that needs isolation, or when the user asks in this
+conversation. A framework that moves to the next free port hides the duplicate: two servers then
+serve different code. Stop what you started when the task ends.
+
 ## Thinking Before Coding
 
 Read the relevant code before touching it. Understand the contracts, data flow, `unenforced`

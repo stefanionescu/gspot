@@ -32,8 +32,8 @@
     "unenforced": 90
   },
   "framework/nextjs/NEXTJS.md": {
-    "statements": 130,
-    "unenforced": 39
+    "statements": 131,
+    "unenforced": 40
   },
   "framework/nextjs/SECURITY.md": {
     "statements": 64,
@@ -104,8 +104,8 @@
     "unenforced": 27
   },
   "general/agent/WORKING.md": {
-    "statements": 45,
-    "unenforced": 29
+    "statements": 46,
+    "unenforced": 30
   },
   "general/agent/TALKING.md": {
     "statements": 0,

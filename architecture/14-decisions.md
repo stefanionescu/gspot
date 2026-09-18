@@ -407,3 +407,13 @@ minus what `.gitignore` excludes. A file the developer created and has not stage
 `gspot check`, so a whole-tree pass is a promise the commit hook keeps. Rejected: tracked files
 only, which passed a whole-tree run and then failed the pre-commit hook on the new file the run
 never saw.
+
+## D-60 gspot's own literals live in `packages/cli/config/`
+
+The regexes, pattern lists, marker strings, header templates, refused reasons and file-tag table
+gspot ships in code live in one directory of literal-only modules, which `integrity/config-purity`
+guards in gspot's own gate through the `config` role in gspot's `gspot.toml`. The `gspot.toml`
+schema and writer live in `src/policy/`, so `config` means one thing. An algorithm's own constant
+stays inline (D-22). Rejected: literals scattered through the engines, which is what the reference
+audit found and what made a regex change a hunt; rejected: hoisting every constant, which D-22
+already refused.

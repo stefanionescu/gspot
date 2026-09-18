@@ -31,6 +31,9 @@ responsible module and the required behavior when designing or reviewing such a 
 - Keep application and tool dependencies compatible. Use one package manager and committed lockfile
   per installation boundary. Align `eslint-config-next` with the application's Next release. Never
   copy configuration from an older release of a library without checking its current API. `enforced-by: integrity/manifest-policy`
+- Check for a running `next dev` before starting one. Next.js moves to the next free port when
+  its port is taken, so a second start serves stale code beside the first without an error. Reuse
+  the running server; start another only for an isolated test or when the user asks. `unenforced`
 - Virtualize a list only when it is long enough or open-ended enough that the browser cannot hold it:
   an infinite feed, a message history. Virtua is the virtualizer for those. An ordinary list, a panel,
   a form, or a page of results renders its rows directly. `unenforced`

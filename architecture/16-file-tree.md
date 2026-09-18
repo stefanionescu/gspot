@@ -43,7 +43,7 @@ gspot/
 ├── LICENSE.md
 ├── README.md
 ├── bunfig.toml                 minimumReleaseAge and the security scanner (gspot's own install policy)
-├── gspot.toml                  gspot's own policy, written by gspot init, no ignores (D-27)
+├── gspot.toml                  gspot's own policy, written by gspot init, no ignores (D-27); [architecture] roles.config = "packages/cli/config/**"
 ├── mise.toml                   bun, and nothing gspot pins itself
 ├── package.json                workspace root: packages/*, private
 └── tsconfig.json               extends .gspot/tsconfig.base.json
@@ -70,10 +70,16 @@ packages/cli/
 │   ├── swift.wasm
 │   ├── tsx.wasm
 │   └── typescript.wasm
+├── config/                     literal tables only (D-60); see below
+│   ├── patterns.ts
+│   ├── markers.ts
+│   ├── reasons.ts
+│   ├── file-tags.ts
+│   └── env-files.ts
 ├── src/
 │   ├── main.ts                 entry: builds the commander program from commands/, runs it
 │   ├── commands/               one file per command; parses flags, calls one function, prints
-│   ├── config/                 gspot.toml
+│   ├── policy/                 gspot.toml: schema, load, merge, write
 │   ├── presets/                manifests
 │   ├── repository/             what is in the tree
 │   ├── run/                    running checks
@@ -100,7 +106,22 @@ Fifteen files, one per command, each under sixty lines: `init.ts`, `check.ts`, `
 with commander, calls one function from another folder, and hands the result to `output/`. No
 logic lives here.
 
-### `src/config/`
+### `config/`
+
+Literal tables only: no function, no control flow, no import of anything but types.
+`integrity/config-purity` guards the folder in gspot's own gate through the `config` role in
+gspot's `gspot.toml`. A value lives here when a reviewer might tune it or a message prints it; an
+algorithm's own constant stays where it is used (D-22).
+
+| File | Holds |
+| --- | --- |
+| `patterns.ts` | the regexes: shebang lines, generated-file banners other tools write, the `gspot-template` header line, path-shaped tokens for `stale-paths`, runner task references (`mise run`, `bun run`, `npm run`) |
+| `markers.ts` | the managed-block markers, the generated-file header text, the `.gspot/version` line format, the inline `gspot-ignore` comment shapes per comment style |
+| `reasons.ts` | the refused reasons (`N/A`, `TBD`, `-`, empty) and the `carried from <file> at init` template |
+| `file-tags.ts` | the `identify`-style table: extension to tag, shebang to tag, the executable and binary rules |
+| `env-files.ts` | the environment-file patterns (`.env*`, `.dev.vars*`) and the template names (`.env.example`, `.env.template`, `.env.sample`) |
+
+### `src/policy/`
 
 | File | Holds |
 | --- | --- |
@@ -109,7 +130,7 @@ logic lives here.
 | `load.ts` | read, parse (smol-toml), validate, resolve scopes; every load error through `zod-validation-error` and `messages.ts` |
 | `merge.ts` | preset default, framework override, scope table, root table; lists append, scalars replace, conflicts fail |
 | `write.ts` | the one writer the six commands share: `toml-patch` append, replace, remove; validate as load; run sync |
-| `reasons.ts` | the refused reasons (`N/A`, `TBD`, empty) and the loosening-needs-a-reason rule |
+| `loosening.ts` | the loosening-needs-a-reason rule, reading `config/reasons.ts` |
 | `settings.ts` | the settings surface: every key, its direction, its default, its source, for `set`, `doctor --settings` and the docs |
 | `messages.ts` | every load and write message in plain English, one function per message, tested |
 | `json-schema.ts` | `z.toJSONSchema` into `schema/gspot.schema.json` and `run-record.schema.json` |
@@ -131,7 +152,7 @@ logic lives here.
 | --- | --- |
 | `tracked.ts` | `git ls-files --cached --others --exclude-standard -z` (tracked or would be tracked), symlinks and submodules; the `globby` walk with `ignore` when there is no repository |
 | `natures.ts` | source, generated, vendored, binary from `[[declare]]`, `.gitattributes`, banners and a content sniff |
-| `tags.ts` | file tags the way `identify` computes them: extension, shebang, executable bit, content |
+| `tags.ts` | file tags from `config/file-tags.ts`: extension, shebang, executable bit, content |
 | `scopes.ts` | scopes from `[[scope]]` and from workspaces (`@manypkg/get-packages`, uv, Cargo) |
 | `staged.ts` | `git diff --cached --name-only --diff-filter=ACMRT` and the unstaged-changes note |
 | `manifests.ts` | readers for `package.json` (`@npmcli/package-json`), `pyproject.toml`, `Package.swift`, the platform files detection needs |
@@ -438,7 +459,7 @@ docs/
     │   └── working-with-an-agent.md
     └── reference/              generated; every file carries the header
         ├── commands/           one page per command, from commander
-        ├── settings.md         every key from config/settings.ts
+        ├── settings.md         every key from policy/settings.ts
         ├── presets/            one page per preset, from its manifest
         ├── rules/              one page per check id, from summary, why and fix
         ├── engines.md
