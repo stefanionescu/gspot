@@ -82,6 +82,9 @@ export type CheckSpec = {
     command?: string[];
     fix_command?: string[];
     fix_order?: FixOrder;
+    baseline_file?: string;
+    baseline_command?: string[];
+    prune_command?: string[];
     engine?: string;
     analysis?: string;
     rules?: string;

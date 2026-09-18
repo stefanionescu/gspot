@@ -1,5 +1,6 @@
 // Write every generated file, block and merge; remove strays; set the hooks path. The apply command as a function.
 import { dirname, join } from 'node:path';
+import { planRun } from '#cli/run/plan.ts';
 import type { RunRecord } from '#types/record.ts';
 import { computeDrift } from '#cli/emit/drift.ts';
 import { locateTool } from '#cli/doctor/probes.ts';
@@ -7,15 +8,16 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import type { RulesLintReport } from '#types/rules.ts';
 import { lowerBaselines } from '#cli/run/baselines.ts';
 import { applyBlock } from '#cli/emit/managed-blocks.ts';
+import { runSideCommand } from '#cli/run/tool-runner.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import { isRulePath, lintRules } from '#cli/rules/lint.ts';
-import type { Session, CommandResult } from '#types/run.ts';
 import { hasPackagePins, emitAll } from '#cli/emit/targets.ts';
 import { markExecutable } from '#cli/platform/executable-bit.ts';
 import { openSession, everyManifest } from '#cli/run/session.ts';
 import { hasPackages, installPackages } from '#cli/prose/vale.ts';
 import { isLefthookHeld, usesLefthook } from '#cli/emit/lefthook.ts';
 import { installHooksPath, removeHooksPath } from '#cli/emit/hooks.ts';
+import type { Session, CommandResult, PlannedCheck } from '#types/run.ts';
 import { assetPath, listAssets, readAsset } from '#cli/platform/assets.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import type { ApplyReport, ApplyOptions, DriftEntry, PackageContent, RenderedSet } from '#types/emit.ts';
@@ -133,7 +135,29 @@ function checkDrift(session: Session): CommandResult {
     return { text: `${driftLine}${rulesText(rules)}`, json, exitCode };
 }
 
-function lowerFromLastRun(root: string, session: Session): CommandResult {
+async function pruneOne(session: Session, check: PlannedCheck): Promise<string | undefined> {
+    const { spec, scope } = check;
+    if (spec.prune_command === undefined || spec.baseline_file === undefined) return undefined;
+    const file = join(session.root, spec.baseline_file);
+    if (!existsSync(file)) return undefined;
+    await runSideCommand(session, check, spec.prune_command);
+    if (Object.keys(JSON.parse(readFileSync(file, 'utf8')) as object).length === 0) rmSync(file, { force: true });
+    const where = scope.scope.path === '' ? '' : ` (${scope.scope.path})`;
+    return `${check.id}${where}`;
+}
+
+// A tool that owns its baseline prunes it itself: ESLint drops the suppressions nothing triggers any more.
+async function pruneToolBaselines(session: Session): Promise<string[]> {
+    const pruned: string[] = [];
+    const planned = planRun(session, { stage: 'all', skips: [], localSkips: session.policyFiles.local.skip });
+    for (const check of planned) {
+        const name = await pruneOne(session, check);
+        if (name !== undefined) pruned.push(name);
+    }
+    return pruned;
+}
+
+async function lowerFromLastRun(root: string, session: Session): Promise<CommandResult> {
     const last = join(root, '.gspot', 'last.json');
     if (!existsSync(last))
         return {
@@ -148,7 +172,9 @@ function lowerFromLastRun(root: string, session: Session): CommandResult {
         ...session.policyFiles.policy.checks.map((check) => check.id),
     ]);
     const result = lowerBaselines(root, findings, existing);
+    const pruned = await pruneToolBaselines(session);
     const lines = [
+        ...pruned.map((id) => `pruned   ${id}  (the tool's own suppressions file)`),
         ...result.lowered.map((id) => `lowered  ${id}`),
         ...result.removed.map((id) => `removed  ${id}`),
         ...result.rose.map(
@@ -156,7 +182,7 @@ function lowerFromLastRun(root: string, session: Session): CommandResult {
         ),
     ];
     const text = lines.length === 0 ? "every baseline is already at the last run's count" : lines.join('\n');
-    return { text: `${text}\n`, json: result, exitCode: result.rose.length > 0 ? 1 : 0 };
+    return { text: `${text}\n`, json: { ...result, pruned }, exitCode: result.rose.length > 0 ? 1 : 0 };
 }
 
 async function installProsePackages(session: Session, report: ApplyReport): Promise<void> {

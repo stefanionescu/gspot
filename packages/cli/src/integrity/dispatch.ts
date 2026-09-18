@@ -10,6 +10,7 @@ import { docsHeadings } from '#cli/integrity/docs-headings.ts';
 import { readmePresent } from '#cli/integrity/readme/present.ts';
 import { generatedDrift } from '#cli/integrity/generated-drift.ts';
 import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
+import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
 
 const checks: Record<string, IntegrityCheck> = {
     'generated-drift': generatedDrift,
@@ -20,6 +21,7 @@ const checks: Record<string, IntegrityCheck> = {
     'readme-shape': readmeShape,
     fences,
     'env-example': envExample,
+    'baselines-current': baselinesCurrent,
 };
 
 /**

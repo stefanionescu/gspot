@@ -7,9 +7,11 @@ import { executeRun } from '#cli/run/execute.ts';
 import type { RunRecord } from '#types/record.ts';
 import { openSession } from '#cli/run/session.ts';
 import type { Manifest } from '#types/manifest.ts';
+import type { RunOutcome, Session } from '#types/run.ts';
+import { runSideCommand } from '#cli/run/tool-runner.ts';
 import { npmPins, npmScripts } from '#cli/emit/runner-surface.ts';
 import { writeBaselines, isBaselineAllowed } from '#cli/run/baselines.ts';
-import type { ApplyReport, FirstRun, InitAnswers, PackageContent } from '#types/emit.ts';
+import type { ApplyReport, FirstRun, InitAnswers, PackageContent, ToolBaseline } from '#types/emit.ts';
 
 const PACKAGE_RUNNERS = new Set(['bun', 'npm', 'pnpm']);
 
@@ -36,6 +38,22 @@ async function runInstall(root: string, commands: string[][]): Promise<string> {
 function summaryOf(record: RunRecord): { failing: RunRecord['checks']; lines: string[] } {
     const failing = record.checks.filter((check) => check.status === 'missing' || check.status === 'error');
     return { failing, lines: failing.map((check) => `${check.id}: ${check.note ?? check.status}`) };
+}
+
+// A check with a baseline command (the ESLint suppressions) writes the tool's own file instead of a count file.
+async function writeToolBaselines(session: Session, outcome: RunOutcome): Promise<ToolBaseline[]> {
+    const written: ToolBaseline[] = [];
+    for (const planned of outcome.planned) {
+        const command = planned.spec.baseline_command;
+        if (command === undefined) continue;
+        const result = outcome.record.checks.find(
+            (check) => check.id === planned.id && check.scope === planned.scope.scope.path,
+        );
+        if (result === undefined || result.findings.length === 0) continue;
+        await runSideCommand(session, planned, command);
+        written.push({ check: planned.id, scope: planned.scope.scope.path, count: result.findings.length });
+    }
+    return written;
 }
 
 /**
@@ -108,17 +126,25 @@ export async function firstRun(root: string): Promise<FirstRun> {
         noCache: true,
     });
     const findings = outcome.record.checks.flatMap((check) => check.findings);
+    const toolBaselines = await writeToolBaselines(session, outcome);
+    const owned = new Set(toolBaselines.map((entry) => entry.check));
     const allowed = new Set(
         session.scopes.flatMap((scope) =>
             scope.selected.flatMap((manifest) =>
-                manifest.checks.filter((check) => isBaselineAllowed(check.inspection)).map((check) => check.id),
+                manifest.checks
+                    .filter((check) => isBaselineAllowed(check.inspection) && check.baseline_command === undefined)
+                    .map((check) => check.id),
             ),
         ),
     );
     const declared = new Set(session.policyFiles.policy.checks.map((entry) => entry.id));
-    const baselines = writeBaselines(root, findings, (check) => allowed.has(check) || declared.has(check));
+    const baselines = writeBaselines(
+        root,
+        findings,
+        (check) => (allowed.has(check) || declared.has(check)) && !owned.has(check),
+    );
     if (baselines.length > 0) mkdirSync(join(root, '.gspot', 'baseline'), { recursive: true });
-    return { record: outcome.record, baselines };
+    return { record: outcome.record, baselines, toolBaselines };
 }
 
 /**
@@ -138,6 +164,10 @@ export function firstRunSummary(first: FirstRun, installNote: string): { lines: 
         const shown = `${String(baselines.length)} ${noun}`;
         lines.push(`baseline: ${shown} enter a baseline with ${String(count)} findings; every other check passes`);
     }
+    for (const entry of first.toolBaselines)
+        lines.push(
+            `baseline: ${entry.check} wrote its own suppressions file for ${String(entry.count)} findings (${entry.scope === '' ? 'root' : entry.scope})`,
+        );
     const summary = summaryOf(record);
     return { lines: [...lines, ...summary.lines], failing: summary.failing.length };
 }

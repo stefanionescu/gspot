@@ -536,3 +536,13 @@ so the commit stage stays offline and the schema check is v8r's at push. zizmor 
 GitHub format, which puts the file, the line, and the audit on one line. Rejected: padded
 brackets, which taplo cannot be told to add; and excluding `gspot.toml` from the format check,
 which D-27 forbids.
+
+## D-76 The suppressions flag appears only when the file exists
+
+Recorded 2026-09-18, with the ESLint suppression baselines (D-54). ESLint exits with an error
+when `--suppressions-location` names a file that does not exist, and a repository whose first
+run had no ESLint findings has none. The `{suppressions}` placeholder therefore expands to the
+flag, the path and `--pass-on-unpruned-suppressions` when the file exists and to nothing
+otherwise. Unpruned suppressions never fail a check: a count that fell is the baseline model,
+and `apply --baseline` prunes them. Rejected: writing an empty suppressions file at `init`,
+which puts a file in every repository for the few that need it.

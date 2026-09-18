@@ -26,3 +26,6 @@ export type Tsconfig = { extends?: string | string[]; compilerOptions?: Record<s
 
 /** One environment variable read in code: the key and the line it is read on. */
 export type EnvRead = { key: string; line: number };
+
+/** A tool's own suppressions file: its path from the root and the scope it belongs to (the root, until a tool runs per scope). */
+export type SuppressionFile = { path: string; scope: string };

@@ -61,6 +61,17 @@ summary = "Finds a folder named after a container word like common, core, helper
 why = "A folder with no owner collects everything nobody wanted to place, and grows until nobody reads it."
 fix = "Name the folder after what it holds, or allow it with a reason under structure.folder_name_allowed."
 
+[[checks]]
+id = "integrity/baselines-current"
+stage = "commit"
+takes = "project"
+engine = "integrity"
+analysis = "baselines-current"
+inspection = ["consistency"]
+summary = "Checks that every baseline names a check that still runs and that every file in a tool's suppressions file is still tracked."
+why = "A baseline for a check that is gone hides nothing and misleads the reader; a suppression for a deleted file is a count nobody lowered."
+fix = "Run gspot apply --baseline to remove the stale baseline or prune the suppressions."
+
 [[settings]]
 name = "limits.file_lines"
 kind = "number"

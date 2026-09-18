@@ -182,7 +182,10 @@ export type InitAnswers = {
 };
 
 /** The first check run after init and the baselines it wrote. */
-export type FirstRun = { record: RunRecord; baselines: BaselineFile[] };
+/** A baseline a tool wrote itself at init: the check, its scope and how many findings it covers. */
+export type ToolBaseline = { check: string; scope: string; count: number };
+
+export type FirstRun = { record: RunRecord; baselines: BaselineFile[]; toolBaselines: ToolBaseline[] };
 
 /** The part of package.json the alias reader looks at. */
 export type PackageImports = { imports?: Record<string, unknown> };

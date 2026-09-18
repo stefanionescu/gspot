@@ -147,6 +147,7 @@ language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
 - `takes = "files"` receives the claimed file list as `{files}`. `takes = "project"` runs once from the scope root and reports its own inputs. Its cache key and file count cover every
   tracked text file under the scope, child scopes included, because the tool reads the project
   rather than the claimed files.
+- A check whose tool owns its baseline names `baseline_file`, `baseline_command` (run at `init` when the check has findings, instead of a count file) and `prune_command` (run by `apply --baseline`). `{baseline}` expands to the file's path; `{suppressions}` expands to the flags that read it, and to nothing while the file does not exist.
 - A check with `fix_command` names its `fix_order`. `fix` is the prose that tells a person what to do; `fix_command` is what `check --fix` runs.
 - A check whose exit code does not reflect findings declares `count_regex`.
 - `[required]` names, per extension, the inspection kinds a file needs to count as fully

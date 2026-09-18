@@ -40,6 +40,12 @@ function generatedHash(session: Session): string {
         .join('\n');
 }
 
+// The tool's own baseline is an input too: a suppression added or pruned changes the verdict.
+function baselineHash(session: Session, planned: PlannedCheck): string {
+    const file = planned.spec.baseline_file;
+    return file === undefined ? '' : fileHash(session.root, file);
+}
+
 function keyFor(session: Session, planned: PlannedCheck, config: string): string | undefined {
     if (NEVER_CACHED.has(planned.id) || planned.spec.requires !== undefined) return undefined;
     if (planned.spec.takes === 'project' && planned.files.length === 0) return undefined;
@@ -50,7 +56,7 @@ function keyFor(session: Session, planned: PlannedCheck, config: string): string
         toolVersion: toolVersionOf(session, planned),
         configurationHash: config,
         files,
-        extra: `${session.version}\n${generatedHash(session)}`,
+        extra: `${session.version}\n${generatedHash(session)}\n${baselineHash(session, planned)}`,
     });
 }
 

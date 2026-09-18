@@ -1,6 +1,7 @@
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
-import { join } from 'node:path';
+import { dirname, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
+import { existsSync, mkdirSync } from 'node:fs';
 import { probeTool } from '#cli/doctor/probes.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { pushBase } from '#cli/repository/staged.ts';
@@ -49,8 +50,21 @@ function stubPath(session: Session, planned: PlannedCheck, name: string, scope: 
     return scope === '' ? path : `${scope}/${path}`;
 }
 
+// The tool's own baseline file, absolute, whether or not it exists yet. One file per repository: the tool runs from the root, so its paths are root-relative in every scope.
+function baselinePath(session: Session, planned: PlannedCheck): string | undefined {
+    return planned.spec.baseline_file === undefined ? undefined : join(session.root, planned.spec.baseline_file);
+}
+
+// `--suppressions-location` only when the file exists: ESLint refuses a missing one, and a repository with no findings has none.
+function suppressionsArguments(session: Session, planned: PlannedCheck): string[] {
+    const path = baselinePath(session, planned);
+    if (path === undefined || !existsSync(path)) return [];
+    return ['--suppressions-location', toPlatform(path), '--pass-on-unpruned-suppressions'];
+}
+
 function expandPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string[] {
     if (part === '{files}') return sub.files.map((file) => toPlatform(file));
+    if (part === '{suppressions}') return suppressionsArguments(session, planned);
     if (part === '{file}') return [];
     if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}'))
         return sub.scope === '' ? [] : [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope];
@@ -67,7 +81,8 @@ function substituteOne(session: Session, planned: PlannedCheck, part: string, su
         .replaceAll('{root}', () => sub.root)
         .replaceAll('{indent}', () => String(sub.indent))
         .replaceAll('{message_file}', () => sub.messageFile ?? '')
-        .replaceAll('{merge_base}', () => sub.mergeBase ?? '');
+        .replaceAll('{merge_base}', () => sub.mergeBase ?? '')
+        .replaceAll('{baseline}', () => toPlatform(baselinePath(session, planned) ?? ''));
 }
 
 function firstLine(result: SpawnResult, placeholder: string): string {
@@ -246,4 +261,26 @@ export async function runToolCheck(session: Session, planned: PlannedCheck): Pro
     if (probe.state === 'missing' || probe.state === 'outdated') return missingResult(base, tool, probe, probe.state);
     const prepared = prepare(session, planned, spec.command, probe.path);
     return runCommands(planned, tool, prepared, base);
+}
+
+/**
+ * Runs one of a check's side commands (its baseline or prune command) once over every file it claims.
+ * @param session the session
+ * @param planned the check
+ * @param command the command with its placeholders
+ * @returns the spawn result, or undefined when the tool is missing
+ */
+export async function runSideCommand(
+    session: Session,
+    planned: PlannedCheck,
+    command: string[],
+): Promise<SpawnResult | undefined> {
+    const { tool } = planned;
+    if (tool === undefined) return undefined;
+    const probe = probeTool(session.root, tool);
+    if (probe.state === 'missing' || probe.state === 'outdated') return undefined;
+    const prepared = prepare(session, planned, command, probe.path);
+    const baseline = baselinePath(session, planned);
+    if (baseline !== undefined) mkdirSync(dirname(baseline), { recursive: true });
+    return run(prepared.argv, { cwd: prepared.cwd });
 }

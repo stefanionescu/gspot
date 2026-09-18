@@ -6,17 +6,17 @@ import type { BaselineFile, RuleCount } from '#types/run.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const NEVER_BASELINED = new Set(['format', 'syntax', 'schema']);
+
 const FOREIGN_FILES = new Set(['eslint.json', 'basedpyright.json']);
+
 const DATE_LENGTH = 10;
+
 const JSON_INDENT = 4;
+
 const UNSAFE_RULE_CHARS = /[^\w.-]/gu;
 
 function dir(root: string): string {
     return join(root, '.gspot', 'baseline');
-}
-
-function fileName(check: string, rule: string): string {
-    return `${check.replace('/', '.')}.${rule.replaceAll(UNSAFE_RULE_CHARS, '_')}.json`;
 }
 
 function keyOf(check: string, rule: string | undefined): string {
@@ -58,6 +58,16 @@ function verdictFor(
 function writeBaseline(root: string, file: BaselineFile): void {
     mkdirSync(dir(root), { recursive: true });
     writeFileSync(join(dir(root), fileName(file.check, file.rule)), `${JSON.stringify(file, null, JSON_INDENT)}\n`);
+}
+
+/**
+ * The file a baseline lives in, relative to the baseline directory.
+ * @param check the check id
+ * @param rule the rule
+ * @returns the file name
+ */
+export function fileName(check: string, rule: string): string {
+    return `${check.replace('/', '.')}.${rule.replaceAll(UNSAFE_RULE_CHARS, '_')}.json`;
 }
 
 /**
