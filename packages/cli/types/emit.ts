@@ -249,3 +249,13 @@ export type InitInputs = {
     manifests: Map<string, Manifest>;
     options: InitOptions;
 };
+
+/** What an upgrade changes, section by section. */
+export type UpgradeReport = {
+    tools: { tool: string; from?: string; to: string; requiredBy: string }[];
+    rules: { rule: string; path: string; kind: 'added' | 'removed' }[];
+    files: { path: string; kind: 'new' | 'removed' | 'changed'; lines?: number }[];
+    ruleFiles: { path: string; kind: 'new' | 'removed' | 'changed'; lines?: number }[];
+    presets: { preset: string; evidence: string }[];
+    extras: { tool: string; key: string; scope: string }[];
+};

@@ -9,6 +9,7 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { newerVersion } from '#cli/doctor/newer-version.ts';
 import type { BaselineFile, CommandResult } from '#types/run.ts';
 import { writeBaselines, isBaselineAllowed } from '#cli/run/baselines.ts';
+import { upgradeReport, upgradeReportLines } from '#cli/emit/upgrade/report.ts';
 import { GSPOT_VERSION, pinnedVersion, writePin } from '#cli/run/version-pin.ts';
 
 function otherBinaryText(target: string): string {
@@ -28,17 +29,8 @@ async function alreadyAtTarget(header: string[], pinned: string | undefined, tar
     };
 }
 
-function planLines(target: string, isInstalling: boolean): string[] {
+function actionLines(target: string, isInstalling: boolean): string[] {
     return [
-        'rules',
-        '  every check in the selected presets runs at this version; new findings enter a baseline',
-        '',
-        'tools',
-        "  the pins in the runner surface move to this version's",
-        '',
-        'rule files',
-        "  re-rendered from this version's corpus",
-        '',
         'action on upgrade',
         `  move the pin to ${target}, re-render .gspot/, baseline what arrives${isInstalling ? ', run the install step' : ''}`,
         '',
@@ -107,7 +99,7 @@ async function applyUpgrade(
 }
 
 /**
- * Runs upgrade. The report compares the pinned version with this binary's presets; a target version other than this binary's is installed first.
+ * Runs upgrade. The report compares what is on disk with this binary's render and pins; a target version other than this binary's is installed first.
  * @param options the parsed flags
  * @returns the command result
  */
@@ -123,8 +115,10 @@ export async function upgradeCommand(options: UpgradeOptions): Promise<CommandRe
             exitCode: 2,
         };
     if (pinned === target) return alreadyAtTarget(header, pinned, target);
-    const lines = [...header, ...planLines(target, options.install)];
-    if (options.check) return { text: `${lines.join('\n')}\n`, json: { pinned, target, isDryRun: true }, exitCode: 0 };
+    const report = upgradeReport(await openSession(root));
+    const lines = [...header, ...upgradeReportLines(report), ...actionLines(target, options.install)];
+    if (options.check)
+        return { text: `${lines.join('\n')}\n`, json: { pinned, target, report, isDryRun: true }, exitCode: 0 };
     const isGo = await isConfirmed('Apply the upgrade?', '--yes', true, options.yes);
     if (!isGo) return { text: 'Nothing changed.\n', json: { pinned, target, applied: false }, exitCode: 0 };
     return applyUpgrade(root, options, pinned, target, lines);

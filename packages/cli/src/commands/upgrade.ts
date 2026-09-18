@@ -2,7 +2,7 @@
 import type { Command } from 'commander';
 import { emit } from '#cli/commands/emit.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
-import { upgradeCommand } from '#cli/emit/upgrade.ts';
+import { upgradeCommand } from '#cli/emit/upgrade/command.ts';
 import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 
 /**

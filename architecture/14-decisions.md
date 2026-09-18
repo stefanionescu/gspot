@@ -546,3 +546,18 @@ flag, the path and `--pass-on-unpruned-suppressions` when the file exists and to
 otherwise. Unpruned suppressions never fail a check: a count that fell is the baseline model,
 and `apply --baseline` prunes them. Rejected: writing an empty suppressions file at `init`,
 which puts a file in every repository for the few that need it.
+
+## D-77 One binary compares the disk with its own render
+
+Recorded 2026-09-18, with `upgrade`. A binary carries one version of the presets, so
+`upgrade --check` cannot ask an older version what it shipped. It compares what the repository
+holds on disk with what this binary renders and pins.
+
+The report holds the drift of every generated file and rule file, and the rule names that
+appear or vanish in a configuration diff. It holds the tool pins the runner surface has on disk
+against the manifests. It lists the presets detection proposes that the policy does not select,
+and the `extra` keys that now have a slot.
+
+Two lines of the earlier report are gone: the coverage change and the refusal when the target
+claims fewer files, both of which need the older binary's claim set. Rejected: embedding every
+past manifest in the binary, which grows without bound for a report nobody reads twice.

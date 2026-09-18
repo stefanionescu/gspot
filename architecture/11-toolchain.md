@@ -143,38 +143,44 @@ run.
 
 ## Upgrade
 
-`gspot upgrade --check` compares the presets of the installed gspot with those of the target version:
+`gspot upgrade --check` compares what is on disk with what this binary renders and pins (D-77):
 
 ```text
 gspot 0.4.0 -> 0.5.0
 
 rules
-  + typescript      @typescript-eslint/no-unnecessary-condition   new      41 findings
-  ~ structure       function_lines  60 -> 50                       stricter 22 findings
-  - typescript      gspot/no-imports-after-statements              removed, import-x/first covers it
+  + @typescript-eslint/no-unnecessary-condition  (.gspot/eslint.config.mjs)
+  - gspot/no-imports-after-statements  (.gspot/eslint.config.mjs)
 
 tools
-  ~ eslint          9.38.0 -> 9.41.2
-  + ast-grep        0.45.3       new, required by structure
+  ~ eslint  9.38.0 -> 9.41.2
+  + ast-grep  0.45.3  new, required by structure
+
+generated configuration
+  ~ .gspot/eslint.config.mjs  14 lines changed
+  + .gspot/taplo.toml  new
 
 rule files
-  ~ general/agent/WORKING.md   12 lines changed
-  + general/agent/GIT.md       new
+  ~ .gspot/rules/general/agent/WORKING.md  12 lines changed
+  + .gspot/rules/general/agent/GIT.md  new
 
 presets available, not selected
-  vitest            vitest in package.json
+  vitest  vitest in package.json
 
-coverage
-  + 14 files newly claimed   - 0 files lose a check
+extra keys that now have a slot
+  tools.eslint.globals  move it up
 
 action on upgrade
-  2 new baselines   1 tool to install (runs mise install after the yes)
+  move the pin to 0.5.0, re-render .gspot/, baseline what arrives, run the install step
 ```
 
-`gspot upgrade` moves the pin in `.gspot/version` and the runner surface, re-renders, and writes baselines for rules that arrive with findings. It runs the runner's install step so the bumped tools
-are present (`--no-install` skips it and prints the command), and prints the report. It never
-edits `gspot.toml`, never commits, and aborts when the target version claims fewer files than the
-installed one.
+The rules section reads the rule names out of the configuration diffs; the tools section reads
+the pins the runner surface holds on disk (nothing under runner `none`). `gspot upgrade` moves
+the pin in `.gspot/version` and the runner surface, re-renders, and writes baselines for rules
+that arrive with findings. It runs the runner's install step so the bumped tools are present
+(`--no-install` skips it and prints the command), and prints the report. It never edits
+`gspot.toml` and never commits. `--to` names a version other than the running binary's: the
+command then says which binary to install and run.
 
 A setting renamed or removed between versions fails to load with the old name, the new name and
 the release note. Nothing migrates `gspot.toml` automatically.
