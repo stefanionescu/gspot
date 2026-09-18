@@ -68,7 +68,7 @@ main() {
 main "$@"
 ```
 
-The hook is a Bash script gspot's own bash preset checks, so it carries the header, strict mode
+The hook is a Bash script the gspot bash preset checks, so it carries the header, strict mode
 and entry point the interpreter policy asks of every executable.
 
 `init` resolves how the binary is found on this machine and writes it into the hook: `mise exec
@@ -153,7 +153,7 @@ jobs:
 
 One job, the same `push`-stage set the hook runs, plus `manual` on the default branch. A macOS
 job appears only when a Swift scope exists. `[ci] platforms = ["ubuntu", "windows"]` adds a
-Windows job that runs the same `check`; gspot's own CI runs all three. Actions are pinned by SHA; `actionlint` and `zizmor`
+Windows job that runs the same `check`; the gspot CI runs all three. Actions are pinned by SHA; `actionlint` and `zizmor`
 run over the workflow in the `config-files` preset. The workflow is a generated file: it carries
 the header and `apply --check` guards it.
 
@@ -165,7 +165,7 @@ runs `gspot doctor` first so a missing tool fails with its install hint.
 Every failing check prints the command that runs it alone: `gspot check typescript/eslint
 --scope api`. The line is the same in the hook, in CI, and in the terminal.
 
-## Run record
+## The run record
 
 Every run writes `.gspot/last.json`: version, stage, start time, duration, checks with status
 (`ran`, `skipped`, `missing`), file counts, finding counts, duration; coverage counts; ignores
@@ -173,5 +173,4 @@ applied; baselines with counts; suppressions by form. `gspot check --json` print
 workflow uploads a SARIF rendering (`node-sarif-builder`) with locations for tools that give them.
 
 A hook never runs `--fix`. When a person runs `gspot check --fix` themselves with files staged,
-the fixes land in the working tree and are not staged for them, the way lint-staged's
-`--fail-on-changes` behaves; the output names the files that changed.
+the fixes land in the working tree and are not staged for them. That is how the lint-staged `--fail-on-changes` option behaves. The output names the files that changed.

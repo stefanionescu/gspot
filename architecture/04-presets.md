@@ -5,7 +5,7 @@ combine, and the catalog.
 
 ## What a preset is
 
-A preset is a folder in gspot's distribution:
+A preset is a folder in the gspot distribution:
 
 ```text
 presets/typescript/
@@ -233,8 +233,7 @@ Detection reads manifests and file names. It never reads code to guess a framewo
 
 ## Catalog
 
-The full table with claims, tools and checks is [presets/README.md](presets/README.md). The v1
-set is every preset the four reference repositories need, which covers a Python API, a Swift
+The full table with claims, tools and checks is [presets/README.md](presets/README.md). The v1 set is every preset the four reference repositories need. That covers a Python API, a Swift
 app, an Express API, a Supabase project, a static site on Cloudflare, and a Next.js app.
 
 ## What a preset never does

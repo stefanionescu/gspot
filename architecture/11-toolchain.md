@@ -26,8 +26,7 @@ through the `ubi:` backend, or `devDependencies.gspot` under a package manager).
 the runner tasks resolve that pinned version (`mise exec -- gspot`, `bunx gspot`), so two people
 on one repository run the same gspot whatever they installed globally.
 
-A binary of another version than `.gspot/version` exits 2 on `check`, `apply` and the writing
-commands and prints the two ways forward: install the pinned version (`mise install`, the package
+A binary of another version than `.gspot/version` exits 2 on `check`, `apply` and the writing commands. It prints the two ways forward: install the pinned version (`mise install`, the package
 manager's install) or move the pin (`gspot upgrade --to <this version>`). `init`, `doctor`,
 `explain`, `why`, `--version` and `--help` run under any version. With runner `none` the pin is
 `.gspot/version` alone and the hook calls the absolute path `init` recorded.
@@ -87,16 +86,14 @@ skip elsewhere as platform skips. `shellcheck`, `shfmt`, `typos`, `ruff`, `based
 `gitleaks`, `osv-scanner`, `hadolint`, `semgrep`, `vale`, `lychee`, `taplo`, `actionlint` and the
 npm tools run natively on Windows.
 
-mise is recommended and proposed first because it handles every backend from one file, including
-npm and pipx packages, so a Python repository needs no `package.json` to run ESLint over its
-scripts. Without mise, gspot writes to the runner the repository has and reports the rest.
+mise is recommended and proposed first because it handles every backend from one file, npm and pipx packages included. A Python repository then needs no `package.json` to run ESLint over its scripts. Without mise, gspot writes to the runner the repository has and reports the rest.
 
 The ESLint plugins the generated config imports are npm tools. In a JavaScript repository they
 are devDependencies. In a repository without one, mise installs them under `npm:` and gspot
-renders the config to import them from mise's install path; without mise, JavaScript checks in a
+renders the config to import them from the mise install path. Without mise, JavaScript checks in a
 non-JavaScript repository report `missing` with the mise hint.
 
-`@gspot/eslint-plugin` ships as an npm package from gspot's repository, pinned to the gspot
+`@gspot/eslint-plugin` ships as an npm package from the gspot repository, pinned to the gspot
 version, and arrives the same way.
 
 ## One tool per job
@@ -109,7 +106,7 @@ the reference set, these were cut, and every rule they enforced is re-pointed in
 | lizard                                  | sonarjs `cognitive-complexity`                           | sonarjs runs on every JavaScript file ESLint sees, in the editor  |
 | madge                                   | `import-x/no-cycle`                                      | same graph, CommonJS included                                     |
 | type-coverage                           | `tsc` strict, `no-explicit-any`, the `no-unsafe-*` rules | it measured what the rules already forbid                         |
-| sort-package-json                       | `eslint-plugin-package-json`                             | orders, validates, and fixes in one tool                           |
+| sort-package-json                       | `eslint-plugin-package-json`                             | orders, validates, and fixes in one tool                          |
 | pip-audit                               | osv-scanner                                              | one advisory database over every lockfile, `uv.lock` included     |
 | bandit, the vendored bandit Semgrep set | Ruff `S` plus the Semgrep Python pack                    | Ruff `S` is the bandit port and runs in the editor                |
 | interrogate                             | Ruff `D100` to `D107`                                    | same rule                                                         |
@@ -119,11 +116,14 @@ the reference set, these were cut, and every rule they enforced is re-pointed in
 | gspot's own version alignment           | syncpack version groups                                  | syncpack expresses pairs and ranges                               |
 | trivy over lockfiles                    | osv-scanner for lockfiles; trivy for images and IaC      | one scanner per surface                                           |
 
-Kept with a stated reason, where overlap looked possible: gitleaks and trufflehog (pattern
-detection against live verification), lychee and linkinator (documents against a served
-site), actionlint and zizmor (syntax against security), editorconfig-checker (covers files no
-formatter touches), pydoclint (until Ruff `DOC` leaves preview), vulture (basedpyright reports
-unused private symbols only).
+Kept with a stated reason, where overlap looked possible:
+
+- gitleaks and trufflehog (pattern detection against live verification);
+- lychee and linkinator (documents against a served site);
+- actionlint and zizmor (syntax against security);
+- editorconfig-checker (covers files no formatter touches);
+- pydoclint (until Ruff `DOC` leaves preview);
+- vulture (basedpyright reports unused private symbols only).
 
 ## Verification
 
@@ -143,7 +143,7 @@ run.
 
 ## Upgrade
 
-`gspot upgrade --check` compares the installed gspot's presets with the target version's:
+`gspot upgrade --check` compares the presets of the installed gspot with those of the target version:
 
 ```text
 gspot 0.4.0 -> 0.5.0
@@ -171,14 +171,13 @@ action on upgrade
   2 new baselines   1 tool to install (runs mise install after the yes)
 ```
 
-`gspot upgrade` moves the pin in `.gspot/version` and the runner surface, re-renders, writes
-baselines for rules that arrive with findings, runs the runner's install step so the bumped tools
+`gspot upgrade` moves the pin in `.gspot/version` and the runner surface, re-renders, and writes baselines for rules that arrive with findings. It runs the runner's install step so the bumped tools
 are present (`--no-install` skips it and prints the command), and prints the report. It never
 edits `gspot.toml`, never commits, and aborts when the target version claims fewer files than the
 installed one.
 
 A setting renamed or removed between versions fails to load with the old name, the new name and
-the release note. There is no automatic migration of `gspot.toml`.
+the release note. Nothing migrates `gspot.toml` automatically.
 
 ## Rollback
 

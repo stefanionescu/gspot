@@ -6,9 +6,7 @@ each. Every row names a check that exists in a preset.
 
 ## Slop
 
-Slop is code, naming, or prose that adds nothing. A model reaches for it when asked to improve
-something it does not want to replace, to guard against a failure it cannot name, or to explain
-code it did not read. The patterns are stable across languages, so the checks are too.
+Slop is code, naming, or prose that adds nothing. A model reaches for it when asked to improve something it does not want to replace. It also reaches for it to guard against a failure it cannot name, or to explain code it did not read. The patterns are stable across languages, so the checks are too.
 
 ### Slop in names
 
@@ -113,7 +111,7 @@ name. One term list serves identifiers, file names, and prose.
 
 ## Drift
 
-Drift is two things that are meant to agree and no longer do. Nobody notices drift by reading,
+Drift is two things that are meant to agree and do not. Nobody notices drift by reading,
 so every kind gets a check.
 
 | Kind                    | Agreement                                                                                                                                    | Check                                                         | Stage                                                     |
@@ -127,7 +125,7 @@ so every kind gets a check.
 | Workspace versions      | one version per dependency across packages; paired packages aligned                                                                          | `integrity/dependency-alignment`                              | push                                                      |
 | Generated source files  | running `produced_by` changes nothing (`supabase gen types`, OpenAPI export, build output)                                                   | `integrity/generated-fresh`                                   | push                                                      |
 | Build reproducibility   | building twice gives identical output                                                                                                        | `static-site/build-reproducible`                              | push                                                      |
-| Documentation paths     | every path in Markdown, comments, and config lists exists                                                                                     | `integrity/stale-paths`                                       | commit                                                    |
+| Documentation paths     | every path in Markdown, comments, and config lists exists                                                                                    | `integrity/stale-paths`                                       | commit                                                    |
 | Documentation links     | every relative link and anchor resolves; external links resolve at manual                                                                    | `integrity/docs-links`, `static-site/links-external`          | commit, manual                                            |
 | Allowlists and ignores  | every entry matches at least one tracked file                                                                                                | `integrity/allowlists-resolve`                                | commit                                                    |
 | Baselines               | every baseline names a rule that exists; no count rose                                                                                       | `integrity/baselines-current`, the baseline verdict           | commit                                                    |

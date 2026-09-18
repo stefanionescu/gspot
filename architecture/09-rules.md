@@ -1,8 +1,6 @@
 # Rules Corpus
 
-This document decides the agent rule files: their layers, how they are assembled into a
-repository, how the merged corpus is repaired before it ships, and how each rule links to the
-check that enforces it.
+This document decides the agent rule files: their layers and how they are assembled into a repository. It also decides how the merged corpus is repaired before it ships and how each rule links to the check that enforces it.
 
 ## What ships
 
@@ -35,8 +33,7 @@ unconditionally and the code files per preset.
 ## Project templates
 
 The merge left out one team's architecture on purpose. That material still has value to the
-team that wrote it, so it ships as templates under `templates/project/`, and
-`gspot init --project-templates` or `gspot apply --project-templates` copies the ones that match
+team that wrote it, so it ships as templates under `templates/project/`. `gspot init --project-templates` or `gspot apply --project-templates` copies the ones that match
 the selection into the repository's project layer once. gspot never upgrades a project file. The
 copy opens with `<!-- gspot-template: IOS-ARCHITECTURE 0.4.0 -->`, so `upgrade --check` can report
 that the template changed upstream; merging is the person's choice.
@@ -54,28 +51,19 @@ that the template changed upstream; merging is the person's choice.
 A heading comparison between the four source corpora and the merged corpus found general
 content with no counterpart. The repair pass restored each into the file named.
 
-| Restored                                                                                        | Into                                                                                                                    |
-| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Docker: image stack ownership, build contexts, CUDA, models, Hugging Face downloads             | `templates/project/DOCKER-ML.md`; layering and cache discipline was already in `tool/docker/DOCKER.md`                  |
-| Swift: networking and API clients                                                               | `language/SWIFT.md` (the neutral rules) and `templates/project/IOS-ARCHITECTURE.md` (the layered version)               |
-| General: verification and tests policy, once                                                    | `general/agent/WORKING.md`                                                                                              |
+| Restored                                                                                         | Into                                                                                                                    |
+| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
+| Docker: image stack ownership, build contexts, CUDA, models, Hugging Face downloads              | `templates/project/DOCKER-ML.md`; layering and cache discipline was already in `tool/docker/DOCKER.md`                  |
+| Swift: networking and API clients                                                                | `language/SWIFT.md` (the neutral rules) and `templates/project/IOS-ARCHITECTURE.md` (the layered version)               |
+| General: verification and tests policy, once                                                     | `general/agent/WORKING.md`                                                                                              |
 | Static site: boundaries, build, routes, HTML, CSS and content naming, tests, and fixtures naming | `repository/static-site/STATIC-SITE.md`, `language/naming/HTML.md`, `language/naming/CSS.md`, `general/code/TESTING.md` |
-| The iOS and API architecture, Supabase deployment, inference vocabulary                         | `templates/project/`                                                                                                    |
+| The iOS and API architecture, Supabase deployment, inference vocabulary                          | `templates/project/`                                                                                                    |
 
-Both guards are clean as of 2026-09-18. The completeness check: 7,616 source statements, 6,443
-matched exactly or as duplicates, 255 at the fuzzy ratio, 354 listed in `DROPPED.md`, 564 with
-a recorded reason (including the 48 statements the prose pass split into shorter ones), none
-unresolved; the completeness check and its records were retired once that state was reached
-(D-70). Vale with the thirty `gspot` rules: no findings
-over the 98 files, after a pass that changed 379 headings to sentence case, split 64 long list
-items and 28 long sentences and paragraphs, and stated 63 conditional modals as facts, with no
-rule dropped. The enforcement markers: 5,303 statements, 2,354 unenforced. What Phase 6 still
-owes is code, not editing: the assembler and the corpus lint inside the binary.
+Both guards are clean as of 2026-09-18. The completeness check counted 7,616 source statements: 6,443 matched exactly or as duplicates, 255 at the fuzzy ratio, 354 listed in `DROPPED.md`, and 564 with a recorded reason. The reasons include the 48 statements the prose pass split into shorter ones. None was unresolved, and the check and its records were retired once that state was reached (D-70).
 
-The guard is mechanical: a completeness check normalizes every statement (sentence or list
-item) in the four source corpora and asserts it appears in the merged corpus or a project
-template, or is listed in `rules/DROPPED.md` with a reason. The check runs in gspot's own gate
-until the four repositories have migrated, then the source corpora are removed.
+Vale with the thirty `gspot` rules reports no findings over the 98 files. That pass changed 379 headings to sentence case, split 64 long list items and 28 long sentences and paragraphs, and stated 63 conditional modals as facts, with no rule dropped. The enforcement markers: 5,303 statements, 2,354 unenforced. Phase 6 owed code, not editing: the assembler and the corpus lint inside the binary, both under `packages/cli/src/rules/` now.
+
+The guard was mechanical: a completeness check normalized every statement (sentence or list item) in the four source corpora. Each had to appear in the merged corpus or a project template, or be listed in `rules/DROPPED.md` with a reason. The check ran in the gate of this repository until the state above was reached, then retired with its records (D-70).
 
 ## Layer boundary
 
@@ -85,18 +73,11 @@ and database layers carry only what the thing itself dictates: the App Router la
 layer names, deployment topology and product vocabulary belong to the project layer, which the
 team writes and gspot never touches.
 
-The corpus lint enforces the boundary with a word list per layer: a general or language file that
-names a directory layout, a service tier or a deployment target fails the corpus lint in gspot's
-own repository.
+The corpus lint enforces the boundary with a word list per layer. A general or language file that names a directory layout, a service tier or a deployment target fails the corpus lint in this repository.
 
 ## Repair pass
 
-The first editorial pass is done: the corruption residue is gone, the twelve cross-file
-contradictions are resolved, the "only when the user asks" statements are one sentence in
-`WORKING.md`, the Express API and next-intl content is re-homed, the SQL examples match the SQL
-casing rule, the cross-language casing decisions are written in `general/code/NAMING.md`, and
-the missing general, language, and tool files exist. Each remaining item is a check in gspot's
-own gate so the corpus cannot regress.
+The first editorial pass is done. The corruption residue is gone, the twelve cross-file contradictions are resolved, and the "only when the user asks" statements are one sentence in `WORKING.md`. The Express API and next-intl content is re-homed, the SQL examples match the SQL casing rule, and the cross-language casing decisions are written in `general/code/NAMING.md`. The missing general, language, and tool files exist. Each remaining item is a check in the gate of this repository, so the corpus cannot regress.
 
 | Defect                                                                                                                                                                                                                                          | Fix                                                                                                                                                                                                      | Guard                                                                                               |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
@@ -186,7 +167,7 @@ project rule directory (`[rules] project = "rules/project"`), the block links it
 ## Corpus lint
 
 `gspot apply --check` lints the corpus the binary carries (`packages/cli/src/rules/lint.ts`)
-and prints the unenforced count, so every change to the corpus goes through gspot's own gate:
+and prints the unenforced count, so every change to the corpus goes through the gate of this repository:
 
 - Front matter present; layer matches the path; preset names a preset page; title equals the H1.
 - Every `enforced-by` names a check id in `architecture-ids.ts`.
@@ -204,8 +185,7 @@ unknown ids.
 
 ## Completeness
 
-The four source rule corpora were checked against the merged corpus statement by statement
-while the merge ran: every statement had to survive in `rules/`, in the templates, or in a list
+The four source rule corpora were checked against the merged corpus statement by statement while the merge ran. Every statement had to survive in `rules/`, in the templates, or in a list
 of dropped statements with a reason. The state recorded above is the final one, and the check
 retired with the source corpora (D-70).
 

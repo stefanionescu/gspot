@@ -187,7 +187,7 @@ entry when they want it in the gate.
 
 Hand-written hooks are never deleted. When `.githooks/` or another hook directory holds scripts
 gspot did not write, `init` points `core.hooksPath` at `.gspot/hooks` and lists the old directory
-under "no longer runs; delete when ready".
+under `no longer runs; delete when ready`.
 
 Three other things land on that list, each by one rule that reads no code:
 
@@ -225,9 +225,9 @@ Runs checks and prints findings.
 Every finding line carries the rule, the message, and a link to the rule's page under
 `docs/rules/<check-id>`. `gspot explain <check-id>` prints that page in the terminal. It shows the check's `summary`, `why` and `fix` from its manifest, which preset turns it on, and the rule file statement it enforces. It also shows the settings that change it and the ignore entry that turns it off.
 
-`gspot explain markdownlint/MD024` does the same for a rule inside a tool. It prints the tool's own summary of the rule where the tool exposes one (`ruff rule`, ESLint rule metadata, `swiftlint rules`, markdownlint's rule table), or a link to the tool's page otherwise. Then come the check that runs it, the `gspot ignore` line that turns it off, and the `gspot set` line that changes its options. Each carries the reason field already. The finding line for a tool rule prints this command, so the
-path from "what is MD024" to "how do I change it" is one command and never a trip to the tool's
-website.
+`gspot explain markdownlint/MD024` does the same for a rule inside a tool. It prints the tool's own summary of the rule where the tool exposes one (`ruff rule`, ESLint rule metadata, `swiftlint rules`, the markdownlint rule table). Otherwise, it prints a link to the tool's page.
+
+Then come the check that runs it, the `gspot ignore` line that turns it off, and the `gspot set` line that changes its options. Each carries the reason field already. The finding line for a tool rule prints this command. The path from the question "what is MD024" to the change is one command and never a trip to the tool's website.
 
 Results are cached in `.gspot/cache/` keyed on the tool version, the generated configuration
 hash and the content hash of every file the check read. A check whose inputs are unchanged
@@ -353,7 +353,7 @@ the one line that changes it.
 
 ## `explain`
 
-One verb for "what is this". It takes:
+One verb for "what is this." It takes:
 
 | Argument                                | Prints                                                                                                                                                                                                                                                                                         |
 | --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -406,7 +406,7 @@ Exit 0 unless a tool is missing or outdated. Coverage is information here. `[cov
 true` in `gspot.toml` turns unchecked files into a failing check. Nothing `doctor` prints is
 applied; every remedy is a second command, so running `doctor` can never overwrite a decision.
 
-`gspot doctor --settings` prints every setting the selection exposes, its current value, and where the value came from (preset default, scope table, root table). The list includes the per-language limits and naming ceilings, and every `extra` table under "not a slot".
+`gspot doctor --settings` prints every setting the selection exposes, its current value, and where the value came from (preset default, scope table, root table). The list includes the per-language limits and naming ceilings, and every `extra` table under "not a slot."
 
 `doctor` is the one command besides `upgrade` that reaches the network: one lookup for a newer
 gspot, only when a person runs it.
@@ -416,7 +416,9 @@ gspot, only when a person runs it.
 `gspot upgrade --check` prints what the newer version changes and writes nothing. It lists rules added, removed or stricter; tools bumped; rule files changed; presets now available that the repository does not select; coverage change; and `extra` keys that now have a slot. It also lists project templates that changed upstream after they were copied (read from the `gspot-template` header line), which the person merges by hand or ignores.
 
 `gspot upgrade` prints the same report as its plan, then asks, exactly as `init` does. `--yes`
-skips the question. On a yes it moves the version pin (`.gspot/version` and the runner surface), re-renders every generated file, and rewrites the managed blocks between their markers. It writes baselines for rules that arrive with findings, runs the runner's install step so the bumped tools are present (`--no-install` skips it and prints the command), and reports. It never writes
+skips the question. On a yes it moves the version pin (`.gspot/version` and the runner surface), re-renders every generated file, and rewrites the managed blocks between their markers. It writes baselines for rules that arrive with findings, runs the runner's install step so the bumped tools are present (`--no-install` skips it and prints the command), and reports.
+
+It never writes
 `gspot.toml`, never touches text outside a managed block, never touches the project rule layer,
 and never commits. Because every decision lives in `gspot.toml`, an upgrade cannot lose a setting;
 what it changes is visible in the tracked diff of `.gspot/`. `--to` moves to an exact version,
@@ -442,15 +444,12 @@ workflow, and `core.hooksPath`. Leaves `gspot.toml` and the project rule layer. 
 - Every command resolves the repository root from the current directory and works from it.
 - The repository pins a gspot version in `.gspot/version`. A binary of another version exits 2 on `check`, `apply` and the six writing commands, naming the pinned version. The two ways forward: install it (`mise install`, or the package manager's install) or move the pin (`gspot upgrade --to <this version>`).
 - `init`, `doctor`, `explain`, `why`, `--version` and `--help` run under any version. [11-toolchain.md](11-toolchain.md) has the install paths.
-- gspot runs natively on macOS, Linux, and Windows. Paths print with the platform separator and
-  compare through `node:path`. Hooks on Windows run under the `sh` that Git for Windows ships.
-  A check that needs a tool with no Windows build (`plutil`, `xcodebuild`, `swiftlint`) is a
-  platform skip there and passes. Install hints name the platform's manager: mise, Homebrew,
-  apt, winget, scoop.
+- gspot runs natively on macOS, Linux, and Windows. Paths print with the platform separator and compare through `node:path`. Hooks on Windows run under the `sh` that Git for Windows ships.
+- A check that needs a tool with no Windows build (`plutil`, `xcodebuild`, `swiftlint`) is a platform skip there and passes. Install hints name the platform's manager: mise, Homebrew, apt, winget, scoop.
 - gspot sends nothing anywhere. It has no telemetry, no update check inside `check`, and no
   network access outside `upgrade`, `doctor` (one version lookup, when a person runs it),
   the last line of `init`, and checks that declare `network`.
-- Every message gspot prints is written for someone who does not code: it says what happened
+- Every message gspot prints is written for someone who does not code. It says what happened
   and what to do next, in plain words, and names the command that does it.
 
 ## Exit codes

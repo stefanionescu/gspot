@@ -4,10 +4,7 @@ This document decides who gspot serves, what it promises, and what it refuses to
 
 ## The problem
 
-Code written with AI agents accumulates a specific kind of junk: functions that forward their
-arguments, files that only re-export, folders with one file, names like `enhancedHandler` and
-`ensureConfigIfNeeded`, guards for states that cannot occur, comments that narrate history,
-tests that assert nothing. Standard linters do not catch it, because none of it is a bug.
+Code written with AI agents accumulates a specific kind of junk. Functions forward their arguments, files only re-export, folders hold one file, and names read like `enhancedHandler` and `ensureConfigIfNeeded`. Guards cover states that cannot occur, comments narrate history, and tests assert nothing. Standard linters do not catch it, because none of it is a bug.
 
 Teams that notice this write their own checks. Each repository grows a folder of scripts that
 differs from the last one, gets a different bug, and is maintained by nobody. The same rule is
@@ -18,8 +15,7 @@ implemented four times in four repositories and drifts in each.
 gspot is the shared house style for AI-written code, delivered as one binary:
 
 - **Configured linters.** gspot writes the configuration for the tools the repository already
-  needs (ESLint, Prettier, Ruff, SwiftLint, ShellCheck, sqlfluff and the rest) at full
-  strictness, and runs them over an explicit file list.
+  needs (ESLint, Prettier, Ruff, SwiftLint, ShellCheck, sqlfluff and the rest) at full strictness. It runs them over an explicit file list.
 - **The missing rules.** gspot ships the structural, naming, prose, security, and drift checks
   the standard tools lack, as one engine per concern, versioned with the rest.
 - **Agent instructions.** gspot installs rule files that tell an agent how to write code in this
@@ -52,13 +48,12 @@ and gets findings from the hooks with a message it can act on.
    reviewer reads.
 6. **Rules and enforcement stay in step.** Every rule statement in the agent files names the
    check that enforces it, or says it is unenforced. The unenforced count is reported.
-7. **The tool obeys its own rules.** gspot's repository runs gspot at full strictness with no
+7. **The tool obeys its own rules.** The gspot repository runs gspot at full strictness with no
    ignores.
 
 ## The developer's day
 
-- Save a file. The editor shows ESLint, Ruff or SwiftLint findings, including gspot's structural
-  rules for JavaScript and TypeScript, because gspot wrote the configuration those editors read.
+- Save a file. The editor shows ESLint, Ruff or SwiftLint findings, including the gspot structural rules for JavaScript and TypeScript, because gspot wrote the configuration those editors read.
 - Commit. The pre-commit hook runs `gspot check --staged`: the fast checks over staged files
   only. It takes seconds.
 - Push. The pre-push hook runs `gspot check`: everything, including build, container and
@@ -68,7 +63,7 @@ and gets findings from the hooks with a message it can act on.
 - Disagree with a finding. `gspot ignore <check> --paths <glob> --reason "..."`, or
   `gspot set limits.function_lines 80 --reason "..."`, or `gspot allow typos <word>`. Each writes
   one entry to `gspot.toml`, and each prints on every run.
-- Add a language. `gspot add python`, or `gspot doctor` to see what appeared since the install
+- Add a language. `gspot add python`, or `gspot doctor` to see what appeared after the install
   and the command that adds it. New findings enter a baseline.
 - Wonder what a finding means. `gspot explain <check>` says what the check looks for, what goes
   wrong without it, and what to do, in plain words.
@@ -90,12 +85,10 @@ and gets findings from the hooks with a message it can act on.
   carries a reason and prints every run.
 - **The tool owns a job or leaves it alone.** When gspot owns a linter, no second configuration
   for that linter exists in the repository.
-- **Take over, list, never guess.** At `init`, gspot replaces the configuration of every tool it
-  has a preset for, carries the repository's exception lists, and lists everything else it found
-  (other tools, hand-written hooks, home-grown lint folders) without touching it.
+- **Take over, list, never guess.** At `init`, gspot replaces the configuration of every tool it has a preset for and carries the repository's exception lists. Everything else it found (other tools, hand-written hooks, home-grown lint folders) is listed and left alone.
 - **Written for someone who does not code.** Every message, help text, check summary, and page
   says what happened and what to do next, in plain words, and names the command that does it.
-  gspot's own prose runs through gspot's prose engine.
+  The prose of gspot itself runs through its own prose engine.
 
 ## Non-goals
 

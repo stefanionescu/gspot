@@ -104,9 +104,8 @@ library is maintained and does the whole job.
   presets, rules and prose embedded through the file embedding of Bun. Output: `gspot-darwin-arm64`,
   `gspot-darwin-x64`, `gspot-linux-x64`, `gspot-linux-arm64`, `gspot-windows-x64.exe`.
 - The version comes from the release tag and is written into every generated file header.
-- The npm release publishes one platform package per target plus the launcher package, all at
-  one version; the launcher resolves the installed platform package by `process.platform` and
-  `process.arch` and fails with the install hint when none is present.
+- The npm release publishes one platform package per target plus the launcher package, all at one version.
+- The launcher resolves the installed platform package by `process.platform` and `process.arch`, and fails with the install hint when none is present.
 - `@gspot/eslint-plugin` builds with `bun build` to ESM and CommonJS, versioned with the binary.
 
 ## Release
@@ -176,7 +175,7 @@ cannot follow fails the gate the same way a long function does.
     - _Monorepos and scopes_;
     - _Without mise_ (the package-manager surface and its limits).
 
-The manual also publishes `llms.txt` at its root, the index of every page in plain text, as qlty and the Astral tools do. One more page, _Working with an agent_, says how an agent reads a finding, runs `explain`, changes policy with the writing commands, and never edits `.gspot/`. The managed block in `CLAUDE.md` links to it.
+The manual also publishes `llms.txt` at its root, the index of every page in plain text (qlty and the Astral tools publish one too). One more page, _Working with an agent_, says how an agent reads a finding, runs `explain`, changes policy with the writing commands, and never edits `.gspot/`. The managed block in `CLAUDE.md` links to it.
 
 `architecture/` stays the design and is linked from the manual. `docs/` is linted by gspot like
 any other Markdown in the repository, plus the readability ceiling above.

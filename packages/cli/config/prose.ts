@@ -134,11 +134,10 @@ export const DISABLED_UPSTREAM_RULES: [string, string][] = [
     ['Harper.MoreAdjective4', 'it reports that an inflected form exists, which is not an error'],
 ];
 
-/** What Vale never reads: code spans, variable expansions, quoted strings, tool directives and doc tags. */
+/** What Vale never reads: code spans, variable expansions, URLs, tool directives and doc tags. A quoted string is read; ignoring it broke the code span around it. */
 export const TOKEN_IGNORES = [
     '(`[^`]+`)',
     String.raw`(\$\{[^}]+\})`,
-    String.raw`("[^"\n]+")`,
     String.raw`(https?://\S+)`,
     String.raw`(eslint-disable[^\n]*)`,
     String.raw`(@ts-expect-error[^\n]*)`,

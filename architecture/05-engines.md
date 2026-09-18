@@ -24,10 +24,8 @@ a fixer exists. The reporter, the baseline and the ignore filter never know whic
 
 Runs external tools. Owns nothing about what they find.
 
-- **File lists, always.** gspot computes the file set (the files git tracks or would track, filtered by claims, scope,
-  declarations and ignores) and passes it to the tool. A tool that walks the tree itself
-  (`takes = "project"`) receives a generated ignore file that mirrors git's ignored set and the
-  declarations, and gspot compares what the tool reported against the list it expected.
+- **File lists, always.** gspot computes the file set (the files git tracks or is about to track, filtered by claims, scope, declarations and ignores) and passes it to the tool.
+- **Tools that walk the tree** (`takes = "project"`) receive a generated ignore file that mirrors git's ignored set and the declarations. gspot compares what the tool reported against the list it expected.
 - **Explicit configuration.** Every tool receives its config path by flag. Discovery is for
   editors; the runner never relies on it.
 - **Concurrency.** Checks within a stage run in parallel up to the CPU count. Checks that share a
@@ -37,12 +35,11 @@ Runs external tools. Owns nothing about what they find.
   reported as "the tool broke" with the remediation text, never as a code finding.
 - **Result cache.** Each check's verdict is stored under `.gspot/cache/` keyed on the tool
   version, the generated configuration hash and the content hash of every file it read.
-  Unchanged inputs skip the run and print `cache`. `--staged` therefore costs the staged files
-  only. The cache is per machine and never tracked.
+  Unchanged inputs skip the run and print `cache`.
+- **Cache scope.** `--staged` therefore costs the staged files only. The cache is per machine and never tracked.
 - **Platforms.** Commands are spawned without a shell. Paths are joined with `node:path` and
   passed to tools in the platform's form. On Windows, npm-installed tools are `.cmd` shims that
-  a plain spawn cannot run; `cross-spawn` resolves them, with no shell and no quoting of gspot's
-  own.
+  a plain spawn cannot run; `cross-spawn` resolves them without a shell and without quoting by gspot.
 - **Missing tool.** The check reports `missing` with the install hint and fails.
 - **Skips.** `gspot.local.toml` skips and `--skip` print and record. A `docker` requirement with
   no daemon fails; a platform requirement (`macos`, `linux`) that does not hold passes as
@@ -100,12 +97,11 @@ For every language that is not JavaScript or TypeScript, and for repository-leve
   css, html, and the JavaScript family for the naming extractors. SQL parses through
   `libpg-query` compiled to WASM. No native modules.
 - **Declarative rules.** ast-grep YAML files under each preset, executed through the ast-grep
-  CLI (`ast-grep scan --json`), which gspot pins as a tool. Node kinds match tree-sitter's. Rules that
-  need a count (barrel ceiling, shell branches, nesting, mutable assignments) run the YAML and
-  gspot counts the matches per file or per enclosing function.
+  CLI (`ast-grep scan --json`), which gspot pins as a tool. Node kinds match tree-sitter's.
+- **Counted rules.** Rules that need a count (barrel ceiling, shell branches, nesting, mutable assignments) run the YAML and gspot counts the matches per file or per enclosing function.
 - **Cross-file index.** Before any analysis runs, the engine builds one index per scope:
-  declarations by file, calls and references by name, imports by module. The trivial-function,
-  private-prefix, unused-function and env-access analyses read it. It is built once per run
+  declarations by file, calls and references by name, imports by module.
+- **Index readers.** The trivial-function, private-prefix, unused-function and env-access analyses read it. It is built once per run
   and cached with the results.
 - **Original analyses.** Kept to what a pattern cannot express, each with the tools searched
   recorded in the manifest:
@@ -139,13 +135,12 @@ For every language that is not JavaScript or TypeScript, and for repository-leve
 The one analysis the reference audit judged not replaceable. One policy document, one engine,
 extractors per language, no emission into other tools.
 
-- **Extractors** (tree-sitter): identifiers by category per language. TypeScript and
-  JavaScript: files, directories, types, classes, functions, parameters, variables, properties,
-  routes, path parameters, operation ids. Python: files, directories, modules, packages,
-  classes, exceptions, functions, methods, parameters, variables, constants, attributes, type
-  aliases. Swift: files, types, functions, parameters, variables, enum cases. Shell: files,
-  directories, functions, variables. SQL: files, schemas, tables, columns, functions,
-  parameters, indexes, triggers, policies.
+- **Extractors** (tree-sitter): identifiers by category per language.
+    - TypeScript and JavaScript: files, directories, types, classes, functions, parameters, variables, properties, routes, path parameters, operation ids.
+    - Python: files, directories, modules, packages, classes, exceptions, functions, methods, parameters, variables, constants, attributes, type aliases.
+    - Swift: files, types, functions, parameters, variables, enum cases.
+    - Shell: files, directories, functions, variables.
+    - SQL: files, schemas, tables, columns, functions, parameters, indexes, triggers, policies.
 - **Validation** per identifier: case for its category, length ceiling, word ceiling, digits,
   duplicate words, banned terms, reserved terms, structural prefixes, path-scoped rules,
   external-name and contract-property exemptions.
@@ -166,8 +161,8 @@ Vale, driven by gspot, over comments, and documentation.
 - Files with a Vale grammar (Markdown, TypeScript, JavaScript, Swift) go to Vale by path.
   Shell and SQL comments go through stdin under a grammar with the same comment marker (`.rb`
   and `.lua`), and gspot rewrites the reported path.
-- Every alert fails, whatever its level. gspot does not trust Vale's exit code.
-- Strings are out of Vale's reach. Three ESLint `no-restricted-syntax` selectors own error
+- Every alert fails, whatever its level. gspot does not trust the Vale exit code.
+- Strings are out of reach for Vale. Three ESLint `no-restricted-syntax` selectors own error
   message capitalization, interpolated identifiers in client messages, and stable log messages.
   Ruff `EM` and `G` families own the Python side. A SwiftLint custom rule owns `///` over
   `/** */`.
@@ -209,9 +204,7 @@ Repository-level assertions. Each is small, reads git or a manifest, and answers
 Each integrity check is one function with one test fixture. New ones are added when a
 repository shows a class of drift nothing catches.
 
-Two jobs that looked like integrity checks are tools instead: relative links and heading
-anchors in Markdown go to lychee (`--offline --include-fragments`), and workspace version
-alignment, including paired packages, goes to syncpack with a rendered configuration. gspot
+Two jobs that looked like integrity checks are tools instead. Relative links and heading anchors in Markdown go to lychee (`--offline --include-fragments`). Workspace version alignment, including paired packages, goes to syncpack with a rendered configuration. gspot
 writes no analysis a maintained tool already ships.
 
 ## What no engine does

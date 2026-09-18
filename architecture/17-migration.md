@@ -10,9 +10,9 @@ The order: yap-swift-app first, because it has the most to replace. yap-text-inf
    first integration test and runs on every change.
 2. **gspot replaces the home-grown linting in the six reference repositories.** Every rule and
    check in their `quality/` folders, dotfiles, hooks and task runners lands in a gspot check
-   ([06-enforcement-ledger.md](06-enforcement-ledger.md)). The acceptance harness proves it in a
-   detached worktree. The migration itself, deleting what gspot made redundant, is the owner's
-   step, guided by the plan `init` prints (D-57). gspot lists; the person deletes.
+   ([06-enforcement-ledger.md](06-enforcement-ledger.md)). The acceptance harness proves it in a detached worktree.
+
+The migration itself, deleting what gspot made redundant, is the owner's step, guided by the plan `init` prints (D-57). gspot lists; the person deletes.
 
 ## The `yap-swift-app` numbers
 
@@ -292,7 +292,7 @@ comment-preserving TOML edit, and every other table stays.
 
 ## The end state for a stranger's repository
 
-After `gspot init --yes` and deleting what the plan lists under "no longer runs", the repository
+After `gspot init --yes` and deleting what the plan lists under `no longer runs`, the repository
 holds, for linting, exactly this:
 
 - `gspot.toml`: the policy, tens of lines, every exception with a reason.
@@ -312,10 +312,10 @@ every finding means and what to do.
 
 0. When exception lists live inside the lint folder rather than at conventional paths (a `shellcheckrc`, an osv config, a gitleaks allowlist, a license policy), `git mv` them to the conventional path. Takeover carries them from there and does not search for them.
     - Move anything in the lint folder that is not linting (a deploy script, a generator) out of it now, because the folder is deleted whole in step 3.
-1. `gspot init` in a branch. Read the plan: the delete, carry, change and "no longer runs"
+1. `gspot init` in a branch. Read the plan: the delete, carry, change and `no longer runs`
    sections. Say yes.
 2. `gspot check`. Everything passes through baselines; read the counts.
-3. Delete what "no longer runs" listed: the lint folder, the old hooks, the lint-only tasks and
+3. Delete what `no longer runs` listed: the lint folder, the old hooks, the lint-only tasks and
    workspace packages, the duplicate pins `doctor` names. `gspot check` again.
 4. Rewrite or remove every `carried at init` reason in `gspot.toml` while the old file is one
    `git show` away.

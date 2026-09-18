@@ -1,8 +1,6 @@
-# Roadmap
+# Build Order
 
-This document decides the build order, the v1 cut, and what "done" means for each phase. Each
-phase ends with a repository passing under gspot with no rule lost: gspot's own repository
-first, then yap-swift-app in a detached worktree, then the other reference repositories through
+This document decides the build order, the v1 cut, and what "done" means for each phase. Each phase ends with a repository passing under gspot with no rule lost. This repository comes first, then yap-swift-app in a detached worktree, then the other reference repositories through
 planted repositories of their shape (D-62). The order is 0, 1, 4, 2, 3, 5, 6, with the corpus
 assembler pulled forward into the Swift phase because the managed blocks need it.
 
@@ -70,9 +68,7 @@ checks report under a gspot check, plus the additions; the repository itself is 
 | dependency ownership, typecheck membership, security-headers integrity checks               | fixtures                                                     |
 
 Acceptance: the worktree harness on yap-text-inference, and on the two ComfyUI custom-node
-repositories for the Python half of the fifth shape (a root `__init__.py`, `requirements.txt`
-exported from `pyproject.toml` and declared with `produced_by`, dependency ranges because the
-node is a library).
+repositories for the Python half of the fifth shape. That shape has a root `__init__.py`, a `requirements.txt` exported from `pyproject.toml` and declared with `produced_by`, and dependency ranges because the node is a library.
 
 ## Phase 3: the web
 
@@ -83,9 +79,7 @@ node is a library).
 | zod, drizzle, trpc, tanstack-query, zustand, react-hook-form, i18n, vitest presets                              | each installs its rule file and its ESLint rules                           |
 | GitHub Actions emitter                                                                                          | the workflow runs green on a planted repository                            |
 
-Acceptance: the worktree harness on slopshop, on yap-landing's site checks, and on the ComfyUI
-repositories' `web/` half (browser JavaScript with no bundler, CSS and HTML beside Python, the
-runtime chosen per file class).
+Acceptance: the worktree harness on slopshop, on the yap-landing site checks, and on the `web/` half of the ComfyUI repositories. That half is browser JavaScript with no bundler, CSS and HTML beside Python, and the runtime chosen per file class.
 
 ## Phase 4: Swift
 
@@ -96,9 +90,7 @@ runtime chosen per file class).
 | macOS job in the workflow                                                                                      | runs green                          |
 
 Acceptance: the worktree harness on yap-swift-app across its three scopes, with the numbers in
-[17-migration.md](17-migration.md) as the pass condition: every check in `quality/` maps to a
-gspot check, the 29 configuration files are replaced or carried, the 35 lint tasks, and the 15
-duplicate pins are listed. The repository is read, never written; its own gate keeps running
+[17-migration.md](17-migration.md) as the pass condition. Every check in `quality/` maps to a gspot check, the 29 configuration files are replaced or carried, and the 35 lint tasks and the 15 duplicate pins are listed. The repository is read, never written; its own gate keeps running
 until its owners migrate it.
 
 ## Phase 5: prose, security, upgrade
@@ -119,14 +111,11 @@ until its owners migrate it.
 | Corpus lint in gspot's gate                             | runs on every change                                      |
 
 Acceptance: each reference repository's `rules/` and its `CLAUDE.md` are replaced by the
-assembled set, with no rule statement lost (a diff of normalized statements is empty except for
-duplicates and the repaired words).
+assembled set, with no rule statement lost. A diff of normalized statements is empty except for duplicates and the repaired words.
 
 ## Phase 7: the next repository shapes
 
-Post-v1, one preset per phase-7 item, each with a planted repository, and the acceptance harness
-on a public repository of that shape, ordered by how often `init` reports the manifest with no
-preset:
+Post-v1, one preset per phase-7 item, each with a planted repository and the acceptance harness on a public repository of that shape. The order is how often `init` reports the manifest with no preset:
 
 | Preset       | Detects                           | Tools                                                                                                              |
 | ------------ | --------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
@@ -147,8 +136,7 @@ repository) and reports the rest as unchecked.
 Phases 0 through 6, whole (D-61). v1 ships when every preset, the prose engine, the corpus
 assembler, CodeQL at its `manual` stage and the upgrade path pass on the planted repositories and
 the six acceptance shapes. That is a gspot that installs in a Python API, a Swift app, an
-Express and Supabase monorepo, a static site, a Next.js app and a ComfyUI custom node, replaces
-six quality folders, installs the agent rule files, upgrades itself, explains every finding, and
+Express and Supabase monorepo, a static site, a Next.js app and a ComfyUI custom node. It replaces six quality folders, installs the agent rule files, upgrades itself, explains every finding, and
 passes on day one through baselines. Only `check --watch`, the Homebrew tap, and Phase 7 follow
 v1.
 

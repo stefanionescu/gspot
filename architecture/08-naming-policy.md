@@ -74,18 +74,15 @@ calling `handler.bind(this)` does not, because a call is not a declaration. The 
 
 Two rules connect naming to visibility, both in the structure engine and both on by default:
 
-- `structure/private-prefix`. Python: a top-level function, class or constant not listed in
-  `__all__` starts with `_`, and a name in `__all__` never does; a method called from no other
-  module starts with `_`. Bash: a function called from no other file starts with `_`; `main` is
-  exempt. TypeScript, JavaScript and Swift have visibility keywords (`export`, `private`,
-  `fileprivate`), so no prefix is required there; class members that are not part of the class's
-  contract use `#name` in JavaScript and TypeScript and `private` in Swift.
-- `structure/private-before-public`. In every language, private declarations come first and
-  public ones last: Python `_` names above public names with `__all__` last; Bash `_` functions
-  above the rest with `main` last; Swift `private` and `fileprivate` top-level declarations
-  above `internal` and `public` ones; TypeScript and JavaScript non-exported declarations above
-  exported ones, which `import-x/exports-last` enforces for the export statements and
-  `gspot/private-before-public` for exported declarations.
+- `structure/private-prefix`.
+    - Python: a top-level function, class or constant not listed in `__all__` starts with `_`, and a name in `__all__` never does; a method called from no other module starts with `_`.
+    - Bash: a function called from no other file starts with `_`; `main` is exempt.
+    - TypeScript, JavaScript and Swift have visibility keywords (`export`, `private`, `fileprivate`), so no prefix is required there. Class members outside the class contract use `#name` in JavaScript and TypeScript and `private` in Swift.
+- `structure/private-before-public`. In every language, private declarations come first. Public ones come last.
+    - Python: `_` names above public names, with `__all__` last.
+    - Bash: `_` functions above the rest, with `main` last.
+    - Swift: `private` and `fileprivate` top-level declarations above `internal` and `public` ones.
+    - TypeScript and JavaScript: non-exported declarations above exported ones; `import-x/exports-last` enforces it for the export statements and `gspot/private-before-public` for exported declarations.
 
 ### File and directory stems
 
@@ -122,13 +119,10 @@ external`.
 
 ### Contract properties
 
-Property keys fixed by a protocol, a package option or a data format, exempt for property keys
-in one named file: HTTP headers (`Content-Type`, `Retry-After`), ARIA attributes, key names
-(`ArrowUp`), locale tags (`en-GB`), card brands. A repository lists them under
+Property keys fixed by a protocol, a package option or a data format are exempt when a named file lists them. Examples: HTTP headers (`Content-Type`, `Retry-After`), ARIA attributes, key names (`ArrowUp`), locale tags (`en-GB`), card brands. A repository lists them under
 `[naming] contract_properties = [{ file = "...", names = [...] }]`. A property signature in a
 type or interface whose name is snake_case or UPPER_SNAKE describes a shape another format
-fixes (TOML keys, a JSON API, a generated type) and is exempt from the case check without a
-listing; a class field is not (D-69).
+fixes (TOML keys, a JSON API, a generated type). It is exempt from the case check without a listing; a class field is not (D-69).
 
 ## Per-language tables
 
@@ -215,14 +209,15 @@ A rule narrows by paths, languages and categories, and does one of: exclude the 
 allow digits, allow duplicate words, strip a structural prefix, or set the case list. Every
 exclusion carries a reason.
 
-The shipped policy carries the rules every repository needs: `_` and single letters `i j k x y`
-excluded in loop and lambda positions; `__init__` and `__main__` excluded as Python file names;
-`.githooks` and `.mise` excluded as directory names; a leading underscore stripped as a
-structural prefix for private Python and Bash names and for the unused TypeScript and JavaScript
-parameters and variables ESLint asks to be marked that way; `pre` accepted as a shared prefix in hook
-directories; the Next.js reserved names (`page`, `layout`, `loading`, `error`, `global-error`,
-`not-found`, `route`, `template`, `default`, `middleware`, `instrumentation`) excluded as file
-names under the router directory.
+The shipped policy carries the rules every repository needs:
+
+- `_` and single letters `i j k x y` excluded in loop and lambda positions;
+- `__init__` and `__main__` excluded as Python file names;
+- `.githooks` and `.mise` excluded as directory names;
+- a leading underscore stripped as a structural prefix for private Python and Bash names;
+- the same for the unused TypeScript and JavaScript parameters and variables ESLint asks to be marked that way;
+- `pre` accepted as a shared prefix in hook directories;
+- the Next.js reserved names (`page`, `layout`, `loading`, `error`, `global-error`, `not-found`, `route`, `template`, `default`, `middleware`, `instrumentation`) excluded as file names under the router directory.
 
 ## Matching
 
@@ -246,17 +241,12 @@ exemptions that whole-part matching does not need.
 
 ## Extraction
 
-The engine extracts identifiers with tree-sitter per language and classifies them. The
-reference extractors are the acceptance test: on the four reference repositories, the new
-extractor's record set is a superset of the old one's, checked in gspot's test suite (the parity
+The engine extracts identifiers with tree-sitter per language and classifies them. The reference extractors are the acceptance test. On the four reference repositories, the new extractor's record set is a superset of the old one's, checked in the gspot test suite (the parity
 test in [12-repository-layout.md](12-repository-layout.md)).
 
 Extraction skips: generated files (by nature), lockfiles, the paths a preset excludes
 (`node_modules`, build output, `.git`, caches, `Generated/`, `vendor/`), and string contents.
-Three things in a file are not declarations and are not extracted: declaration files (`.d.ts`)
-describing another module, import bindings (`const { existsSync } = require('node:fs')`,
-`const { default: X } = await import(...)`), and the keys and methods of object literals, which
-name what another party reads (an ESLint visitor, an option table). The `test` group applies
+Three things in a file are not declarations and are not extracted. Declaration files (`.d.ts`) describe another module. Import bindings (`const { existsSync } = require('node:fs')`, `const { default: X } = await import(...)`) belong to the imported module. The keys and methods of object literals name what another party reads (an ESLint visitor, an option table). The `test` group applies
 in non-test code only: a file under `tests/` or named `*.test.*` or `*.spec.*` may say `fixture`.
 
 ## Extension in `gspot.toml`
@@ -289,8 +279,9 @@ case = { value = ["kebab", "pascal"], reason = "React component files are Pascal
 removable group with a reason. `[naming.<language>]` sets `max_chars` and `max_words` for one
 language; `[naming.<language>.<category>]` narrows to one category (`files`, `directories`,
 `types`, `functions`, `parameters`, `variables`, `properties`) and may also set `case` to a list
-of the pattern names above. The shipped per-language table is the default for every key. A
-ceiling above the default or a case list wider than the default carries a reason; tighter does
+of the pattern names above. The shipped per-language table is the default for every key.
+
+A ceiling above the default or a case list wider than the default carries a reason; tighter does
 not. Every loosening entry prints in every run.
 
 Each key has a writing command: `gspot set naming.banned_terms dispatcher`,

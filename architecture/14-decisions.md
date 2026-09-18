@@ -232,7 +232,7 @@ skip without saying what was accepted and so cannot notice a license change at t
 ignore` line that turns it off and the `gspot set` line that changes its options. The finding
 line prints the command. `explain` also takes a check id, a preset id and a setting key, so one
 verb answers "what is this" for everything gspot has a name for. Rejected: a link to the tool's
-documentation alone, which answers "what is it" and not "how do I change it here".
+documentation alone, which answers "what is it" and not the question of changing it here.
 
 ## D-40 Every tool has an `extra` passthrough
 
@@ -365,7 +365,9 @@ for a tool in the same space.
 
 ## D-57 Migration is the owner's step; gspot lists, the person deletes
 
-`init` replaces what it owns and lists what it can prove redundant without reading code. That list holds a directory nothing in the gate references, a hand-written hook directory, a manifest whose dependencies are all tools gspot pins, and a pin gspot also pins. `doctor` keeps listing them. Tasks,
+`init` replaces what it owns and lists what it can prove redundant without reading code. That list holds a directory nothing in the gate references, a hand-written hook directory, a manifest whose dependencies are all tools gspot pins, and a pin gspot also pins. `doctor` keeps listing them.
+
+Tasks,
 rule directories and documentation are the person's to judge; the migration document walks them
 for the reference repositories, and the ledger is the proof for checks. Rejected: `init` deleting those itself, which destroys code it cannot prove it replaced. Also rejected: `init` reading task bodies or rule files to decide what is redundant. That is a heuristic per repository shape and the kind of code this design refuses.
 
@@ -394,7 +396,7 @@ already refused.
 
 ## D-61 one release, whole
 
-v1 is Phases 0 through 6. Rejected: the earlier cut that shipped after Phase 4 and deferred prose, the corpus, and CodeQL. That handed every early adopter a second migration when the agent rule files arrived, and it put the part of gspot that makes it more than a linter runner into "later."
+v1 is Phases 0 through 6. Rejected: the earlier cut that shipped after Phase 4 and deferred prose, the corpus, and CodeQL. That handed every early adopter a second migration when the agent rule files arrived. It also put the part of gspot that makes it more than a linter runner into "later."
 
 ## D-62 Build order follows the two goals
 
@@ -497,4 +499,4 @@ Seventy more upstream rules are off, each with its reason in the rendered `vale.
 - rules that report the same thing under three names (the Oxford comma, ellipses, spacing, quotes);
 - rules that misread technical words (`disabled` as a slur, `primitive` as a type, `swallow` as profanity).
 
-Tables are a skipped scope: a ledger cell is a list of identifiers and rule names, not a sentence, and the rules that judge prose have nothing to say about it. Rejected: a baseline for the 1,345 semicolons, which hides the corpus's own unenforced rule. Also rejected: trimming the packages, because the rules that stay (the Oxford comma, `there is`, repeated words, the Harper grammar rules) find real slips.
+Tables are a skipped scope. A ledger cell is a list of identifiers and rule names, not a sentence, and the rules that judge prose have nothing to say about it. Rejected: a baseline for the 1,345 semicolons, which hides the corpus's own unenforced rule. Also rejected: trimming the packages, because the rules that stay (the Oxford comma, `there is`, repeated words, the Harper grammar rules) find real slips.

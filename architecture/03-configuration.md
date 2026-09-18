@@ -31,10 +31,8 @@ Every generated file opens with a header:
 ```
 
 JSON files carry the same text under a `"_gspot"` key, except a JSON file whose reader refuses
-unknown keys (Prettier's), which carries none and is known from the rendered list. `apply --check`
-compares every rendered file with the disk and finds strays by the header, so a renamed or copied
-generated file is still caught, and gspot writes them read-only where the platform allows, as
-projen does.
+unknown keys (the Prettier one), which carries none and is known from the rendered list. `apply --check`
+compares every rendered file with the disk and finds strays by the header, so a renamed or copied generated file is still caught. gspot writes them read-only where the platform allows, as projen does.
 
 ## `gspot.toml`
 
@@ -333,7 +331,7 @@ values fail at load with both presets named; a person resolves it with an explic
   A count below the baseline passes and prints.
 - `apply --baseline` lowers every baseline to the last run's counts. It never raises one.
 - Format, syntax, and schema findings never baseline. A formatter run fixes them in one commit.
-- A baseline for a rule that no longer exists is reported by `apply --check` and removed by
+- A baseline for a rule that has been removed is reported by `apply --check` and removed by
   `apply --baseline`.
 
 ## `gspot.local.toml`
@@ -365,6 +363,5 @@ it fails `check`.
 
 One syntax everywhere: root-relative globs, `**` crosses directories, `!` negates after an
 include. A bare directory name is refused with a message: write `dir/**`. This is the syntax a
-misread `.sqlfluffignore` entry violated when it hid 58 of 83 files in a reference repository,
-and gspot never translates its own selectors into a tool's ignore syntax. It passes file lists.
+misread `.sqlfluffignore` entry violated when it hid 58 of 83 files in a reference repository. gspot never translates its own selectors into a tool's ignore syntax; it passes file lists.
 Selectors use forward slashes on every platform.
