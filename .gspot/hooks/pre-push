@@ -1,6 +1,20 @@
 #!/usr/bin/env bash
+#
 # Written by gspot. Run `gspot uninstall` to remove.
+# Runtime: Bash 4.0+, macOS and Linux.
 set -euo pipefail
-if command -v git-lfs >/dev/null 2>&1; then git lfs pre-push "$@"; fi
-read -ra gspot_command <<<"${GSPOT_BIN:-mise exec -- gspot}"
-exec "${gspot_command[@]}" check "$@"
+shopt -s inherit_errexit
+
+main() {
+    local -a gspot_command
+    read -ra gspot_command <<<"${GSPOT_BIN-}"
+    if [[ ${#gspot_command[@]} -eq 0 ]]; then
+        gspot_command=('mise' 'exec' '--' 'gspot')
+    fi
+    if command -v git-lfs >/dev/null 2>&1; then
+        git lfs pre-push "$@"
+    fi
+    exec "${gspot_command[@]}" check "$@"
+}
+
+main "$@"

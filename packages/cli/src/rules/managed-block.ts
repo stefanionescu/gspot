@@ -1,7 +1,7 @@
-// The index block for CLAUDE.md and AGENTS.md.
-import type { Session } from '#cli/run/session.ts';
+// The index block for `CLAUDE.md` and `AGENTS.md`.
+import type { Session } from '#types/run.ts';
+import type { RuleFile } from '#types/rules.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
-import type { RuleFile } from '#cli/rules/assemble.ts';
 
 const AREA_BY_LAYER: Record<string, string> = {
     agent: 'How to work here',
@@ -18,48 +18,59 @@ const AREA_BY_LAYER: Record<string, string> = {
     repository: 'Repository',
 };
 
+const MIN_COLUMN = 3;
+const TITLED_LAYERS = new Set(['language', 'framework', 'library', 'tool', 'platform', 'database', 'runtime']);
+
+const FOOTER =
+    'Run `gspot check --staged` before committing. Change policy with `gspot set`, `gspot allow` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`. Do not use subagents or parallel agents unless asked in the conversation.';
+
 function areaFor(file: RuleFile): string {
     const base = AREA_BY_LAYER[file.layer] ?? file.layer;
-    if (
-        file.layer === 'language' ||
-        file.layer === 'framework' ||
-        file.layer === 'library' ||
-        file.layer === 'tool' ||
-        file.layer === 'platform' ||
-        file.layer === 'database' ||
-        file.layer === 'runtime'
-    ) {
-        return file.title || `${base}: ${file.preset}`;
-    }
-    return base;
+    if (!TITLED_LAYERS.has(file.layer)) return base;
+    return file.title === '' ? `${base}: ${file.preset}` : file.title;
 }
 
-/** The managed block text for a session. */
-export function managedBlock(session: Session): string {
-    const directory = session.loaded.policy.rules.directory;
-    const files = selectRuleFiles(session);
+function tableRows(files: RuleFile[]): [string, string][] {
     const rows = new Map<string, string[]>();
     for (const file of files) {
-        const area = areaFor(file);
-        const list = rows.get(area) ?? [];
+        const list = rows.get(areaFor(file)) ?? [];
         list.push(`\`${file.target}\``);
-        rows.set(area, list);
+        rows.set(areaFor(file), list);
     }
-    const lines = ['# Engineering guidelines', ''];
-    if (files.length > 0) {
-        lines.push(
-            `Read \`${directory}/general/agent/WORKING.md\` and \`${directory}/general/prose/WRITING.md\` first. Then read the guides for the files you change. A more specific layer wins over a general one.`,
-            '',
-            '| Area | Guide |',
-            '| --- | --- |',
-        );
-        for (const [area, list] of rows) lines.push(`| ${area} | ${list.join(', ')} |`);
-        if (session.loaded.policy.rules.project)
-            lines.push(`| Project rules | \`${session.loaded.policy.rules.project}/\` |`);
-        lines.push('');
-    }
-    lines.push(
-        'Run `gspot check --staged` before committing. Change policy with `gspot set`, `gspot allow` or `gspot ignore` (or by editing `gspot.toml`), then `gspot sync`; never edit files under `.gspot/`. Do not use subagents or parallel agents unless asked in the conversation.',
-    );
-    return lines.join('\n');
+    return rows
+        .entries()
+        .map(([area, list]): [string, string] => [area, list.join(', ')])
+        .toArray();
+}
+
+function markdownTable(head: [string, string], rows: [string, string][]): string[] {
+    const all = [head, ...rows];
+    const widths = [0, 1].map((column) => Math.max(MIN_COLUMN, ...all.map((row) => row[column]?.length ?? 0)));
+    const line = (row: [string, string]): string =>
+        `| ${row[0].padEnd(widths[0] ?? 0)} | ${row[1].padEnd(widths[1] ?? 0)} |`;
+    const separator = `| ${'-'.repeat(widths[0] ?? 0)} | ${'-'.repeat(widths[1] ?? 0)} |`;
+    return [line(head), separator, ...rows.map((row) => line(row))];
+}
+
+function indexLines(session: Session, files: RuleFile[]): string[] {
+    const { directory, project } = session.policyFiles.policy.rules;
+    const projectRow: [string, string][] =
+        project === undefined || project === '' ? [] : [['Project rules', `\`${project}/\``]];
+    return [
+        `Read \`${directory}/general/agent/WORKING.md\` and \`${directory}/general/prose/WRITING.md\` first. Then read the guides for the files you change. A more specific layer wins over a general one.`,
+        '',
+        ...markdownTable(['Area', 'Guide'], [...tableRows(files), ...projectRow]),
+        '',
+    ];
+}
+
+/**
+ * The managed block text for a session.
+ * @param session the session
+ * @returns the block: a heading, the guide table when rules are installed, and the standing instructions
+ */
+export function managedBlock(session: Session): string {
+    const files = selectRuleFiles(session);
+    const index = files.length > 0 ? indexLines(session, files) : [];
+    return ['# Engineering Guidelines', '', ...index, FOOTER].join('\n');
 }
