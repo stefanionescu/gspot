@@ -1,28 +1,33 @@
 // The integrity engine: one function per check, chosen by `analysis =` in the manifest.
-import type { EngineInput } from '#cli/run/engines.ts';
-import { generatedDrift } from '#cli/integrity/generated-drift.ts';
+import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
-
-export type IntegrityCheck = (input: EngineInput) => Promise<Finding[]>;
+import { fences } from '#cli/integrity/fences.ts';
+import type { IntegrityCheck } from '#types/integrity.ts';
+import { stalePaths } from '#cli/integrity/stale-paths.ts';
+import { readmeShape } from '#cli/integrity/readme/shape.ts';
+import { docsHeadings } from '#cli/integrity/docs-headings.ts';
+import { readmePresent } from '#cli/integrity/readme/present.ts';
+import { generatedDrift } from '#cli/integrity/generated-drift.ts';
+import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
 
 const checks: Record<string, IntegrityCheck> = {
     'generated-drift': generatedDrift,
+    'tsconfig-options': tsconfigOptions,
+    'docs-headings': docsHeadings,
+    'stale-paths': stalePaths,
+    'readme-present': readmePresent,
+    'readme-shape': readmeShape,
+    fences,
 };
 
-/** Registers an integrity check by its analysis name. */
-export function registerIntegrity(name: string, check: IntegrityCheck): void {
-    checks[name] = check;
-}
-
-/** The analysis names this build knows. */
-export function integrityAnalyses(): string[] {
-    return Object.keys(checks).sort();
-}
-
-/** Runs the analysis a check names. */
+/**
+ * Runs the analysis a check names.
+ * @param input the engine input
+ * @returns the findings
+ */
 export async function runIntegrity(input: EngineInput): Promise<Finding[]> {
-    const name = input.spec.analysis ?? input.spec.id.split('/')[1]!;
+    const name = input.spec.analysis ?? input.spec.id.slice(input.spec.id.indexOf('/') + 1);
     const check = checks[name];
-    if (!check) throw new Error(`no integrity analysis called ${name}`);
+    if (!check) throw new Error(`No integrity analysis is called ${name}.`);
     return check(input);
 }

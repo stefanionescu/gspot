@@ -1,0 +1,16 @@
+{
+    "default": true,
+    "MD007": { "indent": <%= format.indent_width %> },
+    "MD013": false,
+    "MD024": { "siblings_only": true },
+    "MD025": { "front_matter_title": "" },
+    "MD033": false,
+    "MD041": true,
+    "MD046": { "style": "fenced" },
+    "MD048": { "style": "backtick" },
+    "MD049": { "style": "underscore" },
+    "MD050": { "style": "asterisk" },
+    "MD060": false<% const rules = tool('markdownlint').rules; if (rules && typeof rules === 'object') { for (const [id, value] of Object.entries(rules)) { %>,
+    "<%= id %>": <%= json(value) %><% } } %><% for (const rule of rulesOff('markdown/markdownlint')) { %>,
+    "<%= rule %>": false<% } %>
+}

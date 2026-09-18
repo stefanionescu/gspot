@@ -1,25 +1,29 @@
-// Does every generated file match its render? Runs sync --check in memory.
-import { computeDrift } from '#cli/render/drift.ts';
-import type { EngineInput } from '#cli/run/engines.ts';
+// Does every generated file match its render? Runs apply --check in memory.
+import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
+import { computeDrift } from '#cli/emit/drift.ts';
 
-/** One finding per generated file that differs from its render, is missing, or is a stray gspot file. */
-export async function generatedDrift(input: EngineInput): Promise<Finding[]> {
-    const drift = await computeDrift(input.session);
-    return drift.map((entry) => ({
+const MESSAGES: Record<string, string> = {
+    changed: 'This generated file differs from what gspot.toml renders.',
+    missing: 'This generated file is missing.',
+    stray: 'This file carries the gspot header but nothing in the selection renders it.',
+};
+const MOVE_HELP = 'Move your change into gspot.toml with gspot set, allow or ignore, or run gspot apply to discard it.';
+const STRAY_HELP = 'Delete the file, or add the preset that renders it.';
+
+/**
+ * One finding per generated file that differs from its render, is missing, or is a stray gspot file.
+ * @param input the engine input
+ * @returns the findings
+ */
+export function generatedDrift(input: EngineInput): Promise<Finding[]> {
+    const findings = computeDrift(input.session).map((entry) => ({
         check: input.spec.id,
         file: entry.path,
         rule: entry.kind,
-        message:
-            entry.kind === 'changed'
-                ? 'This generated file differs from what gspot.toml renders.'
-                : entry.kind === 'missing'
-                  ? 'This generated file is missing.'
-                  : 'This file carries the gspot header but nothing in the selection renders it.',
-        help:
-            entry.kind === 'stray'
-                ? 'Delete the file, or add the preset that renders it.'
-                : 'Move your change into gspot.toml with gspot set, allow or ignore, or run gspot sync to discard it.',
+        message: MESSAGES[entry.kind] ?? MESSAGES['changed'] ?? '',
+        help: entry.kind === 'stray' ? STRAY_HELP : MOVE_HELP,
         fixable: true,
     }));
+    return Promise.resolve(findings);
 }

@@ -1,0 +1,92 @@
+// Are the required compiler options on in every tsconfig the scope's TypeScript files belong to?
+import type { EngineInput } from '#types/run.ts';
+import type { Finding } from '#types/finding.ts';
+import { dirname, join, resolve } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
+import { parse as parseJsonc } from 'jsonc-parser';
+import type { Tsconfig } from '#types/integrity.ts';
+
+const REQUIRED = [
+    'strict',
+    'noUncheckedIndexedAccess',
+    'exactOptionalPropertyTypes',
+    'noImplicitOverride',
+    'forceConsistentCasingInFileNames',
+    'noImplicitReturns',
+    'noFallthroughCasesInSwitch',
+    'verbatimModuleSyntax',
+    'erasableSyntaxOnly',
+    'noPropertyAccessFromIndexSignature',
+];
+
+function readTsconfig(path: string): Tsconfig | undefined {
+    try {
+        return (parseJsonc(readFileSync(path, 'utf8')) as Tsconfig | undefined) ?? {};
+    } catch {
+        return undefined;
+    }
+}
+
+function basesOf(parsed: Tsconfig): string[] {
+    if (parsed.extends === undefined) return [];
+    return Array.isArray(parsed.extends) ? parsed.extends : [parsed.extends];
+}
+
+function baseFile(path: string, base: string): string {
+    const target = base.startsWith('.') ? resolve(dirname(path), base) : join(dirname(path), 'node_modules', base);
+    return target.endsWith('.json') ? target : `${target}.json`;
+}
+
+function resolvedOptions(path: string, seen = new Set<string>()): Record<string, unknown> {
+    if (seen.has(path) || !existsSync(path)) return {};
+    seen.add(path);
+    const parsed = readTsconfig(path);
+    if (!parsed) return {};
+    let options: Record<string, unknown> = {};
+    for (const base of basesOf(parsed)) options = { ...options, ...resolvedOptions(baseFile(path, base), seen) };
+    return { ...options, ...parsed.compilerOptions };
+}
+
+function isTsconfigName(path: string): boolean {
+    const name = path.slice(path.lastIndexOf('/') + 1);
+    return name === 'tsconfig.json' || (name.startsWith('tsconfig.') && name.endsWith('.json'));
+}
+
+function missingOptions(input: EngineInput, path: string): Finding[] {
+    const options = resolvedOptions(join(input.root, path));
+    return REQUIRED.filter((option) => options[option] !== true).map((option) => ({
+        check: input.spec.id,
+        file: path,
+        rule: option,
+        message: `${option} is not on in this tsconfig.`,
+        help: 'Keep extends pointing at .gspot/tsconfig.base.json and do not override the strict options.',
+        fixable: false,
+    }));
+}
+
+/**
+ * One finding per required option a scope's tsconfig leaves off.
+ * @param input the engine input for the scope
+ * @returns the findings
+ */
+export function tsconfigOptions(input: EngineInput): Promise<Finding[]> {
+    const scopeTsconfig = input.scope === '' ? 'tsconfig.json' : `${input.scope}/tsconfig.json`;
+    const candidates = new Set([
+        scopeTsconfig,
+        ...input.files.map((file) => file.path).filter((path) => isTsconfigName(path)),
+    ]);
+    const findings = [...candidates].flatMap((path) => {
+        if (existsSync(join(input.root, path))) return missingOptions(input, path);
+        if (path !== scopeTsconfig) return [];
+        return [
+            {
+                check: input.spec.id,
+                file: path,
+                message:
+                    'This scope has no tsconfig.json; run gspot apply to write the stub that extends the shipped base.',
+                fixable: true,
+            },
+        ];
+    });
+    return Promise.resolve(findings);
+}

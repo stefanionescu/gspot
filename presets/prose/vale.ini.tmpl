@@ -1,0 +1,15 @@
+StylesPath = vale/styles
+MinAlertLevel = suggestion
+SkippedScopes = script, style, pre, figure, table
+Packages = <%= prose.packages.join(', ') %>
+Vocab = gspot
+
+[*]
+BasedOnStyles = Vale, gspot, <%= prose.packages.join(', ') %>
+BlockIgnores = <%= prose.blockIgnores.join(', ') %>
+TokenIgnores = <%= prose.tokenIgnores.join(', ') %>
+<% for (const [rule, reason] of prose.disabledUpstream) { %># <%= reason %>
+<%= rule %> = NO
+<% } %><% for (const entry of policy.prose.disabled) { %># <%= entry.reason %>
+<%= entry.rule %> = NO
+<% } %>

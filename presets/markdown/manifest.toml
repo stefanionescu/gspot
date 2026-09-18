@@ -1,0 +1,65 @@
+[preset]
+id = "markdown"
+kind = "language"
+title = "Markdown"
+requires = ["docs", "formatting", "spelling"]
+description = "Markdown files: markdownlint, Prettier, every fenced block parsing in its language, and the docs and prose checks."
+
+[detect]
+extensions = [".md", ".mdx"]
+
+[claims]
+extensions = [".md", ".mdx"]
+natures = ["source"]
+
+[[tools]]
+name = "markdownlint-cli2"
+version = "0.23.2"
+npm = "markdownlint-cli2"
+mise = "npm:markdownlint-cli2"
+
+[[configs]]
+template = "markdownlint.jsonc.tmpl"
+target = ".gspot/markdownlint.jsonc"
+stub = { path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"extends\": \"./.gspot/markdownlint.jsonc\" },\n    \"globs\": [\"**/*.md\", \"**/*.mdx\", \"!.gspot/**\", \"!**/node_modules/**\", \"!**/dist/**\", \"!**/build/**\", \"!**/coverage/**\"]\n}\n" }
+
+[[checks]]
+id = "markdown/markdownlint"
+stage = "commit"
+takes = "files"
+command = ["markdownlint-cli2", "--config", "{config:markdownlint}", "{files}"]
+fix_command = ["markdownlint-cli2", "--fix", "--config", "{config:markdownlint}", "{files}"]
+fix_order = "format"
+inspection = ["style"]
+output = { format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+)(?::(?<column>\\d+))? (?<rule>MD\\d+)\\/(?<message>.*)$" }
+summary = "Checks every Markdown file against markdownlint with the shipped rule set."
+why = "Markdown that lints the same everywhere renders the same everywhere."
+fix = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."
+
+[[checks]]
+id = "markdown/prettier"
+stage = "commit"
+rules = "formatting/prettier"
+inspection = ["format"]
+summary = "Checks that every Markdown file is formatted the way Prettier formats it."
+why = "One formatter keeps a diff about the words, not the table padding."
+fix = "Run gspot check --fix, or prettier --write on the file."
+
+[[checks]]
+id = "markdown/fences"
+stage = "commit"
+engine = "integrity"
+analysis = "fences"
+inspection = ["syntax"]
+summary = "Checks that every fenced code block with a language tag parses in that language."
+why = "A code block that does not parse is documentation that lies about the code."
+fix = "Fix the code in the block, or tag the block text when it is not code."
+
+[[settings]]
+name = "tools.markdownlint.rules"
+kind = "table"
+direction = "per-rule"
+summary = "Options per markdownlint rule, by rule id; turning a rule off is gspot ignore --rule."
+
+[rules]
+language = ["general/prose/DOCS-FORMAT.md"]

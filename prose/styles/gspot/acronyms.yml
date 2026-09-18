@@ -193,3 +193,17 @@ exceptions:
     - ANN
     - ARG
     - EOL
+    - AST
+    - ESM
+    - CJS
+    - TSX
+    - JSONC
+    - INI
+    - SPDX
+    - MIT
+    - ISC
+    - BSL
+    - TTY
+    - WSL
+    - SAST
+    - PRs

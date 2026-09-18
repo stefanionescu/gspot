@@ -1,0 +1,34 @@
+import { describe, expect, test } from 'bun:test';
+import type { TrackedFile } from '#types/repository.ts';
+import { routeFor, routeGroups } from '#cli/prose/grammars.ts';
+
+function tracked(path: string, tags: string[] = ['text']): TrackedFile {
+    return { path, nature: 'source', tags, executable: false, size: 1 };
+}
+
+describe('prose routes', () => {
+    test('Markdown, TypeScript and Swift go by path; shell and SQL through stdin under look-alike grammars', () => {
+        expect(routeFor(tracked('a.md'))).toEqual({ path: 'a.md', mode: 'path', extension: '.md' });
+        expect(routeFor(tracked('a.tsx'))).toEqual({ path: 'a.tsx', mode: 'path', extension: '.ts' });
+        expect(routeFor(tracked('a.sh'))).toEqual({ path: 'a.sh', mode: 'stdin', extension: '.rb' });
+        expect(routeFor(tracked('a.sql'))).toEqual({ path: 'a.sql', mode: 'stdin', extension: '.lua' });
+        expect(routeFor(tracked('hooks/pre-commit', ['shell', 'text']))?.extension).toBe('.rb');
+        expect(routeFor(tracked('a.png'))).toBeUndefined();
+    });
+
+    test('path routes group by extension and stdin routes stand alone', () => {
+        const groups = routeGroups([
+            tracked('a.md'),
+            tracked('b.md'),
+            tracked('c.ts'),
+            tracked('d.sh'),
+            tracked('e.sh'),
+        ]);
+        expect(groups.map((group) => group.map((route) => route.path))).toEqual([
+            ['a.md', 'b.md'],
+            ['c.ts'],
+            ['d.sh'],
+            ['e.sh'],
+        ]);
+    });
+});
