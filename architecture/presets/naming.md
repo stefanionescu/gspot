@@ -1,11 +1,11 @@
-# naming
+# `naming`
 
 Kind: repository. Required by every language preset. Runs the naming engine over every language
 with the shipped policy in [../08-naming-policy.md](../08-naming-policy.md).
 
 ## Claims
 
-Every file a language preset claims, plus every directory name and file name in the tree
+Every file a language preset claims, plus every directory name, and file name in the tree
 outside build output and vendored paths.
 
 ## Checks

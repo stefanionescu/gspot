@@ -1,8 +1,12 @@
 // Stamps the platform packages from the template, copies the binaries in, writes checksums, publishes everything at one version.
+
+import { dirname, join } from 'node:path';
 // Usage: bun packages/cli/publish.ts --tag v0.1.0 [--registry <url>] [--dry-run]
 import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync, chmodSync } from 'node:fs';
-import { dirname, join } from 'node:path';
 
+const JSON_INDENT = 4;
+const EXECUTABLE_MODE = 0o755;
+const VERSION_SHAPE = /^\d+\.\d+\.\d+/u;
 const here = dirname(new URL(import.meta.url).pathname);
 const root = join(here, '..', '..');
 
@@ -18,8 +22,15 @@ function checksum(path: string): string {
     return new Bun.CryptoHasher('sha256').update(readFileSync(path)).digest('hex');
 }
 
-/** The manifest of one platform package. */
-export function platformManifest(platform: { os: string; cpu: string }, version: string): Record<string, unknown> {
+/**
+ * The manifest of one platform package.
+ * @param platform the platform
+ * @param platform.os the node os name
+ * @param platform.cpu the node cpu name
+ * @param version the version to stamp
+ * @returns the package.json object
+ */
+function platformManifest(platform: { os: string; cpu: string }, version: string): Record<string, unknown> {
     return {
         name: `@gspot/cli-${platform.os}-${platform.cpu}`,
         version,
@@ -32,26 +43,34 @@ export function platformManifest(platform: { os: string; cpu: string }, version:
     };
 }
 
-/** Writes the platform packages under dist/npm and returns their directories. */
-export function stampPackages(version: string, dist: string): string[] {
+/**
+ * Writes the platform packages under dist/npm.
+ * @param version the version to stamp
+ * @param distribution the dist directory
+ * @returns the package directories to publish
+ */
+function stampPackages(version: string, distribution: string): string[] {
     const readme = readFileSync(join(root, 'packages', 'npm', 'platform', 'README.md'), 'utf8');
-    const dirs: string[] = [];
+    const directories: string[] = [];
     for (const platform of PLATFORMS) {
-        const source = join(dist, platform.binary);
-        const dir = join(dist, 'npm', `cli-${platform.os}-${platform.cpu}`);
+        const source = join(distribution, platform.binary);
+        const dir = join(distribution, 'npm', `cli-${platform.os}-${platform.cpu}`);
         mkdirSync(dir, { recursive: true });
-        writeFileSync(join(dir, 'package.json'), `${JSON.stringify(platformManifest(platform, version), null, 4)}\n`);
+        writeFileSync(
+            join(dir, 'package.json'),
+            `${JSON.stringify(platformManifest(platform, version), null, JSON_INDENT)}\n`,
+        );
         writeFileSync(join(dir, 'README.md'), readme);
         const target = join(dir, platform.os === 'win32' ? 'gspot.exe' : 'gspot');
         try {
             copyFileSync(source, target);
-            chmodSync(target, 0o755);
-            dirs.push(dir);
+            chmodSync(target, EXECUTABLE_MODE);
+            directories.push(dir);
         } catch {
-            console.error(`no binary for ${platform.os} ${platform.cpu} at ${source}; skipping its package`);
+            console.error('No binary for this platform; skipping its package:', platform.os, platform.cpu, source);
         }
     }
-    const launcher = join(dist, 'npm', 'gspot');
+    const launcher = join(distribution, 'npm', 'gspot');
     mkdirSync(launcher, { recursive: true });
     for (const file of ['gspot.js', 'README.md'])
         copyFileSync(join(root, 'packages', 'npm', 'gspot', file), join(launcher, file));
@@ -62,41 +81,44 @@ export function stampPackages(version: string, dist: string): string[] {
     launcherManifest['optionalDependencies'] = Object.fromEntries(
         PLATFORMS.map((platform) => [`@gspot/cli-${platform.os}-${platform.cpu}`, version]),
     );
-    writeFileSync(join(launcher, 'package.json'), `${JSON.stringify(launcherManifest, null, 4)}\n`);
-    dirs.push(launcher);
-    return dirs;
+    writeFileSync(join(launcher, 'package.json'), `${JSON.stringify(launcherManifest, null, JSON_INDENT)}\n`);
+    directories.push(launcher);
+    return directories;
 }
 
-/** Writes dist/checksums.txt for the release page. */
-export function writeChecksums(dist: string): void {
-    const lines = readdirSync(dist)
+/**
+ * Writes dist/checksums.txt for the release page.
+ * @param distribution the dist directory
+ */
+function writeChecksums(distribution: string): void {
+    const lines = readdirSync(distribution)
         .filter((name) => name.startsWith('gspot-'))
-        .sort()
-        .map((name) => `${checksum(join(dist, name))}  ${name}`);
-    writeFileSync(join(dist, 'checksums.txt'), `${lines.join('\n')}\n`);
+        .toSorted((a, b) => a.localeCompare(b))
+        .map((name) => `${checksum(join(distribution, name))}  ${name}`);
+    writeFileSync(join(distribution, 'checksums.txt'), `${lines.join('\n')}\n`);
 }
 
-if (import.meta.main) {
-    const args = process.argv.slice(2);
-    const flag = (name: string) => (args.includes(name) ? args[args.indexOf(name) + 1] : undefined);
+{
+    const argv = process.argv.slice(2);
+    const flag = (name: string) => (argv.includes(name) ? argv[argv.indexOf(name) + 1] : undefined);
     const tag = flag('--tag') ?? '';
     const version = tag.replace(/^v/, '');
-    if (!/^\d+\.\d+\.\d+/.test(version)) throw new Error('--tag v<version> is required');
+    if (!VERSION_SHAPE.test(version)) throw new Error('--tag v<version> is required');
     const registry = flag('--registry');
-    const dryRun = args.includes('--dry-run');
-    const dist = join(root, 'dist');
-    writeChecksums(dist);
-    const dirs = stampPackages(version, dist);
-    for (const dir of dirs) {
+    const isDryRun = argv.includes('--dry-run');
+    const distribution = join(root, 'dist');
+    writeChecksums(distribution);
+    const directories = stampPackages(version, distribution);
+    for (const dir of directories) {
         const command = [
             'npm',
             'publish',
             '--access',
             'public',
-            ...(registry ? ['--registry', registry] : ['--provenance']),
-            ...(dryRun ? ['--dry-run'] : []),
+            ...(registry === undefined ? ['--provenance'] : ['--registry', registry]),
+            ...(isDryRun ? ['--dry-run'] : []),
         ];
         const result = Bun.spawnSync(command, { cwd: dir, stdout: 'inherit', stderr: 'inherit' });
-        if (result.exitCode !== 0) throw new Error(`publish failed in ${dir}`);
+        if (result.exitCode !== 0) throw new Error(`Publish failed in ${dir}`);
     }
 }

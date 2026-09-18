@@ -1,116 +1,129 @@
 // The [[ignore]] filter, the inline gspot-ignore syntax, and the suppression census input.
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { COMMENT_STYLE_BY_EXTENSION, INLINE_IGNORE } from '#config/markers.ts';
+import { readFileSync } from 'node:fs';
+import type { Finding } from '#types/finding.ts';
+import type { IgnoreEntry } from '#types/config.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import type { IgnoreEntry } from '#types/config.ts';
-import type { Finding } from '#types/finding.ts';
+import type { IgnoreUse, InlineIgnore } from '#types/run.ts';
+import { COMMENT_STYLE_BY_EXTENSION, HTML_COMMENT_CLOSE, INLINE_IGNORE, REASON_INTRODUCER } from '#config/markers.ts';
 
-export type IgnoreUse = { entry: IgnoreEntry; matched: number };
+const ENGINE_PREFIXES = ['structure/', 'naming/', 'integrity/', 'prose/'];
+const COMMENT_OPENERS: Record<string, string> = { slash: '//', hash: '#', dash: '--', html: '<!--' };
 
-export type InlineIgnore = { line: number; check: string; reason?: string };
+function isTextMatch(entry: IgnoreEntry, finding: Finding): boolean {
+    if (entry.finding === undefined) return true;
+    return finding.message.includes(entry.finding) || entry.finding === finding.rule;
+}
 
-/** Splits findings into kept and ignored, counting how many each entry matched. */
+function isPathMatch(entry: IgnoreEntry, finding: Finding): boolean {
+    return entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(finding.file);
+}
+
+function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
+    if (entry.check !== finding.check) return false;
+    if (entry.rule !== undefined && entry.rule !== finding.rule) return false;
+    return isTextMatch(entry, finding) && isPathMatch(entry, finding);
+}
+
+function existingText(root: string, path: string): string {
+    try {
+        return readFileSync(join(root, path), 'utf8');
+    } catch {
+        return '';
+    }
+}
+
+function reasonIn(rest: string): string | undefined {
+    const close = rest.indexOf(HTML_COMMENT_CLOSE);
+    const body = close === -1 ? rest : rest.slice(0, close);
+    const at = body.indexOf(REASON_INTRODUCER);
+    if (at === -1) return undefined;
+    const reason = body.slice(at + REASON_INTRODUCER.length).trim();
+    return reason === '' ? undefined : reason;
+}
+
+function targetLine(style: string, line: string, index: number): number {
+    const isStandalone = line.trim().startsWith(COMMENT_OPENERS[style] ?? '');
+    return index + (isStandalone ? 2 : 1);
+}
+
+function inlineIgnoreOf(style: string, line: string, index: number): InlineIgnore | undefined {
+    const match = INLINE_IGNORE[style]?.exec(line);
+    const check = match?.[1];
+    if (!match || check === undefined) return undefined;
+    const reason = reasonIn(line.slice(match.index + match[0].length));
+    return { line: targetLine(style, line, index), check, ...(reason === undefined ? {} : { reason }) };
+}
+
+function isEngineFinding(finding: Finding): boolean {
+    return ENGINE_PREFIXES.some((prefix) => finding.check.startsWith(prefix));
+}
+
+function missingReasonFinding(file: string, entry: InlineIgnore): Finding {
+    return {
+        check: 'integrity/suppressions',
+        file,
+        line: entry.line,
+        rule: 'gspot-ignore',
+        message: `This gspot-ignore for ${entry.check} has no reason.`,
+        help: 'Write the reason after two dashes: gspot-ignore <check> -- why this line is fine.',
+        fixable: false,
+    };
+}
+
+/**
+ * Splits findings into kept and ignored, counting how many each entry matched.
+ * @param findings the findings of one check
+ * @param entries the [[ignore]] entries for that check
+ * @returns the findings kept and the match count per entry
+ */
 export function applyIgnores(findings: Finding[], entries: IgnoreEntry[]): { kept: Finding[]; uses: IgnoreUse[] } {
     const uses: IgnoreUse[] = entries.map((entry) => ({ entry, matched: 0 }));
     const kept: Finding[] = [];
     for (const finding of findings) {
-        let ignored = false;
-        for (const use of uses) {
-            const { entry } = use;
-            if (entry.check !== finding.check) continue;
-            if (entry.rule !== undefined && entry.rule !== finding.rule) continue;
-            if (
-                entry.finding !== undefined &&
-                !finding.message.includes(entry.finding) &&
-                entry.finding !== finding.rule
-            )
-                continue;
-            if (entry.paths !== undefined && entry.paths.length > 0 && !pathMatcher(entry.paths)(finding.file))
-                continue;
-            use.matched += 1;
-            ignored = true;
-            break;
-        }
-        if (!ignored) kept.push(finding);
+        const use = uses.find((candidate) => isEntryMatch(candidate.entry, finding));
+        if (use) use.matched += 1;
+        else kept.push(finding);
     }
     return { kept, uses };
 }
 
-/** Rules an [[ignore]] with no paths turns off for a check, rendered into the tool's own disable list. */
-export function rulesTurnedOff(entries: IgnoreEntry[], check: string): string[] {
-    return entries
-        .filter(
-            (entry) =>
-                entry.check === check &&
-                entry.rule !== undefined &&
-                (entry.paths === undefined || entry.paths.length === 0),
-        )
-        .map((entry) => entry.rule!);
-}
-
-/** Inline gspot-ignore comments in one file, with the line each applies to (the same line, or the next when the comment stands alone). */
+/**
+ * Inline gspot-ignore comments in one file, with the line each applies to (the same line, or the next when the comment stands alone).
+ * @param root the repository root
+ * @param path the file, relative to the root
+ * @returns the ignores found
+ */
 export function inlineIgnores(root: string, path: string): InlineIgnore[] {
     const style = COMMENT_STYLE_BY_EXTENSION[extensionOf(path)];
-    if (!style) return [];
-    const pattern = INLINE_IGNORE[style]!;
-    let text: string;
-    try {
-        text = readFileSync(join(root, path), 'utf8');
-    } catch {
-        return [];
-    }
-    const found: InlineIgnore[] = [];
-    const lines = text.split('\n');
-    lines.forEach((line, index) => {
-        const match = line.match(pattern);
-        if (!match) return;
-        const standalone = line
-            .trim()
-            .startsWith(style === 'slash' ? '//' : style === 'hash' ? '#' : style === 'dash' ? '--' : '<!--');
-        const reason = match[2]?.trim();
-        found.push({ line: standalone ? index + 2 : index + 1, check: match[1]!, ...(reason ? { reason } : {}) });
-    });
-    return found;
+    if (style === undefined) return [];
+    const lines = existingText(root, path).split('\n');
+    return lines.map((line, index) => inlineIgnoreOf(style, line, index)).filter((entry) => entry !== undefined);
 }
 
-/** Applies inline ignores to findings from gspot's own engines. A suppression without a reason becomes a finding itself. */
+/**
+ * Applies inline ignores to findings from gspot's own engines. A suppression without a reason becomes a finding itself.
+ * @param root the repository root
+ * @param findings the findings before ignores
+ * @returns the findings kept, plus one per inline ignore that has no reason
+ */
 export function applyInlineIgnores(root: string, findings: Finding[]): Finding[] {
     const byFile = new Map<string, InlineIgnore[]>();
-    const out: Finding[] = [];
-    for (const finding of findings) {
-        if (
-            !finding.check.startsWith('structure/') &&
-            !finding.check.startsWith('naming/') &&
-            !finding.check.startsWith('integrity/') &&
-            !finding.check.startsWith('prose/')
-        ) {
-            out.push(finding);
-            continue;
-        }
-        let inline = byFile.get(finding.file);
-        if (!inline) {
-            inline = inlineIgnores(root, finding.file);
-            byFile.set(finding.file, inline);
-        }
-        const hit = inline.find((entry) => entry.check === finding.check && entry.line === finding.line);
-        if (!hit) out.push(finding);
-    }
-    for (const [file, inline] of byFile) {
-        for (const entry of inline) {
-            if (entry.reason === undefined)
-                out.push({
-                    check: 'integrity/suppressions',
-                    file,
-                    line: entry.line,
-                    rule: 'gspot-ignore',
-                    message: `This gspot-ignore for ${entry.check} has no reason.`,
-                    help: 'Write the reason after two dashes: gspot-ignore <check> -- why this line is fine.',
-                    fixable: false,
-                });
-        }
-    }
-    return out;
+    const inlineFor = (file: string): InlineIgnore[] => {
+        const known = byFile.get(file);
+        if (known) return known;
+        const found = inlineIgnores(root, file);
+        byFile.set(file, found);
+        return found;
+    };
+    const kept = findings.filter(
+        (finding) =>
+            !isEngineFinding(finding) ||
+            inlineFor(finding.file).every((entry) => !(entry.check === finding.check && entry.line === finding.line)),
+    );
+    const unexplained = [...byFile].flatMap(([file, inline]) =>
+        inline.filter((entry) => entry.reason === undefined).map((entry) => missingReasonFinding(file, entry)),
+    );
+    return [...kept, ...unexplained];
 }

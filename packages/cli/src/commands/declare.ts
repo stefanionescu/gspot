@@ -1,10 +1,13 @@
 // gspot declare
 import type { Command } from 'commander';
-
 import { emit } from '#cli/commands/emit.ts';
 import { declareCommand } from '#cli/policy/commands.ts';
+import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 
-/** Registers declare. */
+/**
+ * Registers declare.
+ * @param program the commander program
+ */
 export function registerDeclare(program: Command): void {
     program
         .command('declare <glob...>')
@@ -15,17 +18,17 @@ export function registerDeclare(program: Command): void {
         .option('--remove', 'Delete the matching entry instead')
         .option('--dry-run', 'Print what would be written and write nothing')
         .action(async (paths: string[], flags: Record<string, unknown>, command: Command) => {
-            const global = command.optsWithGlobals() as Record<string, unknown>;
+            const global = command.optsWithGlobals();
             await emit(
                 () =>
                     declareCommand({
-                        cwd: String(global['directory'] ?? process.cwd()),
+                        cwd: directoryOf(global),
                         paths,
-                        vendored: Boolean(flags['vendored']),
-                        remove: Boolean(flags['remove']),
-                        dryRun: Boolean(flags['dryRun']),
-                        ...(flags['producedBy'] ? { producedBy: String(flags['producedBy']) } : {}),
-                        ...(flags['reason'] !== undefined ? { reason: String(flags['reason']) } : {}),
+                        vendored: flags['vendored'] === true,
+                        remove: flags['remove'] === true,
+                        isDryRun: flags['dryRun'] === true,
+                        ...textEntry(flags, 'producedBy', 'producedBy'),
+                        ...textEntry(flags, 'reason', 'reason'),
                     }),
                 global,
             );

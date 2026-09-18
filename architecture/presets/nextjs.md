@@ -1,4 +1,4 @@
-# nextjs
+# `nextjs`
 
 Kind: framework. Requires: typescript, css, config-files.
 

@@ -1,0 +1,49 @@
+// The one place gspot reads the environment: every variable it honors has a function here.
+
+function isSet(name: string): boolean {
+    const value = process.env[name];
+    return value !== undefined && value !== '';
+}
+
+/**
+ * True under a CI runner, which sets CI.
+ * @returns whether CI is set
+ */
+export function isCi(): boolean {
+    return isSet('CI');
+}
+
+/**
+ * True when NO_COLOR asks for plain output.
+ * @returns whether NO_COLOR is set
+ */
+export function isColorRefused(): boolean {
+    return isSet('NO_COLOR');
+}
+
+/**
+ * The parallelism GSPOT_JOBS asks for, when it names a positive integer.
+ * @returns the count, or undefined
+ */
+export function jobsWanted(): number | undefined {
+    const wanted = Number(process.env['GSPOT_JOBS'] ?? '');
+    return Number.isSafeInteger(wanted) && wanted > 0 ? wanted : undefined;
+}
+
+/**
+ * True when GSPOT_RELEASE_TEST asks for the release test, which needs a registry and a built binary.
+ * @returns whether the release test runs
+ */
+export function isReleaseTestWanted(): boolean {
+    return process.env['GSPOT_RELEASE_TEST'] === '1';
+}
+
+/**
+ * The whole environment with the undefined entries dropped, for spawning tools.
+ * @returns the variables as strings
+ */
+export function environmentVariables(): Record<string, string> {
+    const variables: Record<string, string> = {};
+    for (const [key, value] of Object.entries(process.env)) if (value !== undefined) variables[key] = value;
+    return variables;
+}

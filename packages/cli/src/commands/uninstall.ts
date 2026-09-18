@@ -1,10 +1,13 @@
 // gspot uninstall
 import type { Command } from 'commander';
-
 import { emit } from '#cli/commands/emit.ts';
-import { uninstallCommand } from '#cli/render/uninstall-command.ts';
+import { directoryOf } from '#cli/commands/flags.ts';
+import { uninstallCommand } from '#cli/emit/uninstall.ts';
 
-/** Registers uninstall. */
+/**
+ * Registers uninstall.
+ * @param program the commander program
+ */
 export function registerUninstall(program: Command): void {
     program
         .command('uninstall')
@@ -13,14 +16,14 @@ export function registerUninstall(program: Command): void {
         .option('--yes', 'Skip the question')
         .option('--dry-run', 'Print the plan and remove nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {
-            const global = command.optsWithGlobals() as Record<string, unknown>;
+            const global = command.optsWithGlobals();
             await emit(
                 () =>
                     uninstallCommand({
-                        cwd: String(global['directory'] ?? process.cwd()),
-                        keepHooks: Boolean(flags['keepHooks']),
-                        yes: Boolean(flags['yes']),
-                        dryRun: Boolean(flags['dryRun']),
+                        cwd: directoryOf(global),
+                        isHooksKept: flags['keepHooks'] === true,
+                        yes: flags['yes'] === true,
+                        isDryRun: flags['dryRun'] === true,
                     }),
                 global,
             );

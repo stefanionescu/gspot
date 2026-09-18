@@ -1,10 +1,13 @@
 // gspot doctor
 import type { Command } from 'commander';
-
 import { emit } from '#cli/commands/emit.ts';
+import { directoryOf } from '#cli/commands/flags.ts';
 import { doctorCommand } from '#cli/doctor/command.ts';
 
-/** Registers doctor. */
+/**
+ * Registers doctor.
+ * @param program the commander program
+ */
 export function registerDoctor(program: Command): void {
     program
         .command('doctor')
@@ -12,13 +15,13 @@ export function registerDoctor(program: Command): void {
         .option('--settings', 'Print every setting the selection exposes, its value and where it came from')
         .option('--offline', 'Skip the one lookup for a newer gspot')
         .action(async (flags: Record<string, unknown>, command: Command) => {
-            const global = command.optsWithGlobals() as Record<string, unknown>;
+            const global = command.optsWithGlobals();
             await emit(
                 () =>
                     doctorCommand({
-                        cwd: String(global['directory'] ?? process.cwd()),
-                        settings: Boolean(flags['settings']),
-                        offline: Boolean(flags['offline']),
+                        cwd: directoryOf(global),
+                        settings: flags['settings'] === true,
+                        offline: flags['offline'] === true,
                     }),
                 global,
             );

@@ -1,0 +1,9 @@
+extends: existence
+message: "A default value in prose drifts: '%s'. The configuration reference owns defaults."
+level: error
+ignorecase: true
+scope: paragraph
+nonword: true
+tokens:
+    - "defaults? to \\d"
+    - "by default,? \\d"

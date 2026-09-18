@@ -1,4 +1,4 @@
-# fastapi
+# `fastapi`
 
 Kind: framework. Requires: python.
 

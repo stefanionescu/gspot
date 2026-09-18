@@ -1,61 +1,80 @@
 // Every generated file for the selection: path, template, stub; the managed blocks and the merge stubs beside them.
-import { gitignoreBlock } from '#cli/render/managed-blocks.ts';
-import { gspotHooks } from '#cli/render/hooks.ts';
-import { miseSurface } from '#cli/render/runner-surface.ts';
-import { bodyStub, mergeStub } from '#cli/render/stubs.ts';
-import { renderTarget, renderText, templateData } from '#cli/render/templates.ts';
-import { workflowFile } from '#cli/render/workflow.ts';
-import { assembleRules } from '#cli/rules/assemble.ts';
-import { managedBlock } from '#cli/rules/managed-block.ts';
-import { readAsset } from '#cli/platform/assets.ts';
-import type { ScopeSelection, Session } from '#cli/run/session.ts';
+import { join } from 'node:path';
+import { styleFiles } from '#cli/prose/vale.ts';
+import type { MergedView } from '#types/config.ts';
+import { existsSync, readFileSync } from 'node:fs';
 import { everyManifest } from '#cli/run/session.ts';
+import { readAsset } from '#cli/platform/assets.ts';
+import { workflowFile } from '#cli/emit/workflow.ts';
+import { assembleRules } from '#cli/rules/assemble.ts';
+import { bodyStub, mergeStub } from '#cli/emit/stubs.ts';
+import { managedBlock } from '#cli/rules/managed-block.ts';
+import type { ScopeSelection, Session } from '#types/run.ts';
+import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
+import type { ConfigurationTarget, Manifest } from '#types/manifest.ts';
 import { GENERATED_JSON_KEY, VERSION_FILE_LINE } from '#config/markers.ts';
-import type { ConfigTarget, Manifest } from '#types/manifest.ts';
-import type { GeneratedFile } from '#types/render.ts';
+import { gspotHooks, huskyLines, lefthookBlock } from '#cli/emit/hooks.ts';
+import { miseSurface, npmPins, npmScripts } from '#cli/emit/runner-surface.ts';
+import { emitTarget, templateText, templateInputs } from '#cli/emit/templates.ts';
+import type { EmitContext, GeneratedFile, PackageContent, PackageOutput, RenderedSet } from '#types/emit.ts';
 
-export type BlockRender = { path: string; block: string; style: 'markdown' | 'hash' };
-
-export type MergeRender = {
-    path: string;
-    content: string;
-    keys: string[];
-    target: string;
-    stub: ConfigTarget['stub'] & object;
-};
-
-export type RenderedSet = { files: GeneratedFile[]; blocks: BlockRender[]; merges: MergeRender[] };
+const JSON_INDENT = 4;
+const GSPOT_DIRECTORY = '.gspot/';
+const NPM_RUNNERS = new Set(['bun', 'npm', 'pnpm']);
 
 function copyStubContent(content: string, stubPath: string): string {
     if (!stubPath.endsWith('.json')) return content;
-    const data = JSON.parse(content) as Record<string, unknown>;
-    delete data[GENERATED_JSON_KEY];
-    return `${JSON.stringify(data, null, 4)}\n`;
+    const parsed = JSON.parse(content) as Record<string, unknown>;
+    Reflect.deleteProperty(parsed, GENERATED_JSON_KEY);
+    return `${JSON.stringify(parsed, null, JSON_INDENT)}\n`;
 }
 
-function scopedPath(scope: string, path: string): string {
+function pathInScope(scope: string, path: string): string {
     return scope === '' ? path : `${scope}/${path}`;
 }
 
-function targetPath(scope: string, config: ConfigTarget): string {
-    if (!config.per_scope || scope === '') return config.target;
-    return config.target.startsWith('.gspot/')
-        ? `.gspot/${scope}/${config.target.slice(7)}`
-        : scopedPath(scope, config.target);
+function targetPath(scope: string, config: ConfigurationTarget): string {
+    if (scope === '' || config.per_scope !== true) return config.target;
+    if (config.target.startsWith(GSPOT_DIRECTORY))
+        return `${GSPOT_DIRECTORY}${scope}/${config.target.slice(GSPOT_DIRECTORY.length)}`;
+    return pathInScope(scope, config.target);
 }
 
-function fragmentsFor(session: Session, selection: ScopeSelection, owner: ConfigTarget): string {
-    const parts: string[] = [];
-    for (const manifest of selection.selected) {
-        for (const fragment of manifest.configs) {
-            if (!fragment.fragment || fragment.target !== owner.target) continue;
-            parts.push(renderText(readAsset(`${manifest.dir}/${fragment.template}`), templateData(session, selection)));
-        }
-    }
-    return parts.join('\n');
+function fragmentsFor(session: Session, selection: ScopeSelection, owner: ConfigurationTarget): string {
+    return selection.selected
+        .flatMap((manifest) =>
+            manifest.configs
+                .filter((fragment) => fragment.fragment === true && fragment.target === owner.target)
+                .map((fragment) =>
+                    templateText(readAsset(`${manifest.dir}/${fragment.template}`), templateInputs(session, selection)),
+                ),
+        )
+        .join('\n');
 }
 
-function configFiles(
+function stubFor(context: EmitContext, config: ConfigurationTarget, file: GeneratedFile, out: RenderedSet): void {
+    const { session, selection, manifest } = context;
+    const { stub } = config;
+    if (!stub) return;
+    const stubPath = pathInScope(config.per_scope === true ? selection.scope.path : '', stub.path);
+    if (stub.merge) out.merges.push({ ...mergeStub(session.root, stub, stubPath, file.path), target: file.path, stub });
+    else if (stub.copy === true)
+        out.files.push({
+            path: stubPath,
+            content: copyStubContent(file.content, stubPath),
+            readOnly: true,
+            kind: 'stub',
+            preset: manifest.preset.id,
+        });
+    else out.files.push(bodyStub(stub, stubPath, file.path, session.version, manifest.preset.id));
+}
+
+function isRenderedHere(config: ConfigurationTarget, selection: ScopeSelection): boolean {
+    if (config.fragment === true) return false;
+    return config.per_scope === true || selection.scope.path === '';
+}
+
+function configurationFiles(
     session: Session,
     selection: ScopeSelection,
     manifest: Manifest,
@@ -63,75 +82,147 @@ function configFiles(
     seen: Set<string>,
 ): void {
     for (const config of manifest.configs) {
-        if (config.fragment) continue;
-        if (!config.per_scope && selection.scope.path !== '') continue;
+        if (!isRenderedHere(config, selection)) continue;
         const target = targetPath(selection.scope.path, config);
         if (seen.has(target)) continue;
         seen.add(target);
-        const data = templateData(session, selection, fragmentsFor(session, selection, config));
+        const inputs = templateInputs(session, selection, fragmentsFor(session, selection, config));
         const file: GeneratedFile = {
             path: target,
-            content: renderTarget(`${manifest.dir}/${config.template}`, target, data, config.header !== false),
+            content: emitTarget(`${manifest.dir}/${config.template}`, target, inputs, config.header !== false),
             readOnly: true,
             kind: 'config',
             preset: manifest.preset.id,
         };
-        if (config.executable) file.executable = true;
+        if (config.executable === true) file.executable = true;
         out.files.push(file);
-        if (!config.stub) continue;
-        const stubPath = scopedPath(config.per_scope ? selection.scope.path : '', config.stub.path);
-        if (config.stub.merge)
-            out.merges.push({ ...mergeStub(session.root, config.stub, stubPath, target), target, stub: config.stub });
-        else if (config.stub.copy)
-            out.files.push({
-                path: stubPath,
-                content: copyStubContent(file.content, stubPath),
-                readOnly: true,
-                kind: 'stub',
-                preset: manifest.preset.id,
-            });
-        else out.files.push(bodyStub(config.stub, stubPath, target, session.version, manifest.preset.id));
+        stubFor({ session, selection, manifest }, config, file, out);
     }
 }
 
-/** Renders every generated file, block and merge for the session, in memory. */
-export function renderAll(session: Session, binaryPath?: string): RenderedSet {
-    const out: RenderedSet = { files: [], blocks: [], merges: [] };
-    const { policy } = session.loaded;
+function hookOutputs(session: Session, out: RenderedSet, binaryPath: string | undefined): void {
+    const { policy } = session.policyFiles;
+    switch (policy.hooks.tool) {
+        case 'gspot': {
+            out.files.push(...gspotHooks(policy.runner.surface, binaryPath));
+            break;
+        }
+        case 'husky': {
+            for (const line of huskyLines(policy.runner.surface, binaryPath))
+                out.blocks.push({ path: line.path, block: line.line, style: 'hash' });
+            break;
+        }
+        case 'lefthook': {
+            const isDotted =
+                !existsSync(join(session.root, 'lefthook.yml')) && existsSync(join(session.root, '.lefthook.yml'));
+            out.lefthook = {
+                path: isDotted ? '.lefthook.yml' : 'lefthook.yml',
+                block: lefthookBlock(policy.runner.surface, binaryPath),
+            };
+
+            break;
+        }
+        // No default
+    }
+}
+
+function runnerOutputs(session: Session, out: RenderedSet): void {
+    const { surface } = session.policyFiles.policy.runner;
+    const isRootPackage = hasRootPackage(session.root);
+    if (surface === 'mise') out.files.push(miseSurface(everyManifest(session), session.version, isRootPackage));
+    const isNpmRunner = NPM_RUNNERS.has(surface);
+    if (isRootPackage && (isNpmRunner || surface === 'mise'))
+        out.packages.push({
+            path: 'package.json',
+            devDependencies: npmPins(everyManifest(session), surface),
+            scripts: isNpmRunner ? npmScripts() : {},
+        });
+}
+
+function workflowOutput(session: Session, out: RenderedSet): void {
+    const { policy } = session.policyFiles;
+    if (policy.ci.provider !== 'github') return;
+    const swiftScope = session.scopes.find((selection) =>
+        selection.selected.some((manifest) => manifest.preset.id === 'swift'),
+    );
+    out.files.push(
+        workflowFile({
+            version: session.version,
+            platforms: policy.ci.platforms,
+            swiftScope: swiftScope?.scope.path,
+            isMise: policy.runner.surface === 'mise',
+        }),
+    );
+}
+
+function rootView(session: Session): MergedView {
+    const root = session.scopes.find((selection) => selection.scope.path === '') ?? session.scopes[0];
+    if (root === undefined) throw new Error('The session has no scope.');
+    return root.view;
+}
+
+function blockOutputs(session: Session, out: RenderedSet): void {
+    out.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
+    if (!session.policyFiles.policy.rules.install) return;
+    const block = managedBlock(session);
+    out.blocks.push({ path: 'CLAUDE.md', block, style: 'markdown' }, { path: 'AGENTS.md', block, style: 'markdown' });
+}
+
+/**
+ * True when the root holds a package.json, which is where npm tools are pinned.
+ * @param root the repository root
+ * @returns whether the file is there
+ */
+export function hasRootPackage(root: string): boolean {
+    return existsSync(join(root, 'package.json'));
+}
+
+/**
+ * True when package.json already carries every pin and script the output asks for.
+ * @param root the repository root
+ * @param output the pins and scripts wanted
+ * @returns whether nothing needs writing
+ */
+export function hasPackagePins(root: string, output: PackageOutput): boolean {
+    const full = join(root, output.path);
+    if (!existsSync(full)) return false;
+    let manifestContent: PackageContent;
+    try {
+        manifestContent = JSON.parse(readFileSync(full, 'utf8')) as PackageContent;
+    } catch {
+        return false;
+    }
+    return (
+        Object.entries(output.devDependencies).every(
+            ([name, version]) => manifestContent.devDependencies?.[name] === version,
+        ) && Object.entries(output.scripts).every(([name, command]) => manifestContent.scripts?.[name] === command)
+    );
+}
+
+/**
+ * Renders every generated file, block and merge for the session, in memory.
+ * @param session the session
+ * @param binaryPath the gspot binary the hooks call, when not on PATH
+ * @returns the files, blocks, merges and package edits
+ */
+export function emitAll(session: Session, binaryPath?: string): RenderedSet {
+    const out: RenderedSet = { files: [], blocks: [], merges: [], packages: [] };
     out.files.push({
         path: '.gspot/version',
-        content: VERSION_FILE_LINE.replace('{{version}}', session.version),
+        content: VERSION_FILE_LINE.replaceAll('{{version}}', () => session.version),
         readOnly: false,
         kind: 'version',
     });
     const seen = new Set<string>();
     for (const selection of session.scopes)
-        for (const manifest of selection.selected) configFiles(session, selection, manifest, out, seen);
-    if (policy.hooks.manager === 'gspot') out.files.push(...gspotHooks(policy.runner.surface, binaryPath));
-    if (policy.runner.surface === 'mise') out.files.push(miseSurface(everyManifest(session), session.version));
-    if (policy.ci.provider === 'github') {
-        const swiftScope = session.scopes.find((selection) =>
-            selection.selected.some((manifest) => manifest.preset.id === 'swift'),
-        );
-        out.files.push(
-            workflowFile(
-                session.version,
-                policy.ci.platforms,
-                swiftScope !== undefined,
-                swiftScope?.scope.path ?? '',
-                policy.runner.surface === 'mise',
-            ),
-        );
-    }
+        for (const manifest of selection.selected) configurationFiles(session, selection, manifest, out, seen);
+    hookOutputs(session, out, binaryPath);
+    runnerOutputs(session, out);
+    workflowOutput(session, out);
     out.files.push(...assembleRules(session));
-    out.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
-    if (policy.rules.install) {
-        const block = managedBlock(session);
-        out.blocks.push(
-            { path: 'CLAUDE.md', block, style: 'markdown' },
-            { path: 'AGENTS.md', block, style: 'markdown' },
-        );
-    }
+    if (session.scopes.some((selection) => selection.selected.some((manifest) => manifest.preset.id === 'prose')))
+        out.files.push(...styleFiles(session.policyFiles.policy, rootView(session)));
+    blockOutputs(session, out);
     out.files.sort((a, b) => a.path.localeCompare(b.path));
     return out;
 }

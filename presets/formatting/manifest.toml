@@ -89,7 +89,7 @@ default = "lf"
 summary = "The line ending every file uses: lf or crlf."
 
 [[settings]]
-name = "format.final_newline"
+name = "format.newline_at_end"
 kind = "boolean"
 direction = "neutral"
 default = true

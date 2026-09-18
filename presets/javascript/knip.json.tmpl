@@ -1,0 +1,11 @@
+{
+    "$schema": "https://unpkg.com/knip@6/schema.json",
+    "entry": <%= json([...new Set([...(tool('knip').entry ?? []), ...(has('nextjs') ? [] : ['src/main.{ts,js}', 'src/index.{ts,js}', 'src/server.{ts,js}', 'scripts/**/*.{ts,js,mjs}', '**/*.{test,spec}.{ts,tsx,js}', 'tests/**/*.{ts,js}', 'build.ts', 'publish.ts'])])]) %>,
+    "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
+    "ignore": <%= json([...(tool('knip').ignore ?? []).flatMap((entry) => entry.paths ?? []), ...policy.declares.flatMap((entry) => entry.paths)]) %>,
+    "ignoreDependencies": <%= json(["@gspot/eslint-plugin", "eslint-config-prettier", "prettier", "@socketsecurity/bun-security-scanner", ...(settings['tools.knip.ignore_dependencies'] ?? []).map((entry) => typeof entry === 'string' ? entry : entry.name)]) %>,
+    "ignoreBinaries": <%= json([...tools, "vale", "git", "mise", "bunx", "npx"]) %>,
+    "ignoreExportsUsedInFile": true,
+    "workspaces": <%= json(Object.fromEntries([{ path: '' }, ...scopes].map((scope) => [scope.path === '' ? '.' : scope.path, { entry: [...new Set([...(tool('knip').entry ?? []).filter((pattern) => scope.path === '' || pattern.startsWith(`${scope.path}/`) || pattern.startsWith('**/')).map((pattern) => scope.path !== '' && pattern.startsWith(`${scope.path}/`) ? pattern.slice(scope.path.length + 1) : pattern), 'src/main.{ts,js}', 'src/index.{ts,js}', 'src/plugin.{ts,js}', '**/*.{test,spec}.{ts,tsx,js}', 'tests/**/*.{ts,js}', 'build.ts', 'publish.ts'])], project: ['**/*.{ts,tsx,mts,cts,js,mjs,cjs}'] }]))) %><% const extras = extra('knip'); if (extras) { for (const [key, value] of Object.entries(extras)) { if (key !== 'reason') { %>,
+    "<%= key %>": <%= json(value) %><% } } } %>
+}

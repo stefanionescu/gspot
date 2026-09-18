@@ -42,4 +42,13 @@ gspot.local.toml
 .gspot/vale/styles/alex/
 .gspot/vale/styles/RedHat/
 .gspot/vale/styles/Readability/
+.gspot/vale/styles/Harper/
+.gspot/vale/styles/.vale-config/
+.gspot/vale/styles/config/dictionaries/
 # <<< gspot managed <<<
+
+# Build output of the workspace packages
+/packages/*/dist/
+
+# Scratch scripts of the session
+/packages/cli/scratch/

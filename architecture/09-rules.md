@@ -6,7 +6,7 @@ check that enforces it.
 
 ## What ships
 
-The corpus is Markdown an agent reads before editing. It lives in `reference-rules/merged/`,
+The corpus is Markdown an agent reads before editing. It lives in `rules/`,
 arranged by layer:
 
 | Layer      | Directory                               | Files                                                                                                                                                                                                                                                                                  | Installed when                         |
@@ -36,7 +36,7 @@ unconditionally and the code files per preset.
 
 The merge left out one team's architecture on purpose. That material still has value to the
 team that wrote it, so it ships as templates under `templates/project/`, and
-`gspot init --project-templates` or `gspot sync --project-templates` copies the ones that match
+`gspot init --project-templates` or `gspot apply --project-templates` copies the ones that match
 the selection into the repository's project layer once. gspot never upgrades a project file. The
 copy opens with `<!-- gspot-template: IOS-ARCHITECTURE 0.4.0 -->`, so `upgrade --check` can report
 that the template changed upstream; merging is the person's choice.
@@ -59,14 +59,14 @@ content with no counterpart. The repair pass restored each into the file named.
 | Docker: image stack ownership, build contexts, CUDA, models, Hugging Face downloads             | `templates/project/DOCKER-ML.md`; layering and cache discipline was already in `tool/docker/DOCKER.md`                  |
 | Swift: networking and API clients                                                               | `language/SWIFT.md` (the neutral rules) and `templates/project/IOS-ARCHITECTURE.md` (the layered version)               |
 | General: verification and tests policy, once                                                    | `general/agent/WORKING.md`                                                                                              |
-| Static site: boundaries, build, routes, HTML, CSS and content naming, tests and fixtures naming | `repository/static-site/STATIC-SITE.md`, `language/naming/HTML.md`, `language/naming/CSS.md`, `general/code/TESTING.md` |
+| Static site: boundaries, build, routes, HTML, CSS and content naming, tests, and fixtures naming | `repository/static-site/STATIC-SITE.md`, `language/naming/HTML.md`, `language/naming/CSS.md`, `general/code/TESTING.md` |
 | The iOS and API architecture, Supabase deployment, inference vocabulary                         | `templates/project/`                                                                                                    |
 
 Both guards are clean as of 2026-09-18. The completeness check: 7,616 source statements, 6,443
 matched exactly or as duplicates, 255 at the fuzzy ratio, 354 listed in `DROPPED.md`, 564 with
 a recorded reason (including the 48 statements the prose pass split into shorter ones), none
-unresolved. The reasons live in `reference-rules/DROPPED.md` and
-`reference-rules/lint/dropped-manual.json`. Vale with the thirty `gspot` rules: no findings
+unresolved; the completeness check and its records were retired once that state was reached
+(D-70). Vale with the thirty `gspot` rules: no findings
 over the 98 files, after a pass that changed 379 headings to sentence case, split 64 long list
 items and 28 long sentences and paragraphs, and stated 63 conditional modals as facts, with no
 rule dropped. The enforcement markers: 5,303 statements, 2,354 unenforced. What Phase 6 still
@@ -95,7 +95,7 @@ The first editorial pass is done: the corruption residue is gone, the twelve cro
 contradictions are resolved, the "only when the user asks" statements are one sentence in
 `WORKING.md`, the Express API and next-intl content is re-homed, the SQL examples match the SQL
 casing rule, the cross-language casing decisions are written in `general/code/NAMING.md`, and
-the missing general, language and tool files exist. Each remaining item is a check in gspot's
+the missing general, language, and tool files exist. Each remaining item is a check in gspot's
 own gate so the corpus cannot regress.
 
 | Defect                                                                                                                                                                                                                                          | Fix                                                                                                                                                                                                      | Guard                                                                                               |
@@ -134,9 +134,9 @@ Tables, code blocks, headings, explanatory prose, and templates carry none.
 - Prefer duplication over the wrong abstraction. `unenforced`
 ```
 
-The check id before the space is one the architecture names (`reference-rules/lint/check-ids.txt`,
-generated from this folder); the words after it name the rule inside that check. The marker is
-written by `reference-rules/lint/mark-statements.ts` from `enforcement-map.json` (file glob,
+The check id before the space is one the architecture names (`packages/cli/config/architecture-ids.ts`,
+written from this folder by `packages/cli/scripts/check-ids.ts`); the words after it name the rule inside that check. The marker is
+written by `packages/cli/scripts/mark-statements.ts` from `rules/enforcement-map.json` (file glob,
 pattern, check) and hand-corrected; `unenforced.json` records the count per file, and the count
 rises only with a reason in the commit. The marker renders as small text in the installed file so
 an agent sees which rules the gate backs.
@@ -150,9 +150,9 @@ not measured.
 
 ## Assembly
 
-`gspot sync`, when `[rules] install = true`:
+`gspot apply`, when `[rules] install = true`:
 
-1. Selects the files for the selected presets, root and every scope.
+1. Selects the files for the selected presets, root, and every scope.
 2. Writes them under `[rules] directory` (default `.gspot/rules/`), keeping the layer folders.
 3. Removes files under that directory that no selected preset installs.
 4. Writes one managed block into `CLAUDE.md` and `AGENTS.md`, creating the files when absent:
@@ -175,44 +175,39 @@ the guides for the files you change. A more specific layer wins over a general o
 | Project rules | `rules/project/` |
 
 Run `gspot check --staged` before committing. Change policy with `gspot set`, `gspot allow` or
-`gspot ignore` (or by editing `gspot.toml`), then `gspot sync`; never edit files under `.gspot/`. Do not use subagents or parallel agents unless asked in the conversation.
+`gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`. Do not use subagents or parallel agents unless asked in the conversation.
 <!-- <<< gspot managed <<< -->
 ```
 
-The block is regenerated on every `sync`; text outside the markers is never read or moved. The
+The block is regenerated on every `apply`; text outside the markers is never read or moved. The
 table lists layers by area, names each file, and states precedence. When the repository has a
 project rule directory (`[rules] project = "rules/project"`), the block links it last.
 
 ## Corpus lint
 
-`bun reference-rules/lint/corpus-lint.ts` runs on every change to the corpus (and moves into
-gspot's own gate with the CLI):
+`gspot apply --check` lints the corpus the binary carries (`packages/cli/src/rules/lint.ts`)
+and prints the unenforced count, so every change to the corpus goes through gspot's own gate:
 
 - Front matter present; layer matches the path; preset names a preset page; title equals the H1.
-- Every `enforced-by` names a check id in `check-ids.txt`.
+- Every `enforced-by` names a check id in `architecture-ids.ts`.
 - No file links to another rule file.
 - No file exceeds 800 lines.
 - The layer boundary word list holds in agent, code, prose and language files: no reference
-  repository, product, layout path or deployment target outside code formatting.
+  repository, product, layout path, or deployment target outside code formatting.
 - Every fenced code block has a language tag from the allowed set and is closed.
 - The corruption phrase list from the repair pass returns nothing.
-- Vale with the `gspot` style under `reference-rules/lint/vale/` (30 rules, every alert an
-  error) when the binary is installed.
+- Vale with the `gspot` style under `prose/styles/gspot/` (30 rules, every alert an error) when
+  the binary is installed.
 
-`bun reference-rules/lint/mark-statements.ts --check` reports statements without a marker and
+`bun packages/cli/scripts/mark-statements.ts --check` reports statements without a marker and
 unknown ids.
 
 ## Completeness
 
-`bun reference-rules/lint/completeness-check.ts` reads the four source `rules/` folders,
-normalizes every list item (lowercase, punctuation stripped, the six corrupted words restored),
-and requires each to match a corpus or template statement, heading or sentence exactly, at a
-word-bigram ratio of 0.85, or at a word-set overlap of 0.8, or to be listed in
-`reference-rules/DROPPED.md` with a reason. `--write-dropped` appends the reasons the script can
-prove: a duplicate of a kept statement, a review-checklist question, a project-specific path or
-product, a statement a recorded decision superseded, or formatting a tool owns. The remaining
-reasons are written by hand. The check runs until the four repositories have migrated, then the
-source corpora are removed.
+The four source rule corpora were checked against the merged corpus statement by statement
+while the merge ran: every statement had to survive in `rules/`, in the templates, or in a list
+of dropped statements with a reason. The state recorded above is the final one, and the check
+retired with the source corpora (D-70).
 
 ## What the corpus does not do
 

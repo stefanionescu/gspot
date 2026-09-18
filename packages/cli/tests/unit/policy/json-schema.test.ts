@@ -1,7 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-
-import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 import { policySchema } from '#cli/policy/schema.ts';
+import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 
 describe('the JSON schema of gspot.toml', () => {
     test('is generated from the zod schema with the top-level tables', () => {

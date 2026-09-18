@@ -1,0 +1,97 @@
+[preset]
+id = "typescript"
+kind = "language"
+title = "TypeScript"
+requires = ["javascript", "structure", "naming", "formatting", "spelling"]
+description = "The strict compiler, ESLint with typescript-eslint and the gspot structural rules over every TypeScript file, and knip for dead code."
+
+[detect]
+extensions = [".ts", ".tsx", ".mts", ".cts"]
+filenames = ["tsconfig.json"]
+dependencies = ["typescript"]
+
+[claims]
+extensions = [".ts", ".tsx", ".mts", ".cts", ".d.ts"]
+filenames = ["tsconfig.json", "tsconfig.*.json"]
+
+[[tools]]
+name = "tsc"
+version = "5.9.3"
+npm = "typescript"
+
+[[tools]]
+name = "typescript-eslint"
+version = "8.70.0"
+npm = "typescript-eslint"
+floor = "8.29.0"
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/eslint.config.mjs"
+fragment = true
+
+[[configs]]
+template = "tsconfig.base.json.tmpl"
+target = ".gspot/tsconfig.base.json"
+stub = { path = "tsconfig.json", merge = { extends = "{target}" } }
+per_scope = true
+
+[[checks]]
+id = "typescript/tsc"
+stage = "commit"
+takes = "project"
+cwd = "scope"
+command = ["tsc", "--noEmit", "-p", "tsconfig.json", "--pretty", "false"]
+inspection = ["types", "syntax"]
+output = { format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$" }
+summary = "Checks that every TypeScript file type-checks with the strict compiler options."
+why = "A file that does not type-check can crash at run time in a way the editor already knew about."
+fix = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
+
+[[checks]]
+id = "typescript/eslint"
+stage = "commit"
+takes = "files"
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
+fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
+fix_order = "codemod"
+claims = { extensions = [".ts", ".tsx", ".mts", ".cts"] }
+inspection = ["style", "structure", "security"]
+output = { format = "eslint-json" }
+tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:"
+summary = "Runs ESLint with the shipped rule set over every TypeScript file."
+why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."
+fix = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
+
+[[checks]]
+id = "integrity/tsconfig-options"
+stage = "commit"
+engine = "integrity"
+analysis = "tsconfig-options"
+inspection = ["types"]
+summary = "Checks that every tsconfig still turns on the strict options the preset requires."
+why = "One tsconfig that drops strict lets untyped code back in for that whole scope."
+fix = "Keep extends pointing at .gspot/tsconfig.base.json and do not override the strict options; run gspot apply to restore the stub."
+
+[[settings]]
+name = "tools.typescript.types"
+kind = "list"
+direction = "neutral"
+default = []
+summary = "The type packages every tsconfig loads, like bun or node."
+
+[[settings]]
+name = "tools.typescript.paths"
+kind = "table"
+direction = "neutral"
+default = {}
+summary = "The path aliases every tsconfig gets, in tsconfig paths form; read from the existing tsconfig at init."
+
+[required]
+".ts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
+".tsx" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
+".mts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
+".cts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
+
+[rules]
+language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]

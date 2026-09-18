@@ -1,78 +1,129 @@
 // Every tracked path has one nature: source, generated, vendored, binary.
-import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { GENERATED_BANNERS, VENDORED_DIRECTORIES } from '#config/patterns.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
 import { head } from '#cli/repository/tracked.ts';
+import { existsSync, readFileSync } from 'node:fs';
 import type { DeclareEntry } from '#types/config.ts';
-import type { Nature } from '#types/repository.ts';
+import { pathMatcher } from '#cli/presets/claims.ts';
+import type { Attribute, NatureVerdict } from '#types/repository.ts';
 
-export type NatureVerdict = { nature: Nature; source: string; producedBy?: string };
+import {
+    GENERATED_BANNERS,
+    INSTALLED_PREFIXES,
+    LICENSE_FILE,
+    VALE_OWN_PREFIXES,
+    VALE_STYLES_PREFIX,
+    VENDORED_DIRECTORIES,
+} from '#config/patterns.ts';
 
-type Attribute = { matcher: (path: string) => boolean; attributes: string[] };
+const BANNER_BYTES = 1024;
+
+const GENERATED_ATTRIBUTES = new Set(['linguist-generated', 'linguist-generated=true']);
+
+const VENDORED_ATTRIBUTES = new Set(['linguist-vendored', 'linguist-vendored=true']);
+
+const BINARY_ATTRIBUTES = new Set(['-text', 'binary']);
+
+const state: { attributes: { root: string; rules: Attribute[] } | undefined } = { attributes: undefined };
+
+function attributeRule(line: string): Attribute | undefined {
+    const trimmed = line.trim();
+    if (trimmed === '' || trimmed.startsWith('#')) return undefined;
+    const [pattern = '', ...attributes] = trimmed.split(/\s+/u);
+    if (pattern === '') return undefined;
+    const bare = pattern.startsWith('/') ? pattern.slice(1) : pattern;
+    return { matcher: pathMatcher([pattern.includes('/') ? bare : `**/${pattern}`]), attributes };
+}
 
 function parseGitattributes(root: string): Attribute[] {
     const path = join(root, '.gitattributes');
     if (!existsSync(path)) return [];
-    const rules: Attribute[] = [];
-    for (const line of readFileSync(path, 'utf8').split('\n')) {
-        const trimmed = line.trim();
-        if (trimmed === '' || trimmed.startsWith('#')) continue;
-        const [pattern, ...attributes] = trimmed.split(/\s+/);
-        if (!pattern) continue;
-        const glob = pattern.includes('/') ? pattern.replace(/^\//, '') : `**/${pattern}`;
-        rules.push({ matcher: pathMatcher([glob]), attributes });
-    }
-    return rules;
+    return readFileSync(path, 'utf8')
+        .split('\n')
+        .map((line) => attributeRule(line))
+        .filter((rule) => rule !== undefined);
 }
-
-let attributeCache: { root: string; rules: Attribute[] } | undefined;
 
 function attributesFor(root: string, path: string): string[] {
-    if (!attributeCache || attributeCache.root !== root) attributeCache = { root, rules: parseGitattributes(root) };
-    const found: string[] = [];
-    for (const rule of attributeCache.rules) if (rule.matcher(path)) found.push(...rule.attributes);
-    return found;
+    if (state.attributes?.root !== root) state.attributes = { root, rules: parseGitattributes(root) };
+    return state.attributes.rules.filter((rule) => rule.matcher(path)).flatMap((rule) => rule.attributes);
 }
 
-/** Decides the nature of one path in the order the design fixes: declarations, .gitattributes, banners, vendored directories, the binary sniff. */
-export function natureOf(
-    root: string,
-    path: string,
-    declares: DeclareEntry[],
-    binary: boolean,
-    isText: boolean,
-): NatureVerdict {
+function declaredNature(path: string, declares: DeclareEntry[]): NatureVerdict | undefined {
     for (const entry of declares) {
         if (!pathMatcher(entry.paths)(path)) continue;
         if (entry.produced_by !== undefined)
             return { nature: 'generated', source: 'declare', producedBy: entry.produced_by };
-        if (entry.vendored) return { nature: 'vendored', source: 'declare' };
+        if (entry.vendored === true) return { nature: 'vendored', source: 'declare' };
     }
-    const attributes = attributesFor(root, path);
-    if (attributes.includes('linguist-generated') || attributes.includes('linguist-generated=true'))
+    return undefined;
+}
+
+function attributeNature(attributes: string[]): NatureVerdict | undefined {
+    if (attributes.some((attribute) => GENERATED_ATTRIBUTES.has(attribute)))
         return { nature: 'generated', source: '.gitattributes' };
-    if (attributes.includes('linguist-vendored') || attributes.includes('linguist-vendored=true'))
+    if (attributes.some((attribute) => VENDORED_ATTRIBUTES.has(attribute)))
         return { nature: 'vendored', source: '.gitattributes' };
-    if (
-        attributes.includes('-text') ||
-        attributes.includes('binary') ||
-        attributes.some((attribute) => attribute.startsWith('filter=lfs'))
-    )
-        return { nature: 'binary', source: '.gitattributes' };
-    if (binary) return { nature: 'binary', source: 'content' };
-    if (isText) {
-        const start = head(root, path, 1024);
-        if (GENERATED_BANNERS.some((banner) => banner.test(start))) return { nature: 'generated', source: 'banner' };
-    }
-    const segments = path.split('/');
-    if (segments.slice(0, -1).some((segment) => VENDORED_DIRECTORIES.includes(segment)))
-        return { nature: 'vendored', source: 'directory' };
+    const isBinary = attributes.some(
+        (attribute) => BINARY_ATTRIBUTES.has(attribute) || attribute.startsWith('filter=lfs'),
+    );
+    return isBinary ? { nature: 'binary', source: '.gitattributes' } : undefined;
+}
+
+function hasBanner(root: string, path: string): boolean {
+    const start = head(root, path, BANNER_BYTES);
+    return GENERATED_BANNERS.some((banner) => banner.test(start));
+}
+
+function managedNature(path: string): NatureVerdict | undefined {
+    if (LICENSE_FILE.test(path.slice(path.lastIndexOf('/') + 1))) return { nature: 'vendored', source: 'license' };
+    if (INSTALLED_PREFIXES.some((prefix) => path.startsWith(prefix))) return { nature: 'generated', source: 'gspot' };
+    if (isValePackageFile(path)) return { nature: 'vendored', source: 'gspot' };
+    return undefined;
+}
+
+function isUnderVendoredDirectory(path: string): boolean {
+    return path
+        .split('/')
+        .slice(0, -1)
+        .some((segment) => VENDORED_DIRECTORIES.includes(segment));
+}
+
+/**
+ * Whether a path is a Vale package file: under the styles folder and not gspot's own style or vocabulary.
+ * @param path the file, relative to the root
+ * @returns true for a package file
+ */
+export function isValePackageFile(path: string): boolean {
+    return path.startsWith(VALE_STYLES_PREFIX) && VALE_OWN_PREFIXES.every((prefix) => !path.startsWith(prefix));
+}
+
+/**
+ * Decides the nature of one path in the order the design fixes: declarations, .gitattributes, gspot's own installs, banners, vendored directories, the binary sniff.
+ * @param root the repository root
+ * @param path the file, relative to the root
+ * @param declares the [[declare]] entries
+ * @param isBinary whether the content sniff found binary bytes
+ * @param isText whether the file is text that can carry a banner
+ * @returns the nature and where it came from
+ */
+export function natureOf(
+    root: string,
+    path: string,
+    declares: DeclareEntry[],
+    isBinary: boolean,
+    isText: boolean,
+): NatureVerdict {
+    const declared = declaredNature(path, declares) ?? attributeNature(attributesFor(root, path));
+    if (declared) return declared;
+    if (isBinary) return { nature: 'binary', source: 'content' };
+    const managed = managedNature(path);
+    if (managed) return managed;
+    if (isText && hasBanner(root, path)) return { nature: 'generated', source: 'banner' };
+    if (isUnderVendoredDirectory(path)) return { nature: 'vendored', source: 'directory' };
     return { nature: 'source', source: 'default' };
 }
 
 /** Drops the .gitattributes cache; tests use it after planting a file. */
 export function resetNatures(): void {
-    attributeCache = undefined;
+    state.attributes = undefined;
 }

@@ -12,7 +12,7 @@ export type TrackedFile = {
     producedBy?: string;
 };
 
-export type ScopeInfo = {
+export type ScopeEntry = {
     name: string;
     path: string;
     presets: string[];
@@ -23,7 +23,7 @@ export type Repository = {
     root: string;
     hasGit: boolean;
     files: TrackedFile[];
-    scopes: ScopeInfo[];
+    scopes: ScopeEntry[];
 };
 
 export type DependencyMap = Record<string, string>;
@@ -35,7 +35,7 @@ export type ManifestFacts = {
     installed: DependencyMap;
     scripts: Record<string, string>;
     workspaces: string[];
-    packageManager?: string;
+    installer?: string;
     engines: Record<string, string>;
     type?: string;
 };
@@ -56,4 +56,24 @@ export type ExistingTooling = {
     lintOnlyManifests: string[];
     runner: 'mise' | 'npm' | 'bun' | 'pnpm' | 'yarn' | 'uv' | 'none';
     runnerFile?: string;
+};
+
+export type Attribute = { matcher: (path: string) => boolean; attributes: string[] };
+
+export type NatureVerdict = { nature: Nature; source: string; producedBy?: string };
+
+export type StagedSet = { staged: string[]; unstaged: number };
+
+export type Tagged = { tags: string[]; binary: boolean; shebang?: string };
+
+export type RawEntry = { path: string; size: number; executable: boolean; symlink: boolean };
+
+/** What detection reads from a scope's tree once, for every manifest to look at. */
+export type TreeFacts = {
+    candidates: TrackedFile[];
+    extensionCounts: Map<string, number>;
+    names: Set<string>;
+    shebangs: Set<string>;
+    dependencies: Map<string, string>;
+    scope: string;
 };

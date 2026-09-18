@@ -1,4 +1,4 @@
-# swift
+# `swift`
 
 Kind: language. Requires: structure, naming, formatting, spelling.
 

@@ -1,12 +1,8 @@
 # Migration
 
-This document decides the two goals gspot is built against, what `gspot init` does to a
-repository that already has home-grown linting, and what that repository looks like when the
-migration is done. yap-swift-app is worked first because it has the most to replace;
-yap-text-inference second because its policy lives in `pyproject.toml` and inside the lint
-folder, which is the harder case; yap-landing third because one language runs in three
-runtimes there; slopshop fourth as the framework app; the two ComfyUI nodes last, in one section,
-because they share one shape.
+This document decides the two goals gspot is built against and what `gspot init` does to a repository that already has home-grown linting. It also shows what that repository looks like when the migration is done.
+
+The order: yap-swift-app first, because it has the most to replace. yap-text-inference second, because its policy lives in `pyproject.toml` and inside the lint folder, which is the harder case. yap-landing third, because one language runs in three runtimes there. slopshop fourth, as the framework app. The two ComfyUI nodes last, in one section, because they share one shape.
 
 ## The two goals
 
@@ -18,53 +14,53 @@ because they share one shape.
    detached worktree. The migration itself, deleting what gspot made redundant, is the owner's
    step, guided by the plan `init` prints (D-57). gspot lists; the person deletes.
 
-## yap-swift-app in numbers
+## The `yap-swift-app` numbers
 
 | Today                                                  | Count                                                                                           | After `init --yes` and the delete-when-ready step                                                                                                       |
 | ------------------------------------------------------ | ----------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Root linter and formatter config files                 | 17                                                                                              | none hand-written: 8 become one-line stubs pointing at `.gspot/`, 9 are gone                                                                            |
 | Per-scope linter configs (`api/`, `supabase/`, `ios/`) | 12 (`ios/.swiftlint.yml` alone is 235 lines, `ios/.swiftformat` 134)                            | none hand-written; stubs for eslint, sqlfluff, swiftlint, swiftformat, hadolint                                                                         |
 | `quality/`                                             | 159 files, 836 KB; plus `LINTING.md` (1,815 lines), `.qlty/`, and the `quality` workspace entry | deleted                                                                                                                                                 |
-| `.mise/tasks/`                                         | 102 task files, of which 35 are lint, format, typecheck, knip, deps, hook or quality tasks      | 67 stay (build, test, deploy, dev, gen, local); the person deletes the 35, using this table; `.config/mise/conf.d/gspot.toml` adds five `gspot:*` tasks |
+| `.mise/tasks/`                                         | 102 task files, of which 35 are lint, format, typecheck, knip, deps, hook, or quality tasks     | 67 stay (build, test, deploy, dev, gen, local); the person deletes the 35, using this table; `.config/mise/conf.d/gspot.toml` adds five `gspot:*` tasks |
 | `.githooks/`                                           | 3 hand-written hooks calling `mise run repo:hook:*`                                             | deleted; `.gspot/hooks/` replaces them                                                                                                                  |
 | `mise.toml` `[tools]`                                  | 22 pins, 15 of them linters                                                                     | the person trims to the runtime and product pins (bun, node, deno, jq, ansible-core, and what deploys need); `doctor` lists the duplicates              |
 | `ios/package.json`, `ios/knip.json`                    | exist only to hold ESLint tooling for the iOS scope                                             | listed as a manifest whose dependencies are all pinned tools; deleted with `quality/`                                                                   |
 | `rules/`, `CLAUDE.md`, `AGENTS.md`                     | the old corpus and its index                                                                    | one managed block each; the old `rules/` is deleted once the completeness check proves `.gspot/rules/` covers it                                        |
 | `gspot.toml`                                           | none                                                                                            | about 70 lines; every carried entry with its reason                                                                                                     |
 
-## yap-swift-app, file by file: root
+## The `yap-swift-app` root, file by file
 
-| File                               | Verb                | What happens                                                                                                                                                                                                                                             |
-| ---------------------------------- | ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.squawk.toml`                     | replace, carry      | `.gspot/squawk.toml`. `assume_in_transaction` is the supabase default. `prefer-bigint-over-int` becomes `[[ignore]] check = "postgres/squawk" rule = "prefer-bigint-over-int"` with the file's comment as its reason                                     |
-| `.shellcheckrc`                    | replace, carry      | `.gspot/shellcheckrc` and a `.shellcheckrc` stub. The six `disable=` codes become six `[[ignore]]` entries with the reason `carried from .shellcheckrc at init`, for the person to rewrite or remove                                                     |
-| `.semgrepignore`                   | delete              | gspot passes Semgrep an explicit file list; every path here is excluded by nature already (build output, lockfiles, Xcode artifacts, `.env*`)                                                                                                            |
-| `.prettierrc.json`                 | replace             | `.gspot/prettier.json` and a stub. Its eight values are the shipped `[format]` defaults; nothing to carry                                                                                                                                                |
-| `.prettierignore`                  | replace, suggest    | gspot owns the file, rendered by nature. The three generated paths it names print in the plan as `gspot declare api/types/supabase.ts --produced-by "supabase gen types"` suggestions; not applied                                                       |
-| `.nvmrc`                           | leave               | a runtime pin, not linting. `integrity/manifest-policy` checks it agrees with `engines` and the mise pin; redundant once mise pins node, and the person may delete it                                                                                    |
-| `.markdownlint-cli2.jsonc`         | replace             | `.gspot/markdownlint.jsonc` and a stub. Every value in it is the shipped default, because the defaults came from this repository                                                                                                                         |
-| `.license-checker.json`            | replace, carry      | `.gspot/licenses.json`. The allowlist equals the shipped one. The twelve `excludePackages` entries become `[[tools.licenses.exceptions]]` with the license the checker reports at `init` and the reason `carried at init`                                |
-| `.gitleaks.toml`                   | replace, carry      | `.gspot/gitleaks.toml`. The allowlist for public identifiers in `ios/Yap/Config/*.xcconfig` is carried with its description as the reason                                                                                                                |
-| `.editorconfig`                    | replace             | the formatting preset owns the whole file: rendered from `[format]` with the header; the old one is deleted and listed. A section gspot does not render goes in `[tools.editorconfig.extra]`                                                             |
-| `.commitlintrc.json`               | replace             | `.gspot/commitlint.config.js` and a stub. Its scopes (`api`, `ios`, `supabase`, `root`, `hooks`, `deps`) are the default: the scope paths plus `root`, `hooks`, `deps`                                                                                   |
-| `bearer.yml`, `bearer.ignore`      | delete              | Bearer is cut (D-28). Semgrep covers the same classes; the twelve recorded false positives re-enter through the Semgrep baseline on day one                                                                                                              |
-| `lychee.toml`                      | replace             | `.gspot/lychee.toml`: offline, fragments, the online profile for `manual`                                                                                                                                                                                |
-| `mise.toml`                        | leave, list         | never edited. `doctor` lists the fifteen pins gspot also pins under "pinned twice", each with the line to delete                                                                                                                                         |
-| `osv-scanner.toml`                 | replace, carry      | `.gspot/osv-scanner.toml`. Both ignored advisories carried with their reasons and a `review_by` date                                                                                                                                                     |
-| `tsconfig.base.json`               | replace             | `.gspot/tsconfig.base.json` holds the same fourteen options; `api/tsconfig.json` and `supabase/tsconfig.json` keep their `paths`, `include` and module settings and their `extends` is repointed                                                         |
-| `typos.toml`                       | replace, carry      | `.gspot/typos.toml` and a stub. The eight words carried with their comments as reasons; excludes come from natures                                                                                                                                       |
-| `.syncpackrc`                      | replace             | `.gspot/syncpack.json`, the same one-version policy plus the shipped aligned pairs                                                                                                                                                                       |
-| `.gitattributes`                   | leave               | LFS and generated markers are the person's; gspot reads them for natures                                                                                                                                                                                 |
-| `.dockerignore`                    | leave               | `docker/dockerignore` checks it                                                                                                                                                                                                                          |
-| `.githooks/`                       | delete              | `.gspot/hooks/` and `core.hooksPath`; listed under "no longer runs; delete when ready" until deleted                                                                                                                                                     |
-| `.mise/tasks/`                     | leave 67, delete 35 | gspot does not read task bodies. The 35 lint, format, typecheck, knip, deps, hook and quality tasks call `quality/` or a tool gspot now runs; the person deletes them. Build, test, deploy, dev, gen and local tasks stay and the bash preset lints them |
-| `quality/`, `LINTING.md`, `.qlty/` | delete              | listed under "no longer runs; delete when ready". The completeness check proves every rule landed before the person deletes                                                                                                                              |
-| `CLAUDE.md`, `AGENTS.md`, `rules/` | leave, add          | one managed block each. `rules/` is the person's; for the reference repositories the completeness check in gspot's own repository proves the corpus covers it, and then it is deleted                                                                    |
-| `README.md`, `ADVANCED.md`         | leave               | the docs checks run over them. There is no `LICENSE` file at the root today, so `docs/readme-present` fails until one is added or `tools.docs.require_license` is set false with a reason                                                                |
-| `package.json` (root)              | change              | gspot's npm tools land in `devDependencies` (or under mise `npm:`); `quality` leaves `workspaces` when the folder is deleted; the lint scripts are replaced by `check` and `sync`                                                                        |
-| `bunfig.toml`                      | leave               | already at the shipped install policy                                                                                                                                                                                                                    |
+| File                               | Verb                | What happens                                                                                                                                                                                                                                              |
+| ---------------------------------- | ------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.squawk.toml`                     | replace, carry      | `.gspot/squawk.toml`. `assume_in_transaction` is the supabase default. `prefer-bigint-over-int` becomes `[[ignore]] check = "postgres/squawk" rule = "prefer-bigint-over-int"` with the file's comment as its reason                                      |
+| `.shellcheckrc`                    | replace, carry      | `.gspot/shellcheckrc` and a `.shellcheckrc` stub. The six `disable=` codes become six `[[ignore]]` entries with the reason `carried from .shellcheckrc at init`, for the person to rewrite, or remove                                                     |
+| `.semgrepignore`                   | delete              | gspot passes Semgrep an explicit file list; every path here is excluded by nature already (build output, lockfiles, Xcode artifacts, `.env*`)                                                                                                             |
+| `.prettierrc.json`                 | replace             | `.gspot/prettier.json` and a stub. Its eight values are the shipped `[format]` defaults; nothing to carry                                                                                                                                                 |
+| `.prettierignore`                  | replace, suggest    | gspot owns the file, rendered by nature. The three generated paths it names print in the plan as `gspot declare api/types/supabase.ts --produced-by "supabase gen types"` suggestions; not applied                                                        |
+| `.nvmrc`                           | leave               | a runtime pin, not linting. `integrity/manifest-policy` checks it agrees with `engines` and the mise pin; redundant once mise pins node, and the person may delete it                                                                                     |
+| `.markdownlint-cli2.jsonc`         | replace             | `.gspot/markdownlint.jsonc` and a stub. Every value in it is the shipped default, because the defaults came from this repository                                                                                                                          |
+| `.license-checker.json`            | replace, carry      | `.gspot/licenses.json`. The allowlist equals the shipped one. The twelve `excludePackages` entries become `[[tools.licenses.exceptions]]` with the license the checker reports at `init` and the reason `carried at init`                                 |
+| `.gitleaks.toml`                   | replace, carry      | `.gspot/gitleaks.toml`. The allowlist for public identifiers in `ios/Yap/Config/*.xcconfig` is carried with its description as the reason                                                                                                                 |
+| `.editorconfig`                    | replace             | the formatting preset owns the whole file: rendered from `[format]` with the header; the old one is deleted and listed. A section gspot does not render goes in `[tools.editorconfig.extra]`                                                              |
+| `.commitlintrc.json`               | replace             | `.gspot/commitlint.config.js` and a stub. Its scopes (`api`, `ios`, `supabase`, `root`, `hooks`, `deps`) are the default: the scope paths plus `root`, `hooks`, `deps`                                                                                    |
+| `bearer.yml`, `bearer.ignore`      | delete              | Bearer is cut (D-28). Semgrep covers the same classes; the twelve recorded false positives re-enter through the Semgrep baseline on day one                                                                                                               |
+| `lychee.toml`                      | replace             | `.gspot/lychee.toml`: offline, fragments, the online profile for `manual`                                                                                                                                                                                 |
+| `mise.toml`                        | leave, list         | never edited. `doctor` lists the fifteen pins gspot also pins under "pinned twice", each with the line to delete                                                                                                                                          |
+| `osv-scanner.toml`                 | replace, carry      | `.gspot/osv-scanner.toml`. Both ignored advisories carried with their reasons and a `review_by` date                                                                                                                                                      |
+| `tsconfig.base.json`               | replace             | `.gspot/tsconfig.base.json` holds the same fourteen options; `api/tsconfig.json` and `supabase/tsconfig.json` keep their `paths`, `include` and module settings and their `extends` is repointed                                                          |
+| `typos.toml`                       | replace, carry      | `.gspot/typos.toml` and a stub. The eight words carried with their comments as reasons; excludes come from natures                                                                                                                                        |
+| `.syncpackrc`                      | replace             | `.gspot/syncpack.json`, the same one-version policy plus the shipped aligned pairs                                                                                                                                                                        |
+| `.gitattributes`                   | leave               | LFS and generated markers are the person's; gspot reads them for natures                                                                                                                                                                                  |
+| `.dockerignore`                    | leave               | `docker/dockerignore` checks it                                                                                                                                                                                                                           |
+| `.githooks/`                       | delete              | `.gspot/hooks/` and `core.hooksPath`; listed under "no longer runs; delete when ready" until deleted                                                                                                                                                      |
+| `.mise/tasks/`                     | leave 67, delete 35 | gspot does not read task bodies. The 35 lint, format, typecheck, knip, deps, hook and quality tasks call `quality/` or a tool gspot now runs; the person deletes them. Build, test, deploy, dev, gen and local tasks stay, and the bash preset lints them |
+| `quality/`, `LINTING.md`, `.qlty/` | delete              | listed under "no longer runs; delete when ready". The completeness check proves every rule landed before the person deletes                                                                                                                               |
+| `CLAUDE.md`, `AGENTS.md`, `rules/` | leave, add          | one managed block each. `rules/` is the person's; for the reference repositories the completeness check in gspot's own repository proves the corpus covers it, and then it is deleted                                                                     |
+| `README.md`, `ADVANCED.md`         | leave               | the docs checks run over them. There is no `LICENSE` file at the root today, so `docs/readme-present` fails until one is added or `tools.docs.require_license` is set false with a reason                                                                 |
+| `package.json` (root)              | change              | gspot's npm tools land in `devDependencies` (or under mise `npm:`); `quality` leaves `workspaces` when the folder is deleted; the lint scripts are replaced by `check` and `apply`                                                                        |
+| `bunfig.toml`                      | leave               | already at the shipped install policy                                                                                                                                                                                                                     |
 
-## yap-swift-app, file by file: scopes
+## The `yap-swift-app` scopes, file by file
 
 | File                                                                                 | Verb           | What happens                                                                                                                                                                                                                                                      |
 | ------------------------------------------------------------------------------------ | -------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -82,7 +78,7 @@ because they share one shape.
 | `*/.env.example`, `*/.env.development`, `*/.env.staging`                             | leave          | `config-files/dotenv` checks that tracked ones hold keys only; `integrity/env-files` refuses staging the rest                                                                                                                                                     |
 | `api/Dockerfile`, `api/docker-compose.yml`, `api/nginx.conf`, `supabase/config.toml` | leave          | product files: checked, never written                                                                                                                                                                                                                             |
 
-## yap-text-inference in numbers
+## The `yap-text-inference` numbers
 
 A Python inference server with two Docker images and a large shell layer. It has fewer
 dotfiles than yap-swift-app because most of its policy lives in `pyproject.toml` tables and
@@ -94,14 +90,14 @@ inside `quality/`, which changes what `init` can find.
 | `pyproject.toml` tool tables    | `[tool.ruff]` (97 lines), `[tool.interrogate]`, `[tool.deptry]`, `[tool.vulture]`, `[tool.bandit]`, `[tool.pytest]`, `[tool.importlinter]` with nine contracts (589 lines in all)                                                | the tables gspot owns are rewritten from `gspot.toml` through a comment-preserving edit; `[project]`, `[dependency-groups]` and `[tool.uv]` are untouched; `[tool.interrogate]` and `[tool.bandit]` are removed because the tools are cut |
 | Configuration inside `quality/` | `quality/config/shellcheckrc`, `security/osv/config.toml`, `security/gitleaks/{baseline,reasons}.json`, `repository/licenses/policy.json`, `typecheck/{trt,vllm,llmcompressor}.json`, `naming/policy.json`, `duplication/*.json` | not at conventional paths, so takeover does not see them. The person moves the four exception lists to their conventional paths first (step 0), and the rest is policy the ledger already ships                                           |
 | `quality/`                      | 139 files, 2.8 MB, plus a `quality/package.json` workspace                                                                                                                                                                       | deleted                                                                                                                                                                                                                                   |
-| Root `package.json`, `bun.lock` | exist only to install jscpd, markdownlint and prettier                                                                                                                                                                           | listed as lint-only; deleted. Under the mise runner the npm tools become `npm:` pins and the repository has no Node footprint                                                                                                             |
-| `.mise/tasks/`                  | 34 task files: 20 are lint, format, type, deps, hook, security or licenses tasks                                                                                                                                                 | 12 test tasks stay; `setup` stays; `check` is rewritten by hand to call `gspot check` and the tests; 20 deleted                                                                                                                           |
+| Root `package.json`, `bun.lock` | exist only to install jscpd, markdownlint, and prettier                                                                                                                                                                          | listed as lint-only; deleted. Under the mise runner the npm tools become `npm:` pins and the repository has no Node footprint                                                                                                             |
+| `.mise/tasks/`                  | 34 task files: 20 are lint, format, type, deps, hook, security, or licenses tasks                                                                                                                                                | 12 test tasks stay; `setup` stays; `check` is rewritten by hand to call `gspot check` and the tests; 20 deleted                                                                                                                           |
 | `.githooks/`                    | 3, including a hand-written commit-message regex                                                                                                                                                                                 | deleted; `.gspot/hooks/`, with commitlint in the `commit-msg` hook                                                                                                                                                                        |
 | `mise.toml` `[tools]`           | 14 pins, 9 of them linters                                                                                                                                                                                                       | the person trims to bun, node (mise's `npm:` backend needs it), python, uv, jq; `doctor` lists the nine                                                                                                                                   |
 | `rules/`                        | 7 files, 13,721 lines, with `rules/DOCUMENTATION.md` excluded from its own linters                                                                                                                                               | one managed block in `CLAUDE.md` and `AGENTS.md` (they are identical today); the old `rules/` is deleted once the completeness check is clean                                                                                             |
 | Documentation                   | `README.md` and `ADVANCED.md` name 65 `mise run` commands and one `quality/` path                                                                                                                                                | the "Develop the project" and "Developer workflow" sections shrink to `gspot check`, `gspot check --fix`, and the test tasks; `integrity/stale-paths` fails until they do                                                                 |
 
-## yap-text-inference, file by file
+## The `yap-text-inference` files
 
 | File                                                                                            | Verb                                | What happens                                                                                                                                                                                                                                                                                                                                                                                      |
 | ----------------------------------------------------------------------------------------------- | ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -140,10 +136,8 @@ inside `quality/`, which changes what `init` can find.
 What this repository taught, and the rule each lesson landed as. None is a special case: each is
 one general mechanism or one corrected default.
 
-- **A repository can need checks gspot does not ship.** Type checking per engine under
-  `uv run --extra`, Linux only. The answer is the `[[check]]` entry that already existed, now
-  with `platform`, so a person declares the command and gspot schedules, caches and skips it like
-  any preset check. No preset grew a slot.
+- **A repository can need checks gspot does not ship.** Type checking per engine under `uv run --extra`, Linux only. The answer is the `[[check]]` entry that already existed, now with `platform`. A person declares the command, and gspot schedules, caches, and skips it like any preset check.
+- No preset grew a slot for it.
 - **Takeover reads conventional paths and nothing else.** A shellcheckrc inside `quality/` is
   invisible, and gspot does not go looking. The person moves the exception lists first.
 - **The cyclomatic limit was wrong in the ledger.** Every source repository uses 8; the ledger
@@ -155,11 +149,9 @@ one general mechanism or one corrected default.
   Node footprint.
 - **A default must not tighten by accident.** With no `[[scope]]`, commitlint has no scope enum.
 
-## yap-landing in numbers
+## The `yap-landing` numbers
 
-A plain-JavaScript static site built to `dist/` and served by Cloudflare Pages: Node build
-scripts, browser scripts, one Pages worker, HTML templates with placeholders, legal copy in
-Markdown, images and videos, no tests. The smallest of the six, and the one that tests three
+A plain-JavaScript static site built to `dist/` and served by Cloudflare Pages. It holds Node build scripts, browser scripts, one Pages worker, HTML templates with placeholders, legal copy in Markdown, images and videos, and no tests. The smallest of the six, and the one that tests three
 runtimes in one language, product copy that is not documentation, and a formatter set
 differently from the shipped default.
 
@@ -169,13 +161,13 @@ differently from the shipped default.
 | `quality/`                         | 119 files, 564 KB, plus its own `quality/package.json`                                                                                                                                                                                                   | deleted; the manifest is listed as one whose dependencies are all pinned tools                                   |
 | `package.json` `devDependencies`   | 33, of which 25 are linters and their plugins                                                                                                                                                                                                            | the 25 show as "pinned twice" once gspot pins them; the build tools (esbuild, html-minifier-terser, qrcode) stay |
 | `package.json` `scripts`           | 7, of which 5 wrap `mise run`                                                                                                                                                                                                                            | `integrity/manifest-policy` flags the wrappers; `build` and `start` stay                                         |
-| `.mise/tasks/`                     | 15, of which 14 are lint, format, deps, knip or hook tasks                                                                                                                                                                                               | `setup` stays and gains `gspot sync`; the person deletes 14                                                      |
+| `.mise/tasks/`                     | 15, of which 14 are lint, format, deps, knip, or hook tasks                                                                                                                                                                                              | `setup` stays and gains `gspot apply`; the person deletes 14                                                     |
 | `.githooks/`                       | 3                                                                                                                                                                                                                                                        | deleted; `.gspot/hooks/`                                                                                         |
 | `mise.toml` `[tools]`              | 13 pins, 10 of them linters, two of which (lizard, qlty) gspot cuts                                                                                                                                                                                      | bun, node and jq stay; `doctor` lists the 10                                                                     |
 | `rules/`, `CLAUDE.md`, `AGENTS.md` | 5 files and a three-line index                                                                                                                                                                                                                           | one managed block each; the old `rules/` deleted once the completeness check is clean                            |
 | `README.md`                        | a "Quality" section of six commands                                                                                                                                                                                                                      | rewritten to `gspot check`; `integrity/stale-paths` fails until it is                                            |
 
-## yap-landing, file by file
+## The `yap-landing` files
 
 | File                                                                                               | Verb               | What happens                                                                                                                                                                                                                                                                                                                                                                                                                   |
 | -------------------------------------------------------------------------------------------------- | ------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------- |
@@ -211,7 +203,7 @@ What this repository taught, and the general rule each lesson landed as:
   suggested is gone.
 - **Formatting is the one policy `init` asks about.** Every other default ships at the strictest
   observed value; formatting has no strictest value, and a reformat of every file is the most
-  disruptive thing `init` could do unasked (D-58).
+  disruptive thing `init` can do unasked (D-58).
 - **Product copy is not documentation**, and needs no mechanism: the ordinary path ignore on the
   prose check does it.
 - **A cut tool's baseline re-enters through the replacement tool's own baseline.** The Lizard
@@ -219,26 +211,22 @@ What this repository taught, and the general rule each lesson landed as:
 - **Nothing else changed.** Large media, lint-only manifests, wrapper scripts, license globs and
   duplicate pins each met an existing rule.
 
-## slopshop in numbers
+## The `slopshop` numbers
 
-A Next.js 16 app on Cloudflare through OpenNext: TypeScript and TSX, CSS modules, next-intl
-locales, zod, zustand, react-hook-form, a `_headers` file under `public/`, 93 MB of tracked
-video, two generated type files that git ignores, and a lint folder that also holds a product
-deploy script. Its own checks were the source for most Next.js rows in the ledger, so the
-question here is not coverage but whether the general rules hold on a framework app.
+A Next.js 16 app on Cloudflare through OpenNext: TypeScript and TSX, CSS modules, next-intl locales, zod, zustand, and react-hook-form. The tree also holds a `_headers` file under `public/`, 93 MB of tracked video, two generated type files that git ignores, and a lint folder that also holds a product deploy script. Its checks supplied most Next.js rows in the ledger, so the question here is not coverage but whether the general rules hold on a framework app.
 
 | Today                            | Count                                                                                                                                                                    | After `init --yes` and the delete-when-ready step                                                                |
 | -------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------- |
-| Root lint config files           | 8 (`.commitlintrc.json`, `.editorconfig`, `.license-checker.json`, `.markdownlint-cli2.jsonc`, `.prettierrc.json`, `.prettierignore`, `eslint.config.mjs`, `typos.toml`) | none hand-written; stubs for commitlint, markdownlint, prettier, eslint and typos                                |
+| Root lint config files           | 8 (`.commitlintrc.json`, `.editorconfig`, `.license-checker.json`, `.markdownlint-cli2.jsonc`, `.prettierrc.json`, `.prettierignore`, `eslint.config.mjs`, `typos.toml`) | none hand-written; stubs for commitlint, markdownlint, prettier, eslint, and typos                               |
 | `quality/`                       | 83 files, 416 KB, its own `package.json`, and one product script (`workspace/deploy/videos.mjs`)                                                                         | deleted after the deploy script moves out; the manifest is listed as one whose dependencies are all pinned tools |
 | `package.json` `devDependencies` | 49, about 30 of them linters, plugins and quality-tool libraries                                                                                                         | "pinned twice" once gspot pins them; Next, React, OpenNext and the app's own tooling stay                        |
-| `.mise/tasks/`                   | 28, of which 21 are lint, format, fix, typecheck, dependencies, security or hook tasks                                                                                   | the 5 deploy tasks, `next/build` and `repo/setup` stay; the person deletes 21                                    |
+| `.mise/tasks/`                   | 28, of which 21 are lint, format, fix, typecheck, dependencies, security, or hook tasks                                                                                  | the 5 deploy tasks, `next/build` and `repo/setup` stay; the person deletes 21                                    |
 | `.githooks/`                     | 3                                                                                                                                                                        | deleted; `.gspot/hooks/`                                                                                         |
 | `mise.toml` `[tools]`            | 7 pins, 5 of them linters                                                                                                                                                | bun and node stay; `doctor` lists the 5                                                                          |
 | `rules/`                         | 15 files in `general/` and `nextjs/`; its `CLAUDE.md` table is the model for gspot's managed block                                                                       | one managed block each; the old `rules/` deleted once the completeness check is clean                            |
 | `README.md`                      | 34 `mise run` mentions in the quality table                                                                                                                              | rewritten to `gspot check`; `integrity/stale-paths` fails until it is                                            |
 
-## slopshop, file by file
+## The `slopshop` files
 
 | File                                                                                          | Verb                         | What happens                                                                                                                                                                                                                                                                                           |
 | --------------------------------------------------------------------------------------------- | ---------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
@@ -263,7 +251,7 @@ question here is not coverage but whether the general rules hold on a framework 
 
 What this repository taught, and the general rule each lesson landed as:
 
-- **The file set is what git tracks or would track** (D-59). A file created and not yet staged
+- **The file set is what git tracks or is about to track** (D-59). A file created and not yet staged
   is checked by `gspot check`, so a whole-tree pass is a promise the commit hook keeps.
 - **A freshness check runs only over tracked generated files.** An ignored generated file is
   the build's; there is nothing to compare.
@@ -276,10 +264,7 @@ What this repository taught, and the general rule each lesson landed as:
 
 ## The ComfyUI nodes
 
-comfyui-reactor-connector and comfyui-live-shopping are one shape: a Python package whose root
-is the repository (`__init__.py` at the top), a TypeScript front end under `web/` whose bundled
-output is committed, ComfyUI workflow exports as data, and the same `quality/` folder as
-yap-text-inference. One section covers both, with a column where they differ.
+comfyui-reactor-connector and comfyui-live-shopping are one shape. Each is a Python package whose root is the repository (`__init__.py` at the top), with a TypeScript front end under `web/` whose bundled output is committed. Each holds ComfyUI workflow exports as data and the same `quality/` folder as yap-text-inference. One section covers both, with a column where they differ.
 
 | Item                                     | reactor-connector                                                                                                                                                                                     | live-shopping                       | What happens                                                                                                                                                                                                                                                                                                                                                                                                   |
 | ---------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -290,21 +275,18 @@ yap-text-inference. One section covers both, with a column where they differ.
 | `workflows/*.json` and their images      | yes                                                                                                                                                                                                   | yes, in `character/` and `product/` | product data, not configuration: `gspot declare "workflows/**/*.json" --produced-by "mise run comfy:workflows:build"` (both repositories have the task), or an `[[ignore]]` on `config-files/json` with a reason                                                                                                                                                                                               |
 | `locales/en/*.json`                      | yes                                                                                                                                                                                                   | none                                | plain JSON; neither next-intl nor i18next is a dependency, so no i18n preset; `config-files/json` and typos check them                                                                                                                                                                                                                                                                                         |
 | `__init__.py`, `__main__.py` at the root | both                                                                                                                                                                                                  | `__init__.py`                       | the python preset claims them; `__init__` and `__main__` are shipped exclusions in the naming policy; `structure/single-file-folder` does not fire on a package root                                                                                                                                                                                                                                           |
-| `.mise/tasks/`                           | 36; the `comfy/*` build, package, publish and model tasks stay                                                                                                                                        | 36                                  | the person deletes the lint, format, type, deps, security, licenses, audit and hook tasks                                                                                                                                                                                                                                                                                                                      |
+| `.mise/tasks/`                           | 36; the `comfy/*` build, package, publish, and model tasks stay                                                                                                                                       | 36                                  | the person deletes the lint, format, type, deps, security, licenses, audit, and hook tasks                                                                                                                                                                                                                                                                                                                     |
 | `.githooks/`, `mise.toml` pins           | 3 hooks; 12 pins, 8 linters (bearer and codeql among them)                                                                                                                                            | same                                | as the other repositories                                                                                                                                                                                                                                                                                                                                                                                      |
 | `rules/`, `CLAUDE.md`, `AGENTS.md`       | 8 files; both agent files                                                                                                                                                                             | 8 files; `AGENTS.md` only           | one managed block each; `init` creates `CLAUDE.md` where it is absent                                                                                                                                                                                                                                                                                                                                          |
 | Docs                                     | `ADVANCED.md` names 24 `mise run` commands                                                                                                                                                            | `README.md` 2, `ADVANCED.md` 9      | rewritten to `gspot check`; `integrity/stale-paths` fails until they are                                                                                                                                                                                                                                                                                                                                       |
 
-What these taught, as rules already in the design: a committed bundle is a declared generated
-file; product data files are declared or ignored by path; a front end that a host page outside
-the repository loads gets its runtime from one `set` line, because nothing in the tree references
-it. No change to the architecture.
+What these taught, as rules already in the design: a committed bundle is a declared generated file, and product data files are declared or ignored by path. A front end that a host page outside the repository loads gets its runtime from one `set` line, because nothing in the tree references it. No change to the architecture.
 
 ## Across the six repositories
 
 946 files of home-grown lint code, about 8.5 MB, six sets of hooks, roughly 140 task files and
 54 dotfiles do one job that gspot does once. The `pyproject.toml` tool tables in the Python
-repositories are replaced the same way as dotfiles: the tables gspot owns (`ruff`, `importlinter`,
+repositories are replaced the same way as dotfiles. The tables gspot owns (`ruff`, `importlinter`,
 `deptry`, `vulture`, `pytest.ini_options`) are rewritten from `gspot.toml` through a
 comment-preserving TOML edit, and every other table stays.
 
@@ -321,18 +303,15 @@ holds, for linting, exactly this:
 - One managed block in `CLAUDE.md` and `AGENTS.md`.
 
 Nothing else about linting exists in the tree. `mise.toml` pins runtimes and product tools
-only. The task runner holds build, test and deploy tasks only. Every rule the old folder
+only. The task runner holds build, test, and deploy tasks only. Every rule the old folder
 enforced still runs, at the strictest value observed, behind a baseline that only falls.
 Changing anything is one `gspot set`, `allow` or `ignore` line, and `gspot explain` says what
 every finding means and what to do.
 
 ## How the migration runs
 
-0. When exception lists live inside the lint folder rather than at conventional paths (a
-   `shellcheckrc`, an osv config, a gitleaks allowlist, a license policy), `git mv` them to the
-   conventional path so takeover carries them. gspot does not search for them. Move anything in
-   the lint folder that is not linting (a deploy script, a generator) out of it now, because the
-   folder is deleted whole in step 3.
+0. When exception lists live inside the lint folder rather than at conventional paths (a `shellcheckrc`, an osv config, a gitleaks allowlist, a license policy), `git mv` them to the conventional path. Takeover carries them from there and does not search for them.
+    - Move anything in the lint folder that is not linting (a deploy script, a generator) out of it now, because the folder is deleted whole in step 3.
 1. `gspot init` in a branch. Read the plan: the delete, carry, change and "no longer runs"
    sections. Say yes.
 2. `gspot check`. Everything passes through baselines; read the counts.
@@ -344,5 +323,4 @@ every finding means and what to do.
    the old setup needed (`LINTING.md`).
 6. Commit. The diff is the migration; nothing outside it changed.
 
-The acceptance harness runs steps 1 and 2 in a detached worktree for every reference
-repository on every release, so the plan a person sees is the plan that was tested.
+The acceptance harness runs steps 1 and 2 in a detached worktree for every reference repository on every release. The plan a person sees is the plan that was tested.

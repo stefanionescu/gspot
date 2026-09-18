@@ -51,19 +51,19 @@ The shipped policy is `presets/naming/policy.json`. The repository extends it th
 
 Terms are whole identifier parts. One entry covers every separator and casing.
 
-| Group        | Removable | Terms                                                                                                                                                                                                                                                                                  |
-| ------------ | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| containers   | yes       | `core`, `common`, `generic`, `misc`, `stuff`, `thing`, `things`, `details`, `info`, `object`, `data` (reserved), `catalog`, `catalogue`, `corpus`, `taxonomy`, `tmp`, `temp`                                                                                                           |
-| roles        | yes       | `helper`, `helpers`, `util`, `utils`, `manager`, `handler`, `processor`, `service`, `wrapper`, `shim`, `shims`, `support`                                                                                                                                                              |
-| marketing    | no        | `advanced`, `enhanced`, `improved`, `intelligent`, `smart`, `modern`, `robust`, `seamless`, `ultimate`, `comprehensive`, `optimized`, `reusable`, `custom`, `final`, `latest`, `old`, `new`, `legacy`, `plus`, `combined`, `v2` (through the digit ban)                                |
-| defensive    | no        | `ensure`, `maybe`, `likely`, `should`, `if needed`, `ifneeded`, `if available`, `ifavailable`, `if changed`, `ifchanged`, `if possible`, `ifpossible`, `or throw`, `orthrow`, `waitfor`, `with retries`, `transient`, `belt and suspenders`, `fallback`, `load bearing`, `loadbearing` |
-| verbs        | yes       | `render`, `generate`, `sync`, `synchronize`, `synchronise`, `materialize`, `materialise`, `coerce`, `scoped`, `bind`                                                                                                                                                                   |
-| verbs-strict | yes       | `load`, `loaded`, `loader`, `loaders`, `loading`, `fetch`, `resolve`, `resolving`, `resolution`                                                                                                                                                                                        |
-| conjunctions | yes       | `and`, `or`, `with`, `when`, `what`, `whatever`, `once`, `plus`                                                                                                                                                                                                                        |
-| test         | yes       | `fixture`, `fixtures`, `test case`, `testcase`, `under test`, `undertest`, `edge case`, `edge cases`, `snapshot`, `snapshots` (scoped to non-test code)                                                                                                                                |
+| Group        | Removable | Terms                                                                                                                                                                                                                                                                                                  |
+| ------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| containers   | yes       | `core`, `common`, `generic`, `misc`, `stuff`, `thing`, `things`, `details`, `info`, `object`, `data` (reserved), `catalog`, `catalogue`, `corpus`, `taxonomy`, `tmp`, `temp`                                                                                                                           |
+| roles        | yes       | `helper`, `helpers`, `util`, `utils`, `manager`, `handler`, `processor`, `service`, `wrapper`, `shim`, `shims`, `support`                                                                                                                                                                              |
+| marketing    | no        | `advanced`, `enhanced`, `improved`, `intelligent`, `smart`, `modern`, `robust`, `seamless`, `ultimate`, `comprehensive`, `optimized`, `reusable`, `custom`, `final`, `latest`, `old`, `new`, `legacy`, `plus`, `combined`, `v2` (through the digit ban)                                                |
+| defensive    | no        | `ensure`, `maybe`, `likely`, `should`, `if needed`, `ifneeded`, `if available`, `ifavailable`, `if changed`, `ifchanged`, `if possible`, `ifpossible`, `or throw`, `orthrow`, `waitfor`, `with retries`, `transient`, `belt and suspenders`, `fallback`, `load bearing`, `load-bearing`, `loadbearing` |
+| verbs        | yes       | `render`, `generate`, `sync`, `synchronize`, `synchronise`, `materialize`, `materialise`, `coerce`, `scoped`, `bind`                                                                                                                                                                                   |
+| verbs-strict | yes       | `load`, `loaded`, `loader`, `loaders`, `loading`, `fetch`, `resolve`, `resolving`, `resolution`                                                                                                                                                                                                        |
+| conjunctions | yes       | `and`, `or`, `with`, `when`, `what`, `whatever`, `once`, `plus`                                                                                                                                                                                                                                        |
+| test         | yes       | `fixture`, `fixtures`, `test case`, `testcase`, `under test`, `undertest`, `edge case`, `edge cases`, `snapshot`, `snapshots` (scoped to non-test code)                                                                                                                                                |
 
-This is the union of the four reference policies plus `load bearing` (also `load-bearing` and
-`loadBearing` through part splitting) and `bind`. Project-specific terms in them (`runpsql`,
+This is the union of the four reference policies plus `load bearing` (spelled out as `load-bearing`
+too, and `loadBearing` through part splitting) and `bind`. Project-specific terms in them (`runpsql`,
 `prelock`, `postlock`) do not ship; they belong in a repository's `[naming] banned_terms`.
 
 Terms match declarations: a function, variable, type, file or directory named `bind` fires;
@@ -125,7 +125,10 @@ external`.
 Property keys fixed by a protocol, a package option or a data format, exempt for property keys
 in one named file: HTTP headers (`Content-Type`, `Retry-After`), ARIA attributes, key names
 (`ArrowUp`), locale tags (`en-GB`), card brands. A repository lists them under
-`[naming] contract_properties = [{ file = "...", names = [...] }]`.
+`[naming] contract_properties = [{ file = "...", names = [...] }]`. A property signature in a
+type or interface whose name is snake_case or UPPER_SNAKE describes a shape another format
+fixes (TOML keys, a JSON API, a generated type) and is exempt from the case check without a
+listing; a class field is not (D-69).
 
 ## Per-language tables
 
@@ -215,14 +218,15 @@ exclusion carries a reason.
 The shipped policy carries the rules every repository needs: `_` and single letters `i j k x y`
 excluded in loop and lambda positions; `__init__` and `__main__` excluded as Python file names;
 `.githooks` and `.mise` excluded as directory names; a leading underscore stripped as a
-structural prefix for private Python and Bash names; `pre` accepted as a shared prefix in hook
+structural prefix for private Python and Bash names and for the unused TypeScript and JavaScript
+parameters and variables ESLint asks to be marked that way; `pre` accepted as a shared prefix in hook
 directories; the Next.js reserved names (`page`, `layout`, `loading`, `error`, `global-error`,
 `not-found`, `route`, `template`, `default`, `middleware`, `instrumentation`) excluded as file
 names under the router directory.
 
 ## Matching
 
-1. Split the identifier into parts at case boundaries, underscores, hyphens, dots and spaces
+1. Split the identifier into parts at case boundaries, underscores, hyphens, dots, and spaces
    (`scule`'s `splitByCase`, with the acronym rule per language applied on top).
    `HTMLParser` splits to `html`, `parser`. `user_id` splits to `user`, `id`.
 2. Lowercase every part.
@@ -249,6 +253,11 @@ test in [12-repository-layout.md](12-repository-layout.md)).
 
 Extraction skips: generated files (by nature), lockfiles, the paths a preset excludes
 (`node_modules`, build output, `.git`, caches, `Generated/`, `vendor/`), and string contents.
+Three things in a file are not declarations and are not extracted: declaration files (`.d.ts`)
+describing another module, import bindings (`const { existsSync } = require('node:fs')`,
+`const { default: X } = await import(...)`), and the keys and methods of object literals, which
+name what another party reads (an ESLint visitor, an option table). The `test` group applies
+in non-test code only: a file under `tests/` or named `*.test.*` or `*.spec.*` may say `fixture`.
 
 ## Extension in `gspot.toml`
 

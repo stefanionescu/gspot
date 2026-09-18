@@ -1,4 +1,4 @@
-# postgres
+# `postgres`
 
 Kind: database. Requires: sql.
 

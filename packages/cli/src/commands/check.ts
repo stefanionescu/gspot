@@ -1,12 +1,38 @@
 // gspot check
 import type { Command } from 'commander';
-
 import { emit } from '#cli/commands/emit.ts';
 import { checkCommand } from '#cli/run/check.ts';
-import type { CheckOptions } from '#cli/run/check.ts';
-import type { StageFilter } from '#cli/run/plan.ts';
+import type { StageFilter, CheckOptions } from '#types/run.ts';
+import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 
-/** Registers check. */
+function optionsFrom(
+    checkId: string | undefined,
+    flags: Record<string, unknown>,
+    global: Record<string, unknown>,
+): CheckOptions {
+    const stage = textFlag(flags, 'stage') as StageFilter | undefined;
+    const scope = textFlag(flags, 'scope');
+    return {
+        cwd: directoryOf(global),
+        staged: flags['staged'] === true,
+        fix: flags['fix'] === true,
+        isDryRun: flags['dryRun'] === true,
+        skips: listFlag(flags, 'skip') ?? [],
+        quiet: global['quiet'] === true,
+        verbose: global['verbose'] === true,
+        noCache: flags['cache'] === false,
+        ...(checkId === undefined ? {} : { check: checkId }),
+        ...textEntry(flags, 'since', 'since'),
+        ...(stage === undefined ? {} : { stage }),
+        ...(scope === undefined ? {} : { scope: scope.endsWith('/') ? scope.slice(0, -1) : scope }),
+        ...textEntry(flags, 'messageFile', 'messageFile'),
+    };
+}
+
+/**
+ * Registers check.
+ * @param program the commander program
+ */
 export function registerCheck(program: Command): void {
     program
         .command('check [check-id]')
@@ -20,27 +46,12 @@ export function registerCheck(program: Command): void {
         .option(
             '--skip <check-id>',
             'Skip one check this run; repeat for more',
-            (value: string, previous: string[] = []) => [...previous, value],
+            (value: string, previous: string[]) => [...previous, value],
         )
         .option('--message-file <path>', 'The commit message file, for the message stage')
         .option('--no-cache', 'Run every check even when its inputs are unchanged')
         .action(async (checkId: string | undefined, flags: Record<string, unknown>, command: Command) => {
-            const global = command.optsWithGlobals() as Record<string, unknown>;
-            const options: CheckOptions = {
-                cwd: String(global['directory'] ?? process.cwd()),
-                staged: Boolean(flags['staged']),
-                fix: Boolean(flags['fix']),
-                dryRun: Boolean(flags['dryRun']),
-                skips: (flags['skip'] as string[] | undefined) ?? [],
-                quiet: Boolean(global['quiet']),
-                verbose: Boolean(global['verbose']),
-                noCache: flags['cache'] === false,
-                ...(checkId !== undefined ? { check: checkId } : {}),
-                ...(flags['since'] ? { since: String(flags['since']) } : {}),
-                ...(flags['stage'] ? { stage: flags['stage'] as StageFilter } : {}),
-                ...(flags['scope'] ? { scope: String(flags['scope']).replace(/\/$/, '') } : {}),
-                ...(flags['messageFile'] ? { messageFile: String(flags['messageFile']) } : {}),
-            };
-            await emit(() => checkCommand(options), global);
+            const global = command.optsWithGlobals();
+            await emit(() => checkCommand(optionsFrom(checkId, flags, global)), global);
         });
 }

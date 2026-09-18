@@ -1,4 +1,4 @@
-# html
+# `html`
 
 Kind: language. Requires: formatting, spelling.
 

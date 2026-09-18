@@ -1,0 +1,15 @@
+extends: existence
+message: "Heading '%s' inventories the tree. Document behavior and ownership instead."
+level: error
+ignorecase: true
+scope: heading
+tokens:
+    - project structure
+    - project layout
+    - repository layout
+    - repository structure
+    - directory structure
+    - folder structure
+    - file map
+    - codebase map
+    - source tree

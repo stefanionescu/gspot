@@ -1,39 +1,46 @@
 // The --settings listing: every setting, its value, and where it came from.
+import type { Session } from '#types/run.ts';
 import { listSettings } from '#cli/policy/settings.ts';
-import type { Session } from '#cli/run/session.ts';
-import type { SettingRow } from '#types/doctor.ts';
+import type { ExtraRow, SettingRow, SettingsListing, ToolTables } from '#types/doctor.ts';
 
-/** Every setting per scope, plus every extra table under "not a slot". */
-export function settingRows(session: Session): {
-    rows: SettingRow[];
-    extras: { tool: string; keys: string[]; reason: string; scope: string }[];
-} {
-    const rows: SettingRow[] = [];
-    for (const selection of session.scopes) {
-        for (const resolved of listSettings(selection.surface, session.loaded.policy, selection.scope.path)) {
-            if (selection.scope.path !== '' && resolved.source.startsWith('preset')) continue;
-            rows.push({
-                key: resolved.key,
-                value: resolved.value,
-                source: resolved.source,
-                direction: resolved.spec.direction,
-                scope: selection.scope.path,
-            });
-        }
-    }
-    const extras: { tool: string; keys: string[]; reason: string; scope: string }[] = [];
-    const tables: { scope: string; tools: Record<string, { extra?: Record<string, unknown> & { reason: string } }> }[] =
-        [{ scope: '', tools: session.loaded.policy.tools }];
-    for (const [scope, table] of Object.entries(session.loaded.policy.scopeTables))
-        if (table.tools) tables.push({ scope, tools: table.tools });
-    for (const { scope, tools } of tables)
-        for (const [tool, table] of Object.entries(tools))
-            if (table.extra)
-                extras.push({
-                    tool,
-                    keys: Object.keys(table.extra).filter((key) => key !== 'reason'),
-                    reason: table.extra.reason,
-                    scope,
-                });
-    return { rows, extras };
+function rowsFor(session: Session): SettingRow[] {
+    return session.scopes.flatMap((selection) => {
+        const scope = selection.scope.path;
+        return listSettings(selection.surface, session.policyFiles.policy, scope)
+            .filter((entry) => scope === '' || !entry.source.startsWith('preset'))
+            .map((entry) => ({
+                key: entry.key,
+                value: entry.value,
+                source: entry.source,
+                direction: entry.spec.direction,
+                scope,
+            }));
+    });
+}
+
+function extrasFor(scope: string, tools: ToolTables): ExtraRow[] {
+    return Object.entries(tools).flatMap(([tool, table]) => {
+        if (table.extra === undefined) return [];
+        return [
+            {
+                tool,
+                keys: Object.keys(table.extra).filter((key) => key !== 'reason'),
+                reason: table.extra.reason,
+                scope,
+            },
+        ];
+    });
+}
+
+/**
+ * Every setting per scope, plus every extra table under "not a slot".
+ * @param session the session
+ * @returns the rows and the extra tables
+ */
+export function settingRows(session: Session): SettingsListing {
+    const { policy } = session.policyFiles;
+    const fromScopes = Object.entries(policy.scopeTables).flatMap(([scope, table]) =>
+        table.tools === undefined ? [] : extrasFor(scope, table.tools),
+    );
+    return { rows: rowsFor(session), extras: [...extrasFor('', policy.tools), ...fromScopes] };
 }

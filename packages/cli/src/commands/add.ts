@@ -1,10 +1,13 @@
 // gspot add
 import type { Command } from 'commander';
-
 import { emit } from '#cli/commands/emit.ts';
 import { addCommand } from '#cli/policy/commands.ts';
+import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 
-/** Registers add. */
+/**
+ * Registers add.
+ * @param program the commander program
+ */
 export function registerAdd(program: Command): void {
     program
         .command('add <preset...>')
@@ -12,14 +15,14 @@ export function registerAdd(program: Command): void {
         .option('--scope <path>', 'The scope to add them to')
         .option('--dry-run', 'Print what would be written and write nothing')
         .action(async (presets: string[], flags: Record<string, unknown>, command: Command) => {
-            const global = command.optsWithGlobals() as Record<string, unknown>;
+            const global = command.optsWithGlobals();
             await emit(
                 () =>
                     addCommand({
-                        cwd: String(global['directory'] ?? process.cwd()),
+                        cwd: directoryOf(global),
                         presets,
-                        dryRun: Boolean(flags['dryRun']),
-                        ...(flags['scope'] ? { scope: String(flags['scope']) } : {}),
+                        isDryRun: flags['dryRun'] === true,
+                        ...textEntry(flags, 'scope', 'scope'),
                     }),
                 global,
             );

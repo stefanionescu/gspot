@@ -57,7 +57,10 @@ const configSchema = z.strictObject({
     header: z.boolean().default(true),
 });
 
-const sentence = z.string().min(12);
+const SENTENCE_MIN = 12;
+const sentence = z.string().min(SENTENCE_MIN);
+
+const stringListTable = z.record(z.string(), z.array(z.string()));
 
 const checkSchema = z.strictObject({
     id: z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/),
@@ -78,6 +81,7 @@ const checkSchema = z.strictObject({
     claims: claimsSchema.optional(),
     output: outputSchema.optional(),
     cwd: z.enum(['root', 'scope']).optional(),
+    whole: z.boolean().optional(),
     exclude_setting: z.string().optional(),
     inspection: stringList,
     summary: sentence,
@@ -129,8 +133,6 @@ export const manifestSchema = z.strictObject({
     configs: z.array(configSchema).default([]),
     checks: z.array(checkSchema).default([]),
     settings: z.array(settingSchema).default([]),
-    required: z.record(z.string(), z.array(z.string())).default({}),
-    rules: z.record(z.string(), z.array(z.string())).default({}),
+    required: stringListTable.default({}),
+    rules: stringListTable.default({}),
 });
-
-export type RawManifest = z.infer<typeof manifestSchema>;

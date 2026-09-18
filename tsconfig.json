@@ -22,9 +22,21 @@
         "paths": {
             "#cli/*": ["./packages/cli/src/*"],
             "#config/*": ["./packages/cli/config/*"],
-            "#types/*": ["./packages/cli/types/*"]
+            "#types/*": ["./packages/cli/types/*"],
+            "#plugin/*": ["./packages/eslint-plugin/src/*"],
+            "#plugin-types/*": ["./packages/eslint-plugin/types/*"],
+            "#plugin-tests/*": ["./packages/eslint-plugin/tests/*"],
+            "#tests/*": ["./tests/*"]
         }
     },
     "include": ["packages/**/*.ts", "tests/**/*.ts", "docs/generate.ts"],
-    "exclude": ["node_modules", "dist", "**/node_modules", "packages/cli/build", "tests/repositories/**/fixtures"]
+    "exclude": [
+        "node_modules",
+        "dist",
+        "**/node_modules",
+        "packages/cli/build",
+        "tests/repositories/**/fixtures",
+        "packages/cli/scratch"
+    ],
+    "extends": "./.gspot/tsconfig.base.json"
 }

@@ -1,186 +1,231 @@
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
 import { join } from 'node:path';
-
+import { run } from '#cli/platform/spawn.ts';
 import { probeTool } from '#cli/doctor/probes.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
-import { run } from '#cli/platform/spawn.ts';
-import type { SpawnResult } from '#cli/platform/spawn.ts';
-import type { PlannedCheck } from '#cli/run/plan.ts';
-import type { Session } from '#cli/run/session.ts';
+import type { SpawnResult } from '#types/platform.ts';
+import { parseOutput } from '#cli/run/parse-output.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
-import type { CheckSpec, OutputFormat } from '#types/manifest.ts';
+import type { ToolPin, CheckSpec, ConfigurationTarget } from '#types/manifest.ts';
+import type { ToolRun, Prepared, Substitutions, Session, PlannedCheck } from '#types/run.ts';
 
-export type Substitutions = { files: string[]; scope: string; root: string; messageFile?: string; indent: number };
+const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
 
-const DEFAULT_OUTPUT: OutputFormat = {
-    format: 'regex',
-    pattern: '^(?<file>[^:\\s][^:]*):(?<line>\\d+):(?:(?<column>\\d+):)?\\s*(?<message>.*)$',
-};
+const STUB_PLACEHOLDER = /\{stub:(?<name>[^}]+)\}/gu;
 
-function configPath(session: Session, planned: PlannedCheck, name: string): string {
-    const targets = [
-        ...(planned.manifest?.configs ?? []),
-        ...[...session.manifests.values()].flatMap((manifest) => manifest.configs),
-    ];
-    const target = targets.find(
-        (config) => !config.fragment && config.target.replace(/^\.gspot\//, '').replace(/\..*$/, '') === name,
+const WORKSPACE_PREFIX = '{workspace:';
+
+const TAIL_LINES = 20;
+
+const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
+
+function allConfigs(session: Session, planned: PlannedCheck): ConfigurationTarget[] {
+    const own = planned.manifest?.configs ?? [];
+    const every = session.manifests
+        .values()
+        .flatMap((manifest) => manifest.configs)
+        .toArray();
+    return [...own, ...every];
+}
+
+function configurationName(target: string): string {
+    const bare = target.startsWith('.gspot/') ? target.slice('.gspot/'.length) : target;
+    const dot = bare.indexOf('.');
+    return dot === -1 ? bare : bare.slice(0, dot);
+}
+
+function configurationPath(session: Session, planned: PlannedCheck, name: string): string {
+    const target = allConfigs(session, planned).find(
+        (config) => config.fragment !== true && configurationName(config.target) === name,
     );
-    if (!target) throw new Error(`check ${planned.id} names {config:${name}} and no preset renders it.`);
+    if (!target) throw new Error(`Check ${planned.id} names {config:${name}} and no preset renders it.`);
     return target.target;
 }
 
 function stubPath(session: Session, planned: PlannedCheck, name: string, scope: string): string {
-    const targets = [
-        ...(planned.manifest?.configs ?? []),
-        ...[...session.manifests.values()].flatMap((manifest) => manifest.configs),
-    ];
-    const target = targets.find((config) => config.stub?.path === name);
+    const target = allConfigs(session, planned).find((config) => config.stub?.path === name);
     const path = target?.stub?.path ?? name;
     return scope === '' ? path : `${scope}/${path}`;
 }
 
-/** Expands the placeholders of a manifest command into argv. {files} expands to every file, in the platform's form. */
+function expandPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string[] {
+    if (part === '{files}') return sub.files.map((file) => toPlatform(file));
+    if (part === '{file}') return [];
+    if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}'))
+        return sub.scope === '' ? [] : [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope];
+    return [substituteOne(session, planned, part, sub)];
+}
+
+function substituteOne(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string {
+    return part
+        .replaceAll(CONFIG_PLACEHOLDER, (_match, name: string) =>
+            toPlatform(join(session.root, configurationPath(session, planned, name))),
+        )
+        .replaceAll(STUB_PLACEHOLDER, (_match, name: string) => toPlatform(stubPath(session, planned, name, sub.scope)))
+        .replaceAll('{scope}', () => (sub.scope === '' ? '.' : sub.scope))
+        .replaceAll('{root}', () => sub.root)
+        .replaceAll('{indent}', () => String(sub.indent))
+        .replaceAll('{message_file}', () => sub.messageFile ?? '');
+}
+
+function firstLine(result: SpawnResult, placeholder: string): string {
+    const text = result.stderr.trim() === '' ? result.stdout.trim() : result.stderr.trim();
+    return (text === '' ? placeholder : text).split('\n', 1)[0] ?? placeholder;
+}
+
+function tailLines(result: SpawnResult, placeholder: string): string {
+    const text = result.stderr.trim() === '' ? result.stdout.trim() : result.stderr.trim();
+    return (text === '' ? placeholder : text).split('\n').slice(0, TAIL_LINES).join('\n');
+}
+
+function missingResult(
+    base: CheckResult,
+    tool: ToolPin,
+    probe: { found?: string; floor?: string; hint?: string },
+    state: string,
+): CheckResult {
+    const hint = probe.hint ?? 'install it';
+    const version = tool.version === undefined ? '' : ` ${tool.version}`;
+    const note =
+        state === 'outdated'
+            ? `${tool.name} ${probe.found ?? '?'} is below ${probe.floor ?? '?'}. Run: ${hint}`
+            : `${tool.name}${version} is not installed. Run: ${hint}`;
+    return { ...base, status: 'missing', note };
+}
+
+function workingDirectory(session: Session, planned: PlannedCheck): string {
+    const { spec, scope } = planned;
+    const isInScope = spec.cwd === 'scope' || (spec.takes === 'project' && spec.cwd !== 'root');
+    return isInScope ? join(session.root, scope.scope.path) : session.root;
+}
+
+function relativizer(session: Session, planned: PlannedCheck, cwd: string): (path: string) => string {
+    const scopePath = planned.scope.scope.path;
+    if (scopePath === '' || cwd === session.root) return (path) => path;
+    return (path) => path.slice(scopePath.length + 1);
+}
+
+function perFileCommands(argv: string[], command: string[], files: string[]): string[][] {
+    const slot = command.indexOf('{file}');
+    if (slot === -1) return [argv];
+    return files.map((file) => [...argv.slice(0, slot), toPlatform(file), ...argv.slice(slot + 1)]);
+}
+
+function prefixScope(findings: Finding[], scopePath: string): void {
+    for (const finding of findings)
+        if (finding.file !== '' && !finding.file.startsWith(`${scopePath}/`))
+            finding.file = `${scopePath}/${finding.file}`;
+}
+
+function countMatches(spec: CheckSpec, result: SpawnResult): number {
+    if (spec.count_regex === undefined) return 0;
+    const pattern = new RegExp(spec.count_regex, 'gu');
+    return `${result.stdout}\n${result.stderr}`.matchAll(pattern).toArray().length;
+}
+
+function isBroken(spec: CheckSpec, result: SpawnResult): boolean {
+    if (spec.tool_errors === undefined) return false;
+    return new RegExp(spec.tool_errors, 'mu').test(`${result.stdout}\n${result.stderr}`);
+}
+
+function unexplainedFailure(spec: CheckSpec, tool: ToolPin, result: SpawnResult, file: string | undefined): Finding {
+    const placeholder = `${tool.name} exited ${String(result.code)}`;
+    const text = file === undefined ? tailLines(result, placeholder) : firstLine(result, placeholder);
+    return { check: spec.id, file: file?.replaceAll('\\', '/') ?? '', message: text, help: spec.fix, fixable: false };
+}
+
+function markFailure(spec: CheckSpec, tool: ToolPin, result: SpawnResult, parsed: Finding[], state: ToolRun): void {
+    if (spec.count_regex !== undefined) {
+        if (countMatches(spec, result) > 0) state.isFailed = true;
+        return;
+    }
+    if (result.code === 0) return;
+    state.isFailed = true;
+    if (parsed.length === 0) state.findings.push(unexplainedFailure(spec, tool, result, undefined));
+}
+
+function isPerFile(spec: CheckSpec): boolean {
+    return spec.command?.includes('{file}') ?? false;
+}
+
+function collect(planned: PlannedCheck, tool: ToolPin, command: string[], result: SpawnResult, state: ToolRun): void {
+    const { spec, scope } = planned;
+    const parsed = parseOutput(spec, result.stdout, result.stderr, state.root);
+    if (parsed.length === 0 && result.code !== 0 && isPerFile(spec))
+        parsed.push(unexplainedFailure(spec, tool, result, command.at(-1) ?? ''));
+    if (scope.scope.path !== '' && state.cwd !== state.root) prefixScope(parsed, scope.scope.path);
+    state.findings.push(...parsed);
+    markFailure(spec, tool, result, parsed, state);
+}
+
+function prepare(session: Session, planned: PlannedCheck, command: string[], toolPath: string | undefined): Prepared {
+    const { scope } = planned;
+    const cwd = workingDirectory(session, planned);
+    const relative = relativizer(session, planned, cwd);
+    const files = planned.files.map((file) => relative(file.path));
+    const sub: Substitutions = {
+        files,
+        scope: scope.scope.path,
+        root: session.root,
+        indent: scope.view.format.indent_width,
+    };
+    if (planned.messageFile !== undefined) sub.messageFile = planned.messageFile;
+    const argv = substitute(session, planned, command, sub);
+    if (toolPath !== undefined) argv[0] = toolPath;
+    return { root: session.root, cwd, argv, commands: perFileCommands(argv, command, files) };
+}
+
+function finished(base: CheckResult, spec: CheckSpec, state: ToolRun, argv: string[], started: number): CheckResult {
+    const isEveryFindingKept = state.isFailed || spec.count_regex !== undefined;
+    const findings = isEveryFindingKept
+        ? state.findings
+        : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);
+    const status = state.isFailed || findings.length > 0 ? 'fail' : 'ok';
+    return { ...base, status, duration: performance.now() - started, findings, command: argv };
+}
+
+async function runCommands(
+    planned: PlannedCheck,
+    tool: ToolPin,
+    prepared: Prepared,
+    base: CheckResult,
+): Promise<CheckResult> {
+    const { spec } = planned;
+    const { cwd, argv } = prepared;
+    const state: ToolRun = { root: prepared.root, cwd, findings: [], isFailed: false };
+    const started = performance.now();
+    for (const command of prepared.commands) {
+        const result = await run(command, { cwd, env: TOOL_ENV });
+        if (result.missing)
+            return { ...base, status: 'missing', note: `${tool.name} could not be started: ${result.stderr.trim()}` };
+        if (isBroken(spec, result)) {
+            const detail = firstLine(result, `${tool.name} exited ${String(result.code)}`);
+            const note = `${tool.name} broke: ${detail}`;
+            return { ...base, status: 'error', duration: performance.now() - started, note, command: argv };
+        }
+        collect(planned, tool, command, result, state);
+    }
+    return finished(base, spec, state, argv, started);
+}
+
+/**
+ * Expands the placeholders of a manifest command into argv. {files} expands to every file, in the platform's form.
+ * @param session the session
+ * @param planned the check being run
+ * @param command the command as the manifest wrote it
+ * @param sub the values the placeholders take
+ * @returns the argv to spawn
+ */
 export function substitute(session: Session, planned: PlannedCheck, command: string[], sub: Substitutions): string[] {
-    const argv: string[] = [];
-    for (const part of command) {
-        if (part === '{files}') {
-            argv.push(...sub.files.map(toPlatform));
-            continue;
-        }
-        if (part === '{file}') continue;
-        const replaced = part
-            .replace(/\{config:([a-z0-9-]+)\}/g, (_, name: string) => toPlatform(configPath(session, planned, name)))
-            .replace(/\{stub:([^}]+)\}/g, (_, name: string) => toPlatform(stubPath(session, planned, name, sub.scope)))
-            .replace('{scope}', sub.scope === '' ? '.' : sub.scope)
-            .replace('{root}', sub.root)
-            .replace('{indent}', String(sub.indent))
-            .replace('{message_file}', sub.messageFile ?? '');
-        argv.push(replaced);
-    }
-    return argv;
+    return command.flatMap((part) => expandPart(session, planned, part, sub));
 }
 
-function parseRegex(check: string, output: OutputFormat, text: string, help: string): Finding[] {
-    const pattern = new RegExp(output.pattern ?? DEFAULT_OUTPUT.pattern!);
-    const fixable = output.fixable ? new RegExp(output.fixable) : undefined;
-    const findings: Finding[] = [];
-    for (const line of text.split('\n')) {
-        const match = line.match(pattern);
-        if (!match?.groups) continue;
-        const groups = match.groups;
-        const finding: Finding = {
-            check,
-            file: (groups['file'] ?? '').replace(/^\.\//, ''),
-            message: (groups['message'] ?? output.message ?? line).trim(),
-            help,
-            fixable: fixable ? fixable.test(line) : output.fixable === undefined && output.message !== undefined,
-        };
-        if (groups['line']) finding.line = Number(groups['line']);
-        if (groups['column']) finding.column = Number(groups['column']);
-        if (groups['rule']) finding.rule = groups['rule'];
-        else {
-            const trailing =
-                finding.message.match(/\[([A-Za-z0-9_:/@.-]+)\]\s*$/) ??
-                finding.message.match(/\(([a-z0-9_:/@.-]+)\)\s*$/);
-            if (trailing) {
-                finding.rule = trailing[1]!;
-                finding.message = finding.message.slice(0, trailing.index).trim();
-            }
-        }
-        findings.push(finding);
-    }
-    return findings;
-}
-
-function parseGrouped(check: string, output: OutputFormat, text: string, help: string): Finding[] {
-    const filePattern = new RegExp(output.file_pattern ?? '^(?<file>[^\\s].*):$');
-    const pattern = new RegExp(output.pattern ?? '^\\s+(?<line>\\d+): (?<message>.*)$');
-    const findings: Finding[] = [];
-    let file = '';
-    for (const line of text.split('\n')) {
-        const header = line.match(filePattern);
-        if (header?.groups?.['file'] !== undefined) {
-            file = header.groups['file'].replace(/^\.\//, '');
-            continue;
-        }
-        const match = line.match(pattern);
-        if (!match?.groups) continue;
-        const finding: Finding = {
-            check,
-            file,
-            message: (match.groups['message'] ?? line).trim(),
-            help,
-            fixable: false,
-        };
-        if (match.groups['line']) finding.line = Number(match.groups['line']);
-        if (match.groups['column']) finding.column = Number(match.groups['column']);
-        if (match.groups['rule']) finding.rule = match.groups['rule'];
-        findings.push(finding);
-    }
-    return findings;
-}
-
-type EslintMessage = {
-    ruleId: string | null;
-    line?: number;
-    column?: number;
-    message: string;
-    fix?: unknown;
-    severity: number;
-};
-
-function parseEslintJson(check: string, text: string, help: string, root: string): Finding[] {
-    const start = text.indexOf('[');
-    if (start === -1) return [];
-    let files: { filePath: string; messages: EslintMessage[] }[];
-    try {
-        files = JSON.parse(text.slice(start)) as { filePath: string; messages: EslintMessage[] }[];
-    } catch {
-        return [{ check, file: '', message: text.trim().slice(0, 400), help, fixable: false }];
-    }
-    const findings: Finding[] = [];
-    for (const file of files) {
-        const rel = file.filePath.startsWith(root) ? file.filePath.slice(root.length + 1) : file.filePath;
-        for (const message of file.messages) {
-            const finding: Finding = {
-                check,
-                file: rel.split('\\').join('/'),
-                message: message.message,
-                help,
-                fixable: message.fix !== undefined,
-            };
-            if (message.line !== undefined) finding.line = message.line;
-            if (message.column !== undefined) finding.column = message.column;
-            if (message.ruleId) finding.rule = message.ruleId;
-            findings.push(finding);
-        }
-    }
-    return findings;
-}
-
-/** Findings from a tool's output, per the check's output format. */
-export function parseOutput(spec: CheckSpec, result: SpawnResult, root: string): Finding[] {
-    const output = spec.output ?? DEFAULT_OUTPUT;
-    const text = `${result.stdout}\n${result.stderr}`;
-    switch (output.format) {
-        case 'none':
-            return [];
-        case 'eslint-json':
-            return parseEslintJson(spec.id, result.stdout, spec.fix, root);
-        case 'lines':
-            return text
-                .split('\n')
-                .map((line) => line.trim())
-                .filter(Boolean)
-                .map((line) => ({ check: spec.id, file: '', message: line, help: spec.fix, fixable: false }));
-        case 'regex':
-            return parseRegex(spec.id, output, text, spec.fix);
-        case 'grouped':
-            return parseGrouped(spec.id, output, text, spec.fix);
-    }
-}
-
-/** Runs one planned tool check. */
+/**
+ * Runs one planned tool check: probes the tool, expands the command, spawns it once or per file, parses the output.
+ * @param session the session
+ * @param planned the check to run
+ * @returns the check result with its findings
+ */
 export async function runToolCheck(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const { spec, tool, scope } = planned;
     const base: CheckResult = {
@@ -192,97 +237,10 @@ export async function runToolCheck(session: Session, planned: PlannedCheck): Pro
         findings: [],
         baselined: 0,
     };
-    if (!spec.command || !tool) return { ...base, status: 'error', note: 'this check has no command to run' };
+    if (tool === undefined || spec.command === undefined)
+        return { ...base, status: 'error', note: 'this check has no command to run' };
     const probe = probeTool(session.root, tool);
-    if (probe.state === 'missing')
-        return {
-            ...base,
-            status: 'missing',
-            note: `${tool.name}${tool.version ? ` ${tool.version}` : ''} is not installed. Run: ${probe.hint ?? 'install it'}`,
-        };
-    if (probe.state === 'outdated')
-        return {
-            ...base,
-            status: 'missing',
-            note: `${tool.name} ${probe.found} is below ${probe.floor}. Run: ${probe.hint ?? 'install it'}`,
-        };
-    const cwd =
-        spec.cwd === 'scope' || (spec.takes === 'project' && spec.cwd !== 'root')
-            ? join(session.root, scope.scope.path)
-            : session.root;
-    const relative =
-        cwd === session.root
-            ? (path: string) => path
-            : (path: string) => (scope.scope.path === '' ? path : path.slice(scope.scope.path.length + 1));
-    const sub: Substitutions = {
-        files: planned.files.map((file) => relative(file.path)),
-        scope: scope.scope.path,
-        root: session.root,
-        indent: scope.view.format.indent_width,
-    };
-    if (planned.messageFile !== undefined) sub.messageFile = planned.messageFile;
-    const argv = substitute(session, planned, spec.command, sub);
-    argv[0] = probe.path ?? argv[0]!;
-    const perFile = spec.command.includes('{file}');
-    const started = performance.now();
-    let findings: Finding[] = [];
-    let failed = false;
-    let broke: string | undefined;
-    const runs = perFile
-        ? planned.files.map((file) => [
-              ...argv.slice(0, spec.command!.indexOf('{file}')),
-              toPlatform(relative(file.path)),
-              ...argv.slice(spec.command!.indexOf('{file}') + 1),
-          ])
-        : [argv];
-    for (const command of runs) {
-        const result = await run(command, { cwd, env: { NO_COLOR: '1', FORCE_COLOR: '0' } });
-        if (result.missing)
-            return { ...base, status: 'missing', note: `${tool.name} could not be started: ${result.stderr.trim()}` };
-        if (spec.tool_errors && new RegExp(spec.tool_errors, 'm').test(`${result.stdout}\n${result.stderr}`)) {
-            broke = `${result.stderr.trim() || result.stdout.trim()}`.split('\n')[0];
-            break;
-        }
-        const parsed = parseOutput(spec, result, session.root);
-        if (perFile && parsed.length === 0 && result.code !== 0) {
-            const file = command[command.length - 1] ?? '';
-            parsed.push({
-                check: spec.id,
-                file: file.split('\\').join('/'),
-                message: (result.stderr.trim() || result.stdout.trim() || `${tool.name} exited ${result.code}`).split(
-                    '\n',
-                )[0]!,
-                help: spec.fix,
-                fixable: false,
-            });
-        }
-        if (cwd !== session.root && scope.scope.path !== '')
-            for (const finding of parsed)
-                if (finding.file !== '' && !finding.file.startsWith(`${scope.scope.path}/`))
-                    finding.file = `${scope.scope.path}/${finding.file}`;
-        findings.push(...parsed);
-        if (spec.count_regex) {
-            const count = (`${result.stdout}\n${result.stderr}`.match(new RegExp(spec.count_regex, 'g')) ?? []).length;
-            if (count > 0) failed = true;
-        } else if (result.code !== 0) {
-            failed = true;
-            if (parsed.length === 0)
-                findings.push({
-                    check: spec.id,
-                    file: '',
-                    message: (result.stderr.trim() || result.stdout.trim() || `${tool.name} exited ${result.code}`)
-                        .split('\n')
-                        .slice(0, 20)
-                        .join('\n'),
-                    help: spec.fix,
-                    fixable: false,
-                });
-        }
-    }
-    const duration = performance.now() - started;
-    if (broke !== undefined)
-        return { ...base, status: 'error', duration, note: `${tool.name} broke: ${broke}`, command: argv };
-    if (!failed && !spec.count_regex)
-        findings = findings.filter((finding) => finding.file !== '' || finding.line !== undefined);
-    return { ...base, status: failed || findings.length > 0 ? 'fail' : 'ok', duration, findings, command: argv };
+    if (probe.state === 'missing' || probe.state === 'outdated') return missingResult(base, tool, probe, probe.state);
+    const prepared = prepare(session, planned, spec.command, probe.path);
+    return runCommands(planned, tool, prepared, base);
 }

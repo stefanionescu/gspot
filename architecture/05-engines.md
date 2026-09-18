@@ -48,7 +48,7 @@ Runs external tools. Owns nothing about what they find.
   no daemon fails; a platform requirement (`macos`, `linux`) that does not hold passes as
   skipped.
 
-## 2. @gspot/eslint-plugin
+## 2. The `@gspot/eslint-plugin` package
 
 An ESLint plugin published from the gspot repository and imported by the generated flat config.
 Editors run it. The rules are the 21 JavaScript and TypeScript structural rules the reference
@@ -74,8 +74,8 @@ repositories wrote, ported with their tests and their semantics, plus the five g
 | `gspot/import-path-style`              | An internal import using the wrong suffix or alias style for its runtime boundary                                                                                 |
 | `gspot/no-cross-folder-imports`        | A relative import that crosses a sibling top-level folder; use the alias                                                                                          |
 | `gspot/no-cross-project-imports`       | A relative import that escapes the scope                                                                                                                          |
-| `gspot/no-support-in-dirs`             | Non-test support code beside test files                                                                                                                           |
-| `gspot/no-tests-support-imports`       | An import from a test-support barrel                                                                                                                              |
+| `gspot/tests-directory-contents`       | A file that is not a test beside test files                                                                                                                       |
+| `gspot/no-harness-barrel-imports`      | An import from a test-harness barrel                                                                                                                              |
 | `gspot/registry-instance-only`         | An exported `new` instance outside a `registry.ts`                                                                                                                |
 | `gspot/require-server-only`            | A server module without `import 'server-only'` (Next.js)                                                                                                          |
 | `gspot/no-client-environment`          | `process.env` in a client module beyond `NEXT_PUBLIC_*` and `NODE_ENV` (Next.js)                                                                                  |
@@ -100,7 +100,7 @@ For every language that is not JavaScript or TypeScript, and for repository-leve
   css, html, and the JavaScript family for the naming extractors. SQL parses through
   `libpg-query` compiled to WASM. No native modules.
 - **Declarative rules.** ast-grep YAML files under each preset, executed through the ast-grep
-  CLI (`sg scan --json`), which gspot pins as a tool. Node kinds match tree-sitter's. Rules that
+  CLI (`ast-grep scan --json`), which gspot pins as a tool. Node kinds match tree-sitter's. Rules that
   need a count (barrel ceiling, shell branches, nesting, mutable assignments) run the YAML and
   gspot counts the matches per file or per enclosing function.
 - **Cross-file index.** Before any analysis runs, the engine builds one index per scope:
@@ -159,7 +159,7 @@ extractors per language, no emission into other tools.
 
 ## 5. Prose engine
 
-Vale, driven by gspot, over comments and documentation.
+Vale, driven by gspot, over comments, and documentation.
 
 - gspot renders `.gspot/vale.ini` with the `gspot` style, the pinned upstream packages (Google,
   Microsoft, write-good, proselint, alex, RedHat, Harper), and the vocabulary from `[prose]`.
@@ -217,6 +217,6 @@ writes no analysis a maintained tool already ships.
 ## What no engine does
 
 - No engine re-implements a rule a maintained tool ships. Complexity, dead exports, cycles,
-  import ordering, type checking and formatting belong to the tools.
+  import ordering, type checking, and formatting belong to the tools.
 - No engine reads a tool's ignore file to guess coverage. gspot hands the list.
 - No engine returns success when it failed to run.

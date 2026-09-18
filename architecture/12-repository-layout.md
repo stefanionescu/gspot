@@ -1,6 +1,6 @@
-# Repository Layout
+# The gspot Repository
 
-This document decides gspot's own repository: packages, folders, tests, and how gspot lints
+This document decides the gspot repository: packages, folders, tests, and how gspot lints
 itself.
 
 ## The tree
@@ -27,12 +27,8 @@ Every folder and file, with what each holds, is in [16-file-tree.md](16-file-tre
 goes where that document says or the document changes in the same commit.
 
 Two published artifacts: the binary (GitHub Releases, one asset per platform) and
-`@gspot/eslint-plugin` (npm). Presets, rules and prose ship inside the binary. On npm the binary
-ships the way Biome and ast-grep ship theirs: one package per platform
-(`@gspot/cli-darwin-arm64`, `@gspot/cli-linux-x64`, ...) holding the executable, gated by the
-`os` and `cpu` fields, and a thin `gspot` package that lists them as `optionalDependencies` and
-whose `bin` launcher runs the one that installed. Nothing downloads at install time and no
-install script runs, so `npx`, `--ignore-scripts`, proxies and offline mirrors all work.
+`@gspot/eslint-plugin` (npm). Presets, rules, and prose ship inside the binary. On npm the binary ships the way Biome and ast-grep ship theirs. One package per platform (`@gspot/cli-darwin-arm64`, `@gspot/cli-linux-x64` and the rest) holds the executable, gated by the `os` and `cpu` fields. A thin `gspot` package lists them as `optionalDependencies`, and its `bin` launcher runs the one that installed. Nothing downloads at install time and no
+install script runs, so `npx`, `--ignore-scripts`, proxies, and offline mirrors all work.
 
 ## Folder rules
 
@@ -44,12 +40,9 @@ install script runs, so `npx`, `--ignore-scripts`, proxies and offline mirrors a
   header comment and in the preset manifest.
 - No folder is named `util`, `helper`, `common`, `shared`, `core`, `lib` or `misc`. The naming
   policy gspot ships refuses them, and gspot lints itself.
-- `packages/cli/config/` holds the literal tables gspot ships in code: the regexes and pattern
-  lists (shebangs, generated-file banners, environment-file names), the marker strings and header
-  templates, the refused reasons, the file-tag table. Files there hold literals only, and
-  `integrity/config-purity` guards them in gspot's own gate, because gspot's `gspot.toml` names
-  the directory as its `config` role. An algorithm's own constant (an index, a loop bound) stays
-  inline; nothing forces hoisting (D-22). The `gspot.toml` schema, loader, merge and writer live
+- `packages/cli/config/` holds the literal tables gspot ships in code. Those are the regexes and pattern lists (shebangs, generated-file banners, environment-file names), the marker strings and header templates, the refused reasons, and the file-tag table.
+- Files there hold literals only. `integrity/config-purity` guards them in the gate of this repository, because its `gspot.toml` names the directory as the `config` role. An algorithm's own constant (an index, a loop bound) stays inline; nothing forces hoisting (D-22).
+- The `gspot.toml` schema, loader, merge, and writer live
   in `src/policy/`, named after what the file is called in the glossary, so `config` means one
   thing in this repository.
 
@@ -68,11 +61,11 @@ ask.
 | Schemas for `gspot.toml`, manifests, run record       | zod                                                                  | error messages rewritten into plain English before printing                                                                          |
 | Read TOML                                             | smol-toml                                                            |                                                                                                                                      |
 | Write `gspot.toml` keeping comments and order         | `@decimalturn/toml-patch`                                            | TOML 1.1; `patch()` and `TomlDocument`; a comment travels with the entry it belongs to when the entry moves or goes                  |
-| Detect and drive the package manager                  | `package-manager-detector`, `nypm`                                   | lockfile and `packageManager` detection; `installDependencies` and `addDependency` for npm, pnpm, yarn and bun                       |
+| Detect and drive the package manager                  | `package-manager-detector`, `nypm`                                   | lockfile and `packageManager` detection; `installDependencies` and `addDependency` for npm, pnpm, yarn, and bun                      |
 | `.gitignore` semantics without git                    | `ignore`, `globby` with `gitignore: true`                            | the walk `init` does when there is no repository                                                                                     |
 | Name a language gspot has no preset for               | `linguist-languages`                                                 | GitHub Linguist's extension data, offline                                                                                            |
 | SARIF for CI                                          | `node-sarif-builder`                                                 | the `.gspot/last.sarif` rendering                                                                                                    |
-| Shell completions                                     | `@bomb.sh/tab` with its commander adapter                            | `gspot completion <shell>`; the same library Wrangler, Nuxt, Astro and Vitest use                                                    |
+| Shell completions                                     | `@bomb.sh/tab` with its commander adapter                            | `gspot completion <shell>`; the same library Wrangler, Nuxt, Astro, and Vitest use                                                   |
 | JSON schema for `gspot.toml`                          | zod v4 `z.toJSONSchema`                                              | `gspot.schema.json`, published to SchemaStore each release                                                                           |
 | Baselines where the tool has its own                  | ESLint bulk suppressions, `basedpyright --writebaseline`             | gspot drives the tool's file under `.gspot/baseline/`; the editor honors the same file                                               |
 | Split identifiers into parts                          | `scule` (`splitByCase`, the case functions)                          | the naming engine's splitter; the whole-part matcher stays gspot's (D-08)                                                            |
@@ -83,7 +76,7 @@ ask.
 | Parse `.editorconfig`                                 | `editorconfig`                                                       | the managed block and the `[format]` derivation                                                                                      |
 | License expressions                                   | `spdx-expression-parse`, `spdx-satisfies`                            | matching `MIT OR Apache-2.0` against the allowlist                                                                                   |
 | Markdown structure                                    | `mdast-util-from-markdown` (remark)                                  | `integrity/stale-paths`, `integrity/docs-headings`, `docs/readme-shape`, `markdown/fences`; no regex over Markdown                   |
-| Unified diffs                                         | `diff` (jsdiff)                                                      | `check --fix --dry-run` and `sync --check` output                                                                                    |
+| Unified diffs                                         | `diff` (jsdiff)                                                      | `check --fix --dry-run` and `apply --check` output                                                                                   |
 | Concurrency                                           | `p-limit`                                                            | the tool runner's per-stage limit                                                                                                    |
 | Plain-English schema errors                           | `zod-validation-error`                                               | every message from a bad `gspot.toml` or manifest                                                                                    |
 | Messages on stderr                                    | `consola`                                                            | levels for `--quiet` and `--verbose`, TTY and CI detection, a JSON reporter under `--json`; findings on stdout stay gspot's reporter |
@@ -101,17 +94,14 @@ Not used: any terminal UI framework, table renderer, spinner library outside cla
 framework, or dependency-injection container. Columns are computed from the longest id.
 [15-prior-art.md](15-prior-art.md) records the candidates that were considered and not taken.
 
-What stays gspot's own, because no library does it: the preset loader and merge, the file-set
-computation from claims, natures and ignores, the reporter that prints findings, the
-whole-part naming matcher, the structure analyses listed in [05-engines.md](05-engines.md),
-the integrity checks, and the writers for generated files and managed blocks. Each is small,
+What gspot writes itself, because no library does it: the preset loader and merge, the file-set computation from claims, natures and ignores, and the reporter that prints findings. Also the whole-part naming matcher, the structure analyses listed in [05-engines.md](05-engines.md), the integrity checks, and the writers for generated files and managed blocks. Each is small,
 and each has a test. A contribution that adds a library for one of these is welcome when the
 library is maintained and does the whole job.
 
 ## Build
 
 - `bun build --compile --target=bun-<os>-<arch>` per platform, with the grammar WASM files,
-  presets, rules and prose embedded through Bun's file embedding. Output: `gspot-darwin-arm64`,
+  presets, rules and prose embedded through the file embedding of Bun. Output: `gspot-darwin-arm64`,
   `gspot-darwin-x64`, `gspot-linux-x64`, `gspot-linux-arm64`, `gspot-windows-x64.exe`.
 - The version comes from the release tag and is written into every generated file header.
 - The npm release publishes one platform package per target plus the launcher package, all at
@@ -121,7 +111,7 @@ library is maintained and does the whole job.
 
 ## Release
 
-Nothing in the release path is gspot's own code:
+Nothing in the release path is code gspot wrote:
 
 | Step                   | Tool                                                                                                                                                     |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -145,11 +135,11 @@ Nothing in the release path is gspot's own code:
 | Parity                                   | the naming extractor and the structure analyses over frozen copies of the reference repositories' source; the record set is a superset of the reference implementation's                                                                                                                                                                                                                                                                                                                                                        | `tests/parity`                                                                                |
 | Performance                              | `gspot check --staged` over ten staged files in a 1,000-file scope completes under 5 seconds with a warm cache and under 30 cold, on every CI platform                                                                                                                                                                                                                                                                                                                                                                          | `tests/performance`                                                                           |
 | Platform                                 | the unit and planted-repository suites run on `ubuntu`, `macos` and `windows` in CI                                                                                                                                                                                                                                                                                                                                                                                                                                             | the CI matrix                                                                                 |
-| Completion                               | every command and flag appears in the completions `tab` generates for bash, zsh, fish and PowerShell                                                                                                                                                                                                                                                                                                                                                                                                                            | `packages/cli/tests/unit`                                                                     |
+| Completion                               | every command and flag appears in the completions `tab` generates for bash, zsh, fish, and PowerShell                                                                                                                                                                                                                                                                                                                                                                                                                           | `packages/cli/tests/unit`                                                                     |
 | Schema                                   | `gspot.schema.json` validates every fixture `gspot.toml` and rejects every invalid fixture the load tests use                                                                                                                                                                                                                                                                                                                                                                                                                   | `packages/cli/tests/unit`                                                                     |
 | Launcher                                 | the npm launcher and platform packages are published to a `verdaccio` registry in CI and installed from it on the three platforms with `--ignore-scripts`; `bunx gspot --version` runs                                                                                                                                                                                                                                                                                                                                          | `tests/release`                                                                               |
 | Fixtures                                 | planted repositories are written with `fs-fixture` and removed after each test                                                                                                                                                                                                                                                                                                                                                                                                                                                  | `tests/repositories`                                                                          |
-| Corpus                                   | `reference-rules/lint/corpus-lint.ts` (front matter, markers, links, size, layer boundary, fences, corruption, Vale), `mark-statements.ts --check`, `completeness-check.ts`                                                                                                                                                                                                                                                                                                                                                     | gspot's own gate; interim home `reference-rules/lint/` until `packages/cli/src/rules/` exists |
+| Corpus                                   | `gspot apply --check` over the corpus (front matter, markers, links, size, layer boundary, fences, corruption, Vale), `mark-statements.ts --check`                                                                                                                                                                                                                                                                                                                                                                              | gspot's own gate; interim home `reference-rules/lint/` until `packages/cli/src/rules/` exists |
 | Self                                     | `gspot check` on gspot, no ignores                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | gspot's own gate                                                                              |
 
 Tests never call the network. Tools run in CI through mise pins; a missing tool fails the test
@@ -159,39 +149,34 @@ of every command's JSON output, because agents drive gspot through it.
 
 ## Self-lint
 
-gspot runs gspot at full strictness with no `[[ignore]]` entries. When a rule is too strict for
-gspot's own code, the choice is to fix the code or change the rule for everyone in a recorded
+gspot runs gspot at full strictness with no `[[ignore]]` entries. When a rule is too strict for the code of gspot itself, the choice is to fix the code or change the rule for everyone in a recorded
 decision. An ignore for gspot itself is not a choice.
 
 The self-lint is the first integration test to pass, not the last. It runs on every change,
-starting with gspot's own shell scripts and hooks in Phase 0 and covering the TypeScript from
+starting with the shell scripts and hooks in Phase 0 and covering the TypeScript from
 Phase 1.
 
-The self-lint includes gspot's prose. Every check `summary`, `why` and `fix`, every help string,
-every message template and every page under `docs/` runs through the prose engine with the
-`gspot` style and the Vale `Readability` package at a stated ceiling (Flesch reading ease 60 or
-above, the level of plain consumer writing). A message a person without a coding background
+The self-lint includes the prose. Every check `summary`, `why` and `fix`, every help string, every message template and every page under `docs/` runs through the prose engine with the `gspot` style. The Vale `Readability` package runs at a stated ceiling: Flesch reading ease 60 or above, the level of plain consumer writing. A message a person without a coding background
 cannot follow fails the gate the same way a long function does.
 
 ## Documentation
 
 `docs/` is the user manual. Two kinds of page:
 
-- **Generated**, from the same data the binary uses, so they cannot drift: the command reference
-  from commander, the settings reference from the schema (`doctor --settings` prints the same
-  keys), one page per preset from its manifest, one page per check from its `summary`, `why` and
-  `fix` (`explain` prints the same text), and the decision log copied from `architecture/`.
-  Generated pages carry the header and `sync --check` guards them.
-- **Written by hand**, five guides, each a task in plain English: _Install gspot_; _Run it in a
-  repository you already have_ (what `init` will delete, carry and leave alone); _You got a
-  finding, now what_ (read it, `explain` it, fix it, or `ignore` it with a reason); _Monorepos
-  and scopes_; _Without mise_ (the package-manager surface and its limits). Each guide is under
-  two pages and every step is one command.
+- **Generated**, from the same data the binary uses, so they cannot drift. Generated pages carry the header and `apply --check` guards them.
+    - the command reference, from commander;
+    - the settings reference, from the schema (`doctor --settings` prints the same keys);
+    - one page per preset, from its manifest;
+    - one page per check, from its `summary`, `why` and `fix` (`explain` prints the same text);
+    - the decision log, copied from `architecture/`.
+- **Written by hand**, five guides, each a task in plain English. Each guide is under two pages and every step is one command.
+    - _Install gspot_;
+    - _Run it in a repository you already have_ (what `init` deletes, carries and leaves alone);
+    - _You got a finding, now what_ (read it, `explain` it, fix it, or `ignore` it with a reason);
+    - _Monorepos and scopes_;
+    - _Without mise_ (the package-manager surface and its limits).
 
-The manual also publishes `llms.txt` at its root (the index of every page in plain text, the
-way qlty and the Astral tools do) and one page, _Working with an agent_, that says how an agent
-reads a finding, runs `explain`, changes policy with the writing commands, and never edits
-`.gspot/`. The managed block in `CLAUDE.md` links to it.
+The manual also publishes `llms.txt` at its root, the index of every page in plain text, as qlty and the Astral tools do. One more page, _Working with an agent_, says how an agent reads a finding, runs `explain`, changes policy with the writing commands, and never edits `.gspot/`. The managed block in `CLAUDE.md` links to it.
 
 `architecture/` stays the design and is linked from the manual. `docs/` is linted by gspot like
 any other Markdown in the repository, plus the readability ceiling above.

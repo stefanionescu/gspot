@@ -1,28 +1,40 @@
 // What every command does with its result: print text or JSON, set the exit code, turn errors into exit 2.
-import { fail, print } from '#cli/output/messages.ts';
 import { printJson } from '#cli/output/json.ts';
+import type { Result } from '#types/commands.ts';
+import { fail, print } from '#cli/output/messages.ts';
 
-type Result = { text: string; json: unknown; exitCode: number };
+const KNOWN_ERRORS = new Set([
+    'PolicyError',
+    'SelectionError',
+    'ManifestError',
+    'VersionPinError',
+    'NoTerminalError',
+    'PromptError',
+]);
 
-/** Runs a command function and prints its result. Errors gspot raises print their message and exit 2. */
+function printResult(result: Result, isJson: boolean): void {
+    if (isJson) printJson(result.json);
+    else if (result.text !== '') print(result.text);
+    process.exitCode = result.exitCode;
+}
+
+function printError(error: Error, isJson: boolean): void {
+    if (isJson) printJson({ error: error.name, message: error.message });
+    else fail(error.message);
+    process.exitCode = 2;
+}
+
+/**
+ * Runs a command function and prints its result. Errors gspot raises print their message and exit 2.
+ * @param command the command function
+ * @param global the global flags
+ */
 export async function emit(command: () => Promise<Result>, global: Record<string, unknown>): Promise<void> {
+    const isJson = global['json'] === true;
     try {
-        const result = await command();
-        if (global['json']) printJson(result.json);
-        else if (result.text !== '') print(result.text);
-        process.exitCode = result.exitCode;
+        printResult(await command(), isJson);
     } catch (error) {
-        const known =
-            error instanceof Error &&
-            ['PolicyError', 'SelectionError', 'ManifestError', 'VersionPinError', 'NoTerminalError'].includes(
-                error.name,
-            );
-        if (known) {
-            if (global['json']) printJson({ error: error.name, message: (error as Error).message });
-            else fail((error as Error).message);
-            process.exitCode = 2;
-            return;
-        }
-        throw error;
+        if (error instanceof Error && KNOWN_ERRORS.has(error.name)) printError(error, isJson);
+        else throw error;
     }
 }

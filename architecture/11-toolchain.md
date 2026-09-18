@@ -1,7 +1,7 @@
 # Toolchain
 
 This document decides how gspot itself is installed and pinned, and how the tools gspot drives
-are pinned, obtained, verified and upgraded. gspot pins; the ecosystem installs; `doctor`
+are pinned, obtained, verified, and upgraded. gspot pins; the ecosystem installs; `doctor`
 verifies.
 
 ## Installing gspot
@@ -16,7 +16,7 @@ them:
 | npm, bun, pnpm | `bunx gspot init`, `npx gspot init`; `devDependencies.gspot` pins it per repository. The `gspot` package is a launcher over per-platform packages (`@gspot/cli-<os>-<arch>`) listed as `optionalDependencies`, so the install downloads nothing and runs no script | JavaScript repositories, with nothing installed globally                         |
 | release asset  | download `gspot-<os>-<arch>` from the release page and put it on `PATH`                                                                                                                                                                                            | machines with neither                                                            |
 
-Homebrew, winget and scoop packages follow v1. A `curl | sh` installer is never offered; the
+Homebrew, winget, and scoop packages follow v1. A `curl | sh` installer is never offered; the
 corpus bans the pattern and gspot obeys its own rules.
 
 A global install exists to run `gspot init` in a repository that has nothing yet. After `init`,
@@ -26,14 +26,14 @@ through the `ubi:` backend, or `devDependencies.gspot` under a package manager).
 the runner tasks resolve that pinned version (`mise exec -- gspot`, `bunx gspot`), so two people
 on one repository run the same gspot whatever they installed globally.
 
-A binary of another version than `.gspot/version` exits 2 on `check`, `sync` and the writing
+A binary of another version than `.gspot/version` exits 2 on `check`, `apply` and the writing
 commands and prints the two ways forward: install the pinned version (`mise install`, the package
 manager's install) or move the pin (`gspot upgrade --to <this version>`). `init`, `doctor`,
 `explain`, `why`, `--version` and `--help` run under any version. With runner `none` the pin is
 `.gspot/version` alone and the hook calls the absolute path `init` recorded.
 
 A newer gspot is announced in three places and nowhere else: the last line of `init`, `doctor`,
-and `upgrade --check`. `check`, `sync` and the hooks never look.
+and `upgrade --check`. `check`, `apply` and the hooks never look.
 
 ## Pins
 
@@ -109,7 +109,7 @@ the reference set, these were cut, and every rule they enforced is re-pointed in
 | lizard                                  | sonarjs `cognitive-complexity`                           | sonarjs runs on every JavaScript file ESLint sees, in the editor  |
 | madge                                   | `import-x/no-cycle`                                      | same graph, CommonJS included                                     |
 | type-coverage                           | `tsc` strict, `no-explicit-any`, the `no-unsafe-*` rules | it measured what the rules already forbid                         |
-| sort-package-json                       | `eslint-plugin-package-json`                             | orders, validates and fixes in one tool                           |
+| sort-package-json                       | `eslint-plugin-package-json`                             | orders, validates, and fixes in one tool                           |
 | pip-audit                               | osv-scanner                                              | one advisory database over every lockfile, `uv.lock` included     |
 | bandit, the vendored bandit Semgrep set | Ruff `S` plus the Semgrep Python pack                    | Ruff `S` is the bandit port and runs in the editor                |
 | interrogate                             | Ruff `D100` to `D107`                                    | same rule                                                         |
@@ -183,13 +183,13 @@ the release note. There is no automatic migration of `gspot.toml`.
 ## Rollback
 
 `gspot upgrade --to 0.4.0` re-renders from the older version. Because generated files, baselines
-and rule files are tracked, `git revert` of the upgrade commit followed by `gspot sync` also
+and rule files are tracked, `git revert` of the upgrade commit followed by `gspot apply` also
 restores the previous state. A baseline written by the newer version for a rule the older one
-lacks is reported by `sync --check` and removed by `sync --baseline`.
+lacks is reported by `apply --check` and removed by `apply --baseline`.
 
 ## Network
 
 `upgrade --check` and `upgrade` reach the network to read the target version's presets.
 `doctor` and the last line of `init` reach it once to learn whether a newer gspot exists, and
-only when run by a person. `check`, `sync` and the hooks never do. A `network` requirement on a check is the check's own
+only when run by a person. `check`, `apply` and the hooks never do. A `network` requirement on a check is the check's own
 (external links, advisory databases) and puts it at `push` or `manual`.

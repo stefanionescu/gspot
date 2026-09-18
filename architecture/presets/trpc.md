@@ -1,4 +1,4 @@
-# trpc
+# `trpc`
 
 Kind: library. Requires: typescript.
 

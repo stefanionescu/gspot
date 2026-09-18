@@ -1,7 +1,6 @@
-import { describe, expect, test } from 'bun:test';
 import { createFixture } from 'fs-fixture';
-
-import { loadPolicy, parseLocalText, parsePolicyText, PolicyError } from '#cli/policy/load.ts';
+import { describe, expect, test } from 'bun:test';
+import { readPolicy, parseLocalText, parsePolicyText, PolicyError } from '#cli/policy/read.ts';
 
 const minimal = 'version = 1\npresets = ["bash"]\n';
 
@@ -42,10 +41,10 @@ describe('parsePolicyText', () => {
     });
 
     test('an unknown key names the keys that exist under that table', () => {
-        const found = problems(`${minimal}[hooks]\nmanagr = "gspot"\n`);
+        const found = problems(`${minimal}[hooks]\ntol = "gspot"\n`);
         expect(found).toHaveLength(1);
-        expect(found[0]).toContain('`managr` is not a setting gspot knows under [hooks]');
-        expect(found[0]).toContain('`manager`');
+        expect(found[0]).toContain('`tol` is not a setting gspot knows under [hooks]');
+        expect(found[0]).toContain('`tool`');
     });
 
     test('an unknown top-level key is refused', () => {
@@ -112,19 +111,19 @@ describe('parseLocalText', () => {
     });
 });
 
-describe('loadPolicy', () => {
+describe('readPolicy', () => {
     test('reads gspot.toml and gspot.local.toml from a root', async () => {
         await using fixture = await createFixture({
             'gspot.toml': minimal,
             'gspot.local.toml': 'skip = ["bash/shfmt"]\n',
         });
-        const loaded = loadPolicy(fixture.path);
-        expect(loaded.policy.presets).toEqual(['bash']);
-        expect(loaded.local.skip).toEqual(['bash/shfmt']);
+        const files = readPolicy(fixture.path);
+        expect(files.policy.presets).toEqual(['bash']);
+        expect(files.local.skip).toEqual(['bash/shfmt']);
     });
 
     test('a missing gspot.toml points at init', async () => {
         await using fixture = await createFixture({});
-        expect(() => loadPolicy(fixture.path)).toThrow('Run `gspot init`');
+        expect(() => readPolicy(fixture.path)).toThrow('Run `gspot init`');
     });
 });

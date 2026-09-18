@@ -1,0 +1,118 @@
+{
+    "$schema": "https://unpkg.com/knip@6/schema.json",
+    "entry": [
+        "**/build.ts",
+        "**/publish.ts",
+        "packages/cli/scripts/*.ts",
+        "packages/npm/gspot/gspot.js",
+        "docs/generate.ts",
+        "src/main.{ts,js}",
+        "src/index.{ts,js}",
+        "src/server.{ts,js}",
+        "scripts/**/*.{ts,js,mjs}",
+        "**/*.{test,spec}.{ts,tsx,js}",
+        "tests/**/*.{ts,js}",
+        "build.ts",
+        "publish.ts"
+    ],
+    "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"],
+    "ignore": [],
+    "ignoreDependencies": [
+        "@gspot/eslint-plugin",
+        "eslint-config-prettier",
+        "prettier",
+        "@socketsecurity/bun-security-scanner",
+        "verdaccio",
+        "tree-sitter-bash",
+        "tree-sitter-css",
+        "tree-sitter-html",
+        "tree-sitter-javascript",
+        "tree-sitter-python",
+        "tree-sitter-typescript"
+    ],
+    "ignoreBinaries": [
+        "@eslint-community/eslint-plugin-eslint-comments",
+        "@eslint/js",
+        "@gspot/eslint-plugin",
+        "ast-grep",
+        "bash",
+        "ec",
+        "eslint",
+        "eslint-config-prettier",
+        "eslint-plugin-boundaries",
+        "eslint-plugin-import-x",
+        "eslint-plugin-jsdoc",
+        "eslint-plugin-n",
+        "eslint-plugin-package-json",
+        "eslint-plugin-regexp",
+        "eslint-plugin-security",
+        "eslint-plugin-sonarjs",
+        "eslint-plugin-unicorn",
+        "globals",
+        "knip",
+        "lychee",
+        "markdownlint-cli2",
+        "prettier",
+        "shellcheck",
+        "shfmt",
+        "tsc",
+        "typescript",
+        "typescript-eslint",
+        "typos",
+        "vale",
+        "vale",
+        "git",
+        "mise",
+        "bunx",
+        "npx"
+    ],
+    "ignoreExportsUsedInFile": true,
+    "workspaces": {
+        ".": {
+            "entry": [
+                "**/build.ts",
+                "**/publish.ts",
+                "packages/cli/scripts/*.ts",
+                "packages/npm/gspot/gspot.js",
+                "docs/generate.ts",
+                "src/main.{ts,js}",
+                "src/index.{ts,js}",
+                "src/plugin.{ts,js}",
+                "**/*.{test,spec}.{ts,tsx,js}",
+                "tests/**/*.{ts,js}",
+                "build.ts",
+                "publish.ts"
+            ],
+            "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"]
+        },
+        "packages/cli": {
+            "entry": [
+                "**/build.ts",
+                "**/publish.ts",
+                "scripts/*.ts",
+                "src/main.{ts,js}",
+                "src/index.{ts,js}",
+                "src/plugin.{ts,js}",
+                "**/*.{test,spec}.{ts,tsx,js}",
+                "tests/**/*.{ts,js}",
+                "build.ts",
+                "publish.ts"
+            ],
+            "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"]
+        },
+        "packages/eslint-plugin": {
+            "entry": [
+                "**/build.ts",
+                "**/publish.ts",
+                "src/main.{ts,js}",
+                "src/index.{ts,js}",
+                "src/plugin.{ts,js}",
+                "**/*.{test,spec}.{ts,tsx,js}",
+                "tests/**/*.{ts,js}",
+                "build.ts",
+                "publish.ts"
+            ],
+            "project": ["**/*.{ts,tsx,mts,cts,js,mjs,cjs}"]
+        }
+    }
+}

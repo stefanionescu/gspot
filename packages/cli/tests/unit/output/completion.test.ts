@@ -1,5 +1,5 @@
-import { describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
+import { describe, expect, test } from 'bun:test';
 
 const gspot = join(new URL('../../../src/main.ts', import.meta.url).pathname);
 
@@ -19,7 +19,7 @@ describe('completion', () => {
         for (const command of [
             'init',
             'check',
-            'sync',
+            'apply',
             'ignore',
             'add',
             'remove',

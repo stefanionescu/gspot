@@ -1,4 +1,4 @@
-# python
+# `python`
 
 Kind: language. Requires: structure, naming, formatting, spelling.
 

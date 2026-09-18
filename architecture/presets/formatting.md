@@ -1,7 +1,7 @@
-# formatting
+# `formatting`
 
 Kind: repository. Required by every language preset. One `[format]` block that every formatter
-reads, so indentation cannot disagree between Prettier, shfmt, Ruff and markdownlint.
+reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint.
 
 ## Settings
 
@@ -11,7 +11,7 @@ indent_style  = "space"
 indent_width  = 4
 print_width   = 120
 line_ending   = "lf"
-final_newline = true
+newline_at_end = true
 quotes        = "single"        # prettier and ruff; swift keeps double
 trailing_comma = "all"
 semicolons    = true

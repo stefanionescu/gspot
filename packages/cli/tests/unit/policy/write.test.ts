@@ -1,12 +1,11 @@
-import { describe, expect, test } from 'bun:test';
-import { readFileSync } from 'node:fs';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
-
+import { describe, expect, test } from 'bun:test';
 import { appendEntry, appendList, deleteKey, removeEntries, setKey, writePolicy } from '#cli/policy/write.ts';
 
 const text =
-    '#:schema x\n\n# Comment on version.\nversion = 1\npresets = ["bash"]\n\n[hooks]\n# gspot writes the hooks.\nmanager = "gspot"\n';
+    '#:schema x\n\n# Comment on version.\nversion = 1\npresets = ["bash"]\n\n[hooks]\n# gspot writes the hooks.\ntool = "gspot"\n';
 
 describe('writePolicy', () => {
     test('appends an ignore entry and keeps comments and order', async () => {

@@ -1,6 +1,9 @@
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
-import { existsSync, readdirSync, statSync } from 'node:fs';
 import { join } from 'node:path';
+import { git } from '#cli/platform/spawn.ts';
+import { existsSync, readdirSync, statSync } from 'node:fs';
+import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
+import type { ExistingTool, ExistingTooling, ManifestFacts, ScopeEntry, TrackedFile } from '#types/repository.ts';
 
 import {
     AGENT_FILE_NAMES,
@@ -9,90 +12,108 @@ import {
     LINT_FOLDER_NAMES,
     RULES_DIRECTORY_NAMES,
 } from '#config/patterns.ts';
-import { git } from '#cli/platform/spawn.ts';
-import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
-import type { ExistingTool, ExistingTooling, ManifestFacts, ScopeInfo, TrackedFile } from '#types/repository.ts';
+
+const MISE_FILES = ['mise.toml', '.mise.toml', '.mise/config.toml', '.tool-versions', 'mise.local.toml'];
+const RUNNER_LOCKS: { file: string; runner: ExistingTooling['runner'] }[] = [
+    { file: 'bun.lock', runner: 'bun' },
+    { file: 'bun.lockb', runner: 'bun' },
+    { file: 'pnpm-lock.yaml', runner: 'pnpm' },
+    { file: 'yarn.lock', runner: 'yarn' },
+    { file: 'package-lock.json', runner: 'npm' },
+    { file: 'package.json', runner: 'npm' },
+    { file: 'uv.lock', runner: 'uv' },
+    { file: 'pyproject.toml', runner: 'uv' },
+];
 
 function listDir(root: string, rel: string): string[] {
     const full = join(root, rel);
     if (!existsSync(full) || !statSync(full).isDirectory()) return [];
     return readdirSync(full)
         .filter((entry) => !entry.startsWith('.') || entry === '.gitkeep')
-        .sort();
+        .toSorted((a, b) => a.localeCompare(b));
 }
 
 function hasFiles(root: string, rel: string): boolean {
     return listDir(root, rel).length > 0;
 }
 
-/** Everything init lists about the tools a repository already has. Reads conventional paths only. */
+function isBareDirectoryName(name: string): boolean {
+    return name.startsWith('.') && !name.includes('.', 1);
+}
+
+function isConfigurationPresent(root: string, paths: Set<string>, name: string, path: string): boolean {
+    return paths.has(path) || (isBareDirectoryName(name) && hasFiles(root, path));
+}
+
+function conventionalConfigs(root: string, paths: Set<string>, scopes: ScopeEntry[]): ExistingTool[] {
+    const prefixes = ['', ...scopes.filter((scope) => scope.path !== '').map((scope) => `${scope.path}/`)];
+    return Object.entries(CONVENTIONAL_CONFIG_PATHS).flatMap(([tool, names]) =>
+        prefixes.flatMap((prefix) =>
+            names
+                .filter((name) => isConfigurationPresent(root, paths, name, `${prefix}${name}`))
+                .map((name): ExistingTool => ({ tool, path: `${prefix}${name}`, owned: false })),
+        ),
+    );
+}
+
+function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTooling['hooks'][number] | undefined {
+    if (!hasFiles(root, dir)) return undefined;
+    if (dir === '.husky') return { kind: 'husky', path: dir, files: listDir(root, dir) };
+    return hooksPath === dir ? undefined : { kind: 'githooks', path: dir, files: listDir(root, dir) };
+}
+
+function hooksFound(root: string, paths: Set<string>): ExistingTooling['hooks'] {
+    const hooksPath = git(root, ['config', '--get', 'core.hooksPath'])?.trim() ?? '';
+    const isForeignPath = hooksPath !== '' && hooksPath !== '.gspot/hooks';
+    const lefthook = ['lefthook.yml', '.lefthook.yml'].find((name) => paths.has(name));
+    return [
+        ...(isForeignPath ? [{ kind: 'hooksPath' as const, path: hooksPath, files: listDir(root, hooksPath) }] : []),
+        ...HOOK_DIRECTORIES.map((dir) => hookDirectory(root, dir, hooksPath)).filter((hook) => hook !== undefined),
+        ...(lefthook === undefined ? [] : [{ kind: 'lefthook' as const, path: lefthook, files: [] }]),
+    ];
+}
+
+function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; runnerFile?: string } {
+    const mise = MISE_FILES.find((name) => paths.has(name));
+    if (mise !== undefined) return { runner: 'mise', runnerFile: mise };
+    const lock = RUNNER_LOCKS.find(({ file }) => paths.has(file));
+    if (lock === undefined) return { runner: 'none' };
+    return { runner: lock.runner, runnerFile: lock.runner === 'uv' ? 'pyproject.toml' : 'package.json' };
+}
+
+function isWorkflow(path: string): boolean {
+    return path.startsWith('.github/workflows/') && (path.endsWith('.yml') || path.endsWith('.yaml'));
+}
+
+/**
+ * Everything init lists about the tools a repository already has. Reads conventional paths only.
+ * @param root the repository root
+ * @param files the tracked files
+ * @param scopes the scopes, root first
+ * @param facts the manifests read from the tree
+ * @returns the configuration files, hooks, CI, agent files, lint folders and runner found
+ */
 export function existingTooling(
     root: string,
     files: TrackedFile[],
-    scopes: ScopeInfo[],
+    scopes: ScopeEntry[],
     facts: ManifestFacts[],
 ): ExistingTooling {
     const paths = new Set(files.map((file) => file.path));
-    const configs: ExistingTool[] = [];
-    const prefixes = ['', ...scopes.filter((scope) => scope.path !== '').map((scope) => `${scope.path}/`)];
-    for (const [tool, names] of Object.entries(CONVENTIONAL_CONFIG_PATHS)) {
-        for (const prefix of prefixes) {
-            for (const name of names) {
-                const path = `${prefix}${name}`;
-                if (paths.has(path) || (name.startsWith('.') && !name.includes('.', 1) && hasFiles(root, path)))
-                    configs.push({ tool, path, owned: false });
-            }
-        }
-    }
-    const hooks: ExistingTooling['hooks'] = [];
-    const hooksPath = git(root, ['config', '--get', 'core.hooksPath'])?.trim();
-    if (hooksPath && hooksPath !== '.gspot/hooks')
-        hooks.push({ kind: 'hooksPath', path: hooksPath, files: listDir(root, hooksPath) });
-    for (const dir of HOOK_DIRECTORIES) {
-        if (!hasFiles(root, dir)) continue;
-        if (dir === '.husky') hooks.push({ kind: 'husky', path: dir, files: listDir(root, dir) });
-        else if (hooksPath !== dir) hooks.push({ kind: 'githooks', path: dir, files: listDir(root, dir) });
-    }
-    if (paths.has('lefthook.yml') || paths.has('.lefthook.yml'))
-        hooks.push({ kind: 'lefthook', path: paths.has('lefthook.yml') ? 'lefthook.yml' : '.lefthook.yml', files: [] });
-    const ci = [...paths].filter((path) => path.startsWith('.github/workflows/') && /\.ya?ml$/.test(path)).sort();
-    const agentFiles = AGENT_FILE_NAMES.filter((name) => paths.has(name));
-    const rulesDirectories = RULES_DIRECTORY_NAMES.filter(
-        (name) => hasFiles(root, name) && listDir(root, name).some((entry) => entry.endsWith('.md')),
-    );
-    const lintFolders = LINT_FOLDER_NAMES.filter((name) => hasFiles(root, name));
     const lintOnlyManifests = facts
-        .filter((fact) => fact.kind === 'package.json' && fact.path !== 'package.json' && isLintOnlyManifest(fact))
-        .map((fact) => fact.path);
-    for (const fact of facts)
-        if (fact.kind === 'package.json' && fact.path === 'package.json' && isLintOnlyManifest(fact))
-            lintOnlyManifests.push(fact.path);
-    let runner: ExistingTooling['runner'] = 'none';
-    let runnerFile: string | undefined;
-    for (const name of ['mise.toml', '.mise.toml', '.mise/config.toml', '.tool-versions', 'mise.local.toml']) {
-        if (paths.has(name)) {
-            runner = 'mise';
-            runnerFile = name;
-            break;
-        }
-    }
-    if (runner === 'none') {
-        if (paths.has('bun.lock') || paths.has('bun.lockb')) runner = 'bun';
-        else if (paths.has('pnpm-lock.yaml')) runner = 'pnpm';
-        else if (paths.has('yarn.lock')) runner = 'yarn';
-        else if (paths.has('package-lock.json') || paths.has('package.json')) runner = 'npm';
-        else if (paths.has('uv.lock') || paths.has('pyproject.toml')) runner = 'uv';
-        if (runner !== 'none') runnerFile = runner === 'uv' ? 'pyproject.toml' : 'package.json';
-    }
+        .filter((fact) => fact.kind === 'package.json' && isLintOnlyManifest(fact))
+        .map((fact) => fact.path)
+        .toSorted((a, b) => Number(a === 'package.json') - Number(b === 'package.json'));
     return {
-        configs,
-        hooks,
-        ci,
-        agentFiles,
-        rulesDirectories,
-        lintFolders,
+        configs: conventionalConfigs(root, paths, scopes),
+        hooks: hooksFound(root, paths),
+        ci: [...paths].filter((path) => isWorkflow(path)).toSorted((a, b) => a.localeCompare(b)),
+        agentFiles: AGENT_FILE_NAMES.filter((name) => paths.has(name)),
+        rulesDirectories: RULES_DIRECTORY_NAMES.filter((name) =>
+            listDir(root, name).some((entry) => entry.endsWith('.md')),
+        ),
+        lintFolders: LINT_FOLDER_NAMES.filter((name) => hasFiles(root, name)),
         lintOnlyManifests,
-        runner,
-        ...(runnerFile !== undefined ? { runnerFile } : {}),
+        ...runnerFound(paths),
     };
 }

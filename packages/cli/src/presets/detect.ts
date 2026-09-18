@@ -1,133 +1,187 @@
+import { pathMatcher } from '#cli/presets/claims.ts';
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
 import * as linguistLanguages from 'linguist-languages';
-
 import { SHEBANG_INTERPRETERS } from '#config/patterns.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import { pathMatcher } from '#cli/presets/claims.ts';
-import type { Manifest } from '#types/manifest.ts';
-import type { ManifestFacts, TrackedFile } from '#types/repository.ts';
+import type { TreeFacts, ManifestFacts, TrackedFile } from '#types/repository.ts';
+import type { Manifest, LinguistEntry, Proposal, UnknownLanguage } from '#types/manifest.ts';
 
-export type Proposal = { preset: string; evidence: string; kind: string; count?: number };
-
-export type UnknownLanguage = { language: string; extensions: string[]; count: number };
-
-type LinguistEntry = { extensions?: readonly string[]; type?: string; filenames?: readonly string[] };
+const SHEBANG_TAG = 'shebang:';
+const GLOB_CHARS = /[*?{]/u;
+const ENV_SUFFIX = '/env';
 
 function languageByExtension(): Map<string, string> {
     const map = new Map<string, string>();
-    for (const [name, entry] of Object.entries(linguistLanguages as unknown as Record<string, LinguistEntry>)) {
+    for (const [name, value] of Object.entries(linguistLanguages)) {
+        const entry = value as LinguistEntry;
         if (entry.type !== 'programming') continue;
-        for (const ext of entry.extensions ?? []) if (!map.has(ext.toLowerCase())) map.set(ext.toLowerCase(), name);
+        const extensions = entry.extensions ?? [];
+        for (const extension of extensions)
+            if (!map.has(extension.toLowerCase())) map.set(extension.toLowerCase(), name);
     }
     return map;
 }
 
-/** Proposes presets from the tree, the manifests and the dependencies, with the evidence for each. */
+function dependencyMap(facts: ManifestFacts[], scope: string): Map<string, string> {
+    const dependencies = new Map<string, string>();
+    for (const fact of facts) {
+        if (scope !== '' && !fact.path.startsWith(`${scope}/`)) continue;
+        for (const name of Object.keys(fact.dependencies)) dependencies.set(name, fact.path);
+    }
+    return dependencies;
+}
+
+function treeFacts(files: TrackedFile[], facts: ManifestFacts[], scope: string): TreeFacts {
+    const candidates = files.filter((file) => scope === '' || file.path.startsWith(`${scope}/`));
+    const extensionCounts = new Map<string, number>();
+    const names = new Set<string>();
+    const shebangs = new Set<string>();
+    for (const file of candidates) {
+        const extension = extensionOf(file.path);
+        if (extension !== '') extensionCounts.set(extension, (extensionCounts.get(extension) ?? 0) + 1);
+        names.add(baseName(file.path));
+        for (const tag of file.tags) if (tag.startsWith(SHEBANG_TAG)) shebangs.add(tag.slice(SHEBANG_TAG.length));
+    }
+    return { candidates, extensionCounts, names, shebangs, dependencies: dependencyMap(facts, scope), scope };
+}
+
+function isFileNamed(tree: TreeFacts, name: string): boolean {
+    if (!GLOB_CHARS.test(name)) return tree.names.has(name);
+    const matcher = pathMatcher([name]);
+    return tree.candidates.some((file) => matcher(baseName(file.path)) || matcher(file.path));
+}
+
+function extensionEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
+    const extensions = manifest.detect.extensions.filter((extension) => tree.extensionCounts.has(extension));
+    if (extensions.length === 0) return undefined;
+    const count = extensions.reduce((sum, extension) => sum + (tree.extensionCounts.get(extension) ?? 0), 0);
+    return `${String(count)} ${extensions.join(', ')} file${count === 1 ? '' : 's'}`;
+}
+
+function extensionCount(manifest: Manifest, tree: TreeFacts): number {
+    return manifest.detect.extensions.reduce((sum, extension) => sum + (tree.extensionCounts.get(extension) ?? 0), 0);
+}
+
+function filenameEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
+    const filename = manifest.detect.filenames.find((name) => isFileNamed(tree, name));
+    if (filename === undefined) return undefined;
+    const matcher = pathMatcher([filename]);
+    const found = tree.candidates.find(
+        (file) => baseName(file.path) === filename || matcher(file.path) || matcher(baseName(file.path)),
+    );
+    return found?.path ?? filename;
+}
+
+function dependencyEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
+    const dependency = manifest.detect.dependencies.find((name) => tree.dependencies.has(name));
+    return dependency === undefined ? undefined : `${dependency} in ${tree.dependencies.get(dependency) ?? ''}`;
+}
+
+function shebangEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
+    const shebang = manifest.detect.shebangs.find((name) => tree.shebangs.has(name));
+    return shebang === undefined ? undefined : `${shebang} shebang`;
+}
+
+function pathEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
+    if (manifest.detect.paths.length === 0) return undefined;
+    const matcher = pathMatcher(manifest.detect.paths);
+    return tree.candidates.find((file) => matcher(file.path))?.path;
+}
+
+function defaultEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
+    return manifest.preset.default && tree.scope === '' ? 'every repository' : undefined;
+}
+
+const EVIDENCE = [filenameEvidence, dependencyEvidence, shebangEvidence, pathEvidence, defaultEvidence];
+
+function proposalFor(manifest: Manifest, tree: TreeFacts): Proposal | undefined {
+    const { preset } = manifest;
+    const byExtension = extensionEvidence(manifest, tree);
+    if (byExtension !== undefined)
+        return { preset: preset.id, kind: preset.kind, evidence: byExtension, count: extensionCount(manifest, tree) };
+    for (const source of EVIDENCE) {
+        const evidence = source(manifest, tree);
+        if (evidence !== undefined) return { preset: preset.id, kind: preset.kind, evidence };
+    }
+    return undefined;
+}
+
+function withoutTrailingVersion(word: string): string {
+    let end = word.length;
+    while (end > 0 && '0123456789.'.includes(word[end - 1] ?? '')) end -= 1;
+    return word.slice(0, end);
+}
+
+function interpreterToken(firstLine: string): string | undefined {
+    if (!firstLine.startsWith('#!')) return undefined;
+    const tokens = firstLine.slice(2).trim().split(/\s+/u);
+    let index = 0;
+    if (tokens[index]?.endsWith(ENV_SUFFIX) === true) index += 1;
+    if (tokens[index] === '-S') index += 1;
+    const word = tokens[index];
+    return word === undefined || word === '' ? undefined : word.slice(word.lastIndexOf('/') + 1);
+}
+
+/**
+ * Proposes presets from the tree, the manifests and the dependencies, with the evidence for each.
+ * @param files the tracked files
+ * @param manifests every preset manifest
+ * @param facts the package manifests read from the tree
+ * @param scope the scope path, '' for the root
+ * @returns one proposal per preset with evidence
+ */
 export function detectPresets(
     files: TrackedFile[],
     manifests: Map<string, Manifest>,
     facts: ManifestFacts[],
     scope = '',
 ): Proposal[] {
-    const scoped = files.filter((file) => scope === '' || file.path.startsWith(`${scope}/`));
-    const extensionCounts = new Map<string, number>();
-    const names = new Set<string>();
-    const shebangs = new Set<string>();
-    for (const file of scoped) {
-        const ext = extensionOf(file.path);
-        if (ext !== '') extensionCounts.set(ext, (extensionCounts.get(ext) ?? 0) + 1);
-        names.add(baseName(file.path));
-        for (const tag of file.tags) if (tag.startsWith('shebang:')) shebangs.add(tag.slice(8));
-    }
-    const dependencies = new Map<string, string>();
-    for (const fact of facts) {
-        if (scope !== '' && !fact.path.startsWith(`${scope}/`) && fact.path !== `${scope}/package.json`) continue;
-        for (const name of Object.keys(fact.dependencies)) dependencies.set(name, fact.path);
-    }
-    const proposals: Proposal[] = [];
-    for (const manifest of manifests.values()) {
-        const { detect, preset } = manifest;
-        const extensions = detect.extensions.filter((ext) => extensionCounts.has(ext));
-        if (extensions.length > 0) {
-            const count = extensions.reduce((sum, ext) => sum + (extensionCounts.get(ext) ?? 0), 0);
-            proposals.push({
-                preset: preset.id,
-                kind: preset.kind,
-                evidence: `${count} ${extensions.join(', ')} file${count === 1 ? '' : 's'}`,
-                count,
-            });
-            continue;
-        }
-        const filename = detect.filenames.find((name) =>
-            /[*?{]/.test(name)
-                ? scoped.some((file) => pathMatcher([name])(baseName(file.path)) || pathMatcher([name])(file.path))
-                : names.has(name),
-        );
-        if (filename !== undefined) {
-            const found = scoped.find(
-                (file) =>
-                    baseName(file.path) === filename ||
-                    pathMatcher([filename])(file.path) ||
-                    pathMatcher([filename])(baseName(file.path)),
-            );
-            proposals.push({ preset: preset.id, kind: preset.kind, evidence: found?.path ?? filename });
-            continue;
-        }
-        const dependency = detect.dependencies.find((name) => dependencies.has(name));
-        if (dependency !== undefined) {
-            proposals.push({
-                preset: preset.id,
-                kind: preset.kind,
-                evidence: `${dependency} in ${dependencies.get(dependency)}`,
-            });
-            continue;
-        }
-        const shebang = detect.shebangs.find((name) => shebangs.has(name));
-        if (shebang !== undefined) {
-            proposals.push({ preset: preset.id, kind: preset.kind, evidence: `${shebang} shebang` });
-            continue;
-        }
-        if (detect.paths.length > 0) {
-            const matcher = pathMatcher(detect.paths);
-            const found = scoped.find((file) => matcher(file.path));
-            if (found) {
-                proposals.push({ preset: preset.id, kind: preset.kind, evidence: found.path });
-                continue;
-            }
-        }
-        if (preset.default && scope === '')
-            proposals.push({ preset: preset.id, kind: preset.kind, evidence: 'every repository' });
-    }
-    return proposals;
+    const tree = treeFacts(files, facts, scope);
+    return manifests
+        .values()
+        .map((manifest) => proposalFor(manifest, tree))
+        .filter((proposal) => proposal !== undefined)
+        .toArray();
 }
 
-/** Languages in the tree that no preset detects, named through GitHub Linguist's data. */
+/**
+ * Languages in the tree that no preset detects, named through GitHub Linguist's data.
+ * @param files the tracked files
+ * @param manifests every preset manifest
+ * @returns the languages with their extensions and file counts, most files first
+ */
 export function unknownLanguages(files: TrackedFile[], manifests: Map<string, Manifest>): UnknownLanguage[] {
-    const known = new Set<string>();
-    for (const manifest of manifests.values())
-        for (const ext of [...manifest.detect.extensions, ...manifest.claims.extensions]) known.add(ext);
+    const known = new Set(
+        manifests.values().flatMap((manifest) => [...manifest.detect.extensions, ...manifest.claims.extensions]),
+    );
     const byExtension = languageByExtension();
     const counts = new Map<string, { extensions: Set<string>; count: number }>();
     for (const file of files) {
-        if (file.nature !== 'source') continue;
-        const ext = extensionOf(file.path);
-        if (ext === '' || known.has(ext)) continue;
-        const language = byExtension.get(ext);
-        if (!language) continue;
+        const extension = extensionOf(file.path);
+        const language = file.nature === 'source' && !known.has(extension) ? byExtension.get(extension) : undefined;
+        if (language === undefined) continue;
         const entry = counts.get(language) ?? { extensions: new Set<string>(), count: 0 };
-        entry.extensions.add(ext);
+        entry.extensions.add(extension);
         entry.count += 1;
         counts.set(language, entry);
     }
-    return [...counts.entries()]
-        .map(([language, entry]) => ({ language, extensions: [...entry.extensions].sort(), count: entry.count }))
-        .sort((a, b) => b.count - a.count);
+    return [...counts]
+        .map(([language, entry]) => ({
+            language,
+            extensions: [...entry.extensions].toSorted((a, b) => a.localeCompare(b)),
+            count: entry.count,
+        }))
+        .toSorted((a, b) => b.count - a.count);
 }
 
-/** The interpreter a shebang names, or undefined. */
+/**
+ * The interpreter a shebang names, or undefined.
+ * @param firstLine the first line of the file
+ * @returns the interpreter name the table knows
+ */
 export function shebangInterpreter(firstLine: string): string | undefined {
-    const match = firstLine.match(/^#!\s*(?:\/usr\/bin\/env\s+(?:-S\s+)?)?(?:[\w./-]*\/)?([A-Za-z0-9_.-]+)/);
-    if (!match) return undefined;
-    const name = match[1]!.replace(/\d+(\.\d+)*$/, (digits) => (match[1] === `python${digits}` ? digits : ''));
-    return SHEBANG_INTERPRETERS[match[1]!] ?? SHEBANG_INTERPRETERS[name];
+    const word = interpreterToken(firstLine);
+    if (word === undefined) return undefined;
+    const stripped = withoutTrailingVersion(word);
+    return SHEBANG_INTERPRETERS[word] ?? SHEBANG_INTERPRETERS[stripped];
 }

@@ -1,4 +1,4 @@
-# markdown
+# `markdown`
 
 Kind: language. Requires: docs, formatting, spelling.
 

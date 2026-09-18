@@ -1,4 +1,4 @@
-# javascript
+# `javascript`
 
 Kind: language. Requires: structure, naming, formatting, spelling.
 

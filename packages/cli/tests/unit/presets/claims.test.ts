@@ -1,10 +1,9 @@
 import { describe, expect, test } from 'bun:test';
-
-import { claimedFiles, claimsFile, pathMatcher } from '#cli/presets/claims.ts';
-import { detectPresets, shebangInterpreter, unknownLanguages } from '#cli/presets/detect.ts';
-import { loadManifests } from '#cli/presets/load.ts';
+import { presetManifests } from '#cli/presets/read.ts';
 import { selectPresets } from '#cli/presets/select.ts';
 import type { TrackedFile } from '#types/repository.ts';
+import { claimedFiles, isClaimed, pathMatcher } from '#cli/presets/claims.ts';
+import { detectPresets, shebangInterpreter, unknownLanguages } from '#cli/presets/detect.ts';
 
 const file = (path: string, tags: string[] = ['text']): TrackedFile => ({
     path,
@@ -13,16 +12,16 @@ const file = (path: string, tags: string[] = ['text']): TrackedFile => ({
     executable: false,
     size: 1,
 });
-const manifests = loadManifests();
+const manifests = presetManifests();
 
 describe('claims', () => {
     test('match by extension, filename at any depth, tag and glob', () => {
         const bash = manifests.get('bash')!;
-        expect(claimsFile(bash.claims, file('scripts/build.sh'))).toBe(true);
-        expect(claimsFile(bash.claims, file('.gspot/hooks/pre-commit', ['text', 'shebang:shell']))).toBe(true);
-        expect(claimsFile(bash.claims, file('README.md'))).toBe(false);
+        expect(isClaimed(bash.claims, file('scripts/build.sh'))).toBe(true);
+        expect(isClaimed(bash.claims, file('.gspot/hooks/pre-commit', ['text', 'shebang:shell']))).toBe(true);
+        expect(isClaimed(bash.claims, file('README.md'))).toBe(false);
         expect(
-            claimsFile(
+            isClaimed(
                 {
                     extensions: [],
                     filenames: ['_headers'],

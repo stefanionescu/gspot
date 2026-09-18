@@ -6,22 +6,40 @@ first, then yap-swift-app in a detached worktree, then the other reference repos
 planted repositories of their shape (D-62). The order is 0, 1, 4, 2, 3, 5, 6, with the corpus
 assembler pulled forward into the Swift phase because the managed blocks need it.
 
+## Status
+
+Updated with every commit, so this table says what is built. Done means the code exists, has
+tests, and runs in the gate of this repository. Last update: 2026-09-18.
+
+| Area                                  | State                                                                                                                                                                                                                                                                                                        |
+| ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| Phase 0                               | Done. Policy, presets, repository model, runner, emit, hooks, doctor, the commands, the bash, structure, naming, formatting and spelling presets, the build, the npm launcher, planted tests.                                                                                                                |
+| ESLint plugin, typescript, javascript | Done.                                                                                                                                                                                                                                                                                                        |
+| Naming engine                         | Done: bash, TypeScript, JavaScript and Python extractors, paths, the policy schema check.                                                                                                                                                                                                                    |
+| Structure engine                      | Done: the directory family and the whole shell family, ast-grep counts. Swift, Python and SQL analyses not started.                                                                                                                                                                                          |
+| Prose engine                          | Done: Vale by path and by stdin grammar, source bans, vocabulary, the 30 rules rendered with the docs ceilings. The prose, markdown and docs presets exist.                                                                                                                                                  |
+| Integrity                             | Done: `generated-drift`, `docs-headings`, `stale-paths`, `fences`, `readme-present`, `readme-shape`, `tsconfig-options`. Owed: `allowlists-resolve`, `suppressions`, `manifest-policy`, `lockfile-fresh`, `baselines-current`, `env-files`, `large-files`, `config-purity`, `task-policy`, `install-policy`. |
+| Corpus (Phase 6)                      | Done: the corpus lives in `rules/`, the corpus lint runs in `apply --check` with the unenforced count, the markers and ids scripts live in `packages/cli/scripts/`.                                                                                                                                          |
+| Self-lint                             | Not green yet. Open: about 230 Vale findings in the architecture documents and the corpus, about 50 in TypeScript comments, one fence in the corpus, and the ledger row Vale misreads. Every other check passes.                                                                                             |
+| Phase 1, the rest                     | Owed: the commits and config-files presets, ESLint suppression baselines (D-54), `upgrade` between versions, the takeover planted test, the docs site.                                                                                                                                                       |
+| Phases 2 to 5, Phase 7                | Not started.                                                                                                                                                                                                                                                                                                 |
+
 ## Phase 0: the skeleton
 
-| Deliverable                                                                                                  | Done when                                                                                                                                                                                                           |
-| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The binary builds for five targets with embedded assets                                                      | `gspot --version` runs from a release asset on macOS, Linux and Windows                                                                                                                                             |
-| Result cache                                                                                                 | a second `check --staged` with no changes runs no tool                                                                                                                                                              |
-| `gspot.toml` schema, load, merge, error messages                                                             | every message in [03-configuration.md](03-configuration.md) has a test                                                                                                                                              |
-| Tracked files, natures, scopes, staged files                                                                 | the four reference repositories list correctly                                                                                                                                                                      |
-| Tool runner with file lists, concurrency, missing-tool handling                                              | a planted repository with one missing tool fails with the hint                                                                                                                                                      |
-| Reporter, run record, exit codes                                                                             | output matches the shape in [02-cli.md](02-cli.md)                                                                                                                                                                  |
-| `init`, `check`, `sync`, `doctor`, `uninstall`, `why`, `explain`, `completion`, and the six writing commands | the fifteen-command surface parses and every command works; `explain` renders `summary`, `why` and `fix` for every check in the bash preset; `completion` output from `tab` completes every command in bash and zsh |
-| The npm launcher and one platform package per target                                                         | `bunx gspot --version` works from a local registry on the three platforms with no network and `--ignore-scripts`                                                                                                    |
-| Version pin: `.gspot/version`, the runner pin, the mismatch refusal, `--version`                             | a binary of another version exits 2 on `check` with the two remedies                                                                                                                                                |
-| Hooks, staged mode, `.config/mise/conf.d/gspot.toml`                                                         | a planted repository commits through the hook                                                                                                                                                                       |
-| One preset: bash (ShellCheck, shfmt, `bash -n`)                                                              | `gspot init --yes && gspot check` passes on a repository with one script                                                                                                                                            |
-| Self-lint begins                                                                                             | gspot's own shell scripts and hooks pass under gspot with no ignores                                                                                                                                                |
+| Deliverable                                                                                                   | Done when                                                                                                                                                                                                           |
+| ------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The binary builds for five targets with embedded assets                                                       | `gspot --version` runs from a release asset on macOS, Linux, and Windows                                                                                                                                            |
+| Result cache                                                                                                  | a second `check --staged` with no changes runs no tool                                                                                                                                                              |
+| `gspot.toml` schema, load, merge, error messages                                                              | every message in [03-configuration.md](03-configuration.md) has a test                                                                                                                                              |
+| Tracked files, natures, scopes, staged files                                                                  | the four reference repositories list correctly                                                                                                                                                                      |
+| Tool runner with file lists, concurrency, missing-tool handling                                               | a planted repository with one missing tool fails with the hint                                                                                                                                                      |
+| Reporter, run record, exit codes                                                                              | output matches the shape in [02-cli.md](02-cli.md)                                                                                                                                                                  |
+| `init`, `check`, `apply`, `doctor`, `uninstall`, `why`, `explain`, `completion`, and the six writing commands | the fifteen-command surface parses and every command works; `explain` renders `summary`, `why` and `fix` for every check in the bash preset; `completion` output from `tab` completes every command in bash and zsh |
+| The npm launcher and one platform package per target                                                          | `bunx gspot --version` works from a local registry on the three platforms with no network and `--ignore-scripts`                                                                                                    |
+| Version pin: `.gspot/version`, the runner pin, the mismatch refusal, `--version`                              | a binary of another version exits 2 on `check` with the two remedies                                                                                                                                                |
+| Hooks, staged mode, `.config/mise/conf.d/gspot.toml`                                                          | a planted repository commits through the hook                                                                                                                                                                       |
+| One preset: bash (ShellCheck, shfmt, `bash -n`)                                                               | `gspot init --yes && gspot check` passes on a repository with one script                                                                                                                                            |
+| Self-lint begins                                                                                              | gspot's own shell scripts and hooks pass under gspot with no ignores                                                                                                                                                |
 
 ## Phase 1: JavaScript and TypeScript
 
@@ -29,7 +47,7 @@ assembler pulled forward into the Swift phase because the managed blocks need it
 | -------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `@gspot/eslint-plugin` with the 26 rules and a rule-tester suite each (D-64)                                               | every suite passes; findings over a planted scope match the reference plugin's                                                                     |
 | typescript, javascript, formatting, structure, naming, config-files, markdown, spelling, commits, docs presets             | each has a planted repository                                                                                                                      |
-| Naming engine with the TypeScript, JavaScript and shell extractors                                                         | parity with the reference extractors on the frozen sources                                                                                         |
+| Naming engine with the TypeScript, JavaScript, and shell extractors                                                        | parity with the reference extractors on the frozen sources                                                                                         |
 | Structure engine: tree-sitter loading, ast-grep driver, directory analyses, shell analyses                                 | every shell check in the ledger fires on its planted defect                                                                                        |
 | Baselines                                                                                                                  | `init` on a repository with findings passes; a grown count fails; the ESLint baseline is the tool's own suppressions file and the editor honors it |
 | Integrity: generated drift, stale paths, allowlists, suppressions, manifest policy, lockfile, docs links, tsconfig options | each has a fixture                                                                                                                                 |
@@ -44,7 +62,7 @@ checks report under a gspot check, plus the additions; the repository itself is 
 
 | Deliverable                                                                                 | Done when                                                    |
 | ------------------------------------------------------------------------------------------- | ------------------------------------------------------------ |
-| python, pytest, fastapi presets with every tool and the 14 structure analyses               | the ledger's Python section is green on a planted repository |
+| python, pytest, fastapi presets with every tool, and the 14 structure analyses              | the ledger's Python section is green on a planted repository |
 | Python naming extractor                                                                     | parity on the frozen source                                  |
 | sql, postgres, supabase presets: sqlfluff, squawk, migration docs, edge lint, Semgrep rules | planted Supabase repository passes                           |
 | docker, nginx presets                                                                       | compose config and nginx `-t` run through the daemon         |
@@ -79,7 +97,7 @@ runtime chosen per file class).
 
 Acceptance: the worktree harness on yap-swift-app across its three scopes, with the numbers in
 [17-migration.md](17-migration.md) as the pass condition: every check in `quality/` maps to a
-gspot check, the 29 configuration files are replaced or carried, the 35 lint tasks and the 15
+gspot check, the 29 configuration files are replaced or carried, the 35 lint tasks, and the 15
 duplicate pins are listed. The repository is read, never written; its own gate keeps running
 until its owners migrate it.
 
@@ -96,7 +114,7 @@ until its owners migrate it.
 | Deliverable                                             | Done when                                                 |
 | ------------------------------------------------------- | --------------------------------------------------------- |
 | Repair pass over `rules/`                               | Vale clean, corruption rule clean, no cross-file links    |
-| Front matter and enforcement markers on every statement | `sync --check` passes; the unenforced count is recorded   |
+| Front matter and enforcement markers on every statement | `apply --check` passes; the unenforced count is recorded  |
 | Assembler and managed index block                       | the four reference repositories get their files and index |
 | Corpus lint in gspot's gate                             | runs on every change                                      |
 
@@ -106,7 +124,7 @@ duplicates and the repaired words).
 
 ## Phase 7: the next repository shapes
 
-Post-v1, one preset per phase-7 item, each with a planted repository and the acceptance harness
+Post-v1, one preset per phase-7 item, each with a planted repository, and the acceptance harness
 on a public repository of that shape, ordered by how often `init` reports the manifest with no
 preset:
 
@@ -116,7 +134,7 @@ preset:
 | rust         | `Cargo.toml`                      | rustfmt, clippy at deny, cargo-audit, cargo-deny                                                                   |
 | react        | `vite.config.*` with `react`      | the typescript preset plus `framework/react/REACT.md` and the React ESLint rules the nextjs preset already carries |
 | react-native | Expo `app.json`, `react-native`   | react plus the Expo lint config                                                                                    |
-| django       | `manage.py`                       | the python preset plus django-upgrade, the Django Ruff rules, model and migration checks                           |
+| django       | `manage.py`                       | the python preset plus django-upgrade, the Django Ruff rules, model, and migration checks                          |
 | nestjs       | `nest-cli.json`                   | the typescript preset plus module boundary rules                                                                   |
 | ruby         | `Gemfile`                         | rubocop, bundler-audit                                                                                             |
 | vue, svelte  | `vue.config.*`, `svelte.config.*` | the framework ESLint plugins                                                                                       |
@@ -131,7 +149,7 @@ assembler, CodeQL at its `manual` stage and the upgrade path pass on the planted
 the six acceptance shapes. That is a gspot that installs in a Python API, a Swift app, an
 Express and Supabase monorepo, a static site, a Next.js app and a ComfyUI custom node, replaces
 six quality folders, installs the agent rule files, upgrades itself, explains every finding, and
-passes on day one through baselines. Only `check --watch`, the Homebrew tap and Phase 7 follow
+passes on day one through baselines. Only `check --watch`, the Homebrew tap, and Phase 7 follow
 v1.
 
 The reference repositories are never modified. Every acceptance run happens in a detached

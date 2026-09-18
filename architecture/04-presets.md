@@ -134,7 +134,7 @@ language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
 - `claims` decides which files the preset's checks receive. A `filenames` claim matches at any
   depth (`_headers` under `public/` is `_headers`); an `extensions` claim likewise. A file claimed by no selected preset
   is unchecked. Besides `extensions` and `filenames`, `claims` may name `tags`, computed the way
-  pre-commit's `identify` library does from extension, shebang, executable bit and content
+  pre-commit's `identify` library does from extension, shebang, executable bit, and content
   (`shell`, `python`, `node`, `executable`, `text`, `binary`), so hooks and task files with no
   extension are claimed without a filename list.
 - Every tool the checks or the generated configuration need is in `[[tools]]` with a version
@@ -142,13 +142,15 @@ language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
   `github`). `doctor` verifies presence and version.
 - Every `[[configs]]` entry has a reader among the checks, or fails to load.
 - Every check is in a stage. `commit` checks need nothing but the source. `push` checks need a
-  build, a daemon or the network. `manual` checks take minutes or need credentials.
+  build, a daemon, or the network. `manual` checks take minutes or need credentials.
 - Every check carries `summary` (what it looks for, one sentence), `why` (what goes wrong
   without it) and `fix` (what to do), written for a person who does not code. The loader refuses
   an empty one. `explain`, the finding line and the generated page under `docs/rules/` print
   them; nothing else describes a check.
 - `takes = "files"` receives the claimed file list as `{files}`. `takes = "project"` runs once
-  from the scope root and reports its own inputs.
+  from the scope root and reports its own inputs; its cache key and file count cover every
+  tracked text file under the scope, child scopes included, because the tool reads the project
+  rather than the claimed files.
 - A check with `fix_command` names its `fix_order`. `fix` is the prose that tells a person what to do; `fix_command` is what `check --fix` runs.
 - A check whose exit code does not reflect findings declares `count_regex`.
 - `[required]` names, per extension, the inspection kinds a file needs to count as fully

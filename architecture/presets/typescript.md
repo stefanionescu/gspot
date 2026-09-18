@@ -1,4 +1,4 @@
-# typescript
+# `typescript`
 
 Kind: language. Requires: javascript, structure, naming, formatting, spelling.
 
@@ -28,13 +28,13 @@ the ledger.
 
 ## Checks
 
-| Id                           | Stage  | Command                                                                                                                                                                                                                                                                                        |
-| ---------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `typescript/tsc`             | commit | `tsc --noEmit -p <stub tsconfig>` per scope                                                                                                                                                                                                                                                    |
-| `typescript/eslint`          | commit | `eslint --max-warnings 0 --no-warn-ignored --config .gspot/eslint.config.js --suppressions-location .gspot/baseline/eslint.json {files}`; fix: `--fix`, order codemod; the baseline is ESLint's own suppressions file, written with `--suppress-all` at `init` and pruned by `sync --baseline` |
-| `typescript/knip`            | push   | `knip --config .gspot/knip.json`                                                                                                                                                                                                                                                               |
-| `integrity/tsconfig-options` | commit | engine                                                                                                                                                                                                                                                                                         |
-| `integrity/required-rules`   | push   | `eslint --print-config` per file class, compared with the preset's rule list                                                                                                                                                                                                                   |
+| Id                           | Stage  | Command                                                                                                                                                                                                                                                                                         |
+| ---------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `typescript/tsc`             | commit | `tsc --noEmit -p <stub tsconfig>` per scope                                                                                                                                                                                                                                                     |
+| `typescript/eslint`          | commit | `eslint --max-warnings 0 --no-warn-ignored --config .gspot/eslint.config.js --suppressions-location .gspot/baseline/eslint.json {files}`; fix: `--fix`, order codemod; the baseline is ESLint's own suppressions file, written with `--suppress-all` at `init` and pruned by `apply --baseline` |
+| `javascript/knip`            | push   | `knip --config .gspot/knip.json`, once over the whole tree; javascript owns the check and typescript requires javascript                                                                                                                                                                        |
+| `integrity/tsconfig-options` | commit | engine                                                                                                                                                                                                                                                                                          |
+| `integrity/required-rules`   | push   | `eslint --print-config` per file class, compared with the preset's rule list                                                                                                                                                                                                                    |
 
 ## The types directory
 
@@ -43,7 +43,7 @@ the ledger.
 
 - No `interface`. Every type alias, and every `as const` object that stands in for an enum,
   lives under the types directory.
-- Files under it hold type-only imports, no default export, no runtime value, function or class
+- Files under it hold type-only imports, no default export, no runtime value, function, or class
   export; `export *` re-exports types only.
 - Source files import from it with `import type`.
 - `*.d.ts` files a framework generates are exempt by nature. Anything else goes through

@@ -1,4 +1,4 @@
-# tanstack-query
+# `tanstack-query`
 
 Kind: library. Requires: typescript.
 

@@ -1,10 +1,10 @@
-# secrets
+# `secrets`
 
 Kind: repository. Selected by default in every repository.
 
 ## Claims
 
-The whole tree, including binaries and vendored files.
+The whole tree, including binaries, and vendored files.
 
 ## Tools
 

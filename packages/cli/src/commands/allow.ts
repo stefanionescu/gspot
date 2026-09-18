@@ -1,10 +1,13 @@
 // gspot allow
 import type { Command } from 'commander';
-
 import { emit } from '#cli/commands/emit.ts';
-import { allowCommand } from '#cli/policy/commands.ts';
+import { allowCommand } from '#cli/policy/allow-command.ts';
+import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 
-/** Registers allow. */
+/**
+ * Registers allow.
+ * @param program the commander program
+ */
 export function registerAllow(program: Command): void {
     program
         .command('allow <list> <value...>')
@@ -13,18 +16,18 @@ export function registerAllow(program: Command): void {
         .option('--license <spdx>', 'For licenses: the license the package reports')
         .option('--remove', 'Delete the matching entry instead')
         .option('--dry-run', 'Print what would be written and write nothing')
-        .action(async (list: string, values: string[], flags: Record<string, unknown>, command: Command) => {
-            const global = command.optsWithGlobals() as Record<string, unknown>;
+        .action(async (list: string, items: string[], flags: Record<string, unknown>, command: Command) => {
+            const global = command.optsWithGlobals();
             await emit(
                 () =>
                     allowCommand({
-                        cwd: String(global['directory'] ?? process.cwd()),
+                        cwd: directoryOf(global),
                         list,
-                        values,
-                        remove: Boolean(flags['remove']),
-                        dryRun: Boolean(flags['dryRun']),
-                        ...(flags['reason'] !== undefined ? { reason: String(flags['reason']) } : {}),
-                        ...(flags['license'] ? { license: String(flags['license']) } : {}),
+                        items,
+                        remove: flags['remove'] === true,
+                        isDryRun: flags['dryRun'] === true,
+                        ...textEntry(flags, 'reason', 'reason'),
+                        ...textEntry(flags, 'license', 'license'),
                     }),
                 global,
             );

@@ -1,18 +1,24 @@
 // Where gspot's own data lives: the repository during development, embedded files in the binary.
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
-import { dirname, join, relative } from 'node:path';
-
 import { toPosix } from '#cli/platform/paths.ts';
+import { dirname, join, relative } from 'node:path';
+import { GRAMMAR_SOURCES } from '#config/grammars.ts';
+import type { EmbeddedIndex } from '#types/platform.ts';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 
-type EmbeddedIndex = Record<string, string>;
+const ROOT_SEARCH_DEPTH = 6;
 
-function findRepositoryRoot(): string {
+const state: { embedded: EmbeddedIndex | null | undefined; developmentRoot: string | undefined } = {
+    embedded: undefined,
+    developmentRoot: undefined,
+};
+
+function findRepoRoot(): string {
     let dir = dirname(new URL(import.meta.url).pathname);
-    for (let i = 0; i < 6; i += 1) {
+    for (let index = 0; index < ROOT_SEARCH_DEPTH; index += 1) {
         if (existsSync(join(dir, 'presets')) && existsSync(join(dir, 'packages'))) return dir;
         dir = dirname(dir);
     }
-    throw new Error('gspot cannot find its presets folder from the source tree.');
+    throw new Error('The presets folder is not beside the source tree.');
 }
 
 function walk(dir: string, out: string[]): string[] {
@@ -24,72 +30,90 @@ function walk(dir: string, out: string[]): string[] {
     return out;
 }
 
-let embedded: EmbeddedIndex | null | undefined;
-let devRoot: string | undefined;
-
 function embeddedIndex(): EmbeddedIndex | undefined {
-    if (embedded === undefined) embedded = (globalThis as { __gspotEmbedded?: EmbeddedIndex }).__gspotEmbedded ?? null;
-    return embedded ?? undefined;
+    state.embedded ??= (globalThis as { gspotEmbedded?: EmbeddedIndex }).gspotEmbedded ?? null;
+    return state.embedded ?? undefined;
 }
 
 function developmentRoot(): string {
-    devRoot ??= findRepositoryRoot();
-    return devRoot;
+    state.developmentRoot ??= findRepoRoot();
+    return state.developmentRoot;
 }
 
-/** The absolute path of this binary when compiled, for hooks under runner none; undefined when running from source. */
+/**
+ * The absolute path of this binary when compiled, for hooks under runner none; undefined when running from source.
+ * @returns the path, or undefined
+ */
 export function binaryPath(): string | undefined {
     return isEmbedded() ? process.execPath : undefined;
 }
 
-/** True when running from a compiled binary with embedded assets. */
+/**
+ * True when running from a compiled binary with embedded assets.
+ * @returns whether the assets are embedded
+ */
 export function isEmbedded(): boolean {
     return embeddedIndex() !== undefined;
 }
 
-/** Reads one asset by its repository-relative path (`presets/bash/manifest.toml`). */
+/**
+ * Reads one asset by its repository-relative path (`presets/bash/manifest.toml`).
+ * @param path the asset path
+ * @returns the text
+ */
 export function readAsset(path: string): string {
     const index = embeddedIndex();
     if (index) {
         const file = index[path];
-        if (file === undefined) throw new Error(`gspot has no embedded asset at ${path}.`);
+        if (file === undefined) throw new Error(`No embedded asset is at ${path}.`);
         return readFileSync(file, 'utf8');
     }
     return readFileSync(join(developmentRoot(), path), 'utf8');
 }
 
-/** Reads one asset as bytes (grammar WASM files). */
-export function readAssetBytes(path: string): Uint8Array {
-    const index = embeddedIndex();
-    if (index) {
-        const file = index[path];
-        if (file === undefined) throw new Error(`gspot has no embedded asset at ${path}.`);
-        return new Uint8Array(readFileSync(file));
-    }
-    return new Uint8Array(readFileSync(join(developmentRoot(), path)));
+/**
+ * The on-disk path of an asset when it is a real file a tool can open: the repository file during development, undefined when embedded.
+ * @param path the asset path
+ * @returns the absolute path, or undefined
+ */
+export function assetPath(path: string): string | undefined {
+    if (isEmbedded()) return undefined;
+    const full = join(developmentRoot(), path);
+    return existsSync(full) ? full : undefined;
 }
 
-/** Lists asset paths under a prefix, repository-relative, sorted. */
+/**
+ * The bytes of a grammar file: embedded in the binary, or read from its npm package during development.
+ * @param name the file name under grammars/, such as `bash.wasm`
+ * @returns the WASM bytes
+ */
+export function grammarBytes(name: string): Uint8Array {
+    const index = embeddedIndex();
+    const embedded = index?.[`grammars/${name}`];
+    if (embedded !== undefined) return new Uint8Array(readFileSync(embedded));
+    const source = GRAMMAR_SOURCES[name];
+    if (source === undefined) throw new Error(`No grammar is called ${name}.`);
+    const root = developmentRoot();
+    const candidates = [join(root, 'packages', 'cli', 'node_modules', source), join(root, 'node_modules', source)];
+    const found = candidates.find((candidate) => existsSync(candidate));
+    if (found === undefined) throw new Error(`The grammar package for ${name} is not installed; run bun install.`);
+    return new Uint8Array(readFileSync(found));
+}
+
+/**
+ * Lists asset paths under a prefix, repository-relative, sorted.
+ * @param prefix the path prefix, such as `presets/`
+ * @returns the paths
+ */
 export function listAssets(prefix: string): string[] {
     const index = embeddedIndex();
     if (index)
         return Object.keys(index)
             .filter((key) => key.startsWith(prefix))
-            .sort();
+            .toSorted((a, b) => a.localeCompare(b));
     const dir = join(developmentRoot(), prefix);
     if (!existsSync(dir)) return [];
     return walk(dir, [])
         .map((full) => toPosix(join(prefix, relative(dir, full))))
-        .sort();
-}
-
-/** The path an external tool can read for an asset: the file itself in development, the embedded file otherwise. */
-export function assetFilePath(path: string): string {
-    const index = embeddedIndex();
-    if (index) {
-        const file = index[path];
-        if (file === undefined) throw new Error(`gspot has no embedded asset at ${path}.`);
-        return file;
-    }
-    return join(developmentRoot(), path);
+        .toSorted((a, b) => a.localeCompare(b));
 }

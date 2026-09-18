@@ -1,4 +1,4 @@
-# Hooks, CI and Runners
+# Hooks, CI, and Runners
 
 This document decides where checks run: git hooks, the CI workflow, and the task-runner surface.
 
@@ -37,7 +37,7 @@ unstaged changes` so nobody mistakes the verdict for a verdict on the commit alo
 
 ## Hook managers
 
-`[hooks] manager` selects one:
+`[hooks] tool` selects one:
 
 | Manager    | gspot writes                                                                              | When proposed         |
 | ---------- | ----------------------------------------------------------------------------------------- | --------------------- |
@@ -50,10 +50,26 @@ The gspot hook body:
 
 ```bash
 #!/usr/bin/env bash
+#
 # Written by gspot. Run `gspot uninstall` to remove.
+# Runtime: Bash 4.0+, macOS and Linux.
 set -euo pipefail
-exec "${GSPOT_BIN:-gspot}" check --staged "$@"
+shopt -s inherit_errexit
+
+main() {
+    local -a gspot_command
+    read -ra gspot_command <<<"${GSPOT_BIN-}"
+    if [[ ${#gspot_command[@]} -eq 0 ]]; then
+        gspot_command=('mise' 'exec' '--' 'gspot')
+    fi
+    exec "${gspot_command[@]}" check --staged "$@"
+}
+
+main "$@"
 ```
+
+The hook is a Bash script gspot's own bash preset checks, so it carries the header, strict mode
+and entry point the interpreter policy asks of every executable.
 
 `init` resolves how the binary is found on this machine and writes it into the hook: `mise exec
 -- gspot` under the mise runner, `bunx gspot` or `npx gspot` under an npm runner, the absolute
@@ -63,10 +79,10 @@ hook that cannot find gspot prints the install command and fails; it never passe
 Hooks that exist and were not written by gspot (a `.githooks/` directory of hand-written scripts,
 a `.husky/` set the person declined to hand over) are never deleted. `init` lists them under "no
 longer runs; delete when ready" once `core.hooksPath` points elsewhere. A person who keeps their
-own hooks chooses `[hooks] manager = "none"` and calls `gspot check --staged` from them.
+own hooks chooses `[hooks] tool = "none"` and calls `gspot check --staged` from them.
 
-`core.hooksPath` is per clone. `sync` sets it when hooks are on, so a fresh clone gets hooks on
-the first `gspot sync`, which the runner's setup task calls. The pre-push hook calls `git lfs
+`core.hooksPath` is per clone. `apply` sets it when hooks are on, so a fresh clone gets hooks on
+the first `gspot apply`, which the runner's setup task calls. The pre-push hook calls `git lfs
 pre-push` first when git-lfs is installed.
 
 On Windows, git runs hooks through the `sh` that Git for Windows installs, so the same hook
@@ -82,12 +98,12 @@ second line.
 
 The runner is a surface for humans and editors. Every task calls gspot; the graph lives in gspot.
 
-| Surface        | gspot writes                                                                                                                       | Tasks                                                                   |
-| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
-| mise           | `.config/mise/conf.d/gspot.toml` with `[tools]` pins and `[tasks]`                                                                 | `gspot:check`, `gspot:fix`, `gspot:sync`, `gspot:doctor`, `gspot:setup` |
-| npm, bun, pnpm | `scripts` entries in `package.json`, after a yes                                                                                   | `check`, `check:fix`, `sync`, `prepare` (runs `gspot sync`)             |
-| uv             | `[tool.gspot]` is not used; `uv run gspot` works when gspot is a dev dependency through the npm wrapper, else the binary on `PATH` | none                                                                    |
-| none           | nothing                                                                                                                            | none                                                                    |
+| Surface        | gspot writes                                                                                                                       | Tasks                                                                    |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------ |
+| mise           | `.config/mise/conf.d/gspot.toml` with `[tools]` pins and `[tasks]`                                                                 | `gspot:check`, `gspot:fix`, `gspot:apply`, `gspot:doctor`, `gspot:setup` |
+| npm, bun, pnpm | `scripts` entries in `package.json`, after a yes                                                                                   | `check`, `check:fix`, `apply`, `prepare` (runs `gspot apply`)            |
+| uv             | `[tool.gspot]` is not used; `uv run gspot` works when gspot is a dev dependency through the npm wrapper, else the binary on `PATH` | none                                                                     |
+| none           | nothing                                                                                                                            | none                                                                     |
 
 gspot never edits `mise.toml`. mise merges every file under `.config/mise/conf.d/` (the one
 `conf.d` directory mise reads), so gspot owns one file there and the repository's own pins and
@@ -102,11 +118,11 @@ pyenv and asdf without mise are not runners gspot writes to: `init` reports them
 and falls back to the package manager surface when the person declines.
 
 Task names carry the `gspot:` prefix under mise so they cannot collide. Under npm the names are
-`check` and `sync`; an existing script with that name is listed in the plan as replaced and
+`check` and `apply`; an existing script with that name is listed in the plan as replaced and
 needs the yes.
 
 `setup` (`gspot:setup` or `prepare`) runs `mise install` or the package manager's install, then
-`gspot sync`, which installs the hooks and rule files.
+`gspot apply`, which installs the hooks and rule files.
 
 ## CI workflow
 
@@ -139,7 +155,7 @@ One job, the same `push`-stage set the hook runs, plus `manual` on the default b
 job appears only when a Swift scope exists. `[ci] platforms = ["ubuntu", "windows"]` adds a
 Windows job that runs the same `check`; gspot's own CI runs all three. Actions are pinned by SHA; `actionlint` and `zizmor`
 run over the workflow in the `config-files` preset. The workflow is a generated file: it carries
-the header and `sync --check` guards it.
+the header and `apply --check` guards it.
 
 Without mise in the repository the workflow installs gspot from the release asset by version and
 runs `gspot doctor` first so a missing tool fails with its install hint.
@@ -147,7 +163,7 @@ runs `gspot doctor` first so a missing tool fails with its install hint.
 ## Reproduce lines
 
 Every failing check prints the command that runs it alone: `gspot check typescript/eslint
---scope api`. The line is the same in the hook, in CI and in the terminal.
+--scope api`. The line is the same in the hook, in CI, and in the terminal.
 
 ## Run record
 

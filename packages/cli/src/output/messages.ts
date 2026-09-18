@@ -1,80 +1,97 @@
 // Messages about the run on stderr, with levels for --quiet and --verbose.
+import pc from 'picocolors';
 import { createConsola } from 'consola';
 import type { ConsolaInstance } from 'consola';
-import pc from 'picocolors';
+import type { OutputOptions, Painter } from '#types/output.ts';
+import { isCi, isColorRefused } from '#cli/platform/environment.ts';
 
-export type Verbosity = 'quiet' | 'normal' | 'verbose';
+const LEVELS: Record<OutputOptions['verbosity'], number> = { quiet: 1, normal: 3, verbose: 4 };
 
-export type OutputOptions = { verbosity: Verbosity; json: boolean; color: boolean };
+const state: { options: OutputOptions; instance: ConsolaInstance | undefined } = {
+    options: { verbosity: 'normal', json: false, color: false },
+    instance: undefined,
+};
 
-let options: OutputOptions = { verbosity: 'normal', json: false, color: false };
-let instance: ConsolaInstance | undefined;
-
-/** True when color is allowed: a terminal, no NO_COLOR, no CI, no --no-color. */
-export function colorAllowed(noColor: boolean): boolean {
-    if (noColor) return false;
-    if (process.env['NO_COLOR'] !== undefined && process.env['NO_COLOR'] !== '') return false;
-    if (process.env['CI'] !== undefined && process.env['CI'] !== '') return false;
-    return Boolean(process.stderr.isTTY) && Boolean(process.stdout.isTTY);
+function same(text: string): string {
+    return text;
 }
 
-/** Sets the output mode for the process. */
+function consola(): ConsolaInstance {
+    state.instance ??= createConsola({
+        level: LEVELS.normal,
+        formatOptions: { colors: false, date: false, compact: true },
+    });
+    return state.instance;
+}
+
+/**
+ * True when color is allowed: a terminal, no NO_COLOR, no CI, no --no-color.
+ * @param isNoColor whether --no-color was given
+ * @returns whether to paint
+ */
+export function isColorAllowed(isNoColor: boolean): boolean {
+    if (isNoColor || isColorRefused() || isCi()) return false;
+    return process.stderr.isTTY && process.stdout.isTTY;
+}
+
+/**
+ * Sets the output mode for the process.
+ * @param next verbosity, JSON and color
+ */
 export function configureOutput(next: OutputOptions): void {
-    options = next;
-    instance = createConsola({
-        level: next.verbosity === 'quiet' ? 1 : next.verbosity === 'verbose' ? 4 : 3,
+    state.options = next;
+    state.instance = createConsola({
+        level: LEVELS[next.verbosity],
         formatOptions: { colors: next.color, date: false, compact: true },
     });
 }
 
-/** The current output options. */
-export function outputOptions(): OutputOptions {
-    return options;
-}
-
-/** The color functions, or identity when color is off. */
-export function paint() {
-    const on = options.color;
-    const id = (text: string) => text;
+/**
+ * The color functions, or identity when color is off.
+ * @returns the painter
+ */
+export function paint(): Painter {
+    const isOn = state.options.color;
     return {
-        red: on ? pc.red : id,
-        green: on ? pc.green : id,
-        yellow: on ? pc.yellow : id,
-        dim: on ? pc.dim : id,
-        bold: on ? pc.bold : id,
-        cyan: on ? pc.cyan : id,
+        red: isOn ? pc.red : same,
+        green: isOn ? pc.green : same,
+        yellow: isOn ? pc.yellow : same,
+        dim: isOn ? pc.dim : same,
+        bold: isOn ? pc.bold : same,
+        cyan: isOn ? pc.cyan : same,
     };
 }
 
-function consola(): ConsolaInstance {
-    instance ??= createConsola({ level: 3, formatOptions: { colors: false, date: false, compact: true } });
-    return instance;
-}
-
-/** A line about the run: hints, warnings, progress. Goes to stderr. */
+/**
+ * A line about the run: hints, warnings, progress. Goes to stderr.
+ * @param text the line
+ */
 export function note(text: string): void {
-    if (options.json) return;
+    if (state.options.json) return;
     consola().info(text);
 }
 
-/** A warning about the run. */
+/**
+ * A warning about the run.
+ * @param text the line
+ */
 export function warn(text: string): void {
-    if (options.json) return;
+    if (state.options.json) return;
     consola().warn(text);
 }
 
-/** Verbose detail. */
-export function detail(text: string): void {
-    if (options.verbosity !== 'verbose' || options.json) return;
-    consola().debug(text);
-}
-
-/** An error message on stderr. Always printed. */
+/**
+ * An error message on stderr. Always printed.
+ * @param text the message
+ */
 export function fail(text: string): void {
-    process.stderr.write(`${text.endsWith('\n') ? text : `${text}\n`}`);
+    process.stderr.write(text.endsWith('\n') ? text : `${text}\n`);
 }
 
-/** Output that is the command's record: stdout. */
+/**
+ * Output that is the command's record: stdout.
+ * @param text the text
+ */
 export function print(text: string): void {
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
 }

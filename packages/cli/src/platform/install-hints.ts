@@ -1,32 +1,69 @@
 // The install command for a tool on this platform: mise first, then the platform's manager.
 import type { ToolPin } from '#types/manifest.ts';
+import type { RunnerSurface } from '#types/config.ts';
 
-/** The one line doctor prints under a missing tool. */
-export function installHint(tool: ToolPin, runner: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none' = 'mise'): string {
+const HOST_HINTS: Record<string, string> = {
+    xcodebuild: 'install Xcode from the App Store',
+    plutil: 'install Xcode from the App Store',
+    xcstringstool: 'install Xcode from the App Store',
+    docker: 'install Docker Desktop or the docker engine',
+    bash: "install bash through your platform's package manager",
+};
+const MISE_INSTALLERS = ['mise', 'npm', 'pypi', 'ubi', 'github'];
+const NPM_RUNNERS = new Set(['npm', 'bun', 'pnpm']);
+const PLATFORM_INSTALLERS: { platform: NodeJS.Platform; installer: string; command: string }[] = [
+    { platform: 'darwin', installer: 'brew', command: 'brew install' },
+    { platform: 'linux', installer: 'apt', command: 'sudo apt install' },
+    { platform: 'win32', installer: 'winget', command: 'winget install' },
+    { platform: 'win32', installer: 'scoop', command: 'scoop install' },
+];
+
+function platformHint(installers: Record<string, string>): string | undefined {
+    const match = PLATFORM_INSTALLERS.find(
+        ({ platform, installer }) => platform === process.platform && installers[installer] !== undefined,
+    );
+    return match === undefined ? undefined : `${match.command} ${installers[match.installer] ?? ''}`;
+}
+
+function cargoHint(installers: Record<string, string>): string | undefined {
+    return installers['cargo'] === undefined ? undefined : `cargo install ${installers['cargo']}`;
+}
+
+function githubHint(tool: ToolPin): string | undefined {
     const { installers } = tool;
-    if (tool.provider === 'host') {
-        if (tool.name === 'xcodebuild' || tool.name === 'plutil' || tool.name === 'xcstringstool')
-            return 'install Xcode from the App Store';
-        if (tool.name === 'docker') return 'install Docker Desktop or the docker engine';
-        if (tool.name === 'bash') return "install bash through your platform's package manager";
-        return `install ${tool.name}`;
-    }
-    if (
-        runner === 'mise' &&
-        (installers['mise'] || installers['npm'] || installers['pypi'] || installers['ubi'] || installers['github'])
-    )
-        return 'mise install';
-    if (installers['npm']) {
-        const manager = runner === 'npm' || runner === 'bun' || runner === 'pnpm' ? runner : 'bun';
-        return `${manager} install`;
-    }
-    if (installers['pypi']) return runner === 'uv' ? 'uv sync --group gspot' : `uv tool install ${installers['pypi']}`;
-    if (process.platform === 'darwin' && installers['brew']) return `brew install ${installers['brew']}`;
-    if (process.platform === 'linux' && installers['apt']) return `sudo apt install ${installers['apt']}`;
-    if (process.platform === 'win32' && installers['winget']) return `winget install ${installers['winget']}`;
-    if (process.platform === 'win32' && installers['scoop']) return `scoop install ${installers['scoop']}`;
-    if (installers['cargo']) return `cargo install ${installers['cargo']}`;
-    if (installers['github'])
-        return `mise use ${installers['ubi'] ? `ubi:${installers['ubi']}` : `github:${installers['github']}`}@${tool.version ?? 'latest'}`;
-    return `install ${tool.name}${tool.version ? ` ${tool.version}` : ''}`;
+    if (installers['github'] === undefined) return undefined;
+    const source = installers['ubi'] === undefined ? `github:${installers['github']}` : `ubi:${installers['ubi']}`;
+    return `mise use ${source}@${tool.version ?? 'latest'}`;
+}
+
+function packageHint(tool: ToolPin, runner: RunnerSurface): string | undefined {
+    const { installers } = tool;
+    if (installers['npm'] !== undefined) return `${NPM_RUNNERS.has(runner) ? runner : 'bun'} install`;
+    if (installers['pypi'] !== undefined)
+        return runner === 'uv' ? 'uv sync --group gspot' : `uv tool install ${installers['pypi']}`;
+    return undefined;
+}
+
+function hasMiseInstaller(tool: ToolPin): boolean {
+    return MISE_INSTALLERS.some((installer) => tool.installers[installer] !== undefined);
+}
+
+function installerHint(tool: ToolPin, runner: RunnerSurface): string | undefined {
+    return packageHint(tool, runner) ?? platformHint(tool.installers) ?? cargoHint(tool.installers) ?? githubHint(tool);
+}
+
+function plainHint(tool: ToolPin): string {
+    return tool.version === undefined ? `install ${tool.name}` : `install ${tool.name} ${tool.version}`;
+}
+
+/**
+ * The one line doctor prints under a missing tool.
+ * @param tool the pin
+ * @param runner the runner surface the repository uses
+ * @returns the command to run
+ */
+export function installHint(tool: ToolPin, runner: RunnerSurface = 'mise'): string {
+    if (tool.provider === 'host') return HOST_HINTS[tool.name] ?? `install ${tool.name}`;
+    if (runner === 'mise' && hasMiseInstaller(tool)) return 'mise install';
+    return installerHint(tool, runner) ?? plainHint(tool);
 }

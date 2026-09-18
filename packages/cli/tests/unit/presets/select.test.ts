@@ -1,8 +1,7 @@
 import { describe, expect, test } from 'bun:test';
-
-import { parseManifest, loadManifests } from '#cli/presets/load.ts';
-import { selectPresets } from '#cli/presets/select.ts';
 import type { Manifest } from '#types/manifest.ts';
+import { selectPresets } from '#cli/presets/select.ts';
+import { parseManifest, presetManifests } from '#cli/presets/read.ts';
 
 function manifest(id: string, requires: string[] = [], conflicts: string[] = []): Manifest {
     return parseManifest(
@@ -13,13 +12,13 @@ function manifest(id: string, requires: string[] = [], conflicts: string[] = [])
 
 describe('selectPresets', () => {
     test('pulls required presets in, dependencies first, in order of first mention', () => {
-        const ids = selectPresets(['bash'], loadManifests()).map((entry) => entry.preset.id);
+        const ids = selectPresets(['bash'], presetManifests()).map((entry) => entry.preset.id);
         expect(ids.indexOf('structure')).toBeLessThan(ids.indexOf('bash'));
-        expect(ids).toEqual(expect.arrayContaining(['structure', 'naming', 'formatting', 'spelling', 'bash']));
+        for (const id of ['structure', 'naming', 'formatting', 'spelling', 'bash']) expect(ids).toContain(id);
     });
 
     test('an unknown preset names the near matches', () => {
-        expect(() => selectPresets(['bassh'], loadManifests())).toThrow('Did you mean `bash`');
+        expect(() => selectPresets(['bassh'], presetManifests())).toThrow('Did you mean `bash`');
     });
 
     test('a circular requires fails with the chain', () => {
@@ -59,6 +58,6 @@ describe('parseManifest', () => {
     });
 
     test('every shipped manifest loads and its folder equals its id', () => {
-        for (const [id, entry] of loadManifests()) expect(entry.dir.endsWith(`/${id}`)).toBe(true);
+        for (const [id, entry] of presetManifests()) expect(entry.dir.endsWith(`/${id}`)).toBe(true);
     });
 });

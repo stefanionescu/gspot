@@ -1,4 +1,4 @@
-# dependencies
+# `dependencies`
 
 Kind: repository. Selected by default. Dependency health: advisories, unused, duplicated,
 skewed, foreign lockfiles, ownership, install policy.

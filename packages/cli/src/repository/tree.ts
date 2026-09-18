@@ -1,12 +1,18 @@
 // Builds the Repository record: the file set with natures and tags, and the scopes.
 import { tagEntry } from '#cli/repository/tags.ts';
+import type { DeclareEntry } from '#types/config.ts';
 import { natureOf } from '#cli/repository/natures.ts';
 import { policyScopes } from '#cli/repository/scopes.ts';
-import { isGitRepository, trackedEntries } from '#cli/repository/tracked.ts';
-import type { DeclareEntry } from '#types/config.ts';
 import type { Repository, TrackedFile } from '#types/repository.ts';
+import { isGitRepository, trackedEntries } from '#cli/repository/tracked.ts';
 
-/** Reads the tree once: every tracked or would-be-tracked file with its nature and tags. */
+/**
+ * Reads the tree once: every tracked or would-be-tracked file with its nature and tags.
+ * @param root the repository root
+ * @param declares the [[declare]] entries
+ * @param scopeEntries the [[scope]] entries
+ * @returns the repository record
+ */
 export async function readRepository(
     root: string,
     declares: DeclareEntry[],

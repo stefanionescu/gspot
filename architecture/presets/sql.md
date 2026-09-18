@@ -1,4 +1,4 @@
-# sql
+# `sql`
 
 Kind: language. Requires: structure, naming, formatting, spelling.
 
@@ -16,9 +16,9 @@ sqlfluff; `libpg-query` (WASM, inside gspot) for parsing and naming extraction.
 
 ## Generated configuration
 
-| Target                | Stub                                                                                                                                | Holds                                                                                                                                                                                                          |
-| --------------------- | ----------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/sqlfluff.cfg` | `.sqlfluff` with `[sqlfluff] config_path` is not supported by sqlfluff; the stub is a copy with a header, guarded by `sync --check` | `sql_file_exts` covering all three extensions, dialect from the database preset (`ansi` alone), line length and indent from `[format]`, `capitalization` and `references` rules aligned with the naming policy |
+| Target                | Stub                                                                                                                                 | Holds                                                                                                                                                                                                          |
+| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.gspot/sqlfluff.cfg` | `.sqlfluff` with `[sqlfluff] config_path` is not supported by sqlfluff; the stub is a copy with a header, guarded by `apply --check` | `sql_file_exts` covering all three extensions, dialect from the database preset (`ansi` alone), line length and indent from `[format]`, `capitalization` and `references` rules aligned with the naming policy |
 
 sqlfluff never reads a `.sqlfluffignore`; gspot passes the file list.
 
@@ -43,5 +43,5 @@ is `gspot ignore sql/sqlfluff --rule <code>`, rendered into `exclude_rules`).
 
 ## Not covered here
 
-Migration safety, documentation layout and immutability belong to postgres. Row-level security
+Migration safety, documentation layout, and immutability belong to postgres. Row-level security
 and grants belong to supabase.

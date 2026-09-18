@@ -1,4 +1,4 @@
-# zod
+# `zod`
 
 Kind: library. Requires: typescript.
 

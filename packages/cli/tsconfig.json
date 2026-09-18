@@ -1,0 +1,3 @@
+{
+    "extends": "../../.gspot/packages/cli/tsconfig.base.json"
+}

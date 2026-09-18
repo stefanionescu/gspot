@@ -1,4 +1,4 @@
-# zustand
+# `zustand`
 
 Kind: library. Requires: typescript.
 

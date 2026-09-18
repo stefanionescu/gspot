@@ -1,4 +1,4 @@
-# drizzle
+# `drizzle`
 
 Kind: library. Requires: typescript, postgres when the dialect is Postgres.
 

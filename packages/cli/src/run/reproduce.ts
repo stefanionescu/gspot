@@ -1,6 +1,12 @@
 // The reproduce line per failing check: the same in the hook, in CI and in the terminal.
 
-/** The command that runs one check alone. */
+/**
+ * The command that runs one check alone.
+ * @param id the check id
+ * @param scope the scope path, '' for the root
+ * @param stage the stage, when it is not commit or push
+ * @returns the command line
+ */
 export function reproduceLine(id: string, scope: string, stage?: string): string {
     const parts = ['gspot check', id];
     if (scope !== '') parts.push('--scope', scope);

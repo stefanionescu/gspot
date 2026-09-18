@@ -1,4 +1,4 @@
-# commits
+# `commits`
 
 Kind: repository. Selected by default.
 

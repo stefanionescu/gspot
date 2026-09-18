@@ -1,4 +1,4 @@
-# react-hook-form
+# `react-hook-form`
 
 Kind: library. Requires: typescript, zod when `@hookform/resolvers` is present.
 

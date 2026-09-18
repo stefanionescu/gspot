@@ -1,69 +1,43 @@
 // One session per command: the policy, the manifests, the repository, the selection and the merged view per scope.
-import { loadPolicy } from '#cli/policy/load.ts';
-import type { PolicyError } from '#cli/policy/load.ts';
+import { readPolicy } from '#cli/policy/read.ts';
+import type { Manifest } from '#types/manifest.ts';
 import { mergeForScope } from '#cli/policy/merge.ts';
-import type { MergedView } from '#cli/policy/merge.ts';
 import { buildSurface } from '#cli/policy/settings.ts';
-import { assertPolicyComplete } from '#cli/policy/validate.ts';
-import type { SettingsSurface } from '#cli/policy/settings.ts';
-import { loadManifests } from '#cli/presets/load.ts';
+import { presetManifests } from '#cli/presets/read.ts';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { selectForScope } from '#cli/presets/select.ts';
 import { readRepository } from '#cli/repository/tree.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import type { LoadedPolicy } from '#types/config.ts';
-import type { Manifest } from '#types/manifest.ts';
-import type { Repository, ScopeInfo } from '#types/repository.ts';
+import type { ScopeSelection, Session } from '#types/run.ts';
+import { assertPolicyComplete } from '#cli/policy/validate.ts';
 
-export type ScopeSelection = {
-    scope: ScopeInfo;
-    selected: Manifest[];
-    surface: SettingsSurface;
-    view: MergedView;
-};
-
-export type Session = {
-    root: string;
-    version: string;
-    loaded: LoadedPolicy;
-    manifests: Map<string, Manifest>;
-    repository: Repository;
-    scopes: ScopeSelection[];
-    problems: string[];
-};
-
-/** Opens a session on a repository that has gspot.toml. Throws PolicyError or SelectionError. */
+/**
+ * Opens a session on a repository that has gspot.toml. Throws PolicyError or SelectionError.
+ * @param root the repository root
+ * @returns the session
+ */
 export async function openSession(root: string): Promise<Session> {
-    const loaded = loadPolicy(root);
-    assertPolicyComplete(loaded.policy);
-    const manifests = loadManifests();
-    const repository = await readRepository(root, loaded.policy.declares, loaded.policy.scopes);
-    const scopes: ScopeSelection[] = [];
-    const problems: string[] = [];
-    for (const scope of repository.scopes) {
-        const selected = selectForScope(loaded.policy.presets, scope.presets, manifests);
+    const policyFiles = readPolicy(root);
+    assertPolicyComplete(policyFiles.policy);
+    const manifests = presetManifests();
+    const repo = await readRepository(root, policyFiles.policy.declares, policyFiles.policy.scopes);
+    const scopes: ScopeSelection[] = repo.scopes.map((scope) => {
+        const selected = selectForScope(policyFiles.policy.presets, scope.presets, manifests);
         const surface = buildSurface(selected);
-        const view = mergeForScope(surface, loaded.policy, selected, scope.path);
-        scopes.push({ scope, selected, surface, view });
-    }
-    if (problems.length > 0) {
-        const error = new Error(problems.join('\n')) as PolicyError;
-        error.name = 'PolicyError';
-        (error as { problems: string[] }).problems = problems;
-        throw error;
-    }
-    return { root, version: GSPOT_VERSION, loaded, manifests, repository, scopes, problems };
+        const view = mergeForScope(surface, policyFiles.policy, selected, scope.path);
+        return { scope, selected, surface, view };
+    });
+    return { root, version: GSPOT_VERSION, policyFiles, manifests, repository: repo, scopes, problems: [] };
 }
 
-/** Every distinct manifest across the scopes, in first-seen order. */
+/**
+ * Every distinct manifest across the scopes, in first-seen order.
+ * @param session the session
+ * @returns the manifests
+ */
 export function everyManifest(session: Session): Manifest[] {
     const seen = new Map<string, Manifest>();
     for (const scope of session.scopes)
         for (const manifest of scope.selected)
             if (!seen.has(manifest.preset.id)) seen.set(manifest.preset.id, manifest);
-    return [...seen.values()];
-}
-
-/** The selection for a scope path, or the root's. */
-export function scopeSelection(session: Session, path: string): ScopeSelection {
-    return session.scopes.find((entry) => entry.scope.path === path) ?? session.scopes[0]!;
+    return seen.values().toArray();
 }

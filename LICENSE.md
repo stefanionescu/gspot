@@ -37,7 +37,7 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
     copyright notice that is included in or attached to the work
     (an example is provided in the Appendix below).
 
-    "Derivative Works" shall mean any work, whether in Source or Object
+    "Derivative Works" shall mean any work, whether in Source, or Object
     form, that is based on (or derived from) the Work and for which the
     editorial revisions, annotations, elaborations, or other modifications
     represent, as a whole, an original work of authorship. For the purposes
@@ -87,7 +87,7 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
    as of the date such litigation is filed.
 
 4. Redistribution. You may reproduce and distribute copies of the
-   Work or Derivative Works thereof in any medium, with or without
+   Work or Derivative Works thereof in any medium, with, or without
    modifications, and in Source or Object form, provided that You
    meet the following conditions:
 
@@ -130,8 +130,8 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
 5. Submission of Contributions. Unless You explicitly state otherwise,
    any Contribution intentionally submitted for inclusion in the Work
    by You to the Licensor shall be under the terms and conditions of
-   this License, without any additional terms or conditions.
-   Notwithstanding the above, nothing herein shall supersede or modify
+   this License, without any additional terms, or conditions.
+   Notwithstanding the above, nothing herein shall supersede, or modify
    the terms of any separate license agreement you may have executed
    with Licensor regarding such Contributions.
 
@@ -144,7 +144,7 @@ TERMS AND CONDITIONS FOR USE, REPRODUCTION, AND DISTRIBUTION
    agreed to in writing, Licensor provides the Work (and each
    Contributor provides its Contributions) on an "AS IS" BASIS,
    WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or
-   implied, including, without limitation, any warranties or conditions
+   implied, including, without limitation, any warranties, or conditions
    of TITLE, NON-INFRINGEMENT, MERCHANTABILITY, or FITNESS FOR A
    PARTICULAR PURPOSE. You are solely responsible for determining the
    appropriateness of using or redistributing the Work and assume any

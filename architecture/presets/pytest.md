@@ -1,4 +1,4 @@
-# pytest
+# `pytest`
 
 Kind: tool. Requires: python.
 

@@ -20,5 +20,3 @@ export const REFUSED_REASONS = [
 export const MINIMUM_REASON_WORDS = 2;
 
 export const CARRIED_REASON = 'carried from {{file}} at init';
-
-export const CARRIED_AT_INIT = 'carried at init';

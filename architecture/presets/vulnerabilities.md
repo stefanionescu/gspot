@@ -1,4 +1,4 @@
-# vulnerabilities
+# `vulnerabilities`
 
 Kind: repository. Static analysis for security patterns, per language. One SAST tool.
 

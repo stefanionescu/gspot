@@ -1,11 +1,14 @@
 // gspot upgrade
 import type { Command } from 'commander';
-
 import { emit } from '#cli/commands/emit.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
-import { upgradeCommand } from '#cli/render/upgrade.ts';
+import { upgradeCommand } from '#cli/emit/upgrade.ts';
+import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 
-/** Registers upgrade. */
+/**
+ * Registers upgrade.
+ * @param program the commander program
+ */
 export function registerUpgrade(program: Command): void {
     program
         .command('upgrade')
@@ -17,17 +20,17 @@ export function registerUpgrade(program: Command): void {
         .option('--yes', 'Skip the question')
         .option('--no-install', 'Skip the install step and print the command instead')
         .action(async (flags: Record<string, unknown>, command: Command) => {
-            const global = command.optsWithGlobals() as Record<string, unknown>;
+            const global = command.optsWithGlobals();
             const binary = binaryPath();
             await emit(
                 () =>
                     upgradeCommand({
-                        cwd: String(global['directory'] ?? process.cwd()),
-                        check: Boolean(flags['check']),
-                        yes: Boolean(flags['yes']),
+                        cwd: directoryOf(global),
+                        check: flags['check'] === true,
+                        yes: flags['yes'] === true,
                         install: flags['install'] !== false,
-                        ...(flags['to'] ? { to: String(flags['to']) } : {}),
-                        ...(binary !== undefined ? { binaryPath: binary } : {}),
+                        ...textEntry(flags, 'to', 'to'),
+                        ...(binary === undefined ? {} : { binaryPath: binary }),
                     }),
                 global,
             );

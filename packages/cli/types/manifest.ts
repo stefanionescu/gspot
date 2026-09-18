@@ -1,3 +1,5 @@
+import type { z } from 'zod';
+import type { manifestSchema } from '#cli/presets/manifest-schema.ts';
 // The shape of a preset manifest.toml after validation.
 
 export type PresetKind = 'language' | 'framework' | 'platform' | 'tool' | 'library' | 'database' | 'repository';
@@ -63,7 +65,7 @@ export type StubSpec = {
     copy?: boolean;
 };
 
-export type ConfigTarget = {
+export type ConfigurationTarget = {
     template: string;
     target: string;
     stub?: StubSpec;
@@ -92,6 +94,7 @@ export type CheckSpec = {
     claims?: Claims;
     output?: OutputFormat;
     cwd?: 'root' | 'scope';
+    whole?: boolean;
     exclude_setting?: string;
     inspection: string[];
     summary: string;
@@ -119,10 +122,53 @@ export type Manifest = {
     detect: Detect;
     claims: Claims;
     tools: ToolPin[];
-    configs: ConfigTarget[];
+    configs: ConfigurationTarget[];
     checks: CheckSpec[];
     settings: SettingSpec[];
     required: Record<string, string[]>;
     rules: Record<string, string[]>;
     dir: string;
+};
+
+export type ListingRow = {
+    id: string;
+    kind: string;
+    title: string;
+    description: string;
+    requires: string[];
+    tools: string[];
+    checks: { id: string; stage: string }[];
+    settings: string[];
+    rules: string[];
+    default: boolean;
+    proposed: boolean;
+};
+
+export type Proposal = { preset: string; evidence: string; kind: string; count?: number };
+
+export type UnknownLanguage = { language: string; extensions: string[]; count: number };
+
+export type LinguistEntry = { extensions?: readonly string[]; type?: string; filenames?: readonly string[] };
+
+export type Compact<T> = { [K in keyof T]: Exclude<T[K], undefined> };
+
+/** manifest.toml as the schema accepts it. */
+export type RawManifest = z.infer<typeof manifestSchema>;
+
+/** One [[tools]] entry as written. */
+export type RawTool = RawManifest['tools'][number];
+
+/** One [[checks]] entry as written. */
+export type RawCheck = RawManifest['checks'][number];
+
+/** One [[configs]] entry as written. */
+export type RawConfiguration = RawManifest['configs'][number];
+
+/** The state of one selection walk over the requires graph. */
+export type SelectionWalk = {
+    manifests: Map<string, Manifest>;
+    problems: string[];
+    order: Manifest[];
+    seen: Set<string>;
+    visiting: string[];
 };

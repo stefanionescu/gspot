@@ -1,4 +1,4 @@
-# supabase
+# `supabase`
 
 Kind: platform. Requires: postgres, sql, typescript, config-files.
 

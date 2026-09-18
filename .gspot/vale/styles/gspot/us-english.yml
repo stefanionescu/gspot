@@ -1,0 +1,26 @@
+extends: substitution
+message: "Use US English: '%s' instead of '%s'."
+level: error
+ignorecase: true
+swap:
+    behaviour: behavior
+    colour: color
+    favour: favor
+    honour: honor
+    initialise: initialize
+    initialised: initialized
+    optimise: optimize
+    optimised: optimized
+    organise: organize
+    organised: organized
+    recognise: recognize
+    serialise: serialize
+    serialised: serialized
+    synchronise: synchronize
+    synchronised: synchronized
+    licence: license
+    catalogue: catalog
+    centre: center
+    normalise: normalize
+    normalised: normalized
+    analyse: analyze

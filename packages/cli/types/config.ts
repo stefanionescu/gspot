@@ -1,4 +1,8 @@
 // The shape of gspot.toml after load: every reasoned key is normalized to { value, reason }.
+import type { z } from 'zod';
+import type { CarriedLists } from '#types/emit.ts';
+import type { SettingSpec } from '#types/manifest.ts';
+import type { policySchema, scopeSchema } from '#cli/policy/schema.ts';
 
 export type Reasoned<T> = { value: T; reason?: string };
 
@@ -32,7 +36,7 @@ export type NamingRule = {
     reason?: string;
 };
 
-export type NamingConfig = {
+export type NamingSettings = {
     banned_terms: string[];
     allowed: { name: string; reason: string }[];
     external: string[];
@@ -46,7 +50,7 @@ export type NamingConfig = {
 export type ArchitectureElement = { name: string; paths: string[] };
 export type ArchitectureAllow = { from: string; to: string[]; reason?: string };
 
-export type ArchitectureConfig = {
+export type ArchitectureSettings = {
     types_directory?: string;
     elements: ArchitectureElement[];
     allow: ArchitectureAllow[];
@@ -59,7 +63,7 @@ export type ArchitectureConfig = {
     allowed_imports: { from: string; to: string; reason: string }[];
 };
 
-export type StructureConfig = {
+export type StructureSettings = {
     reexports: 'none' | 'index-only';
     call_through_allowed: { file: string; name: string; reason: string }[];
     trivial_exemptions: { language?: string; path: string; names: string[]; reason: string }[];
@@ -69,12 +73,12 @@ export type StructureConfig = {
     python: Record<string, unknown>;
 };
 
-export type FormatConfig = {
+export type FormatSettings = {
     indent_style: 'space' | 'tab';
     indent_width: number;
     print_width: number;
     line_ending: 'lf' | 'crlf';
-    final_newline: boolean;
+    newline_at_end: boolean;
     quotes: 'single' | 'double';
     trailing_comma: 'all' | 'es5' | 'none';
     semicolons: boolean;
@@ -119,16 +123,16 @@ export type Policy = {
     presets: string[];
     scopes: ScopeEntry[];
     limits: Limits;
-    naming: NamingConfig;
-    architecture: ArchitectureConfig;
-    structure: StructureConfig;
-    format: Partial<FormatConfig>;
+    naming: NamingSettings;
+    architecture: ArchitectureSettings;
+    structure: StructureSettings;
+    format: Partial<FormatSettings>;
     prose: { vocabulary: string[]; disabled: { rule: string; reason: string }[] };
     tools: Record<string, ToolTable>;
     ignores: IgnoreEntry[];
     declares: DeclareEntry[];
     checks: RepositoryCheck[];
-    hooks: { manager: 'gspot' | 'lefthook' | 'husky' | 'none' };
+    hooks: { tool: 'gspot' | 'lefthook' | 'husky' | 'none' };
     ci: { provider: 'github' | 'none'; platforms: string[] };
     rules: { install: boolean; directory: string; project?: string };
     editor: { vscode: boolean };
@@ -139,9 +143,95 @@ export type Policy = {
 
 export type LocalPolicy = { skip: string[] };
 
-export type LoadedPolicy = {
+export type PolicyFiles = {
     policy: Policy;
     local: LocalPolicy;
     path: string;
     text: string;
 };
+
+export type Raw = Record<string, unknown>;
+
+export type Compact<T> = { [K in keyof T]: Exclude<T[K], undefined> };
+
+export type MergedView = {
+    scope: string;
+    presets: string[];
+    settings: Record<string, unknown>;
+    reasons: Record<string, string>;
+    format: FormatSettings;
+    limit: (key: string, language?: string) => number | undefined;
+    tool: (name: string) => Record<string, unknown>;
+    toolEnabled: (name: string) => boolean;
+    ignoresFor: (check: string) => IgnoreEntry[];
+    rulesOff: (check: string) => string[];
+    extra: (name: string) => Record<string, unknown> | undefined;
+};
+
+export type Proposal = {
+    presets: string[];
+    scopes: { path: string; presets: string[] }[];
+    carried: CarriedLists;
+    hooks: 'gspot' | 'lefthook' | 'husky' | 'none';
+    ci: 'github' | 'none';
+    rules: boolean;
+    runner: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none';
+    format?: Partial<FormatSettings>;
+    typesDirectory?: string;
+    commitScopes?: string[];
+};
+
+export type ResolvedSetting = {
+    key: string;
+    spec: SettingSpec;
+    value: unknown;
+    reason?: string;
+    source: string;
+    scope?: string;
+};
+
+export type SettingsSurface = {
+    specs: Map<string, SettingSpec>;
+    defaults: Map<string, { value: unknown; preset: string }>;
+    problems: string[];
+};
+
+export type Mutation = (raw: Raw) => void;
+
+export type WriteResult = { text: string; policy: Policy; changed: boolean };
+
+/** A written value with its reason, once the reasoned form is unwrapped. */
+export type PlainValue = { value: unknown; reason?: string };
+
+/** One layer of policy that a key is resolved through: the root table or one scope table. */
+export type PolicyLayer = { table: Partial<Policy>; name: string };
+
+/** A written key matched to its spec, with the language and category the key names. */
+export type SpecMatch = { spec: SettingSpec; language?: string; category?: string };
+
+/** Where a resolved value stands after some layers were applied. */
+export type SettingState = { value: unknown; source: string; reason: string | undefined };
+
+/** A zod schema node as the loader walks it to name the keys a table accepts. */
+export type SchemaNode = { def?: Record<string, unknown>; shape?: Record<string, unknown> };
+
+/** One step of a zod issue path. */
+export type PathSegment = string | number;
+
+/** gspot.toml as the schema accepts it, before normalization. */
+export type RawPolicy = z.infer<typeof policySchema>;
+
+/** One [[scope]] entry as written. */
+export type RawScope = z.infer<typeof scopeSchema>;
+
+/** The [limits] table as written. */
+export type RawLimits = NonNullable<RawPolicy['limits']>;
+
+/** The [naming] table as written. */
+export type RawNaming = NonNullable<RawPolicy['naming']>;
+
+/** The task-runner surfaces gspot can write. */
+export type RunnerSurface = 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none';
+
+/** What resolving a value for one scope needs. */
+export type PolicyScopeLayer = { surface: SettingsSurface; policy: Policy; scope: string };

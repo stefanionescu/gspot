@@ -1,4 +1,4 @@
-# xcode
+# `xcode`
 
 Kind: tool. Requires: swift, config-files. macOS only; every check here passes as a platform skip
 elsewhere.

@@ -1,16 +1,26 @@
 // The one network lookup: is there a newer gspot? Only when a person runs doctor, init or upgrade --check.
-import latestVersion from 'latest-version';
 import semver from 'semver';
+import latestVersion from 'latest-version';
 
-/** The newer version on npm, or undefined when none or offline. Never throws. */
+const LOOKUP_TIMEOUT_MS = 3000;
+
+/**
+ * The newer version on npm, or undefined when none or offline. Never throws.
+ * @param current the running version
+ * @returns the newer version
+ */
 export async function newerVersion(current: string): Promise<string | undefined> {
     try {
-        const latest = await Promise.race([
+        const found = await Promise.race([
             latestVersion('gspot'),
-            new Promise<undefined>((resolve) => setTimeout(() => resolve(undefined), 3000)),
+            new Promise<undefined>((settle) =>
+                setTimeout(() => {
+                    settle(undefined);
+                }, LOOKUP_TIMEOUT_MS),
+            ),
         ]);
-        if (latest === undefined) return undefined;
-        return semver.gt(latest, current) ? latest : undefined;
+        if (found === undefined) return undefined;
+        return semver.gt(found, current) ? found : undefined;
     } catch {
         return undefined;
     }

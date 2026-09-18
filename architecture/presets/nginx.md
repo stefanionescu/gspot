@@ -1,4 +1,4 @@
-# nginx
+# `nginx`
 
 Kind: tool. Requires: docker when the configuration runs in a container.
 

@@ -1,79 +1,94 @@
+import type { Choice } from '#types/output.ts';
 // The clack questions, asked only in a terminal and never under --yes.
-import { confirm, isCancel, multiselect, select, text } from '@clack/prompts';
+import { confirm, select } from '@clack/prompts';
+import { isCi } from '#cli/platform/environment.ts';
 
-export class NoTerminalError extends Error {
-    constructor(question: string, flag: string) {
-        super(`${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every proposal.`);
-        this.name = 'NoTerminalError';
+/** Thrown when a question cannot be answered: no terminal to ask in, or the person cancelled. The command exits 2. */
+export class PromptError extends Error {
+    /**
+     * The error for a question with no terminal to be asked in.
+     * @param question the question
+     * @param flag the flag that answers it
+     * @returns the error
+     */
+    static noTerminal(question: string, flag: string): PromptError {
+        return new PromptError(
+            `${question} There is no terminal to ask in. Pass ${flag}, or --yes to take every proposal.`,
+        );
+    }
+
+    /**
+     * The error for a cancelled question.
+     * @param question the question
+     * @returns the error
+     */
+    static cancelled(question: string): PromptError {
+        return new PromptError(`${question} Cancelled; nothing written.`);
+    }
+
+    /**
+     * Wraps the message.
+     * @param text the message
+     */
+    constructor(text: string) {
+        super(text);
+        this.name = 'PromptError';
     }
 }
 
-/** True when a question can be asked. */
+/**
+ * True when a question can be asked.
+ * @returns whether stdin and stdout are terminals outside CI
+ */
 export function canAsk(): boolean {
-    return Boolean(process.stdin.isTTY) && Boolean(process.stdout.isTTY) && !process.env['CI'];
+    return process.stdin.isTTY && process.stdout.isTTY && !isCi();
 }
 
-/** A yes or no question. */
-export async function askConfirm(question: string, flag: string, initial: boolean, yes: boolean): Promise<boolean> {
-    if (yes) return initial;
-    if (!canAsk()) throw new NoTerminalError(question, flag);
-    const answer = await confirm({ message: question, initialValue: initial });
-    if (isCancel(answer)) process.exit(2);
-    return answer as boolean;
+/**
+ * A yes or no question.
+ * @param question the question
+ * @param flag the flag that answers it without a terminal
+ * @param isDefaultYes the answer --yes takes, and the initial value in the terminal
+ * @param isYes whether --yes was given
+ * @returns the answer
+ */
+export async function isConfirmed(
+    question: string,
+    flag: string,
+    isDefaultYes: boolean,
+    isYes: boolean,
+): Promise<boolean> {
+    if (isYes) return isDefaultYes;
+    if (!canAsk()) throw PromptError.noTerminal(question, flag);
+    const answer = await confirm({ message: question, initialValue: isDefaultYes });
+    if (typeof answer !== 'boolean') throw PromptError.cancelled(question);
+    return answer;
 }
 
-/** One choice from a list. */
+/**
+ * One choice from a list.
+ * @param question the question
+ * @param flag the flag that answers it without a terminal
+ * @param choices the values with their labels
+ * @param initial the choice --yes takes, and the initial value in the terminal
+ * @param isYes whether --yes was given
+ * @returns the chosen value
+ */
 export async function askChoice<T extends string>(
     question: string,
     flag: string,
-    choices: { value: T; label: string; hint?: string | undefined }[],
+    choices: Choice<T>[],
     initial: T,
-    yes: boolean,
+    isYes: boolean,
 ): Promise<T> {
-    if (yes) return initial;
-    if (!canAsk()) throw new NoTerminalError(question, flag);
-    const answer = await select({
-        message: question,
-        options: choices.map((choice) => ({
-            value: choice.value,
-            label: choice.label,
-            ...(choice.hint ? { hint: choice.hint } : {}),
-        })) as unknown as Parameters<typeof select<T>>[0]['options'],
-        initialValue: initial,
-    });
-    if (isCancel(answer)) process.exit(2);
-    return answer as T;
-}
-
-/** Several choices from a list. */
-export async function askMany<T extends string>(
-    question: string,
-    flag: string,
-    choices: { value: T; label: string; hint?: string | undefined }[],
-    initial: T[],
-    yes: boolean,
-): Promise<T[]> {
-    if (yes) return initial;
-    if (!canAsk()) throw new NoTerminalError(question, flag);
-    const answer = await multiselect({
-        message: question,
-        options: choices.map((choice) => ({
-            value: choice.value,
-            label: choice.label,
-            ...(choice.hint ? { hint: choice.hint } : {}),
-        })) as unknown as Parameters<typeof multiselect<T>>[0]['options'],
-        initialValues: initial,
-        required: false,
-    });
-    if (isCancel(answer)) process.exit(2);
-    return answer as T[];
-}
-
-/** A free-text answer. */
-export async function askText(question: string, flag: string, initial: string, yes: boolean): Promise<string> {
-    if (yes) return initial;
-    if (!canAsk()) throw new NoTerminalError(question, flag);
-    const answer = await text({ message: question, initialValue: initial });
-    if (isCancel(answer)) process.exit(2);
-    return answer as string;
+    if (isYes) return initial;
+    if (!canAsk()) throw PromptError.noTerminal(question, flag);
+    const options = choices.map((choice) => ({
+        value: choice.value,
+        label: choice.label,
+        ...(choice.hint === undefined ? {} : { hint: choice.hint }),
+    })) as Parameters<typeof select<T>>[0]['options'];
+    const answer = await select<T>({ message: question, options, initialValue: initial });
+    if (typeof answer === 'symbol') throw PromptError.cancelled(question);
+    return answer;
 }

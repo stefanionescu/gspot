@@ -1,18 +1,37 @@
 {
     "name": "@gspot/eslint-plugin",
     "version": "0.1.0",
+    "description": "The structural ESLint rules gspot ships for JavaScript and TypeScript: wrappers, barrels, lone files, import layout and direction, private-first order, types placement.",
+    "license": "MIT",
+    "repository": "github:stefanionescu/gspot",
     "type": "module",
     "main": "./dist/plugin.cjs",
     "module": "./dist/plugin.js",
+    "types": "./dist/plugin.d.ts",
     "exports": {
         ".": {
+            "types": "./dist/plugin.d.ts",
             "import": "./dist/plugin.js",
             "require": "./dist/plugin.cjs"
         }
     },
+    "imports": {
+        "#plugin/*": "./src/*",
+        "#plugin-types/*": "./types/*",
+        "#plugin-tests/*": "./tests/*"
+    },
     "files": [
         "dist"
     ],
+    "dependencies": {
+        "@typescript-eslint/utils": "8.70.0"
+    },
+    "devDependencies": {
+        "@typescript-eslint/parser": "8.70.0",
+        "@typescript-eslint/rule-tester": "8.70.0",
+        "eslint": "10.10.0",
+        "typescript": "5.9.3"
+    },
     "peerDependencies": {
         "eslint": ">=9.38.0"
     }

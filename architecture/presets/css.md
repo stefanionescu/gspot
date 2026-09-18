@@ -1,4 +1,4 @@
-# css
+# `css`
 
 Kind: language. Requires: formatting, spelling.
 

@@ -1,0 +1,241 @@
+[preset]
+id = "javascript"
+kind = "language"
+title = "JavaScript"
+requires = ["structure", "naming", "formatting", "spelling"]
+description = "ESLint with the shipped rule set over every JavaScript file, type checking through JSDoc, and knip for dead code."
+
+[detect]
+extensions = [".js", ".jsx", ".mjs", ".cjs"]
+shebangs = ["node"]
+
+[claims]
+extensions = [".js", ".jsx", ".mjs", ".cjs"]
+tags = ["shebang:node"]
+
+[[tools]]
+name = "eslint"
+version = "10.10.0"
+npm = "eslint"
+floor = "9.38.0"
+
+[[tools]]
+name = "@eslint/js"
+version = "10.0.1"
+npm = "@eslint/js"
+
+[[tools]]
+name = "@gspot/eslint-plugin"
+version = "0.1.0"
+npm = "@gspot/eslint-plugin"
+
+[[tools]]
+name = "eslint-plugin-sonarjs"
+version = "4.2.0"
+npm = "eslint-plugin-sonarjs"
+floor = "3.0.0"
+
+[[tools]]
+name = "eslint-plugin-unicorn"
+version = "74.0.0"
+npm = "eslint-plugin-unicorn"
+floor = "63.0.0"
+
+[[tools]]
+name = "eslint-plugin-security"
+version = "4.0.1"
+npm = "eslint-plugin-security"
+
+[[tools]]
+name = "eslint-plugin-n"
+version = "18.3.0"
+npm = "eslint-plugin-n"
+floor = "17.24.0"
+
+[[tools]]
+name = "eslint-plugin-jsdoc"
+version = "64.3.9"
+npm = "eslint-plugin-jsdoc"
+floor = "50.8.0"
+
+[[tools]]
+name = "eslint-plugin-regexp"
+version = "3.3.0"
+npm = "eslint-plugin-regexp"
+floor = "2.10.0"
+
+[[tools]]
+name = "eslint-plugin-import-x"
+version = "4.17.1"
+npm = "eslint-plugin-import-x"
+
+[[tools]]
+name = "@eslint-community/eslint-plugin-eslint-comments"
+version = "4.8.0"
+npm = "@eslint-community/eslint-plugin-eslint-comments"
+
+[[tools]]
+name = "eslint-plugin-boundaries"
+version = "7.2.0"
+npm = "eslint-plugin-boundaries"
+floor = "5.0.0"
+
+[[tools]]
+name = "eslint-plugin-package-json"
+version = "1.8.0"
+npm = "eslint-plugin-package-json"
+
+[[tools]]
+name = "eslint-config-prettier"
+version = "10.1.8"
+npm = "eslint-config-prettier"
+
+[[tools]]
+name = "globals"
+version = "17.12.0"
+npm = "globals"
+
+[[tools]]
+name = "knip"
+version = "6.35.1"
+npm = "knip"
+floor = "5.85.0"
+
+[[tools]]
+name = "typescript"
+version = "5.9.3"
+npm = "typescript"
+
+[[configs]]
+template = "eslint.config.js.tmpl"
+target = ".gspot/eslint.config.mjs"
+stub = { path = "eslint.config.mjs", body = "export { default } from '{target}';" }
+
+[[configs]]
+template = "jsconfig.json.tmpl"
+target = ".gspot/jsconfig.json"
+
+[[configs]]
+template = "knip.json.tmpl"
+target = ".gspot/knip.json"
+header = false
+
+[[checks]]
+id = "javascript/eslint"
+stage = "commit"
+takes = "files"
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
+fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
+fix_order = "codemod"
+claims = { extensions = [".js", ".jsx", ".mjs", ".cjs"], tags = ["shebang:node"] }
+inspection = ["style", "structure", "security"]
+output = { format = "eslint-json" }
+tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:"
+summary = "Runs ESLint with the shipped rule set over every JavaScript file."
+why = "ESLint catches mistakes and slop the runtime accepts: unused code, unsafe patterns, functions that only forward."
+fix = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
+
+[[checks]]
+id = "javascript/checkjs"
+stage = "commit"
+takes = "project"
+command = ["tsc", "-p", "{config:jsconfig}", "--pretty", "false"]
+tool = "tsc"
+whole = true
+inspection = ["types"]
+output = { format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$" }
+summary = "Type-checks plain JavaScript through its JSDoc comments."
+why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."
+fix = "Add or fix the JSDoc type the checker names; gspot explain tsc/TS2345 links the error page."
+
+[[checks]]
+id = "javascript/knip"
+stage = "push"
+takes = "project"
+command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "compact", "{workspace:--workspace}"]
+cwd = "root"
+inspection = ["dependencies"]
+output = { format = "regex", pattern = "^(?<file>[^:\\s]+)(?::\\s*(?<message>.*))?$" }
+summary = "Finds files, exports and dependencies nothing uses."
+why = "Dead code is read, maintained and shipped for nobody."
+fix = "Delete what knip names, or add a knip entry point with gspot set tools.knip.entry if the file is loaded in a way knip cannot see."
+
+[[settings]]
+name = "tools.eslint.rules"
+kind = "table"
+direction = "per-rule"
+default = {}
+summary = "Rule options and rules turned on, by ESLint rule id; a rule turned off is a gspot ignore --rule."
+
+[[settings]]
+name = "tools.eslint.import_style"
+kind = "table"
+direction = "neutral"
+default = {}
+summary = "The import suffix style per file class: js for compiled ESM, ts for Deno and Bun, extensionless for bundled code."
+
+[[settings]]
+name = "tools.eslint.test_files"
+kind = "list"
+direction = "neutral"
+default = ["**/*.{test,spec}.{ts,tsx,js,mjs,cjs}", "**/tests/**", "**/__tests__/**"]
+summary = "The globs that count as test files for the test overrides."
+
+[[settings]]
+name = "tools.eslint.script_files"
+kind = "list"
+direction = "neutral"
+default = ["scripts/**", "**/*.config.{js,mjs,cjs,ts}", ".mise/tasks/**"]
+summary = "The globs that count as scripts: no-process-exit off, every unused argument reported."
+
+[[settings]]
+name = "tools.eslint.globals"
+kind = "table"
+direction = "neutral"
+default = {}
+summary = "The runtime per file class when the tree does not say: a glob to node, browser, worker or commonjs."
+
+[[settings]]
+name = "tools.eslint.node_version"
+kind = "string"
+direction = "neutral"
+default = ">=22.0.0"
+summary = "The Node version the n plugin checks builtins against; detected from engines at init."
+
+[[settings]]
+name = "tools.eslint.restricted_imports"
+kind = "list"
+direction = "tightening"
+default = []
+summary = "Imports this repository refuses, each with a name and a message."
+
+[[settings]]
+name = "tools.knip.entry"
+kind = "list"
+direction = "neutral"
+default = []
+summary = "Entry points knip starts from beyond the ones the framework preset declares."
+
+[[settings]]
+name = "tools.knip.ignore"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Files knip leaves out, each with a reason."
+
+[[settings]]
+name = "tools.knip.ignore_dependencies"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses."
+
+[required]
+".js" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
+".mjs" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
+".cjs" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
+".jsx" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
+
+[rules]
+language = ["language/JAVASCRIPT.md", "language/naming/JAVASCRIPT.md"]
+runtime = ["runtime/node/NODE.md"]

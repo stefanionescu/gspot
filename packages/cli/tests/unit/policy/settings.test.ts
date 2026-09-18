@@ -1,11 +1,11 @@
 import { describe, expect, test } from 'bun:test';
-
-import { parsePolicyText } from '#cli/policy/load.ts';
-import { buildSurface, listSettings, resolveSetting, specFor, validateAgainstSurface } from '#cli/policy/settings.ts';
-import { loadManifests } from '#cli/presets/load.ts';
+import { parsePolicyText } from '#cli/policy/read.ts';
+import { presetManifests } from '#cli/presets/read.ts';
 import { selectPresets } from '#cli/presets/select.ts';
+import { validateAgainstSurface } from '#cli/policy/audit.ts';
+import { buildSurface, listSettings, settingValue, specFor } from '#cli/policy/settings.ts';
 
-const selected = selectPresets(['bash'], loadManifests());
+const selected = selectPresets(['bash'], presetManifests());
 const surface = buildSurface(selected);
 
 describe('the settings surface', () => {
@@ -31,9 +31,9 @@ describe('the settings surface', () => {
             'version = 1\npresets = ["bash"]\n[limits]\nfile_lines = 250\n[[scope]]\npath = "api"\n[scope.limits]\nfile_lines = 200\n',
             'gspot.toml',
         );
-        expect(resolveSetting(surface, policy, 'limits.file_lines')?.value).toBe(250);
-        expect(resolveSetting(surface, policy, 'limits.file_lines', 'api')?.value).toBe(200);
-        expect(resolveSetting(surface, policy, 'limits.function_lines')?.source).toBe('preset structure');
+        expect(settingValue(surface, policy, 'limits.file_lines')?.value).toBe(250);
+        expect(settingValue(surface, policy, 'limits.file_lines', 'api')?.value).toBe(200);
+        expect(settingValue(surface, policy, 'limits.function_lines')?.source).toBe('preset structure');
     });
 
     test('lists append and deduplicate across layers', () => {
@@ -41,7 +41,7 @@ describe('the settings surface', () => {
             'version = 1\npresets = ["bash"]\n[naming]\nbanned_terms = ["dispatcher"]\n[[scope]]\npath = "api"\n[scope.naming]\nbanned_terms = ["dispatcher", "orchestrator"]\n',
             'gspot.toml',
         );
-        expect(resolveSetting(surface, policy, 'naming.banned_terms', 'api')?.value).toEqual([
+        expect(settingValue(surface, policy, 'naming.banned_terms', 'api')?.value).toEqual([
             'dispatcher',
             'orchestrator',
         ]);
@@ -79,7 +79,7 @@ describe('the settings surface', () => {
     test('listSettings returns every key sorted', () => {
         const policy = parsePolicyText('version = 1\npresets = ["bash"]\n', 'gspot.toml');
         const keys = listSettings(surface, policy).map((row) => row.key);
-        expect(keys).toEqual([...keys].sort());
+        expect(keys).toEqual(keys.toSorted((a, b) => a.localeCompare(b)));
         expect(keys).toContain('format.indent_width');
     });
 });

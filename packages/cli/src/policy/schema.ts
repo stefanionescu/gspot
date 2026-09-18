@@ -1,188 +1,204 @@
 // The zod schema of gspot.toml. Pure: no transforms, so the JSON schema is generated from it.
 import { z } from 'zod';
 
-const reasoned = <T extends z.ZodTypeAny>(inner: T) =>
-    z.union([inner, z.strictObject({ value: inner, reason: z.string() })]);
+const INDENT_MAX = 8;
+
+const PRINT_WIDTH_MIN = 40;
+
+const PRINT_WIDTH_MAX = 400;
+
+const text = z.string();
+
+const flag = z.boolean();
+
+const textList = z.array(text);
+
+const textListNonEmpty = textList.min(1);
+
+const anyTable = z.record(text, z.unknown());
+
+const reasoned = <T extends z.ZodType>(inner: T) => z.union([inner, z.strictObject({ value: inner, reason: text })]);
 
 const reasonedNumber = reasoned(z.number());
-const reasonedBoolean = reasoned(z.boolean());
-const reasonedStringList = reasoned(z.array(z.string()));
 
-const limitTable = z.record(z.string(), reasonedNumber);
+const reasonedBoolean = reasoned(flag);
 
-const limitsSchema = z.record(z.string(), z.union([reasonedNumber, limitTable]));
+const reasonedTextList = reasoned(textList);
 
-const namingCategory = z.strictObject({
+const limitTable = z.record(text, reasonedNumber);
+
+const limitValue = z.union([reasonedNumber, limitTable]);
+const limitsTable = z.record(text, limitValue);
+
+const namingCategoryShape = {
     max_chars: reasonedNumber.optional(),
     max_words: reasonedNumber.optional(),
-    case: reasonedStringList.optional(),
-});
+    case: reasonedTextList.optional(),
+};
 
-const namingLanguage = z
-    .object({
-        max_chars: reasonedNumber.optional(),
-        max_words: reasonedNumber.optional(),
-        case: reasonedStringList.optional(),
-    })
-    .catchall(namingCategory);
+const namingCategory = z.strictObject(namingCategoryShape);
+
+const namingLanguage = z.object(namingCategoryShape).catchall(namingCategory);
 
 const namingRule = z.strictObject({
-    paths: z.array(z.string()).min(1),
-    languages: z.array(z.string()).optional(),
-    categories: z.array(z.string()).optional(),
-    names: z.array(z.string()).optional(),
-    structural_prefix: z.string().optional(),
-    allow_digits: z.boolean().optional(),
-    allow_duplicate_words: z.boolean().optional(),
-    exclude: z.boolean().optional(),
-    case: z.array(z.string()).optional(),
-    reason: z.string().optional(),
+    paths: textListNonEmpty,
+    languages: textList.optional(),
+    categories: textList.optional(),
+    names: textList.optional(),
+    structural_prefix: text.optional(),
+    allow_digits: flag.optional(),
+    allow_duplicate_words: flag.optional(),
+    exclude: flag.optional(),
+    case: textList.optional(),
+    reason: text.optional(),
 });
 
-const namingSchema = z
-    .object({
-        banned_terms: z.array(z.string()).optional(),
-        allowed: z.array(z.strictObject({ name: z.string(), reason: z.string() })).optional(),
-        external: z.array(z.string()).optional(),
-        reserved: z.array(z.strictObject({ term: z.string(), allowed_for: z.array(z.string()) })).optional(),
-        remove_groups: z.array(z.strictObject({ group: z.string(), reason: z.string() })).optional(),
-        contract_properties: z.array(z.strictObject({ file: z.string(), names: z.array(z.string()) })).optional(),
-        rules: z.array(namingRule).optional(),
-    })
-    .catchall(namingLanguage);
+const namedReason = z.strictObject({ name: text, reason: text });
+
+const reservedTerm = z.strictObject({ term: text, allowed_for: textList });
+
+const groupReason = z.strictObject({ group: text, reason: text });
+
+const contractProperties = z.strictObject({ file: text, names: textList });
+
+const namingLists = z.object({
+    banned_terms: textList.optional(),
+    allowed: z.array(namedReason).optional(),
+    external: textList.optional(),
+    reserved: z.array(reservedTerm).optional(),
+    remove_groups: z.array(groupReason).optional(),
+    contract_properties: z.array(contractProperties).optional(),
+    rules: z.array(namingRule).optional(),
+});
+
+const element = z.strictObject({ name: text, paths: textList });
+
+const allowedEdge = z.strictObject({ from: text, to: textList, reason: text.optional() });
+
+const allowedImport = z.strictObject({ from: text, to: text, reason: text });
+
+const roleGlobs = z.union([text, textList]);
 
 const architectureSchema = z.strictObject({
-    types_directory: z.string().optional(),
-    elements: z.array(z.strictObject({ name: z.string(), paths: z.array(z.string()) })).optional(),
-    allow: z
-        .array(z.strictObject({ from: z.string(), to: z.array(z.string()), reason: z.string().optional() }))
-        .optional(),
-    roles: z.record(z.string(), z.union([z.string(), z.array(z.string())])).optional(),
-    contracts: z.array(z.record(z.string(), z.unknown())).optional(),
-    package_roots: z.array(z.string()).optional(),
-    route_directories: z.array(z.string()).optional(),
-    shared_directories: z.array(z.string()).optional(),
-    feature_contracts: z.array(z.string()).optional(),
-    allowed_imports: z.array(z.strictObject({ from: z.string(), to: z.string(), reason: z.string() })).optional(),
+    types_directory: text.optional(),
+    elements: z.array(element).optional(),
+    allow: z.array(allowedEdge).optional(),
+    roles: z.record(text, roleGlobs).optional(),
+    contracts: z.array(anyTable).optional(),
+    package_roots: textList.optional(),
+    route_directories: textList.optional(),
+    shared_directories: textList.optional(),
+    feature_contracts: textList.optional(),
+    allowed_imports: z.array(allowedImport).optional(),
 });
 
-const pathsWithReason = z.strictObject({ paths: z.array(z.string()).min(1), reason: z.string() });
+const reasonedPaths = z.strictObject({ paths: textListNonEmpty, reason: text });
+
+const callThrough = z.strictObject({ file: text, name: text, reason: text });
+
+const trivialExemption = z.strictObject({ language: text.optional(), path: text, names: textList, reason: text });
 
 const structureSchema = z.strictObject({
     reexports: z.enum(['none', 'index-only']).optional(),
-    call_through_allowed: z
-        .array(z.strictObject({ file: z.string(), name: z.string(), reason: z.string() }))
-        .optional(),
-    trivial_exemptions: z
-        .array(
-            z.strictObject({
-                language: z.string().optional(),
-                path: z.string(),
-                names: z.array(z.string()),
-                reason: z.string(),
-            }),
-        )
-        .optional(),
-    single_file_folder_allowed: z.array(pathsWithReason).optional(),
-    prefix_collision_allowed: z.array(pathsWithReason).optional(),
-    folder_name_allowed: z.array(pathsWithReason).optional(),
-    python: z.record(z.string(), z.unknown()).optional(),
+    call_through_allowed: z.array(callThrough).optional(),
+    trivial_exemptions: z.array(trivialExemption).optional(),
+    single_file_folder_allowed: z.array(reasonedPaths).optional(),
+    prefix_collision_allowed: z.array(reasonedPaths).optional(),
+    folder_name_allowed: z.array(reasonedPaths).optional(),
+    python: anyTable.optional(),
 });
 
 const formatSchema = z.strictObject({
     indent_style: z.enum(['space', 'tab']).optional(),
-    indent_width: z.number().int().min(1).max(8).optional(),
-    print_width: z.number().int().min(40).max(400).optional(),
+    indent_width: z.number().int().min(1).max(INDENT_MAX).optional(),
+    print_width: z.number().int().min(PRINT_WIDTH_MIN).max(PRINT_WIDTH_MAX).optional(),
     line_ending: z.enum(['lf', 'crlf']).optional(),
-    final_newline: z.boolean().optional(),
+    newline_at_end: flag.optional(),
     quotes: z.enum(['single', 'double']).optional(),
     trailing_comma: z.enum(['all', 'es5', 'none']).optional(),
-    semicolons: z.boolean().optional(),
+    semicolons: flag.optional(),
 });
 
-const proseSchema = z.strictObject({
-    vocabulary: z.array(z.string()).optional(),
-    disabled: z.array(z.strictObject({ rule: z.string(), reason: z.string() })).optional(),
-});
+const disabledRule = z.strictObject({ rule: text, reason: text });
 
-const toolTable = z
-    .object({
-        enabled: reasonedBoolean.optional(),
-        extra: z.object({ reason: z.string() }).catchall(z.unknown()).optional(),
-    })
-    .catchall(z.unknown());
+const proseSchema = z.strictObject({ vocabulary: textList.optional(), disabled: z.array(disabledRule).optional() });
+
+const extraTable = z.object({ reason: text }).catchall(z.unknown());
+
+const toolTable = z.object({ enabled: reasonedBoolean.optional(), extra: extraTable.optional() }).catchall(z.unknown());
 
 const ignoreSchema = z.strictObject({
-    check: z.string(),
-    rule: z.string().optional(),
-    finding: z.string().optional(),
-    paths: z.array(z.string()).optional(),
-    reason: z.string(),
+    check: text,
+    rule: text.optional(),
+    finding: text.optional(),
+    paths: textList.optional(),
+    reason: text,
 });
 
 const declareSchema = z.strictObject({
-    paths: z.array(z.string()).min(1),
-    produced_by: z.string().optional(),
-    vendored: z.boolean().optional(),
-    reason: z.string().optional(),
+    paths: textListNonEmpty,
+    produced_by: text.optional(),
+    vendored: flag.optional(),
+    reason: text.optional(),
 });
 
 const checkSchema = z.strictObject({
-    id: z.string(),
-    command: z.array(z.string()).min(1),
-    paths: z.array(z.string()).min(1),
+    id: text,
+    command: textListNonEmpty,
+    paths: textListNonEmpty,
     stage: z.enum(['commit', 'push', 'manual']),
-    fix: z.array(z.string()).optional(),
-    count_regex: z.string().optional(),
+    fix: textList.optional(),
+    count_regex: text.optional(),
     requires: z.enum(['build', 'docker', 'network']).optional(),
     platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
-    summary: z.string().optional(),
+    summary: text.optional(),
 });
 
+const hooksSchema = z.strictObject({ tool: z.enum(['gspot', 'lefthook', 'husky', 'none']).optional() });
+
+const ciPlatform = z.enum(['ubuntu', 'macos', 'windows']);
+
+const ciSchema = z.strictObject({
+    provider: z.enum(['github', 'none']).optional(),
+    platforms: z.array(ciPlatform).optional(),
+});
+
+const rulesSchema = z.strictObject({ install: flag.optional(), directory: text.optional(), project: text.optional() });
+
+const editorSchema = z.strictObject({ vscode: flag.optional() });
+
+const coverageSchema = z.strictObject({ strict: flag.optional() });
+
+const runnerSchema = z.strictObject({ surface: z.enum(['mise', 'npm', 'bun', 'pnpm', 'uv', 'none']).optional() });
+
+const namingTable = namingLists.catchall(namingLanguage);
+
 const scopeBody = {
-    limits: limitsSchema.optional(),
-    naming: namingSchema.optional(),
+    limits: limitsTable.optional(),
+    naming: namingTable.optional(),
     architecture: architectureSchema.optional(),
     structure: structureSchema.optional(),
-    tools: z.record(z.string(), toolTable).optional(),
+    tools: z.record(text, toolTable).optional(),
     format: formatSchema.optional(),
 };
 
-const scopeSchema = z.strictObject({
-    path: z.string(),
-    presets: z.array(z.string()).optional(),
-    ...scopeBody,
-});
+/** One [[scope]] entry: its path, presets, and the per-scope tables. */
+export const scopeSchema = z.strictObject({ path: text, presets: textList.optional(), ...scopeBody });
 
+/** The whole of gspot.toml. */
 export const policySchema = z.strictObject({
     version: z.number().int(),
-    presets: z.array(z.string()).optional(),
+    presets: textList.optional(),
     scope: z.array(scopeSchema).optional(),
     ...scopeBody,
     prose: proseSchema.optional(),
     ignore: z.array(ignoreSchema).optional(),
     declare: z.array(declareSchema).optional(),
     check: z.array(checkSchema).optional(),
-    hooks: z.strictObject({ manager: z.enum(['gspot', 'lefthook', 'husky', 'none']).optional() }).optional(),
-    ci: z
-        .strictObject({
-            provider: z.enum(['github', 'none']).optional(),
-            platforms: z.array(z.enum(['ubuntu', 'macos', 'windows'])).optional(),
-        })
-        .optional(),
-    rules: z
-        .strictObject({
-            install: z.boolean().optional(),
-            directory: z.string().optional(),
-            project: z.string().optional(),
-        })
-        .optional(),
-    editor: z.strictObject({ vscode: z.boolean().optional() }).optional(),
-    coverage: z.strictObject({ strict: z.boolean().optional() }).optional(),
-    runner: z.strictObject({ surface: z.enum(['mise', 'npm', 'bun', 'pnpm', 'uv', 'none']).optional() }).optional(),
+    hooks: hooksSchema.optional(),
+    ci: ciSchema.optional(),
+    rules: rulesSchema.optional(),
+    editor: editorSchema.optional(),
+    coverage: coverageSchema.optional(),
+    runner: runnerSchema.optional(),
 });
-
-export type RawPolicy = z.infer<typeof policySchema>;
-export type RawScope = z.infer<typeof scopeSchema>;
-export type RawLimits = z.infer<typeof limitsSchema>;
-export type RawNaming = z.infer<typeof namingSchema>;

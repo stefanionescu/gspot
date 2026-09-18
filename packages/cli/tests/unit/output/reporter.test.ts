@@ -1,8 +1,7 @@
+import { main } from '#cli/program.ts';
+import type { RunRecord } from '#types/record.ts';
 import { describe, expect, test } from 'bun:test';
-
-import { renderRun } from '#cli/output/reporter.ts';
-import { main } from '#cli/main.ts';
-import type { RunRecord } from '#types/run-record.ts';
+import { runText } from '#cli/output/reporter.ts';
 
 const record: RunRecord = {
     version: '0.1.0',
@@ -57,7 +56,7 @@ const record: RunRecord = {
 
 describe('the reporter', () => {
     test('prints one line per check, findings file first with a help line, reproduce lines, baselines and the summary', () => {
-        const text = renderRun(record, { quiet: false, verbose: false });
+        const text = runText(record, { quiet: false, verbose: false });
         expect(text).toContain('root  bash/shellcheck      fail       3 files     0.1s');
         expect(text).toContain('  a.sh:4:3  SC2086  Double quote to prevent globbing.');
         expect(text).toContain('    help: Quote it.');
@@ -70,8 +69,8 @@ describe('the reporter', () => {
     });
 
     test('--quiet hides passing checks and --verbose prints ignores with reasons', () => {
-        expect(renderRun(record, { quiet: true, verbose: false })).not.toContain('bash/shfmt');
-        expect(renderRun(record, { quiet: false, verbose: true })).toContain(
+        expect(runText(record, { quiet: true, verbose: false })).not.toContain('bash/shfmt');
+        expect(runText(record, { quiet: false, verbose: true })).toContain(
             'ignore     bash/shellcheck SC2312  why  (1 matched)',
         );
     });
@@ -79,8 +78,8 @@ describe('the reporter', () => {
 
 describe('the program', () => {
     test('an unknown command exits 2', async () => {
-        const original = process.stderr.write;
-        process.stderr.write = (() => true) as typeof process.stderr.write;
+        const original = process.stderr.write.bind(process.stderr);
+        process.stderr.write = () => true;
         try {
             expect(await main(['xyzzy'])).toBe(2);
         } finally {

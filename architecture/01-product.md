@@ -20,7 +20,7 @@ gspot is the shared house style for AI-written code, delivered as one binary:
 - **Configured linters.** gspot writes the configuration for the tools the repository already
   needs (ESLint, Prettier, Ruff, SwiftLint, ShellCheck, sqlfluff and the rest) at full
   strictness, and runs them over an explicit file list.
-- **The missing rules.** gspot ships the structural, naming, prose, security and drift checks
+- **The missing rules.** gspot ships the structural, naming, prose, security, and drift checks
   the standard tools lack, as one engine per concern, versioned with the rest.
 - **Agent instructions.** gspot installs rule files that tell an agent how to write code in this
   repository, selected by what the repository uses.
@@ -84,7 +84,7 @@ and gets findings from the hooks with a message it can act on.
   expresses the rule, and the preset names the tools it searched.
 - **Detect, never assume.** gspot learns the repository from its tracked files and manifests.
   It never assumes a directory layout.
-- **Do not report what nobody can fix.** Generated, vendored and binary files get the checks
+- **Do not report what nobody can fix.** Generated, vendored, and binary files get the checks
   that apply to them and nothing else.
 - **Easy to change, impossible to hide.** One TOML line changes a limit or adds a term. The line
   carries a reason and prints every run.
@@ -93,7 +93,7 @@ and gets findings from the hooks with a message it can act on.
 - **Take over, list, never guess.** At `init`, gspot replaces the configuration of every tool it
   has a preset for, carries the repository's exception lists, and lists everything else it found
   (other tools, hand-written hooks, home-grown lint folders) without touching it.
-- **Written for someone who does not code.** Every message, help text, check summary and page
+- **Written for someone who does not code.** Every message, help text, check summary, and page
   says what happened and what to do next, in plain words, and names the command that does it.
   gspot's own prose runs through gspot's prose engine.
 

@@ -1,4 +1,4 @@
-# licenses
+# `licenses`
 
 Kind: repository. Selected by default when a manifest exists.
 

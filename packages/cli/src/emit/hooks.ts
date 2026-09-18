@@ -1,48 +1,79 @@
 // .gspot/hooks/*, core.hooksPath, the husky and lefthook forms.
-import { HOOK_HEADER } from '#config/markers.ts';
 import { git } from '#cli/platform/spawn.ts';
-import type { GeneratedFile } from '#types/render.ts';
+import { HOOK_HEADER } from '#config/markers.ts';
+import type { HookName, GeneratedFile, LefthookBlock } from '#types/emit.ts';
 
-export type HookName = 'pre-commit' | 'pre-push' | 'commit-msg';
-
+const RUNTIME_LINE = '# Runtime: Bash 4.0+, macOS and Linux.';
+const HOOK_NAMES: HookName[] = ['pre-commit', 'pre-push', 'commit-msg'];
 const HOOK_ARGS: Record<HookName, string> = {
     'pre-commit': 'check --staged',
     'pre-push': 'check',
     'commit-msg': 'check --stage message --message-file',
 };
+const RUNNER_EXEC: Record<string, string> = {
+    mise: 'mise exec -- gspot',
+    bun: 'bunx gspot',
+    npm: 'npx gspot',
+    pnpm: 'pnpm exec gspot',
+};
 
-/** The command that resolves the pinned gspot for a runner. */
+/**
+ * The command that resolves the pinned gspot for a runner.
+ * @param surface the runner surface
+ * @param binaryPath the gspot binary to call when there is no runner
+ * @returns the command prefix
+ */
 export function runnerExec(surface: string, binaryPath?: string): string {
-    switch (surface) {
-        case 'mise':
-            return 'mise exec -- gspot';
-        case 'bun':
-            return 'bunx gspot';
-        case 'npm':
-            return 'npx gspot';
-        case 'pnpm':
-            return 'pnpm exec gspot';
-        default:
-            return binaryPath ?? 'gspot';
-    }
+    return RUNNER_EXEC[surface] ?? binaryPath ?? 'gspot';
 }
 
-/** The body of one hook. */
+/**
+ * The body of one hook.
+ * @param name the hook
+ * @param surface the runner surface
+ * @param binaryPath the gspot binary to call when there is no runner
+ * @returns the script text
+ */
 export function hookBody(name: HookName, surface: string, binaryPath?: string): string {
-    const lfs = name === 'pre-push' ? 'if command -v git-lfs >/dev/null 2>&1; then git lfs pre-push "$@"; fi\n' : '';
+    const lfs =
+        name === 'pre-push'
+            ? ['    if command -v git-lfs >/dev/null 2>&1; then', '        git lfs pre-push "$@"', '    fi']
+            : [];
+    const exec = runnerExec(surface, binaryPath)
+        .split(' ')
+        .map((word) => `'${word}'`)
+        .join(' ');
     return [
         '#!/usr/bin/env bash',
+        '#',
         HOOK_HEADER,
+        RUNTIME_LINE,
         'set -euo pipefail',
-        `${lfs}read -ra gspot_command <<<"\${GSPOT_BIN:-${runnerExec(surface, binaryPath)}}"`,
-        `exec "\${gspot_command[@]}" ${HOOK_ARGS[name]} "$@"`,
+        'shopt -s inherit_errexit',
+        '',
+        'main() {',
+        '    local -a gspot_command',
+        '    read -ra gspot_command <<<"${GSPOT_BIN-}"',
+        '    if [[ ${#gspot_command[@]} -eq 0 ]]; then',
+        `        gspot_command=(${exec})`,
+        '    fi',
+        ...lfs,
+        `    exec "\${gspot_command[@]}" ${HOOK_ARGS[name]} "$@"`,
+        '}',
+        '',
+        'main "$@"',
         '',
     ].join('\n');
 }
 
-/** The three gspot hook files. */
+/**
+ * The three gspot hook files.
+ * @param surface the runner surface
+ * @param binaryPath the gspot binary to call when there is no runner
+ * @returns the executable hook files under .gspot/hooks
+ */
 export function gspotHooks(surface: string, binaryPath?: string): GeneratedFile[] {
-    return (['pre-commit', 'pre-push', 'commit-msg'] as HookName[]).map((name) => ({
+    return HOOK_NAMES.map((name) => ({
         path: `.gspot/hooks/${name}`,
         content: hookBody(name, surface, binaryPath),
         readOnly: false,
@@ -51,28 +82,44 @@ export function gspotHooks(surface: string, binaryPath?: string): GeneratedFile[
     }));
 }
 
-/** Points core.hooksPath at .gspot/hooks. */
+/**
+ * Points core.hooksPath at .gspot/hooks.
+ * @param root the repository root
+ */
 export function installHooksPath(root: string): void {
     git(root, ['config', 'core.hooksPath', '.gspot/hooks']);
 }
 
-/** Removes core.hooksPath when it points at gspot. */
+/**
+ * Removes core.hooksPath when it points at gspot.
+ * @param root the repository root
+ */
 export function removeHooksPath(root: string): void {
     const current = git(root, ['config', '--get', 'core.hooksPath'])?.trim();
     if (current === '.gspot/hooks') git(root, ['config', '--unset', 'core.hooksPath']);
 }
 
-/** The husky files: one line each, appended to whatever the person has. */
+/**
+ * The husky files: one line each, appended to whatever the person has.
+ * @param surface the runner surface
+ * @param binaryPath the gspot binary to call when there is no runner
+ * @returns the line per husky file
+ */
 export function huskyLines(surface: string, binaryPath?: string): { path: string; line: string }[] {
     const exec = runnerExec(surface, binaryPath);
-    return (['pre-commit', 'pre-push', 'commit-msg'] as HookName[]).map((name) => ({
+    return HOOK_NAMES.map((name) => ({
         path: `.husky/${name}`,
         line: `${exec} ${HOOK_ARGS[name]}${name === 'commit-msg' ? ' "$1"' : ''}`,
     }));
 }
 
-/** The lefthook block. */
-export function lefthookBlock(surface: string, binaryPath?: string): Record<string, unknown> {
+/**
+ * The lefthook block.
+ * @param surface the runner surface
+ * @param binaryPath the gspot binary to call when there is no runner
+ * @returns the three hook tables lefthook.yml carries
+ */
+export function lefthookBlock(surface: string, binaryPath?: string): LefthookBlock {
     const exec = runnerExec(surface, binaryPath);
     return {
         'pre-commit': { commands: { gspot: { run: `${exec} check --staged` } } },

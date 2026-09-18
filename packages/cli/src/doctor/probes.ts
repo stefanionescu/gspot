@@ -1,85 +1,98 @@
 // Locate and version every tool: node_modules/.bin, .venv/bin, mise shims, PATH.
-import { existsSync } from 'node:fs';
-import { homedir } from 'node:os';
-import { join } from 'node:path';
-
 import semver from 'semver';
-
-import { installHint } from '#cli/platform/install-hints.ts';
-import { runSync } from '#cli/platform/spawn.ts';
+import { join } from 'node:path';
+import { homedir } from 'node:os';
+import { existsSync } from 'node:fs';
 import type { ToolPin } from '#types/manifest.ts';
 import type { ToolProbe } from '#types/doctor.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { installHint } from '#cli/platform/install-hints.ts';
 
+const VERSION_TIMEOUT_MS = 15_000;
 const VERSION_FLAGS: Record<string, string[]> = {
-    bash: ['--version'],
-    shellcheck: ['--version'],
-    shfmt: ['--version'],
-    typos: ['--version'],
-    prettier: ['--version'],
-    ec: ['--version'],
-    eslint: ['--version'],
-    tsc: ['--version'],
-    knip: ['--version'],
-    'markdownlint-cli2': ['--version'],
-    lychee: ['--version'],
-    vale: ['--version'],
-    sg: ['--version'],
-    'ast-grep': ['--version'],
     gitleaks: ['version'],
-    swiftlint: ['--version'],
-    swiftformat: ['--version'],
     periphery: ['version'],
-    sqlfluff: ['--version'],
-    squawk: ['--version'],
-    hadolint: ['--version'],
-    semgrep: ['--version'],
-    'osv-scanner': ['--version'],
-    trivy: ['--version'],
-    ruff: ['--version'],
-    basedpyright: ['--version'],
-    deno: ['--version'],
-    supabase: ['--version'],
-    docker: ['--version'],
     plutil: ['-help'],
     xcodebuild: ['-version'],
-    commitlint: ['--version'],
-    jscpd: ['--version'],
-    stylelint: ['--version'],
-    'html-validate': ['--version'],
-    git: ['--version'],
 };
 
 const probeCache = new Map<string, ToolProbe>();
 
 function candidates(root: string, name: string): string[] {
-    const windows = process.platform === 'win32';
-    const names = windows ? [`${name}.cmd`, `${name}.exe`, name] : [name];
-    const dirs = [
+    const isWindows = process.platform === 'win32';
+    const names = isWindows ? [`${name}.cmd`, `${name}.exe`, name] : [name];
+    const directories = [
         join(root, 'node_modules', '.bin'),
         join(root, '.venv', 'bin'),
         join(root, '.venv', 'Scripts'),
         join(homedir(), '.local', 'share', 'mise', 'shims'),
     ];
-    const found: string[] = [];
-    for (const dir of dirs) for (const file of names) if (existsSync(join(dir, file))) found.push(join(dir, file));
+    const found = directories.flatMap((dir) => names.map((file) => join(dir, file))).filter((path) => existsSync(path));
     const onPath = Bun.which(name);
-    if (onPath) found.push(onPath);
-    return found;
+    return onPath === null ? found : [...found, onPath];
 }
 
 function readVersion(path: string, tool: ToolPin): string | undefined {
     const command = tool.version_command ?? VERSION_FLAGS[tool.name] ?? ['--version'];
-    const result = runSync([path, ...command], { cwd: process.cwd(), timeoutMs: 15_000 });
+    const result = runBlocking([path, ...command], { cwd: process.cwd(), timeoutMs: VERSION_TIMEOUT_MS });
     const text = `${result.stdout}\n${result.stderr}`;
-    if (tool.version_regex) {
-        const match = text.match(new RegExp(tool.version_regex));
+    if (tool.version_regex !== undefined) {
+        const match = new RegExp(tool.version_regex, 'u').exec(text);
         return match?.[1] ?? match?.[0];
     }
-    const match = text.match(/(\d+\.\d+\.\d+)/);
-    return match?.[1];
+    return semver.coerce(text)?.version;
 }
 
-/** Probes one tool. Cached per process. */
+function stateFor(found: string, want: string, floor: string): ToolProbe['state'] {
+    const version = semver.coerce(found);
+    if (version === null) return 'ok';
+    const lowest = semver.coerce(floor);
+    if (lowest !== null && semver.lt(version, lowest)) return 'outdated';
+    const pinned = semver.coerce(want);
+    return pinned !== null && semver.gt(version, pinned) ? 'newer' : 'ok';
+}
+
+function probeUncached(root: string, tool: ToolPin): ToolProbe {
+    const [path] = candidates(root, tool.name);
+    const hint = installHint(tool);
+    if (path === undefined)
+        return {
+            name: tool.name,
+            state: 'missing',
+            hint,
+            ...(tool.version === undefined ? {} : { want: tool.version }),
+        };
+    if (tool.provider === 'host' || tool.version === undefined) return { name: tool.name, state: 'host', path, hint };
+    const found = readVersion(path, tool);
+    if (found === undefined) return { name: tool.name, state: 'ok', path, want: tool.version, found: 'unknown', hint };
+    const floor = tool.floor ?? tool.version;
+    return {
+        name: tool.name,
+        state: stateFor(found, tool.version, floor),
+        path,
+        want: tool.version,
+        found,
+        hint,
+        floor,
+    };
+}
+
+/**
+ * Where a tool is, searching the repository's own bin folders, the mise shims and PATH, or undefined.
+ * @param root the repository root
+ * @param name the executable name
+ * @returns the first path found
+ */
+export function locateTool(root: string, name: string): string | undefined {
+    return candidates(root, name)[0];
+}
+
+/**
+ * Probes one tool. Cached per process.
+ * @param root the repository root
+ * @param tool the pin
+ * @returns where the tool is, its version and its state
+ */
 export function probeTool(root: string, tool: ToolPin): ToolProbe {
     const key = `${root}\n${tool.name}`;
     const cached = probeCache.get(key);
@@ -87,32 +100,4 @@ export function probeTool(root: string, tool: ToolPin): ToolProbe {
     const probe = probeUncached(root, tool);
     probeCache.set(key, probe);
     return probe;
-}
-
-function probeUncached(root: string, tool: ToolPin): ToolProbe {
-    const paths = candidates(root, tool.name);
-    const hint = installHint(tool);
-    if (paths.length === 0)
-        return { name: tool.name, state: 'missing', hint, ...(tool.version ? { want: tool.version } : {}) };
-    const path = paths[0]!;
-    if (tool.provider === 'host' || tool.version === undefined) return { name: tool.name, state: 'host', path, hint };
-    const found = readVersion(path, tool);
-    if (found === undefined) return { name: tool.name, state: 'ok', path, want: tool.version, found: 'unknown', hint };
-    const floor = tool.floor ?? tool.version;
-    const base: ToolProbe = { name: tool.name, state: 'ok', path, want: tool.version, found, hint, floor };
-    if (semver.valid(semver.coerce(found)) && semver.lt(semver.coerce(found)!, semver.coerce(floor)!))
-        return { ...base, state: 'outdated' };
-    if (semver.valid(semver.coerce(found)) && semver.gt(semver.coerce(found)!, semver.coerce(tool.version)!))
-        return { ...base, state: 'newer' };
-    return base;
-}
-
-/** The executable path a probe found, or undefined. */
-export function toolPath(root: string, tool: ToolPin): string | undefined {
-    return probeTool(root, tool).path;
-}
-
-/** Drops the probe cache; tests use it after planting a tool. */
-export function resetProbes(): void {
-    probeCache.clear();
 }

@@ -1,4 +1,4 @@
-# duplication
+# `duplication`
 
 Kind: repository. Copy-paste detection across every language.
 

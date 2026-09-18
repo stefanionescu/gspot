@@ -1,27 +1,37 @@
 // Read every embedded manifest, validate it, and refuse the shapes the design forbids.
 import { parse as parseToml } from 'smol-toml';
-
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { manifestSchema } from '#cli/presets/manifest-schema.ts';
-import type { RawManifest } from '#cli/presets/manifest-schema.ts';
-import type { CheckSpec, ConfigTarget, Manifest, ToolPin } from '#types/manifest.ts';
+
+import type {
+    RawCheck,
+    RawConfiguration,
+    RawManifest,
+    RawTool,
+    Compact,
+    CheckSpec,
+    ConfigurationTarget,
+    Manifest,
+    ToolPin,
+} from '#types/manifest.ts';
 
 const INSTALLER_KEYS = ['npm', 'pypi', 'mise', 'brew', 'apt', 'cargo', 'github', 'winget', 'scoop', 'ubi'] as const;
+const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
+const GSPOT_DIRECTORY = '.gspot/';
 
-export class ManifestError extends Error {
-    constructor(preset: string, problems: string[]) {
-        super(`The preset manifest for \`${preset}\` is not valid:\n${problems.join('\n')}`);
-        this.name = 'ManifestError';
-    }
-}
-
-type Compact<T> = { [K in keyof T]: Exclude<T[K], undefined> };
+const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
 
 function compact<T extends object>(value: T): Compact<T> {
     return Object.fromEntries(Object.entries(value).filter(([, entry]) => entry !== undefined)) as Compact<T>;
 }
 
-function toTool(raw: RawManifest['tools'][number]): ToolPin {
+function configurationName(target: string): string {
+    const bare = target.startsWith(GSPOT_DIRECTORY) ? target.slice(GSPOT_DIRECTORY.length) : target;
+    const dot = bare.indexOf('.');
+    return dot === -1 ? bare : bare.slice(0, dot);
+}
+
+function toTool(raw: RawTool): ToolPin {
     const installers: Record<string, string> = {};
     for (const key of INSTALLER_KEYS) {
         const value = raw[key];
@@ -36,58 +46,114 @@ function toTool(raw: RawManifest['tools'][number]): ToolPin {
     return tool;
 }
 
-function toCheck(raw: RawManifest['checks'][number]): CheckSpec {
+function toCheck(raw: RawCheck): CheckSpec {
     const { claims, ...rest } = raw;
-    const check = compact(rest) as unknown as CheckSpec;
-    if (claims)
-        check.claims = {
-            extensions: claims.extensions,
-            filenames: claims.filenames,
-            tags: claims.tags,
-            paths: claims.paths,
-            from_languages: claims.from_languages,
-            natures: claims.natures,
-        };
+    const check = compact(rest) as CheckSpec;
+    if (claims) {
+        const { extensions, filenames, tags, paths, from_languages: isFromLanguages, natures } = claims;
+        check.claims = { extensions, filenames, tags, paths, from_languages: isFromLanguages, natures };
+    }
     return check;
 }
 
-function refusals(raw: RawManifest): string[] {
-    const problems: string[] = [];
-    const readers = new Set<string>();
-    for (const check of raw.checks) {
-        for (const argument of [...(check.command ?? []), ...(check.fix_command ?? [])]) {
-            for (const match of argument.matchAll(/\{config:([a-z0-9-]+)\}/g)) readers.add(match[1]!);
-        }
-        if (check.command === undefined && check.engine === undefined)
-            problems.push(`check ${check.id} has neither a command nor an engine.`);
-        if (check.fix_command !== undefined && check.fix_order === undefined)
-            problems.push(`check ${check.id} has a fix_command and no fix_order.`);
-        if (check.requires !== undefined && check.stage === 'commit')
-            problems.push(`check ${check.id} requires ${check.requires} and cannot run at the commit stage.`);
-    }
-    for (const config of raw.configs) {
-        if (config.fragment) continue;
-        const name = config.target.replace(/^\.gspot\//, '').replace(/\..*$/, '');
-        const readByTemplate = raw.configs.some((other) => other !== config && other.template.includes(name));
-        if (!readers.has(name) && !readByTemplate && !config.stub)
-            problems.push(`config ${config.target} has no check that reads it ({config:${name}}) and no stub.`);
-    }
-    for (const check of raw.checks)
-        if (
-            check.stage === 'manual' &&
-            check.requires === undefined &&
-            check.takes === 'files' &&
-            check.command === undefined
-        )
-            problems.push(`check ${check.id} is manual with nothing that makes it slow.`);
-    return problems;
+function toConfiguration(config: RawConfiguration): ConfigurationTarget {
+    return compact({
+        template: config.template,
+        target: config.target,
+        stub: config.stub === undefined ? undefined : compact(config.stub),
+        fragment: config.fragment,
+        per_scope: config.per_scope,
+        executable: config.executable,
+        header: config.header,
+    });
 }
 
-/** Parses one manifest text into a Manifest. Throws ManifestError. */
+function isIdleManual(check: RawCheck): boolean {
+    return (
+        check.stage === 'manual' &&
+        check.requires === undefined &&
+        check.takes === 'files' &&
+        check.command === undefined
+    );
+}
+
+function hasNoRunner(check: RawCheck): boolean {
+    return check.command === undefined && check.engine === undefined && check.rules === undefined;
+}
+
+function checkProblems(check: RawCheck): string[] {
+    const problems: (string | undefined)[] = [
+        hasNoRunner(check) ? `check ${check.id} has neither a command nor an engine.` : undefined,
+        check.fix_command !== undefined && check.fix_order === undefined
+            ? `check ${check.id} has a fix_command and no fix_order.`
+            : undefined,
+        check.requires !== undefined && check.stage === 'commit'
+            ? `check ${check.id} requires ${check.requires} and cannot run at the commit stage.`
+            : undefined,
+        isIdleManual(check) ? `check ${check.id} is manual with nothing that makes it slow.` : undefined,
+    ];
+    return problems.filter((problem) => problem !== undefined);
+}
+
+function configurationReaders(checks: RawCheck[]): Set<string> {
+    const readers = new Set<string>();
+    for (const check of checks)
+        for (const argument of [...(check.command ?? []), ...(check.fix_command ?? [])])
+            for (const match of argument.matchAll(CONFIG_PLACEHOLDER)) readers.add(match[1] ?? '');
+    return readers;
+}
+
+function configurationProblems(raw: RawManifest): string[] {
+    const readers = configurationReaders(raw.checks);
+    const hasEngineCheck = raw.checks.some((check) => check.engine !== undefined);
+    if (hasEngineCheck) return [];
+    return raw.configs
+        .filter((config) => !config.fragment && config.stub === undefined)
+        .filter((config) => {
+            const name = configurationName(config.target);
+            const isReadByTemplate = raw.configs.some((other) => other !== config && other.template.includes(name));
+            return !readers.has(name) && !isReadByTemplate;
+        })
+        .map(
+            (config) =>
+                `config ${config.target} has no check that reads it ({config:${configurationName(config.target)}}) and no stub.`,
+        );
+}
+
+function refusals(raw: RawManifest): string[] {
+    return [...raw.checks.flatMap((check) => checkProblems(check)), ...configurationProblems(raw)];
+}
+
+function checkRequires(manifests: Map<string, Manifest>): void {
+    for (const manifest of manifests.values())
+        for (const required of manifest.preset.requires)
+            if (!manifests.has(required))
+                throw new ManifestError(manifest.preset.id, [`it requires \`${required}\`, which does not exist.`]);
+}
+
+/** A manifest that the schema or the design refuses. */
+export class ManifestError extends Error {
+    /**
+     * Names the preset and lists its problems.
+     * @param preset the preset id
+     * @param problems the problems in plain English
+     */
+    constructor(preset: string, problems: string[]) {
+        super(`The preset manifest for \`${preset}\` is not valid:\n${problems.join('\n')}`);
+        this.name = 'ManifestError';
+    }
+}
+
+/**
+ * Parses one manifest text into a Manifest. Throws ManifestError.
+ * @param text the manifest.toml text
+ * @param dir the preset directory inside the assets
+ * @returns the manifest
+ */
 export function parseManifest(text: string, dir: string): Manifest {
-    const data = parseToml(text);
-    const result = manifestSchema.safeParse(data);
-    const id = (data as { preset?: { id?: string } }).preset?.id ?? dir;
+    const parsed = parseToml(text);
+    const result = manifestSchema.safeParse(parsed);
+    const id = (parsed as { preset?: { id?: string } }).preset?.id ?? dir;
     if (!result.success)
         throw new ManifestError(
             id,
@@ -100,20 +166,9 @@ export function parseManifest(text: string, dir: string): Manifest {
         preset: raw.preset,
         detect: raw.detect,
         claims: raw.claims,
-        tools: raw.tools.map(toTool),
-        configs: raw.configs.map(
-            (config) =>
-                compact({
-                    template: config.template,
-                    target: config.target,
-                    stub: config.stub === undefined ? undefined : compact(config.stub),
-                    fragment: config.fragment,
-                    per_scope: config.per_scope,
-                    executable: config.executable,
-                    header: config.header,
-                }) as ConfigTarget,
-        ),
-        checks: raw.checks.map(toCheck),
+        tools: raw.tools.map((tool) => toTool(tool)),
+        configs: raw.configs.map((config) => toConfiguration(config)),
+        checks: raw.checks.map((check) => toCheck(check)),
         settings: raw.settings.map((setting) => compact(setting)),
         required: raw.required,
         rules: raw.rules,
@@ -121,33 +176,25 @@ export function parseManifest(text: string, dir: string): Manifest {
     };
 }
 
-let cache: Map<string, Manifest> | undefined;
-
-/** Every embedded manifest by preset id. Loaded once per process. */
-export function loadManifests(): Map<string, Manifest> {
-    if (cache) return cache;
+/**
+ * Every embedded manifest by preset id. Read once per process.
+ * @returns the manifests
+ */
+export function presetManifests(): Map<string, Manifest> {
+    if (state.cache) return state.cache;
     const manifests = new Map<string, Manifest>();
     for (const path of listAssets('presets/')) {
         if (!path.endsWith('/manifest.toml')) continue;
         const dir = path.slice(0, -'/manifest.toml'.length);
         const manifest = parseManifest(readAsset(path), dir);
-        const folder = dir.split('/').pop();
+        const folder = dir.slice(dir.lastIndexOf('/') + 1);
         if (folder !== manifest.preset.id)
             throw new ManifestError(manifest.preset.id, [
                 `the folder is \`${folder}\` and the id is \`${manifest.preset.id}\`; they must match.`,
             ]);
         manifests.set(manifest.preset.id, manifest);
     }
-    for (const manifest of manifests.values()) {
-        for (const required of manifest.preset.requires)
-            if (!manifests.has(required))
-                throw new ManifestError(manifest.preset.id, [`it requires \`${required}\`, which does not exist.`]);
-    }
-    cache = manifests;
+    checkRequires(manifests);
+    state.cache = manifests;
     return manifests;
-}
-
-/** Drops the cache; tests use it after planting a manifest. */
-export function resetManifests(): void {
-    cache = undefined;
 }

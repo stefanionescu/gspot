@@ -1,4 +1,4 @@
-# spelling
+# `spelling`
 
 Kind: repository. Selected by default. Required by every language preset.
 

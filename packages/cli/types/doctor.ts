@@ -32,3 +32,32 @@ export type SettingRow = {
     direction: string;
     scope?: string;
 };
+
+export type DoctorReport = {
+    tools: ToolProbe[];
+    coverage: CoverageReport;
+    changes: ChangeReport;
+    hooks: string;
+    ci: string;
+    rules: { files: number; unenforced: number };
+    version: { running: string; pinned?: string; newer?: string };
+    exitCode: number;
+};
+
+/** The change sections that share one row shape. */
+export type ChangeKey = 'detectedNotSelected' | 'configurationNotOwned' | 'changedOutsideGspot';
+
+/** One row of the change report: a path, what is wrong with it, and the command that fixes it. */
+export type ChangeRow = { path: string; note: string; command: string };
+
+/** gspot doctor. */
+export type DoctorOptions = { cwd: string; settings: boolean; offline: boolean };
+
+/** One `[tools.<tool>.extra]` table: the keys it sets and why. */
+export type ExtraRow = { tool: string; keys: string[]; reason: string; scope: string };
+
+/** The --settings listing. */
+export type SettingsListing = { rows: SettingRow[]; extras: ExtraRow[] };
+
+/** The `[tools.<tool>]` tables of one policy layer, as the settings listing reads them. */
+export type ToolTables = Record<string, { extra?: Record<string, unknown> & { reason: string } }>;

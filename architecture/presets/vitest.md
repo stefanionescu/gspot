@@ -1,4 +1,4 @@
-# vitest
+# `vitest`
 
 Kind: tool. Requires: typescript or javascript.
 
@@ -25,15 +25,15 @@ The three rules the reference repository measured and left off enter with a base
 
 ## Checks
 
-| Id                                                           | Stage  | Command                                                                                                                    |
-| ------------------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------- |
-| `typescript/eslint`                                          | commit | with the test overrides                                                                                                    |
-| `vitest/coverage`                                            | push   | `vitest run --coverage` with thresholds from `[tools.vitest] coverage` (default 80 lines, branches, functions, statements) |
-| `gspot/no-support-in-dirs`, `gspot/no-tests-support-imports` | commit | test support lives in the declared support directory                                                                       |
+| Id                                                                  | Stage  | Command                                                                                                                    |
+| ------------------------------------------------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `typescript/eslint`                                                 | commit | with the test overrides                                                                                                    |
+| `vitest/coverage`                                                   | push   | `vitest run --coverage` with thresholds from `[tools.vitest] coverage` (default 80 lines, branches, functions, statements) |
+| `gspot/tests-directory-contents`, `gspot/no-harness-barrel-imports` | commit | test support lives in the declared support directory                                                                       |
 
 ## Settings
 
-`tools.vitest.coverage` (percent per metric), `tools.vitest.support_dir` (default `tests/support`),
+`tools.vitest.coverage` (percent per metric), `tools.vitest.harness_dir` (default `tests/harness`, the harness role),
 `tools.vitest.test_files`.
 
 ## Rule files

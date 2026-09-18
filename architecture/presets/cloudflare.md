@@ -1,4 +1,4 @@
-# cloudflare
+# `cloudflare`
 
 Kind: platform. Requires: javascript or typescript, config-files.
 

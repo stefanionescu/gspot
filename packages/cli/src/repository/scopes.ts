@@ -1,15 +1,61 @@
 // Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
-import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
-
-import { getPackagesSync } from '@manypkg/get-packages';
 import { parse as parseToml } from 'smol-toml';
-
-import { LINT_TOOL_PACKAGE_PREFIXES } from '#config/patterns.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import type { ManifestFacts, ScopeInfo } from '#types/repository.ts';
+import { existsSync, readFileSync } from 'node:fs';
+import { getPackagesSync } from '@manypkg/get-packages';
+import { LINT_TOOL_PACKAGE_PREFIXES } from '#config/patterns.ts';
+import type { ManifestFacts, ScopeEntry } from '#types/repository.ts';
 
-/** True when every dependency of a manifest is a lint tool gspot pins, so the manifest exists only to hold tooling. */
+function lastSegment(path: string): string {
+    return path.slice(path.lastIndexOf('/') + 1);
+}
+
+function workspaceEntry(path: string): ScopeEntry {
+    const trimmed = path.endsWith('/') ? path.slice(0, -1) : path;
+    return { name: lastSegment(trimmed), path: trimmed, presets: [], source: 'workspace' };
+}
+
+function npmScopes(root: string, byPath: Map<string, ManifestFacts>, lintOnly: string[]): ScopeEntry[] {
+    try {
+        const { packages } = getPackagesSync(root);
+        const scopes: ScopeEntry[] = [];
+        for (const found of packages) {
+            const rel = toPosix(found.relativeDir);
+            if (rel === '' || rel === '.') continue;
+            const fact = byPath.get(`${rel}/package.json`);
+            if (fact && isLintOnlyManifest(fact)) lintOnly.push(`${rel}/package.json`);
+            else scopes.push(workspaceEntry(rel));
+        }
+        return scopes;
+    } catch {
+        return [];
+    }
+}
+
+function tomlMembers(root: string, file: string, path: string[]): string[] {
+    const full = join(root, file);
+    if (!existsSync(full)) return [];
+    try {
+        let current: unknown = parseToml(readFileSync(full, 'utf8'));
+        for (const part of path) current = (current as Record<string, unknown> | undefined)?.[part];
+        return Array.isArray(current) ? current.filter((member): member is string => typeof member === 'string') : [];
+    } catch {
+        return [];
+    }
+}
+
+function memberScopes(root: string, members: string[]): ScopeEntry[] {
+    return members
+        .filter((member) => !member.includes('*') && existsSync(join(root, member)))
+        .map((member) => workspaceEntry(member));
+}
+
+/**
+ * True when every dependency of a manifest is a lint tool gspot pins, so the manifest exists only to hold tooling.
+ * @param facts the manifest
+ * @returns whether it holds tooling only
+ */
 export function isLintOnlyManifest(facts: ManifestFacts): boolean {
     const names = Object.keys(facts.installed);
     if (names.length === 0) return false;
@@ -20,88 +66,64 @@ export function isLintOnlyManifest(facts: ManifestFacts): boolean {
     );
 }
 
-/** Workspace packages as scopes, from every workspace format @manypkg knows plus uv and Cargo. Lint-only packages are left out. */
-export function workspaceScopes(root: string, facts: ManifestFacts[]): { scopes: ScopeInfo[]; lintOnly: string[] } {
-    const scopes: ScopeInfo[] = [];
+/**
+ * Workspace packages as scopes, from every workspace format @manypkg knows plus uv and Cargo. Lint-only packages are left out.
+ * @param root the repository root
+ * @param facts the manifests read from the tree
+ * @returns the scopes in path order, and the lint-only manifests left out
+ */
+export function workspaceScopes(root: string, facts: ManifestFacts[]): { scopes: ScopeEntry[]; lintOnly: string[] } {
     const lintOnly: string[] = [];
     const byPath = new Map(facts.map((fact) => [fact.path, fact]));
-    try {
-        const { packages } = getPackagesSync(root);
-        for (const pkg of packages) {
-            const rel = toPosix(pkg.relativeDir);
-            if (rel === '' || rel === '.') continue;
-            const fact = byPath.get(`${rel}/package.json`);
-            if (fact && isLintOnlyManifest(fact)) {
-                lintOnly.push(`${rel}/package.json`);
-                continue;
-            }
-            scopes.push({ name: rel.split('/').pop()!, path: rel, presets: [], source: 'workspace' });
-        }
-    } catch {
-        // no npm-style workspace; fall through
-    }
-    const pyproject = join(root, 'pyproject.toml');
-    if (existsSync(pyproject)) {
-        try {
-            const data = parseToml(readFileSync(pyproject, 'utf8')) as {
-                tool?: { uv?: { workspace?: { members?: string[] } } };
-            };
-            for (const member of data.tool?.uv?.workspace?.members ?? [])
-                if (!member.includes('*') && existsSync(join(root, member)))
-                    scopes.push({
-                        name: member.split('/').pop()!,
-                        path: member.replace(/\/$/, ''),
-                        presets: [],
-                        source: 'workspace',
-                    });
-        } catch {
-            // an unreadable pyproject is reported elsewhere
-        }
-    }
-    const cargo = join(root, 'Cargo.toml');
-    if (existsSync(cargo)) {
-        try {
-            const data = parseToml(readFileSync(cargo, 'utf8')) as { workspace?: { members?: string[] } };
-            for (const member of data.workspace?.members ?? [])
-                if (!member.includes('*') && existsSync(join(root, member)))
-                    scopes.push({
-                        name: member.split('/').pop()!,
-                        path: member.replace(/\/$/, ''),
-                        presets: [],
-                        source: 'workspace',
-                    });
-        } catch {
-            // same
-        }
-    }
-    const unique = new Map<string, ScopeInfo>();
-    for (const scope of scopes) if (!unique.has(scope.path)) unique.set(scope.path, scope);
-    return { scopes: [...unique.values()].sort((a, b) => a.path.localeCompare(b.path)), lintOnly };
+    const found = [
+        ...npmScopes(root, byPath, lintOnly),
+        ...memberScopes(root, tomlMembers(root, 'pyproject.toml', ['tool', 'uv', 'workspace', 'members'])),
+        ...memberScopes(root, tomlMembers(root, 'Cargo.toml', ['workspace', 'members'])),
+    ];
+    const unique = new Map<string, ScopeEntry>();
+    for (const scope of found) if (!unique.has(scope.path)) unique.set(scope.path, scope);
+    return {
+        scopes: unique
+            .values()
+            .toArray()
+            .toSorted((a, b) => a.path.localeCompare(b.path)),
+        lintOnly,
+    };
 }
 
-/** The scopes a policy declares, root first. */
-export function policyScopes(entries: { path: string; presets: string[] }[]): ScopeInfo[] {
+/**
+ * The scopes a policy declares, root first.
+ * @param entries the [[scope]] entries
+ * @returns the scope entries
+ */
+export function policyScopes(entries: { path: string; presets: string[] }[]): ScopeEntry[] {
     return [
         { name: 'root', path: '', presets: [], source: 'root' },
-        ...entries.map((entry) => ({
-            name: entry.path.split('/').pop()!,
-            path: entry.path,
-            presets: entry.presets,
-            source: 'gspot.toml' as const,
-        })),
+        ...entries.map(
+            (entry): ScopeEntry => ({
+                name: lastSegment(entry.path),
+                path: entry.path,
+                presets: entry.presets,
+                source: 'gspot.toml',
+            }),
+        ),
     ];
 }
 
-/** The scope a file belongs to: the deepest scope whose path contains it, else the root. */
-export function scopeOf(path: string, scopes: ScopeInfo[]): ScopeInfo {
-    let best = scopes.find((scope) => scope.path === '') ?? scopes[0]!;
-    for (const scope of scopes) {
-        if (
-            scope.path !== '' &&
-            (path === scope.path || path.startsWith(`${scope.path}/`)) &&
-            scope.path.length > best.path.length
-        )
-            best = scope;
-    }
-    return best;
+/**
+ * The scope a file belongs to: the deepest scope whose path contains it, else the root.
+ * @param path the file path
+ * @param scopes the scopes
+ * @returns the scope
+ */
+export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
+    const root: ScopeEntry = scopes.find((scope) => scope.path === '') ?? {
+        name: 'root',
+        path: '',
+        presets: [],
+        source: 'root',
+    };
+    return scopes
+        .filter((scope) => scope.path !== '' && (path === scope.path || path.startsWith(`${scope.path}/`)))
+        .reduce((best, scope) => (scope.path.length > best.path.length ? scope : best), root);
 }

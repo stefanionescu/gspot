@@ -1,39 +1,34 @@
+import { runProse } from '#cli/prose/engine.ts';
+import { runNaming } from '#cli/naming/engine.ts';
 // Dispatch to the built-in engines by `engine =` in the manifest.
-import type { MergedView } from '#cli/policy/merge.ts';
+import type { CheckResult } from '#types/finding.ts';
+import { runStructure } from '#cli/structure/engine.ts';
 import { runIntegrity } from '#cli/integrity/dispatch.ts';
-import type { PlannedCheck } from '#cli/run/plan.ts';
-import type { Session } from '#cli/run/session.ts';
-import type { CheckResult, Finding } from '#types/finding.ts';
-import type { CheckSpec } from '#types/manifest.ts';
-import type { TrackedFile } from '#types/repository.ts';
+import type { EngineInput, Engine, Session, PlannedCheck } from '#types/run.ts';
 
-export type EngineInput = {
-    session: Session;
-    root: string;
-    scope: string;
-    view: MergedView;
-    spec: CheckSpec;
-    files: TrackedFile[];
-    staged?: Set<string>;
-};
+const engines = new Map<string, Engine>([
+    ['integrity', runIntegrity],
+    ['naming', runNaming],
+    ['structure', runStructure],
+    ['prose', runProse],
+]);
 
-export type Engine = (input: EngineInput) => Promise<Finding[]>;
-
-const engines: Record<string, Engine> = {
-    integrity: runIntegrity,
-};
-
-/** Registers an engine; the structure, naming and prose engines register themselves when built. */
-export function registerEngine(name: string, engine: Engine): void {
-    engines[name] = engine;
-}
-
-/** True when an engine of this name exists in this build. */
+/**
+ * True when an engine of this name exists in this build.
+ * @param name the engine name from the manifest
+ * @returns whether the engine is built
+ */
 export function hasEngine(name: string): boolean {
-    return name in engines;
+    return engines.has(name);
 }
 
-/** Runs one planned engine check. */
+/**
+ * Runs one planned engine check.
+ * @param session the session
+ * @param planned the check to run
+ * @param staged the staged paths, in staged mode
+ * @returns the check result with its findings
+ */
 export async function runEngineCheck(
     session: Session,
     planned: PlannedCheck,
@@ -49,8 +44,9 @@ export async function runEngineCheck(
         findings: [],
         baselined: 0,
     };
-    const engine = engines[spec.engine ?? ''];
-    if (!engine) return { ...base, status: 'skipped', note: `the ${spec.engine} engine is not in this build yet` };
+    const name = spec.engine ?? '';
+    const engine = engines.get(name);
+    if (!engine) return { ...base, status: 'skipped', note: `the ${name} engine is not in this build yet` };
     const started = performance.now();
     try {
         const input: EngineInput = {
@@ -75,7 +71,7 @@ export async function runEngineCheck(
             ...base,
             status: 'error',
             duration: performance.now() - started,
-            note: `the ${spec.engine} engine failed: ${(error as Error).message}`,
+            note: `the ${name} engine failed: ${(error as Error).message}`,
         };
     }
 }
