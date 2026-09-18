@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { isRulePath, lintRules } from '#cli/rules/lint.ts';
+import { isRulePath, lintRules } from '#rules-lint/lint.ts';
 
 const OPTIONS = {};
 

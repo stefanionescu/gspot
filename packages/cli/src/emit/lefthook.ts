@@ -34,3 +34,19 @@ export function isLefthookHeld(root: string, path: string, block: LefthookBlock)
         ),
     );
 }
+
+/**
+ * The file text with the gspot commands removed, and a hook that held nothing else removed with them.
+ * @param existing the file text
+ * @param block the gspot block, which names the hooks
+ * @returns the text without the gspot commands
+ */
+export function withoutLefthook(existing: string, block: LefthookBlock): string {
+    const document = parseDocument(existing);
+    for (const [hook, { commands }] of Object.entries(block)) {
+        for (const name of Object.keys(commands)) document.deleteIn([hook, 'commands', name]);
+        const left = document.getIn([hook, 'commands']) as { items?: unknown[] } | undefined;
+        if (left?.items?.length === 0) document.delete(hook);
+    }
+    return document.toString();
+}

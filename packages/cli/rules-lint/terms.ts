@@ -1,4 +1,4 @@
-// What makes a line of a corpus file a rule statement, and what the corpus lint refuses.
+// What the corpus lint of this repository refuses. None of this ships in the binary (D-86).
 
 /** The layers a corpus file can declare. */
 export const RULE_LAYERS = [

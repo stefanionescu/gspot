@@ -167,9 +167,9 @@ project rule directory (`[rules] project = "rules/project"`), the block links it
 ## Corpus lint
 
 The corpus lint belongs to this repository, not to the binary's commands (D-86). It runs as the
-`[[check]]` entry `corpus/lint` in this repository's `gspot.toml`, at the commit stage, over
+`[[check]]` entry `rules/lint` in this repository's `gspot.toml`, at the commit stage, over
 `rules/**`. `gspot apply --check` in another repository reports drift and nothing else. The word
-lists below live beside the script under `packages/cli/corpus-lint/` and are not embedded:
+lists below live beside the script under `packages/cli/rules-lint/` and are not embedded:
 
 - Front matter present; layer matches the path; preset is an id or `none`; title equals the H1.
 

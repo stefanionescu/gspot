@@ -8,6 +8,7 @@ import type { ExistingTooling, ManifestFacts, Repository, ScopeEntry, TrackedFil
 export type TakeoverPlan = {
     write: { path: string; note: string }[];
     remove: { path: string; note: string }[];
+    unread: { path: string; note: string }[];
     carried: { from: string; count: number; into: string }[];
     change: { path: string; note: string }[];
     noLongerRuns: { path: string; note: string }[];
@@ -47,6 +48,7 @@ export type CarriedLists = {
     licenseAllow: string[];
     ignores: CarriedIgnore[];
     removed: { path: string; note: string }[];
+    unread: { path: string; note: string }[];
 };
 
 export type UninstallPlan = { remove: string[]; blocks: string[]; hooksPath: boolean };

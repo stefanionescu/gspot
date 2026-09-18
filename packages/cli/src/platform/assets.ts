@@ -72,17 +72,6 @@ export function readAsset(path: string): string {
 }
 
 /**
- * The on-disk path of an asset when it is a real file a tool can open: the repository file during development, undefined when embedded.
- * @param path the asset path
- * @returns the absolute path, or undefined
- */
-export function assetPath(path: string): string | undefined {
-    if (isEmbedded()) return undefined;
-    const full = join(developmentRoot(), path);
-    return existsSync(full) ? full : undefined;
-}
-
-/**
  * The bytes of a grammar file: embedded in the binary, or read from its npm package during development.
  * @param name the file name under grammars/, such as `bash.wasm`
  * @returns the WASM bytes

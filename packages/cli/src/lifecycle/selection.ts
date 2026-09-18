@@ -6,8 +6,8 @@ import type { Manifest } from '#types/manifest.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { detectPresets } from '#cli/presets/detect.ts';
 import type { ScopeEntry, TrackedFile } from '#types/repository.ts';
-import { SelectionError, selectPresets } from '#cli/presets/select.ts';
 import type { InitContext, InitInputs, InitSelection } from '#types/lifecycle.ts';
+import { requireChain, SelectionError, selectPresets } from '#cli/presets/select.ts';
 
 function parseScopeFlags(flags: string[] | undefined): Map<string, string[]> {
     const map = new Map<string, string[]>();
@@ -103,28 +103,11 @@ function unknownProblems(ids: string[], manifests: Map<string, Manifest>): strin
     return ids.filter((id) => !manifests.has(id)).map((id) => messages.unknownPreset(id, nearMatches(id, known)));
 }
 
-function chainTo(
-    target: string,
-    from: string,
-    manifests: Map<string, Manifest>,
-    seen: Set<string>,
-): string[] | undefined {
-    if (from === target) return [from];
-    if (seen.has(from)) return undefined;
-    seen.add(from);
-    const requires = manifests.get(from)?.preset.requires ?? [];
-    for (const required of requires) {
-        const rest = chainTo(target, required, manifests, seen);
-        if (rest) return [from, ...rest];
-    }
-    return undefined;
-}
-
 function withoutProblems(without: string[], named: string[], manifests: Map<string, Manifest>): string[] {
     return without.flatMap((id) => {
         const chain = named
             .filter((start) => start !== id)
-            .map((start) => chainTo(id, start, manifests, new Set()))
+            .map((start) => requireChain(id, start, manifests))
             .find((found) => found !== undefined);
         return chain ? [messages.withoutRequired(id, chain)] : [];
     });

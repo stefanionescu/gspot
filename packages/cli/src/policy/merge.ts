@@ -15,12 +15,6 @@ import type {
 const TOOL_PREFIX = 'tools.';
 const RESERVED_SLOTS = new Set(['extra', 'enabled']);
 
-function writtenLimit(layer: PolicyScopeLayer, name: string): number | undefined {
-    const found = settingValue(layer.surface, layer.policy, name, layer.scope);
-    if (found === undefined || found.source === 'unset' || !found.source.includes(name)) return undefined;
-    return found.value as number | undefined;
-}
-
 function groupedLimit(policy: Policy, scope: string, key: string, language: string): number | undefined {
     const grouped = policy.scopeTables[scope]?.limits?.groups[language]?.[key] ?? policy.limits.groups[language]?.[key];
     return grouped?.value;
@@ -29,7 +23,6 @@ function groupedLimit(policy: Policy, scope: string, key: string, language: stri
 function languageLimit(layer: PolicyScopeLayer, key: string, language: string): number | undefined {
     const name = `limits.${language}.${key}`;
     return (
-        writtenLimit(layer, name) ??
         groupedLimit(layer.policy, layer.scope, key, language) ??
         (layer.surface.defaults.get(name)?.value as number | undefined)
     );

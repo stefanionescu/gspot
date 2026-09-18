@@ -102,6 +102,7 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
             ...agentRows,
         ],
         remove: carried.removed,
+        unread: carried.unread,
         carried: carriedRows(carried),
         change: [{ path: '.gitignore', note: 'one managed block' }, ...runnerRows(answers, everySelected)],
         noLongerRuns: noLongerRuns(tooling, pinnedTwice(root, everySelected)),

@@ -76,3 +76,14 @@ export const REQUIRED_TASKS: Record<string, string[]> = {
 
 /** The hook files gspot installs. */
 export const HOOK_FILES = ['pre-commit', 'pre-push', 'commit-msg'];
+
+/** Folders a package manager or a build fills; git tracks nothing inside one. */
+export const DEPENDENCY_FOLDERS = [
+    'node_modules',
+    'bower_components',
+    '.venv',
+    'venv',
+    'Pods',
+    'DerivedData',
+    '.build',
+];

@@ -4,6 +4,7 @@ import type { CommandResult } from '#types/run.ts';
 import { scopeHolder } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { requireChain } from '#cli/presets/select.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import type { TomlTable, Mutation } from '#types/config.ts';
@@ -49,9 +50,15 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
 export async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
+    const manifests = presetManifests();
     const mutation: Mutation = (raw) => {
         const holder = presetHolder(raw, o.scope);
         const list = (holder['presets'] as string[] | undefined) ?? [];
+        const rootList = (raw['presets'] as string[] | undefined) ?? [];
+        const kept = [...new Set([...rootList, ...list])].filter((id) => id !== o.preset);
+        const chain = kept.map((id) => requireChain(o.preset, id, manifests)).find((found) => found !== undefined);
+        if (chain) throw new PolicyError([messages.withoutRequired(o.preset, chain)]);
+        if (!list.includes(o.preset)) throw new PolicyError([messages.presetNotListed(o.preset, o.scope)]);
         holder['presets'] = list.filter((id) => id !== o.preset);
     };
     const where = o.scope === undefined ? '' : ` from scope ${o.scope}`;

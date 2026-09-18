@@ -24,6 +24,23 @@ function visit(walk: SelectionWalk, id: string): void {
     walk.order.push(manifest);
 }
 
+function chainFrom(
+    target: string,
+    from: string,
+    manifests: Map<string, Manifest>,
+    seen: Set<string>,
+): string[] | undefined {
+    if (from === target) return [from];
+    if (seen.has(from)) return undefined;
+    seen.add(from);
+    const requires = manifests.get(from)?.preset.requires ?? [];
+    for (const required of requires) {
+        const rest = chainFrom(target, required, manifests, seen);
+        if (rest) return [from, ...rest];
+    }
+    return undefined;
+}
+
 function conflictProblems(order: Manifest[]): string[] {
     const selectedIds = new Set(order.map((manifest) => manifest.preset.id));
     return order.flatMap((manifest) =>
@@ -46,6 +63,17 @@ export class SelectionError extends Error {
         this.name = 'SelectionError';
         this.problems = problems;
     }
+}
+
+/**
+ * The chain of requires from one preset to another, or undefined when the first does not need the second.
+ * @param target the preset that is required
+ * @param from the preset the chain starts at
+ * @param manifests every preset manifest
+ * @returns the preset ids from `from` to `target`
+ */
+export function requireChain(target: string, from: string, manifests: Map<string, Manifest>): string[] | undefined {
+    return chainFrom(target, from, manifests, new Set());
 }
 
 /**

@@ -25,6 +25,7 @@ Kind: concern.
 | [`integrity/allowlists-match`](/reference/rules/integrity/allowlists-match/)                 | commit | Checks that every path pattern in gspot.toml matches at least one tracked file.                                                                           |
 | [`integrity/task-policy`](/reference/rules/integrity/task-policy/)                           | commit | Checks that the runner surface holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath.         |
 | [`integrity/large-files`](/reference/rules/integrity/large-files/)                           | commit | Checks that every tracked file over the size limit is stored through LFS or declared with a reason.                                                       |
+| [`integrity/tracked-dependencies`](/reference/rules/integrity/tracked-dependencies/)         | commit | Checks that git tracks no file inside a folder a package manager fills, such as node_modules.                                                             |
 
 ## Settings
 

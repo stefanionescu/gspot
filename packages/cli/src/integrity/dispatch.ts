@@ -16,6 +16,7 @@ import { allowlistsMatch } from '#cli/integrity/allowlists-match.ts';
 import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
 import { configurationPurity } from '#cli/integrity/config-purity.ts';
 import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
+import { trackedDependencies } from '#cli/integrity/tracked-dependencies.ts';
 
 const checks: Record<string, IntegrityCheck> = {
     'generated-drift': generatedDrift,
@@ -32,6 +33,7 @@ const checks: Record<string, IntegrityCheck> = {
     'allowlists-match': allowlistsMatch,
     'task-policy': taskPolicy,
     'large-files': largeFiles,
+    'tracked-dependencies': trackedDependencies,
 };
 
 /**

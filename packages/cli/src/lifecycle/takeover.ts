@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { carryFrom } from '#cli/lifecycle/carry.ts';
 import { existsSync, rmSync, statSync } from 'node:fs';
 import type { ExistingTooling } from '#types/repository.ts';
+import { unreadableReason } from '#cli/lifecycle/unreadable.ts';
 import type { CarriedLists, TakeoverPlan } from '#types/lifecycle.ts';
 
 const DELETED_ALONGSIDE_OWNER: Record<string, string> = {
@@ -80,9 +81,15 @@ export function collectCarried(root: string, tooling: ExistingTooling, selected:
         licenseAllow: [],
         ignores: [],
         removed: [],
+        unread: [],
     };
     for (const { tool, path } of tooling.configs) {
         if (!isOwned(tool, selected)) continue;
+        const problem = unreadableReason(root, path);
+        if (problem !== undefined) {
+            lists.unread.push({ path, note: `not read and not deleted: ${problem}` });
+            continue;
+        }
         carryFrom(root, tool, path, lists);
         lists.removed.push({ path, note: `replaced by gspot's ${tool} configuration` });
     }

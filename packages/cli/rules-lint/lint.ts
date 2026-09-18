@@ -1,6 +1,6 @@
 // Lints the rule corpus: front matter, links, size, layer boundary, fences, corruption, and Vale when it is installed.
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { frontMatterFindings, layerOfPath } from '#cli/rules/front-matter.ts';
+import { frontMatterFindings, layerOfPath } from '#rules-lint/front-matter.ts';
 import type { RuleText, RuleFinding, RulesLintOptions, RulesLintReport, FenceWalk } from '#types/rules.ts';
 
 import {
@@ -10,7 +10,7 @@ import {
     CORRUPTION_TERMS,
     FENCE_LANGUAGES,
     RULE_FILE_LINE_CEILING,
-} from '#config/statements.ts';
+} from '#rules-lint/terms.ts';
 
 const RULE_LINK =
     /\]\((?:\.\.\/)*(?:general|language|runtime|framework|library|tool|platform|database|shared|repository)\/[^)]+\.md\)/u;

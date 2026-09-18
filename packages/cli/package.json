@@ -7,7 +7,8 @@
         "#cli/*": "./src/*",
         "#config/*": "./config/*",
         "#types/*": "./types/*",
-        "#package": "./package.json"
+        "#package": "./package.json",
+        "#rules-lint/*": "./rules-lint/*"
     },
     "dependencies": {
         "@bomb.sh/tab": "0.0.22",

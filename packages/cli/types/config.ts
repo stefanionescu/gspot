@@ -212,8 +212,13 @@ export type SpecMatch = { spec: SettingSpec; language?: string; category?: strin
 /** Where a resolved value stands after some layers were applied. */
 export type SettingState = { value: unknown; source: string; reason: string | undefined };
 
-/** A zod schema node as the loader walks it to name the keys a table accepts. */
-export type SchemaNode = { def?: Record<string, unknown>; shape?: Record<string, unknown> };
+/** A node of the published JSON schema, as the loader walks it to name the keys a table accepts. */
+export type SchemaNode = {
+    properties?: Record<string, SchemaNode>;
+    items?: SchemaNode;
+    additionalProperties?: SchemaNode | boolean;
+    anyOf?: SchemaNode[];
+};
 
 /** One step of a zod issue path. */
 export type PathSegment = string | number;

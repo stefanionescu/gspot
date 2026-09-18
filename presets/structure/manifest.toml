@@ -127,6 +127,17 @@ summary = "Checks that every tracked file over the size limit is stored through 
 why = "A large file in plain git history stays in every clone for good."
 fix = "Track the file with git lfs, declare it with gspot declare <path> --reason, or raise limits.file_size_kb with a reason."
 
+[[checks]]
+id = "integrity/tracked-dependencies"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "tracked-dependencies"
+inspection = ["consistency"]
+summary = "Checks that git tracks no file inside a folder a package manager fills, such as node_modules."
+why = "An installed dependency in git is copied into every clone, goes stale the day it lands, and hides from every check because it looks vendored."
+fix = "Run git rm -r --cached <folder>, and write the folder name with no leading slash in .gitignore so it matches at every depth."
+
 [[settings]]
 name = "limits.file_lines"
 kind = "number"

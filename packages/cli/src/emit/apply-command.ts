@@ -4,13 +4,10 @@ import { planRun } from '#cli/run/plan.ts';
 import type { RunRecord } from '#types/record.ts';
 import { computeDrift } from '#cli/emit/drift.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
-import type { RulesLintReport } from '#types/rules.ts';
 import { lowerBaselines } from '#cli/run/baselines.ts';
 import { applyBlock } from '#cli/emit/managed-blocks.ts';
-import { locateTool } from '#cli/platform/tool-probe.ts';
 import { runSideCommand } from '#cli/run/tool-runner.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
-import { isRulePath, lintRules } from '#cli/rules/lint.ts';
 import { hasPackagePins, emitAll } from '#cli/emit/targets.ts';
 import { markExecutable } from '#cli/platform/executable-bit.ts';
 import { openSession, everyManifest } from '#cli/run/session.ts';
@@ -18,15 +15,12 @@ import { hasPackages, installPackages } from '#cli/prose/vale.ts';
 import { isLefthookHeld, lefthookText } from '#cli/emit/lefthook.ts';
 import { installHooksPath, removeHooksPath } from '#cli/emit/hooks.ts';
 import type { Session, CommandResult, PlannedCheck } from '#types/run.ts';
-import { assetPath, listAssets, readAsset } from '#cli/platform/assets.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import type { ApplyReport, ApplyOptions, DriftEntry, PackageContent, RenderedSet } from '#types/emit.ts';
 
 const WRITABLE_MODE = 0o644;
 const READ_ONLY_MODE = 0o444;
 const GSPOT_DIRECTORY = '.gspot/';
-const RULES_PREFIX = 'rules/';
-const VALE_CONFIG = 'prose/vale.ini';
 
 function existingText(full: string): string {
     return existsSync(full) ? readFileSync(full, 'utf8') : '';
@@ -105,34 +99,10 @@ function driftText(drift: DriftEntry[]): string {
     return `${lines.join('\n')}\n`;
 }
 
-function rulesReport(session: Session): RulesLintReport {
-    const files = listAssets(RULES_PREFIX)
-        .map((path) => path.slice(RULES_PREFIX.length))
-        .filter((path) => isRulePath(path))
-        .map((path) => ({ path, text: readAsset(`${RULES_PREFIX}${path}`) }));
-    const config = assetPath(VALE_CONFIG);
-    const binary = locateTool(session.root, 'vale');
-    const vale = config === undefined || binary === undefined ? {} : { vale: { binary, config } };
-    return lintRules(files, vale, session.root);
-}
-
-function rulesText(report: RulesLintReport): string {
-    const lines = report.findings.map((finding) => `  ${finding.file}:${String(finding.line)}  ${finding.message}`);
-    const vale = report.isValeRun ? '' : ' (vale is not installed; prose rules skipped)';
-    const summary = `rule corpus: ${String(report.files)} files${vale}`;
-    return `${[...lines, summary].join('\n')}\n`;
-}
-
 function checkDrift(session: Session): CommandResult {
     const drift = computeDrift(session);
-    const rules = rulesReport(session);
-    const json = {
-        drift,
-        rules: { findings: rules.findings, files: rules.files, isValeRun: rules.isValeRun },
-    };
-    const driftLine = drift.length === 0 ? 'every generated file matches its render\n' : driftText(drift);
-    const exitCode = drift.length === 0 && rules.findings.length === 0 ? 0 : 1;
-    return { text: `${driftLine}${rulesText(rules)}`, json, exitCode };
+    const text = drift.length === 0 ? 'every generated file matches its render\n' : driftText(drift);
+    return { text, json: { drift }, exitCode: drift.length === 0 ? 0 : 1 };
 }
 
 async function pruneOne(session: Session, check: PlannedCheck): Promise<string | undefined> {

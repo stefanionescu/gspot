@@ -6,65 +6,16 @@ import { existsSync, readFileSync } from 'node:fs';
 import * as messages from '#cli/policy/messages.ts';
 import { normalize } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
+import { knownKeysAt } from '#cli/policy/json-schema.ts';
 import { localSchema } from '#cli/policy/local-schema.ts';
 import { reasonProblems, scopeProblems } from '#cli/policy/problems.ts';
-import type { PolicyFiles, LocalPolicy, PathSegment, Policy, SchemaNode } from '#types/config.ts';
-
-function nodeOf(value: unknown): SchemaNode {
-    return value ?? {};
-}
-
-function unwrapped(node: SchemaNode): SchemaNode {
-    let current = node;
-    while (current.def && (current.def['type'] === 'optional' || current.def['type'] === 'nullable'))
-        current = nodeOf(current.def['innerType']);
-    return current;
-}
-
-function shapeOf(node: SchemaNode): Record<string, unknown> | undefined {
-    return (node.shape ?? node.def?.['shape']) as Record<string, unknown> | undefined;
-}
-
-function childAt(node: SchemaNode, segment: PathSegment): SchemaNode | undefined {
-    const def = unwrapped(node).def;
-    if (!def) return undefined;
-    switch (def['type']) {
-        case 'object': {
-            const next = shapeOf(unwrapped(node))?.[String(segment)] ?? def['catchall'];
-            return next === undefined ? undefined : nodeOf(next);
-        }
-        case 'array': {
-            return nodeOf(def['element']);
-        }
-        case 'record': {
-            return nodeOf(def['valueType']);
-        }
-        default: {
-            return undefined;
-        }
-    }
-}
-
-function shapeAt(schema: unknown, path: PathSegment[]): string[] {
-    let current: SchemaNode | undefined = nodeOf(schema);
-    for (const segment of path) {
-        const def = unwrapped(current).def;
-        if (def?.['type'] === 'union') {
-            const options = def['options'] as unknown[];
-            return options.map((option) => shapeAt(option, path)).find((keys) => keys.length > 0) ?? [];
-        }
-        current = childAt(current, segment);
-        if (!current) return [];
-    }
-    const shape = shapeOf(unwrapped(current));
-    return shape ? Object.keys(shape) : [];
-}
+import type { PolicyFiles, LocalPolicy, PathSegment, Policy } from '#types/config.ts';
 
 function issueText(issue: z.core.$ZodIssue): string {
     const where = issue.path.map(String).join('.');
     if (issue.code === 'unrecognized_keys') {
         const path = issue.path.filter((segment): segment is PathSegment => typeof segment !== 'symbol');
-        const known = shapeAt(policySchema, path);
+        const known = knownKeysAt(path);
         return issue.keys.map((key) => messages.unknownKey(where, key, known)).join('\n');
     }
     const shown = where === '' ? 'gspot.toml' : where;

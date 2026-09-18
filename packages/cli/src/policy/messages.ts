@@ -93,6 +93,17 @@ export function withoutRequired(name: string, chain: string[]): string {
 }
 
 /**
+ * A preset named in gspot remove that the list does not hold.
+ * @param name the preset
+ * @param scope the scope the command named, if any
+ * @returns the message
+ */
+export function presetNotListed(name: string, scope: string | undefined): string {
+    const where = scope === undefined ? 'the root presets' : `the presets of scope ${scope}`;
+    return `\`${name}\` is not in ${where}, so there is nothing to remove. Run gspot doctor --settings to see the selection.`;
+}
+
+/**
  * The working tree holds changes init did not make.
  * @param count how many paths git status lists
  * @returns the message
