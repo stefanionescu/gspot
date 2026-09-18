@@ -47,7 +47,7 @@ gspot/
 └── tsconfig.json               extends .gspot/tsconfig.base.json
 ```
 
-`reference-rules/` is gone (D-70). Its `merged/` tree became `rules/`, its corpus lint moved into `packages/cli/src/rules/`, and its marker data (`enforcement-map.json`, `unenforced.json`) sits beside the corpus under `rules/`. Its two maintenance scripts live under `packages/cli/scripts/`: `mark-statements.ts` writes the markers from the map, and `check-ids.ts` writes `packages/cli/config/architecture-ids.ts` from `architecture/`.
+`reference-rules/` is gone (D-70). Its `merged/` tree became `rules/`, its corpus lint moved into `packages/cli/src/rules/`, and its marker data and scripts are gone with the enforcement markers (D-73).
 
 ## `packages/cli/`
 
@@ -274,7 +274,7 @@ exports one function that takes the repository and returns findings, and has one
 - `assemble.ts`: select files for the selection, write under `[rules] directory`, remove strays.
 - `managed-block.ts`: the index block for `CLAUDE.md` and `AGENTS.md`.
 - `front-matter.ts`: layer, preset, and title against the path and the H1.
-- `markers.ts`: which lines are statements, `enforced-by` and `unenforced`, the counts, the marker writer.
+
 - `lint.ts`: front matter, ids, links, size, layer boundary, fences, corruption, Vale; run by `apply --check`.
 - `templates.ts`: project templates: copy once, the `gspot-template` header, the upstream-changed report.
 

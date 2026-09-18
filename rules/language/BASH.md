@@ -16,25 +16,25 @@ and portability.
 Rules:
 
 - Bash is glue code. Use it to orchestrate commands, not to build complex
-  application logic. `enforced-by: structure/shell-script-policy`
+  application logic.
 - Prefer small, boring scripts with explicit inputs, explicit outputs, and clear
-  failure behavior. `unenforced`
+  failure behavior.
 - Treat every path, argument, environment value, command output, and user input
-  as unsafe until quoted, validated, or parsed by a structured tool. `enforced-by: bash/shellcheck`
+  as unsafe until quoted, validated, or parsed by a structured tool.
 - A script that quantizes models, builds engines, starts runtime services,
   publishes artifacts, deletes artifacts, uploads models, or changes secrets
-  must be readable enough to audit line by line. `enforced-by: secrets/gitleaks`
+  must be readable enough to audit line by line.
 - ShellCheck warnings are design feedback. Fix them unless there is a documented
-  reason not to. `enforced-by: bash/shellcheck`
-- `set -euo pipefail` is not a substitute for checking dangerous commands. `enforced-by: structure/shell-interpreter`
+  reason not to.
+- `set -euo pipefail` is not a substitute for checking dangerous commands.
 - Do not hide quantization, engine-build, publishing, runtime, or artifact
   behavior in package scripts or CI YAML. Move non-trivial orchestration into a
-  reviewed Bash script. `enforced-by: structure/shell-script-policy`
+  reviewed Bash script.
 - When writing shell orchestration, write Bash. Do not create another scripting
-  language file as an escape hatch for shell work. `enforced-by: structure/shell-script-policy`
+  language file as an escape hatch for shell work.
 - If scripting logic is too complex for Bash, simplify the workflow or split it into smaller
   scripts. Otherwise, move the behavior into product-owned application code as part of a deliberate
-  feature change. `unenforced`
+  feature change.
 
 Good Bash:
 
@@ -66,25 +66,25 @@ main "$@"
 
 Use Bash when the script mostly:
 
-- calls other command-line tools; `unenforced`
+- calls other command-line tools;
 - wires together install, lint, quantization, engine-build, runtime, publish,
-  or cleanup steps; `unenforced`
-- validates environment and then dispatches to project commands; `unenforced`
-- performs simple file movement, process checks, or retry loops. `unenforced`
+  or cleanup steps;
+- validates environment and then dispatches to project commands;
+- performs simple file movement, process checks, or retry loops.
 
 Do not use Bash for:
 
-- complex business logic; `enforced-by: structure/shell-script-policy`
-- complex text parsing; `enforced-by: structure/shell-script-policy`
+- complex business logic;
+- complex text parsing;
 - JSON, YAML, XML, or HTML transformations beyond simple extraction with a
-  dedicated parser; `enforced-by: structure/shell-script-policy`
-- large mutable data structures; `enforced-by: structure/shell-script-policy`
-- long-lived daemons; `enforced-by: structure/shell-script-policy`
-- high-performance work; `enforced-by: structure/shell-script-policy`
-- security-sensitive parsing of untrusted input; `unenforced`
-- behavior that needs typed contracts. `enforced-by: structure/shell-script-policy`
+  dedicated parser;
+- large mutable data structures;
+- long-lived daemons;
+- high-performance work;
+- security-sensitive parsing of untrusted input;
+- behavior that needs typed contracts.
 
-Do not create non-Bash scripts as an escape hatch. A workflow that needs nested maps, large arrays, `enforced-by: structure/shell-script-policy`
+Do not create non-Bash scripts as an escape hatch. A workflow that needs nested maps, large arrays,
 state machines, non-trivial validation, complex retries, concurrent work, or domain rules is too big
 for a script. Reduce the scripting scope or implement the behavior in the owning application code.
 
@@ -92,25 +92,25 @@ for a script. Reduce the scripting scope or implement the behavior in the owning
 
 Executable scripts:
 
-- Must start with a Bash shebang. `enforced-by: structure/shell-interpreter`
-- Must be executable and directly invoked. `enforced-by: structure/shell-interpreter`
+- Must start with a Bash shebang.
+- Must be executable and directly invoked.
 - Must own a `main` function and finish with `main "$@"`, except for
   externally defined hook and task entrypoints whose manager owns the
-  invocation contract. `enforced-by: structure/shell-interpreter`
-- Must not be sourced by another repository script. `enforced-by: structure/shell-interpreter`
+  invocation contract.
+- Must not be sourced by another repository script.
 
 Libraries:
 
-- Keep library files non-executable. `enforced-by: structure/shell-interpreter`
-- Must be safe to `source` without running main program behavior. `unenforced`
-- Must not contain a `main` function or a `main "$@"` call. `enforced-by: structure/shell-interpreter`
-- Must not enable or disable shell options. `enforced-by: structure/shell-interpreter`
-- Must not call `exit`. `unenforced`
+- Keep library files non-executable.
+- Must be safe to `source` without running main program behavior.
+- Must not contain a `main` function or a `main "$@"` call.
+- Must not enable or disable shell options.
+- Must not call `exit`.
 - Must not perform workflow steps, start processes, mutate runtime state, or
-  delete files while loading. `unenforced`
+  delete files while loading.
 - Configuration libraries may assign documented configuration values while
   loading. Other libraries may only declare readonly owner constants, source
-  direct dependencies, and define functions. `enforced-by: structure/shell-interpreter`
+  direct dependencies, and define functions.
 
 Every file declares its runtime contract in the header:
 
@@ -121,7 +121,7 @@ Every file declares its runtime contract in the header:
 # Runtime: Bash 3.2+, Linux.
 ```
 
-Use `macOS and Linux` only when the file is supported and reviewed on both `unenforced`
+Use `macOS and Linux` only when the file is supported and reviewed on both
 platforms. A newer Bash requirement must name the minimum version and fail
 before any other work.
 
@@ -131,14 +131,14 @@ Shebang rules:
 #!/usr/bin/env bash
 ```
 
-Use this for repo scripts that may run on macOS, Linux, CI, or developer `unenforced`
+Use this for repo scripts that may run on macOS, Linux, CI, or developer
 machines.
 
 ```bash
 #!/bin/bash
 ```
 
-Use this only when the target runtime deliberately relies on system Bash at that `unenforced`
+Use this only when the target runtime deliberately relies on system Bash at that
 path, such as a controlled Linux remote host.
 
 Do not use:
@@ -158,13 +158,13 @@ privilege boundary instead.
 
 Rules:
 
-- Store Bash files as UTF-8 without a byte-order mark. `unenforced`
-- Use LF line endings. Do not commit CRLF shell scripts. `enforced-by: structure/shell-interpreter`
-- Do not put binary data in shell variables. Bash variables cannot contain NUL. `enforced-by: structure/shell-interpreter`
+- Store Bash files as UTF-8 without a byte-order mark.
+- Use LF line endings. Do not commit CRLF shell scripts.
+- Do not put binary data in shell variables. Bash variables cannot contain NUL.
 - Do not use command substitution for content where exact trailing newlines
-  matter. `unenforced`
+  matter.
 - Keep generated shell snippets free of invisible prefix bytes before the
-  shebang. `enforced-by: structure/shell-interpreter`
+  shebang.
 
 If a script has Windows line endings, convert it before review:
 
@@ -182,17 +182,17 @@ macOS ships Bash 3.2 by default. The header's `Runtime:` line is the contract th
 declaring `Bash 3.2+` may not use Bash 4+ and Bash 5+ features. A file declaring `Bash 4.0+` may use
 them, and fails before any other work when the running Bash is older. The gated features are:
 
-- associative arrays; `enforced-by: structure/shell-interpreter`
-- `readarray` and `mapfile`; `enforced-by: bash/shellcheck`
-- `globstar`; `enforced-by: bash/shellcheck`
-- namerefs with `declare -n`; `enforced-by: structure/shell-interpreter`
-- `${var@Q}` and other newer parameter transformations; `unenforced`
-- `coproc`; `enforced-by: structure/shell-interpreter`
-- `BASH_XTRACEFD`; `enforced-by: structure/shell-interpreter`
-- `wait -n`; `enforced-by: structure/shell-interpreter`
-- `local -n`; `unenforced`
-- `shopt -s lastpipe`; `unenforced`
-- process-substitution behavior that has not been verified on the target OS. `unenforced`
+- associative arrays;
+- `readarray` and `mapfile`;
+- `globstar`;
+- namerefs with `declare -n`;
+- `${var@Q}` and other newer parameter transformations;
+- `coproc`;
+- `BASH_XTRACEFD`;
+- `wait -n`;
+- `local -n`;
+- `shopt -s lastpipe`;
+- process-substitution behavior that has not been verified on the target OS.
 
 If a script requires a newer Bash:
 
@@ -205,37 +205,37 @@ require_bash_4() {
 }
 ```
 
-State the requirement in the file header and fail before doing work. `enforced-by: structure/shell-interpreter`
+State the requirement in the file header and fail before doing work.
 
 ## Deprecated and forbidden syntax
 
-Use the modern, explicit Bash form even when an older spelling still works. `unenforced`
+Use the modern, explicit Bash form even when an older spelling still works.
 
 Forbidden forms:
 
-- Arithmetic expansion: do not use `$[ ... ]`. Use `$(( ... ))`. `enforced-by: bash/shellcheck`
-- Command substitution: do not use backtick substitution. Use `$(...)`. `enforced-by: bash/shellcheck`
+- Arithmetic expansion: do not use `$[ ... ]`. Use `$(( ... ))`.
+- Command substitution: do not use backtick substitution. Use `$(...)`.
 - Arithmetic command: do not use `let`. Use `(( ... ))` or assignment with
-  `$(( ... ))`. `enforced-by: bash/shellcheck`
+  `$(( ... ))`.
 - Declarations: do not use `typeset`. Use `local`, `declare`, `readonly`, or
-  `export` according to the value's real scope. `enforced-by: bash/shellcheck`
+  `export` according to the value's real scope.
 - Function definitions: do not use the `function` keyword, including
   `function name()`, `function name() { ... }`, or `function name { ... }`.
-  Use `name() { ...; }`. `enforced-by: bash/shellcheck`
+  Use `name() { ...; }`.
 - Compact loop syntax: do not use `for arg; { ...; }`. Use
-  `for arg in "$@"; do ... done`. `unenforced`
+  `for arg in "$@"; do ... done`.
 - Combined redirection shortcuts: do not use `&>file` or `>&file`. Use
-  `>file 2>&1`. `enforced-by: bash/shellcheck`
+  `>file 2>&1`.
 - Combined pipeline shorthand: do not use `cmd |& other`. Use
-  `cmd 2>&1 | other`. `unenforced`
+  `cmd 2>&1 | other`.
 - Test composition: do not use `test -a`, `test -o`, `[ ... -a ... ]`,
   `[ ... -o ... ]`, or grouping operators inside `[ ... ]`. Use `[[ ... ]]`,
-  explicit `if` branches, or `case`. `enforced-by: bash/shellcheck`
+  explicit `if` branches, or `case`.
 - `ERR` traps: do not use `trap ERR` as general error handling. Use explicit
   status checks where failure matters, and reserve traps for cleanup that is
-  safe to run on the relevant exit path. `enforced-by: bash/shellcheck`
+  safe to run on the relevant exit path.
 - `eval`: do not use casual `eval` to turn strings into code. Use arrays,
-  direct validation, `case`, or fixed dispatch tables. `enforced-by: bash/shellcheck`
+  direct validation, `case`, or fixed dispatch tables.
 
 Good:
 
@@ -252,15 +252,15 @@ run() {
 
 Order files like this:
 
-1. Shebang. `enforced-by: structure/shell-interpreter`
-2. File header comment. `enforced-by: structure/shell-interpreter`
-3. Shell options. `enforced-by: structure/shell-interpreter`
-4. `source` statements. `enforced-by: structure/shell-interpreter`
-5. Constants and exported configuration. `enforced-by: structure/shell-interpreter`
+1. Shebang.
+2. File header comment.
+3. Shell options.
+4. `source` statements.
+5. Constants and exported configuration.
 6. Functions: private functions (prefixed `_`, called from no other file) first, then the
-   functions other files source, then `main`. `enforced-by: structure/private-prefix`
-7. `main`. `unenforced`
-8. `main "$@"` as the last non-comment line for executable scripts. `enforced-by: structure/shell-interpreter`
+   functions other files source, then `main`.
+7. `main`.
+8. `main "$@"` as the last non-comment line for executable scripts.
 
 Example:
 
@@ -309,23 +309,23 @@ Rules:
 
 - Every `_`-prefixed function is defined above the first function without the prefix. A
   function sourced by another file has no prefix; a function used only in its own file has one.
-  `main` is exempt. `enforced-by: structure/shell-interpreter`
-- Do not put executable program flow between function definitions. `enforced-by: structure/shell-interpreter`
+  `main` is exempt.
+- Do not put executable program flow between function definitions.
 - Do not mutate global state while loading a library unless that mutation is the
-  documented purpose of the library. `enforced-by: bash/shellcheck`
+  documented purpose of the library.
 - Source files with explicit paths based on `BASH_SOURCE[0]`, not the caller's
-  current directory. `unenforced`
+  current directory.
 - Libraries may define constants, functions, and validation helpers. Entrypoints
-  own argument parsing and `main`. `enforced-by: structure/shell-interpreter`
+  own argument parsing and `main`.
 - Executable scripts must finish with a meaningful program status. Do not let a
   final diagnostic command, false condition, or optional cleanup check become
-  the script status by accident. `enforced-by: structure/shell-interpreter`
+  the script status by accident.
 - Use explicit `exit 0` only when the final command's status is not the program
-  result and success has already been established. `enforced-by: structure/shell-interpreter`
+  result and success has already been established.
 
 ## Shell options
 
-Use shell options deliberately. `enforced-by: structure/shell-interpreter`
+Use shell options deliberately.
 
 Common entrypoint default:
 
@@ -336,22 +336,22 @@ set -euo pipefail
 Rules:
 
 - Use `set -euo pipefail` only when the script is written and reviewed for those
-  semantics. `enforced-by: structure/shell-interpreter`
+  semantics.
 - Do not rely on `errexit` for critical safety. Explicitly check `cd`, `rm`,
   quantization, engine-build, runtime, publishing, upload, and destructive
-  commands. `enforced-by: bash/shellcheck`
+  commands.
 - Treat `errexit` as a backstop, not control flow. It has exceptions in
-  conditionals, pipelines, command substitutions, subshells, and functions. `enforced-by: structure/shell-interpreter`
+  conditionals, pipelines, command substitutions, subshells, and functions.
 - Do not enable shell options in sourced libraries unless the library is part of
-  a script family that already owns those options. `enforced-by: structure/shell-interpreter`
+  a script family that already owns those options.
 - Do not toggle options globally around a small operation without restoring the
-  prior state. `enforced-by: bash/shellcheck`
+  prior state.
 - Sourced libraries must not call `set` at all. Capture command status with
-  `if`, `if !`, or an explicit conditional command instead. `enforced-by: structure/shell-interpreter`
+  `if`, `if !`, or an explicit conditional command instead.
 - Do not change `IFS` as part of a fake strict-mode ritual. Set `IFS` locally
-  only where reading or joining data requires it. `enforced-by: bash/shellcheck`
+  only where reading or joining data requires it.
 - Avoid `set -x` in committed code. If temporary tracing is necessary, keep it
-  local and make sure secrets cannot be printed. `enforced-by: structure/shell-interpreter`
+  local and make sure secrets cannot be printed.
 
 `errexit` pitfalls:
 
@@ -416,7 +416,7 @@ if produce_large_output | grep -q 'ready'; then
 fi
 ```
 
-Prefer a command that consumes input predictably, or handle the known status `enforced-by: bash/shellcheck`
+Prefer a command that consumes input predictably, or handle the known status
 explicitly. Short readers such as `head`, `grep -q`, and commands that stop
 after the first match can create false failures under `pipefail`.
 
@@ -424,14 +424,14 @@ after the first match can create false failures under `pipefail`.
 
 - Do not enable `set -u` blindly in an existing script. The script must be
   reviewed for unset positional parameters, optional environment variables, and
-  arrays. `enforced-by: structure/shell-interpreter`
-- Use `${name:-}` when an unset variable is acceptable. `enforced-by: structure/shell-config-defaults`
-- Use `${name:?message}` for required configuration at a clear boundary. `enforced-by: structure/shell-config-defaults`
-- Do not use unguarded `${1}` when an argument may be missing. Use `${1:-}`. `enforced-by: structure/shell-config-defaults`
-- Be careful with arrays under `set -u`; check lengths before indexing. `enforced-by: structure/shell-interpreter`
+  arrays.
+- Use `${name:-}` when an unset variable is acceptable.
+- Use `${name:?message}` for required configuration at a clear boundary.
+- Do not use unguarded `${1}` when an argument may be missing. Use `${1:-}`.
+- Be careful with arrays under `set -u`; check lengths before indexing.
 - If empty arrays are meaningful, require Bash 4.4+ before relying on
   their behavior under `set -u`. Bash 3.2-compatible scripts must guard array
-  access explicitly. `enforced-by: structure/shell-interpreter`
+  access explicitly.
 
 ## Output, logging, and errors
 
@@ -455,20 +455,20 @@ fail() {
 
 Rules:
 
-- Use `printf`, not `echo`, for predictable output. `enforced-by: bash/shellcheck`
-- Error messages go to STDERR. `enforced-by: structure/shell-safety`
-- Machine-readable output goes to STDOUT and excludes progress text. `enforced-by: structure/shell-safety`
-- Pipeline scripts include enough context to diagnose the failing step. `enforced-by: structure/shell-safety`
+- Use `printf`, not `echo`, for predictable output.
+- Error messages go to STDERR.
+- Machine-readable output goes to STDOUT and excludes progress text.
+- Pipeline scripts include enough context to diagnose the failing step.
 - Long-running, cron, publishing, and multi-target scripts use timestamped
-  diagnostics with stable fields instead of prose-only progress. `enforced-by: structure/shell-safety`
+  diagnostics with stable fields instead of prose-only progress.
 - Include the script name, function or step, host or target, attempt number, and
-  status when those fields exist. `enforced-by: bash/shellcheck`
+  status when those fields exist.
 - Do not print secrets, tokens, cookies, connection strings, `.env` content, or
-  provider payloads. `enforced-by: structure/shell-safety`
-- Do not use colored output in CI unless the runner and logs support it. `enforced-by: structure/shell-safety`
-- Do not make parsers depend on human log text. `unenforced`
+  provider payloads.
+- Do not use colored output in CI unless the runner and logs support it.
+- Do not make parsers depend on human log text.
 - Use `logger` or journald only in Linux-only scripts that validate the command
-  is available and document the runtime dependency. `enforced-by: structure/shell-safety`
+  is available and document the runtime dependency.
 
 Good:
 
@@ -501,18 +501,18 @@ log_status() {
 
 Rules:
 
-- Use here documents only with commands that read from STDIN. `enforced-by: bash/shellcheck`
-- Do not use `echo <<EOF`; `echo` does not read the here document body. `enforced-by: bash/shellcheck`
-- Quote the here-document delimiter when the body must remain literal. `enforced-by: bash/shellcheck`
+- Use here documents only with commands that read from STDIN.
+- Do not use `echo <<EOF`; `echo` does not read the here document body.
+- Quote the here-document delimiter when the body must remain literal.
 - Use unquoted delimiters only when parameter, command, or arithmetic expansion
-  is intended. `enforced-by: bash/shellcheck`
+  is intended.
 - Use `<<-` only when tab-stripping is deliberate. The body must be indented
-  with tabs, not spaces. `enforced-by: bash/shellcheck`
-- Use `printf`, not `echo`, for short literal output. `enforced-by: bash/shellcheck`
+  with tabs, not spaces.
+- Use `printf`, not `echo`, for short literal output.
 - Use `$HOME` for home-relative paths in quoted strings. Quoted `~` does not
-  expand. `enforced-by: bash/shellcheck`
+  expand.
 - In interactive shell snippets, quote `!` or disable history expansion with
-  `set +H`. Scripts do not use interactive history expansion. `enforced-by: bash/shellcheck`
+  `set +H`. Scripts do not use interactive history expansion.
 
 Good:
 
@@ -571,26 +571,26 @@ push_model() {
 
 Rules:
 
-- Document behavior, not history. `enforced-by: structure/doc-comment`
-- Comments explain why a shell pattern is needed when the code is not obvious. `unenforced`
-- Do not comment every line. `enforced-by: structure/doc-comment`
+- Document behavior, not history.
+- Comments explain why a shell pattern is needed when the code is not obvious.
+- Do not comment every line.
 - A `TODO` is `TODO(<issue-url-or-YYYY-MM-DD>): <sentence>`; the owner is an issue link or an
-  expiry date, never a person. `enforced-by: structure/doc-comment`
+  expiry date, never a person.
 - Suppressions must explain the real constraint and stay as narrow as
-  possible. `enforced-by: integrity/suppressions`
+  possible.
 
 ## Formatting
 
 Rules:
 
 - Indent with 2 spaces. No tabs except tab-stripping here-documents with
-  `<<-`. `enforced-by: bash/shellcheck`
-- Keep Bash source lines within the line length the project sets. `enforced-by: bash/shfmt`
-- Use blank lines between logical blocks. `enforced-by: bash/shfmt`
+  `<<-`.
+- Keep Bash source lines within the line length the project sets.
+- Use blank lines between logical blocks.
 - Keep `; then` and `; do` on the same line as `if`, `for`, `while`, `until`,
-  and `select`. `enforced-by: bash/shfmt`
-- Put `else`, `elif`, `fi`, `done`, and `esac` on their own aligned lines. `enforced-by: bash/shfmt`
-- Prefer one command per line over dense semicolon chains. `enforced-by: bash/shfmt`
+  and `select`.
+- Put `else`, `elif`, `fi`, `done`, and `esac` on their own aligned lines.
+- Prefer one command per line over dense semicolon chains.
 
 Control flow:
 
@@ -646,43 +646,43 @@ generate_results \
 
 Before `gspot check`, read the change against these questions:
 
-- The file has the correct shebang and header. `enforced-by: structure/shell-interpreter`
-- The script uses Bash only where Bash is intended. `unenforced`
-- Shell options are appropriate and not masking missing checks. `enforced-by: structure/shell-interpreter`
-- The script exits with a meaningful final status. `enforced-by: bash/shellcheck`
-- Every function has the required comment. `unenforced`
-- Deprecated syntax such as `$[ ... ]`, backticks, `let`, `typeset`, `function`, `enforced-by: bash/shellcheck`
-- Variables are quoted. `enforced-by: bash/shellcheck`
-- Argument lists use arrays. `unenforced`
-- User input and external data are validated before arithmetic or command use. `unenforced`
-- No `eval`, configured `bash -c`, parsed `ls`, or untrusted shell fragments exist. `enforced-by: bash/shellcheck`
-- `cd`, deployment, destructive, migration, upload, and sync commands are `enforced-by: bash/shellcheck`
-- Pipelines behave correctly with or without `pipefail`. `enforced-by: structure/shell-interpreter`
-- Redirections are ordered correctly. `enforced-by: bash/shellcheck`
-- Temporary files are created with `mktemp` and cleaned up. `enforced-by: bash/shellcheck`
-- Downloads, generated files, and structured replacements validate temporary `unenforced`
-- Locks are acquired atomically, not with separate check-then-create steps. `unenforced`
-- Network, remote, mounted-filesystem, and readiness commands have bounded `enforced-by: structure/shell-ssh-blocks`
-- Retries are limited to known retryable failures and have bounded attempts. `unenforced`
-- Background jobs are tracked by PID, waited on, and cleaned up on interruption. `enforced-by: structure/shell-safety`
-- Concurrent jobs keep output separated or use a tool that serializes output. `unenforced`
-- Checkpoint files cannot skip required work after inputs, targets, or runs `unenforced`
-- Long-running or multi-target scripts log stable status fields to STDERR `enforced-by: structure/shell-safety`
-- Secrets are not printed, traced, or left in files/layers. `enforced-by: secrets/gitleaks`
-- Filenames with spaces and leading dashes are safe. `unenforced`
-- Broken symlinks, home-relative paths, and no-match globs are handled `enforced-by: bash/shellcheck`
-- `IFS`, `read`, and delimited-data handling do not drop meaningful data. `enforced-by: bash/shellcheck`
-- Privileged redirection and globbing happen at the intended privilege level. `enforced-by: bash/shellcheck`
-- Process control does not rely on `ps | grep`. `unenforced`
-- Files have UTF-8 without BOM and LF endings. `enforced-by: structure/shell-interpreter`
-- macOS/Linux portability is acceptable for the script's runtime. `enforced-by: structure/shell-interpreter`
-- The owning shell lint command passes or remaining findings are documented. `unenforced`
-- The file is exactly one invocation type: executable entrypoint or `enforced-by: structure/shell-interpreter`
-- Private functions precede public functions and are not called externally. `enforced-by: structure/private-prefix`
-- Public library functions and constants use their owner namespace. `enforced-by: structure/shell-interpreter`
-- Every repository function dependency is sourced directly. `enforced-by: structure/shell-interpreter`
-- No source-only barrel or one-function, one-caller pseudo-module remains. `unenforced`
-- `cd`, quantization, engine-build, runtime, publishing, upload, and `enforced-by: bash/shellcheck`
-- Deprecated syntax such as `$[ ... ]`, backticks, `let`, `typeset`, `function`, `&>`, `|&`, and the `[ ... -a ... ]` forms is absent. `enforced-by: bash/shellcheck`
-- Downloads, generated files, and structured replacements validate temporary data before replacing known-good files. `unenforced`
-- Network, remote, mounted-filesystem, and readiness commands have bounded timeouts where they can hang. `enforced-by: structure/shell-ssh-blocks`
+- The file has the correct shebang and header.
+- The script uses Bash only where Bash is intended.
+- Shell options are appropriate and not masking missing checks.
+- The script exits with a meaningful final status.
+- Every function has the required comment.
+- Deprecated syntax such as `$[ ... ]`, backticks, `let`, `typeset`, `function`,
+- Variables are quoted.
+- Argument lists use arrays.
+- User input and external data are validated before arithmetic or command use.
+- No `eval`, configured `bash -c`, parsed `ls`, or untrusted shell fragments exist.
+- `cd`, deployment, destructive, migration, upload, and sync commands are
+- Pipelines behave correctly with or without `pipefail`.
+- Redirections are ordered correctly.
+- Temporary files are created with `mktemp` and cleaned up.
+- Downloads, generated files, and structured replacements validate temporary
+- Locks are acquired atomically, not with separate check-then-create steps.
+- Network, remote, mounted-filesystem, and readiness commands have bounded
+- Retries are limited to known retryable failures and have bounded attempts.
+- Background jobs are tracked by PID, waited on, and cleaned up on interruption.
+- Concurrent jobs keep output separated or use a tool that serializes output.
+- Checkpoint files cannot skip required work after inputs, targets, or runs
+- Long-running or multi-target scripts log stable status fields to STDERR
+- Secrets are not printed, traced, or left in files/layers.
+- Filenames with spaces and leading dashes are safe.
+- Broken symlinks, home-relative paths, and no-match globs are handled
+- `IFS`, `read`, and delimited-data handling do not drop meaningful data.
+- Privileged redirection and globbing happen at the intended privilege level.
+- Process control does not rely on `ps | grep`.
+- Files have UTF-8 without BOM and LF endings.
+- macOS/Linux portability is acceptable for the script's runtime.
+- The owning shell lint command passes or remaining findings are documented.
+- The file is exactly one invocation type: executable entrypoint or
+- Private functions precede public functions and are not called externally.
+- Public library functions and constants use their owner namespace.
+- Every repository function dependency is sourced directly.
+- No source-only barrel or one-function, one-caller pseudo-module remains.
+- `cd`, quantization, engine-build, runtime, publishing, upload, and
+- Deprecated syntax such as `$[ ... ]`, backticks, `let`, `typeset`, `function`, `&>`, `|&`, and the `[ ... -a ... ]` forms is absent.
+- Downloads, generated files, and structured replacements validate temporary data before replacing known-good files.
+- Network, remote, mounted-filesystem, and readiness commands have bounded timeouts where they can hang.

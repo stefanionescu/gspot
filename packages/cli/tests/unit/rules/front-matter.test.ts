@@ -1,8 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { frontMatterFindings, layerOfPath, parseFrontMatter } from '#cli/rules/front-matter.ts';
 
-const PRESETS = new Set(['naming', 'rules', 'none']);
-
 describe('front matter', () => {
     test('parses the fields between the fences', () => {
         expect(parseFrontMatter('---\nlayer: code\npreset: naming\ntitle: Naming\n---\n\n# Naming\n')).toEqual({
@@ -21,15 +19,13 @@ describe('front matter', () => {
     });
 
     test('findings name what disagrees', () => {
-        const text = '---\nlayer: code\npreset: unknown\ntitle: Other\n---\n\n# Naming\n';
-        const messages = frontMatterFindings('language/typescript/TS.md', text, PRESETS).map(
-            (finding) => finding.message,
-        );
+        const text = '---\nlayer: code\npreset: Not An Id\ntitle: Other\n---\n\n# Naming\n';
+        const messages = frontMatterFindings('language/typescript/TS.md', text).map((finding) => finding.message);
         expect(messages).toEqual([
             "layer 'code' does not match the path ('language')",
-            "unknown preset 'unknown'",
+            "preset 'Not An Id' is not a preset id or none",
             "title 'Other' does not equal the H1 'Naming'",
         ]);
-        expect(frontMatterFindings('a.md', 'plain\n', PRESETS)[0]?.message).toBe('missing front matter');
+        expect(frontMatterFindings('a.md', 'plain\n')[0]?.message).toBe('missing front matter');
     });
 });

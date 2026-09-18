@@ -146,7 +146,7 @@ export function doctorReport(session: Session, pinned: string | undefined, newer
         changes: changeReport(session),
         hooks: hooksLine(policy.hooks.tool),
         ci: policy.ci.provider === 'github' ? '.github/workflows/gspot.yml' : 'none',
-        rules: { files: policy.rules.install ? selectRuleFiles(session).length : 0, unenforced: 0 },
+        rules: { files: policy.rules.install ? selectRuleFiles(session).length : 0 },
         version: {
             running: session.version,
             ...(pinned === undefined ? {} : { pinned }),
@@ -163,7 +163,6 @@ export function doctorReport(session: Session, pinned: string | undefined, newer
  */
 export function doctorText(report: DoctorReport): string {
     const colors = paint();
-    const unenforced = report.rules.unenforced > 0 ? `, ${String(report.rules.unenforced)} statements unenforced` : '';
     const lines = [
         'tools',
         ...toolLines(report.tools, colors),
@@ -173,7 +172,7 @@ export function doctorText(report: DoctorReport): string {
         ...changeLines(report.changes),
         `hooks      ${report.hooks}`,
         `ci         ${report.ci}`,
-        `rules      ${String(report.rules.files)} files${unenforced}`,
+        `rules      ${String(report.rules.files)} files`,
         versionLine(report),
     ];
     return `${lines.join('\n')}\n`;

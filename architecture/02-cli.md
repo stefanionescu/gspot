@@ -398,7 +398,7 @@ pinned twice
 
 hooks      .gspot/hooks  installed
 ci         none
-rules      14 files, 3 statements unenforced
+rules      14 files
 gspot      0.4.0 pinned and running (0.5.0 available: gspot upgrade --check)
 ```
 

@@ -58,18 +58,18 @@ export const ResourceParamsSchema = z
 
 Zod v4 rules:
 
-- Use `z.email()` for email strings. `enforced-by: typescript/eslint zod/require-strict`
+- Use `z.email()` for email strings.
 - Use `z.uuid()` for UUIDs, or domain ID helpers from the project's shared identifier types when
-  they express the domain. `enforced-by: typescript/eslint zod/require-strict`
-- Use `z.guid()` only for GUID-shaped values an older system issued. `enforced-by: typescript/eslint zod/require-strict`
-- Use `z.coerce.number()` for query params that arrive as strings. `unenforced`
-- Use `z.preprocess()` for environment parsing. `enforced-by: typescript/eslint zod/require-strict`
-- Use `.strict()` on request bodies. `enforced-by: typescript/eslint zod/require-strict`
-- Use `.superRefine()` for cross-field validation. `enforced-by: typescript/eslint zod/require-strict`
-- Use `.meta()` for OpenAPI descriptions and examples. `enforced-by: typescript/eslint zod/require-strict`
-- Prefer Zod built-ins and vetted validators over custom regex. `enforced-by: typescript/eslint zod/require-strict`
-- Keep custom regex bounded, simple, anchored when appropriate, and away from large user-controlled strings. `enforced-by: typescript/eslint zod/require-strict`
-- Prefer contract-local schemas. Move a schema to the project's type roots or `openapi/common.ts` only when multiple endpoints genuinely share the same public shape. `enforced-by: typescript/eslint zod/require-strict`
+  they express the domain.
+- Use `z.guid()` only for GUID-shaped values an older system issued.
+- Use `z.coerce.number()` for query params that arrive as strings.
+- Use `z.preprocess()` for environment parsing.
+- Use `.strict()` on request bodies.
+- Use `.superRefine()` for cross-field validation.
+- Use `.meta()` for OpenAPI descriptions and examples.
+- Prefer Zod built-ins and vetted validators over custom regex.
+- Keep custom regex bounded, simple, anchored when appropriate, and away from large user-controlled strings.
+- Prefer contract-local schemas. Move a schema to the project's type roots or `openapi/common.ts` only when multiple endpoints genuinely share the same public shape.
 
 Unions are appropriate when the endpoint deliberately accepts distinct public
 request shapes.
@@ -82,7 +82,7 @@ export const orderRequestSchema = z
     });
 ```
 
-Use cross-field validation when individual field schemas cannot express the `enforced-by: typescript/eslint zod/require-strict`
+Use cross-field validation when individual field schemas cannot express the
 contract.
 
 ```ts
@@ -108,11 +108,11 @@ between contract, middleware, implementation, and actual response envelopes.
 
 Rules:
 
-- Test representative success responses against the generated OpenAPI schema for public endpoints touched by the change. `enforced-by: typescript/eslint zod/require-strict`
-- Test representative error responses against the documented error envelope. `enforced-by: express/openapi-fresh`
-- Test rejected invalid body, query, and params values at the HTTP boundary. `enforced-by: typescript/eslint`
-- Keep contract tests focused on public shape, not private module structure. `enforced-by: typescript/eslint zod/require-strict`
-- Do not maintain separate hand-written Swagger fixtures. `enforced-by: typescript/eslint`
+- Test representative success responses against the generated OpenAPI schema for public endpoints touched by the change.
+- Test representative error responses against the documented error envelope.
+- Test rejected invalid body, query, and params values at the HTTP boundary.
+- Keep contract tests focused on public shape, not private module structure.
+- Do not maintain separate hand-written Swagger fixtures.
 
 ```ts
 const response = await request(app)

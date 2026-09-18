@@ -2,6 +2,8 @@
 import { RULE_LAYERS } from '#config/statements.ts';
 import type { RuleFinding, FrontMatter } from '#types/rules.ts';
 
+// A preset id, or none; the manifest may arrive in a later phase.
+const PRESET_ID = /^(?:none|[a-z][a-z0-9-]*)$/u;
 const LAYERS = new Set(RULE_LAYERS);
 const FENCE = '---';
 
@@ -47,13 +49,12 @@ export function parseFrontMatter(text: string): FrontMatter | undefined {
 }
 
 /**
- * What is wrong with a file's front matter: missing, an unknown layer or preset, a layer that does not match the path, a title that is not the H1.
+ * What is wrong with a file's front matter: missing, an unknown layer, a preset that is not an id, a layer that does not match the path, a title that is not the H1.
  * @param path the file relative to rules/
  * @param text the file text
- * @param presetIds the preset ids the architecture names, plus `rules` and `none`
  * @returns the findings
  */
-export function frontMatterFindings(path: string, text: string, presetIds: ReadonlySet<string>): RuleFinding[] {
+export function frontMatterFindings(path: string, text: string): RuleFinding[] {
     const matter = parseFrontMatter(text);
     if (matter === undefined) return [{ file: path, line: 1, message: 'missing front matter' }];
     const findings: RuleFinding[] = [];
@@ -65,8 +66,8 @@ export function frontMatterFindings(path: string, text: string, presetIds: Reado
             line: 2,
             message: `layer '${matter.layer}' does not match the path ('${expected}')`,
         });
-    if (!presetIds.has(matter.preset))
-        findings.push({ file: path, line: 3, message: `unknown preset '${matter.preset}'` });
+    if (!PRESET_ID.test(matter.preset))
+        findings.push({ file: path, line: 3, message: `preset '${matter.preset}' is not a preset id or none` });
     const heading = headingOf(text.split('\n')) ?? '';
     if (heading !== matter.title)
         findings.push({ file: path, line: 4, message: `title '${matter.title}' does not equal the H1 '${heading}'` });

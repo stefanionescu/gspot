@@ -20,43 +20,43 @@ tasks, middleware, docs, tests).
 Rules:
 
 - Keep FastAPI framework code organized by application boundaries: app creation,
-  routers, dependencies, schemas, security, middleware, and infrastructure. `enforced-by: python/ruff FAST`
+  routers, dependencies, schemas, security, middleware, and infrastructure.
 - Prefer `Annotated[..., Query(...)]`, `Annotated[..., Path(...)]`,
   `Annotated[..., Body(...)]`, `Annotated[..., Depends(...)]`,
   `Annotated[..., Header()]`, `Annotated[..., Cookie()]`, and similar metadata
-  annotations for FastAPI parameters. `unenforced`
+  annotations for FastAPI parameters.
 - Use Pydantic models for request bodies, response bodies, and documented
-  structured data. `enforced-by: python/ruff FAST`
+  structured data.
 - Return concrete Pydantic models, dataclasses, dictionaries, lists, or
-  iterables that match the declared return type. `enforced-by: python/ruff FAST`
-- Use FastAPI and Starlette primitives directly when they own the HTTP behavior. `unenforced`
+  iterables that match the declared return type.
+- Use FastAPI and Starlette primitives directly when they own the HTTP behavior.
 - Keep business logic outside path operation functions. Path operations adapt
-  HTTP input to application calls and adapt application results to HTTP output. `enforced-by: python/ruff FAST`
-- Keep database, SDK, and service clients out of module-level import-time work. `unenforced`
+  HTTP input to application calls and adapt application results to HTTP output.
+- Keep database, SDK, and service clients out of module-level import-time work.
 - Keep security-specific rules stricter than general examples. Documentation
   examples with fake secrets, fake hashes, fake users, or fake tokens are not
-  acceptable production patterns. `enforced-by: security/semgrep`
+  acceptable production patterns.
 - Do not add a FastAPI dependency, middleware, background task, or router when a
-  plain Python function is enough. `enforced-by: python/ruff FAST`
+  plain Python function is enough.
 
 ## FastAPI application structure
 
 Rules:
 
-- Split nontrivial FastAPI apps across multiple modules. `unenforced`
+- Split nontrivial FastAPI apps across multiple modules.
 - Use one main application module to create the `FastAPI` object and include
-  routers. `unenforced`
-- Put related path operations in router modules. `unenforced`
+  routers.
+- Put related path operations in router modules.
 - Put shared dependencies in a dependencies module or a domain-owned dependency
-  module. `unenforced`
-- Put internal-only routers or admin routers in clearly named internal packages. `unenforced`
-- Every importable package and subpackage has an `__init__.py`. `enforced-by: python/ruff FAST`
+  module.
+- Put internal-only routers or admin routers in clearly named internal packages.
+- Every importable package and subpackage has an `__init__.py`.
 - Keep the main app module small. It wires routers, global dependencies,
-  middleware, exception handlers, metadata, and startup configuration. `enforced-by: python/ruff FAST`
+  middleware, exception handlers, metadata, and startup configuration.
 - Configure the FastAPI entrypoint in project configuration when the deployment
-  tool supports it. `unenforced`
-- Do not depend on running the app from the repository root. `unenforced`
-- Do not patch `sys.path` to make a FastAPI app importable from source. `enforced-by: python/ruff FAST`
+  tool supports it.
+- Do not depend on running the app from the repository root.
+- Do not patch `sys.path` to make a FastAPI app importable from source.
 
 Good shape:
 
@@ -100,23 +100,23 @@ app.include_router(
 
 Rules:
 
-- Use `APIRouter` to group related path operations. `enforced-by: python/ruff FAST`
+- Use `APIRouter` to group related path operations.
 - Name the router object `router` unless a local framework convention requires
-  a more specific name. `enforced-by: python/ruff FAST`
+  a more specific name.
 - Import router modules when multiple modules expose a `router` object, so names
-  do not collide. `enforced-by: python/ruff FAST`
+  do not collide.
 - Put shared router prefix, tags, dependencies, and default responses on the
-  `APIRouter`. `enforced-by: python/ruff FAST`
-- Router prefixes do not end with `/`. `enforced-by: python/ruff FAST`
-- Path operation paths start with `/`. `unenforced`
+  `APIRouter`.
+- Router prefixes do not end with `/`.
+- Path operation paths start with `/`.
 - Add path-operation-specific tags, dependencies, status codes, and responses
-  only when they differ from the router default. `enforced-by: python/ruff FAST`
-- Include routers in the main app module or a higher-level router module. `unenforced`
+  only when they differ from the router default.
+- Include routers in the main app module or a higher-level router module.
 - Include a router in another router before including the parent router in the
-  app. `unenforced`
+  app.
 - Reusing the same router under multiple prefixes is an advanced pattern. Use it
   only when the same API must intentionally be exposed under multiple route
-  groups. `enforced-by: python/ruff FAST`
+  groups.
 
 Good router module:
 
@@ -150,21 +150,21 @@ app.include_router(users.router)
 
 Rules:
 
-- Keep path operation functions thin. `enforced-by: python/ruff FAST`
-- Annotate path operation parameters and return values. `unenforced`
+- Keep path operation functions thin.
+- Annotate path operation parameters and return values.
 - Use response models or return type annotations so FastAPI can validate,
-  filter, document, and serialize responses. `unenforced`
-- Use `HTTPException` for HTTP errors that are part of the API contract. `enforced-by: python/ruff FAST`
-- Use precise status codes. `enforced-by: python/ruff FAST`
-- Do not leak internal error details in `HTTPException.detail`. `enforced-by: security/semgrep`
-- Use `status` constants when they make intent clearer. `unenforced`
+  filter, document, and serialize responses.
+- Use `HTTPException` for HTTP errors that are part of the API contract.
+- Use precise status codes.
+- Do not leak internal error details in `HTTPException.detail`.
+- Use `status` constants when they make intent clearer.
 - Use `Annotated` for headers, cookies, dependencies, form fields, and other
-  parameter metadata. `enforced-by: python/ruff FAST`
+  parameter metadata.
 - Do not use path operation functions as dumping grounds for database access,
-  authorization logic, external API calls, and response formatting. `unenforced`
-- Put repeated path operation policy at the router or app level. `unenforced`
+  authorization logic, external API calls, and response formatting.
+- Put repeated path operation policy at the router or app level.
 - Use relative OpenAPI security URLs such as `tokenUrl="token"` so deployments
-  behind a proxy can keep working. `unenforced`
+  behind a proxy can keep working.
 
 Good:
 
@@ -182,34 +182,34 @@ async def read_item(item_id: str) -> Item:
 Rules:
 
 - Use standard Python type annotations on path operation parameters so FastAPI
-  can parse, validate, document, and serialize consistently. `unenforced`
-- Treat a missing default value as required. `unenforced`
-- Treat a default value, including `None`, as optional. `unenforced`
-- When a parameter can be `None`, include `None` in the type annotation. `unenforced`
+  can parse, validate, document, and serialize consistently.
+- Treat a missing default value as required.
+- Treat a default value, including `None`, as optional.
+- When a parameter can be `None`, include `None` in the type annotation.
 - Use `Query`, `Path`, `Body`, `Header`, `Cookie`, and `Form` inside
-  `Annotated` for framework metadata and validation. `enforced-by: python/ruff FAST`
+  `Annotated` for framework metadata and validation.
 - Keep `Annotated` defaults in the function signature, not inside `Query`,
-  `Path`, `Body`, or other metadata objects. `enforced-by: python/ruff FAST`
+  `Path`, `Body`, or other metadata objects.
 - Use `min_length`, `max_length`, and `pattern` for string constraints at the
-  HTTP boundary when those constraints are part of the API contract. `unenforced`
-- Use `gt`, `ge`, `lt`, and `le` for numeric constraints at the HTTP boundary. `unenforced`
+  HTTP boundary when those constraints are part of the API contract.
+- Use `gt`, `ge`, `lt`, and `le` for numeric constraints at the HTTP boundary.
 - Use Pydantic validators for pure request-value validation that only depends
-  on the request data. `enforced-by: python/ruff FAST`
+  on the request data.
 - Use dependencies, not validators, for validation that needs a database,
-  service call, filesystem access, authorization state, or other external I/O. `unenforced`
-- Declare fixed routes before parameterized routes that otherwise match the same path. `unenforced`
-- Do not define two path operations for the same method and path. `unenforced`
-- Use `str, Enum` path parameter types for documented string choices. `unenforced`
+  service call, filesystem access, authorization state, or other external I/O.
+- Declare fixed routes before parameterized routes that otherwise match the same path.
+- Do not define two path operations for the same method and path.
+- Use `str, Enum` path parameter types for documented string choices.
 - Use the `{name:path}` path convertor only when a path parameter is genuinely
-  allowed to contain slashes. `enforced-by: python/ruff FAST`
+  allowed to contain slashes.
 - Use aliases only to preserve external API names that are not valid or desired
-  Python identifiers. Translate to domain names before moving inward. `enforced-by: python/ruff FAST`
+  Python identifiers. Translate to domain names before moving inward.
 - For query parameters that can appear multiple times, use an explicit
-  `Query()` annotation with a collection type such as `list[str]`. `unenforced`
+  `Query()` annotation with a collection type such as `list[str]`.
 - Use Pydantic query parameter models for cohesive groups such as pagination,
-  filtering, sorting, or search options. `enforced-by: python/ruff FAST`
+  filtering, sorting, or search options.
 - Set `model_config = {"extra": "forbid"}` on a query parameter model when
-  unknown query parameters are invalid for that endpoint. `unenforced`
+  unknown query parameters are invalid for that endpoint.
 
 Good validated parameters:
 
@@ -256,33 +256,33 @@ async def read_user(user_id: str) -> User:
 
 Rules:
 
-- Use Pydantic `BaseModel` classes for JSON request bodies and response bodies. `enforced-by: python/ruff FAST`
+- Use Pydantic `BaseModel` classes for JSON request bodies and response bodies.
 - Use Pydantic models as boundary schemas. Keep business workflows and
-  persistence behavior outside schema classes. `enforced-by: python/ruff FAST`
-- Declare required body fields without defaults. `unenforced`
+  persistence behavior outside schema classes.
+- Declare required body fields without defaults.
 - Declare optional or nullable body fields with explicit defaults and `None`
-  annotations where applicable. `unenforced`
-- Prefer `Field(default_factory=...)` for mutable defaults, even when Pydantic copies mutable defaults. `enforced-by: python/ruff FAST`
+  annotations where applicable.
+- Prefer `Field(default_factory=...)` for mutable defaults, even when Pydantic copies mutable defaults.
 - Use `Field` constraints on model attributes when the constraint belongs to the
-  schema contract. `enforced-by: python/ruff FAST`
+  schema contract.
 - Use separate schema classes for create, read, and update shapes when their
-  required fields, nullable fields, or public fields differ. `unenforced`
-- Do not send request bodies with `GET` endpoints. `unenforced`
+  required fields, nullable fields, or public fields differ.
+- Do not send request bodies with `GET` endpoints.
 - Use `Body()` for singular values that must come from the request body instead
-  of the query string. `unenforced`
+  of the query string.
 - Use `Body(embed=True)` only when the wire contract intentionally wraps a
-  single body model under its parameter name. `unenforced`
+  single body model under its parameter name.
 - When multiple body parameters are declared, document and preserve the keyed
-  body shape clients must send. `unenforced`
-- Use `.model_dump()` for Pydantic v2 model-to-dict conversion. `enforced-by: python/ruff FAST`
+  body shape clients must send.
+- Use `.model_dump()` for Pydantic v2 model-to-dict conversion.
 - Use `.model_dump(exclude_unset=True)` for partial-update input where omitted
-  values must not overwrite stored values. `unenforced`
+  values must not overwrite stored values.
 - Use `.model_copy(update=...)` to create updated model values without mutating
-  the original model. `unenforced`
+  the original model.
 - Use `jsonable_encoder()` when converting Pydantic models or datetimes to
-  values that must be JSON-compatible for storage or transport. `enforced-by: python/ruff FAST`
+  values that must be JSON-compatible for storage or transport.
 - Use `response_model` or a return type annotation when response filtering,
-  validation, serialization, or documentation matters. `enforced-by: python/ruff FAST`
+  validation, serialization, or documentation matters.
 
 Good schema defaults:
 
@@ -320,36 +320,36 @@ async def patch_item(item_id: str, item: ItemUpdate) -> Item:
 
 Rules:
 
-- Import `Field` from `pydantic`, not from `fastapi`. `enforced-by: python/ruff FAST`
+- Import `Field` from `pydantic`, not from `fastapi`.
 - Use `Field` for Pydantic model attribute validation, defaults, and schema
-  metadata. `enforced-by: python/ruff FAST`
+  metadata.
 - Use `Query`, `Path`, `Body`, `Header`, `Cookie`, `Form`, and `File` for
-  FastAPI parameter metadata. `enforced-by: python/ruff FAST`
+  FastAPI parameter metadata.
 - Keep model field defaults in `Field(default=...)` or ordinary assignment
-  syntax, consistently with surrounding schema code. `unenforced`
-- Use `Field(default_factory=...)` for mutable field defaults. `unenforced`
+  syntax, consistently with surrounding schema code.
+- Use `Field(default_factory=...)` for mutable field defaults.
 - Use `Field` constraints when the constraint belongs to the JSON schema, not
-  only to one handler implementation. `enforced-by: python/ruff FAST`
+  only to one handler implementation.
 - Use `title`, `description`, `deprecated`, `examples`, and validation
   arguments deliberately. They become part of generated JSON Schema and
-  OpenAPI. `enforced-by: python/ruff FAST`
+  OpenAPI.
 - Do not add arbitrary extra keyword arguments to `Field`, `Query`, `Body`, or
   similar helpers unless the generated schema extension is intentional and
-  compatible with the OpenAPI tools that consume it. `enforced-by: python/ruff FAST`
-- Put whole-model request examples in `model_config["json_schema_extra"]`. `unenforced`
-- Put field-level examples in `Field(examples=[...])`. `unenforced`
+  compatible with the OpenAPI tools that consume it.
+- Put whole-model request examples in `model_config["json_schema_extra"]`.
+- Put field-level examples in `Field(examples=[...])`.
 - Put body or parameter examples in the relevant FastAPI helper, such as
-  `Body(examples=[...])`. `unenforced`
+  `Body(examples=[...])`.
 - Prefer the JSON Schema `examples` field over older singular `example`
-  metadata. `enforced-by: python/ruff FAST`
+  metadata.
 - Use `openapi_examples` only when the API docs need named examples with
-  summaries, descriptions, values, or external example URLs. `enforced-by: python/ruff FAST`
+  summaries, descriptions, values, or external example URLs.
 - Keep examples sanitized. Do not include real secrets, tokens, credentials,
-  internal IDs, production hostnames, personal data, or customer data. `enforced-by: security/semgrep`
+  internal IDs, production hostnames, personal data, or customer data.
 - Make examples valid by default. Include invalid examples only when the docs
-  intentionally demonstrate validation failure. `unenforced`
+  intentionally demonstrate validation failure.
 - Keep examples aligned with current schema fields. Remove examples when they
-  become stale. `unenforced`
+  become stale.
 
 Good model field metadata:
 
@@ -409,35 +409,35 @@ async def update_prompt(
 
 Rules:
 
-- Use nested Pydantic models for structured JSON objects with known fields. `enforced-by: python/ruff FAST`
-- Do not model known JSON object shapes as `dict[str, object]`. `unenforced`
+- Use nested Pydantic models for structured JSON objects with known fields.
+- Do not model known JSON object shapes as `dict[str, object]`.
 - Specify type parameters for `list`, `set`, `frozenset`, `tuple`, and `dict`
-  fields. `unenforced`
-- Use `list[Model]` for arrays of structured objects. `unenforced`
+  fields.
+- Use `list[Model]` for arrays of structured objects.
 - Use top-level `list[Model]` body parameters only when the external API
-  contract is a JSON array. `unenforced`
+  contract is a JSON array.
 - Use `set[T]` or `frozenset[T]` when uniqueness is part of the domain
   contract. Remember that JSON responses still serialize these values as
-  arrays. `unenforced`
+  arrays.
 - Use `dict[KeyType, ValueType]` bodies only when valid field names are not
-  known ahead of time. `unenforced`
+  known ahead of time.
 - Remember that JSON object keys are strings. If a body is typed as
   `dict[int, float]`, clients still send string keys and Pydantic validates and
-  converts them. `enforced-by: python/ruff FAST`
+  converts them.
 - Use precise Pydantic and standard-library types at API boundaries when they
-  express the domain better than plain strings. `enforced-by: python/ruff FAST`
-- Use `UUID` for UUID identifiers. `unenforced`
+  express the domain better than plain strings.
+- Use `UUID` for UUID identifiers.
 - Use timezone-aware `datetime` values for instants that cross process or
-  service boundaries. `unenforced`
-- Use `date`, `time`, and `timedelta` when those are the actual domain values. `unenforced`
+  service boundaries.
+- Use `date`, `time`, and `timedelta` when those are the actual domain values.
 - Use `Decimal` for exact decimal quantities such as money or prices when
-  binary floating-point behavior is not acceptable. `unenforced`
+  binary floating-point behavior is not acceptable.
 - Use Pydantic string-like types such as `HttpUrl` and `EmailStr` when URL or
-  email validation is part of the schema contract. `enforced-by: python/ruff FAST`
+  email validation is part of the schema contract.
 - Use `bytes` only for small binary values represented in JSON. Use FastAPI
-  file handling for uploaded files. `enforced-by: python/ruff FAST`
+  file handling for uploaded files.
 - Avoid deeply nested request bodies when the domain can be expressed as
-  smaller endpoints or named resources. `unenforced`
+  smaller endpoints or named resources.
 
 Good nested schema:
 
@@ -468,30 +468,30 @@ async def create_index_weights(weights: dict[int, float]) -> dict[int, float]:
 
 Rules:
 
-- Use `Header()` for values that must come from HTTP headers. `unenforced`
-- Use `Cookie()` for values that must come from cookies. `unenforced`
+- Use `Header()` for values that must come from HTTP headers.
+- Use `Cookie()` for values that must come from cookies.
 - Do not rely on plain scalar parameters for headers or cookies. FastAPI treats
-  plain non-path scalar parameters as query parameters. `unenforced`
-- Use `Annotated[..., Header()]` and `Annotated[..., Cookie()]` for new code. `unenforced`
-- Keep Python parameter and field names in snake_case. `unenforced`
-- Let `Header()` convert underscores to hyphens by default. `unenforced`
+  plain non-path scalar parameters as query parameters.
+- Use `Annotated[..., Header()]` and `Annotated[..., Cookie()]` for new code.
+- Keep Python parameter and field names in snake_case.
+- Let `Header()` convert underscores to hyphens by default.
 - Set `Header(convert_underscores=False)` only when an external protocol
-  requires underscores in header names and the deployment path supports them. `unenforced`
-- Remember that HTTP header names are case-insensitive. `unenforced`
+  requires underscores in header names and the deployment path supports them.
+- Remember that HTTP header names are case-insensitive.
 - Use `list[str] | None` with `Header()` for duplicate headers that can appear
-  more than once. `unenforced`
-- Use Pydantic header parameter models for cohesive groups of related headers. `enforced-by: python/ruff FAST`
-- Use Pydantic cookie parameter models for cohesive groups of related cookies. `enforced-by: python/ruff FAST`
+  more than once.
+- Use Pydantic header parameter models for cohesive groups of related headers.
+- Use Pydantic cookie parameter models for cohesive groups of related cookies.
 - Use `model_config = {"extra": "forbid"}` on header or cookie models when
-  unknown headers or cookies are invalid for that endpoint. `unenforced`
-- Prefer `Field(default_factory=list)` for repeated header fields in models. `unenforced`
+  unknown headers or cookies are invalid for that endpoint.
+- Prefer `Field(default_factory=list)` for repeated header fields in models.
 - Do not log cookies, authorization headers, session IDs, CSRF tokens, or other
-  sensitive header values. `enforced-by: security/semgrep`
+  sensitive header values.
 - Do not use ad hoc header parameters for authentication when FastAPI security
-  utilities can express the authentication scheme. `unenforced`
+  utilities can express the authentication scheme.
 - Do not rely on Swagger UI execution to prove cookie behavior. Browser cookie
   handling can prevent JavaScript-driven docs requests from sending the cookie
-  value entered in the UI. `unenforced`
+  value entered in the UI.
 
 Good header parameter:
 
@@ -547,39 +547,39 @@ async def read_items(cookies: Annotated[SessionCookies, Cookie()]) -> list[Item]
 Rules:
 
 - Prefer return type annotations when the function returns the same public
-  schema shape it declares. `unenforced`
+  schema shape it declares.
 - Use the path operation decorator's `response_model` when the returned Python
-  object differs from the public response schema. `enforced-by: python/ruff FAST`
+  object differs from the public response schema.
 - Remember that `response_model` takes priority over the return type annotation
-  for FastAPI validation, serialization, documentation, and filtering. `enforced-by: python/ruff FAST`
+  for FastAPI validation, serialization, documentation, and filtering.
 - Prefer returning an instance of the public response model when that is simple
-  and keeps type checking precise. `unenforced`
+  and keeps type checking precise.
 - Use `-> Any` with `response_model=...` only at a FastAPI boundary where the
-  returned object intentionally differs from the response schema and adapting it first adds noise without improving safety. `unenforced`
+  returned object intentionally differs from the response schema and adapting it first adds noise without improving safety.
 - Never reuse an input schema containing passwords, tokens, secrets, or private
-  fields as the response schema. `enforced-by: python/ruff FAST`
-- Use separate input and output models when request and response fields differ. `unenforced`
+  fields as the response schema.
+- Use separate input and output models when request and response fields differ.
 - Schema inheritance is acceptable for response filtering only when the subclass
-  is a true specialization of the public base schema. `unenforced`
+  is a true specialization of the public base schema.
 - Use direct `Response` or `Response` subclass return annotations when returning
-  a Starlette/FastAPI response object directly. `unenforced`
+  a Starlette/FastAPI response object directly.
 - Do not annotate a path operation with a return type that FastAPI cannot turn
   into a Pydantic response model unless the path operation sets
-  `response_model=None`. `enforced-by: python/ruff FAST`
+  `response_model=None`.
 - Use `response_model=None` only when response model generation is deliberately
-  disabled and the route's response contract is documented another way. `unenforced`
+  disabled and the route's response contract is documented another way.
 - Use `response_model_exclude_unset=True` when omitted default-valued fields
-  are omitted from responses. `unenforced`
+  are omitted from responses.
 - Use `response_model_exclude_defaults=True` or
   `response_model_exclude_none=True` only when that omission is part of the
-  public response contract. `unenforced`
+  public response contract.
 - Prefer dedicated output models over `response_model_include` and
-  `response_model_exclude`. `unenforced`
+  `response_model_exclude`.
 - Do not rely on `response_model_include` or `response_model_exclude` for
   security filtering. The generated OpenAPI schema still describes the full
-  response model. `unenforced`
+  response model.
 - Treat response validation failures as server bugs. Fix the returned data or
-  response schema rather than weakening validation. `unenforced`
+  response schema rather than weakening validation.
 
 Good return type:
 
@@ -620,40 +620,40 @@ async def get_portal(teleport: bool = False) -> Response | dict[str, str]:
 Rules:
 
 - Declare successful non-default HTTP status codes with the path operation
-  decorator's `status_code` parameter. `enforced-by: python/ruff FAST`
-- Do not model status codes as path operation function parameters. `enforced-by: python/ruff FAST`
+  decorator's `status_code` parameter.
+- Do not model status codes as path operation function parameters.
 - Prefer `fastapi.status` constants for readability, such as
-  `status.HTTP_201_CREATED`. `enforced-by: python/ruff FAST`
+  `status.HTTP_201_CREATED`.
 - Python's `http.HTTPStatus` is acceptable when surrounding code already uses
-  it. `enforced-by: python/ruff FAST`
-- Use the default 200 only when it is the correct success response. `unenforced`
-- Use 201 for successful resource creation. `unenforced`
-- Use 202 only when the request was accepted but the work is not complete. `unenforced`
-- Use 204 only when the response intentionally has no body. `unenforced`
+  it.
+- Use the default 200 only when it is the correct success response.
+- Use 201 for successful resource creation.
+- Use 202 only when the request was accepted but the work is not complete.
+- Use 204 only when the response intentionally has no body.
 - Do not return a body with status codes that must not have one, including 204
-  and 304. `enforced-by: python/ruff FAST`
+  and 304.
 - Do not manually return 500-range status codes for ordinary application
-  failures. Raise or let unexpected exceptions surface at the server boundary. `enforced-by: python/ruff FAST`
-- Use `HTTPException` for HTTP errors that are part of the API contract. `enforced-by: python/ruff FAST`
-- Raise `HTTPException`; do not return it. `enforced-by: python/ruff FAST`
-- Keep `HTTPException.detail` sanitized and user-facing. `enforced-by: security/semgrep`
+  failures. Raise or let unexpected exceptions surface at the server boundary.
+- Use `HTTPException` for HTTP errors that are part of the API contract.
+- Raise `HTTPException`; do not return it.
+- Keep `HTTPException.detail` sanitized and user-facing.
 - Do not include stack traces, file paths, table names, internal IDs, request
-  bodies, secrets, or implementation details in error responses. `enforced-by: security/semgrep`
+  bodies, secrets, or implementation details in error responses.
 - Use custom `HTTPException` headers only for public protocol requirements,
   such as authentication challenges, rate limits, or documented client
-  behavior. `enforced-by: python/ruff FAST`
-- Put global exception handlers in the FastAPI application setup boundary. `unenforced`
+  behavior.
+- Put global exception handlers in the FastAPI application setup boundary.
 - Register HTTP exception handlers for Starlette's `HTTPException` when the
-  handler must catch FastAPI, Starlette, and extension-raised HTTP errors. `enforced-by: python/ruff FAST`
+  handler must catch FastAPI, Starlette, and extension-raised HTTP errors.
 - Custom exception handlers must return the API's standard error shape and
-  status code policy. `enforced-by: python/ruff FAST`
-- Do not expose `RequestValidationError.body` to clients. `enforced-by: security/semgrep`
+  status code policy.
+- Do not expose `RequestValidationError.body` to clients.
 - Do not stringify validation exceptions into client responses. Validation
-  errors can include internal context that is safe for logs only after review. `unenforced`
+  errors can include internal context that is safe for logs only after review.
 - Reuse FastAPI's default exception handlers when adding logging or metrics
-  around the default behavior. `unenforced`
+  around the default behavior.
 - Log validation and HTTP errors carefully. Do not log full authenticated
-  request bodies or sensitive headers. `enforced-by: security/semgrep`
+  request bodies or sensitive headers.
 
 Good created status:
 

@@ -61,7 +61,7 @@ content with no counterpart. The repair pass restored each into the file named.
 
 Both guards are clean as of 2026-09-18. The completeness check counted 7,616 source statements: 6,443 matched exactly or as duplicates, 255 at the fuzzy ratio, 354 listed in `DROPPED.md`, and 564 with a recorded reason. The reasons include the 48 statements the prose pass split into shorter ones. None was unresolved, and the check and its records were retired once that state was reached (D-70).
 
-Vale with the thirty `gspot` rules reports no findings over the 98 files. That pass changed 379 headings to sentence case, split 64 long list items and 28 long sentences and paragraphs, and stated 63 conditional modals as facts, with no rule dropped. The enforcement markers: 5,303 statements, 2,354 unenforced. Phase 6 owed code, not editing: the assembler and the corpus lint inside the binary, both under `packages/cli/src/rules/` now.
+Vale with the thirty `gspot` rules reports no findings over the 98 files. That pass changed 379 headings to sentence case, split 64 long list items and 28 long sentences and paragraphs, and stated 63 conditional modals as facts, with no rule dropped. Phase 6 owed code, not editing: the assembler and the corpus lint inside the binary, both under `packages/cli/src/rules/` now.
 
 The guard was mechanical: a completeness check normalized every statement (sentence or list item) in the four source corpora. Each had to appear in the merged corpus or a project template, or be listed in `rules/DROPPED.md` with a reason. The check ran in the gate of this repository until the state above was reached, then retired with its records (D-70).
 
@@ -104,23 +104,10 @@ title: Python            # equals the H1
 ---
 ```
 
-## Enforcement markers
+## Rules say nothing about tooling
 
-Every rule statement (a list item, or a paragraph that opens with an imperative) ends with a
-marker. An item that ends with a colon introduces the statements under it and carries none.
-Tables, code blocks, headings, explanatory prose, and templates carry none.
-
-```markdown
-- Do not use `enum`. Use a literal union or an `as const` object. `enforced-by: typescript/eslint no-restricted-syntax`
-- Prefer duplication over the wrong abstraction. `unenforced`
-```
-
-The check id before the space is one the architecture names (`packages/cli/config/architecture-ids.ts`,
-written from this folder by `packages/cli/scripts/check-ids.ts`); the words after it name the rule inside that check. The marker is
-written by `packages/cli/scripts/mark-statements.ts` from `rules/enforcement-map.json` (file glob,
-pattern, check) and hand-corrected; `unenforced.json` records the count per file, and the count
-rises only with a reason in the commit. The marker renders as small text in the installed file so
-an agent sees which rules the gate backs.
+A rule file states the rule and nothing else. It names no check, no tool, and no enforcement
+state (D-73). What the gate enforces is the ledger's business ([06-enforcement-ledger.md](06-enforcement-ledger.md)), not the reader's.
 
 ## Size
 
@@ -167,10 +154,10 @@ project rule directory (`[rules] project = "rules/project"`), the block links it
 ## Corpus lint
 
 `gspot apply --check` lints the corpus the binary carries (`packages/cli/src/rules/lint.ts`)
-and prints the unenforced count, so every change to the corpus goes through the gate of this repository:
+so every change to the corpus goes through the gate of this repository:
 
-- Front matter present; layer matches the path; preset names a preset page; title equals the H1.
-- Every `enforced-by` names a check id in `architecture-ids.ts`.
+- Front matter present; layer matches the path; preset is an id or `none`; title equals the H1.
+
 - No file links to another rule file.
 - No file exceeds 800 lines.
 - The layer boundary word list holds in agent, code, prose and language files: no reference
@@ -179,9 +166,6 @@ and prints the unenforced count, so every change to the corpus goes through the 
 - The corruption phrase list from the repair pass returns nothing.
 - Vale with the `gspot` style under `prose/styles/gspot/` (30 rules, every alert an error) when
   the binary is installed.
-
-`bun packages/cli/scripts/mark-statements.ts --check` reports statements without a marker and
-unknown ids.
 
 ## Completeness
 

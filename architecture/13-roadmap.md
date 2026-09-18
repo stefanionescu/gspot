@@ -17,7 +17,7 @@ tests, and runs in the gate of this repository. Last update: 2026-09-18.
 | Structure engine                      | Done: the directory family and the whole shell family, ast-grep counts. Swift, Python and SQL analyses not started.                                                                                                                                                                                          |
 | Prose engine                          | Done: Vale by path and by stdin grammar, source bans, vocabulary, the 30 rules rendered with the docs ceilings. The prose, markdown and docs presets exist.                                                                                                                                                  |
 | Integrity                             | Done: `generated-drift`, `docs-headings`, `stale-paths`, `fences`, `readme-present`, `readme-shape`, `tsconfig-options`. Owed: `allowlists-resolve`, `suppressions`, `manifest-policy`, `lockfile-fresh`, `baselines-current`, `env-files`, `large-files`, `config-purity`, `task-policy`, `install-policy`. |
-| Corpus (Phase 6)                      | Done: the corpus lives in `rules/`, the corpus lint runs in `apply --check` with the unenforced count, the markers and ids scripts live in `packages/cli/scripts/`.                                                                                                                                          |
+| Corpus (Phase 6)                      | Done: the corpus lives in `rules/`, the corpus lint runs in `apply --check`; the enforcement markers are gone (D-73).                                                                                                                                                                                        |
 | Self-lint                             | Done: `gspot check` passes 75 checks with no `[[ignore]]` (D-27). Kept green from here on.                                                                                                                                                                                                                   |
 | Phase 1, the rest                     | Owed: the commits and config-files presets, ESLint suppression baselines (D-54), `upgrade` between versions, the takeover planted test, the docs site.                                                                                                                                                       |
 | Phases 2 to 5, Phase 7                | Not started.                                                                                                                                                                                                                                                                                                 |
@@ -103,12 +103,12 @@ until its owners migrate it.
 
 ## Phase 6: the corpus
 
-| Deliverable                                             | Done when                                                 |
-| ------------------------------------------------------- | --------------------------------------------------------- |
-| Repair pass over `rules/`                               | Vale clean, corruption rule clean, no cross-file links    |
-| Front matter and enforcement markers on every statement | `apply --check` passes; the unenforced count is recorded  |
-| Assembler and managed index block                       | the four reference repositories get their files and index |
-| Corpus lint in gspot's gate                             | runs on every change                                      |
+| Deliverable                                         | Done when                                                 |
+| --------------------------------------------------- | --------------------------------------------------------- |
+| Repair pass over `rules/`                           | Vale clean, corruption rule clean, no cross-file links    |
+| Front matter on every file, no tool named in a rule | `apply --check` passes                                    |
+| Assembler and managed index block                   | the four reference repositories get their files and index |
+| Corpus lint in gspot's gate                         | runs on every change                                      |
 
 Acceptance: each reference repository's `rules/` and its `CLAUDE.md` are replaced by the
 assembled set, with no rule statement lost. A diff of normalized statements is empty except for duplicates and the repaired words.

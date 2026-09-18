@@ -37,8 +37,7 @@ const SCRIPTS = [
     "packages/cli/build.ts",
     "packages/cli/publish.ts",
     "packages/eslint-plugin/build.ts",
-    "docs/generate.ts",
-    "packages/cli/scripts/**"
+    "docs/generate.ts"
 ];
 const ALIASES = {
     "#cli/": "packages/cli/src/",

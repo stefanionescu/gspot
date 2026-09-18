@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { isRulePath, lintRules } from '#cli/rules/lint.ts';
 
-const OPTIONS = { checkIds: new Set(['naming/identifiers']), presetIds: new Set(['naming', 'rules']) };
+const OPTIONS = {};
 
 function file(path: string, body: string): { path: string; text: string } {
     return { path, text: `---\nlayer: code\npreset: naming\ntitle: T\n---\n\n# T\n\n${body}` };
@@ -14,18 +14,9 @@ describe('corpus lint', () => {
         expect(isRulePath('check-ids.txt')).toBe(false);
     });
 
-    test('a clean file has no findings and its markers are counted', () => {
-        const report = lintRules(
-            [
-                file(
-                    'general/code/A.md',
-                    '- Name things well. `enforced-by: naming/identifiers`\n- Or not. `unenforced`\n',
-                ),
-            ],
-            OPTIONS,
-        );
+    test('a clean file has no findings', () => {
+        const report = lintRules([file('general/code/A.md', '- Name things well.\n- Or not.\n')], OPTIONS);
         expect(report.findings).toEqual([]);
-        expect(report.counts).toEqual({ statements: 2, unenforced: 1 });
         expect(report.isValeRun).toBe(false);
     });
 
@@ -35,11 +26,11 @@ describe('corpus lint', () => {
             'x',
             '```',
             '',
-            'See [it](../general/code/B.md). `unenforced`',
+            'See [it](../general/code/B.md).',
             '',
-            'Use yap here — now. `unenforced`',
+            'Use yap here — now.',
             '',
-            '- item keys `unenforced`',
+            '- item keys',
             '',
             '```ts',
             'open',

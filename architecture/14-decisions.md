@@ -98,8 +98,7 @@ already done.
 
 ## D-17 Every rule statement names its check
 
-`enforced-by` or `unenforced` on every statement; the unenforced count is reported. Rejected: a
-corpus with no link to enforcement, which the reference audit called "enforcement on paper only."
+Superseded by [D-73](#d-73-rule-files-name-no-check): the markers are gone.
 
 ## D-18 The layer boundary is enforced
 
@@ -272,7 +271,7 @@ tables with two reason conventions.
 ## D-45 `doctor` absorbs reconcile; `apply` absorbs `rules`
 
 `doctor` prints what changed in the repository after `init`: languages and frameworks that appeared, configuration files not owned, or hooks or CI changed by hand. Each line carries the command that applies it, beside the tool and coverage report `doctor` already printed. `apply` installs the rule
-files and the managed blocks, `apply --check` reports their drift and the unenforced count, and
+files and the managed blocks, `apply --check` reports their drift, and
 `apply --project-templates` copies templates once. Fourteen commands, fifteen with D-55. Rejected: `init
 --reconcile` and `rules`, which printed or wrote a subset of what `doctor` and `apply` already
 covered, so a person had two commands to remember for one question.
@@ -446,7 +445,7 @@ The naming groups in `presets/naming/policy.json` bind the identifiers, files, d
 - `format.final_newline` became `format.newline_at_end` (marketing bans `final`);
 - the `support` role became `harness`, `gspot/no-support-in-dirs` became `gspot/tests-directory-contents` and `gspot/no-tests-support-imports` became `gspot/no-harness-barrel-imports` (roles bans `support`);
 - `ScopeInfo` became `ScopeEntry`, and `resolveSetting` became `settingValue`;
-- `src/rules/corpus-lint.ts` became `lint.ts` and its literal table `architecture-ids.ts` (containers bans `corpus`).
+- `src/rules/corpus-lint.ts` became `lint.ts` (containers bans `corpus`).
 
 Strings that name another tool's option (`withFileTypes`, `useWith`, `semver.coerce`, `insert_final_newline`) are calls into that tool, not declarations, and stay. The default path of the `harness` role is `tests/harness/**` for the same reason: `tests/support/**` puts a banned word in every repository's tree. Rejected: a `naming.allowed` entry for `sync` in the policy of this repository, which every reader then takes as the precedent for their own.
 
@@ -455,8 +454,7 @@ Strings that name another tool's option (`withFileTypes`, `useWith`, `semver.coe
 `reference-rules/` held the merged corpus, the four source corpora's completeness check with
 its dropped-statement records, the marker map, and two maintenance scripts. The merge is done
 and the state is recorded in [09-rules.md](09-rules.md), so the folder is
-deleted: the corpus lives in `rules/` with `enforcement-map.json` and `unenforced.json` beside
-it, and the scripts live under `packages/cli/scripts/`. Rejected: keeping the completeness
+deleted: the corpus lives in `rules/`. Rejected: keeping the completeness
 check running against repositories outside this one, which made the gate of this repository depend on four other checkouts.
 
 ## D-69 The naming engine over the gspot code: what was renamed and what the engine leaves alone
@@ -499,4 +497,14 @@ Seventy more upstream rules are off, each with its reason in the rendered `vale.
 - rules that report the same thing under three names (the Oxford comma, ellipses, spacing, quotes);
 - rules that misread technical words (`disabled` as a slur, `primitive` as a type, `swallow` as profanity).
 
-Tables are a skipped scope. A ledger cell is a list of identifiers and rule names, not a sentence, and the rules that judge prose have nothing to say about it. The `future` rule matches `is planned`, `are planned`, `planned for` and `planned to`, not the bare word, because a planned check is what the planner produces. Rejected: a baseline for the 1,345 semicolons, which hides the corpus's own unenforced rule. Also rejected: trimming the packages, because the rules that stay (the Oxford comma, `there is`, repeated words, the Harper grammar rules) find real slips.
+Tables are a skipped scope. A ledger cell is a list of identifiers and rule names, not a sentence, and the rules that judge prose have nothing to say about it. The `future` rule matches `is planned`, `are planned`, `planned for` and `planned to`, not the bare word, because a planned check is what the planner produces. No token ignore covers code spans: the Markdown parser drops code, and a backtick pattern swallowed every fenced block, so the code spans after it were read as prose. Rejected: a baseline for the 1,345 semicolons, which hides the corpus's own unenforced rule. Also rejected: trimming the packages, because the rules that stay (the Oxford comma, `there is`, repeated words, the Harper grammar rules) find real slips.
+
+## D-73 Rule files name no check
+
+Recorded 2026-09-18, on the user's call. Every rule statement carried a trailing marker
+(`enforced-by: <check>` or `unenforced`) and a map beside the corpus kept them current. That
+tied the text an agent reads to the tool set gspot happens to run, and it said nothing a reader
+of the rule needs. The markers, the map, the count files, the scripts that wrote them, and the lint that required them are deleted. A rule file states the rule; the ledger records what the gate enforces.
+
+Supersedes [D-17](#d-17-every-rule-statement-names-its-check). Rejected: keeping
+the map without the markers, which is the same coupling one file away.

@@ -11,7 +11,7 @@ The vocabulary and function-name rules are in the Naming file.
 
 ## Casing across languages
 
-Each language naming file states its own case table. These decisions hold across every language so `unenforced`
+Each language naming file states its own case table. These decisions hold across every language so
 the same concept reads the same way at every boundary.
 
 | Concern               | Rule                                                                                                                                                                                                                                                                                                                          |
@@ -32,26 +32,26 @@ they own, not for reuse intent.
 
 Rules:
 
-- File names follow the language-specific case rules below. `unenforced`
+- File names follow the language-specific case rules below.
 - A source file with one primary top-level type is named after that type when
-  the language uses primary-type filenames. `unenforced`
-- A module file is named after the cohesive capability it owns. `unenforced`
-- Do not create catch-all files or directories for unrelated code. `unenforced`
-- Do not move code into shared locations for a caller that does not exist yet. `unenforced`
-- Promote shared code only when there is a repeated concept and a stable owner. `unenforced`
+  the language uses primary-type filenames.
+- A module file is named after the cohesive capability it owns.
+- Do not create catch-all files or directories for unrelated code.
+- Do not move code into shared locations for a caller that does not exist yet.
+- Promote shared code only when there is a repeated concept and a stable owner.
 - A directory named by a broad layer is acceptable only when the project
-  architecture explicitly owns that layer. `unenforced`
-- Prefer feature ownership over top-level type buckets. `unenforced`
+  architecture explicitly owns that layer.
+- Prefer feature ownership over top-level type buckets.
 - No directory is named `common`, `core`, `helper`, `helpers`, `util`, `utils`, `support`,
   `misc`, `shared`, or after a language or runtime (`bash`, `javascript`, `python`, `node`,
-  `js`). Name it for what it owns. `unenforced`
-- A leaf directory holds more than one code file. One file in a folder is a file, not a folder. `unenforced`
+  `js`). Name it for what it owns.
+- A leaf directory holds more than one code file. One file in a folder is a file, not a folder.
 - Sibling files do not share a leading name part: `asset-card.ts`, `asset-list.ts`, and
-  `asset-row.ts` in one folder are an `asset/` directory with `card.ts`, `list.ts`, `row.ts`. `unenforced`
-- A file stem never equals a sibling directory name: `orders.ts` beside `orders/` is a collision. `unenforced`
-- A file name is a whole-part match against the same banned term list as identifiers. `unenforced`
+  `asset-row.ts` in one folder are an `asset/` directory with `card.ts`, `list.ts`, `row.ts`.
+- A file stem never equals a sibling directory name: `orders.ts` beside `orders/` is a collision.
+- A file name is a whole-part match against the same banned term list as identifiers.
 - A generated artifact (a test result, a report, a build output) may carry a timestamp in its name;
-  hand-written source never does. `unenforced`
+  hand-written source never does.
 
 Bad:
 
@@ -89,14 +89,14 @@ those names at the boundary and translate them intentionally.
 Rules:
 
 - Preserve external field names in DTOs, SQL rows, generated types, wire
-  payloads, and validation schemas when changing them misrepresents the contract. `unenforced`
+  payloads, and validation schemas when changing them misrepresents the contract.
 - Translate provider names into domain names before passing values into domain
-  or presentation layers. `unenforced`
+  or presentation layers.
 - Do not leak provider, database, storage, or HTTP mechanics into ViewModels,
-  domain entities, use cases, or API-facing response names. `unenforced`
+  domain entities, use cases, or API-facing response names.
 - If a name is part of an external contract, treat renaming it as a contract
-  change. `unenforced`
-- Use explicit mapping names when crossing layers. `unenforced`
+  change.
+- Use explicit mapping names when crossing layers.
 
 Bad:
 
@@ -143,23 +143,23 @@ struct MessageAttachment {
 
 ## Tests
 
-Test names and test data names describe observable behavior, not private `unenforced`
+Test names and test data names describe observable behavior, not private
 implementation details.
 
 Rules:
 
-- Name tests for the behavior and expected outcome. `unenforced`
+- Name tests for the behavior and expected outcome.
 - Use descriptive unique values for names, emails, IDs, queue names, event IDs,
-  resource IDs, and external references. `unenforced`
-- Avoid names tied to private helper names. `unenforced`
-- Avoid test data names that hide the scenario. `unenforced`
-- Test helpers are named for the behavior they create. `unenforced`
-- Test fixtures never become global mystery data. `unenforced`
+  resource IDs, and external references.
+- Avoid names tied to private helper names.
+- Avoid test data names that hide the scenario.
+- Test helpers are named for the behavior they create.
+- Test fixtures never become global mystery data.
 - A test name is a sentence stating the scenario and the expected outcome. `edge cases`,
-  `happy path`, `works`, `test1`, and `underTest` are banned. `unenforced`
+  `happy path`, `works`, `test1`, and `underTest` are banned.
 - Support code lives under `tests/support/`; `fixtures/`, `mocks/`, `helpers/`, and `utils/`
-  are banned directory names in test trees. `unenforced`
-- Test file names follow the language table in "Casing Across Languages." `unenforced`
+  are banned directory names in test trees.
+- Test file names follow the language table in "Casing Across Languages."
 
 Bad:
 
@@ -197,31 +197,31 @@ func testSubmitButtonTappedShowsValidationErrorWhenEmailIsInvalid() async throws
 
 Before `gspot check`, read the change against these questions:
 
-- Does the name describe the role or domain concept instead of the type shape? `unenforced`
-- Is the name clear at the call site? `unenforced`
-- Is context supplied by the owner omitted from the local name? `unenforced`
-- Does the name avoid vague role words unless the role is real? `unenforced`
-- Does the name use the language-specific case rule? `unenforced`
-- Does the file or directory name describe ownership? `unenforced`
-- Does the function name state the action and domain item? `unenforced`
-- Do application-owned retrieval operations consistently use `get`? `unenforced`
-- Does each boolean read as a positive assertion? `unenforced`
-- Are external names isolated to boundary types? `unenforced`
-- Are SQL and API names treated as contracts? `unenforced`
-- Does the name satisfy the automated naming checks for the affected scope? `unenforced`
-- Does the name use the correct Python or Bash case rule? `unenforced`
-- Are model, data, and result names treated as contracts? `unenforced`
-- Does the name satisfy `pyproject.toml` and the local quality rules under `quality/`? `unenforced`
-- Does the name identify the owner? `unenforced`
-- Does the name match the repo boundary it lives in? `unenforced`
-- Does the name avoid copied app-stack concepts that do not exist in this repo? `unenforced`
-- Does the name avoid vague words and compatibility language? `unenforced`
-- Does each route, page, content file, and asset path match the generated site contract? `unenforced`
-- Does the name satisfy `quality/repository/naming` for the affected scope? `unenforced`
-- Does the name describe a real role or domain concept? `unenforced`
-- Does its owner already provide some of the words? `unenforced`
-- Are singular/plural and predicate conventions clear at the use site? `unenforced`
-- Does a role suffix describe an actual boundary rather than an invented layer? `unenforced`
-- Are framework and external contract names preserved? `unenforced`
-- Does the file belong with the feature or tooling responsibility it serves? `unenforced`
-- Do the naming checks pass without exceptions that cover unrelated names? `unenforced`
+- Does the name describe the role or domain concept instead of the type shape?
+- Is the name clear at the call site?
+- Is context supplied by the owner omitted from the local name?
+- Does the name avoid vague role words unless the role is real?
+- Does the name use the language-specific case rule?
+- Does the file or directory name describe ownership?
+- Does the function name state the action and domain item?
+- Do application-owned retrieval operations consistently use `get`?
+- Does each boolean read as a positive assertion?
+- Are external names isolated to boundary types?
+- Are SQL and API names treated as contracts?
+- Does the name satisfy the automated naming checks for the affected scope?
+- Does the name use the correct Python or Bash case rule?
+- Are model, data, and result names treated as contracts?
+- Does the name satisfy `pyproject.toml` and the local quality rules under `quality/`?
+- Does the name identify the owner?
+- Does the name match the repo boundary it lives in?
+- Does the name avoid copied app-stack concepts that do not exist in this repo?
+- Does the name avoid vague words and compatibility language?
+- Does each route, page, content file, and asset path match the generated site contract?
+- Does the name satisfy `quality/repository/naming` for the affected scope?
+- Does the name describe a real role or domain concept?
+- Does its owner already provide some of the words?
+- Are singular/plural and predicate conventions clear at the use site?
+- Does a role suffix describe an actual boundary rather than an invented layer?
+- Are framework and external contract names preserved?
+- Does the file belong with the feature or tooling responsibility it serves?
+- Do the naming checks pass without exceptions that cover unrelated names?

@@ -1,16 +1,8 @@
-// Lints the rule corpus: front matter, markers, links, size, layer boundary, fences, corruption, and Vale when it is installed.
+// Lints the rule corpus: front matter, links, size, layer boundary, fences, corruption, and Vale when it is installed.
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { frontMatterFindings, layerOfPath } from '#cli/rules/front-matter.ts';
-import { countMarkers, markerFindings, statementsOf, withoutMarker } from '#cli/rules/markers.ts';
+import type { RuleText, RuleFinding, RulesLintOptions, RulesLintReport, FenceWalk } from '#types/rules.ts';
 
-import type {
-    RuleText,
-    RuleFinding,
-    RulesLintOptions,
-    RulesLintReport,
-    FenceWalk,
-    MarkerCounts,
-} from '#types/rules.ts';
 import {
     BOUNDARY_LAYERS,
     BOUNDARY_TERMS,
@@ -49,7 +41,7 @@ function fenceFinding(file: string, line: number, language: string): RuleFinding
 }
 
 function boundaryFindings(file: string, line: string, number: number, layer: string): RuleFinding[] {
-    if (!boundaryLayers.has(layer) || INLINE_CODE.test(withoutMarker(line))) return [];
+    if (!boundaryLayers.has(layer) || INLINE_CODE.test(line)) return [];
     return BOUNDARY_TERMS.filter((term) => term.test(line)).map((term) => ({
         file,
         line: number,
@@ -110,17 +102,13 @@ function sizeFindings(file: string, lines: string[]): RuleFinding[] {
     ];
 }
 
-function fileReport(file: RuleText, options: RulesLintOptions): { findings: RuleFinding[]; counts: MarkerCounts } {
+function fileReport(file: RuleText, options: RulesLintOptions): RuleFinding[] {
     const lines = file.text.split('\n');
-    const findings = [
-        ...frontMatterFindings(file.path, file.text, options.presetIds),
+    return [
+        ...frontMatterFindings(file.path, file.text),
         ...sizeFindings(file.path, lines),
         ...lineFindings(file.path, lines),
     ];
-    if (isTemplate(file.path)) return { findings, counts: { statements: 0, unenforced: 0 } };
-    const statements = statementsOf(lines);
-    findings.push(...markerFindings(file.path, statements, options.checkIds));
-    return { findings, counts: countMarkers(statements) };
 }
 
 function valeLine(file: string, line: string): RuleFinding | undefined {
@@ -154,22 +142,14 @@ export function isRulePath(path: string): boolean {
 }
 
 /**
- * Lints the corpus files and counts their markers. Vale runs when its binary and config are given.
+ * Lints the corpus files. Vale runs when its binary and config are given.
  * @param files the corpus files
  * @param options the known check ids and preset ids, and the Vale binary and config
  * @param root the directory Vale runs in
- * @returns the findings, the file count, the marker counts, and whether Vale ran
+ * @returns the findings, the file count, and whether Vale ran
  */
 export function lintRules(files: RuleText[], options: RulesLintOptions, root = process.cwd()): RulesLintReport {
-    const reports = files.map((file) => fileReport(file, options));
-    const counts = reports.reduce<MarkerCounts>(
-        (sum, report) => ({
-            statements: sum.statements + report.counts.statements,
-            unenforced: sum.unenforced + report.counts.unenforced,
-        }),
-        { statements: 0, unenforced: 0 },
-    );
+    const own = files.flatMap((file) => fileReport(file, options));
     const vale = options.vale === undefined ? undefined : valeFindings(files, options.vale, root);
-    const findings = [...reports.flatMap((report) => report.findings), ...(vale ?? [])];
-    return { findings, files: files.length, counts, isValeRun: vale !== undefined };
+    return { findings: [...own, ...(vale ?? [])], files: files.length, isValeRun: vale !== undefined };
 }

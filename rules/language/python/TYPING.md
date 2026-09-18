@@ -21,13 +21,13 @@ Rules:
 
 - Annotate every parameter and every return value of every function and method, including
   private helpers and `__init__` (`-> None`). The type checker runs in strict mode and reports
-  an unannotated function. `enforced-by: structure/private-prefix`
-- Do not annotate `self` or `cls` unless needed for precise typing. `enforced-by: python/basedpyright`
+  an unannotated function.
+- Do not annotate `self` or `cls` unless needed for precise typing.
 - Use `Any` only when the type is genuinely unconstrained or cannot be
-  expressed clearly. `enforced-by: python/basedpyright`
-- Do not add obsolete `# type:` comments. `enforced-by: python/vulture`
+  expressed clearly.
+- Do not add obsolete `# type:` comments.
 - Prefer the modern shorthand syntax over older `typing.Union`,
-  `typing.Optional`, `typing.List`, `typing.Dict`, and `typing.Type` aliases. `enforced-by: python/basedpyright`
+  `typing.Optional`, `typing.List`, `typing.Dict`, and `typing.Type` aliases.
 
 Good:
 
@@ -48,16 +48,16 @@ def _token_count(value: int) -> int:
 Rules:
 
 - Use `typing.Annotated` when a framework or validation library needs metadata
-  attached to a normal Python type. `enforced-by: python/basedpyright`
-- Put the real type first. Put framework or validation metadata after it. `unenforced`
+  attached to a normal Python type.
+- Put the real type first. Put framework or validation metadata after it.
 - Keep defaults as ordinary Python parameter defaults when using
-  `Annotated`. `enforced-by: python/basedpyright`
+  `Annotated`.
 - Do not put conflicting defaults in both the metadata object and the function
-  signature. `unenforced`
+  signature.
 - Do not use arbitrary string metadata as a substitute for clear domain types,
-  validators, or documented framework metadata. `unenforced`
+  validators, or documented framework metadata.
 - Prefer `Annotated` over older framework styles that replace the Python
-  default value with a metadata object. `enforced-by: python/basedpyright`
+  default value with a metadata object.
 
 Good:
 
@@ -72,14 +72,14 @@ Rules:
 
 - Use `object` when a value can be literally any Python object and the function
   only uses operations available on all objects, such as passing the value to
-  `str()`. `enforced-by: python/basedpyright`
+  `str()`.
 - Use `object` for callback return values when the callback return value is
-  ignored. `enforced-by: python/basedpyright`
+  ignored.
 - Use `Any` when the type cannot be expressed accurately, the correct type makes the API unreasonably hard to use, or the value intentionally escapes type
-  checking. `enforced-by: python/basedpyright`
-- Do not use `Any` just to avoid writing a precise type. `enforced-by: python/basedpyright`
+  checking.
+- Do not use `Any` just to avoid writing a precise type.
 - Prefer a protocol, type variable, overload, or small value object over `Any`
-  when that models the contract clearly. `enforced-by: python/basedpyright`
+  when that models the contract clearly.
 
 Good:
 
@@ -100,20 +100,20 @@ def call_callback(callback: Callable[[int], object]) -> None:
 Rules:
 
 - For arguments, prefer protocols and abstract collection types such as
-  `Iterable`, `Sequence`, `Mapping`, and `Callable`. `enforced-by: python/basedpyright`
-- For arguments that accept any value, use `object`, not `Any`. `enforced-by: python/basedpyright`
+  `Iterable`, `Sequence`, `Mapping`, and `Callable`.
+- For arguments that accept any value, use `object`, not `Any`.
 - For concrete implementations, return concrete types such as `list`, `dict`,
-  and concrete dataclasses. `enforced-by: python/ruff RUF009`
+  and concrete dataclasses.
 - For protocols and abstract base classes, choose return types case by case
-  based on the promised interface. `enforced-by: python/basedpyright`
+  based on the promised interface.
 - Avoid union return types when callers must immediately branch with
-  `isinstance()` to use the result. `enforced-by: python/basedpyright`
+  `isinstance()` to use the result.
 - If different result shapes require different caller behavior, prefer separate
   functions, a tagged dataclass, a protocol, or a small hierarchy with a clear
-  common contract. `enforced-by: python/ruff RUF009`
+  common contract.
 - Use `float` instead of `int | float` for numeric APIs where integers are valid
-  float inputs. `enforced-by: python/basedpyright`
-- Use `None`, not `Literal[None]`. `enforced-by: python/basedpyright`
+  float inputs.
+- Use `None`, not `Literal[None]`.
 
 Good:
 
@@ -132,17 +132,17 @@ def to_display_text(value: object) -> str:
 
 Rules:
 
-- Import symbols from `typing` and `collections.abc` directly. `enforced-by: structure/import-layout`
-- Prefer `collections.abc` abstract containers for input types. `enforced-by: structure/import-layout`
+- Import symbols from `typing` and `collections.abc` directly.
+- Prefer `collections.abc` abstract containers for input types.
 - Prefer built-in generic types such as `list[str]`, `dict[str, int]`, and
-  `tuple[str, ...]`. `unenforced`
-- Do not use `typing.List`, `typing.Dict`, or `typing.Tuple` in new code. `enforced-by: python/basedpyright`
-- Do not use `typing.Type`; use built-in `type`. `unenforced`
-- Do not use `typing.Union` or `typing.Optional`; use `|`. `enforced-by: python/basedpyright`
-- Do not use `typing.Text` in new code. `enforced-by: python/basedpyright`
-- Use `str` for text and `bytes` for binary data. `unenforced`
+  `tuple[str, ...]`.
+- Do not use `typing.List`, `typing.Dict`, or `typing.Tuple` in new code.
+- Do not use `typing.Type`; use built-in `type`.
+- Do not use `typing.Union` or `typing.Optional`; use `|`.
+- Do not use `typing.Text` in new code.
+- Use `str` for text and `bytes` for binary data.
 - Use `AnyStr` only when multiple string annotations must all be the same text
-  or binary type. `enforced-by: python/basedpyright`
+  or binary type.
 
 Good:
 
@@ -158,11 +158,11 @@ def transform(rows: Sequence[tuple[str, int]]) -> Mapping[str, int]:
 
 Rules:
 
-- Use explicit `X | None` for nullable values. `enforced-by: python/basedpyright`
-- Put `None` last in union annotations. `enforced-by: python/basedpyright`
-- Do not rely on implicit optional inference from a default of `None`. `enforced-by: python/basedpyright`
-- Use `is None` and `is not None` for None checks. `enforced-by: python/basedpyright`
-- When a parameter is nullable and has a default, annotate it as nullable. `enforced-by: python/basedpyright`
+- Use explicit `X | None` for nullable values.
+- Put `None` last in union annotations.
+- Do not rely on implicit optional inference from a default of `None`.
+- Use `is None` and `is not None` for None checks.
+- When a parameter is nullable and has a default, annotate it as nullable.
 
 Good:
 
@@ -177,10 +177,10 @@ def read_examples(path: Path | None = None) -> list[PromptExample]:
 
 Rules:
 
-- Specify type parameters for generic types. `enforced-by: python/basedpyright`
+- Specify type parameters for generic types.
 - Do not write bare `Sequence`, `Mapping`, `list`, or `dict` unless the element
-  type is intentionally unconstrained and made explicit with `Any`. `enforced-by: python/basedpyright`
-- Prefer `TypeVar` when a relationship between input and output types matters. `enforced-by: python/basedpyright`
+  type is intentionally unconstrained and made explicit with `Any`.
+- Prefer `TypeVar` when a relationship between input and output types matters.
 
 Good:
 
@@ -202,14 +202,14 @@ def get_names(employee_ids: Sequence[_T]) -> Mapping[_T, str]:
 
 Rules:
 
-- Use type aliases for complex repeated types. `enforced-by: python/basedpyright`
-- Type alias names use CapWords. `enforced-by: python/basedpyright`
-- Internal type aliases use one leading underscore. `enforced-by: structure/private-prefix`
+- Use type aliases for complex repeated types.
+- Type alias names use CapWords.
+- Internal type aliases use one leading underscore.
 - Use `type` statements for new type aliases when the declared Python version supports them
-  and the surrounding module already uses them. `enforced-by: python/basedpyright`
-- Keep `TypeAlias` for existing aliases when changing syntax creates unrelated churn. `enforced-by: python/basedpyright`
+  and the surrounding module already uses them.
+- Keep `TypeAlias` for existing aliases when changing syntax creates unrelated churn.
 - Do not use `TypeAlias` for ordinary value, module, class, function, constant,
-  or path aliases. `enforced-by: python/basedpyright`
+  or path aliases.
 
 Good:
 
@@ -227,10 +227,10 @@ ERROR_EXISTS = errno.EEXIST
 Rules:
 
 - Private unconstrained type variables may use `_T`, `_P`, and similar short
-  names. `enforced-by: structure/private-prefix`
-- Public or constrained type variables must have descriptive names. `unenforced`
-- Use `_co` and `_contra` suffixes for covariant and contravariant variables. `enforced-by: python/basedpyright`
-- Do not use public single-letter `T` or `P` for type variables. `unenforced`
+  names.
+- Public or constrained type variables must have descriptive names.
+- Use `_co` and `_contra` suffixes for covariant and contravariant variables.
+- Do not use public single-letter `T` or `P` for type variables.
 
 Good:
 
@@ -248,14 +248,14 @@ AnyFunction = TypeVar("AnyFunction", bound=Callable)
 
 Rules:
 
-- Prefer `from __future__ import annotations` for forward references. `enforced-by: python/basedpyright`
+- Prefer `from __future__ import annotations` for forward references.
 - Do not remove `from __future__ import annotations` only because newer Python
   versions defer annotation evaluation. A project on an earlier version keeps
-  future annotations as its convention. `enforced-by: python/basedpyright`
+  future annotations as its convention.
 - Use string annotations only when future annotations are not available or when
-  needed for a type-checking-only import pattern. `enforced-by: python/basedpyright`
+  needed for a type-checking-only import pattern.
 - Avoid type-only circular imports. They are design pressure to move shared
-  contracts. `enforced-by: structure/import-layout`
+  contracts.
 
 Good:
 
@@ -283,19 +283,19 @@ def build(value: "ExternalType") -> str:
 
 Rules:
 
-- Prefer `typing.Protocol` for structural interfaces used by a consumer. `unenforced`
+- Prefer `typing.Protocol` for structural interfaces used by a consumer.
 - Keep protocols narrow. Define only the attributes and methods the consumer
-  needs. `unenforced`
+  needs.
 - Place a protocol near the consumer when it describes what that consumer needs,
-  not what an implementation happens to provide. `unenforced`
+  not what an implementation happens to provide.
 - Use `@runtime_checkable` only when runtime `isinstance()` checks are truly
-  needed. `enforced-by: python/basedpyright`
+  needed.
 - Use abstract base classes when nominal identity, runtime instantiation checks,
-  or a standard-library ABC contract is the real requirement. `enforced-by: python/basedpyright`
-- Do not use an abstract base class to share implementation code. `enforced-by: python/basedpyright`
-- Do not mix interface definition with subclass-based code sharing. `unenforced`
+  or a standard-library ABC contract is the real requirement.
+- Do not use an abstract base class to share implementation code.
+- Do not mix interface definition with subclass-based code sharing.
 - Implementations do not need to import or subclass a protocol for type checkers
-  to recognize that they satisfy it. `enforced-by: python/basedpyright`
+  to recognize that they satisfy it.
 
 Good:
 
@@ -320,10 +320,10 @@ class FileReader:
 
 Rules:
 
-- Use variable annotations when the inferred type is unclear or impossible. `enforced-by: python/basedpyright`
-- Use one space after the colon. `enforced-by: python/basedpyright`
-- Do not use a space before the colon. `unenforced`
-- If assigning a value, use one space around `=`. `unenforced`
+- Use variable annotations when the inferred type is unclear or impossible.
+- Use one space after the colon.
+- Do not use a space before the colon.
+- If assigning a value, use one space around `=`.
 
 Good:
 
@@ -336,11 +336,11 @@ label_by_name: dict[str, int] = {}
 
 Rules:
 
-- Avoid `# type: ignore`. `enforced-by: python/basedpyright`
-- If an ignore is necessary, keep it line-scoped. `unenforced`
-- Include the specific error code when the type checker supports it. `enforced-by: python/basedpyright`
-- Do not keep unused ignores. `unenforced`
-- Prefer refactoring or a clearer annotation over suppressing a type error. `enforced-by: python/basedpyright`
+- Avoid `# type: ignore`.
+- If an ignore is necessary, keep it line-scoped.
+- Include the specific error code when the type checker supports it.
+- Do not keep unused ignores.
+- Prefer refactoring or a clearer annotation over suppressing a type error.
 
 Good:
 

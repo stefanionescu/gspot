@@ -13,25 +13,25 @@ rules are in the Python file.
 
 Rules:
 
-- Keep functions focused on one responsibility. `unenforced`
-- Prefer plain functions and explicit data flow before classes. `unenforced`
-- Name functions by action and domain concept. `enforced-by: naming/identifiers`
+- Keep functions focused on one responsibility.
+- Prefer plain functions and explicit data flow before classes.
+- Name functions by action and domain concept.
 - Do not use `process`, `handle`, `run`, `execute`, or `do_work` when a more
-  precise action exists. `enforced-by: naming/identifiers`
+  precise action exists.
 - Use `handle` only for callbacks, framework boundaries, event handlers, or
-  signal handlers. `enforced-by: naming/identifiers`
-- Keep side effects explicit in the name or docstring. `enforced-by: python/ruff D`
-- Do not hide I/O in helpers that look like pure transformations. `unenforced`
+  signal handlers.
+- Keep side effects explicit in the name or docstring.
+- Do not hide I/O in helpers that look like pure transformations.
 
 ### Function size
 
 Rules:
 
-- Keep functions small and focused. `enforced-by: structure/function-length`
-- The gate limits function and method length to the configured limit. `enforced-by: structure/function-length`
-- If a function approaches the limit, consider extracting real sub-operations. `unenforced`
-- Do not split a function into meaningless helpers only to satisfy the count. `enforced-by: structure/function-length`
-- Extract helpers when the extracted operation has a clear name and contract. `enforced-by: structure/function-length`
+- Keep functions small and focused.
+- The gate limits function and method length to the configured limit.
+- If a function approaches the limit, consider extracting real sub-operations.
+- Do not split a function into meaningless helpers only to satisfy the count.
+- Extract helpers when the extracted operation has a clear name and contract.
 
 Good extraction:
 
@@ -49,15 +49,15 @@ def _trim_history_messages(
 
 Rules:
 
-- Do not use mutable objects as default argument values. `enforced-by: python/ruff B006`
-- Use `None` as the default and create the mutable value inside the function. `enforced-by: python/ruff B006`
+- Do not use mutable objects as default argument values.
+- Use `None` as the default and create the mutable value inside the function.
 - Immutable defaults such as `None`, strings, numbers, booleans, and tuples are
-  allowed. `unenforced`
-- Do not use dynamic values such as `time.time()` as defaults. `enforced-by: python/ruff B006`
+  allowed.
+- Do not use dynamic values such as `time.time()` as defaults.
 - Do not use parsed flag values, environment-dependent values, or mutable global
-  values as defaults. `enforced-by: structure/no-singletons`
-- When an annotated parameter has a default, put spaces around `=`. `enforced-by: python/basedpyright`
-- When an unannotated parameter has a default, do not put spaces around `=`. `enforced-by: python/basedpyright`
+  values as defaults.
+- When an annotated parameter has a default, put spaces around `=`.
+- When an unannotated parameter has a default, do not put spaces around `=`.
 
 Good:
 
@@ -79,11 +79,11 @@ def resize(width: int = 0, height: int = 0) -> None:
 
 Rules:
 
-- Be consistent in return statements. `enforced-by: python/ruff RET`
+- Be consistent in return statements.
 - If any return statement returns a value, every no-value path explicitly
-  return `None` or end in a clear final return. `enforced-by: python/ruff RET`
-- Do not mix `return` and `return value` in the same function. `unenforced`
-- Do not rely on implicit `None` when an explicit no-result path is meaningful. `enforced-by: python/ruff RET`
+  return `None` or end in a clear final return.
+- Do not mix `return` and `return value` in the same function.
+- Do not rely on implicit `None` when an explicit no-result path is meaningful.
 
 Good:
 
@@ -99,11 +99,11 @@ def safe_sqrt(value: float) -> float | None:
 Rules:
 
 - Nested functions are allowed when they close over a local value and make the
-  outer function clearer. `unenforced`
-- Nested classes are allowed for narrowly scoped helper types. `unenforced`
-- Do not nest a function only to hide it from users. `unenforced`
-- Prefer a module-level private helper when tests or reuse need direct access. `enforced-by: structure/import-boundary`
-- Avoid nested functions that make the outer function long or hard to scan. `unenforced`
+  outer function clearer.
+- Nested classes are allowed for narrowly scoped helper types.
+- Do not nest a function only to hide it from users.
+- Prefer a module-level private helper when tests or reuse need direct access.
+- Avoid nested functions that make the outer function long or hard to scan.
 
 Good:
 
@@ -128,12 +128,12 @@ def _normalize_prompt(value: object) -> str:
 
 Rules:
 
-- Lambdas are allowed for simple one-line expressions. `enforced-by: python/ruff E731`
-- Do not bind a lambda directly to a name. Use `def`. `enforced-by: python/ruff E731`
-- Prefer generator expressions over `map()` or `filter()` with a lambda. `enforced-by: python/ruff E731`
-- Use functions from `operator` for common operations when they are clearer. `enforced-by: python/ruff E731`
+- Lambdas are allowed for simple one-line expressions.
+- Do not bind a lambda directly to a name. Use `def`.
+- Prefer generator expressions over `map()` or `filter()` with a lambda.
+- Use functions from `operator` for common operations when they are clearer.
 - If a lambda spans multiple lines or becomes hard to read, use a named
-  function. `enforced-by: python/ruff E731`
+  function.
 
 Good:
 
@@ -148,10 +148,10 @@ sorted_items = sorted(items, key=lambda item: item.name)
 
 Rules:
 
-- Conditional expressions are allowed for simple cases. `enforced-by: python/ruff SIM108`
+- Conditional expressions are allowed for simple cases.
 - Each portion is easy to read: true expression, condition, false
-  expression. `unenforced`
-- Use a full `if` statement when the expression becomes long or nested. `enforced-by: python/ruff SIM108`
+  expression.
+- Use a full `if` statement when the expression becomes long or nested.
 
 Good:
 
@@ -163,13 +163,13 @@ mode = "stream" if is_streaming else "batch"
 
 Rules:
 
-- Use comprehensions for simple mapping or filtering. `enforced-by: python/ruff C4`
+- Use comprehensions for simple mapping or filtering.
 - Do not use multiple `for` clauses or multiple filter expressions in one
-  comprehension. `enforced-by: python/ruff C4`
-- Optimize for readability, not compactness. `unenforced`
+  comprehension.
+- Optimize for readability, not compactness.
 - Use ordinary loops for nested logic, multiple conditions, mutation, or
-  non-obvious transformations. `enforced-by: python/ruff C4`
-- Generator expressions are preferred when a list is not needed. `enforced-by: python/ruff C4`
+  non-obvious transformations.
+- Generator expressions are preferred when a list is not needed.
 
 Good:
 
@@ -201,10 +201,10 @@ for x in range(10):
 
 Rules:
 
-- Use generators when values can be produced lazily. `enforced-by: python/ruff D`
-- A generator docstring uses `Yields:`. `enforced-by: python/ruff D`
-- If a generator manages an expensive resource, make cleanup explicit. `enforced-by: python/ruff D`
-- Do not keep resource lifetime implicit in a partially consumed generator. `enforced-by: python/ruff D`
+- Use generators when values can be produced lazily.
+- A generator docstring uses `Yields:`.
+- If a generator manages an expensive resource, make cleanup explicit.
+- Do not keep resource lifetime implicit in a partially consumed generator.
 
 Good:
 
@@ -226,22 +226,22 @@ def iter_prompt_text(examples: Iterable[PromptExample]) -> Iterable[str]:
 Rules:
 
 - Prefer functions and data structures unless a class owns real state,
-  invariants, or behavior. `enforced-by: naming/identifiers`
+  invariants, or behavior.
 - Keep related classes together when they form one cohesive contract, including
-  schemas, exceptions, protocols, and their input/output records. `unenforced`
-- Split modules by independent responsibilities, not by class count. `enforced-by: naming/identifiers`
+  schemas, exceptions, protocols, and their input/output records.
+- Split modules by independent responsibilities, not by class count.
 - Treat size limits as review prompts: document a justified limit adjustment
-  rather than extracting forwarding wrappers only to reduce line counts. `unenforced`
-- Do not create classes only to group static functions. `enforced-by: naming/identifiers`
-- Avoid `Manager`, `Processor`, `Helper`, and similar vague class names. `enforced-by: naming/identifiers`
-- Decide deliberately which attributes are public and which are internal. `unenforced`
-- Use public attributes for simple data. `enforced-by: naming/identifiers`
-- Use one leading underscore for internal attributes. `enforced-by: structure/private-prefix`
+  rather than extracting forwarding wrappers only to reduce line counts.
+- Do not create classes only to group static functions.
+- Avoid `Manager`, `Processor`, `Helper`, and similar vague class names.
+- Decide deliberately which attributes are public and which are internal.
+- Use public attributes for simple data.
+- Use one leading underscore for internal attributes.
 - Avoid double-leading underscores unless protecting a base class from subclass
-  name collisions. `enforced-by: structure/private-prefix`
-- Focus on the shape of data before adding behavior. `enforced-by: naming/identifiers`
+  name collisions.
+- Focus on the shape of data before adding behavior.
 - If a function coordinates work between multiple classes and no polymorphism is
-  involved, keep it a function unless one class clearly owns the behavior. `enforced-by: naming/identifiers`
+  involved, keep it a function unless one class clearly owns the behavior.
 
 Good:
 
@@ -254,21 +254,21 @@ class RuntimeBatch:
 
 Rules:
 
-- Keep `__init__` small. `unenforced`
+- Keep `__init__` small.
 - `__init__` accepts the values the class needs, not complex external
-  objects that happen to contain those values. `unenforced`
+  objects that happen to contain those values.
 - Do not couple a class constructor to database rows, ORM objects, API payloads,
-  CLI namespaces, or provider SDK response objects. `unenforced`
+  CLI namespaces, or provider SDK response objects.
 - Use classmethod named constructors for external representations, such as
-  `from_row`, `from_payload`, `from_token`, or `from_path`. `unenforced`
+  `from_row`, `from_payload`, `from_token`, or `from_path`.
 - Do not construct business objects with `ClassName(**external_attributes)` when
-  that couples the class to an external storage or wire format. `unenforced`
-- Validation of class invariants belongs in initialization. `unenforced`
+  that couples the class to an external storage or wire format.
+- Validation of class invariants belongs in initialization.
 - Complex loading, serialization, deserialization, and validation systems
-  stay outside the business object. `unenforced`
+  stay outside the business object.
 - Derived attributes are cheap, deterministic, and based on already
   initialized fields. Prefer a named constructor when deriving them requires I/O,
-  external services, or complex parsing. `unenforced`
+  external services, or complex parsing.
 
 Good:
 
@@ -290,21 +290,21 @@ class Point:
 
 Rules:
 
-- Use dataclasses for plain data records. `enforced-by: python/ruff RUF009`
-- Keep dataclass fields typed. `enforced-by: python/ruff RUF009`
+- Use dataclasses for plain data records.
+- Keep dataclass fields typed.
 - Document public fields in the class docstring `Attributes:` section when the
-  class is public. `enforced-by: python/ruff D`
-- Do not add methods to a dataclass unless they are part of the data contract. `enforced-by: python/ruff RUF009`
-- Do not use a dataclass as a disguised mutable global configuration object. `enforced-by: structure/no-singletons`
-- Use `field(default_factory=...)` for mutable defaults. `enforced-by: python/ruff RUF009`
-- Use `__post_init__` for simple invariant checks or cheap derived fields. `enforced-by: python/ruff RUF009`
+  class is public.
+- Do not add methods to a dataclass unless they are part of the data contract.
+- Do not use a dataclass as a disguised mutable global configuration object.
+- Use `field(default_factory=...)` for mutable defaults.
+- Use `__post_init__` for simple invariant checks or cheap derived fields.
 - Prefer a named constructor over `__post_init__` when construction needs
-  parsing, I/O, external objects, or multiple alternate sources. `enforced-by: python/ruff RUF009`
+  parsing, I/O, external objects, or multiple alternate sources.
 - If a project already uses `attrs`, apply the same principles: use factories
   for mutable defaults, validators for invariants, converters for simple input
-  normalization, and named constructors for complex creation paths. `enforced-by: python/ruff RUF009`
+  normalization, and named constructors for complex creation paths.
 - Do not introduce `attrs` solely to avoid writing a small dataclass or ordinary
-  function. `enforced-by: python/ruff RUF009`
+  function.
 
 Good:
 
@@ -336,13 +336,13 @@ class Batch:
 
 Rules:
 
-- Use properties only for cheap, straightforward, unsurprising attribute access. `unenforced`
-- Do not use a property only to get and set an internal attribute. `unenforced`
-- Do not hide expensive work behind attribute syntax. `unenforced`
-- Do not hide side effects behind properties. `unenforced`
+- Use properties only for cheap, straightforward, unsurprising attribute access.
+- Do not use a property only to get and set an internal attribute.
+- Do not hide expensive work behind attribute syntax.
+- Do not hide side effects behind properties.
 - Use `@property`; do not manually implement descriptors unless the power
-  feature is necessary. `enforced-by: security/semgrep`
-- Avoid properties for computations subclasses may need to override and extend. `unenforced`
+  feature is necessary.
+- Avoid properties for computations subclasses may need to override and extend.
 
 Good:
 
@@ -357,34 +357,34 @@ def num_examples(self) -> int:
 
 Rules:
 
-- Design explicitly for inheritance or avoid inheritance. `unenforced`
-- Prefer composition over inheritance for code sharing. `unenforced`
-- Do not subclass only to reuse methods or state. `enforced-by: naming/identifiers`
+- Design explicitly for inheritance or avoid inheritance.
+- Prefer composition over inheritance for code sharing.
+- Do not subclass only to reuse methods or state.
 - Do not use the template method pattern as a default design. A base class that
   defines control flow and calls subclass hooks is harder to read and easier to
-  break than a wrapper with explicit delegation. `unenforced`
+  break than a wrapper with explicit delegation.
 - Do not mix three different inheritance purposes in one hierarchy: code
-  sharing, interface definition, and specialization. `unenforced`
-- Use protocols or small ABCs for interfaces. `enforced-by: python/basedpyright`
+  sharing, interface definition, and specialization.
+- Use protocols or small ABCs for interfaces.
 - Use specialization only when the subclass truly is the base class plus more
-  and can be used anywhere the base class is expected. `unenforced`
+  and can be used anywhere the base class is expected.
 - Follow the Liskov substitution principle: callers that accept the base class
-  must be able to interact correctly with the subclass. `unenforced`
-- Keep strict specialization hierarchies shallow and physically close together. `unenforced`
+  must be able to interact correctly with the subclass.
+- Keep strict specialization hierarchies shallow and physically close together.
 - Do not model variants as one class with a type field and many optional fields
-  that only apply for some type values. `unenforced`
-- Make invalid states unrepresentable. `unenforced`
-- Use composition when behavior varies across more than one axis. `unenforced`
+  that only apply for some type values.
+- Make invalid states unrepresentable.
+- Use composition when behavior varies across more than one axis.
 - Use a wrapper when you need one behavior plus cross-cutting behavior such as
-  tracking, caching, timing, or logging. `unenforced`
+  tracking, caching, timing, or logging.
 - Consider `functools.singledispatch` when an operation varies by type but does
-  not clearly belong to one class. `unenforced`
-- Public attributes have no leading underscore. `enforced-by: structure/private-prefix`
-- Internal attributes use one leading underscore. `enforced-by: structure/private-prefix`
+  not clearly belong to one class.
+- Public attributes have no leading underscore.
+- Internal attributes use one leading underscore.
 - Double-leading underscores are only for avoiding accidental subclass name
-  collisions. `enforced-by: structure/private-prefix`
+  collisions.
 - If a class is intended for subclassing, document the public API and subclass
-  API separately when that distinction matters. `unenforced`
+  API separately when that distinction matters.
 
 Good specialization:
 
@@ -423,14 +423,14 @@ class TrackingRepository:
 Rules:
 
 - Use decorators when they remove real repetition or express a clear framework
-  contract. `unenforced`
-- Decorator behavior must be unsurprising. `unenforced`
+  contract.
+- Decorator behavior must be unsurprising.
 - Decorators run at definition time, which is import time. Do not let them depend
-  on files, sockets, databases, network calls, or other unavailable resources. `enforced-by: structure/import-boundary`
-- Decorators preserve function metadata when wrapping functions. `unenforced`
-- Avoid `staticmethod`. Use a module-level function instead. `enforced-by: structure/import-boundary`
-- Use `classmethod` for named constructors or class-specific routines. `unenforced`
-- Use `@property` only under the property rules above. `unenforced`
+  on files, sockets, databases, network calls, or other unavailable resources.
+- Decorators preserve function metadata when wrapping functions.
+- Avoid `staticmethod`. Use a module-level function instead.
+- Use `classmethod` for named constructors or class-specific routines.
+- Use `@property` only under the property rules above.
 
 Good:
 
@@ -453,12 +453,12 @@ def normalize_model_name(name: str) -> str:
 
 Rules:
 
-- Custom exceptions inherit from `Exception`. `enforced-by: python/ruff N818`
-- Do not inherit directly from `BaseException`. `enforced-by: python/ruff N818`
-- Exception class names use CapWords. `enforced-by: python/ruff N818`
-- Error exception names end with `Error`. `enforced-by: python/ruff N818`
-- Exception names never repeat the module name. `enforced-by: python/ruff N818`
-- Exception docstrings describe the represented condition. `enforced-by: python/ruff D`
+- Custom exceptions inherit from `Exception`.
+- Do not inherit directly from `BaseException`.
+- Exception class names use CapWords.
+- Error exception names end with `Error`.
+- Exception names never repeat the module name.
+- Exception docstrings describe the represented condition.
 
 Good:
 

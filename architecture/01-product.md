@@ -46,8 +46,7 @@ and gets findings from the hooks with a message it can act on.
    list. A file is either checked or listed as unchecked in `doctor`.
 5. **Upgrades are reviewable.** Generated configuration is tracked, so an upgrade is a diff a
    reviewer reads.
-6. **Rules and enforcement stay in step.** Every rule statement in the agent files names the
-   check that enforces it, or says it is unenforced. The unenforced count is reported.
+6. **Rules are rules.** The agent files state rules and name no tool or check; which check backs a rule is the ledger's business, not the reader's.
 7. **The tool obeys its own rules.** The gspot repository runs gspot at full strictness with no
    ignores.
 

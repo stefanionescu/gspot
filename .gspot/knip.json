@@ -3,7 +3,6 @@
     "entry": [
         "**/build.ts",
         "**/publish.ts",
-        "packages/cli/scripts/*.ts",
         "packages/npm/gspot/gspot.js",
         "docs/generate.ts",
         "src/main.{ts,js}",
@@ -72,7 +71,6 @@
             "entry": [
                 "**/build.ts",
                 "**/publish.ts",
-                "packages/cli/scripts/*.ts",
                 "packages/npm/gspot/gspot.js",
                 "docs/generate.ts",
                 "src/main.{ts,js}",
@@ -89,7 +87,6 @@
             "entry": [
                 "**/build.ts",
                 "**/publish.ts",
-                "scripts/*.ts",
                 "src/main.{ts,js}",
                 "src/index.{ts,js}",
                 "src/plugin.{ts,js}",

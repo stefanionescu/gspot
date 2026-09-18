@@ -20,17 +20,17 @@ reviewers, maintainers, security teams, and contributors.
 
 The rules cover:
 
-- Repository and subproject `README.md` files. `unenforced`
-- Optional `ADVANCED.md` guides. `unenforced`
-- Documentation under a dedicated documentation directory. `unenforced`
-- `CONTRIBUTING.md`, `SECURITY.md`, and similar project guides. `unenforced`
-- Architecture and decision documentation. `enforced-by: prose/vale gspot.interface-verbs`
-- Command-line interface, API, configuration, and library reference material. `unenforced`
-- Tutorials, how-to guides, migration guides, and troubleshooting topics. `unenforced`
-- Release notes, known issues, deprecations, and retirement notices. `unenforced`
+- Repository and subproject `README.md` files.
+- Optional `ADVANCED.md` guides.
+- Documentation under a dedicated documentation directory.
+- `CONTRIBUTING.md`, `SECURITY.md`, and similar project guides.
+- Architecture and decision documentation.
+- Command-line interface, API, configuration, and library reference material.
+- Tutorials, how-to guides, migration guides, and troubleshooting topics.
+- Release notes, known issues, deprecations, and retirement notices.
 - Markdown examples embedded in issues, pull requests, and templates when those
-  examples are intended to become durable project guidance. `unenforced`
-- Images, diagrams, video links, and other media used by documentation. `unenforced`
+  examples are intended to become durable project guidance.
+- Images, diagrams, video links, and other media used by documentation.
 
 Project-specific documentation rules may add requirements for a static site
 generator, front matter, shortcodes, link syntax, or generated references.
@@ -39,15 +39,15 @@ renderer requires it.
 
 The following requirements never become optional:
 
-- Accuracy. `unenforced`
-- Security. `unenforced`
-- Accessibility. `unenforced`
-- Clear ownership. `unenforced`
-- Present-state descriptions. `unenforced`
-- Honest limitations. `unenforced`
-- Runnable or explicitly illustrative examples. `unenforced`
+- Accuracy.
+- Security.
+- Accessibility.
+- Clear ownership.
+- Present-state descriptions.
+- Honest limitations.
+- Runnable or explicitly illustrative examples.
 
-Do not copy a provider-specific shortcode, Liquid tag, HTML component, or `unenforced`
+Do not copy a provider-specific shortcode, Liquid tag, HTML component, or
 front-matter field into a different project unless that project supports it.
 
 ## Core documentation standard
@@ -55,38 +55,38 @@ front-matter field into a different project unless that project supports it.
 Good project documentation lets a reader answer these questions without
 inspecting implementation source:
 
-1. What is this project or component? `unenforced`
-1. What problem does it solve? `unenforced`
-1. Is it suitable for the reader's need? `unenforced`
-1. What does the reader need before using it? `unenforced`
-1. How is it installed or accessed? `unenforced`
-1. What does normal use look like? `unenforced`
-1. What are its important limits and risks? `unenforced`
-1. Where is the exact reference information? `unenforced`
-1. How are common failures diagnosed? `unenforced`
-1. How is the project licensed and maintained? `unenforced`
+1. What is this project or component?
+1. What problem does it solve?
+1. Is it suitable for the reader's need?
+1. What does the reader need before using it?
+1. How is it installed or accessed?
+1. What does normal use look like?
+1. What are its important limits and risks?
+1. Where is the exact reference information?
+1. How are common failures diagnosed?
+1. How is the project licensed and maintained?
 
 Documentation must be:
 
 - Correct: It matches shipped behavior, accepted inputs, outputs, defaults,
-  permissions, and supported environments. `unenforced`
-- Useful: It helps a defined reader make a decision or complete a goal. `unenforced`
+  permissions, and supported environments.
+- Useful: It helps a defined reader make a decision or complete a goal.
 - Discoverable: Readers can find it from the README, navigation, search terms,
-  or nearby related content. `unenforced`
+  or nearby related content.
 - Scannable: Headings, short paragraphs, lists, and examples expose the page
-  structure. `enforced-by: prose/vale gspot.paragraph-length`
+  structure.
 - Complete at its chosen level: A task includes every required step. A reference
-  includes the full contract it claims to cover. `unenforced`
-- Concise: Every sentence contributes new information. `unenforced`
+  includes the full contract it claims to cover.
+- Concise: Every sentence contributes new information.
 - Honest: Limitations, destructive effects, prerequisites, and uncertainty are
-  visible before they affect the reader. `unenforced`
+  visible before they affect the reader.
 - Maintainable: The content has a clear owner and does not duplicate volatile
-  facts without a reason. `unenforced`
+  facts without a reason.
 - Accessible: Text carries the essential meaning, and formatting does not
-  exclude readers who use assistive technology. `unenforced`
-- Secure: Examples never expose credentials, personal data, or unsafe defaults. `enforced-by: secrets/gitleaks`
+  exclude readers who use assistive technology.
+- Secure: Examples never expose credentials, personal data, or unsafe defaults.
 - Portable: Standard Markdown carries the core content unless the publishing
-  system requires an extension. `unenforced`
+  system requires an extension.
 
 Length is not a quality signal. A short page can be complete, and a long page
 can still omit the one fact a reader needs. Make a document as short as possible
@@ -100,21 +100,21 @@ implementation to learn routine usage, the abstraction is incomplete.
 Durable product information belongs in the documentation set. Do not leave the
 only explanation in:
 
-- A pull request description. `unenforced`
-- An issue comment. `unenforced`
-- A chat thread. `unenforced`
-- A commit message. `unenforced`
-- A code review discussion. `unenforced`
-- A private document. `unenforced`
-- A maintainer's memory. `unenforced`
+- A pull request description.
+- An issue comment.
+- A chat thread.
+- A commit message.
+- A code review discussion.
+- A private document.
+- A maintainer's memory.
 
 When a recurring question has no documented answer:
 
-1. Identify the canonical page that owns the answer. `unenforced`
-1. Add the missing information to that page. `unenforced`
-1. Link to the page when answering the question elsewhere. `unenforced`
+1. Identify the canonical page that owns the answer.
+1. Add the missing information to that page.
+1. Link to the page when answering the question elsewhere.
 
-Prefer linking to canonical documentation over repeatedly paraphrasing it in `unenforced`
+Prefer linking to canonical documentation over repeatedly paraphrasing it in
 support conversations. Repeated paraphrases drift and create competing
 contracts.
 
@@ -122,16 +122,16 @@ Single source of truth does not mean that every sentence may appear only once.
 Small, intentional duplication can help readers complete a task without jumping
 between pages. Duplicate information only when all of these conditions hold:
 
-- The repeated fact is necessary in both contexts. `unenforced`
-- One location remains the canonical owner. `unenforced`
-- The duplicate is short. `unenforced`
-- The maintenance cost is understood. `unenforced`
-- A change to the fact has an obvious way to find every copy. `unenforced`
+- The repeated fact is necessary in both contexts.
+- One location remains the canonical owner.
+- The duplicate is short.
+- The maintenance cost is understood.
+- A change to the fact has an obvious way to find every copy.
 
-Do not duplicate large procedures, configuration tables, or API contracts. `unenforced`
+Do not duplicate large procedures, configuration tables, or API contracts.
 Link to the owner instead.
 
-Keep source and documentation changes together when behavior changes. A feature `unenforced`
+Keep source and documentation changes together when behavior changes. A feature
 is not complete when its public behavior changes but its documentation still
 describes the previous behavior.
 
@@ -139,23 +139,23 @@ describes the previous behavior.
 
 Before writing, identify:
 
-- The intended reader. `unenforced`
-- The reader's goal. `unenforced`
-- The knowledge the reader is expected to have. `unenforced`
-- The environment the reader is using. `unenforced`
-- The role or permissions the reader needs. `unenforced`
-- The consequences if the reader follows the instructions incorrectly. `unenforced`
-- The next question the reader is likely to ask. `unenforced`
+- The intended reader.
+- The reader's goal.
+- The knowledge the reader is expected to have.
+- The environment the reader is using.
+- The role or permissions the reader needs.
+- The consequences if the reader follows the instructions incorrectly.
+- The next question the reader is likely to ask.
 
-Write for the least specialized reader who can reasonably complete the task. `unenforced`
+Write for the least specialized reader who can reasonably complete the task.
 Do not assume every reader knows internal project vocabulary, deployment
 architecture, framework conventions, or organizational history.
 
 Use progressive disclosure:
 
-- Give all readers the broad purpose and normal path first. `unenforced`
-- Give active users setup and routine tasks next. `unenforced`
-- Give specialists internals, tuning, rare operations, and edge cases later. `unenforced`
+- Give all readers the broad purpose and normal path first.
+- Give active users setup and routine tasks next.
+- Give specialists internals, tuning, rare operations, and edge cases later.
 
 Focus on reader outcomes, not implementation effort.
 
@@ -179,7 +179,7 @@ The second example is inaccurate if most readers lack the required role.
 
 ## Organize the documentation set
 
-Give each kind of information a clear owner. `unenforced`
+Give each kind of information a clear owner.
 
 | Document                   | Primary purpose                                                                                             |
 | -------------------------- | ----------------------------------------------------------------------------------------------------------- |
@@ -198,42 +198,42 @@ Give each kind of information a clear owner. `unenforced`
 
 Do not use `ADVANCED.md` as a substitute for:
 
-- A complete API reference. `unenforced`
-- A contributor guide. `unenforced`
-- A security policy. `unenforced`
-- A changelog. `unenforced`
-- A collection of architectural decisions. `enforced-by: prose/vale gspot.interface-verbs`
-- Generated reference documentation. `unenforced`
+- A complete API reference.
+- A contributor guide.
+- A security policy.
+- A changelog.
+- A collection of architectural decisions.
+- Generated reference documentation.
 
 Create subproject documentation at real ownership boundaries. Do not add a
 README to every directory. A directory README is justified when the directory
 represents an independently operated component, has a distinct workflow, or
 needs orientation that cannot remain clear in the parent guide.
 
-Avoid navigation chains that force a reader through several index pages before `unenforced`
+Avoid navigation chains that force a reader through several index pages before
 reaching useful content. A link moves the reader closer to the goal.
 
 Use standard repository filenames with their established capitalization:
 
-- `README.md` `unenforced`
-- `ADVANCED.md` `unenforced`
-- `CONTRIBUTING.md` `unenforced`
-- `SECURITY.md` `unenforced`
-- `CHANGELOG.md` `unenforced`
-- `LICENSE` `unenforced`
+- `README.md`
+- `ADVANCED.md`
+- `CONTRIBUTING.md`
+- `SECURITY.md`
+- `CHANGELOG.md`
+- `LICENSE`
 
-Do not create variants such as `ReadMe.md` or `advanced-guide.md` when the `unenforced`
+Do not create variants such as `ReadMe.md` or `advanced-guide.md` when the
 standard name already describes the document's role.
 
 Keep discovery metadata consistent with the documentation:
 
-- Repository description. `unenforced`
-- Package or module description. `unenforced`
-- Package-manager keywords. `unenforced`
-- Repository topics. `unenforced`
-- Published documentation title and summary. `unenforced`
+- Repository description.
+- Package or module description.
+- Package-manager keywords.
+- Repository topics.
+- Published documentation title and summary.
 
-Use the README one-liner as the source for these short descriptions when the `unenforced`
+Use the README one-liner as the source for these short descriptions when the
 platform limits permit it. Do not add unrelated popular keywords to attract
 traffic.
 
@@ -242,9 +242,9 @@ traffic.
 The default structure for a substantial project or subproject is:
 
 - `README.md` for evaluation, first success, routine use, essential caveats, and
-  navigation. `unenforced`
+  navigation.
 - `ADVANCED.md` only when specialist material is large enough to disrupt that
-  path. `unenforced`
+  path.
 
 The split is a tool, not a quota. Small components need only a focused README.
 
@@ -256,23 +256,23 @@ action, or understand normal operation.
 
 Include, when relevant:
 
-- Project or component name. `unenforced`
-- One-sentence purpose. `unenforced`
-- Essential context and unfamiliar terminology. `unenforced`
-- Current status when it materially affects adoption. `unenforced`
-- Important compatibility, security, or data-loss caveats. `unenforced`
-- A small, runnable usage example. `unenforced`
-- Prerequisites. `unenforced`
-- Installation or setup. `unenforced`
-- Normal configuration. `unenforced`
-- The commands used most often. `unenforced`
-- A concise architecture or data-flow overview. `enforced-by: prose/vale gspot.interface-verbs`
-- Routine testing and development commands when the README serves contributors. `unenforced`
-- Common failures and their direct fixes. `unenforced`
-- Links to deeper references. `unenforced`
-- License and contribution information. `unenforced`
+- Project or component name.
+- One-sentence purpose.
+- Essential context and unfamiliar terminology.
+- Current status when it materially affects adoption.
+- Important compatibility, security, or data-loss caveats.
+- A small, runnable usage example.
+- Prerequisites.
+- Installation or setup.
+- Normal configuration.
+- The commands used most often.
+- A concise architecture or data-flow overview.
+- Routine testing and development commands when the README serves contributors.
+- Common failures and their direct fixes.
+- Links to deeper references.
+- License and contribution information.
 
-Keep exhaustive internals out of the opening path. `unenforced`
+Keep exhaustive internals out of the opening path.
 
 ### Never add sections that list the tree
 
@@ -283,18 +283,18 @@ directories or files.
 
 This prohibition includes:
 
-- Project layout or repository layout sections. `enforced-by: prose/vale gspot.heading-names`
-- Directory structure or source tree sections. `enforced-by: prose/vale gspot.heading-names`
-- File maps and codebase maps. `enforced-by: prose/vale gspot.heading-names`
-- Tables that pair directories with purposes, ownership, or descriptions. `unenforced`
-- Lists or diagrams that walk readers through the repository hierarchy. `unenforced`
-- Renamed equivalents that provide the same directory inventory. `enforced-by: prose/vale gspot.present-state`
+- Project layout or repository layout sections.
+- Directory structure or source tree sections.
+- File maps and codebase maps.
+- Tables that pair directories with purposes, ownership, or descriptions.
+- Lists or diagrams that walk readers through the repository hierarchy.
+- Renamed equivalents that provide the same directory inventory.
 
-Do not add a project layout section even when the repository is large, the `enforced-by: prose/vale gspot.heading-names`
+Do not add a project layout section even when the repository is large, the
 directory boundaries seem durable, or an older document already contains one.
 Remove an existing layout section instead of revising or preserving it.
 
-Document behavior, workflows, commands, architecture concepts, and ownership `enforced-by: prose/vale gspot.interface-verbs`
+Document behavior, workflows, commands, architecture concepts, and ownership
 boundaries without cataloging the source tree. Mention a path inline only when
 the reader must open, edit, or run that specific path to complete the documented
 task.
@@ -303,17 +303,17 @@ task.
 
 Create `ADVANCED.md` for coherent, substantial material such as:
 
-- Detailed architecture and ownership boundaries. `enforced-by: prose/vale gspot.interface-verbs`
-- Internal orchestration and lifecycle behavior. `unenforced`
-- Performance, scaling, caching, or concurrency details. `enforced-by: prose/vale gspot.currency`
-- Rare configuration combinations. `unenforced`
-- Environment and runtime tuning. `unenforced`
-- Complex deployment and recovery workflows. `unenforced`
-- Deep troubleshooting and diagnostic trees. `unenforced`
-- Provider-specific integration details. `unenforced`
+- Detailed architecture and ownership boundaries.
+- Internal orchestration and lifecycle behavior.
+- Performance, scaling, caching, or concurrency details.
+- Rare configuration combinations.
+- Environment and runtime tuning.
+- Complex deployment and recovery workflows.
+- Deep troubleshooting and diagnostic trees.
+- Provider-specific integration details.
 - Full test-suite strategy when the routine commands already live in the
-  README. `unenforced`
-- Operational behavior needed by maintainers but not by most users. `unenforced`
+  README.
+- Operational behavior needed by maintainers but not by most users.
 
 An advanced guide may assume the reader understands the README. It must not
 assume undocumented prerequisites.
@@ -323,21 +323,21 @@ assume undocumented prerequisites.
 Create an advanced guide when at least one of these conditions is true:
 
 - Three or more substantial specialist sections interrupt the normal README
-  path. `unenforced`
+  path.
 - One specialist workflow is long enough that readers must scroll past it to
-  reach routine setup or usage. `unenforced`
-- The component has distinct beginner and operator or maintainer audiences. `unenforced`
-- Detailed internals are valuable but unnecessary for safe normal use. `unenforced`
+  reach routine setup or usage.
+- The component has distinct beginner and operator or maintainer audiences.
+- Detailed internals are valuable but unnecessary for safe normal use.
 - The README cannot remain a quick evaluation and onboarding document without
-  hiding important specialist depth. `unenforced`
+  hiding important specialist depth.
 
 Keep everything in the README when:
 
-- The total content remains easy to scan. `unenforced`
-- Advanced material is only one short section. `unenforced`
-- Splitting creates two thin pages. `enforced-by: prose/vale gspot.modals`
-- Readers need to switch pages during the basic setup path. `enforced-by: prose/vale gspot.modals`
-- The same information has to be repeated in both files. `enforced-by: prose/vale gspot.modals`
+- The total content remains easy to scan.
+- Advanced material is only one short section.
+- Splitting creates two thin pages.
+- Readers need to switch pages during the basic setup path.
+- The same information has to be repeated in both files.
 
 If a README becomes long, fix its structure before splitting it. Remove
 repetition, move true reference material to its owner, shorten oversized
@@ -363,7 +363,7 @@ content has a coherent audience and purpose.
 
 ### Link the two guides
 
-Add one clearly named advanced-guide link in the README near the point where `unenforced`
+Add one clearly named advanced-guide link in the README near the point where
 normal use ends and specialist material begins. Describe what the reader will
 find there.
 
@@ -376,7 +376,7 @@ See [the advanced guide](ADVANCED.md) for runtime tuning, deployment recovery,
 and detailed architecture.
 ```
 
-Avoid a bare link named "More" or "Click here." `enforced-by: prose/vale gspot.link-text`
+Avoid a bare link named "More" or "Click here."
 
 At the top of the advanced guide, state its audience, and relationship to the
 README. Do not repeat the README introduction, setup procedure, or routine
@@ -389,49 +389,49 @@ specialist audience.
 
 Move content elsewhere when it has a different owner:
 
-- Put contribution policy in a contributor guide. `unenforced`
-- Put exact endpoint schemas in API reference documentation. `unenforced`
-- Put historical changes in release notes. `unenforced`
-- Put isolated design decisions in decision records. `unenforced`
-- Put incident-only commands in a restricted runbook when publishing them is unsafe. `enforced-by: prose/vale gspot.modals`
+- Put contribution policy in a contributor guide.
+- Put exact endpoint schemas in API reference documentation.
+- Put historical changes in release notes.
+- Put isolated design decisions in decision records.
+- Put incident-only commands in a restricted runbook when publishing them is unsafe.
 
-Delete the advanced guide and merge its unique material back into the README if `unenforced`
+Delete the advanced guide and merge its unique material back into the README if
 the guide becomes small or stops serving a distinct audience.
 
 ## Use cognitive funneling
 
-Order information from broad and widely relevant to narrow and specialized. `unenforced`
+Order information from broad and widely relevant to narrow and specialized.
 This structure helps readers decide quickly whether to continue.
 
 The first screen of a README answers:
 
-- What is this? `unenforced`
-- Who is it for? `unenforced`
-- What problem does it solve? `unenforced`
-- What does a normal use look like? `unenforced`
-- Is there a limitation that immediately disqualifies it? `unenforced`
+- What is this?
+- Who is it for?
+- What problem does it solve?
+- What does a normal use look like?
+- Is there a limitation that immediately disqualifies it?
 
 A practical README order is:
 
-1. Name. `unenforced`
-1. One-sentence purpose. `unenforced`
-1. Essential status or caveat. `unenforced`
-1. Minimal example or result. `unenforced`
-1. Key capabilities. `unenforced`
-1. Prerequisites. `unenforced`
-1. Setup. `unenforced`
-1. Normal usage. `unenforced`
-1. Configuration. `unenforced`
-1. Architecture overview. `enforced-by: prose/vale gspot.interface-verbs`
-1. Common problems. `unenforced`
-1. Deeper documentation. `unenforced`
-1. Contribution and license. `unenforced`
+1. Name.
+1. One-sentence purpose.
+1. Essential status or caveat.
+1. Minimal example or result.
+1. Key capabilities.
+1. Prerequisites.
+1. Setup.
+1. Normal usage.
+1. Configuration.
+1. Architecture overview.
+1. Common problems.
+1. Deeper documentation.
+1. Contribution and license.
 
 Change the order when reader risk demands it. Put an incompatible license,
 unsupported status, destructive default, security limitation, or platform
 restriction near the top if it can immediately rule out use.
 
-Do not optimize the README to maximize adoption. Optimize it to help the right `unenforced`
+Do not optimize the README to maximize adoption. Optimize it to help the right
 reader decide quickly and the wrong reader leave confidently.
 
 Readers gain progressively deeper knowledge as they continue. Do not
@@ -450,14 +450,14 @@ relate, and which constraints shape it.
 
 Use concept topics for:
 
-- Architecture. `enforced-by: prose/vale gspot.interface-verbs`
-- Ownership. `unenforced`
-- Data flow. `unenforced`
-- Security models. `unenforced`
-- Lifecycle models. `unenforced`
-- Important domain terminology. `unenforced`
+- Architecture.
+- Ownership.
+- Data flow.
+- Security models.
+- Lifecycle models.
+- Important domain terminology.
 
-Do not hide required procedural steps inside a concept narrative. `unenforced`
+Do not hide required procedural steps inside a concept narrative.
 
 ### Task
 
@@ -465,14 +465,14 @@ A task topic helps a reader complete one concrete goal.
 
 A task includes:
 
-- Outcome-focused title. `unenforced`
-- Required permissions and prerequisites. `unenforced`
-- Ordered actions. `unenforced`
-- Expected result. `unenforced`
-- Verification or recovery information when the task carries risk. `unenforced`
-- Relevant next step. `unenforced`
+- Outcome-focused title.
+- Required permissions and prerequisites.
+- Ordered actions.
+- Expected result.
+- Verification or recovery information when the task carries risk.
+- Relevant next step.
 
-Use one task for one primary outcome. Split unrelated outcomes. `unenforced`
+Use one task for one primary outcome. Split unrelated outcomes.
 
 ### Reference
 
@@ -480,13 +480,13 @@ A reference topic provides exact facts for lookup.
 
 Use reference topics for:
 
-- API endpoints. `unenforced`
-- CLI commands. `unenforced`
-- Configuration keys. `unenforced`
-- Events. `unenforced`
-- Error codes. `unenforced`
-- File formats. `unenforced`
-- Supported values. `unenforced`
+- API endpoints.
+- CLI commands.
+- Configuration keys.
+- Events.
+- Error codes.
+- File formats.
+- Supported values.
 
 Reference content favors completeness, consistent field order, tables for real
 matrices, and small examples. It never requires narrative reading to find a
@@ -498,13 +498,13 @@ A tutorial teaches through a guided, end-to-end result.
 
 A tutorial includes:
 
-- A visible final outcome. `unenforced`
-- A controlled starting state. `unenforced`
-- Complete steps. `unenforced`
-- Enough explanation to teach the important model. `unenforced`
-- A cleanup path for created resources. `unenforced`
+- A visible final outcome.
+- A controlled starting state.
+- Complete steps.
+- Enough explanation to teach the important model.
+- A cleanup path for created resources.
 
-Keep unusual variants out of the main tutorial. Route them to reference or `unenforced`
+Keep unusual variants out of the main tutorial. Route them to reference or
 advanced documentation.
 
 ### Troubleshooting topic
@@ -513,15 +513,15 @@ A troubleshooting topic starts from an observable symptom.
 
 Use this order:
 
-1. Symptom. `unenforced`
-1. Conditions in which it appears. `unenforced`
-1. Diagnostic check. `unenforced`
-1. Likely cause. `unenforced`
-1. Resolution. `unenforced`
-1. Recovery or rollback. `unenforced`
-1. Escalation information if the problem remains. `unenforced`
+1. Symptom.
+1. Conditions in which it appears.
+1. Diagnostic check.
+1. Likely cause.
+1. Resolution.
+1. Recovery or rollback.
+1. Escalation information if the problem remains.
 
-Do not title troubleshooting sections only with internal causes. Readers search `unenforced`
+Do not title troubleshooting sections only with internal causes. Readers search
 for the message or behavior they can observe.
 
 ### Landing page
@@ -530,18 +530,18 @@ A landing page routes distinct audiences or goals. Keep it short.
 
 Use:
 
-- A one-paragraph orientation. `enforced-by: prose/vale gspot.paragraph-length`
-- A small number of descriptive links. `enforced-by: prose/vale gspot.link-text`
-- Categories based on reader goals. `unenforced`
+- A one-paragraph orientation.
+- A small number of descriptive links.
+- Categories based on reader goals.
 
-Do not turn a landing page into a duplicate guide. `unenforced`
+Do not turn a landing page into a duplicate guide.
 
 ### Release note
 
 A release note tells an affected reader what changed, what the effect is, and
 whether action is required.
 
-Release notes are not implementation summaries. See `unenforced`
+Release notes are not implementation summaries. See
 [Document releases and lifecycle changes](#release-note).
 
 ### Combining topic types
@@ -550,7 +550,7 @@ A README can contain several topic types because it is an entry document.
 Keep each section internally consistent. A setup section reads as a task,
 an options section as reference, and an architecture section as a concept.
 
-Do not alternate between narrative, steps, and reference fields without clear `unenforced`
+Do not alternate between narrative, steps, and reference fields without clear
 headings.
 
 ## Plan documentation before writing
@@ -558,21 +558,21 @@ headings.
 For non-trivial documentation work:
 
 1. Inspect the implementation, configuration, user interface, and existing
-   documentation that define the behavior. `unenforced`
-1. Identify the reader and primary goal. `unenforced`
-1. Find the current owner for the topic. `unenforced`
-1. Decide whether to update an existing page or create a new page. `unenforced`
-1. Select the topic type. `enforced-by: prose/vale gspot.interface-verbs`
-1. List the claims that require evidence. `unenforced`
-1. Identify security, permission, compatibility, and data-loss caveats. `unenforced`
-1. Choose the smallest example that proves normal use. `unenforced`
-1. Outline sections in cognitive-funnel order. `unenforced`
-1. Identify links, images, and examples that need maintenance ownership. `unenforced`
+   documentation that define the behavior.
+1. Identify the reader and primary goal.
+1. Find the current owner for the topic.
+1. Decide whether to update an existing page or create a new page.
+1. Select the topic type.
+1. List the claims that require evidence.
+1. Identify security, permission, compatibility, and data-loss caveats.
+1. Choose the smallest example that proves normal use.
+1. Outline sections in cognitive-funnel order.
+1. Identify links, images, and examples that need maintenance ownership.
 
-Do not create a new page for one paragraph that belongs naturally on an `enforced-by: prose/vale gspot.paragraph-length`
+Do not create a new page for one paragraph that belongs naturally on an
 existing page.
 
-Do not begin by copying source comments, tickets, or implementation notes. `unenforced`
+Do not begin by copying source comments, tickets, or implementation notes.
 Translate verified behavior into a reader-focused explanation.
 
 A documentation plan follows the same rules as a code plan. Include the exact
@@ -586,59 +586,59 @@ Documentation evolves with the product.
 
 Review documentation whenever a change affects:
 
-- Public behavior. `unenforced`
-- Setup. `unenforced`
-- Configuration. `unenforced`
-- Commands. `unenforced`
-- API contracts. `unenforced`
-- User interface labels or navigation. `unenforced`
-- Permissions. `unenforced`
-- Supported versions. `unenforced`
-- Error messages. `unenforced`
-- Architecture boundaries. `enforced-by: prose/vale gspot.interface-verbs`
-- Operational procedures. `unenforced`
-- Screenshots or diagrams. `unenforced`
+- Public behavior.
+- Setup.
+- Configuration.
+- Commands.
+- API contracts.
+- User interface labels or navigation.
+- Permissions.
+- Supported versions.
+- Error messages.
+- Architecture boundaries.
+- Operational procedures.
+- Screenshots or diagrams.
 
-Do not defer a required documentation update as optional cleanup. `unenforced`
+Do not defer a required documentation update as optional cleanup.
 
 ### Keep comments and guides aligned
 
 When public behavior changes:
 
-- Update the reader-facing guide. `unenforced`
-- Update public code comments. `unenforced`
-- Update API or generated reference. `unenforced`
-- Update examples. `unenforced`
-- Update troubleshooting. `unenforced`
-- Update diagrams. `unenforced`
+- Update the reader-facing guide.
+- Update public code comments.
+- Update API or generated reference.
+- Update examples.
+- Update troubleshooting.
+- Update diagrams.
 
-Do not describe the same behavior differently at each layer. `unenforced`
+Do not describe the same behavior differently at each layer.
 
 ### Delete stale content
 
-Remove documentation that does not apply. `unenforced`
+Remove documentation that does not apply.
 
 Do not:
 
-- Comment it out. `unenforced`
-- Mark it "old" indefinitely. `unenforced`
-- Keep obsolete commands for historical interest. `unenforced`
-- Preserve screenshots that show a removed interface. `enforced-by: prose/vale gspot.present-state`
+- Comment it out.
+- Mark it "old" indefinitely.
+- Keep obsolete commands for historical interest.
+- Preserve screenshots that show a removed interface.
 
-Use release notes, migrations, or versioned documentation when readers still `unenforced`
+Use release notes, migrations, or versioned documentation when readers still
 need an older-version path.
 
 ### Maintain external links
 
 Prefer stable authoritative sources. Replace or remove:
 
-- Redirect chains. `unenforced`
-- Archived unofficial copies. `unenforced`
-- Links to branch line numbers. `unenforced`
-- Private destinations. `unenforced`
-- Pages that do not support the claim. `unenforced`
+- Redirect chains.
+- Archived unofficial copies.
+- Links to branch line numbers.
+- Private destinations.
+- Pages that do not support the claim.
 
-Do not inline all external information to avoid link rot. Copying creates a `unenforced`
+Do not inline all external information to avoid link rot. Copying creates a
 different form of drift. Keep essential project instructions local and link to
 authoritative external contracts.
 
@@ -646,54 +646,54 @@ authoritative external contracts.
 
 When a fact changes, search for:
 
-- The exact old value. `unenforced`
-- The configuration key. `unenforced`
-- The command. `unenforced`
-- The error code. `unenforced`
-- The feature name. `unenforced`
-- Known synonyms. `unenforced`
+- The exact old value.
+- The configuration key.
+- The command.
+- The error code.
+- The feature name.
+- Known synonyms.
 
-Update every intentional duplicate or replace duplicates with a link to the `unenforced`
+Update every intentional duplicate or replace duplicates with a link to the
 owner.
 
 ### Maintain visuals
 
-Treat screenshots and diagrams as documentation source. `unenforced`
+Treat screenshots and diagrams as documentation source.
 
 Refresh them when:
 
-- Labels change. `unenforced`
-- Layout changes enough to confuse a task. `unenforced`
-- The highlighted control moves. `unenforced`
-- The architecture changes. `enforced-by: prose/vale gspot.interface-verbs`
-- The theme makes the image illegible. `unenforced`
-- Example data does not match the text. `unenforced`
+- Labels change.
+- Layout changes enough to confuse a task.
+- The highlighted control moves.
+- The architecture changes.
+- The theme makes the image illegible.
+- Example data does not match the text.
 
-Do not delete shared image assets until all versioned and localized pages have `unenforced`
+Do not delete shared image assets until all versioned and localized pages have
 stopped referencing them.
 
 ### Preserve localization quality
 
 When changing translated documentation:
 
-- Update the source language first. `unenforced`
-- Follow the project's translation ownership workflow. `unenforced`
-- Do not use machine translation as final copy without review. `unenforced`
-- Do not embed text in images when the text carries essential meaning. `unenforced`
-- Allow user interface strings room to expand in translated products. `unenforced`
+- Update the source language first.
+- Follow the project's translation ownership workflow.
+- Do not use machine translation as final copy without review.
+- Do not embed text in images when the text carries essential meaning.
+- Allow user interface strings room to expand in translated products.
 
 ### Automate durable checks
 
 Repositories automate:
 
-- Markdown syntax and style. `unenforced`
-- Broken internal links. `enforced-by: docs/links`
-- Broken image references. `unenforced`
-- Spelling and terminology. `enforced-by: spelling/typos`
-- Generated reference drift. `unenforced`
-- Runnable examples. `unenforced`
-- Front-matter schemas. `unenforced`
-- Accessibility rules that tools can detect. `unenforced`
+- Markdown syntax and style.
+- Broken internal links.
+- Broken image references.
+- Spelling and terminology.
+- Generated reference drift.
+- Runnable examples.
+- Front-matter schemas.
+- Accessibility rules that tools can detect.
 
 Automation does not prove factual accuracy or usability. Human review remains
 required.

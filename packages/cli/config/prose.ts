@@ -54,14 +54,8 @@ export const DISABLED_UPSTREAM_RULES: [string, string][] = [
     ['RedHat.Definitions', 'gspot.acronyms owns the first use of an acronym'],
     ['alex.ProfanityUnlikely', 'it flags execute, kill and abort, which are the words for those actions'],
     ['Harper.ExpandConfiguration', 'config is a reserved word in the naming policy and a path in every repository'],
-    [
-        'Google.Semicolons',
-        'the corpus rule against semicolons is unenforced; the corpus itself joins clauses with them',
-    ],
-    [
-        'Microsoft.Semicolon',
-        'the corpus rule against semicolons is unenforced; the corpus itself joins clauses with them',
-    ],
+    ['Google.Semicolons', 'the corpus itself joins clauses with semicolons'],
+    ['Microsoft.Semicolon', 'the corpus itself joins clauses with semicolons'],
     [
         'Vale.Terms',
         'the vocabulary accepts spellings; it does not fix case, because preset ids are the lowercase tool names',
@@ -134,9 +128,8 @@ export const DISABLED_UPSTREAM_RULES: [string, string][] = [
     ['Harper.MoreAdjective4', 'it reports that an inflected form exists, which is not an error'],
 ];
 
-/** What Vale never reads: code spans, URLs, tool directives and doc tags. Quoted strings and variable expansions are read; ignoring them broke the code spans around them. */
+/** What Vale never reads: URLs, tool directives and doc tags. Code spans and fences are the Markdown parser's job; a backtick pattern here swallowed whole fenced blocks. */
 export const TOKEN_IGNORES = [
-    '(`[^`]+`)',
     String.raw`(https?://\S+)`,
     String.raw`(eslint-disable[^\n]*)`,
     String.raw`(@ts-expect-error[^\n]*)`,
@@ -148,7 +141,7 @@ export const TOKEN_IGNORES = [
     String.raw`(@(?:param|returns|throws|template|typedef|type|see|example|deprecated)\b[^\n]*)`,
 ];
 
-/** Front matter and the enforcement markers are not prose. */
+/** Front matter is not prose. */
 export const BLOCK_IGNORES = [String.raw`(?s)^---\n.*?\n---\n`];
 
 /** Tool and product names Vale accepts as written. */

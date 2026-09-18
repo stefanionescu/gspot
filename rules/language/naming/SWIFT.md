@@ -14,21 +14,21 @@ where useful, and the local quality rules. Optimize for call-site clarity.
 Rules:
 
 - Types, protocols, actors, enums, structs, classes, and generic type parameters
-  use `PascalCase`. `enforced-by: naming/identifiers`
+  use `PascalCase`.
 - Variables, constants, functions, methods, properties, parameters, argument
-  labels, enum cases, and global constants use `lowerCamelCase`. `enforced-by: naming/identifiers`
-- Swift file names match the primary type or extension target pattern. `enforced-by: naming/identifiers`
-- Do not use Objective-C style app or company prefixes for Swift-only types. `unenforced`
+  labels, enum cases, and global constants use `lowerCamelCase`.
+- Swift file names match the primary type or extension target pattern.
+- Do not use Objective-C style app or company prefixes for Swift-only types.
 - Do not use Hungarian notation, `k` prefixes, `g` prefixes, or all-caps global
-  constants. `enforced-by: naming/identifiers`
+  constants.
 - Do not use leading underscores, suffixes, or prefixes as access control. Use
-  Swift access modifiers instead. `unenforced`
-- Use American English spellings to match Apple APIs. `unenforced`
+  Swift access modifiers instead.
+- Use American English spellings to match Apple APIs.
 - Treat common initialisms consistently and readably at call sites, such as
-  `URL`, `ID`, `API`, `HTTP`, and `JSON`. `unenforced`
-- Do not include `optional` or `maybe` in optional variable names. `unenforced`
+  `URL`, `ID`, `API`, `HTTP`, and `JSON`.
+- Do not include `optional` or `maybe` in optional variable names.
 - Use Unicode identifiers only for legitimate domain notation understood by the
-  team. `unenforced`
+  team.
 
 Bad:
 
@@ -52,21 +52,21 @@ let userID: User.ID
 
 ## Swift scoped names
 
-Prefer language scoping over name prefixes when a relationship is structural. `unenforced`
+Prefer language scoping over name prefixes when a relationship is structural.
 If a type is owned by another type and can be nested, nest it instead of
 inventing a longer top-level name.
 
 Rules:
 
-- Use access control for privacy; do not signal privacy with `_privateName`. `unenforced`
-- Nest owned errors, options, and helper types when Swift allows it. `enforced-by: naming/identifiers`
+- Use access control for privacy; do not signal privacy with `_privateName`.
+- Nest owned errors, options, and helper types when Swift allows it.
 - Do not repeat the declaring type inside static or class properties that return an
-  instance of that same type. `unenforced`
-- Use lower camel case for global constants. `unenforced`
+  instance of that same type.
+- Use lower camel case for global constants.
 - Use `shared` or `default` for singleton-like values only when those words
-  actually describe the role. `unenforced`
+  actually describe the role.
 - Use an empty enum as a namespace only for tightly related constants or helper
-  functions that are never instantiated. `enforced-by: naming/identifiers`
+  functions that are never instantiated.
 
 Bad:
 
@@ -107,19 +107,19 @@ let secondsPerMinute = 60
 
 Rules:
 
-- A file with one primary type is named after that type. `unenforced`
+- A file with one primary type is named after that type.
 - Related small helper types may live in the same file when they are private or
-  tightly owned by the primary type. `enforced-by: naming/identifiers`
-- Split a file when there is no clear primary type. `unenforced`
+  tightly owned by the primary type.
+- Split a file when there is no clear primary type.
 - Extension files use `TypeName+Capability.swift` or
-  `TypeName+ProtocolConformance.swift`. `unenforced`
-- Do not use `TypeName+Extensions.swift` when a narrower capability name exists. `unenforced`
-- Do not create broad extension dumping grounds. `unenforced`
+  `TypeName+ProtocolConformance.swift`.
+- Do not use `TypeName+Extensions.swift` when a narrower capability name exists.
+- Do not create broad extension dumping grounds.
 - Do not prefix files with the app name unless the file is the app entry point
-  or a framework collision makes the prefix unavoidable. `enforced-by: naming/identifiers`
+  or a framework collision makes the prefix unavoidable.
 - Directories are PascalCase and mirror the type or feature they group: `Features/Login/`,
-  `Platform/Networking/`. `enforced-by: naming/identifiers`
-- Test files are `<Type>Tests.swift` in the test target, mirroring the source directory. `unenforced`
+  `Platform/Networking/`.
+- Test files are `<Type>Tests.swift` in the test target, mirroring the source directory.
 
 Bad:
 
@@ -163,9 +163,9 @@ and that list is the project's own. These framework role words have one meaning:
 Two rules hold whatever the list is:
 
 - A suffix means one thing across the whole codebase. If `Repository` owns domain-facing data
-  access in one feature, it does not own HTTP mechanics in another. `enforced-by: naming/identifiers`
+  access in one feature, it does not own HTTP mechanics in another.
 - `Manager`, `Handler`, `Helper`, `Util` and `Data` are not roles. They name a position in an
-  imagined architecture rather than a behavior, and the naming policy bans them. `enforced-by: naming/identifiers`
+  imagined architecture rather than a behavior, and the naming policy bans them.
 
 Bad:
 
@@ -199,7 +199,7 @@ enum LoginViewAction {
 
 ## Swift ViewModel methods
 
-Use UI event names when a ViewModel method represents a direct UI event. Use `unenforced`
+Use UI event names when a ViewModel method represents a direct UI event. Use
 domain verbs when the method does domain work.
 
 Direct UI event examples:
@@ -251,27 +251,27 @@ func handleConfirmButtonTapped(_ sender: UIButton) { }
 func handleKeyboardDidShowNotification(_ notification: Notification) { }
 ```
 
-Do not use `handle` for normal ViewModel intent methods. `unenforced`
+Do not use `handle` for normal ViewModel intent methods.
 
 ## Swift function and argument labels
 
 Rules:
 
-- Function and method names form grammatical English at the call site. `unenforced`
+- Function and method names form grammatical English at the call site.
 - Omit the first argument label when the base name and first argument form a
-  clear phrase. `unenforced`
-- Include argument labels when they clarify weak types or avoid ambiguity. `unenforced`
+  clear phrase.
+- Include argument labels when they clarify weak types or avoid ambiguity.
 - Initializer arguments that directly set stored properties use the
-  property names. `unenforced`
+  property names.
 - Use explicit `self.` in initializers when parameter and stored property names
-  match. `unenforced`
+  match.
 - Factory methods that create new instances use `make...` when that
-  improves clarity. `unenforced`
+  improves clarity.
 - Nonmutating methods without side effects read as noun phrases where
-  natural. `unenforced`
-- Mutating methods with side effects use imperative verb phrases. `unenforced`
+  natural.
+- Mutating methods with side effects use imperative verb phrases.
 - Use Swift mutating/nonmutating pairs where applicable, such as
-  `sort`/`sorted`, `append`/`appending`, and `formUnion`/`union`. `unenforced`
+  `sort`/`sorted`, `append`/`appending`, and `formUnion`/`union`.
 
 Bad:
 
@@ -309,21 +309,21 @@ Delegate methods put the delegate owner first, following Apple API patterns.
 
 Rules:
 
-- Pass the delegate source object as the first argument. `unenforced`
-- Leave the source object argument unlabeled. `unenforced`
+- Pass the delegate source object as the first argument.
+- Leave the source object argument unlabeled.
 - For a source-only `Void` event, use the source type plus a past-tense or
-  future-tense event phrase. `unenforced`
+  future-tense event phrase.
 - For a source-only `Bool` assertion, use the source type plus `can`, `is`, or
-  another allowed predicate phrase that describes the returned answer. `enforced-by: naming/identifiers`
+  another allowed predicate phrase that describes the returned answer.
 - Do not introduce `should` in delegate names. Preserve it only for external
-  framework requirements covered by an explicit quality exemption. `unenforced`
+  framework requirements covered by an explicit quality exemption.
 - For a source-only non-Boolean value, use a noun phrase for the queried value
-  and label the source object with a natural preposition. `unenforced`
+  and label the source object with a natural preposition.
 - When there are extra arguments, use the source type as the base name, then
   make the second argument label describe the event, question, or requested
-  value. `unenforced`
+  value.
 - Do not omit the source object just because the delegate is currently owned by
-  one caller. `unenforced`
+  one caller.
 
 Bad:
 
@@ -350,15 +350,15 @@ func messageListDataSource(
 
 Rules:
 
-- Do not prefix protocol names with `I`. `enforced-by: naming/identifiers`
-- Do not suffix protocols with `Protocol`. `enforced-by: naming/identifiers`
-- Protocols that describe what something is use nouns. `unenforced`
+- Do not prefix protocol names with `I`.
+- Do not suffix protocols with `Protocol`.
+- Protocols that describe what something is use nouns.
 - Capability protocols use natural capability names, often `-ing` when the
-  protocol describes behavior. `unenforced`
+  protocol describes behavior.
 - Use `Provider`, `Repository`, `Client`, or `Coordinating` only when that is the
-  actual role. `unenforced`
-- Avoid automatic `-able` names that do not describe a clear capability. `unenforced`
-- Do not create protocols for every ViewModel or use case just to make mocks. `unenforced`
+  actual role.
+- Avoid automatic `-able` names that do not describe a clear capability.
+- Do not create protocols for every ViewModel or use case just to make mocks.
 
 Bad:
 
@@ -399,15 +399,15 @@ protocol ProgressReporting {
 Rules:
 
 - Repository protocols speak domain language and return domain entities or
-  domain results. `unenforced`
-- Repository method names are domain operations. `unenforced`
-- Repository implementations may name their backing technology when useful. `unenforced`
-- Client types own external API or SDK mechanics. `unenforced`
+  domain results.
+- Repository method names are domain operations.
+- Repository implementations may name their backing technology when useful.
+- Client types own external API or SDK mechanics.
 - Coordinators own route state, destination construction, stack mutations, and
-  presentation flow. `unenforced`
-- Route enums are feature-owned and named for the flow. `unenforced`
+  presentation flow.
+- Route enums are feature-owned and named for the flow.
 - Route values must not hold ViewModels, SwiftUI views, repository
-  implementations, SDK clients, database records, or DTOs. `unenforced`
+  implementations, SDK clients, database records, or DTOs.
 
 Bad:
 
@@ -458,13 +458,13 @@ identify, not for the framework that consumes them.
 
 Rules:
 
-- Snapshot item identifiers use stable presentation or domain IDs. `unenforced`
+- Snapshot item identifiers use stable presentation or domain IDs.
 - Do not use DTO item identity, array offsets, or index paths as long-lived
-  item identity. `unenforced`
-- Use `id` only when the enclosing type already supplies the domain context. `unenforced`
+  item identity.
+- Use `id` only when the enclosing type already supplies the domain context.
 - Use a role-qualified name such as `messageID`, `avatarID`, or
-  `conversationID` when the surrounding scope contains multiple identifiers. `unenforced`
-- Keep accessibility identifiers separate from model identifiers. `unenforced`
+  `conversationID` when the surrounding scope contains multiple identifiers.
+- Keep accessibility identifiers separate from model identifiers.
 
 Bad:
 
@@ -496,10 +496,10 @@ copy.
 
 Rules:
 
-- Use stable `camelCase` strings. `enforced-by: naming/identifiers`
-- Name the interaction surface or important state. `unenforced`
-- Do not include localized text. `unenforced`
-- Do not include user content, IDs, tokens, provider names, or database names. `unenforced`
+- Use stable `camelCase` strings.
+- Name the interaction surface or important state.
+- Do not include localized text.
+- Do not include user content, IDs, tokens, provider names, or database names.
 
 Bad:
 

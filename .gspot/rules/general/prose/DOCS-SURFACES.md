@@ -17,24 +17,24 @@ Different technical surfaces need additional contract details.
 
 For each command, document:
 
-- Purpose. `unenforced`
-- Syntax. `unenforced`
-- Required arguments. `unenforced`
-- Optional arguments and defaults. `unenforced`
-- Flags and accepted values. `unenforced`
-- Environment variables. `unenforced`
-- Working directory assumptions. `unenforced`
-- Input files or standard input. `unenforced`
-- Standard output and standard error behavior. `unenforced`
-- Exit status. `unenforced`
-- Side effects. `unenforced`
-- Permissions. `unenforced`
-- Safe examples. `unenforced`
-- Destructive consequences. `unenforced`
+- Purpose.
+- Syntax.
+- Required arguments.
+- Optional arguments and defaults.
+- Flags and accepted values.
+- Environment variables.
+- Working directory assumptions.
+- Input files or standard input.
+- Standard output and standard error behavior.
+- Exit status.
+- Side effects.
+- Permissions.
+- Safe examples.
+- Destructive consequences.
 
-Use command invocations and output, not screenshots of a terminal. `unenforced`
+Use command invocations and output, not screenshots of a terminal.
 
-Keep a short common-command list in the README. Put exhaustive command details `unenforced`
+Keep a short common-command list in the README. Put exhaustive command details
 in CLI reference documentation or the advanced guide when the surface is small
 and specialist.
 
@@ -42,104 +42,104 @@ and specialist.
 
 For each endpoint or operation, document:
 
-- HTTP method and path. `unenforced`
-- Purpose. `unenforced`
-- Authentication. `unenforced`
-- Required role or scope. `unenforced`
-- Headers. `unenforced`
-- Path parameters. `unenforced`
-- Query parameters. `unenforced`
-- Request body. `unenforced`
-- Field types and required status. `unenforced`
-- Constraints and defaults. `unenforced`
-- Success status and response body. `unenforced`
-- Error statuses and stable error codes. `unenforced`
-- Pagination. `unenforced`
-- Rate limits. `unenforced`
-- Idempotency. `unenforced`
-- Retries. `unenforced`
-- Side effects. `unenforced`
-- Version availability. `unenforced`
-- One valid request and response example. `unenforced`
+- HTTP method and path.
+- Purpose.
+- Authentication.
+- Required role or scope.
+- Headers.
+- Path parameters.
+- Query parameters.
+- Request body.
+- Field types and required status.
+- Constraints and defaults.
+- Success status and response body.
+- Error statuses and stable error codes.
+- Pagination.
+- Rate limits.
+- Idempotency.
+- Retries.
+- Side effects.
+- Version availability.
+- One valid request and response example.
 
-Use exact field names and values from the contract owner. `unenforced`
+Use exact field names and values from the contract owner.
 
-Do not expose internal table names, stack traces, service topology, or other `unenforced`
+Do not expose internal table names, stack traces, service topology, or other
 implementation details through error examples.
 
-Document full error messages exactly when they are part of a public terminal, `unenforced`
+Document full error messages exactly when they are part of a public terminal,
 log, or API contract.
 
 ### Libraries and modules
 
 A library README includes:
 
-- One-line purpose. `unenforced`
-- Installation. `unenforced`
-- Minimal import and use. `unenforced`
-- Supported runtime or language versions. `unenforced`
-- Main public types and functions. `unenforced`
-- Parameter and return behavior. `unenforced`
-- Errors and side effects. `unenforced`
-- Concurrency or thread-safety guarantees. `enforced-by: prose/vale gspot.currency`
-- Compatibility constraints. `unenforced`
-- Link to complete API reference. `unenforced`
-- License. `unenforced`
+- One-line purpose.
+- Installation.
+- Minimal import and use.
+- Supported runtime or language versions.
+- Main public types and functions.
+- Parameter and return behavior.
+- Errors and side effects.
+- Concurrency or thread-safety guarantees.
+- Compatibility constraints.
+- Link to complete API reference.
+- License.
 
 Reference documentation must define:
 
-- Signatures. `unenforced`
-- Types. `unenforced`
-- Optional values. `unenforced`
-- Defaults. `unenforced`
-- Return values. `unenforced`
-- Errors. `unenforced`
-- Callbacks or events. `unenforced`
-- Ownership and lifecycle when resources require cleanup. `unenforced`
+- Signatures.
+- Types.
+- Optional values.
+- Defaults.
+- Return values.
+- Errors.
+- Callbacks or events.
+- Ownership and lifecycle when resources require cleanup.
 
-Do not require readers to inspect source to learn routine public behavior. `unenforced`
+Do not require readers to inspect source to learn routine public behavior.
 
 ### Configuration
 
 For each configuration key, document:
 
-- Exact key. `unenforced`
-- Purpose. `unenforced`
-- Type. `unenforced`
-- Default. `unenforced`
-- Allowed values. `unenforced`
-- Required or optional status. `unenforced`
-- Scope. `unenforced`
-- Precedence. `unenforced`
-- Environment availability. `unenforced`
-- Secret status. `enforced-by: secrets/gitleaks`
-- Reload or restart requirement. `unenforced`
-- Security effect. `unenforced`
-- Example. `unenforced`
+- Exact key.
+- Purpose.
+- Type.
+- Default.
+- Allowed values.
+- Required or optional status.
+- Scope.
+- Precedence.
+- Environment availability.
+- Secret status.
+- Reload or restart requirement.
+- Security effect.
+- Example.
 
-Do not duplicate default values in several narrative sections. Keep one `unenforced`
+Do not duplicate default values in several narrative sections. Keep one
 reference owner and link to it.
 
 Show parent keys in YAML, TOML, or JSON examples so placement is unambiguous.
 
-State whether an empty string, missing key, and explicit `null` have different `unenforced`
+State whether an empty string, missing key, and explicit `null` have different
 meanings.
 
 ### Environment variables
 
 For each environment variable, document:
 
-- Name. `unenforced`
-- Purpose. `unenforced`
-- Required status. `unenforced`
-- Expected format. `unenforced`
-- Example placeholder. `enforced-by: prose/vale gspot.placeholders`
-- Secret status. `enforced-by: secrets/gitleaks`
-- Process that reads it. `unenforced`
-- When it is read. `unenforced`
-- Failure behavior when missing or invalid. `unenforced`
+- Name.
+- Purpose.
+- Required status.
+- Expected format.
+- Example placeholder.
+- Secret status.
+- Process that reads it.
+- When it is read.
+- Failure behavior when missing or invalid.
 
-Do not put real secret values in `.env` examples. `enforced-by: secrets/gitleaks`
+Do not put real secret values in `.env` examples.
 
 Use:
 
@@ -155,46 +155,46 @@ ignored.
 
 Architecture documentation explains:
 
-- System boundaries. `unenforced`
-- Component ownership. `unenforced`
-- Direction of dependencies. `unenforced`
-- Primary data flows. `unenforced`
-- Trust boundaries. `unenforced`
-- State ownership. `unenforced`
-- External services. `unenforced`
-- Failure boundaries. `unenforced`
-- Concurrency model. `enforced-by: prose/vale gspot.currency`
-- Persistence model. `unenforced`
-- Deployment shape. `unenforced`
-- Important invariants. `unenforced`
+- System boundaries.
+- Component ownership.
+- Direction of dependencies.
+- Primary data flows.
+- Trust boundaries.
+- State ownership.
+- External services.
+- Failure boundaries.
+- Concurrency model.
+- Persistence model.
+- Deployment shape.
+- Important invariants.
 
-Explain why a boundary exists when the reason is not obvious from the model. `unenforced`
+Explain why a boundary exists when the reason is not obvious from the model.
 
-Do not list source directories or classes as an architecture overview. The `enforced-by: prose/vale gspot.interface-verbs`
+Do not list source directories or classes as an architecture overview. The
 prohibition on project layout sections applies to architecture documentation.
 Describe durable concepts and responsibilities without inventorying the source
 tree.
 
-Use diagrams only when they make relationships clearer than prose. `unenforced`
+Use diagrams only when they make relationships clearer than prose.
 
 ### Contributor documentation
 
 Contributor documentation includes:
 
-- Supported development environment. `unenforced`
-- Setup. `unenforced`
+- Supported development environment.
+- Setup.
 - Ownership and contribution boundaries needed to complete contributor tasks,
-  without a directory or file inventory. `enforced-by: prose/vale gspot.heading-names`
-- Normal development workflow. `unenforced`
-- Branch and commit policy. `unenforced`
-- Code and documentation standards. `unenforced`
-- How to add or change generated artifacts. `unenforced`
-- Review expectations. `unenforced`
-- Testing and verification policy. `unenforced`
-- Contribution licensing. `unenforced`
-- Security reporting route. `unenforced`
+  without a directory or file inventory.
+- Normal development workflow.
+- Branch and commit policy.
+- Code and documentation standards.
+- How to add or change generated artifacts.
+- Review expectations.
+- Testing and verification policy.
+- Contribution licensing.
+- Security reporting route.
 
-Do not repeat product-user setup unless contributors actually use the same path. `unenforced`
+Do not repeat product-user setup unless contributors actually use the same path.
 
 ### Troubleshooting
 
@@ -206,34 +206,34 @@ Write symptom-first headings:
 
 For each problem, include:
 
-- Observable symptom. `unenforced`
-- Exact message when relevant. `unenforced`
-- Affected scope. `unenforced`
-- Diagnostic command or UI check. `unenforced`
-- Likely cause. `unenforced`
-- Resolution. `unenforced`
-- Cleanup or recovery. `unenforced`
-- Escalation information. `unenforced`
+- Observable symptom.
+- Exact message when relevant.
+- Affected scope.
+- Diagnostic command or UI check.
+- Likely cause.
+- Resolution.
+- Cleanup or recovery.
+- Escalation information.
 
-Order causes from most common and least invasive to rare and destructive. `unenforced`
+Order causes from most common and least invasive to rare and destructive.
 
-Do not start with a destructive reset when a focused diagnosis exists. `unenforced`
+Do not start with a destructive reset when a focused diagnosis exists.
 
-Do not present speculative causes as confirmed facts. `unenforced`
+Do not present speculative causes as confirmed facts.
 
 ### Logs and errors
 
 When showing a log or error:
 
-- Reproduce public text exactly. `unenforced`
-- Use inline code for a short message. `unenforced`
-- Use a `text` block for multi-line output. `unenforced`
-- Remove timestamps and IDs that add no diagnostic value. `unenforced`
-- Replace sensitive values. `unenforced`
-- Explain what part of the message matters. `unenforced`
-- State the scope and likely cause. `unenforced`
+- Reproduce public text exactly.
+- Use inline code for a short message.
+- Use a `text` block for multi-line output.
+- Remove timestamps and IDs that add no diagnostic value.
+- Replace sensitive values.
+- Explain what part of the message matters.
+- State the scope and likely cause.
 
-Do not paste entire logs when a few relevant lines are enough. `unenforced`
+Do not paste entire logs when a few relevant lines are enough.
 
 ### Audit event references
 
@@ -244,34 +244,34 @@ Use passive voice when the actor varies or is separately captured.
 The repository visibility was changed.
 ```
 
-Do not repeat context already supplied by the event table or category. `unenforced`
+Do not repeat context already supplied by the event table or category.
 
 ## Document releases and lifecycle changes
 
-Release documentation tells users what they need to know about a version. `unenforced`
+Release documentation tells users what they need to know about a version.
 
 ### Feature notes
 
 A feature note answers:
 
-- Who is affected? `unenforced`
-- What need can they address? `unenforced`
-- What behavior is available? `unenforced`
-- Where is the complete documentation? `unenforced`
+- Who is affected?
+- What need can they address?
+- What behavior is available?
+- Where is the complete documentation?
 
-Use present tense. `unenforced`
+Use present tense.
 
-Do not use "now" unless timing contrast is essential. `unenforced`
+Do not use "now" unless timing contrast is essential.
 
 ### Bug-fix notes
 
 A bug-fix note answers:
 
-- Who was affected? `unenforced`
-- What incorrect behavior do they observe? `enforced-by: prose/vale gspot.modals`
-- Is any action required? `unenforced`
+- Who was affected?
+- What incorrect behavior do they observe?
+- Is any action required?
 
-Describe the previous symptom in past tense. "Fixed a bug" is implied and does `unenforced`
+Describe the previous symptom in past tense. "Fixed a bug" is implied and does
 not add useful information.
 
 Use:
@@ -285,78 +285,78 @@ job entered the queue.
 
 A change note answers:
 
-- What behavior differs? `unenforced`
-- Who is affected? `unenforced`
-- Why does the difference matter? `unenforced`
-- What action is required? `unenforced`
+- What behavior differs?
+- Who is affected?
+- Why does the difference matter?
+- What action is required?
 
-Use present tense for behavior in the documented release. `unenforced`
+Use present tense for behavior in the documented release.
 
 ### Security-fix notes
 
-Follow the project's disclosure policy. `unenforced`
+Follow the project's disclosure policy.
 
 Include only authorized details:
 
-- Severity. `unenforced`
-- Affected versions. `unenforced`
-- Impact. `unenforced`
-- Mitigation or fixed version. `unenforced`
-- Vulnerability identifier when public. `unenforced`
-- Required action. `unenforced`
+- Severity.
+- Affected versions.
+- Impact.
+- Mitigation or fixed version.
+- Vulnerability identifier when public.
+- Required action.
 
-Do not publish exploit details before coordinated disclosure permits them. `unenforced`
+Do not publish exploit details before coordinated disclosure permits them.
 
 ### Known issues
 
 A known-issue note includes:
 
-- Affected audience and versions. `unenforced`
-- Observable symptom. `unenforced`
-- Triggering condition. `unenforced`
-- Safe workaround. `unenforced`
-- Data-loss or security risk. `unenforced`
-- Tracking issue when public. `unenforced`
+- Affected audience and versions.
+- Observable symptom.
+- Triggering condition.
+- Safe workaround.
+- Data-loss or security risk.
+- Tracking issue when public.
 
-Do not write "This can be ignored" unless ignoring the issue is verified as `unenforced`
+Do not write "This can be ignored" unless ignoring the issue is verified as
 safe.
 
 ### Deprecation and closing-down notices
 
 State:
 
-- What is deprecated. `unenforced`
-- Who is affected. `unenforced`
-- Whether it still receives support. `unenforced`
-- Recommended replacement. `unenforced`
-- Migration path. `unenforced`
-- Earliest removal version or date when formally committed. `enforced-by: prose/vale gspot.dates`
+- What is deprecated.
+- Who is affected.
+- Whether it still receives support.
+- Recommended replacement.
+- Migration path.
+- Earliest removal version or date when formally committed.
 
-Put deprecation warnings in the reference page for the feature as well as `unenforced`
+Put deprecation warnings in the reference page for the feature as well as
 release notes.
 
 ### Retirement notices
 
 State:
 
-- What is unavailable now. `unenforced`
-- The first version without it. `unenforced`
-- The supported replacement. `unenforced`
-- Data export or migration requirements. `unenforced`
-- What support remains, if any. `unenforced`
+- What is unavailable now.
+- The first version without it.
+- The supported replacement.
+- Data export or migration requirements.
+- What support remains, if any.
 
-Use direct language. Do not hide retirement behind "changes to availability." `unenforced`
+Use direct language. Do not hide retirement behind "changes to availability."
 
 ### Errata
 
 When published documentation or release notes contained a material error:
 
-- Identify the affected statement. `unenforced`
-- Provide the corrected fact. `unenforced`
-- Add the correction date in the release system's standard format. `enforced-by: prose/vale gspot.dates`
-- Update the canonical documentation. `unenforced`
+- Identify the affected statement.
+- Provide the corrected fact.
+- Add the correction date in the release system's standard format.
+- Update the canonical documentation.
 
-Do not silently preserve false history. `enforced-by: prose/vale gspot.present-state`
+Do not silently preserve false history.
 
 ### Datestamps
 
@@ -366,5 +366,5 @@ Use ISO dates for update markers:
 [Updated: 2026-07-15]
 ```
 
-Do not add datestamps to ordinary evergreen content. Version control already `enforced-by: prose/vale gspot.dates`
+Do not add datestamps to ordinary evergreen content. Version control already
 tracks routine edits.

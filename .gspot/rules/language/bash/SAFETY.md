@@ -13,34 +13,34 @@ security, portability, testing, debugging, and refactoring.
 
 Rules:
 
-- Check command availability before using non-standard tools. `unenforced`
+- Check command availability before using non-standard tools.
 - Check uncommon commands before long-running, destructive, publishing, or
-  error-handling paths depend on them. `enforced-by: structure/shell-safety`
-- Use fixed command names and argument arrays. `unenforced`
-- Do not build shell commands as strings. `unenforced`
-- Do not pass untrusted input to a shell. `unenforced`
-- Use `command -v` for command discovery. `enforced-by: bash/shellcheck`
+  error-handling paths depend on them.
+- Use fixed command names and argument arrays.
+- Do not build shell commands as strings.
+- Do not pass untrusted input to a shell.
+- Use `command -v` for command discovery.
 - `hash` is acceptable for simple PATH availability checks when no path output
-  is needed. `enforced-by: bash/shellcheck`
+  is needed.
 - Use `builtin` or Bash parameter expansion instead of external commands for
-  simple string and arithmetic work. `enforced-by: bash/shellcheck`
+  simple string and arithmetic work.
 - Use `grep -q` only when early pipe closure will not cause false failures under
-  `pipefail`. `enforced-by: bash/shellcheck`
-- Use `--` before user-controlled positional arguments when supported. `enforced-by: bash/shellcheck`
+  `pipefail`.
+- Use `--` before user-controlled positional arguments when supported.
 - Pass a file directly to a command instead of using `cat file | command` unless
-  concatenation or a pipeline-only interface is required. `unenforced`
+  concatenation or a pipeline-only interface is required.
 - Do not run `su -c 'command'` without the target username. Prefer `sudo` or the
-  platform's service owner tools. `enforced-by: bash/shellcheck`
-- For multiple date fields, get one timestamp, and derive fields from it. `unenforced`
+  platform's service owner tools.
+- For multiple date fields, get one timestamp, and derive fields from it.
 - Application code that invokes commands must pass an argument array to the
-  process API, not a shell string. `unenforced`
+  process API, not a shell string.
 - When shell features are genuinely required, use a static Bash snippet and pass
-  dynamic values as positional arguments. `unenforced`
+  dynamic values as positional arguments.
 - Treat remote `ssh` command strings as a last resort. Prefer a reviewed script
-  copied to the host or pass fixed commands plus deliberately quoted arguments. `enforced-by: bash/shellcheck`
-- `bash -lc` is forbidden in repository scripts. `enforced-by: bash/shellcheck`
+  copied to the host or pass fixed commands plus deliberately quoted arguments.
+- `bash -lc` is forbidden in repository scripts.
 - Do not accept a command string parameter. Accept the command and its
-  arguments after `shift`, then invoke `"$@"`. `enforced-by: bash/shellcheck`
+  arguments after `shift`, then invoke `"$@"`.
 
 Command requirement helper:
 
@@ -76,26 +76,26 @@ bash -c 'printf "%s\n" "$1"' bash "${message}"
 
 Rules:
 
-- Do not use `ps ... | grep name` as process control. `unenforced`
+- Do not use `ps ... | grep name` as process control.
 - Prefer service-manager commands, PID files owned by the script family,
-  `pgrep`/`pkill` with exact matching, or platform-native process APIs. `enforced-by: bash/shellcheck`
+  `pgrep`/`pkill` with exact matching, or platform-native process APIs.
 - Ordinary stop and restart paths stop only PIDs recorded by the owning script
-  family. `enforced-by: structure/shell-safety`
-- Treat process names as advisory. They are not an authorization boundary. `unenforced`
+  family.
+- Treat process names as advisory. They are not an authorization boundary.
 - When starting background jobs, save each PID, `wait` for each PID, and capture
-  each job's status explicitly. `enforced-by: bash/shellcheck`
+  each job's status explicitly.
 - Scripts that start background work must clean up owned child processes on
-  `INT`, `TERM`, and `EXIT`. `enforced-by: structure/shell-safety`
+  `INT`, `TERM`, and `EXIT`.
 - Keep per-job output in separate files when concurrent jobs can interleave
-  logs. `unenforced`
+  logs.
 - Avoid unbounded fan-out. When targeting many hosts or files, use an explicit
-  concurrency limit or a purpose-built tool such as Ansible or GNU Parallel. `enforced-by: structure/shell-safety`
-- `sudo command > file` redirects as the current user, not as root. `enforced-by: bash/shellcheck`
-- Globs in `sudo command /path/*` expand before `sudo` runs. `enforced-by: bash/shellcheck`
-- Use `sudo tee` for privileged file writes. `enforced-by: structure/shell-safety`
+  concurrency limit or a purpose-built tool such as Ansible or GNU Parallel.
+- `sudo command > file` redirects as the current user, not as root.
+- Globs in `sudo command /path/*` expand before `sudo` runs.
+- Use `sudo tee` for privileged file writes.
 - Use a fixed `sudo sh -c '...'` wrapper only when root-owned shell expansion or
-  redirection is genuinely required. `enforced-by: bash/shellcheck`
-- Do not put user input inside privileged shell strings. `enforced-by: structure/shell-safety`
+  redirection is genuinely required.
+- Do not put user input inside privileged shell strings.
 
 Privileged write:
 
@@ -172,20 +172,20 @@ sudo sh -c "systemctl restart ${unit_name}"
 
 Rules:
 
-- Use Bash parameter expansion for simple string edits. `unenforced`
-- Use `jq` for JSON. `enforced-by: bash/shellcheck`
-- Use `yq` or a project-owned parser for YAML when YAML structure matters. `enforced-by: bash/shellcheck`
+- Use Bash parameter expansion for simple string edits.
+- Use `jq` for JSON.
+- Use `yq` or a project-owned parser for YAML when YAML structure matters.
 - Do not parse JSON, YAML, XML, HTML, plist, or xcodebuild output with ad hoc
-  `grep | sed | awk` unless the input is controlled and the format is trivial. `enforced-by: structure/shell-script-policy`
+  `grep | sed | awk` unless the input is controlled and the format is trivial.
 - Prefer command output modes intended for machines, such as JSON, NUL, or
-  explicit format flags. `enforced-by: structure/shell-interpreter`
+  explicit format flags.
 - Avoid parsing human-oriented command output such as `ls`, pretty tables,
-  progress bars, or localized text. `enforced-by: bash/shellcheck`
-- Quote `tr` character classes and account for locale when converting case. `enforced-by: bash/shellcheck`
+  progress bars, or localized text.
+- Quote `tr` character classes and account for locale when converting case.
 - Use double quotes only when shell expansion is intended in `sed` expressions,
-  and escape replacement values correctly. `enforced-by: bash/shellcheck`
+  and escape replacement values correctly.
 - Do not parse process lists, table columns, or localized command output with
-  fixed field numbers unless the producer has a machine-readable contract. `enforced-by: structure/shell-safety`
+  fixed field numbers unless the producer has a machine-readable contract.
 
 Good JSON:
 
@@ -197,7 +197,7 @@ service_url="$(jq -r '.service.url // empty' "${config_file}")" || return 1
 }
 ```
 
-Use `awk`, `sed`, and `perl` when they are the right text-processing tool, but `enforced-by: bash/shellcheck`
+Use `awk`, `sed`, and `perl` when they are the right text-processing tool, but
 keep shell quoting clear and avoid in-place editing portability traps.
 
 macOS and GNU `sed -i` differ. Prefer temp files for committed scripts unless a
@@ -215,23 +215,23 @@ LC_COLLATE=C tr A-Z a-z
 Rules:
 
 - Use `curl --fail --show-error --silent --location` for downloads unless the
-  endpoint requires different behavior. `unenforced`
+  endpoint requires different behavior.
 - Use bounded timeouts for commands that can hang, including `ssh`, `scp`,
-  `curl`, `find` over mounted filesystems, and remote service checks. `enforced-by: bash/shellcheck`
+  `curl`, `find` over mounted filesystems, and remote service checks.
 - Prefer tool-native timeout options first, such as SSH `ConnectTimeout` and
-  curl `--connect-timeout` plus `--max-time`. `enforced-by: structure/shell-ssh-blocks`
+  curl `--connect-timeout` plus `--max-time`.
 - Wrap with `timeout` only when GNU/coreutils availability has been validated
-  for the script's runtime. macOS does not provide GNU `timeout` by default. `enforced-by: bash/shellcheck`
-- Write downloads to explicit files. `unenforced`
-- Verify checksums or signatures for executable downloads. `enforced-by: structure/shell-interpreter`
+  for the script's runtime. macOS does not provide GNU `timeout` by default.
+- Write downloads to explicit files.
+- Verify checksums or signatures for executable downloads.
 - Do not pipe network content into `bash` unless the source is pinned, trusted,
-  and there is no safer package manager or checksum-based flow. `unenforced`
-- Do not print response bodies that may contain secrets. `enforced-by: secrets/gitleaks`
+  and there is no safer package manager or checksum-based flow.
+- Do not print response bodies that may contain secrets.
 - Use retries only for known retryable network, provider, or service failures,
-  with bounded attempts, delay, and attempt-count logging. `unenforced`
+  with bounded attempts, delay, and attempt-count logging.
 - Do not retry corrupt data, syntax errors, invalid credentials, missing
-  required files, failed validation, or permission problems. `enforced-by: secrets/gitleaks`
-- Separate download, verification, and execution into visible steps. `unenforced`
+  required files, failed validation, or permission problems.
+- Separate download, verification, and execution into visible steps.
 
 Good:
 
@@ -281,18 +281,18 @@ bash "${installer}" --version "${tool_version}"
 Rules:
 
 - Read configuration and secrets from the caller environment in one place: the top of the
-  entrypoint or the configuration library. Workflow functions receive values as arguments. `enforced-by: structure/shell-interpreter`
+  entrypoint or the configuration library. Workflow functions receive values as arguments.
 - Read secrets from the caller environment, a secret manager, or documented
-  ignored env files. `enforced-by: secrets/gitleaks`
-- Validate required secrets at the boundary. `enforced-by: secrets/gitleaks`
+  ignored env files.
+- Validate required secrets at the boundary.
 - Do not echo, trace, write, commit, or include secrets in command-line
-  arguments when the process table can expose them. `enforced-by: secrets/gitleaks`
-- Prefer files or stdin for tools that accept sensitive values that way. `unenforced`
-- Do not use `set -x` around secret handling. `enforced-by: structure/shell-interpreter`
+  arguments when the process table can expose them.
+- Prefer files or stdin for tools that accept sensitive values that way.
+- Do not use `set -x` around secret handling.
 - Do not write `.env` files from scripts unless the script owns that lifecycle
-  and the path is ignored. `enforced-by: secrets/gitleaks`
-- Do not include secret values in failure messages. `enforced-by: secrets/gitleaks`
-- Redact secrets before logging external command output. `enforced-by: secrets/gitleaks`
+  and the path is ignored.
+- Do not include secret values in failure messages.
+- Redact secrets before logging external command output.
 
 Required env helper:
 
@@ -323,33 +323,33 @@ fi
 
 Rules:
 
-- Use `mktemp` or `mktemp -d`. `enforced-by: bash/shellcheck`
+- Use `mktemp` or `mktemp -d`.
 - Put temporary files under the system temp directory or an explicit project
-  temp directory. `unenforced`
-- Quote temp paths. `enforced-by: bash/shellcheck`
-- Register cleanup immediately after creation. `unenforced`
-- Use `trap` carefully and restore traps when needed. `enforced-by: bash/shellcheck`
-- Do not use predictable names in `/tmp`. `unenforced`
+  temp directory.
+- Quote temp paths.
+- Register cleanup immediately after creation.
+- Use `trap` carefully and restore traps when needed.
+- Do not use predictable names in `/tmp`.
 - Download, copy, or generate into a temporary file first, validate it, then
-  replace the destination with `mv`. `unenforced`
+  replace the destination with `mv`.
 - Validate structured data with the real parser before replacing known-good
-  data, such as `jq` for JSON. `enforced-by: bash/shellcheck`
+  data, such as `jq` for JSON.
 - Remove failed or corrupt temporary artifacts unless the script explicitly
-  documents that they are kept for inspection. `unenforced`
+  documents that they are kept for inspection.
 - Acquire locks atomically with `mkdir` lock directories or `noclobber`
-  redirection. Do not check with `test` and then create the lock later. `enforced-by: bash/shellcheck`
-- For lock directories, write the owner PID, and recover stale locks explicitly. `enforced-by: structure/shell-safety`
-- Do not delete broad globs under variable paths without validation. `enforced-by: bash/shellcheck`
+  redirection. Do not check with `test` and then create the lock later.
+- For lock directories, write the owner PID, and recover stale locks explicitly.
+- Do not delete broad globs under variable paths without validation.
 - Full cleanup is opt-in. Stop commands preserve environments, caches, models,
-  and unrelated runtime resources by default. `enforced-by: structure/shell-safety`
+  and unrelated runtime resources by default.
 - Cleanup must be limited to repository-owned paths and PIDs. Do not delete
   whole home cache roots, arbitrary dynamic cache roots, or shared `/tmp`
-  families. `enforced-by: structure/shell-safety`
+  families.
 - Before `rm -rf`, canonicalize or structurally validate the target against an
   explicit owner root. Reject empty paths, `/`, the repository root itself,
-  `$HOME`, and any path outside the declared owner. `enforced-by: bash/shellcheck`
+  `$HOME`, and any path outside the declared owner.
 - Do not use `|| true` on destructive commands or required installation,
-  publishing, quantization, engine-build, or runtime commands. `enforced-by: structure/shell-safety`
+  publishing, quantization, engine-build, or runtime commands.
 
 Good:
 
@@ -421,22 +421,22 @@ remove_build_dir() {
 
 Never:
 
-- use `eval` with dynamic input; `enforced-by: bash/shellcheck`
-- use `ERR` traps as a substitute for explicit status checks; `enforced-by: bash/shellcheck`
-- build shell commands from user input; `unenforced`
-- pass user input to `bash -c`; `enforced-by: bash/shellcheck`
-- parse untrusted arithmetic expressions with `(( ... ))`; `enforced-by: bash/shellcheck`
+- use `eval` with dynamic input;
+- use `ERR` traps as a substitute for explicit status checks;
+- build shell commands from user input;
+- pass user input to `bash -c`;
+- parse untrusted arithmetic expressions with `(( ... ))`;
 - use unsanitized values as variable names, associative array keys in arithmetic
   contexts, model variants, repository names, remote paths, or remote shell
-  fragments; `enforced-by: structure/shell-ssh-blocks`
-- use unquoted variables in paths or arguments; `enforced-by: bash/shellcheck`
-- run destructive commands against unchecked variables; `enforced-by: structure/shell-safety`
-- parse `ls`; `enforced-by: bash/shellcheck`
-- use `find -exec sh -c '...'` with `{}` embedded in the script string; `unenforced`
-- use `xargs` without `-0` for filenames; `enforced-by: bash/shellcheck`
-- pipe unverified network data to an interpreter; `unenforced`
-- log secrets; `enforced-by: secrets/gitleaks`
-- keep debug tracing enabled around credentials. `enforced-by: secrets/gitleaks`
+  fragments;
+- use unquoted variables in paths or arguments;
+- run destructive commands against unchecked variables;
+- parse `ls`;
+- use `find -exec sh -c '...'` with `{}` embedded in the script string;
+- use `xargs` without `-0` for filenames;
+- pipe unverified network data to an interpreter;
+- log secrets;
+- keep debug tracing enabled around credentials.
 
 Safe `find -exec sh -c`:
 
@@ -457,21 +457,21 @@ into code.
 
 Rules:
 
-- Default to Bash 3.2-compatible syntax unless runtime support is checked. `enforced-by: structure/shell-interpreter`
-- Every file header declares the supported platform and minimum Bash version. `enforced-by: structure/shell-interpreter`
+- Default to Bash 3.2-compatible syntax unless runtime support is checked.
+- Every file header declares the supported platform and minimum Bash version.
 - The declared contract and syntax must agree. Bash 4+ features such as
   `mapfile`, `readarray`, associative arrays, and `${value,,}` require a
-  checked Bash 4+ entry boundary; otherwise they are forbidden. `enforced-by: bash/shellcheck`
+  checked Bash 4+ entry boundary; otherwise they are forbidden.
 - Account for macOS/BSD and GNU differences in `sed`, `date`, `readlink`,
-  `mktemp`, `stat`, `xargs`, and `grep`. `enforced-by: bash/shellcheck`
-- Prefer project-provided wrappers for platform-specific behavior. `unenforced`
-- Do not use `realpath` unless the target platform guarantees it. `enforced-by: bash/shellcheck`
-- Use `pwd -P` after `cd` for physical paths when symlinks matter. `enforced-by: bash/shellcheck`
-- Avoid `sed -i` unless platform-specific behavior is handled. `enforced-by: bash/shellcheck`
-- Avoid `date` parsing that differs between GNU and BSD. `enforced-by: bash/shellcheck`
-- Do not assume `/bin/bash` is a modern Bash on macOS. `enforced-by: structure/shell-interpreter`
-- Do not use Linux-only utilities in macOS-compatible scripts without checks. `enforced-by: structure/shell-script-policy`
-- Do not assume CI has the same PATH as a developer shell. `enforced-by: structure/shell-interpreter`
+  `mktemp`, `stat`, `xargs`, and `grep`.
+- Prefer project-provided wrappers for platform-specific behavior.
+- Do not use `realpath` unless the target platform guarantees it.
+- Use `pwd -P` after `cd` for physical paths when symlinks matter.
+- Avoid `sed -i` unless platform-specific behavior is handled.
+- Avoid `date` parsing that differs between GNU and BSD.
+- Do not assume `/bin/bash` is a modern Bash on macOS.
+- Do not use Linux-only utilities in macOS-compatible scripts without checks.
+- Do not assume CI has the same PATH as a developer shell.
 
 Portable-ish script directory:
 
@@ -487,42 +487,42 @@ small verified Bash helper or product-owned application code.
 
 Rules:
 
-- Do not create Bash test suites. `enforced-by: structure/shell-script-policy`
+- Do not create Bash test suites.
 - Do not add Bats, shunit2, ShellSpec, custom Bash harnesses, PATH mock wrappers,
-  or sample directories for Bash scripts. `enforced-by: structure/shell-script-policy`
+  or sample directories for Bash scripts.
 - Do not add test-only branches, test-only flags, or test-only dependency
-  injection to Bash scripts. `enforced-by: structure/shell-branches`
-- Do not create sample files only to exercise Bash behavior. `enforced-by: structure/shell-script-policy`
+  injection to Bash scripts.
+- Do not create sample files only to exercise Bash behavior.
 - Do not move Bash orchestration into another scripting language only to make it
-  easier to test. `enforced-by: structure/shell-script-policy`
-- Bash verification is static review, ShellCheck, shfmt, and `bash -n`. `enforced-by: bash/shellcheck`
+  easier to test.
+- Bash verification is static review, ShellCheck, shfmt, and `bash -n`.
 - Runtime trial runs are allowed only when they are part of the requested
   workflow or needed to verify a real publish/local command, not as a new test
-  suite. `unenforced`
+  suite.
 
 ## Debugging Bash
 
 Rules:
 
 - Start with the exact error message and the line it names. Do not guess before
-  checking the command Bash actually reports. `unenforced`
-- Use `bash -n` and ShellCheck before tracing. `enforced-by: bash/shellcheck`
+  checking the command Bash actually reports.
+- Use `bash -n` and ShellCheck before tracing.
 - Reduce the failing script to the smallest command block that reproduces the
-  problem. `unenforced`
+  problem.
 - Use `printf '%q\n'` to expose whitespace, CRLF, quoting, and invisible
-  characters in suspicious values. `enforced-by: bash/shellcheck`
+  characters in suspicious values.
 - Use `bash -x script.sh`, a local `set -x` block, or `set -v` only while
   diagnosing. `set -v` prints input as Bash reads it and can expose surprising
-  line continuations. `enforced-by: structure/shell-interpreter`
+  line continuations.
 - Set `PS4` to include file, line, and function context when tracing complex
-  scripts. `enforced-by: structure/shell-safety`
-- Never trace secret handling. `enforced-by: secrets/gitleaks`
-- Do not commit broad `set -x`, `trap DEBUG`, or interactive stepping code. `enforced-by: structure/shell-interpreter`
+  scripts.
+- Never trace secret handling.
+- Do not commit broad `set -x`, `trap DEBUG`, or interactive stepping code.
 - `BASH_XTRACEFD` requires newer Bash than the project default. Gate it with a
-  version check before use. `enforced-by: structure/shell-interpreter`
+  version check before use.
 - Debug helpers must preserve or explicitly return the script status they are
   diagnosing. A helper that prints diagnostics must not accidentally turn a
-  failure into success. `enforced-by: structure/shell-safety`
+  failure into success.
 
 Tracing pattern:
 
@@ -566,36 +566,36 @@ shellcheck path/to/script.sh
 Common failure causes:
 
 - `unexpected EOF`: unmatched quotes, unterminated here documents, missing
-  `fi`, `done`, `esac`, or a CRLF line ending hiding the delimiter. `enforced-by: bash/shellcheck`
+  `fi`, `done`, `esac`, or a CRLF line ending hiding the delimiter.
 - `too many arguments`: unquoted expansion inside `[ ... ]`, or data that
-  belongs in `[[ ... ]]`. `enforced-by: bash/shellcheck`
+  belongs in `[[ ... ]]`.
 - `event not found`: interactive history expansion from `!`; quote the value or
-  disable history expansion in the interactive snippet. `enforced-by: bash/shellcheck`
+  disable history expansion in the interactive snippet.
 - Command runs differently than expected: alias, function, shell builtin, or
-  PATH collision. Check with `type -a command_name`. `unenforced`
-- Script fails before the shebang: UTF-8 BOM or CRLF line endings. `enforced-by: structure/shell-interpreter`
+  PATH collision. Check with `type -a command_name`.
+- Script fails before the shebang: UTF-8 BOM or CRLF line endings.
 
 ## Refactoring existing scripts
 
 When fixing or refactoring Bash:
 
-1. Read the whole script and sourced libraries first. `enforced-by: structure/shell-interpreter`
-2. Identify the caller contract: local dev, CI, remote host, or package script. `enforced-by: structure/shell-ssh-blocks`
-3. Preserve behavior before changing style. `enforced-by: structure/shell-script-policy`
-4. Fix quoting and argument arrays near the touched logic. `enforced-by: bash/shellcheck`
-5. Add explicit checks around dangerous commands. `enforced-by: structure/shell-script-policy`
+1. Read the whole script and sourced libraries first.
+2. Identify the caller contract: local dev, CI, remote host, or package script.
+3. Preserve behavior before changing style.
+4. Fix quoting and argument arrays near the touched logic.
+5. Add explicit checks around dangerous commands.
 6. Move duplicated shell helpers into the local script family only when the
-   helper has a real shared contract. `enforced-by: structure/shell-script-policy`
+   helper has a real shared contract.
 7. Do not convert a large script in one pass unless the task is explicitly a
-   script cleanup. `enforced-by: structure/shell-script-policy`
+   script cleanup.
 8. Do not change shebangs across a script family unless runtime compatibility is
-   verified. `enforced-by: structure/shell-interpreter`
+   verified.
 9. Run the narrow shell lint/format command first, then broader checks when the
-   owning rule file requires them. `enforced-by: structure/shell-script-policy`
+   owning rule file requires them.
 
 When a script is too complex:
 
-- keep the Bash wrapper thin; `enforced-by: structure/shell-script-policy`
-- move parsing or business logic into product-owned application code; `unenforced`
+- keep the Bash wrapper thin;
+- move parsing or business logic into product-owned application code;
 - keep command invocation and environment validation in Bash only if that is the
-  simplest operational boundary. `enforced-by: structure/shell-script-policy`
+  simplest operational boundary.

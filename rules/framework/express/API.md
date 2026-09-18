@@ -16,7 +16,7 @@ Domain ownership comes before technical folder categories. Express routes are
 transport adapters, not business logic containers. Zod contracts are the runtime
 boundary for public input. Platform integrations are isolated behind `platform/`.
 
-Do not add speculative abstractions. Do not add defensive logic for impossible `unenforced`
+Do not add speculative abstractions. Do not add defensive logic for impossible
 states.
 
 ```text
@@ -55,11 +55,11 @@ validated values with `getValidatedRequest()`.
 
 Rules:
 
-- Do not read from raw `req.body`, `req.query`, or `req.params` when validated data exists. `enforced-by: security/semgrep`
-- Do not duplicate validation manually in handlers. `unenforced`
-- Do not use type assertions to pretend raw input is valid. `enforced-by: security/semgrep`
-- Validation errors use the structured error response envelope. `enforced-by: security/semgrep`
-- Request validation happens before route business logic. `enforced-by: security/semgrep`
+- Do not read from raw `req.body`, `req.query`, or `req.params` when validated data exists.
+- Do not duplicate validation manually in handlers.
+- Do not use type assertions to pretend raw input is valid.
+- Validation errors use the structured error response envelope.
+- Request validation happens before route business logic.
 
 ```ts
 // Bad.
@@ -81,9 +81,9 @@ Public responses use `sendOk()` and `sendError()`. Successful responses use
 
 Rules:
 
-- Endpoint-specific response mapping stays with the endpoint or module owner. `unenforced`
-- OpenAPI response schemas must match the actual envelope shape. `enforced-by: express/openapi-fresh`
-- Validate outbound payloads only when the endpoint is high-risk or has a history of drift. `enforced-by: security/semgrep`
+- Endpoint-specific response mapping stays with the endpoint or module owner.
+- OpenAPI response schemas must match the actual envelope shape.
+- Validate outbound payloads only when the endpoint is high-risk or has a history of drift.
 
 ```ts
 function buildReportResponse(result: ReportSuccess): ReportHttpResponse {
@@ -108,26 +108,26 @@ access.
 Rules:
 
 - Use Helmet and security middleware unless an explicit security task changes
-  that policy. `enforced-by: security/semgrep`
-- Terminate TLS at nginx, the load balancer, or another explicit edge owner. Do not add ad hoc HTTPS setup inside Express unless the deployment architecture requires Node to terminate TLS. `enforced-by: security/semgrep`
-- Preserve security headers such as HSTS, `X-Content-Type-Options`, frame policy, referrer policy, and CSP where relevant. `enforced-by: security/semgrep`
-- Validate body, query, params, and content type before business logic. `enforced-by: security/semgrep`
-- Treat authorization as product behavior when the rule depends on domain state. `unenforced`
-- Treat ownership checks as transport middleware only when the rule is a reusable HTTP boundary. `unenforced`
-- Use `crypto.timingSafeEqual()` for HMAC, webhook, or token comparisons where timing leaks matter. `unenforced`
-- Use `crypto.randomBytes()` or `crypto.randomUUID()` for security-sensitive random values. Do not use `Math.random()` for tokens, nonces, secrets, or reset codes. `enforced-by: security/semgrep`
-- Never use `eval()`, `new Function()`, string-based timers, or dynamic code generation. `enforced-by: security/semgrep`
-- Never resolve filesystem paths directly from user input. `enforced-by: security/semgrep`
-- Never build dynamic imports, module paths, shell commands, or child-process arguments from user input. `enforced-by: security/semgrep`
-- Avoid `child_process` in request paths. When unavoidable, use fixed commands, argument arrays, least privilege, and no shell interpolation. `enforced-by: security/semgrep`
-- Do not trust provider callbacks or webhooks without signature, token, or ownership verification. `enforced-by: security/semgrep`
-- Do not redirect to user-supplied URLs unless the target is relative or explicitly allowlisted. `enforced-by: security/semgrep`
-- Do not introduce cookie sessions unless this API becomes the session owner. If cookies are introduced, set `httpOnly`, `secure`, `sameSite`, explicit `maxAge`, and a non-default cookie name. `enforced-by: security/semgrep`
-- Do not add local in-memory JWT revocation or blacklists. If this API owns token revocation, use short-lived access tokens and a shared external revocation store. `enforced-by: security/semgrep`
-- Do not ship default credentials, example admin users, or development-only access paths. `enforced-by: security/semgrep`
-- Do not pre-escape JSON payload fields. If this API emits HTML, escape output by HTML context at the rendering boundary. `enforced-by: security/semgrep`
-- Do not add maintenance endpoints unless they are private, authenticated, and necessary. `enforced-by: security/semgrep`
-- Prefer external observability over ad hoc debug endpoints. `enforced-by: security/semgrep`
+  that policy.
+- Terminate TLS at nginx, the load balancer, or another explicit edge owner. Do not add ad hoc HTTPS setup inside Express unless the deployment architecture requires Node to terminate TLS.
+- Preserve security headers such as HSTS, `X-Content-Type-Options`, frame policy, referrer policy, and CSP where relevant.
+- Validate body, query, params, and content type before business logic.
+- Treat authorization as product behavior when the rule depends on domain state.
+- Treat ownership checks as transport middleware only when the rule is a reusable HTTP boundary.
+- Use `crypto.timingSafeEqual()` for HMAC, webhook, or token comparisons where timing leaks matter.
+- Use `crypto.randomBytes()` or `crypto.randomUUID()` for security-sensitive random values. Do not use `Math.random()` for tokens, nonces, secrets, or reset codes.
+- Never use `eval()`, `new Function()`, string-based timers, or dynamic code generation.
+- Never resolve filesystem paths directly from user input.
+- Never build dynamic imports, module paths, shell commands, or child-process arguments from user input.
+- Avoid `child_process` in request paths. When unavoidable, use fixed commands, argument arrays, least privilege, and no shell interpolation.
+- Do not trust provider callbacks or webhooks without signature, token, or ownership verification.
+- Do not redirect to user-supplied URLs unless the target is relative or explicitly allowlisted.
+- Do not introduce cookie sessions unless this API becomes the session owner. If cookies are introduced, set `httpOnly`, `secure`, `sameSite`, explicit `maxAge`, and a non-default cookie name.
+- Do not add local in-memory JWT revocation or blacklists. If this API owns token revocation, use short-lived access tokens and a shared external revocation store.
+- Do not ship default credentials, example admin users, or development-only access paths.
+- Do not pre-escape JSON payload fields. If this API emits HTML, escape output by HTML context at the rendering boundary.
+- Do not add maintenance endpoints unless they are private, authenticated, and necessary.
+- Prefer external observability over ad hoc debug endpoints.
 
 ```ts
 // Bad: user input controls code execution.
@@ -163,30 +163,30 @@ if (verifyWebhookSignature({ signature, payload, secret })) {
 
 ## Errors
 
-Throw `Error` instances. Use HTTP-aware errors only at HTTP-aware boundaries, and `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
+Throw `Error` instances. Use HTTP-aware errors only at HTTP-aware boundaries, and
 use platform-specific typed errors for platform failures.
 
 Rules:
 
-- Never throw strings. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
-- Never throw plain objects. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
-- Do not catch just to rethrow unchanged. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
-- Distinguish expected operational errors from programmer errors. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
-- Expected operational errors become typed results or typed errors. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
-- Unknown programmer errors are logged, reported, and returned as generic 500 responses. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
-- Do not convert internal errors to detailed client responses. `unenforced`
-- Central error middleware owns final formatting. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
+- Never throw strings.
+- Never throw plain objects.
+- Do not catch just to rethrow unchanged.
+- Distinguish expected operational errors from programmer errors.
+- Expected operational errors become typed results or typed errors.
+- Unknown programmer errors are logged, reported, and returned as generic 500 responses.
+- Do not convert internal errors to detailed client responses.
+- Central error middleware owns final formatting.
 - Error middleware delegates logging, reporting, and crash policy to the
-  reporting/runtime owner. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
-- Error middleware never sends emails, mutates recovery state, or decides process lifetime. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
-- Use `notFoundRoute` for 404. `enforced-by: express/openapi-fresh`
-- Route handlers may convert expected module failures to `sendError()`. `enforced-by: express/openapi-fresh`
+  reporting/runtime owner.
+- Error middleware never sends emails, mutates recovery state, or decides process lifetime.
+- Use `notFoundRoute` for 404.
+- Route handlers may convert expected module failures to `sendError()`.
 - Client-visible messages must be generic and must not leak table names, column
-  names, stack traces, file paths, provider internals, or raw IDs. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
-- Startup failures fail fast before the server accepts traffic. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
+  names, stack traces, file paths, provider internals, or raw IDs.
+- Startup failures fail fast before the server accepts traffic.
 - Fatal runtime errors go through the runtime shutdown path so the
-  orchestrator can restart the container. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
-- Process-level `unhandledRejection` and `uncaughtException` fallbacks are last-resort guards. In deployed environments, they must report, mark readiness false/draining, shut down, and let the orchestrator restart the process. Do not continue serving after an untrusted process-level failure. `enforced-by: typescript/eslint @typescript-eslint/only-throw-error`
+  orchestrator can restart the container.
+- Process-level `unhandledRejection` and `uncaughtException` fallbacks are last-resort guards. In deployed environments, they must report, mark readiness false/draining, shut down, and let the orchestrator restart the process. Do not continue serving after an untrusted process-level failure.
 
 ```ts
 // Bad.
@@ -251,12 +251,12 @@ metadata.
 
 Rules:
 
-- Response payload names use API-facing names intentionally. `enforced-by: naming/identifiers`
+- Response payload names use API-facing names intentionally.
 - Do not leak provider or database field names unless the public API contract is
-  explicitly provider-shaped. `enforced-by: typescript/eslint zod/require-strict`
+  explicitly provider-shaped.
 - Map provider/database shapes into response shapes at the endpoint or module
-  owner. `enforced-by: naming/identifiers`
-- Public envelope fields stay stable. `enforced-by: express/openapi-fresh`
+  owner.
+- Public envelope fields stay stable.
 
 Bad:
 
@@ -290,19 +290,19 @@ function buildSubmitOrderResponse(result: SubmitOrderSuccess): SubmitOrderHttpRe
 Rules:
 
 - Keep domain objects independent from storage or provider naming when shapes
-  differ. `enforced-by: naming/identifiers`
-- Cross-module functions use stable names and domain-shaped parameters. `unenforced`
+  differ.
+- Cross-module functions use stable names and domain-shaped parameters.
 - Application-owned database, cache, storage, SDK, and remote API retrieval
   functions use `get`. Multiplicity, pagination, and optionality belong in the
-  noun and type, not in alternate verbs. `enforced-by: naming/identifiers`
+  noun and type, not in alternate verbs.
 - Application-owned database and storage mutation functions use `set`, `insert`, `update`, or
   `delete`. `set` replaces a supplied value, `insert` adds a row or item, `update` changes one, and
-  `delete` destroys it. `enforced-by: naming/identifiers`
-- Database row names stay inside the platform database boundary. `unenforced`
+  `delete` destroys it.
+- Database row names stay inside the platform database boundary.
 - Use `dbRow` only inside database boundary code when naming a database wire
-  shape. `enforced-by: naming/identifiers`
+  shape.
 - Do not concatenate SQL, RPC names, table names, column names, filters, or
-  order clauses from user input. `enforced-by: naming/identifiers`
+  order clauses from user input.
 
 Bad:
 
@@ -329,10 +329,10 @@ const activeOrder = await getActiveOrder(orderId);
 Rules:
 
 - Environment variable names are external deployment contracts and use
-  `UPPER_SNAKE_CASE`. `enforced-by: typescript/eslint zod/require-strict`
-- Config module values use concrete domain names. `enforced-by: typescript/eslint gspot/env-access-owner`
-- Do not add a hierarchy or generic config owner for one value. `enforced-by: typescript/eslint gspot/env-access-owner`
-- Do not read environment values outside the environment owner. `enforced-by: typescript/eslint gspot/env-access-owner`
+  `UPPER_SNAKE_CASE`.
+- Config module values use concrete domain names.
+- Do not add a hierarchy or generic config owner for one value.
+- Do not read environment values outside the environment owner.
 
 Bad:
 
@@ -355,15 +355,15 @@ export const providerConfig = {
 
 Rules:
 
-- Event names and log object keys are operational contracts. `enforced-by: typescript/eslint zod/require-strict`
-- Keep event names stable. `enforced-by: typescript/eslint no-restricted-syntax`
-- Keep log object keys stable. `enforced-by: typescript/eslint no-restricted-syntax`
-- Renaming log fields is an observability contract change. `enforced-by: typescript/eslint zod/require-strict`
-- Put searchable values in structured fields, not dynamic message strings. `enforced-by: typescript/eslint no-restricted-syntax`
+- Event names and log object keys are operational contracts.
+- Keep event names stable.
+- Keep log object keys stable.
+- Renaming log fields is an observability contract change.
+- Put searchable values in structured fields, not dynamic message strings.
 - Use stable names for request IDs, correlation IDs, provider request IDs,
-  operation IDs, resource IDs, and safe user IDs. `enforced-by: typescript/eslint no-restricted-syntax`
+  operation IDs, resource IDs, and safe user IDs.
 - Do not put provider messages, user text, serialized payloads, or raw IDs into
-  event names. `enforced-by: typescript/eslint no-restricted-syntax`
+  event names.
 
 Bad:
 
@@ -388,25 +388,25 @@ logger.info(
 
 ## Logging
 
-Use the central logger from the telemetry boundary. HTTP request and response logging belongs to `unenforced`
+Use the central logger from the telemetry boundary. HTTP request and response logging belongs to
 `pino-http` middleware; feature code logs product and provider events.
 
 Rules:
 
-- Application logs go to stdout or stderr through Pino. `enforced-by: typescript/eslint no-console`
-- Keep Pino logger configuration, redaction, serializers, timestamp and level formatting, and transports in the central telemetry or app assembly owner. Do not configure Pino from feature modules. `enforced-by: typescript/eslint no-console`
-- Keep Pino's standard levels: `debug`, `info`, `warn`, `error`, and `fatal`. `enforced-by: typescript/eslint no-console`
-- Put searchable values in the first object argument; keep the message string stable. `unenforced`
-- Do not instantiate new Pino loggers in modules. `enforced-by: typescript/eslint no-console`
-- Do not use `pino-pretty` in deployed environments. `enforced-by: typescript/eslint no-console`
+- Application logs go to stdout or stderr through Pino.
+- Keep Pino logger configuration, redaction, serializers, timestamp and level formatting, and transports in the central telemetry or app assembly owner. Do not configure Pino from feature modules.
+- Keep Pino's standard levels: `debug`, `info`, `warn`, `error`, and `fatal`.
+- Put searchable values in the first object argument; keep the message string stable.
+- Do not instantiate new Pino loggers in modules.
+- Do not use `pino-pretty` in deployed environments.
 - Do not add Pino transports, OpenTelemetry log forwarding, or observability-vendor wiring without
   an explicit observability task. That task defines the service name, trace correlation, collector
   and exporter configuration, schema, redaction, and deployment ownership.
-  `enforced-by: typescript/eslint no-console`
-- Use the reporting owner for exception capture. `enforced-by: typescript/eslint no-console`
-- Use the `err` field for `Error` objects so Pino serializes errors consistently. `enforced-by: typescript/eslint no-console`
-- Do not log full `req`, `res`, headers, cookies, request bodies, response bodies, provider responses, or DB rows outside the dedicated HTTP logger or reporting owner. `enforced-by: security/semgrep`
-- Request-path logs include stable correlation fields when available: `requestId`, domain operation IDs, provider `requestId`, and `userId` only when it is safe and needed. `enforced-by: typescript/eslint no-console`
+
+- Use the reporting owner for exception capture.
+- Use the `err` field for `Error` objects so Pino serializes errors consistently.
+- Do not log full `req`, `res`, headers, cookies, request bodies, response bodies, provider responses, or DB rows outside the dedicated HTTP logger or reporting owner.
+- Request-path logs include stable correlation fields when available: `requestId`, domain operation IDs, provider `requestId`, and `userId` only when it is safe and needed.
 
 ```ts
 // Bad: a dynamic message hides searchable fields.

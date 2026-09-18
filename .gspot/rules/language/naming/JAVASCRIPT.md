@@ -13,38 +13,38 @@ plain JavaScript tooling files.
 Project decisions:
 
 - Prefer TypeScript for app code. Use JavaScript naming rules for tooling,
-  config, migration support, quality scripts, and ecosystem-owned JavaScript. `unenforced`
+  config, migration support, quality scripts, and ecosystem-owned JavaScript.
 - Use `kebab-case` source filenames, even though some external guides also allow
-  underscores. `enforced-by: naming/identifiers`
-- Prefer named exports in hand-written modules. `unenforced`
+  underscores.
+- Prefer named exports in hand-written modules.
 - Use default exports only for ecosystem files that require them or external
-  packages that expose them. `unenforced`
-- Do not create static container classes or nested namespaces for organization. `unenforced`
+  packages that expose them.
+- Do not create static container classes or nested namespaces for organization.
 
 ## JavaScript case rules
 
 Rules:
 
-- Classes, constructor values, and React components use `PascalCase`. `enforced-by: naming/identifiers`
-- JSDoc record, interface, enum item, and typedef names use `PascalCase`. `enforced-by: naming/identifiers`
+- Classes, constructor values, and React components use `PascalCase`.
+- JSDoc record, interface, enum item, and typedef names use `PascalCase`.
 - Functions, methods, variables, parameters, properties, and module aliases use
-  `camelCase`. `enforced-by: naming/identifiers`
+  `camelCase`.
 - A module-level `const` bound to a literal or a frozen object is `UPPER_SNAKE_CASE`. Every
-  other binding is `camelCase`. `enforced-by: naming/identifiers`
-- JSDoc enum members use `UPPER_SNAKE_CASE`. `unenforced`
-- Source filenames use `kebab-case` unless an ecosystem tool owns the filename. `enforced-by: naming/identifiers`
-- Do not use default exports unless an ecosystem file requires them. `unenforced`
-- Do not use namespaces or static classes as containers. `unenforced`
+  other binding is `camelCase`.
+- JSDoc enum members use `UPPER_SNAKE_CASE`.
+- Source filenames use `kebab-case` unless an ecosystem tool owns the filename.
+- Do not use default exports unless an ecosystem file requires them.
+- Do not use namespaces or static classes as containers.
 - Use ASCII identifier names. Keep non-ASCII characters in strings or comments
-  unless an external API requires otherwise. `unenforced`
-- Do not abbreviate by deleting letters from a word. `unenforced`
+  unless an external API requires otherwise.
+- Do not abbreviate by deleting letters from a word.
 - Do not use a trailing underscore to signal privacy; use module scope or the
-  language/framework visibility mechanism available in that file. `enforced-by: naming/identifiers`
+  language/framework visibility mechanism available in that file.
 - Short one-letter local names are acceptable only in tiny scopes where the role
-  is conventional and obvious, such as `i` in a small loop. `enforced-by: naming/identifiers`
+  is conventional and obvious, such as `i` in a small loop.
 - `handle` starts a name only for a DOM or framework event callback (`handleClick`). Never
-  `Handler` as a type suffix. `enforced-by: naming/identifiers`
-- Directories are kebab-case. Test files are `<name>.test.js`, never `.spec`. `enforced-by: naming/identifiers`
+  `Handler` as a type suffix.
+- Directories are kebab-case. Test files are `<name>.test.js`, never `.spec`.
 
 Bad:
 
@@ -77,15 +77,15 @@ export { UserRepository, buildUser };
 Rules:
 
 - Namespace import aliases use `camelCase` derived from the imported filename or
-  clear package name. `enforced-by: naming/identifiers`
-- Named imports keep their exported name unless a collision forces an alias. `unenforced`
+  clear package name.
+- Named imports keep their exported name unless a collision forces an alias.
 - If aliasing a named import is required, use a domain or path component that
-  explains the collision. `unenforced`
+  explains the collision.
 - Default import names follow the identifier type being imported, but default
-  imports are limited to ecosystem modules that require them. `unenforced`
-- Named exports keep naming consistent across import sites. `unenforced`
+  imports are limited to ecosystem modules that require them.
+- Named exports keep naming consistent across import sites.
 - Do not export mutable variables as the public contract. Export functions or an
-  item with clearly named mutable fields when mutation is intentional. `unenforced`
+  item with clearly named mutable fields when mutation is intentional.
 
 Bad:
 

@@ -57,11 +57,11 @@ lib = ["ESNext"]
 
 [tools.eslint]
 import_style = { "**/*" = "ts" }
-script_files = [ "packages/npm/**", "packages/cli/build.ts", "packages/cli/publish.ts", "packages/eslint-plugin/build.ts", "docs/generate.ts", "packages/cli/scripts/**" ]
+script_files = [ "packages/npm/**", "packages/cli/build.ts", "packages/cli/publish.ts", "packages/eslint-plugin/build.ts", "docs/generate.ts" ]
 globals = { "packages/npm/**" = "commonjs" }
 
 [tools.knip]
-entry = [ "**/build.ts", "**/publish.ts", "packages/cli/scripts/*.ts", "packages/npm/gspot/gspot.js", "docs/generate.ts" ]
+entry = [ "**/build.ts", "**/publish.ts", "packages/npm/gspot/gspot.js", "docs/generate.ts" ]
 ignore_dependencies = [ { name = "verdaccio", reason = "The release test starts it through bunx, which knip cannot see." }, { name = "tree-sitter-bash", reason = "The grammar WASM file is read from the package, not imported." }, { name = "tree-sitter-css", reason = "The grammar WASM file is read from the package, not imported." }, { name = "tree-sitter-html", reason = "The grammar WASM file is read from the package, not imported." }, { name = "tree-sitter-javascript", reason = "The grammar WASM file is read from the package, not imported." }, { name = "tree-sitter-python", reason = "The grammar WASM file is read from the package, not imported." }, { name = "tree-sitter-typescript", reason = "The grammar WASM file is read from the package, not imported." } ]
 
 [structure]

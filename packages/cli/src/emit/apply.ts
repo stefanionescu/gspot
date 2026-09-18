@@ -14,7 +14,6 @@ import { hasPackagePins, emitAll } from '#cli/emit/targets.ts';
 import { markExecutable } from '#cli/platform/executable-bit.ts';
 import { openSession, everyManifest } from '#cli/run/session.ts';
 import { hasPackages, installPackages } from '#cli/prose/vale.ts';
-import { CHECK_IDS, PRESET_IDS } from '#config/architecture-ids.ts';
 import { isLefthookHeld, usesLefthook } from '#cli/emit/lefthook.ts';
 import { installHooksPath, removeHooksPath } from '#cli/emit/hooks.ts';
 import { assetPath, listAssets, readAsset } from '#cli/platform/assets.ts';
@@ -26,7 +25,6 @@ const READ_ONLY_MODE = 0o444;
 const GSPOT_DIRECTORY = '.gspot/';
 const RULES_PREFIX = 'rules/';
 const VALE_CONFIG = 'prose/vale.ini';
-const PERCENT = 100;
 
 function existingText(full: string): string {
     return existsSync(full) ? readFileSync(full, 'utf8') : '';
@@ -113,15 +111,13 @@ function rulesReport(session: Session): RulesLintReport {
     const config = assetPath(VALE_CONFIG);
     const binary = locateTool(session.root, 'vale');
     const vale = config === undefined || binary === undefined ? {} : { vale: { binary, config } };
-    return lintRules(files, { checkIds: new Set(CHECK_IDS), presetIds: new Set(PRESET_IDS), ...vale }, session.root);
+    return lintRules(files, vale, session.root);
 }
 
 function rulesText(report: RulesLintReport): string {
-    const { statements, unenforced } = report.counts;
-    const percent = statements === 0 ? 0 : Math.round((PERCENT * unenforced) / statements);
     const lines = report.findings.map((finding) => `  ${finding.file}:${String(finding.line)}  ${finding.message}`);
     const vale = report.isValeRun ? '' : ' (vale is not installed; prose rules skipped)';
-    const summary = `rule corpus: ${String(report.files)} files, ${String(unenforced)} of ${String(statements)} statements unenforced (${String(percent)}%)${vale}`;
+    const summary = `rule corpus: ${String(report.files)} files${vale}`;
     return `${[...lines, summary].join('\n')}\n`;
 }
 
@@ -130,7 +126,7 @@ function checkDrift(session: Session): CommandResult {
     const rules = rulesReport(session);
     const json = {
         drift,
-        rules: { findings: rules.findings, files: rules.files, ...rules.counts, isValeRun: rules.isValeRun },
+        rules: { findings: rules.findings, files: rules.files, isValeRun: rules.isValeRun },
     };
     const driftLine = drift.length === 0 ? 'every generated file matches its render\n' : driftText(drift);
     const exitCode = drift.length === 0 && rules.findings.length === 0 ? 0 : 1;

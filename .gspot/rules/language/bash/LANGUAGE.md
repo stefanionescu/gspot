@@ -13,23 +13,23 @@ command substitution, and pipelines. Script structure and options are in the Bas
 
 Rules:
 
-- Use `name() { ... }` consistently for new code. `unenforced`
+- Use `name() { ... }` consistently for new code.
 - Do not write `function name()`, `function name() { ... }`, or
-  `function name { ... }`. `unenforced`
-- Keep functions small and single-purpose. `enforced-by: structure/function-length`
-- Declare function-local variables with `local`. `enforced-by: bash/shellcheck`
+  `function name { ... }`.
+- Keep functions small and single-purpose.
+- Declare function-local variables with `local`.
 - Separate `local` declaration from command substitution assignment when the
-  exit code matters. `enforced-by: bash/shellcheck`
+  exit code matters.
 - Return status codes with `return`. Print data to STDOUT only when the function
-  is designed as a value-producing command. `enforced-by: structure/shell-safety`
-- Do not make a function both print data and log progress to STDOUT. `enforced-by: structure/shell-safety`
-- Keep a function within the configured statement, branch, and nesting limits. `enforced-by: structure/shell-branches`
+  is designed as a value-producing command.
+- Do not make a function both print data and log progress to STDOUT.
+- Keep a function within the configured statement, branch, and nesting limits.
 - A function that coordinates enough flags, counters, mutable state, or status
   codes to resemble a state machine does not belong in Bash. Simplify the
-  workflow or move the domain behavior to its existing application-code owner. `enforced-by: structure/shell-branches`
+  workflow or move the domain behavior to its existing application-code owner.
 - Do not use a non-zero status to represent an ordinary result such as
   `unchanged`. Print or assign an explicit result and reserve non-zero statuses
-  for failures. `enforced-by: structure/shell-safety`
+  for failures.
 
 Good:
 
@@ -63,22 +63,22 @@ Libraries must not call `main`.
 Rules:
 
 - Quote variable expansions unless a specific shell mechanism requires unquoted
-  expansion. `enforced-by: bash/shellcheck`
-- Prefer `${name}` over `$name` for normal variables. `enforced-by: bash/shellcheck`
+  expansion.
+- Prefer `${name}` over `$name` for normal variables.
 - Do not brace single-character positional or shell-special parameters unless it
-  avoids confusion. `unenforced`
-- Positional parameters above 9 must be braced. Use `${10}`, not `$10`. `enforced-by: bash/shellcheck`
-- Use `readonly` for constants immediately after assignment. `enforced-by: bash/shellcheck`
-- Use `export` only for variables that child processes need. `enforced-by: bash/shellcheck`
+  avoids confusion.
+- Positional parameters above 9 must be braced. Use `${10}`, not `$10`.
+- Use `readonly` for constants immediately after assignment.
+- Use `export` only for variables that child processes need.
 - Do not overwrite important environment variables casually, especially `PATH`,
-  `HOME`, `IFS`, `CDPATH`, `SHELL`, `PWD`, or `BASH_ENV`. `enforced-by: bash/shellcheck`
-- Do not export `CDPATH`. `enforced-by: bash/shellcheck`
+  `HOME`, `IFS`, `CDPATH`, `SHELL`, `PWD`, or `BASH_ENV`.
+- Do not export `CDPATH`.
 - A directory constant is computed with `CDPATH= cd -- <path> && pwd -P` and has a failure
-  path (`|| exit 1` in an entrypoint, `|| return 1` in a library). `enforced-by: structure/shell-interpreter`
-- Do not put spaces around `=`. `unenforced`
-- Use `$HOME`, not quoted `~`, inside paths. `enforced-by: bash/shellcheck`
-- Assign a home-relative value before exporting it, or use `$HOME`. `enforced-by: bash/shellcheck`
-- Quote array elements passed to `unset`, and prefer `unset -v`. `enforced-by: bash/shellcheck`
+  path (`|| exit 1` in an entrypoint, `|| return 1` in a library).
+- Do not put spaces around `=`.
+- Use `$HOME`, not quoted `~`, inside paths.
+- Assign a home-relative value before exporting it, or use `$HOME`.
+- Quote array elements passed to `unset`, and prefer `unset -v`.
 
 Good:
 
@@ -100,7 +100,7 @@ local output
 output="$(some_command)" || return 1
 ```
 
-Separate `local`, `declare`, `readonly`, and `export` from command substitution `enforced-by: bash/shellcheck`
+Separate `local`, `declare`, `readonly`, and `export` from command substitution
 when the command status matters. These declarations can report their own status
 instead of the command substitution's status:
 
@@ -119,17 +119,17 @@ substitution status.
 Rules:
 
 - Always quote variable expansions, command substitutions, and strings with
-  spaces or shell metacharacters. `enforced-by: bash/shellcheck`
-- Use `"$@"` when forwarding arguments. `enforced-by: bash/shellcheck`
-- Do not use `$*` except when intentionally joining arguments into one string. `enforced-by: bash/shellcheck`
-- Prefer single quotes for literal strings with no expansion. `enforced-by: bash/shellcheck`
-- Prefer double quotes when expansion is required. `enforced-by: bash/shellcheck`
-- Do not use unquoted command substitution output as an argument list. `enforced-by: bash/shellcheck`
-- Do not depend on word splitting for data parsing. `enforced-by: bash/shellcheck`
+  spaces or shell metacharacters.
+- Use `"$@"` when forwarding arguments.
+- Do not use `$*` except when intentionally joining arguments into one string.
+- Prefer single quotes for literal strings with no expansion.
+- Prefer double quotes when expansion is required.
+- Do not use unquoted command substitution output as an argument list.
+- Do not depend on word splitting for data parsing.
 - Do not use `eval`. Use arrays, direct validation, explicit `case` branches,
-  or fixed dispatch tables. `enforced-by: bash/shellcheck`
-- Do not use aliases in scripts. Use functions. `enforced-by: bash/shellcheck`
-- Do not rely on backslash-escaped words for readability when quotes work. `enforced-by: bash/shellcheck`
+  or fixed dispatch tables.
+- Do not use aliases in scripts. Use functions.
+- Do not rely on backslash-escaped words for readability when quotes work.
 
 Good:
 
@@ -160,7 +160,7 @@ base="${filename%.tar.gz}"
 
 ## Arrays and argument lists
 
-Use arrays for command arguments. `unenforced`
+Use arrays for command arguments.
 
 Good:
 
@@ -178,13 +178,13 @@ python -m src.quantization.vllm.quantize "${quantize_args[@]}"
 
 Rules:
 
-- Expand arrays with `"${array[@]}"`. `unenforced`
-- Do not populate arrays with raw `$(...)`. `enforced-by: bash/shellcheck`
+- Expand arrays with `"${array[@]}"`.
+- Do not populate arrays with raw `$(...)`.
 - Use a `while read` loop or Bash 4+ `readarray` only when runtime support is
-  guaranteed. `enforced-by: bash/shellcheck`
-- Avoid arrays as ersatz nested data structures. `unenforced`
+  guaranteed.
+- Avoid arrays as ersatz nested data structures.
 - On Bash 3.2-compatible scripts, indexed arrays are allowed; associative arrays
-  are not. `enforced-by: structure/shell-interpreter`
+  are not.
 
 Safe multi-line command output into an array on Bash 4+:
 
@@ -220,18 +220,18 @@ fi
 
 Rules:
 
-- Prefer `[[ ... ]]` over `[ ... ]` in Bash scripts. `enforced-by: bash/shellcheck`
+- Prefer `[[ ... ]]` over `[ ... ]` in Bash scripts.
 - Do not use `test -a`, `test -o`, `[ ... -a ... ]`, `[ ... -o ... ]`, or
   grouping operators inside `[ ... ]`. Use `[[ ... ]]`, explicit `if`
-  branches, or `case`. `enforced-by: bash/shellcheck`
-- Use `==` for string equality. `enforced-by: bash/shellcheck`
+  branches, or `case`.
+- Use `==` for string equality.
 - Quote the right-hand side when string equality is intended and the value may
-  contain glob characters. `enforced-by: bash/shellcheck`
-- Leave the right-hand side unquoted only when pattern matching is intended. `enforced-by: bash/shellcheck`
-- Store regular expressions in variables and use them unquoted with `=~`. `enforced-by: bash/shellcheck`
-- Use `-z` and `-n` for empty and non-empty string checks. `enforced-by: bash/shellcheck`
-- Use `(( ... ))` for trusted numeric comparisons. `enforced-by: bash/shellcheck`
-- Validate untrusted numbers before arithmetic evaluation. `unenforced`
+  contain glob characters.
+- Leave the right-hand side unquoted only when pattern matching is intended.
+- Store regular expressions in variables and use them unquoted with `=~`.
+- Use `-z` and `-n` for empty and non-empty string checks.
+- Use `(( ... ))` for trusted numeric comparisons.
+- Validate untrusted numbers before arithmetic evaluation.
 
 String equality:
 
@@ -259,7 +259,7 @@ if [[ "${version}" =~ ${version_re} ]]; then
 fi
 ```
 
-Do not use `cmd1 && cmd2 || cmd3` as an `if/else` replacement when `cmd2` can `unenforced`
+Do not use `cmd1 && cmd2 || cmd3` as an `if/else` replacement when `cmd2` can
 fail:
 
 ```bash
@@ -274,25 +274,25 @@ fi
 
 Rules:
 
-- Use `$(( ... ))` for arithmetic expansion. `enforced-by: bash/shellcheck`
-- Use `(( ... ))` for trusted arithmetic comparisons and assignments. `enforced-by: bash/shellcheck`
-- Do not use `expr`, `$[ ... ]`, or `let`. `enforced-by: bash/shellcheck`
-- Do not use `<` or `>` inside `[[ ... ]]` for numeric comparisons. `enforced-by: bash/shellcheck`
-- Validate untrusted numeric input before arithmetic contexts. `unenforced`
+- Use `$(( ... ))` for arithmetic expansion.
+- Use `(( ... ))` for trusted arithmetic comparisons and assignments.
+- Do not use `expr`, `$[ ... ]`, or `let`.
+- Do not use `<` or `>` inside `[[ ... ]]` for numeric comparisons.
+- Validate untrusted numeric input before arithmetic contexts.
 - Be careful with `(( i++ ))` under `errexit`; it returns false when the
-  expression evaluates to zero. `enforced-by: bash/shellcheck`
+  expression evaluates to zero.
 - Avoid array subscripts inside arithmetic contexts unless both the array name
-  and index are trusted. `unenforced`
+  and index are trusted.
 - Do not put untrusted strings into `(( ... ))`, `$(( ... ))`, `[[ value -gt n ]]`,
-  array indices, or arithmetic `for` expressions. `enforced-by: bash/shellcheck`
+  array indices, or arithmetic `for` expressions.
 - Avoid associative arrays in arithmetic contexts. Project-default Bash 3.2 does
   not support associative arrays, and newer Bash versions differ in expansion
-  behavior. `enforced-by: structure/shell-interpreter`
+  behavior.
 - Convert base-10 strings with care. `10#${value}` only works for unsigned
-  numbers. `unenforced`
-- Call `date` one time when multiple fields must describe the same instant. `enforced-by: bash/shellcheck`
+  numbers.
+- Call `date` one time when multiple fields must describe the same instant.
 - Compute redirection paths before a command if the path expression mutates a
-  variable. `enforced-by: bash/shellcheck`
+  variable.
 
 Good:
 
@@ -344,16 +344,16 @@ generate_result >"${output_file}"
 
 Rules:
 
-- Iterate over arguments with `for arg in "$@"; do`. `unenforced`
-- Do not use compact loop forms such as `for arg; { ...; }`. `unenforced`
-- Iterate over globs directly, not over `ls`. `enforced-by: bash/shellcheck`
-- Read files with `while IFS= read -r line; do ... done < file`. `unenforced`
-- Do not use `for line in $(cat file)`. `unenforced`
-- Avoid piping into `while` when variables set inside the loop must survive. `unenforced`
-- Use process substitution for current-shell loops. `unenforced`
-- Use NUL-delimited streams for filenames. `enforced-by: structure/shell-interpreter`
-- Use `read` with a bare variable name, not `$variable`. `unenforced`
-- Do not use a here-string containing command substitution as loop input. `unenforced`
+- Iterate over arguments with `for arg in "$@"; do`.
+- Do not use compact loop forms such as `for arg; { ...; }`.
+- Iterate over globs directly, not over `ls`.
+- Read files with `while IFS= read -r line; do ... done < file`.
+- Do not use `for line in $(cat file)`.
+- Avoid piping into `while` when variables set inside the loop must survive.
+- Use process substitution for current-shell loops.
+- Use NUL-delimited streams for filenames.
+- Use `read` with a bare variable name, not `$variable`.
+- Do not use a here-string containing command substitution as loop input.
 
 Good line reading:
 
@@ -390,24 +390,24 @@ for (( index = 0; index < count; index++ )); do
 done
 ```
 
-Do not use `seq` for simple Bash counters. `enforced-by: bash/shellcheck`
+Do not use `seq` for simple Bash counters.
 
 ## Delimited data and IFS
 
 Rules:
 
-- Use `IFS= read -r` for line input to prevent trimming and backslash handling. `unenforced`
-- Use `IFS= LC_ALL=C read -r -d ''` for NUL-delimited filename streams. `enforced-by: structure/shell-interpreter`
+- Use `IFS= read -r` for line input to prevent trimming and backslash handling.
+- Use `IFS= LC_ALL=C read -r -d ''` for NUL-delimited filename streams.
 - Do not save and restore `IFS` with `old_ifs="${IFS}"`; that loses the
-  distinction between unset and empty. `enforced-by: bash/shellcheck`
+  distinction between unset and empty.
 - Prefer function-local `IFS` or a subshell when a temporary separator is
-  needed. `enforced-by: bash/shellcheck`
+  needed.
 - Do not parse general CSV with `IFS=, read ...`; use product-owned application
-  code with a real CSV parser. `unenforced`
+  code with a real CSV parser.
 - If a simple delimiter format is truly controlled, remember that `read` treats
   `IFS` as a terminator. A trailing empty field is discarded unless you account
-  for it. `enforced-by: bash/shellcheck`
-- Do not populate arrays from raw command substitution. `unenforced`
+  for it.
+- Do not populate arrays from raw command substitution.
 
 Good local `IFS`:
 
@@ -438,20 +438,20 @@ done < <(aws_command_that_prints_one_host_per_line)
 
 Rules:
 
-- Quote paths. `enforced-by: bash/shellcheck`
-- Use `--` before path arguments when a command supports it. `enforced-by: bash/shellcheck`
-- Prefer globs with explicit path prefixes such as `./*.mp3`. `enforced-by: bash/shellcheck`
-- Do not parse `ls`. `enforced-by: bash/shellcheck`
-- Do not filter filenames with `grep`; use globs or `[[ ... == pattern ]]`. `enforced-by: bash/shellcheck`
-- Handle no-match glob behavior deliberately. `enforced-by: bash/shellcheck`
+- Quote paths.
+- Use `--` before path arguments when a command supports it.
+- Prefer globs with explicit path prefixes such as `./*.mp3`.
+- Do not parse `ls`.
+- Do not filter filenames with `grep`; use globs or `[[ ... == pattern ]]`.
+- Handle no-match glob behavior deliberately.
 - Do not assume filenames cannot contain spaces, newlines, quotes, brackets, or
-  leading dashes. `enforced-by: bash/shellcheck`
-- Do not assume the current directory. Set or compute it. `unenforced`
-- Check `cd` explicitly. `enforced-by: bash/shellcheck`
-- Test broken symlinks with `-e` or `-L` when existence matters. `enforced-by: bash/shellcheck`
+  leading dashes.
+- Do not assume the current directory. Set or compute it.
+- Check `cd` explicitly.
+- Test broken symlinks with `-e` or `-L` when existence matters.
 - Match path basenames deliberately when using globs against paths that include
-  `./`. `enforced-by: bash/shellcheck`
-- Do not use `grep` to decide whether a path has an extension. `unenforced`
+  `./`.
+- Do not use `grep` to decide whether a path has an extension.
 
 Good:
 
@@ -519,13 +519,13 @@ repo_root="$(CDPATH= cd -- "${SCRIPT_DIR}/.." && pwd -P)" || return 1
 
 Rules:
 
-- Use `$(...)`, not backticks. `enforced-by: bash/shellcheck`
-- Quote command substitutions. `enforced-by: bash/shellcheck`
-- Remember command substitution strips trailing newlines. `unenforced`
-- Do not use command substitution to carry binary data. `unenforced`
-- Do not use command substitution to create argument lists. `unenforced`
-- Capture the exit status immediately when needed. `enforced-by: bash/shellcheck`
-- Use `$(<file)` only when stripping trailing newlines is acceptable. `unenforced`
+- Use `$(...)`, not backticks.
+- Quote command substitutions.
+- Remember command substitution strips trailing newlines.
+- Do not use command substitution to carry binary data.
+- Do not use command substitution to create argument lists.
+- Capture the exit status immediately when needed.
+- Use `$(<file)` only when stripping trailing newlines is acceptable.
 
 Good:
 
@@ -547,18 +547,18 @@ content="${content_with_sentinel%x}"
 
 Rules:
 
-- Split long pipelines one command per line. `enforced-by: bash/shfmt`
-- Know whether each command consumes all input before enabling `pipefail`. `enforced-by: structure/shell-interpreter`
-- Use `PIPESTATUS` immediately if individual pipeline statuses matter. `enforced-by: bash/shellcheck`
-- Redirect stdout and stderr in the correct order. `enforced-by: bash/shellcheck`
-- Do not use `&>file` or `>&file`. Use `>file 2>&1` so ordering is visible. `unenforced`
-- Do not use `cmd |& other`. Use `cmd 2>&1 | other`. `unenforced`
-- Do not close standard file descriptors as a shortcut for `/dev/null`. `enforced-by: structure/shell-interpreter`
-- Do not read from and write to the same file in a pipeline. `unenforced`
-- Use temp files plus atomic rename for file replacement. `unenforced`
-- Do not rely on parallel `xargs` jobs writing ordered, unmixed output. `enforced-by: bash/shellcheck`
+- Split long pipelines one command per line.
+- Know whether each command consumes all input before enabling `pipefail`.
+- Use `PIPESTATUS` immediately if individual pipeline statuses matter.
+- Redirect stdout and stderr in the correct order.
+- Do not use `&>file` or `>&file`. Use `>file 2>&1` so ordering is visible.
+- Do not use `cmd |& other`. Use `cmd 2>&1 | other`.
+- Do not close standard file descriptors as a shortcut for `/dev/null`.
+- Do not read from and write to the same file in a pipeline.
+- Use temp files plus atomic rename for file replacement.
+- Do not rely on parallel `xargs` jobs writing ordered, unmixed output.
 - Do not use `cmd; (( ! $? )) || die`; check the command directly or capture
-  the status in a named variable. `enforced-by: bash/shellcheck`
+  the status in a named variable.
 
 Redirect both stdout and stderr:
 
@@ -600,5 +600,4 @@ else
 fi
 ```
 
-For parallel execution, write per-job output to separate files and combine them
-after all jobs complete, or use a tool that serializes output.
+When jobs run in parallel, write per-job output to separate files and combine them after every job completes, or use a tool that serializes output.

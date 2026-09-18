@@ -12,25 +12,25 @@ Exceptions, assertions, comparisons, control flow, iteration, strings, logging, 
 
 Rules:
 
-- Use built-in exception classes when they fit the error. `unenforced`
-- Raise `ValueError` for invalid argument values. `enforced-by: python/ruff BLE001`
-- Raise `TypeError` for invalid argument types when type validation is needed. `enforced-by: python/ruff BLE001`
-- Keep `try` blocks as small as possible. `enforced-by: integrity/dependency-ownership`
-- Catch specific exceptions. `enforced-by: python/ruff BLE001`
-- Do not use bare `except:`. `enforced-by: python/ruff BLE001`
+- Use built-in exception classes when they fit the error.
+- Raise `ValueError` for invalid argument values.
+- Raise `TypeError` for invalid argument types when type validation is needed.
+- Keep `try` blocks as small as possible.
+- Catch specific exceptions.
+- Do not use bare `except:`.
 - Do not catch `Exception` unless re-raising or creating a deliberate isolation
-  boundary that records and suppresses failures. `enforced-by: python/ruff BLE001`
-- Use `else` when code runs only if the `try` block succeeds. `enforced-by: integrity/dependency-ownership`
-- Use `finally` for cleanup that must run regardless of success or failure. `enforced-by: python/ruff BLE001`
+  boundary that records and suppresses failures.
+- Use `else` when code runs only if the `try` block succeeds.
+- Use `finally` for cleanup that must run regardless of success or failure.
 - Do not use `return`, `break`, or `continue` in a `finally` block when an
-  exception can be active. `enforced-by: integrity/dependency-ownership`
+  exception can be active.
 - Use `raise NewError(...) from error` when replacing an exception but preserving
-  the cause. `unenforced`
+  the cause.
 - Use `raise NewError(...) from None` only when deliberately suppressing an
   irrelevant implementation exception, and preserve relevant details in the new
-  message. `unenforced`
+  message.
 - When catching operating-system errors, prefer Python's explicit OSError
-  subclass hierarchy over checking `errno` manually. `enforced-by: python/ruff BLE001`
+  subclass hierarchy over checking `errno` manually.
 
 Good:
 
@@ -57,12 +57,12 @@ except KeyError as error:
 Rules:
 
 - Do not use `assert` for application logic, input validation, permission
-  checks, or required preconditions. `enforced-by: python/ruff S101`
-- Do not rely on `assert` to satisfy type checking or runtime correctness. `enforced-by: python/ruff S101`
-- `assert` is acceptable in pytest tests. `enforced-by: python/ruff S101`
+  checks, or required preconditions.
+- Do not rely on `assert` to satisfy type checking or runtime correctness.
+- `assert` is acceptable in pytest tests.
 - `assert` is acceptable for non-critical internal consistency checks where
-  removing it does not change application behavior. `enforced-by: python/ruff S101`
-- Use explicit `if` checks and raise exceptions for real validation. `unenforced`
+  removing it does not change application behavior.
+- Use explicit `if` checks and raise exceptions for real validation.
 
 Good:
 
@@ -82,18 +82,18 @@ def connect_to_port(minimum: int) -> int:
 
 Rules:
 
-- Compare to `None` with `is None` or `is not None`. `enforced-by: python/basedpyright`
-- Do not compare booleans to `True` or `False`. `enforced-by: python/ruff E711`
-- Use truthiness for sequences and containers. `enforced-by: python/ruff E711`
-- When handling integers, compare to `0` when zero has domain meaning. `enforced-by: python/ruff E711`
+- Compare to `None` with `is None` or `is not None`.
+- Do not compare booleans to `True` or `False`.
+- Use truthiness for sequences and containers.
+- When handling integers, compare to `0` when zero has domain meaning.
 - Do not write `if not value` when `None`, `0`, `False`, and empty containers
-  have different meanings. `unenforced`
-- Use `is not` instead of `not ... is`. `enforced-by: python/ruff E711`
-- Use `isinstance()` for type checks. `enforced-by: python/ruff E711`
-- Use `startswith()` and `endswith()` for prefix and suffix checks. `enforced-by: python/ruff E711`
-- Do not compare types directly unless exact type identity is the real contract. `enforced-by: python/ruff E711`
+  have different meanings.
+- Use `is not` instead of `not ... is`.
+- Use `isinstance()` for type checks.
+- Use `startswith()` and `endswith()` for prefix and suffix checks.
+- Do not compare types directly unless exact type identity is the real contract.
 - For rich ordering, implement all relevant comparison operations or use
-  `functools.total_ordering()`. `unenforced`
+  `functools.total_ordering()`.
 
 Good:
 
@@ -121,18 +121,18 @@ explicit property when checking array emptiness.
 
 Rules:
 
-- Reduce nesting when a condition can be merged without changing behavior. `enforced-by: python/ruff SIM102`
+- Reduce nesting when a condition can be merged without changing behavior.
 - Merge adjacent `if` statements when the inner condition has no intervening
-  work and no `else` branch that changes the result. `enforced-by: python/ruff SIM102`
+  work and no `else` branch that changes the result.
 - Prefer guard clauses when they remove a level of nesting and keep the main
-  path easy to scan. `enforced-by: python/ruff SIM102`
-- Hoist repeated code out of conditional branches when it runs in every branch. `enforced-by: python/ruff SIM102`
+  path easy to scan.
+- Hoist repeated code out of conditional branches when it runs in every branch.
 - Hoist loop-invariant statements out of `for` and `while` loops when they do
-  not depend on the loop variable and have no required repeated side effect. `enforced-by: python/ruff SIM102`
+  not depend on the loop variable and have no required repeated side effect.
 - Do not combine conditions when separate conditions communicate distinct
-  domain decisions more clearly. `enforced-by: python/ruff SIM102`
+  domain decisions more clearly.
 - Do not hoist code when execution order, exceptions, logging, timing, database
-  calls, or mutation change. `enforced-by: python/ruff SIM102`
+  calls, or mutation change.
 
 Good merged condition:
 
@@ -164,19 +164,19 @@ for building in buildings:
 Rules:
 
 - Use default iterators and membership operators for containers that support
-  them. `enforced-by: python/ruff SIM118`
-- Iterate dictionaries directly for keys. `unenforced`
-- Use `.items()` when both keys and values are needed. `enforced-by: python/ruff SIM118`
-- Do not call `.keys()` only to iterate keys. `enforced-by: python/ruff SIM118`
-- Do not call `.readlines()` only to iterate file lines. `enforced-by: python/ruff SIM118`
-- Do not mutate a container while iterating over it. `enforced-by: python/ruff SIM118`
-- Prefer clear loops over dense collection transformations. `unenforced`
+  them.
+- Iterate dictionaries directly for keys.
+- Use `.items()` when both keys and values are needed.
+- Do not call `.keys()` only to iterate keys.
+- Do not call `.readlines()` only to iterate file lines.
+- Do not mutate a container while iterating over it.
+- Prefer clear loops over dense collection transformations.
 - Use `yield from iterable` instead of a loop that only yields every item from
-  another iterable. `unenforced`
-- Use `any()` and `all()` for simple existence or universal predicate checks. `enforced-by: python/ruff SIM118`
-- Use `[]` for an empty list and `{}` for an empty dictionary. `enforced-by: python/ruff SIM118`
+  another iterable.
+- Use `any()` and `all()` for simple existence or universal predicate checks.
+- Use `[]` for an empty list and `{}` for an empty dictionary.
 - Use `list()` or `dict()` when converting an iterable or mapping, not for empty
-  literals. `enforced-by: python/ruff SIM118`
+  literals.
 
 Good:
 
@@ -221,15 +221,15 @@ metadata = {}
 
 Rules:
 
-- Use f-strings, `%` formatting, or `.format()` for formatting. `enforced-by: python/ruff ISC`
-- Prefer f-strings for ordinary string interpolation. `enforced-by: python/ruff ISC`
-- Do not use `+` to format strings with values. `enforced-by: python/ruff ISC`
+- Use f-strings, `%` formatting, or `.format()` for formatting.
+- Prefer f-strings for ordinary string interpolation.
+- Do not use `+` to format strings with values.
 - A single `a + b` concatenation is allowed when both values are already strings
-  and this is not formatting. `unenforced`
-- Do not accumulate strings with `+` or `+=` in a loop. `enforced-by: python/ruff ISC`
-- Accumulate parts in a list and `"".join(parts)`, or use `io.StringIO`. `enforced-by: python/ruff ISC`
+  and this is not formatting.
+- Do not accumulate strings with `+` or `+=` in a loop.
+- Accumulate parts in a list and `"".join(parts)`, or use `io.StringIO`.
 - Use implicit literal concatenation inside parentheses for long string
-  literals. `enforced-by: python/ruff ISC`
+  literals.
 
 Good:
 
@@ -247,40 +247,40 @@ employee_table = "".join(rows)
 
 Rules:
 
-- Create loggers with `logging.getLogger(__name__)`. `enforced-by: python/ruff G`
+- Create loggers with `logging.getLogger(__name__)`.
 - Use module-level loggers. Logger names track the package and module
-  hierarchy through `__name__`. `enforced-by: structure/import-boundary`
-- Do not log through the root logger from application or library modules. `enforced-by: python/ruff G`
-- Use `print()` for ordinary CLI output intended for the user. `enforced-by: python/ruff G`
-- Use `logger.debug()` for detailed diagnostic information. `enforced-by: python/ruff G`
-- Use `logger.info()` for normal operational events and status. `enforced-by: python/ruff G`
+  hierarchy through `__name__`.
+- Do not log through the root logger from application or library modules.
+- Use `print()` for ordinary CLI output intended for the user.
+- Use `logger.debug()` for detailed diagnostic information.
+- Use `logger.info()` for normal operational events and status.
 - Use `logger.warning()` when something unexpected happened but the software can
-  still continue as expected. `enforced-by: python/ruff G`
+  still continue as expected.
 - Use `warnings.warn()` in library code when client code must change to avoid
-  the issue. `enforced-by: python/ruff G`
-- Raise an exception to report an error that prevents the requested operation. `unenforced`
+  the issue.
+- Raise an exception to report an error that prevents the requested operation.
 - Use `logger.error()`, `logger.exception()`, or `logger.critical()` when an
-  error is deliberately suppressed at an isolation boundary and must be recorded. `enforced-by: python/ruff G`
-- Use `logger.exception()` only inside an exception handler. `enforced-by: python/ruff G`
+  error is deliberately suppressed at an isolation boundary and must be recorded.
+- Use `logger.exception()` only inside an exception handler.
 - Logging calls that accept pattern strings must use a string literal first
-  argument and pass values as later arguments. `enforced-by: python/ruff G`
-- Do not use f-strings in logging pattern calls. `enforced-by: python/ruff ISC`
-- Do not call logging once for the static text and once for the value. `unenforced`
+  argument and pass values as later arguments.
+- Do not use f-strings in logging pattern calls.
+- Do not call logging once for the static text and once for the value.
 - Do not eagerly compute expensive logging arguments unless the log level is
-  enabled. Use `logger.isEnabledFor(...)` around expensive diagnostic work. `unenforced`
+  enabled. Use `logger.isEnabledFor(...)` around expensive diagnostic work.
 - Configure handlers, formatters, and levels at the application entrypoint or
-  deployment boundary, not in importable library modules. `enforced-by: python/ruff-format`
+  deployment boundary, not in importable library modules.
 - Call `logging.basicConfig()` before logger methods are called when an
-  entrypoint uses basic configuration. `unenforced`
+  entrypoint uses basic configuration.
 - If dictionary or file logging configuration is used, set
-  `disable_existing_loggers` deliberately. `enforced-by: python/ruff G`
+  `disable_existing_loggers` deliberately.
 - Library modules must not add handlers other than `logging.NullHandler()` to
-  their own top-level logger. `unenforced`
+  their own top-level logger.
 - Do not define custom logging levels unless there is a documented application
-  need. `enforced-by: python/ruff G`
+  need.
 - Do not log secrets, tokens, passwords, PII, or full authenticated request
-  bodies. `enforced-by: secrets/gitleaks`
-- Keep log messages precise and searchable. `enforced-by: python/ruff G`
+  bodies.
+- Keep log messages precise and searchable.
 
 Good:
 
@@ -313,15 +313,15 @@ except UploadError:
 
 Rules:
 
-- Error messages must match the actual error condition. `enforced-by: python/ruff EM`
-- Interpolated values must be clearly identifiable. `enforced-by: python/ruff EM`
-- Prefer `name=value` formatting for values that aid debugging. `enforced-by: python/ruff EM`
-- Keep messages easy to grep. `enforced-by: python/ruff EM`
-- Start user-visible messages with an uppercase letter. `enforced-by: python/ruff EM`
+- Error messages must match the actual error condition.
+- Interpolated values must be clearly identifiable.
+- Prefer `name=value` formatting for values that aid debugging.
+- Keep messages easy to grep.
+- Start user-visible messages with an uppercase letter.
 - Do not leak schema names, table names, file paths, internal IDs, stack traces,
-  trigger names, policy names, secrets, or implementation details. `enforced-by: secrets/gitleaks`
+  trigger names, policy names, secrets, or implementation details.
 - Use generic messages for configuration and infrastructure failures unless the
-  details are part of the public contract. `enforced-by: python/ruff EM`
+  details are part of the public contract.
 
 Good:
 
@@ -344,15 +344,15 @@ except OSError as error:
 Rules:
 
 - Explicitly close files, sockets, database connections, mmap mappings, h5py
-  files, matplotlib figures, and similar stateful resources. `enforced-by: python/ruff SIM115`
-- Prefer `with` statements for resources that support context management. `enforced-by: python/ruff SIM115`
+  files, matplotlib figures, and similar stateful resources.
+- Prefer `with` statements for resources that support context management.
 - Use `contextlib.closing()` for closeable resources without context-manager
-  support. `enforced-by: python/ruff SIM115`
-- Do not rely on finalizers or garbage collection for resource cleanup. `enforced-by: python/ruff SIM115`
-- Keep resource scope as small as practical. `enforced-by: python/ruff SIM115`
+  support.
+- Do not rely on finalizers or garbage collection for resource cleanup.
+- Keep resource scope as small as practical.
 - Do not return open resources from helpers unless resource ownership is part of
-  the documented contract. `enforced-by: python/ruff SIM115`
-- Document resource lifetime when context-based management is infeasible. `enforced-by: python/ruff SIM115`
+  the documented contract.
+- Document resource lifetime when context-based management is infeasible.
 
 Good:
 

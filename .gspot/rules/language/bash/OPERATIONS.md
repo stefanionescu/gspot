@@ -11,45 +11,45 @@ Script structure and options are in the Bash file; commands, processes, and secr
 
 ## Module ownership and visibility
 
-Each file owns one cohesive responsibility. Directory structure supplies the family or domain `unenforced`
+Each file owns one cohesive responsibility. Directory structure supplies the family or domain
 name.
 
 Rules:
 
 - A sourced file containing only `source` statements is a barrel and is forbidden. Callers
-  source the exact owner they use. `enforced-by: structure/shell-interpreter`
+  source the exact owner they use.
 - A file and a sibling directory must not share a stem. Move the file into the directory and give
-  it a role name. `unenforced`
+  it a role name.
 - A function beginning with `_` is private to its defining file, appears before the public
-  functions, and is never called from another file. `unenforced`
-- An executable file exposes only `main`; every other function in that file is private. `enforced-by: structure/shell-interpreter`
+  functions, and is never called from another file.
+- An executable file exposes only `main`; every other function in that file is private.
 - A sourced public function uses a family or domain namespace, such as `server_start`,
-  `restart_read_state`, or `deploy_prepare_release`. `enforced-by: structure/shell-interpreter`
+  `restart_read_state`, or `deploy_prepare_release`.
 - Library files explicitly source every repository file whose public functions they call. Do not
-  rely on an entrypoint's source order or a transitive source. `enforced-by: structure/shell-interpreter`
+  rely on an entrypoint's source order or a transitive source.
 - Shell configuration owners start with an owner-specific include guard before constants or
   dependency sources. The guard returns when its `_CFG_<OWNER>_READY` marker is set, then
-  immediately declares that marker readonly. `unenforced`
+  immediately declares that marker readonly.
 - Ordinary function libraries do not use blanket include guards. They remain safe when direct
-  dependency diamonds source them more than once. `enforced-by: structure/shell-interpreter`
+  dependency diamonds source them more than once.
 - Library-level behavioral constants use an owner-specific uppercase name and are readonly
   immediately after assignment. Source-path discovery variables are load-time values, not
-  behavioral constants, and remain reassignable. `enforced-by: structure/shell-interpreter`
+  behavioral constants, and remain reassignable.
 - Do not create a file for one function used by one caller. Keep that function with its caller
   unless the file owns a real executable, external-system, security, persistence, or
-  destructive-operation boundary. `enforced-by: structure/shell-interpreter`
+  destructive-operation boundary.
 - A retained one-function, one-caller boundary includes a `Boundary:` header that states the
   concrete boundary. A comment is not sufficient when the implementation does not own that
-  boundary. `unenforced`
+  boundary.
 - Do not split one concept across parallel directory owners, such as both `restart/` and
-  `runtime/restart/`. `unenforced`
+  `runtime/restart/`.
 
 Preferred order inside the function section:
 
-1. Private parsing and validation functions. `unenforced`
-2. Private operation functions. `unenforced`
-3. Public library functions. `enforced-by: structure/shell-interpreter`
-4. `main` for executable scripts. `enforced-by: structure/shell-interpreter`
+1. Private parsing and validation functions.
+2. Private operation functions.
+3. Public library functions.
+4. `main` for executable scripts.
 
 ## Deployment and publishing pipelines
 
@@ -58,27 +58,27 @@ than local utility scripts.
 
 Rules:
 
-- Separate validation, planning, confirmation, execution, readiness checks, and cleanup. `unenforced`
+- Separate validation, planning, confirmation, execution, readiness checks, and cleanup.
 - Fail before doing work when required inputs, commands, files, hosts, artifact directories, or
-  secrets are missing. `enforced-by: secrets/gitleaks`
+  secrets are missing.
 - Make the target explicit. Do not infer a production environment, a remote repository, a
   model, an artifact path, or a host from a branch name without a clear confirmation or CI
-  contract. `enforced-by: structure/shell-branches`
+  contract.
 - Make destructive or remote publishing actions require explicit confirmation unless CI owns the
-  guard. `enforced-by: structure/shell-safety`
+  guard.
 - Keep pipeline state readable: environment, host, service, artifact, commit, image tag,
-  migration range, output directory, and config path. `unenforced`
-- Use idempotent commands. `unenforced`
+  migration range, output directory, and config path.
+- Use idempotent commands.
 - Check readiness after deploying, publishing, or long-running setup and surface actionable
-  diagnostics on failure. `enforced-by: structure/shell-safety`
-- Do not continue to later steps after a required step fails. `unenforced`
+  diagnostics on failure.
+- Do not continue to later steps after a required step fails.
 - Do not hide partial failure by using `|| true` around deploy, build, warmup, test, or publish
-  commands. `enforced-by: structure/shell-safety`
-- Use bounded retries only for known retryable operations. `unenforced`
+  commands.
+- Use bounded retries only for known retryable operations.
 - Keep rollback, teardown, and cleanup commands explicit. Do not invent automatic rollback unless
   the platform supports it and it has been verified. Do not delete artifacts, results, or
-  checkpoints as an implicit side effect. `unenforced`
-- Log enough to reconstruct what happened without printing secrets. `enforced-by: secrets/gitleaks`
+  checkpoints as an implicit side effect.
+- Log enough to reconstruct what happened without printing secrets.
 
 Recommended flow:
 
@@ -121,15 +121,15 @@ confirm_exact() {
 
 Remote commands:
 
-- Prefer copying a reviewed script to the remote host and invoking it with arguments. `enforced-by: structure/shell-ssh-blocks`
-- Avoid interpolating local variables into remote shell strings. `enforced-by: structure/shell-ssh-blocks`
-- If `ssh host command args...` is used, pass fixed commands and quoted arguments. `enforced-by: bash/shellcheck`
+- Prefer copying a reviewed script to the remote host and invoking it with arguments.
+- Avoid interpolating local variables into remote shell strings.
+- If `ssh host command args...` is used, pass fixed commands and quoted arguments.
 - Treat remote command strings as a last resort. Quote or escape every argument deliberately for
-  the shell that will parse it. `enforced-by: bash/shellcheck`
-- Do not build remote shell fragments from user input. `enforced-by: structure/shell-ssh-blocks`
+  the shell that will parse it.
+- Do not build remote shell fragments from user input.
 - Validate hostnames, usernames, service names, container names, unit names, variants, and remote
-  paths before using them in remote commands. `enforced-by: structure/shell-ssh-blocks`
-- Use native connection and command timeouts for remote calls that can hang. `enforced-by: structure/shell-ssh-blocks`
+  paths before using them in remote commands.
+- Use native connection and command timeouts for remote calls that can hang.
 
 Bad:
 
@@ -146,22 +146,22 @@ ssh -- "${host}" bash -- "${remote_script}" "${dir}" "${service}"
 Checkpoint state:
 
 - Use checkpoint files only for idempotent, resumable workflows where repeating a completed
-  expensive step is wasteful. `unenforced`
+  expensive step is wasteful.
 - Scope checkpoint paths by script name, date or run ID, target environment, and input identity
-  so stale success markers cannot skip required work. `unenforced`
-- Mark a checkpoint successful only after validation and final replacement have completed. `unenforced`
+  so stale success markers cannot skip required work.
+- Mark a checkpoint successful only after validation and final replacement have completed.
 - Invalidate or ignore checkpoint state on interruption unless partial progress is explicitly
-  safe to resume. `unenforced`
-- Do not use checkpoints to skip required validation, confirmation, or readiness checks. `unenforced`
+  safe to resume.
+- Do not use checkpoints to skip required validation, confirmation, or readiness checks.
 
 Persisted runtime state:
 
-- Never `source` generated state or pass it to `bash -c`. `enforced-by: bash/shellcheck`
-- Use a fixed, non-executable data format with an exact key schema. `enforced-by: structure/shell-interpreter`
-- Reject delimiters or newlines that the format cannot represent. `enforced-by: bash/shellcheck`
+- Never `source` generated state or pass it to `bash -c`.
+- Use a fixed, non-executable data format with an exact key schema.
+- Reject delimiters or newlines that the format cannot represent.
 - Write state to a permission-restricted temporary file in the destination directory, then
-  replace the previous state with an atomic `mv`. `unenforced`
-- Readers treat malformed, duplicate, or unknown state keys as errors. `enforced-by: structure/duplicate-functions`
+  replace the previous state with an atomic `mv`.
+- Readers treat malformed, duplicate, or unknown state keys as errors.
 
 Retry pattern:
 
@@ -209,35 +209,35 @@ retry_retryable() {
 
 Use retries for:
 
-- retryable network pulls; `unenforced`
-- readiness polling; `unenforced`
-- `eventually consistent` provider APIs; `unenforced`
-- remote service startup checks. `enforced-by: structure/shell-ssh-blocks`
+- retryable network pulls;
+- readiness polling;
+- `eventually consistent` provider APIs;
+- remote service startup checks.
 
 Do not use retries to mask:
 
-- corrupt data; `unenforced`
-- invalid credentials; `enforced-by: secrets/gitleaks`
-- failed migrations or failed artifact validation; `unenforced`
-- syntax errors; `unenforced`
-- missing files; `unenforced`
-- failed validation; `unenforced`
-- failing checks; `unenforced`
-- permission problems. `unenforced`
+- corrupt data;
+- invalid credentials;
+- failed migrations or failed artifact validation;
+- syntax errors;
+- missing files;
+- failed validation;
+- failing checks;
+- permission problems.
 
 ## CI scripts
 
 Rules:
 
-- Keep CI YAML thin. Put reusable logic in scripts. `enforced-by: structure/shell-script-policy`
-- CI scripts must be non-interactive by default. `unenforced`
-- Use explicit environment variables for CI-only behavior. `unenforced`
-- Print the versions of important tools when diagnosing setup issues. `enforced-by: structure/shell-safety`
-- Keep cache key creation deterministic. `unenforced`
-- Do not install global tools without pinning versions. `enforced-by: bash/shellcheck`
+- Keep CI YAML thin. Put reusable logic in scripts.
+- CI scripts must be non-interactive by default.
+- Use explicit environment variables for CI-only behavior.
+- Print the versions of important tools when diagnosing setup issues.
+- Keep cache key creation deterministic.
+- Do not install global tools without pinning versions.
 - Do not mutate source files in verification jobs unless the job is explicitly a formatter or
-  codegen job. `unenforced`
-- Capture logs and reports to predictable artifact paths. `unenforced`
+  codegen job.
+- Capture logs and reports to predictable artifact paths.
 - Do not call broad, expensive, or mutating checks from a narrow task unless the owning rule file
-  requires it. `unenforced`
-- Every CI entrypoint accepts enough flags to run locally through the task runner. `unenforced`
+  requires it.
+- Every CI entrypoint accepts enough flags to run locally through the task runner.

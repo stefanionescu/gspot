@@ -39,7 +39,7 @@ export type DoctorReport = {
     changes: ChangeReport;
     hooks: string;
     ci: string;
-    rules: { files: number; unenforced: number };
+    rules: { files: number };
     version: { running: string; pinned?: string; newer?: string };
     exitCode: number;
 };

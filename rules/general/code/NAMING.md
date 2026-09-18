@@ -16,18 +16,18 @@ Naming decisions must satisfy both this guide and the quality tooling.
 - Follow this file when choosing names for files, directories, classes, structs, protocols, type
   aliases, interfaces, and enums. It covers functions, methods, parameters, variables, constants,
   SQL identifiers, storage objects, migration files, test helpers, and documentation examples too.
-  `unenforced`
-- Also follow the workspace naming quality checks. `unenforced`
+
+- Also follow the workspace naming quality checks.
 - Also follow the banned-term and language policy checks for the affected
-  scope. `enforced-by: naming/identifiers`
+  scope.
 - Treat quality failures as authoritative. If this guide and quality disagree,
-  fix the disagreement instead of working around it locally. `unenforced`
+  fix the disagreement instead of working around it locally.
 - Do not duplicate quality implementation details here. The quality config owns
-  exact limits, banned terms, scope exceptions, and extractor behavior. `enforced-by: naming/identifiers`
+  exact limits, banned terms, scope exceptions, and extractor behavior.
 - Do not bypass naming quality by hiding bad names in string keys, filenames,
-  SQL quoted identifiers, generated wrappers, or aliases. `enforced-by: naming/identifiers`
+  SQL quoted identifiers, generated wrappers, or aliases.
 - Generated code may keep generator-owned names, but hand-written wrappers
-  around generated code must follow this guide. `unenforced`
+  around generated code must follow this guide.
 
 Bad:
 
@@ -50,24 +50,24 @@ scope, role, and expected value without reading the implementation first.
 
 Rules:
 
-- Name by role, responsibility, and domain meaning. `unenforced`
+- Name by role, responsibility, and domain meaning.
 - Do not name by storage type, UI framework type, collection shape, or
-  implementation accident. `unenforced`
+  implementation accident.
 - Use English unless representing an external identifier that must keep another
-  spelling. `unenforced`
-- Prefer the shortest name that is still clear at the use site. `unenforced`
-- Add qualifiers only when the unqualified name is genuinely ambiguous. `unenforced`
-- Avoid private shorthand that only the original author understands. `unenforced`
-- Avoid contractions created by deleting letters from a word. `unenforced`
+  spelling.
+- Prefer the shortest name that is still clear at the use site.
+- Add qualifiers only when the unqualified name is genuinely ambiguous.
+- Avoid private shorthand that only the original author understands.
+- Avoid contractions created by deleting letters from a word.
 - Do not duplicate context already supplied by the enclosing type, module,
-  directory, or package. `unenforced`
-- Do not encode every implementation detail in a name. `unenforced`
-- Use the same vocabulary for the same concept across a feature. `unenforced`
-- Use singular names for single values and plural names for collections. `unenforced`
-- Name collections by their contents, not by the collection type. `unenforced`
-- Use role words when primitive or weak types do not carry enough meaning. `unenforced`
+  directory, or package.
+- Do not encode every implementation detail in a name.
+- Use the same vocabulary for the same concept across a feature.
+- Use singular names for single values and plural names for collections.
+- Name collections by their contents, not by the collection type.
+- Use role words when primitive or weak types do not carry enough meaning.
 - Preserve required external names at boundaries, but translate them into domain
-  names before they move inward. `unenforced`
+  names before they move inward.
 
 Bad:
 
@@ -151,7 +151,7 @@ const usersById = usersById;
 
 ### Avoid redundant context
 
-Let the owner provide context. Add context only when the name is ambiguous outside the owner without it. `unenforced`
+Let the owner provide context. Add context only when the name is ambiguous outside the owner without it.
 
 Bad:
 
@@ -201,7 +201,7 @@ struct ProfileViewState {
 
 ### Avoid type and shape duplication
 
-Do not repeat information already expressed by the type system or declaration. `unenforced`
+Do not repeat information already expressed by the type system or declaration.
 
 Bad:
 
@@ -239,7 +239,7 @@ let avatarURL: URL? = profile.avatarURL
 
 ### Avoid vague and inflated words
 
-Do not use vague words to avoid naming the real responsibility. Common bad `enforced-by: naming/identifiers`
+Do not use vague words to avoid naming the real responsibility. Common bad
 patterns include names that describe generic assistance, movement, or quality
 instead of a concrete role.
 
@@ -271,19 +271,19 @@ ProfileSummaryView
 
 Allowed framework or domain terms must be precise:
 
-- `Repository` is valid for persistence or domain data access boundaries. `unenforced`
-- `Client` is valid for external API or SDK boundaries. `unenforced`
+- `Repository` is valid for persistence or domain data access boundaries.
+- `Client` is valid for external API or SDK boundaries.
 - `Route`, `Callback`, `Observer`, and `Listener` are valid only when that
-  framework shape is actually the point. `unenforced`
+  framework shape is actually the point.
 - UI-framework role words (`View`, `ViewModel`, `ViewController`,
   `Coordinator`) are defined in the language naming file that owns the
-  framework. `unenforced`
+  framework.
 - `Service` is not valid for app-owned names unless quality has an explicit
-  exact exemption for that name. Prefer a more specific role. `enforced-by: naming/identifiers`
+  exact exemption for that name. Prefer a more specific role.
 
 ## Vocabulary and role words
 
-Choose suffixes and role words deterministically. A deterministic suffix tells a `enforced-by: naming/identifiers`
+Choose suffixes and role words deterministically. A deterministic suffix tells a
 reader what kind of boundary or owner they are looking at.
 
 ### Preferred role words
@@ -304,7 +304,7 @@ Use these meanings consistently:
 | `Provider`   | Supplies a capability or value, especially when the source may vary. |
 | `Adapter`    | Bridges one interface or framework shape to another.                 |
 
-Do not use a suffix just because the class needs a suffix. If the role is not `enforced-by: naming/identifiers`
+Do not use a suffix just because the class needs a suffix. If the role is not
 real, rename the type to the concrete domain concept.
 
 Bad:
@@ -354,7 +354,7 @@ struct NotificationAuthorizationClient {
 
 ### Manager
 
-Do not use `Manager` in app-owned names unless an external platform contract `enforced-by: naming/identifiers`
+Do not use `Manager` in app-owned names unless an external platform contract
 requires that exact name. Most `Manager` names hide a more specific role.
 
 Bad:
@@ -376,7 +376,7 @@ suffix for local application owners.
 
 ### Helper and utility
 
-Do not create `Helper`, `Helpers`, `Utility`, `Utilities`, `Util`, `Utils`, `enforced-by: naming/identifiers`
+Do not create `Helper`, `Helpers`, `Utility`, `Utilities`, `Util`, `Utils`,
 `Common`, `Shared`, `Base`, or `Core` dumping grounds. Name the capability.
 
 Bad:
@@ -405,36 +405,36 @@ on without repeating context already supplied by the owner.
 Rules:
 
 - Start with the action unless a language or framework convention requires
-  another shape. `unenforced`
-- Include enough domain context to read clearly at the call site. `unenforced`
+  another shape.
+- Include enough domain context to read clearly at the call site.
 - Do not use generic names such as `process`, `handle`, `run`, `execute`,
-  `manage`, `perform`, or `doWork` when the action can be named. `unenforced`
-- Use `handle` only when matching an external framework callback pattern. `unenforced`
-- Use `refresh` for replacing local presentation state from a source. `unenforced`
-- Use `prepare` for setting up local state before a workflow. `unenforced`
+  `manage`, `perform`, or `doWork` when the action can be named.
+- Use `handle` only when matching an external framework callback pattern.
+- Use `refresh` for replacing local presentation state from a source.
+- Use `prepare` for setting up local state before a workflow.
 - Use `get` for application-owned retrieval operations. Do not select a
   different retrieval verb based on I/O, optionality, pagination, or whether
-  one value or many values are returned. `enforced-by: naming/identifiers`
-- Use `set` for assigning or replacing a supplied value directly. `unenforced`
+  one value or many values are returned.
+- Use `set` for assigning or replacing a supplied value directly.
 - Use `insert` for adding a new row or storage item through a persistence
-  boundary. `unenforced`
+  boundary.
 - Use `update` for changing an existing row or storage item through a
-  persistence boundary. `unenforced`
-- Use `delete` for destroying a durable row, object, or domain value. `unenforced`
-- Use `reset` only for returning to an initial state. `unenforced`
+  persistence boundary.
+- Use `delete` for destroying a durable row, object, or domain value.
+- Use `reset` only for returning to an initial state.
 - Use `add` and `remove` only for in-memory collection membership, not as
-  persistence verbs. `unenforced`
+  persistence verbs.
 - Use `create` when making a new independent domain value before persistence,
-  not as a synonym for database insertion. `enforced-by: naming/identifiers`
-- Use `make` for factories that construct in-memory objects or dependencies. `unenforced`
-- Use `build` for constructing a value from existing values. `unenforced`
-- Use `parse` for raw input to structured data. `unenforced`
-- Use `decode` for encoded bytes or serialized payloads into typed values. `unenforced`
-- Use `encode` for typed values into bytes or serialized payloads. `unenforced`
-- Use `validate` for checking and reporting invalidity. `unenforced`
-- Use `assert` only when failure throws, traps, or stops execution. `unenforced`
-- Use item/options parameters when positional arguments become ambiguous. `unenforced`
-- Avoid positional boolean parameters. `unenforced`
+  not as a synonym for database insertion.
+- Use `make` for factories that construct in-memory objects or dependencies.
+- Use `build` for constructing a value from existing values.
+- Use `parse` for raw input to structured data.
+- Use `decode` for encoded bytes or serialized payloads into typed values.
+- Use `encode` for typed values into bytes or serialized payloads.
+- Use `validate` for checking and reporting invalidity.
+- Use `assert` only when failure throws, traps, or stops execution.
+- Use item/options parameters when positional arguments become ambiguous.
+- Avoid positional boolean parameters.
 
 ### Retrieval and CRUD operations
 
@@ -446,40 +446,40 @@ those differences by switching between synonymous verbs.
 Rules:
 
 - Use `get` for retrieving existing values from memory, caches, files,
-  databases, storage, SDKs, or remote APIs. `unenforced`
+  databases, storage, SDKs, or remote APIs.
 - Use a singular noun for one value and a plural noun for a collection, such as
-  `getChatConfig`, `getSession`, `getSessions`, and `getPaginatedSessions`. `unenforced`
+  `getChatConfig`, `getSession`, `getSessions`, and `getPaginatedSessions`.
 - Let the return type communicate optionality. A lookup returning `T | null`
-  still uses `get`, not a separate verb. `unenforced`
+  still uses `get`, not a separate verb.
 - A `get` boundary may populate its owning runtime state when returning the raw source leaks boundary mechanics, such as `getTestEnv()` loading the
-  dynamic test environment. `unenforced`
+  dynamic test environment.
 - Do not use `read`, `find`, `fetch`, `load`, or `list` as alternate retrieval
-  verbs in application-owned APIs. `enforced-by: naming/identifiers`
+  verbs in application-owned APIs.
 - Use `set` when the caller supplies the value that directly replaces current
-  state. `unenforced`
-- Use `insert` when a database or storage boundary adds a new row or item. `unenforced`
+  state.
+- Use `insert` when a database or storage boundary adds a new row or item.
 - Use `update` when a database or storage boundary changes an existing row or
-  item. `unenforced`
-- Use `delete` when a database or storage boundary destroys a row or item. `unenforced`
+  item.
+- Use `delete` when a database or storage boundary destroys a row or item.
 - Keep the noun short. Do not append `Row`, `Record`, `Value`, `Existing`, or an
   owner such as `ForSession` when the type, parameters, or enclosing module
-  already provide that information. `unenforced`
+  already provide that information.
 - Add a qualifier only when it distinguishes two operations that are both
-  visible at the same use site, such as `getCachedCall` versus `getActiveCall`. `unenforced`
+  visible at the same use site, such as `getCachedCall` versus `getActiveCall`.
 - Do not use `create`, `add`, `save`, `write`, `put`, `upsert`, or `remove` as
-  synonyms for persistence insertion, update, or deletion. `enforced-by: naming/identifiers`
+  synonyms for persistence insertion, update, or deletion.
 - Keep `create` for constructing a new domain value and `add` or `remove` for
-  in-memory collection membership. `unenforced`
+  in-memory collection membership.
 - A transactional domain operation may keep a precise domain verb when it is
-  not merely a longer synonym for one direct CRUD operation. `enforced-by: naming/identifiers`
+  not merely a longer synonym for one direct CRUD operation.
 - Keep precise non-CRUD verbs such as `parse`, `decode`, `encode`, `validate`,
   and `build` when the function performs that operation instead of retrieving
-  data. `resolve`, `load`, and `fetch` are banned as synonyms for `get`. `enforced-by: naming/identifiers`
+  data. `resolve`, `load`, and `fetch` are banned as synonyms for `get`.
 - `handle` is a verb only for framework callbacks: React event props such as
   `handleSubmit`, UIKit `@objc handleConfirmButtonTapped`, Python signal and
-  event handlers. `Handler` is never a type or role suffix. `enforced-by: naming/identifiers`
+  event handlers. `Handler` is never a type or role suffix.
 - Preserve framework, standard-library, SDK, generated, and external contract
-  names exactly. `unenforced`
+  names exactly.
 
 Bad:
 
@@ -608,21 +608,21 @@ function parseSubmitOrderRequest(input: unknown): SubmitOrderRequest {
 
 ### Boundary shape suffixes
 
-Use suffixes such as `Row`, `DTO`, `Request`, and `Response` only where they `unenforced`
+Use suffixes such as `Row`, `DTO`, `Request`, and `Response` only where they
 describe the declared shape. Do not carry the suffix into every function that
 accepts or returns that shape.
 
 Rules:
 
 - Keep `Row` on a type alias, interface, or generated contract when it is a
-  database row, RPC row, or row-shaped storage boundary. `unenforced`
+  database row, RPC row, or row-shaped storage boundary.
 - Do not add `Row` to domain entities, ViewModels, use cases, API response
-  objects, or UI state just because the value originally came from storage. `unenforced`
+  objects, or UI state just because the value originally came from storage.
 - Do not keep `Row` on parser, mapper, validator, or conversion function names
-  when the parameter or return type already carries the row shape. `unenforced`
-- Name boundary functions for the operation and domain concept they perform. `unenforced`
+  when the parameter or return type already carries the row shape.
+- Name boundary functions for the operation and domain concept they perform.
 - Use `row` or `dbRow` for a local variable only inside database boundary code
-  where the value is still a database wire shape. `unenforced`
+  where the value is still a database wire shape.
 
 Bad:
 
@@ -665,18 +665,18 @@ Rules:
 
 - Stored Boolean columns and direct domain mappings use concise positive states
   without an `is` prefix, such as `enabled`, `active`, `retryable`,
-  `webSearchEnabled`, or `defaultForCharacter`. `enforced-by: naming/identifiers`
+  `webSearchEnabled`, or `defaultForCharacter`.
 - Predicate functions, predicate methods, computed predicates, and
   presentation-state assertions use `is` for state or characteristics, `has`
-  for possession or presence, and `can` for capability. `unenforced`
+  for possession or presence, and `can` for capability.
 - Preserve externally owned Boolean names exactly, including framework, SDK,
-  protocol, wire, and generated relationship names. `unenforced`
+  protocol, wire, and generated relationship names.
 - Do not introduce `should` in new local names. Preserve it only for external
-  framework or protocol requirements covered by an explicit quality exemption. `unenforced`
+  framework or protocol requirements covered by an explicit quality exemption.
 - Avoid negative names such as `isNotReady` or `isEmailNotUsed` when the
-  positive form is clearer. `unenforced`
-- Do not name booleans like nouns that read as non-boolean values. `unenforced`
-- Prefer the boolean name that matches the branch without double negation. `unenforced`
+  positive form is clearer.
+- Do not name booleans like nouns that read as non-boolean values.
+- Prefer the boolean name that matches the branch without double negation.
 
 Bad:
 
