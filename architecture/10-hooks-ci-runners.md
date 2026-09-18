@@ -81,8 +81,7 @@ longer runs; delete when ready" once `core.hooksPath` points elsewhere. A person
 own hooks chooses `[hooks] tool = "none"` and calls `gspot check --staged` from them.
 
 `core.hooksPath` is per clone. `apply` sets it when hooks are on, so a fresh clone gets hooks on
-the first `gspot apply`, which the runner's setup task calls. The pre-push hook calls `git lfs
-pre-push` first when git-lfs is installed.
+the first `gspot apply`, which the runner's setup task calls. The pre-push hook calls `git lfs pre-push` first when git-lfs is installed. Only the commit-msg hook forwards a git argument (the message file); git hands pre-push the remote name and URL, which the check does not take.
 
 On Windows, git runs hooks through the `sh` that Git for Windows installs, so the same hook
 files work. gspot marks them executable through `git update-index --chmod=+x` rather than a

@@ -667,7 +667,7 @@ Before `gspot check`, read the change against these questions:
 - Do argument types accept the broadest useful protocol or abstract collection? `unenforced`
 - Do concrete implementations return concrete types? `unenforced`
 - Is `Any` avoided where `object`, a protocol, or a type variable expresses `enforced-by: python/basedpyright`
-- Are names consistent with [`NAMING.md`](../general/code/NAMING.md)? `unenforced`
+- Are names consistent with `NAMING.md`? `unenforced`
 - Are functions small, focused, and under the local length limit? `unenforced`
 - Are defaults immutable or initialized inside the function? `unenforced`
 - Are None checks explicit? `unenforced`
