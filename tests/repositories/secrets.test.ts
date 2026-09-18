@@ -2,7 +2,17 @@
 import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
-import { commitAll, git, PLANTED_TIMEOUT_MS, run, runPlanted, script, toolsPath } from '#tests/harness/planted.ts';
+
+import {
+    commitAll,
+    install,
+    git,
+    PLANTED_TIMEOUT_MS,
+    run,
+    runPlanted,
+    script,
+    toolsPath,
+} from '#tests/harness/planted.ts';
 
 const INIT = [
     'init',
@@ -32,7 +42,7 @@ describe('the secrets preset', () => {
             await using fixture = await createFixture({ 'scripts/a.sh': script });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['gitleaks']) };
-            run(fixture.path, INIT, environment);
+            await install(fixture.path, INIT, environment);
             expect(run(fixture.path, ['check', '--at', 'commit', '--no-cache'], environment).code).toBe(0);
 
             await Bun.write(join(fixture.path, 'settings.py'), SETTINGS);

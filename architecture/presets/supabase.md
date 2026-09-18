@@ -16,32 +16,34 @@ supabase (CLI), deno, the Semgrep Supabase rule pack.
 
 ## Generated configuration
 
-| Target                             | Holds                                                                                              |
-| ---------------------------------- | -------------------------------------------------------------------------------------------------- |
-| `.gspot/deno.json`                 | lint and fmt options for edge functions; each function's own `deno.json` is a stub that extends it |
-| ESLint override for `functions/**` | Deno globals; `n/*` and `n/prefer-promises/*` off; `import_style = "ts"`                           |
-| `.gspot/sqlfluff.cfg`              | dialect `postgres` (through postgres)                                                              |
-| `.gspot/v8r.yml`                   | the `config.toml` schema                                                                           |
+| Target                             | Holds                                                                    |
+| ---------------------------------- | ------------------------------------------------------------------------ |
+| ESLint override for `functions/**` | Deno globals; `n/*` and `n/prefer-promises/*` off; `import_style = "ts"` |
+| `.gspot/sqlfluff.cfg`              | dialect `postgres` (through postgres)                                    |
+| `.gspot/v8r.yml`                   | the `config.toml` schema                                                 |
 
 ## Checks
 
-| Id                                  | Stage        | Command                                                                                                                                                                                                         |
-| ----------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `supabase/config`                   | commit       | `config.toml` validates against the CLI schema                                                                                                                                                                  |
-| `supabase/deno-lint`                | commit       | `deno lint --config .gspot/deno.json <function>` per function                                                                                                                                                   |
-| `supabase/deno-fmt`                 | commit       | `deno fmt --check`                                                                                                                                                                                              |
-| `supabase/deno-check`               | commit       | `deno check` per function entry                                                                                                                                                                                 |
-| `supabase/migration-names`          | commit       | naming engine `snake-migration`                                                                                                                                                                                 |
-| `supabase/types-fresh`              | push         | `supabase gen types` matches the declared file (`[[declare]] produced_by`)                                                                                                                                      |
-| `supabase/storage-policies`         | commit       | every bucket in `config.toml` has an RLS policy in a migration                                                                                                                                                  |
-| `supabase/service-role-containment` | commit       | ast-grep: the service-role key name appears only in server files and never in `functions/**` client bundles                                                                                                     |
-| `security/semgrep` supabase pack    | push         | raw SQL interpolation, RPC with user input, service-role key in client code, RLS bypass, wildcard CORS with credentials, unvalidated JSON body, dynamic import, `eval`, secrets in logs, hard-coded service key |
-| `postgres/*`                        | see postgres | migration safety, docs, immutability                                                                                                                                                                            |
+| Id                               | Stage        | Command                                                                                                                                                                                                         |
+| -------------------------------- | ------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `supabase/config`                | commit       | `config.toml` validates against the CLI schema                                                                                                                                                                  |
+| `supabase/deno-lint`             | commit       | `deno lint --config .gspot/deno.json <function>` per function                                                                                                                                                   |
+| `supabase/deno-check`            | commit       | `deno check` per function entry                                                                                                                                                                                 |
+| `supabase/migration-names`       | commit       | naming engine `snake-migration`                                                                                                                                                                                 |
+| `supabase/types-fresh`           | push         | `supabase gen types` matches the declared file (`[[declare]] produced_by`)                                                                                                                                      |
+| `supabase/storage-policies`      | commit       | every bucket in `config.toml` has an RLS policy in a migration                                                                                                                                                  |
+| `supabase/admin-key-containment` | commit       | ast-grep: the service-role key name appears only in server files and never in `functions/**` client bundles                                                                                                     |
+| `security/semgrep` supabase pack | push         | raw SQL interpolation, RPC with user input, service-role key in client code, RLS bypass, wildcard CORS with credentials, unvalidated JSON body, dynamic import, `eval`, secrets in logs, hard-coded service key |
+| `postgres/*`                     | see postgres | migration safety, docs, immutability                                                                                                                                                                            |
+
+Prettier formats the edge functions with the rest of the TypeScript, so no `deno fmt` check
+ships. Each function keeps its own `deno.json`, because its import map lives there and Deno
+has no way to extend another file.
 
 ## Settings
 
 `tools.supabase.types_file`, `tools.supabase.functions_dir` (default `supabase/functions`),
-`tools.deno.lint_rules`.
+`tools.supabase.admin_key_paths`.
 
 ## Rule files
 

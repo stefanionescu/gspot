@@ -3,13 +3,16 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { codeql } from '#cli/integrity/codeql.ts';
 import { fences } from '#cli/integrity/fences.ts';
+import { adminKey } from '#cli/supabase/admin-key.ts';
 import { envFiles } from '#cli/integrity/env/files.ts';
 import { licensesNpm } from '#cli/integrity/licenses.ts';
 import type { IntegrityCheck } from '#types/integrity.ts';
+import { typesFresh } from '#cli/supabase/types-fresh.ts';
 import { envExample } from '#cli/integrity/env/example.ts';
 import { largeFiles } from '#cli/integrity/large-files.ts';
 import { stalePaths } from '#cli/integrity/stale-paths.ts';
 import { taskPolicy } from '#cli/integrity/task-policy.ts';
+import { denoCheck, denoLint } from '#cli/supabase/deno.ts';
 import { readmeShape } from '#cli/integrity/readme/shape.ts';
 import { suppressions } from '#cli/integrity/suppressions.ts';
 import { docsHeadings } from '#cli/integrity/docs-headings.ts';
@@ -31,6 +34,7 @@ import { gitleaksBaseline } from '#cli/integrity/gitleaks-baseline.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/postgres/history.ts';
 import { trackedDependencies } from '#cli/integrity/tracked-dependencies.ts';
 import { sqlBlockComments, sqlFileLength, sqlSyntax } from '#cli/sql/checks.ts';
+import { projectValid, migrationNames, storagePolicies } from '#cli/supabase/config-checks.ts';
 import { definerSearchPath, explicitGrants, foreignKeyIndexes, rlsPresent } from '#cli/postgres/schema/checks.ts';
 
 const checks: Record<string, IntegrityCheck> = {
@@ -53,6 +57,13 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'supabase-config': projectValid,
+    'supabase-storage': storagePolicies,
+    'supabase-migration-names': migrationNames,
+    'supabase-deno-lint': denoLint,
+    'supabase-deno-check': denoCheck,
+    'supabase-admin-key': adminKey,
+    'supabase-types': typesFresh,
     'postgres-rls': rlsPresent,
     'postgres-grants': explicitGrants,
     'postgres-definer': definerSearchPath,

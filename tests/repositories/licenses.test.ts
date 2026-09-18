@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
-import { commitAll, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../node_modules/.bin');
 const INIT = [
@@ -36,7 +36,7 @@ describe('the licenses preset', () => {
             });
             commitAll(fixture.path);
             const environment = { PATH: `${NPM_BIN}:${toolsPath(['typos', 'ec'])}` };
-            run(fixture.path, INIT, environment);
+            await install(fixture.path, INIT, environment);
             expect(run(fixture.path, ['check', 'licenses/npm', '--no-cache'], environment).code).toBe(0);
             await Bun.write(
                 join(fixture.path, 'node_modules/strict/package.json'),

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
-import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const INIT = [
     'init',
@@ -81,7 +81,7 @@ describe('the dependencies preset', () => {
             await using fixture = await createFixture({ 'package.json': CLEAN });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
-            run(fixture.path, INIT, environment);
+            await install(fixture.path, INIT, environment);
             expect(run(fixture.path, ['check', 'integrity/manifest-policy', '--no-cache'], environment).code).toBe(0);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);

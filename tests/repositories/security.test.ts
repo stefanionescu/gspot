@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
-import { commitAll, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
 const INIT = [
     'init',
@@ -34,7 +34,7 @@ describe('the security preset', () => {
             });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['semgrep', 'typos', 'ec']) };
-            run(fixture.path, INIT, environment);
+            await install(fixture.path, INIT, environment);
             const clean = run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             await Bun.write(join(fixture.path, 'src/run.ts'), EVALUATED);

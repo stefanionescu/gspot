@@ -2,7 +2,7 @@
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
-import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const INIT = [
     'init',
@@ -32,7 +32,7 @@ describe('the nginx preset', () => {
             await using fixture = await createFixture({ 'proxy/nginx.conf': CLEAN });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['gixy', 'typos', 'ec']) };
-            run(fixture.path, INIT, environment);
+            await install(fixture.path, INIT, environment);
             const clean = run(fixture.path, ['check', 'nginx/gixy', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const planted of CASES) {

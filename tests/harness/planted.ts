@@ -126,3 +126,16 @@ export async function runPlanted(
     await restore();
     return outcome;
 }
+
+/**
+ * Runs gspot init in a planted repository, and stops the test with what init printed when it wrote no policy.
+ * A nonzero exit alone is not a failure: init exits nonzero when a tool is missing on this machine, after it wrote everything.
+ * @param cwd the planted repository, with one commit
+ * @param argv the init command line
+ * @param environment extra variables, such as the PATH of the tools
+ */
+export async function install(cwd: string, argv: string[], environment: Record<string, string> = {}): Promise<void> {
+    const outcome = run(cwd, argv, environment);
+    if (await Bun.file(join(cwd, 'gspot.toml')).exists()) return;
+    throw new Error(`The init command wrote no policy in the planted repository: ${outcome.stderr}${outcome.stdout}`);
+}

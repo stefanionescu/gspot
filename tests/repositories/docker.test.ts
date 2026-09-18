@@ -3,7 +3,7 @@ import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { composeImages } from '#cli/integrity/docker/image-scan.ts';
-import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const INIT = [
     'init',
@@ -51,7 +51,7 @@ describe('the docker preset', () => {
             });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['hadolint', 'trivy', 'typos', 'ec', 'taplo', 'yamllint']) };
-            run(fixture.path, INIT, environment);
+            await install(fixture.path, INIT, environment);
             const checkIds = new Set(CASES.map((planted) => planted.id));
             for (const id of checkIds) {
                 const clean = run(fixture.path, ['check', id, '--no-cache'], environment);
