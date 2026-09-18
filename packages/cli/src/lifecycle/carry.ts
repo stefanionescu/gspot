@@ -7,47 +7,9 @@ import type { TomlTable } from '#types/config.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { CARRIED_REASON } from '#config/reasons.ts';
 import type { CarryPush, CarriedLists } from '#types/lifecycle.ts';
-
-const CHECK_BY_TOOL: Record<string, string> = {
-    shellcheck: 'bash/shellcheck',
-    sqlfluff: 'sql/sqlfluff',
-    squawk: 'postgres/squawk',
-    swiftlint: 'swift/swiftlint',
-    markdownlint: 'markdown/markdownlint',
-    stylelint: 'css/stylelint',
-    eslint: 'typescript/eslint',
-    ruff: 'python/ruff',
-    hadolint: 'docker/hadolint',
-    typos: 'spelling/typos',
-    gitleaks: 'secrets/gitleaks',
-    osv: 'dependencies/osv',
-    licenses: 'licenses/npm',
-};
+import { CHECK_BY_TOOL, TYPOS_DEFAULT_EXCLUDES } from '#config/carry.ts';
 
 const DATE_LENGTH = 10;
-const TYPOS_DEFAULT_EXCLUDES = [
-    'node_modules',
-    'dist',
-    'build',
-    'coverage',
-    '.lock',
-    'DerivedData',
-    'Pods',
-    '.build',
-    '*.png',
-    '*.jpg',
-    '*.jpeg',
-    '*.gif',
-    '*.svg',
-    '*.mp3',
-    '*.mp4',
-    '*.ttf',
-    '*.woff',
-    '*.woff2',
-    '*.ico',
-    '*.zip',
-    '*.pdf',
-];
 const COMMENT_MARK = /^(?:#|\/\/)\s?/u;
 const OFF_WORDS = ["'off'", '"off"', "['off'", '["off"', "[ 'off'", '[ "off"'];
 
@@ -148,6 +110,16 @@ function carryTypos(root: string, path: string, lists: CarriedLists): void {
     });
 }
 
+// How an allowlist regex is applied travels with it: against the line, the match or the secret, and whether every part must hold.
+function targetKeys(entry: TomlTable): { regex_target?: string; condition?: string } {
+    const target = asText(entry['regexTarget']);
+    const condition = asText(entry['condition']);
+    return {
+        ...(target === undefined ? {} : { regex_target: target }),
+        ...(condition === undefined ? {} : { condition }),
+    };
+}
+
 function carryGitleaks(root: string, path: string, lists: CarriedLists): void {
     const parsed = tryParseToml(readText(root, path));
     if (!parsed) return;
@@ -161,6 +133,7 @@ function carryGitleaks(root: string, path: string, lists: CarriedLists): void {
             description,
             paths: asStrings(entry['paths']),
             regexes: asStrings(entry['regexes']),
+            ...targetKeys(entry),
             reason: description === '' ? reasonFor(path) : description,
         });
     }

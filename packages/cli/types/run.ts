@@ -173,3 +173,6 @@ export type PlantedCase = {
     removed?: string[];
     executable?: string[];
 };
+
+/** What one acceptance run produced: the init output, the run record and how many checks ended in each status. */
+export type AcceptanceRun = { init: string; record: RunRecord; statuses: Record<string, number> };

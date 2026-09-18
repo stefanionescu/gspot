@@ -1,0 +1,38 @@
+---
+title: "Secrets"
+description: "Secret scanning over staged files at commit and over the pushed commits at push, with every allowed value carrying its reason."
+---
+
+Secret scanning over staged files at commit and over the pushed commits at push, with every allowed value carrying its reason.
+
+Kind: concern. Selected by default.
+
+## Tools
+
+- gitleaks 8.30.1
+- trufflehog 3.97.5
+
+## Generated configuration
+
+- `.gspot/gitleaks.toml`
+
+## Checks
+
+| Check                                                                          | Stage  | What it finds                                                                                          |
+| ------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------ |
+| [`secrets/gitleaks-staged`](/reference/rules/secrets/gitleaks-staged/)         | commit | Scans the staged change for keys, tokens, and passwords before the commit exists.                      |
+| [`secrets/gitleaks`](/reference/rules/secrets/gitleaks/)                       | push   | Scans every commit about to be pushed for keys, tokens, and passwords.                                 |
+| [`secrets/trufflehog`](/reference/rules/secrets/trufflehog/)                   | push   | Verifies candidate secrets in the pushed commits against the service that issued them.                 |
+| [`integrity/env-files`](/reference/rules/integrity/env-files/)                 | commit | Checks that git tracks no environment file except the templates.                                       |
+| [`integrity/gitleaks-baseline`](/reference/rules/integrity/gitleaks-baseline/) | commit | Checks that every reviewed finding in the gitleaks baseline has a reason and names a path that exists. |
+
+## Settings
+
+- `tools.gitleaks.allow`: Values gitleaks skips because they are public by design: a description, paths, regexes, and the reason.
+- `tools.gitleaks.baseline_reasons`: The reason for each reviewed historical finding in the gitleaks baseline, by fingerprint.
+- `tools.trufflehog.verified_only`: Whether trufflehog reports only the secrets it verified against their provider.
+
+## Rule files
+
+- `general/code/SECRETS.md`
+- `general/code/SECURITY.md`

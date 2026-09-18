@@ -1,0 +1,22 @@
+---
+title: "integrity/gitleaks-baseline"
+description: "Checks that every reviewed finding in the gitleaks baseline has a reason and names a path that exists."
+---
+
+Checks that every reviewed finding in the gitleaks baseline has a reason and names a path that exists.
+
+## Why
+
+A baseline entry with no reason hides a secret nobody reviewed, and one for a deleted file hides nothing at all.
+
+## What to do
+
+Add the reason under tools.gitleaks.baseline_reasons, or remove the entry from the baseline file.
+
+## Where it runs
+
+- Preset: [the secrets preset](/reference/presets/secrets/)
+- Stage: commit
+- Engine: integrity
+
+Turn it off for a path with a reason: `gspot ignore integrity/gitleaks-baseline --paths <glob> --reason "<why>"`.

@@ -35,3 +35,9 @@ export type PathPattern = { pattern: string; where: string };
 
 /** One inline suppression form: its name, the directive that marks it, how a reason is written after it, and whether it is refused outright. */
 export type SuppressionForm = { form: string; marker: RegExp; reason: RegExp; isForbidden?: boolean };
+
+/** One finding as gitleaks writes it into a report or a baseline. */
+export type GitleaksFinding = { Fingerprint: string; File: string; RuleID: string };
+
+/** The reason for one reviewed baseline entry. */
+export type BaselineReason = { fingerprint: string; reason: string };

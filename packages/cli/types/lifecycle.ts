@@ -48,7 +48,14 @@ export type CarriedIgnore = { check: string; rule: string; reason: string; paths
 export type CarriedLists = {
     typosWords: { word: string; reason: string }[];
     typosExcludes: { paths: string[]; reason: string }[];
-    gitleaksAllow: { description: string; paths: string[]; regexes: string[]; reason: string }[];
+    gitleaksAllow: {
+        description: string;
+        paths: string[];
+        regexes: string[];
+        regex_target?: string;
+        condition?: string;
+        reason: string;
+    }[];
     osvIgnores: { id: string; reason: string; review_by?: string }[];
     licenseExceptions: { package: string; license: string; reason: string }[];
     licenseAllow: string[];

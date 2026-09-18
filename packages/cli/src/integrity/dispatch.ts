@@ -2,8 +2,9 @@
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { fences } from '#cli/integrity/fences.ts';
+import { envFiles } from '#cli/integrity/env/files.ts';
 import type { IntegrityCheck } from '#types/integrity.ts';
-import { envExample } from '#cli/integrity/env-example.ts';
+import { envExample } from '#cli/integrity/env/example.ts';
 import { largeFiles } from '#cli/integrity/large-files.ts';
 import { stalePaths } from '#cli/integrity/stale-paths.ts';
 import { taskPolicy } from '#cli/integrity/task-policy.ts';
@@ -16,6 +17,7 @@ import { allowlistsMatch } from '#cli/integrity/allowlists-match.ts';
 import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
 import { configurationPurity } from '#cli/integrity/config-purity.ts';
 import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
+import { gitleaksBaseline } from '#cli/integrity/gitleaks-baseline.ts';
 import { trackedDependencies } from '#cli/integrity/tracked-dependencies.ts';
 
 const checks: Record<string, IntegrityCheck> = {
@@ -34,6 +36,8 @@ const checks: Record<string, IntegrityCheck> = {
     'task-policy': taskPolicy,
     'large-files': largeFiles,
     'tracked-dependencies': trackedDependencies,
+    'env-files': envFiles,
+    'gitleaks-baseline': gitleaksBaseline,
 };
 
 /**

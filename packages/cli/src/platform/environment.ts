@@ -48,6 +48,14 @@ export function isReleaseTestWanted(): boolean {
 }
 
 /**
+ * The repositories GSPOT_ACCEPTANCE names for the acceptance run, as absolute paths separated by a colon.
+ * @returns the paths, empty when the variable is unset
+ */
+export function acceptanceRepositories(): string[] {
+    return (process.env['GSPOT_ACCEPTANCE'] ?? '').split(':').filter((path) => path !== '');
+}
+
+/**
  * The whole environment with the undefined entries dropped, for spawning tools.
  * @returns the variables as strings
  */
