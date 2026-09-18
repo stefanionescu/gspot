@@ -27,6 +27,8 @@ IFEs = "IFEs"
 IIF = "IIF"
 # The sqlfluff rule group is spelled capitalisation in its own configuration keys.
 capitalisation = "capitalisation"
+# A preset name misspelled on purpose in the profile test.
+speling = "speling"
 
 [files]
 extend-exclude = [

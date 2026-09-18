@@ -76,7 +76,7 @@ describe('profiles', () => {
             await using fixture = await createFixture({
                 'scripts/a.sh': script,
                 'bad.profile.toml':
-                    'version = 1\nprofile = "bad"\nselection = "sometimes"\npresets = ["spelling"]\n\n[[tools.typos.exclude]]\npaths = ["a/**"]\nreason = "A reason that says something."\n',
+                    'version = 1\nprofile = "bad"\nselection = "sometimes"\npresets = ["speling"]\n\n[[tools.typos.exclude]]\npaths = ["a/**"]\nreason = "A reason that says something."\n',
             });
             commitAll(fixture.path);
             const init = run(fixture.path, ['init', '--yes', '--from', 'bad.profile.toml'], TOOLS);
