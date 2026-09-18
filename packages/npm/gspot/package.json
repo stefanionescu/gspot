@@ -1,0 +1,24 @@
+{
+    "name": "gspot",
+    "version": "0.1.0",
+    "description": "One command that installs the house style for AI-written code: configured linters, the missing rules, and agent instructions.",
+    "license": "MIT",
+    "repository": "github:stefanionescu/gspot",
+    "bin": {
+        "gspot": "gspot.js"
+    },
+    "files": [
+        "gspot.js",
+        "README.md"
+    ],
+    "optionalDependencies": {
+        "@gspot/cli-darwin-arm64": "0.1.0",
+        "@gspot/cli-darwin-x64": "0.1.0",
+        "@gspot/cli-linux-arm64": "0.1.0",
+        "@gspot/cli-linux-x64": "0.1.0",
+        "@gspot/cli-win32-x64": "0.1.0"
+    },
+    "engines": {
+        "node": ">=18"
+    }
+}

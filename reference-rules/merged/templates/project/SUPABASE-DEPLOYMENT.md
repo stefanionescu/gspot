@@ -24,7 +24,6 @@ configuration deliberately rather than relying on a database-only update flow.
 Remote deploy scripts validate expected buckets and configured functions.
 Keep configuration, deployment scripts, and deployment expectations in sync.
 
-
 ## Flow order
 
 1. Link the project.

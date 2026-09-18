@@ -3,4 +3,4 @@ message: "Possessive on a product or code name: '%s'. Rephrase with 'of' or 'the
 level: error
 nonword: true
 tokens:
-  - "\\b(?:gspot|ESLint|Ruff|SwiftLint|Prettier|Next\\.js|Vale|Bun|Node)'s\\b"
+    - "\\b(?:gspot|ESLint|Ruff|SwiftLint|Prettier|Next\\.js|Vale|Bun|Node)'s\\b"

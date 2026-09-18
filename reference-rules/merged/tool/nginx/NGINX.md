@@ -24,9 +24,9 @@ title: nginx
 - `server_tokens off`. No version in error pages or headers. `enforced-by: nginx/config-test`
 - TLS: `ssl_protocols TLSv1.2 TLSv1.3`, a modern cipher list from the platform's generator,
   `ssl_session_tickets off`, OCSP stapling on. `enforced-by: nginx/config-test`
-- Security headers on every response: `Strict-Transport-Security`, `X-Content-Type-Options
-  nosniff`, `X-Frame-Options` or a frame-ancestors CSP, `Referrer-Policy`, and the application's
-  `Content-Security-Policy`. Set them once in a shared include. `enforced-by: nginx/config-test`
+- Security headers on every response: `Strict-Transport-Security`,
+  `X-Content-Type-Options nosniff`, `X-Frame-Options` or a frame-ancestors CSP, `Referrer-Policy`,
+  and the application's `Content-Security-Policy`. Set them once in a shared include. `enforced-by: nginx/config-test`
 - `client_max_body_size` per location, matching the application route limits, with a small
   default. `enforced-by: nginx/config-test`
 - Timeouts (`proxy_read_timeout`, `proxy_connect_timeout`, `send_timeout`) are explicit and align

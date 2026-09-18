@@ -290,19 +290,19 @@ reader what kind of boundary or owner they are looking at.
 
 Use these meanings consistently:
 
-| Role word        | Use when                                                                               |
-| ---------------- | -------------------------------------------------------------------------------------- |
-| `UseCase`        | Application operation or business workflow.                                            |
-| `Repository`     | Domain-facing access to persisted, cached, or remote domain data.                      |
-| `Client`         | External API, SDK, HTTP, storage, or platform protocol boundary.                       |
-| `Factory`        | Type that constructs instances and owns dependency assembly.                           |
-| `Formatter`      | Converts a value into a display or wire representation.                                |
-| `Parser`         | Converts raw input into structured data.                                               |
-| `Validator`      | Checks a value and returns or throws validation failure.                               |
-| `Mapper`         | Converts between explicit layers, such as DTO or record to domain.                     |
-| `Store`          | Owns local mutable state or persistence mechanics.                                     |
-| `Provider`       | Supplies a capability or value, especially when the source may vary.                   |
-| `Adapter`        | Bridges one interface or framework shape to another.                                   |
+| Role word    | Use when                                                             |
+| ------------ | -------------------------------------------------------------------- |
+| `UseCase`    | Application operation or business workflow.                          |
+| `Repository` | Domain-facing access to persisted, cached, or remote domain data.    |
+| `Client`     | External API, SDK, HTTP, storage, or platform protocol boundary.     |
+| `Factory`    | Type that constructs instances and owns dependency assembly.         |
+| `Formatter`  | Converts a value into a display or wire representation.              |
+| `Parser`     | Converts raw input into structured data.                             |
+| `Validator`  | Checks a value and returns or throws validation failure.             |
+| `Mapper`     | Converts between explicit layers, such as DTO or record to domain.   |
+| `Store`      | Owns local mutable state or persistence mechanics.                   |
+| `Provider`   | Supplies a capability or value, especially when the source may vary. |
+| `Adapter`    | Bridges one interface or framework shape to another.                 |
 
 Do not use a suffix just because the class needs a suffix. If the role is not `enforced-by: naming/identifiers`
 real, rename the type to the concrete domain concept.

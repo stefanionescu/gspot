@@ -14,11 +14,11 @@ literals outside `[tools.drizzle] raw_sql_allowed`.
 
 ## Checks
 
-| Id | Stage | Command |
-| --- | --- | --- |
-| `typescript/eslint` | commit | with the rules above |
-| `drizzle/migrations-fresh` | push | `drizzle-kit generate` produces no new migration (the schema and the migrations agree) |
-| `drizzle/relations-complete` | commit | ast-grep: every `references()` has a matching `relations()` entry |
+| Id                           | Stage  | Command                                                                                |
+| ---------------------------- | ------ | -------------------------------------------------------------------------------------- |
+| `typescript/eslint`          | commit | with the rules above                                                                   |
+| `drizzle/migrations-fresh`   | push   | `drizzle-kit generate` produces no new migration (the schema and the migrations agree) |
+| `drizzle/relations-complete` | commit | ast-grep: every `references()` has a matching `relations()` entry                      |
 
 ## Settings
 

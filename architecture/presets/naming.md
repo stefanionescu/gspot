@@ -10,12 +10,12 @@ outside build output and vendored paths.
 
 ## Checks
 
-| Id | Stage | Over |
-| --- | --- | --- |
-| `naming/identifiers` | commit | every category the language extractor yields |
-| `naming/paths` | commit | file stems and directory names against the language's file and directory cases; the migration file pattern; Next.js segment rules |
-| `naming/policy-schema` | commit | `[naming]` and `[[naming.rules]]` validate; every `allowed` entry and every path rule matches something |
-| `structure/private-prefix`, `structure/file-directory-collision` | commit | run with the naming engine's index; see structure |
+| Id                                                               | Stage  | Over                                                                                                                              |
+| ---------------------------------------------------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------- |
+| `naming/identifiers`                                             | commit | every category the language extractor yields                                                                                      |
+| `naming/paths`                                                   | commit | file stems and directory names against the language's file and directory cases; the migration file pattern; Next.js segment rules |
+| `naming/policy-schema`                                           | commit | `[naming]` and `[[naming.rules]]` validate; every `allowed` entry and every path rule matches something                           |
+| `structure/private-prefix`, `structure/file-directory-collision` | commit | run with the naming engine's index; see structure                                                                                 |
 
 A finding reads:
 

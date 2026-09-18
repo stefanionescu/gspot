@@ -181,20 +181,20 @@ The second example is inaccurate if most readers lack the required role.
 
 Give each kind of information a clear owner. `unenforced`
 
-| Document | Primary purpose |
-|----------|-----------------|
-| Root README | Explain the whole repository, provide the shortest successful path, and route readers to owned subprojects. |
-| Subproject README | Explain one independently usable component, its normal setup, common commands, and routine operation. |
-| Advanced guide | Hold substantial specialist material that obstructs the normal README path. |
-| Contributor guide | Explain contribution setup, review expectations, development workflow, and contribution policy. |
-| Architecture guide | Explain system boundaries, ownership, data flow, important constraints, and architectural reasoning. |
-| API reference | Define endpoints, authentication, requests, responses, errors, limits, and examples. |
-| CLI reference | Define commands, arguments, options, output, exit status, and examples. |
-| Configuration reference | Define keys, types, defaults, allowed values, scope, precedence, and restart requirements. |
-| Troubleshooting guide | Map observable symptoms to diagnosis, cause, resolution, and recovery. |
-| Security policy | Define supported versions, private reporting channels, response expectations, and disclosure policy. |
-| Changelog or release notes | Record user-visible changes by release. |
-| License | State the legal terms for use and distribution. |
+| Document                   | Primary purpose                                                                                             |
+| -------------------------- | ----------------------------------------------------------------------------------------------------------- |
+| Root README                | Explain the whole repository, provide the shortest successful path, and route readers to owned subprojects. |
+| Subproject README          | Explain one independently usable component, its normal setup, common commands, and routine operation.       |
+| Advanced guide             | Hold substantial specialist material that obstructs the normal README path.                                 |
+| Contributor guide          | Explain contribution setup, review expectations, development workflow, and contribution policy.             |
+| Architecture guide         | Explain system boundaries, ownership, data flow, important constraints, and architectural reasoning.        |
+| API reference              | Define endpoints, authentication, requests, responses, errors, limits, and examples.                        |
+| CLI reference              | Define commands, arguments, options, output, exit status, and examples.                                     |
+| Configuration reference    | Define keys, types, defaults, allowed values, scope, precedence, and restart requirements.                  |
+| Troubleshooting guide      | Map observable symptoms to diagnosis, cause, resolution, and recovery.                                      |
+| Security policy            | Define supported versions, private reporting channels, response expectations, and disclosure policy.        |
+| Changelog or release notes | Record user-visible changes by release.                                                                     |
+| License                    | State the legal terms for use and distribution.                                                             |
 
 Do not use `ADVANCED.md` as a substitute for:
 
@@ -346,20 +346,20 @@ content has a coherent audience and purpose.
 
 ### Content placement matrix
 
-| Information | README | Advanced guide | Different owner |
-|-------------|:------:|:--------------:|-----------------|
-| One-line purpose | Yes | No | None |
-| Minimal runnable example | Yes | No | Example file may also own runnable code |
-| Basic prerequisites and setup | Yes | No | None |
-| Routine commands | Yes | Optional summary | CLI reference for exhaustive options |
-| Essential limitations | Yes | More detail if useful | None |
-| Architecture overview | Yes | Detailed model | Architecture guide for large systems |
-| Rare tuning options | Short link only | Yes | Configuration reference if exhaustive |
-| Destructive recovery | Warning and route | Full procedure | Operations runbook when access is restricted |
-| Public API overview | Yes | Optional internals | API reference owns the contract |
-| Contribution workflow | Short route | No | Contributor guide |
-| Version history | No | No | Changelog or release notes |
-| Security reporting | Short route | No | Security policy |
+| Information                   |      README       |    Advanced guide     | Different owner                              |
+| ----------------------------- | :---------------: | :-------------------: | -------------------------------------------- |
+| One-line purpose              |        Yes        |          No           | None                                         |
+| Minimal runnable example      |        Yes        |          No           | Example file may also own runnable code      |
+| Basic prerequisites and setup |        Yes        |          No           | None                                         |
+| Routine commands              |        Yes        |   Optional summary    | CLI reference for exhaustive options         |
+| Essential limitations         |        Yes        | More detail if useful | None                                         |
+| Architecture overview         |        Yes        |    Detailed model     | Architecture guide for large systems         |
+| Rare tuning options           |  Short link only  |          Yes          | Configuration reference if exhaustive        |
+| Destructive recovery          | Warning and route |    Full procedure     | Operations runbook when access is restricted |
+| Public API overview           |        Yes        |  Optional internals   | API reference owns the contract              |
+| Contribution workflow         |    Short route    |          No           | Contributor guide                            |
+| Version history               |        No         |          No           | Changelog or release notes                   |
+| Security reporting            |    Short route    |          No           | Security policy                              |
 
 ### Link the two guides
 

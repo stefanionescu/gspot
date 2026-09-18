@@ -514,4 +514,3 @@ Good:
 .accessibilityIdentifier("submitButton")
 .accessibilityIdentifier("profileAvatarButton")
 ```
-

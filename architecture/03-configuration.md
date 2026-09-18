@@ -4,24 +4,24 @@ This document decides the one file a person edits, the files gspot owns, and how
 
 ## Files
 
-| Path | Owner | Tracked | Purpose |
-| --- | --- | --- | --- |
-| `gspot.toml` | the repository | yes | The policy. Written by `init`, changed by the six writing commands (`ignore`, `add`, `remove`, `allow`, `set`, `declare`) or by hand; every load validates it the same way. |
-| `gspot.local.toml` | one machine | no | Local skips. Nothing else. |
-| `.gspot/<tool>.<ext>` | gspot | yes | Generated tool configuration. Header names the writer. |
-| `.gspot/version` | gspot | yes | The gspot version this repository runs. One line. Written by `init`, moved by `upgrade`. |
-| `.gspot/hooks/*` | gspot | yes | Git hooks. |
-| `.gspot/baseline/*.json` | gspot | yes | Recorded finding counts. |
-| `.gspot/rules/**` | gspot | yes | Installed agent rule files. |
-| `.gspot/cache/**` | gspot | no | Check results keyed on inputs. |
-| `.gspot/last.json` | gspot | no | The last run. |
-| `.gitignore` | gspot, managed block | yes | Lists the three untracked paths above: `gspot.local.toml`, `.gspot/cache/`, `.gspot/last.json`. |
-| `<conventional path>` stubs | gspot | yes | One-line files that point editors at `.gspot/`. |
-| `.editorconfig` | gspot | yes | Owned whole by the formatting preset, rendered from `[format]`; `[tools.editorconfig.extra]` adds a section gspot does not render. |
-| `.mise/conf.d/gspot.toml` | gspot | yes | Tool pins and tasks under the mise runner. |
-| `.github/workflows/gspot.yml` | gspot | yes | The CI job, when enabled. |
-| `.vscode/settings.json`, `.vscode/extensions.json` | gspot, managed block | yes | Editor wiring, when `[editor] vscode = true`. |
-| `gspot.schema.json` | gspot, published with each release | no | The JSON schema of `gspot.toml`, generated from the zod schema and submitted to SchemaStore, so taplo and editors validate the file as they do `mise.toml`. `init` writes a `#:schema` line at the top of `gspot.toml`. |
+| Path                                               | Owner                              | Tracked | Purpose                                                                                                                                                                                                                 |
+| -------------------------------------------------- | ---------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `gspot.toml`                                       | the repository                     | yes     | The policy. Written by `init`, changed by the six writing commands (`ignore`, `add`, `remove`, `allow`, `set`, `declare`) or by hand; every load validates it the same way.                                             |
+| `gspot.local.toml`                                 | one machine                        | no      | Local skips. Nothing else.                                                                                                                                                                                              |
+| `.gspot/<tool>.<ext>`                              | gspot                              | yes     | Generated tool configuration. Header names the writer.                                                                                                                                                                  |
+| `.gspot/version`                                   | gspot                              | yes     | The gspot version this repository runs. One line. Written by `init`, moved by `upgrade`.                                                                                                                                |
+| `.gspot/hooks/*`                                   | gspot                              | yes     | Git hooks.                                                                                                                                                                                                              |
+| `.gspot/baseline/*.json`                           | gspot                              | yes     | Recorded finding counts.                                                                                                                                                                                                |
+| `.gspot/rules/**`                                  | gspot                              | yes     | Installed agent rule files.                                                                                                                                                                                             |
+| `.gspot/cache/**`                                  | gspot                              | no      | Check results keyed on inputs.                                                                                                                                                                                          |
+| `.gspot/last.json`                                 | gspot                              | no      | The last run.                                                                                                                                                                                                           |
+| `.gitignore`                                       | gspot, managed block               | yes     | Lists the three untracked paths above: `gspot.local.toml`, `.gspot/cache/`, `.gspot/last.json`.                                                                                                                         |
+| `<conventional path>` stubs                        | gspot                              | yes     | One-line files that point editors at `.gspot/`.                                                                                                                                                                         |
+| `.editorconfig`                                    | gspot                              | yes     | Owned whole by the formatting preset, rendered from `[format]`; `[tools.editorconfig.extra]` adds a section gspot does not render.                                                                                      |
+| `.config/mise/conf.d/gspot.toml`                   | gspot                              | yes     | Tool pins and tasks under the mise runner.                                                                                                                                                                              |
+| `.github/workflows/gspot.yml`                      | gspot                              | yes     | The CI job, when enabled.                                                                                                                                                                                               |
+| `.vscode/settings.json`, `.vscode/extensions.json` | gspot, managed block               | yes     | Editor wiring, when `[editor] vscode = true`.                                                                                                                                                                           |
+| `gspot.schema.json`                                | gspot, published with each release | no      | The JSON schema of `gspot.toml`, generated from the zod schema and submitted to SchemaStore, so taplo and editors validate the file as they do `mise.toml`. `init` writes a `#:schema` line at the top of `gspot.toml`. |
 
 Every generated file opens with a header:
 
@@ -30,9 +30,11 @@ Every generated file opens with a header:
 # Change policy: gspot set / allow / ignore, or edit gspot.toml, then run: gspot sync
 ```
 
-JSON files carry the same text under a `"_gspot"` key. `sync --check` finds generated files by
-this header, not by a stored list, so a renamed or copied generated file is still caught, and
-gspot writes them read-only where the platform allows, as projen does.
+JSON files carry the same text under a `"_gspot"` key, except a JSON file whose reader refuses
+unknown keys (Prettier's), which carries none and is known from the rendered list. `sync --check`
+compares every rendered file with the disk and finds strays by the header, so a renamed or copied
+generated file is still caught, and gspot writes them read-only where the platform allows, as
+projen does.
 
 ## `gspot.toml`
 
@@ -301,8 +303,8 @@ For every setting:
 ```text
 preset default
   → framework or platform preset override, in selection order
-  → scope table
   → root table
+  → scope table
 ```
 
 Lists append and deduplicate. Scalars replace. Two presets that set the same scalar to different
@@ -323,8 +325,8 @@ values fail at load with both presets named; a person resolves it with an explic
 - `init` writes one file per rule that has findings. The gate passes that day.
 - Where a tool has its own baseline mechanism, gspot drives it instead of counting: ESLint's
   bulk suppressions (`--suppress-all` at `init`, `--suppressions-location
-  .gspot/baseline/eslint.json` on every run, `--prune-suppressions` under `sync --baseline`) and
-  basedpyright's `--writebaseline` with the file under `.gspot/baseline/`. The tool then honours
+.gspot/baseline/eslint.json` on every run, `--prune-suppressions` under `sync --baseline`) and
+  basedpyright's `--writebaseline` with the file under `.gspot/baseline/`. The tool then honors
   the same file in the editor, so the editor and the gate agree. Every other check uses the count
   file above. The person sees one command either way.
 - `check` fails when the count exceeds the baseline, or when a touched file's own count grows.
@@ -349,12 +351,12 @@ Every tracked path has one nature: `source`, `generated`, `vendored`, `binary`. 
 `[[declare]]`, `.gitattributes` (`linguist-generated`, `linguist-vendored`, `-text`, `filter=lfs`),
 a generated-file banner the preset knows, and a content sniff for binaries, in that order.
 
-| Nature | Checks that apply |
-| --- | --- |
-| source | everything the selected presets claim for its extension |
+| Nature    | Checks that apply                                                                                                                                                                                                                                              |
+| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| source    | everything the selected presets claim for its extension                                                                                                                                                                                                        |
 | generated | secrets, freshness (run `produced_by` and diff). Freshness applies to tracked files only: a generated file that git ignores (`next-env.d.ts`, `cloudflare-env.d.ts`) is regenerated by the build and has nothing to compare, so the check skips it and says so |
-| vendored | secrets, licenses, vulnerabilities |
-| binary | secrets, size limit unless under LFS |
+| vendored  | secrets, licenses, vulnerabilities                                                                                                                                                                                                                             |
+| binary    | secrets, size limit unless under LFS                                                                                                                                                                                                                           |
 
 A source file no preset claims is `unchecked`. `doctor` lists it. With `[coverage] strict = true`
 it fails `check`.

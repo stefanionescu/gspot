@@ -5,4 +5,4 @@ ignorecase: true
 scope: raw
 nonword: true
 tokens:
-  - "\\[(?:here|this|this page|read more|more|click here|link|documentation|docs)\\]\\("
+    - "\\[(?:here|this|this page|read more|more|click here|link|documentation|docs)\\]\\("

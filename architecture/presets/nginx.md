@@ -4,11 +4,11 @@ Kind: tool. Requires: docker when the configuration runs in a container.
 
 ## Detects and claims
 
-| | |
-| --- | --- |
-| Detect | `nginx.conf`, `*.conf` under a directory named `nginx` |
-| Claims | the same |
-| Required inspections | syntax, security |
+|                      |                                                        |
+| -------------------- | ------------------------------------------------------ |
+| Detect               | `nginx.conf`, `*.conf` under a directory named `nginx` |
+| Claims               | the same                                               |
+| Required inspections | syntax, security                                       |
 
 ## Tools
 
@@ -16,9 +16,9 @@ gixy, docker (host) for `nginx -t`.
 
 ## Checks
 
-| Id | Stage | Command |
-| --- | --- | --- |
-| `nginx/gixy` | commit | `gixy <file>` |
+| Id                  | Stage        | Command                                                                                                                                                  |
+| ------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `nginx/gixy`        | commit       | `gixy <file>`                                                                                                                                            |
 | `nginx/config-test` | push, docker | `docker compose -f <compose> run --rm --no-deps <service> nginx -t`; the image, network aliases and volumes come from the compose file, never from gspot |
 
 The service name comes from `[tools.nginx] compose_service`; when unset, the first service whose

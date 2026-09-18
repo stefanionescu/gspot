@@ -9,7 +9,7 @@ title: Concept Template
 Template. Remove sections that do not apply. Do not publish empty headings or placeholder
 prose.
 
-````markdown
+```markdown
 # CONCEPT_NAME
 
 Define the concept and explain why it matters.
@@ -30,4 +30,4 @@ Describe responsibilities and dependency direction.
 ## Related tasks
 
 - [DESCRIPTIVE_TASK](RELATIVE_LINK)
-````
+```

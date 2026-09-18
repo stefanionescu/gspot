@@ -6,12 +6,12 @@ This document decides where checks run: git hooks, the CI workflow, and the task
 
 Every check declares one stage. The stage decides which hook runs it.
 
-| Stage | Runs | Over | Hook |
-| --- | --- | --- | --- |
-| `commit` | checks that need only the source: formatters, linters, type checks, structure, naming, integrity | staged files; project-wide checks run when any staged file is in their scope | pre-commit |
-| `push` | everything in `commit` plus checks that need a build, a daemon or the network: container scans, dependency audits, dead-code analysis, link crawls, generated-file freshness, coverage thresholds | the whole tree | pre-push |
-| `manual` | checks that take minutes or need credentials: CodeQL, external link verification, image scans | the whole tree | none; `gspot check --stage manual` and the CI workflow |
-| `message` | commitlint | the commit message | commit-msg |
+| Stage     | Runs                                                                                                                                                                                              | Over                                                                         | Hook                                                   |
+| --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------- | ------------------------------------------------------ |
+| `commit`  | checks that need only the source: formatters, linters, type checks, structure, naming, integrity                                                                                                  | staged files; project-wide checks run when any staged file is in their scope | pre-commit                                             |
+| `push`    | everything in `commit` plus checks that need a build, a daemon or the network: container scans, dependency audits, dead-code analysis, link crawls, generated-file freshness, coverage thresholds | the whole tree                                                               | pre-push                                               |
+| `manual`  | checks that take minutes or need credentials: CodeQL, external link verification, image scans                                                                                                     | the whole tree                                                               | none; `gspot check --stage manual` and the CI workflow |
+| `message` | commitlint                                                                                                                                                                                        | the commit message                                                           | commit-msg                                             |
 
 A check requires nothing, or one of `build`, `docker`, `network`. A requirement puts the check in
 `push` at least. A `docker` requirement with no daemon fails; there is no silent pass.
@@ -39,12 +39,12 @@ unstaged changes` so nobody mistakes the verdict for a verdict on the commit alo
 
 `[hooks] manager` selects one:
 
-| Manager | gspot writes | When proposed |
-| --- | --- | --- |
-| `gspot` | `.gspot/hooks/pre-commit`, `pre-push`, `commit-msg`; sets `core.hooksPath = .gspot/hooks` | default |
-| `lefthook` | a `gspot` block in `lefthook.yml` | `lefthook.yml` exists |
-| `husky` | `.husky/pre-commit`, `pre-push`, `commit-msg` lines | `.husky/` exists |
-| `none` | nothing | the person says no |
+| Manager    | gspot writes                                                                              | When proposed         |
+| ---------- | ----------------------------------------------------------------------------------------- | --------------------- |
+| `gspot`    | `.gspot/hooks/pre-commit`, `pre-push`, `commit-msg`; sets `core.hooksPath = .gspot/hooks` | default               |
+| `lefthook` | a `gspot` block in `lefthook.yml`                                                         | `lefthook.yml` exists |
+| `husky`    | `.husky/pre-commit`, `pre-push`, `commit-msg` lines                                       | `.husky/` exists      |
+| `none`     | nothing                                                                                   | the person says no    |
 
 The gspot hook body:
 
@@ -82,15 +82,17 @@ second line.
 
 The runner is a surface for humans and editors. Every task calls gspot; the graph lives in gspot.
 
-| Surface | gspot writes | Tasks |
-| --- | --- | --- |
-| mise | `.mise/conf.d/gspot.toml` with `[tools]` pins and `[tasks]` | `gspot:check`, `gspot:fix`, `gspot:sync`, `gspot:doctor`, `gspot:setup` |
-| npm, bun, pnpm | `scripts` entries in `package.json`, after a yes | `check`, `check:fix`, `sync`, `prepare` (runs `gspot sync`) |
-| uv | `[tool.gspot]` is not used; `uv run gspot` works when gspot is a dev dependency through the npm wrapper, else the binary on `PATH` | none |
-| none | nothing | none |
+| Surface        | gspot writes                                                                                                                       | Tasks                                                                   |
+| -------------- | ---------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| mise           | `.config/mise/conf.d/gspot.toml` with `[tools]` pins and `[tasks]`                                                                 | `gspot:check`, `gspot:fix`, `gspot:sync`, `gspot:doctor`, `gspot:setup` |
+| npm, bun, pnpm | `scripts` entries in `package.json`, after a yes                                                                                   | `check`, `check:fix`, `sync`, `prepare` (runs `gspot sync`)             |
+| uv             | `[tool.gspot]` is not used; `uv run gspot` works when gspot is a dev dependency through the npm wrapper, else the binary on `PATH` | none                                                                    |
+| none           | nothing                                                                                                                            | none                                                                    |
 
-gspot never edits `mise.toml`. mise merges every file under `.mise/conf.d/`, so gspot owns one
-file there and the repository's own pins and tasks stay untouched. A pin the repository already
+gspot never edits `mise.toml`. mise merges every file under `.config/mise/conf.d/` (the one
+`conf.d` directory mise reads), so gspot owns one file there and the repository's own pins and
+tasks stay untouched. `init` runs `mise trust` on that file before the install step, because mise
+refuses a configuration file nobody has trusted. A pin the repository already
 set for a tool gspot needs is kept; `doctor` reports a version below the preset's floor. The
 gspot file also pins gspot itself (`gspot = "0.5.0"` through `ubi:`), which is what `mise exec`
 and the hook resolve.

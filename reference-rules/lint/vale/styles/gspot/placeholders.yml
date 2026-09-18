@@ -3,5 +3,5 @@ message: "Placeholder style '%s'. Use <UPPER_SNAKE_CASE> in angle brackets."
 level: error
 nonword: true
 tokens:
-  - "\\bYOUR_[A-Z_]+\\b"
-  - "\\{\\{?[a-z_]+\\}\\}?"
+    - "\\bYOUR_[A-Z_]+\\b"
+    - "\\{\\{?[a-z_]+\\}\\}?"

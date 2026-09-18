@@ -1,0 +1,9 @@
+# Assignments per function; the engine compares the count with limits.bash.mutable_assignments.
+id: shell-mutable-assignments
+language: bash
+rule:
+    kind: variable_assignment
+    not:
+        inside:
+            kind: declaration_command
+            stopBy: end

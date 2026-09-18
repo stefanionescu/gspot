@@ -27,15 +27,15 @@ runs, settings it exposes, and rule files it installs. It contributes nothing it
 Seven kinds. The kind names the folder under `presets/` in this documentation and a `kind` field in
 the manifest. Preset ids are bare names; the kind is not part of the id.
 
-| Kind | Selected by | Claims files by | Examples |
-| --- | --- | --- | --- |
-| language | an extension in the tree | extension, filename, shebang | typescript, python, swift, bash, sql, css, html, markdown |
-| framework | a dependency | path convention the framework dictates | nextjs, express, fastapi |
-| platform | the platform's config file | the platform's layout | supabase, cloudflare |
-| tool | the tool's own file | the tool's files | docker, nginx, xcode, vitest, pytest |
-| library | a dependency | none; adds rules to the language's checks | zod, drizzle, trpc, tanstack-query, zustand, react-hook-form, i18n |
-| database | a dialect or connection | migration and schema files | postgres |
-| repository | the person, for a concern that spans languages | the whole tree | structure, naming, prose, secrets, vulnerabilities, dependencies, licenses, commits, duplication, formatting, docs, config-files, static-site |
+| Kind       | Selected by                                    | Claims files by                           | Examples                                                                                                                                      |
+| ---------- | ---------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| language   | an extension in the tree                       | extension, filename, shebang              | typescript, python, swift, bash, sql, css, html, markdown                                                                                     |
+| framework  | a dependency                                   | path convention the framework dictates    | nextjs, express, fastapi                                                                                                                      |
+| platform   | the platform's config file                     | the platform's layout                     | supabase, cloudflare                                                                                                                          |
+| tool       | the tool's own file                            | the tool's files                          | docker, nginx, xcode, vitest, pytest                                                                                                          |
+| library    | a dependency                                   | none; adds rules to the language's checks | zod, drizzle, trpc, tanstack-query, zustand, react-hook-form, i18n                                                                            |
+| database   | a dialect or connection                        | migration and schema files                | postgres                                                                                                                                      |
+| repository | the person, for a concern that spans languages | the whole tree                            | structure, naming, prose, secrets, vulnerabilities, dependencies, licenses, commits, duplication, formatting, docs, config-files, static-site |
 
 ## Manifest
 
@@ -91,7 +91,7 @@ id      = "typescript/eslint"
 stage   = "commit"
 takes   = "files"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{files}"]
-fix     = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
+fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"               # codemod | imports | manifest | format
 summary = "Runs ESLint with the shipped rule set over every TypeScript file."
 why     = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."
@@ -149,7 +149,7 @@ language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
   them; nothing else describes a check.
 - `takes = "files"` receives the claimed file list as `{files}`. `takes = "project"` runs once
   from the scope root and reports its own inputs.
-- A check with `fix` names its `fix_order`.
+- A check with `fix_command` names its `fix_order`. `fix` is the prose that tells a person what to do; `fix_command` is what `check --fix` runs.
 - A check whose exit code does not reflect findings declares `count_regex`.
 - `[required]` names, per extension, the inspection kinds a file needs to count as fully
   checked. `doctor` reports files that fall short. Kinds: `format`, `syntax`, `schema`, `style`,
@@ -205,27 +205,27 @@ over that scope's files. Root-only presets (repository kind) run once over the w
 
 Signals, in the order `init` prints them:
 
-| Signal | Proposes |
-| --- | --- |
-| extension present in the tree, matched against every language preset's `detect.extensions` | that language |
-| shebang on an extensionless file (`bash`, `sh`, `zsh`, `python`, `node`) | bash or python or javascript |
-| `next` in dependencies, `next.config.*` | nextjs |
-| `express` in dependencies | express |
-| `fastapi` in dependencies | fastapi |
-| `supabase/config.toml` | supabase, postgres, sql |
-| `wrangler.jsonc`, `wrangler.toml`, `functions/_middleware.js`, `_headers` | cloudflare |
-| `*.xcodeproj`, `Package.swift` | swift; xcode for the project |
-| `Dockerfile*`, `docker-compose*.yml` | docker |
-| `nginx.conf` | nginx |
-| `vitest` in dependencies | vitest |
-| `pytest` in dependencies or `[tool.pytest]` | pytest |
-| `zod`, `drizzle-orm`, `@trpc/server`, `@tanstack/react-query`, `zustand`, `react-hook-form`, `next-intl` or `i18next` in dependencies | the library preset |
-| `*.sql` files | sql; postgres when Postgres syntax appears |
-| `*.html` with no framework and a build script | html, static-site |
-| `.md` files | markdown |
-| `.json`, `.yaml`, `.toml` files | config-files |
-| any repository | structure, naming, formatting, docs, secrets, dependencies, commits, spelling |
-| `go.mod`, `Cargo.toml`, `Gemfile`, `manage.py`, `vite.config.*`, Expo `app.json`, `nest-cli.json`, `svelte.config.*`, `vue.config.*` | nothing yet; `init` prints "no preset for go; 212 files unchecked" and `doctor` lists them. The language name and the extension list come from GitHub Linguist's data (`linguist-languages`), not a table gspot keeps |
+| Signal                                                                                                                                | Proposes                                                                                                                                                                                                              |
+| ------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| extension present in the tree, matched against every language preset's `detect.extensions`                                            | that language                                                                                                                                                                                                         |
+| shebang on an extensionless file (`bash`, `sh`, `zsh`, `python`, `node`)                                                              | bash or python or javascript                                                                                                                                                                                          |
+| `next` in dependencies, `next.config.*`                                                                                               | nextjs                                                                                                                                                                                                                |
+| `express` in dependencies                                                                                                             | express                                                                                                                                                                                                               |
+| `fastapi` in dependencies                                                                                                             | fastapi                                                                                                                                                                                                               |
+| `supabase/config.toml`                                                                                                                | supabase, postgres, sql                                                                                                                                                                                               |
+| `wrangler.jsonc`, `wrangler.toml`, `functions/_middleware.js`, `_headers`                                                             | cloudflare                                                                                                                                                                                                            |
+| `*.xcodeproj`, `Package.swift`                                                                                                        | swift; xcode for the project                                                                                                                                                                                          |
+| `Dockerfile*`, `docker-compose*.yml`                                                                                                  | docker                                                                                                                                                                                                                |
+| `nginx.conf`                                                                                                                          | nginx                                                                                                                                                                                                                 |
+| `vitest` in dependencies                                                                                                              | vitest                                                                                                                                                                                                                |
+| `pytest` in dependencies or `[tool.pytest]`                                                                                           | pytest                                                                                                                                                                                                                |
+| `zod`, `drizzle-orm`, `@trpc/server`, `@tanstack/react-query`, `zustand`, `react-hook-form`, `next-intl` or `i18next` in dependencies | the library preset                                                                                                                                                                                                    |
+| `*.sql` files                                                                                                                         | sql; postgres when Postgres syntax appears                                                                                                                                                                            |
+| `*.html` with no framework and a build script                                                                                         | html, static-site                                                                                                                                                                                                     |
+| `.md` files                                                                                                                           | markdown                                                                                                                                                                                                              |
+| `.json`, `.yaml`, `.toml` files                                                                                                       | config-files                                                                                                                                                                                                          |
+| any repository                                                                                                                        | structure, naming, formatting, docs, secrets, dependencies, commits, spelling                                                                                                                                         |
+| `go.mod`, `Cargo.toml`, `Gemfile`, `manage.py`, `vite.config.*`, Expo `app.json`, `nest-cli.json`, `svelte.config.*`, `vue.config.*`  | nothing yet; `init` prints "no preset for go; 212 files unchecked" and `doctor` lists them. The language name and the extension list come from GitHub Linguist's data (`linguist-languages`), not a table gspot keeps |
 
 Detection reads manifests and file names. It never reads code to guess a framework.
 

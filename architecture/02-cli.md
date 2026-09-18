@@ -44,7 +44,7 @@ The checklist is [clig.dev](https://clig.dev/). What it means here:
   `gspot check --json > out.json` holds only the record.
 - `-h` and `--help` on every command; `--help` lists every flag with one plain sentence each.
   `--version` prints the version and nothing else.
-- No colour, no spinner and no question without a terminal. A question that has no flag and no
+- No color, no spinner and no question without a terminal. A question that has no flag and no
   terminal is exit 2, naming the flag.
 - A mistyped command or flag prints the closest match. A command that deletes (`uninstall`,
   `init` over existing configuration, `remove`) prints its plan and asks; `--yes` answers.
@@ -64,7 +64,7 @@ Reads the repository, proposes a policy, writes it after a yes.
 ### What it reads
 
 1. The files git tracks or would track (`git ls-files --cached --others --exclude-standard`),
-   so a file created and not yet staged is checked too; or a walk that honours `.gitignore`
+   so a file created and not yet staged is checked too; or a walk that honors `.gitignore`
    when there is no git repository.
 2. Manifests: `package.json`, `pyproject.toml`, `requirements*.txt`, `Package.swift`, `*.xcodeproj`,
    `go.mod`, `Cargo.toml`, `Gemfile`, `supabase/config.toml`, `wrangler.*`, `next.config.*`,
@@ -102,16 +102,16 @@ no gspot preset      qlty  lychee
 Asked in this order, in a terminal, through `@clack/prompts`. Each has a flag. `--yes` takes
 every proposal. With no terminal and no flag for a question, gspot exits 2 and names the flag.
 
-| Question | Proposal | Flag |
-| --- | --- | --- |
-| Scopes and presets per scope | From detection | `--presets`, `--scope` |
-| Own these tools? (one yes or no per tool) | Yes for every tool gspot has a preset for | `--own <tool,...>` or `--yes` |
-| Extensions nothing claims: declare or leave | Leave, listed in `doctor` | `--yes` |
-| Install git hooks? | Yes when hooks exist; else yes | `--hooks gspot|lefthook|husky|none` |
-| Write a CI workflow? | Yes when `.github/` exists with no lint job; else no | `--ci github|none` |
-| Install agent rule files? | Yes | `--rules yes|no` |
-| Task runner surface | The runner detected; `none` when none | `--runner` |
-| Keep your formatting? (asked only when an existing formatter config differs from the shipped `[format]`) | Keep: your indent and width go into `[format]` and nothing is reformatted | `--format keep|shipped` |
+| Question                                                                                                 | Proposal                                                                  | Flag                          |
+| -------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- | ----------------------------- | -------- | ----- | ----- |
+| Scopes and presets per scope                                                                             | From detection                                                            | `--presets`, `--scope`        |
+| Own these tools? (one yes or no per tool)                                                                | Yes for every tool gspot has a preset for                                 | `--own <tool,...>` or `--yes` |
+| Extensions nothing claims: declare or leave                                                              | Leave, listed in `doctor`                                                 | `--yes`                       |
+| Install git hooks?                                                                                       | Yes when hooks exist; else yes                                            | `--hooks gspot                | lefthook | husky | none` |
+| Write a CI workflow?                                                                                     | Yes when `.github/` exists with no lint job; else no                      | `--ci github                  | none`    |
+| Install agent rule files?                                                                                | Yes                                                                       | `--rules yes                  | no`      |
+| Task runner surface                                                                                      | The runner detected; `none` when none                                     | `--runner`                    |
+| Keep your formatting? (asked only when an existing formatter config differs from the shipped `[format]`) | Keep: your indent and width go into `[format]` and nothing is reformatted | `--format keep                | shipped` |
 
 ### The plan
 
@@ -139,7 +139,7 @@ carried into gspot.toml
 
 change
   package.json                    add 12 devDependencies gspot pins; remove 3 scripts gspot replaces
-  .mise/conf.d/gspot.toml         9 tool pins, 4 tasks, gspot 0.5.0
+  .config/mise/conf.d/gspot.toml         9 tool pins, 4 tasks, gspot 0.5.0
   .gitignore                      one managed block
 
 no longer runs; delete when ready
@@ -169,12 +169,12 @@ deleted file with the `git show` command that prints it.
 
 Carried into `gspot.toml`, because they are facts about the repository and not policy:
 
-| From | Into |
-| --- | --- |
-| typos words and excludes | `[tools.typos] words`, `exclude`, reason `carried at init` |
-| gitleaks allowlist entries and baseline fingerprints | `[tools.gitleaks] allow`, `baseline_reasons` |
-| osv-scanner ignored advisories | `[tools.osv] ignore` |
-| license exceptions | `[[tools.licenses.exceptions]]` |
+| From                                                                                                                                                                                                                                   | Into                                                                    |
+| -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------- |
+| typos words and excludes                                                                                                                                                                                                               | `[tools.typos] words`, `exclude`, reason `carried at init`              |
+| gitleaks allowlist entries and baseline fingerprints                                                                                                                                                                                   | `[tools.gitleaks] allow`, `baseline_reasons`                            |
+| osv-scanner ignored advisories                                                                                                                                                                                                         | `[tools.osv] ignore`                                                    |
+| license exceptions                                                                                                                                                                                                                     | `[[tools.licenses.exceptions]]`                                         |
 | a rule turned off in a linter config (ESLint `off`, Ruff `ignore` and `per-file-ignores`, SwiftLint `disabled_rules`, ShellCheck `disable`, sqlfluff `exclude_rules`, squawk `excluded_rules`, markdownlint `false`, stylelint `null`) | one `[[ignore]]` per rule with the reason `carried from <file> at init` |
 
 That is the whole carry list: exception lists and allowlists, which are facts about the
@@ -213,17 +213,17 @@ has changed in the repository since the install and the command that applies eac
 
 Runs checks and prints findings.
 
-| Form | Runs |
-| --- | --- |
-| `gspot check` | Every check in every scope, `commit` and `push` stages. Whole tree. |
-| `gspot check --staged` | `commit` stage over staged files. The pre-commit form. |
-| `gspot check --since origin/main` | `commit` and `push` stages over files changed since a ref. The pull-request form. |
-| `gspot check --stage manual` | The checks that need the network or minutes: CodeQL, external links, container scans. |
-| `gspot check typescript/eslint` | One check. |
-| `gspot check --scope api` | One scope. |
-| `gspot check --fix` | Every fixer in order (codemods, imports, manifests, formatters), then the checks again to prove convergence. |
-| `gspot check --fix --dry-run` | Prints the diff of every fix without applying it. Writes nothing. |
-| `gspot check --skip <id>` | Skips one check this run. Printed and recorded. |
+| Form                              | Runs                                                                                                         |
+| --------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `gspot check`                     | Every check in every scope, `commit` and `push` stages. Whole tree.                                          |
+| `gspot check --staged`            | `commit` stage over staged files. The pre-commit form.                                                       |
+| `gspot check --since origin/main` | `commit` and `push` stages over files changed since a ref. The pull-request form.                            |
+| `gspot check --stage manual`      | The checks that need the network or minutes: CodeQL, external links, container scans.                        |
+| `gspot check typescript/eslint`   | One check.                                                                                                   |
+| `gspot check --scope api`         | One scope.                                                                                                   |
+| `gspot check --fix`               | Every fixer in order (codemods, imports, manifests, formatters), then the checks again to prove convergence. |
+| `gspot check --fix --dry-run`     | Prints the diff of every fix without applying it. Writes nothing.                                            |
+| `gspot check --skip <id>`         | Skips one check this run. Printed and recorded.                                                              |
 
 Every finding line carries the rule, the message, and a link to the rule's page under
 `docs/rules/<check-id>`. `gspot explain <check-id>` prints that page in the terminal: the
@@ -244,13 +244,14 @@ prints `cache` instead of `ok` and does not run. The cache never decides a verdi
 result is a recorded verdict from a real run.
 
 A check whose file set is empty does not run and does not print. A check whose tool is missing
-prints `MISSING` and fails with the install hint from `doctor`.
+prints `missing` and fails with the install hint from `doctor`. Status words are lowercase: `ok`,
+`cache`, `fail`, `missing`, `error`, `skip`.
 
 ### Output
 
 ```text
 api        typescript/tsc            ok       512 files   4.2s
-api        typescript/eslint         FAIL     512 files  21.4s
+api        typescript/eslint         fail     512 files  21.4s
   src/routes/turn.ts:41:3  gspot/no-call-through  This function passes its arguments straight through to buildTurn.
     help: Call buildTurn directly and delete this function, or give it real work.
   src/routes/turn.ts:88:1  max-lines-per-function  Function has 71 lines (limit 60).
@@ -258,7 +259,7 @@ api        typescript/eslint         FAIL     512 files  21.4s
   reproduce: gspot check typescript/eslint --scope api
 api        docker/hadolint           ok         1 file    0.3s
 supabase   sql/sqlfluff              ok        83 files   1.8s
-ios        swift/swiftlint           MISSING  swiftlint 0.63.2 is not installed. Run: mise install
+ios        swift/swiftlint           missing  swiftlint 0.63.2 is not installed. Run: mise install
 
 baselines  typescript/eslint:vitest/expect-expect  97 of 100
 ignores    3 (printed with --verbose)
@@ -372,12 +373,12 @@ the one line that would change it.
 
 One verb for "what is this". It takes:
 
-| Argument | Prints |
-| --- | --- |
-| a check id (`structure/call-through`) | `summary`, `why` and `fix` from the manifest; the preset that turns it on; the rule file statement it enforces; the settings that change it; the `ignore` line that turns it off |
-| a tool rule (`markdownlint/MD024`) | the tool's own summary, read from the tool (`ruff rule <code> --output-format json`, `swiftlint rules <id>`, an ESLint rule's `meta.docs`, markdownlint's rule metadata, ShellCheck's wiki page id) or its page; the check that runs it; the `ignore` line for off; the `set` line for options |
-| a preset id (`python`) | what it detects and claims, the tools it pins, the checks it runs by stage, the settings it exposes, the rule files it installs |
-| a setting key (`limits.function_lines`) | meaning, default, direction, current value and where it came from, the `set` line that changes it |
+| Argument                                | Prints                                                                                                                                                                                                                                                                                         |
+| --------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| a check id (`structure/call-through`)   | `summary`, `why` and `fix` from the manifest; the preset that turns it on; the rule file statement it enforces; the settings that change it; the `ignore` line that turns it off                                                                                                               |
+| a tool rule (`markdownlint/MD024`)      | the tool's own summary, read from the tool (`ruff rule <code> --output-format json`, `swiftlint rules <id>`, an ESLint rule's `meta.docs`, markdownlint's rule metadata, ShellCheck's wiki page id) or its page; the check that runs it; the `ignore` line for off; the `set` line for options |
+| a preset id (`python`)                  | what it detects and claims, the tools it pins, the checks it runs by stage, the settings it exposes, the rule files it installs                                                                                                                                                                |
+| a setting key (`limits.function_lines`) | meaning, default, direction, current value and where it came from, the `set` line that changes it                                                                                                                                                                                              |
 
 Every text `explain` prints is written for a person who does not code: what the thing looks
 for, what goes wrong without it, what to do. The same text is the page under `docs/`.
@@ -411,7 +412,7 @@ changed outside gspot
   .github/workflows/lint.yml         a second lint job            none; informational
 
 pinned twice
-  swiftlint 0.63.2                   mise.toml and .mise/conf.d/gspot.toml   delete the mise.toml line
+  swiftlint 0.63.2                   mise.toml and .config/mise/conf.d/gspot.toml   delete the mise.toml line
   eslint 9.38.0                      api/package.json and the root            delete the api entry
 
 hooks      .gspot/hooks  installed
@@ -454,9 +455,9 @@ downward included.
 Removes what `init` wrote: `.gspot/`, the stubs, the managed blocks, the runner surface, the
 workflow, and `core.hooksPath`. Leaves `gspot.toml` and the project rule layer. Restores nothing.
 
-## Global behaviour
+## Global behavior
 
-- Without a terminal, or with `CI`, `NO_COLOR` or `--no-color`: no colour, no spinners, the same
+- Without a terminal, or with `CI`, `NO_COLOR` or `--no-color`: no color, no spinners, the same
   words.
 - `--json` works on every command that prints a report: `check` and `doctor` print their run
   record; `why`, `explain`, `doctor --settings`, and the `init` and `upgrade` plans print one
@@ -485,8 +486,8 @@ workflow, and `core.hooksPath`. Leaves `gspot.toml` and the project rule layer. 
 
 ## Exit codes
 
-| Code | Meaning |
-| --- | --- |
-| 0 | Every check ran and passed, or the command completed |
-| 1 | Findings, a baseline exceeded, a generated file drifted, a tool missing |
-| 2 | gspot did not run: bad `gspot.toml`, unknown preset, unknown command, unanswered question, version pin mismatch |
+| Code | Meaning                                                                                                         |
+| ---- | --------------------------------------------------------------------------------------------------------------- |
+| 0    | Every check ran and passed, or the command completed                                                            |
+| 1    | Findings, a baseline exceeded, a generated file drifted, a tool missing                                         |
+| 2    | gspot did not run: bad `gspot.toml`, unknown preset, unknown command, unanswered question, version pin mismatch |

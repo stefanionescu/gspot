@@ -10,18 +10,18 @@ gspot is one binary per platform, published to GitHub Releases and to npm as a l
 over one package per platform (D-52). Three ways to get it, in the order the manual recommends
 them:
 
-| Way | Command | For |
-| --- | --- | --- |
-| mise | `mise use -g ubi:stefanionescu/gspot` for a global copy; `.mise/conf.d/gspot.toml` pins it per repository | any repository; the only way that needs no Node for a Python or Swift repository |
-| npm, bun, pnpm | `bunx gspot init`, `npx gspot init`; `devDependencies.gspot` pins it per repository. The `gspot` package is a launcher over per-platform packages (`@gspot/cli-<os>-<arch>`) listed as `optionalDependencies`, so the install downloads nothing and runs no script | JavaScript repositories, with nothing installed globally |
-| release asset | download `gspot-<os>-<arch>` from the release page and put it on `PATH` | machines with neither |
+| Way            | Command                                                                                                                                                                                                                                                            | For                                                                              |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
+| mise           | `mise use -g ubi:stefanionescu/gspot` for a global copy; `.config/mise/conf.d/gspot.toml` pins it per repository                                                                                                                                                   | any repository; the only way that needs no Node for a Python or Swift repository |
+| npm, bun, pnpm | `bunx gspot init`, `npx gspot init`; `devDependencies.gspot` pins it per repository. The `gspot` package is a launcher over per-platform packages (`@gspot/cli-<os>-<arch>`) listed as `optionalDependencies`, so the install downloads nothing and runs no script | JavaScript repositories, with nothing installed globally                         |
+| release asset  | download `gspot-<os>-<arch>` from the release page and put it on `PATH`                                                                                                                                                                                            | machines with neither                                                            |
 
 Homebrew, winget and scoop packages follow v1. A `curl | sh` installer is never offered; the
 corpus bans the pattern and gspot obeys its own rules.
 
 A global install exists to run `gspot init` in a repository that has nothing yet. After `init`,
 the repository pins its own version in two places: `.gspot/version` (one line, tracked, read by
-every command) and the runner surface (`[tools] gspot = "0.5.0"` in `.mise/conf.d/gspot.toml`
+every command) and the runner surface (`[tools] gspot = "0.5.0"` in `.config/mise/conf.d/gspot.toml`
 through the `ubi:` backend, or `devDependencies.gspot` under a package manager). The hook and
 the runner tasks resolve that pinned version (`mise exec -- gspot`, `bunx gspot`), so two people
 on one repository run the same gspot whatever they installed globally.
@@ -73,13 +73,13 @@ repositories on the same gspot version run the same tool versions.
 gspot downloads nothing. It writes pins into the surface the repository already uses and tells
 `doctor` what to verify.
 
-| Ecosystem | gspot writes | Person runs |
-| --- | --- | --- |
-| mise (recommended) | `.mise/conf.d/gspot.toml` `[tools]` with every pin, using `npm:`, `pipx:`, `ubi:` or `github:` backends where mise has no core plugin | `mise install` |
-| npm, bun, pnpm | `devDependencies` in `package.json` for npm tools, after the yes in the plan; written and installed through `nypm`, which detects the manager from the lockfile and `packageManager` | the package manager's install |
-| uv | `[dependency-groups] gspot = [...]` in `pyproject.toml` for Python tools, after the yes | `uv sync --group gspot` |
-| Homebrew, apt, winget, scoop, cargo | nothing; `doctor` prints the install command for the platform it runs on | the command |
-| host | nothing; `doctor` reports presence | install Xcode, Docker |
+| Ecosystem                           | gspot writes                                                                                                                                                                         | Person runs                   |
+| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
+| mise (recommended)                  | `.config/mise/conf.d/gspot.toml` `[tools]` with every pin, using `npm:`, `pipx:`, `ubi:` or `github:` backends where mise has no core plugin                                         | `mise install`                |
+| npm, bun, pnpm                      | `devDependencies` in `package.json` for npm tools, after the yes in the plan; written and installed through `nypm`, which detects the manager from the lockfile and `packageManager` | the package manager's install |
+| uv                                  | `[dependency-groups] gspot = [...]` in `pyproject.toml` for Python tools, after the yes                                                                                              | `uv sync --group gspot`       |
+| Homebrew, apt, winget, scoop, cargo | nothing; `doctor` prints the install command for the platform it runs on                                                                                                             | the command                   |
+| host                                | nothing; `doctor` reports presence                                                                                                                                                   | install Xcode, Docker         |
 
 Platform notes: every tool in the presets has a Windows build except `plutil`, `xcodebuild`,
 `xcstringstool`, `swiftlint`, `swiftformat` and `periphery`, which are macOS-only and whose checks
@@ -94,9 +94,9 @@ scripts. Without mise, gspot writes to the runner the repository has and reports
 The ESLint plugins the generated config imports are npm tools. In a JavaScript repository they
 are devDependencies. In a repository without one, mise installs them under `npm:` and gspot
 renders the config to import them from mise's install path; without mise, JavaScript checks in a
-non-JavaScript repository report `MISSING` with the mise hint.
+non-JavaScript repository report `missing` with the mise hint.
 
-`eslint-plugin-gspot` ships as an npm package from gspot's repository, pinned to the gspot
+`@gspot/eslint-plugin` ships as an npm package from gspot's repository, pinned to the gspot
 version, and arrives the same way.
 
 ## One tool per job
@@ -104,20 +104,20 @@ version, and arrives the same way.
 A tool enters a preset only when it does something no tool already in the set does. Applied to
 the reference set, these were cut, and every rule they enforced is re-pointed in the ledger:
 
-| Cut | Kept instead | Why |
-| --- | --- | --- |
-| lizard | sonarjs `cognitive-complexity` | sonarjs runs on every JavaScript file ESLint sees, in the editor |
-| madge | `import-x/no-cycle` | same graph, CommonJS included |
-| type-coverage | `tsc` strict, `no-explicit-any`, the `no-unsafe-*` rules | it measured what the rules already forbid |
-| sort-package-json | `eslint-plugin-package-json` | orders, validates and fixes in one tool |
-| pip-audit | osv-scanner | one advisory database over every lockfile, `uv.lock` included |
-| bandit, the vendored bandit Semgrep set | Ruff `S` plus the Semgrep Python pack | Ruff `S` is the bandit port and runs in the editor |
-| interrogate | Ruff `D100` to `D107` | same rule |
-| pyright | basedpyright | stricter `all` mode; a native binary with no Node dependency |
-| bearer | Semgrep | one rule format for the repository's own rules and the OWASP pack |
-| gspot's own Markdown link checker | lychee `--offline --include-fragments` | lychee checks anchors |
-| gspot's own version alignment | syncpack version groups | syncpack expresses pairs and ranges |
-| trivy over lockfiles | osv-scanner for lockfiles; trivy for images and IaC | one scanner per surface |
+| Cut                                     | Kept instead                                             | Why                                                               |
+| --------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------- |
+| lizard                                  | sonarjs `cognitive-complexity`                           | sonarjs runs on every JavaScript file ESLint sees, in the editor  |
+| madge                                   | `import-x/no-cycle`                                      | same graph, CommonJS included                                     |
+| type-coverage                           | `tsc` strict, `no-explicit-any`, the `no-unsafe-*` rules | it measured what the rules already forbid                         |
+| sort-package-json                       | `eslint-plugin-package-json`                             | orders, validates and fixes in one tool                           |
+| pip-audit                               | osv-scanner                                              | one advisory database over every lockfile, `uv.lock` included     |
+| bandit, the vendored bandit Semgrep set | Ruff `S` plus the Semgrep Python pack                    | Ruff `S` is the bandit port and runs in the editor                |
+| interrogate                             | Ruff `D100` to `D107`                                    | same rule                                                         |
+| pyright                                 | basedpyright                                             | stricter `all` mode; a native binary with no Node dependency      |
+| bearer                                  | Semgrep                                                  | one rule format for the repository's own rules and the OWASP pack |
+| gspot's own Markdown link checker       | lychee `--offline --include-fragments`                   | lychee checks anchors                                             |
+| gspot's own version alignment           | syncpack version groups                                  | syncpack expresses pairs and ranges                               |
+| trivy over lockfiles                    | osv-scanner for lockfiles; trivy for images and IaC      | one scanner per surface                                           |
 
 Kept with a stated reason, where overlap looked possible: gitleaks and trufflehog (pattern
 detection against live verification), lychee and linkinator (documents against a served
@@ -131,12 +131,12 @@ unused private symbols only).
 `node_modules/.bin` and `.venv/bin`, mise's shims, `PATH`. It runs the tool's version command
 and compares:
 
-| State | Meaning | Effect on `check` |
-| --- | --- | --- |
-| ok | present at the pinned version, or at or above the floor | runs |
-| outdated | present below the floor | fails the checks that need it |
-| newer | present above the pin | runs; `doctor` notes it |
-| missing | not found | fails the checks that need it, with the install hint |
+| State    | Meaning                                                 | Effect on `check`                                    |
+| -------- | ------------------------------------------------------- | ---------------------------------------------------- |
+| ok       | present at the pinned version, or at or above the floor | runs                                                 |
+| outdated | present below the floor                                 | fails the checks that need it                        |
+| newer    | present above the pin                                   | runs; `doctor` notes it                              |
+| missing  | not found                                               | fails the checks that need it, with the install hint |
 
 `check` runs the same probe for the tools its selected checks need and caches the result for the
 run.

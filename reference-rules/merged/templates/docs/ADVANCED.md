@@ -9,7 +9,7 @@ title: Advanced-Guide Template
 Template. Remove sections that do not apply. Do not publish empty headings or placeholder
 prose.
 
-````markdown
+```markdown
 # PROJECT_NAME Advanced Guide
 
 This guide covers SPECIALIST_SCOPE for readers familiar with the project
@@ -43,6 +43,6 @@ Document permissions, prerequisites, risks, success signals, and recovery.
 ## Deep troubleshooting
 
 Organize topics by observable symptoms.
-````
+```
 
 Delete sections that do not form part of the coherent advanced scope.

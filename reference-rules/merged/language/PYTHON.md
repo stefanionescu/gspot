@@ -711,24 +711,24 @@ Before `gspot check`, read the change against these questions:
 These rules adapt PEP 8, PEP 257, and the Google Python Style Guide into one standard. Where they
 disagree, the decision is:
 
-| Topic | Decision |
-| --- | --- |
-| Style authority | These rules and the configured tools win over the source guides. |
-| Line length | The formatter's configured line length, not PEP 8's 79 or Google's 80. |
-| Formatter and linters | Ruff format, Ruff lint, basedpyright, import-linter, and the structure engine. Pylint guidance from Google maps to these tools. |
-| Runtime | The project's declared Python version, stated once in the runtime pin. |
-| Future imports | Prefer `from __future__ import annotations`. |
-| Quotes | Double quotes; docstrings always triple double quotes. |
-| Imports | Absolute imports across packages; explicit relative sibling imports inside a package when that is the local pattern; direct imports of public symbols and of typing and `collections.abc` names. |
-| `__all__` | At the bottom of the module, overriding PEP 8's dunder placement for `__all__` only. Other dunders such as `__version__` sit after the module docstring and future imports. |
-| License boilerplate | None unless the project defines the exact text. |
-| Function and file length | The configured limits; barrel `__init__.py` files are exempt from the file limit. |
-| Typing | Every function annotated; modern union syntax, built-in generics, `type` statements or `TypeAlias` for real aliases, `Annotated` for metadata, `object` for any value, protocols for structural interfaces; abstract input types and concrete return types. |
-| Logging | `logging.getLogger(__name__)` in modules; entrypoints configure handlers; libraries add only `NullHandler`. |
-| Project layout | Importable code under `src/`; no `sys.path` patches. |
-| Inheritance | Composition for code sharing, protocols for interfaces, subclassing only for true specialization. |
-| FastAPI | The FastAPI rules apply only to FastAPI applications and never override these rules. |
-| Package installs | Pinned, hashed, binary-only requirements for deployments; no direct setuptools commands. |
+| Topic                    | Decision                                                                                                                                                                                                                                                    |
+| ------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Style authority          | These rules and the configured tools win over the source guides.                                                                                                                                                                                            |
+| Line length              | The formatter's configured line length, not PEP 8's 79 or Google's 80.                                                                                                                                                                                      |
+| Formatter and linters    | Ruff format, Ruff lint, basedpyright, import-linter, and the structure engine. Pylint guidance from Google maps to these tools.                                                                                                                             |
+| Runtime                  | The project's declared Python version, stated once in the runtime pin.                                                                                                                                                                                      |
+| Future imports           | Prefer `from __future__ import annotations`.                                                                                                                                                                                                                |
+| Quotes                   | Double quotes; docstrings always triple double quotes.                                                                                                                                                                                                      |
+| Imports                  | Absolute imports across packages; explicit relative sibling imports inside a package when that is the local pattern; direct imports of public symbols and of typing and `collections.abc` names.                                                            |
+| `__all__`                | At the bottom of the module, overriding PEP 8's dunder placement for `__all__` only. Other dunders such as `__version__` sit after the module docstring and future imports.                                                                                 |
+| License boilerplate      | None unless the project defines the exact text.                                                                                                                                                                                                             |
+| Function and file length | The configured limits; barrel `__init__.py` files are exempt from the file limit.                                                                                                                                                                           |
+| Typing                   | Every function annotated; modern union syntax, built-in generics, `type` statements or `TypeAlias` for real aliases, `Annotated` for metadata, `object` for any value, protocols for structural interfaces; abstract input types and concrete return types. |
+| Logging                  | `logging.getLogger(__name__)` in modules; entrypoints configure handlers; libraries add only `NullHandler`.                                                                                                                                                 |
+| Project layout           | Importable code under `src/`; no `sys.path` patches.                                                                                                                                                                                                        |
+| Inheritance              | Composition for code sharing, protocols for interfaces, subclassing only for true specialization.                                                                                                                                                           |
+| FastAPI                  | The FastAPI rules apply only to FastAPI applications and never override these rules.                                                                                                                                                                        |
+| Package installs         | Pinned, hashed, binary-only requirements for deployments; no direct setuptools commands.                                                                                                                                                                    |
 
 When editing an existing file, follow the surrounding style where the source guides allow a choice.
 When creating new code, use the decisions in this table.

@@ -9,22 +9,22 @@ check that enforces it.
 The corpus is Markdown an agent reads before editing. It lives in `reference-rules/merged/`,
 arranged by layer:
 
-| Layer | Directory | Files | Installed when |
-| --- | --- | --- | --- |
-| agent | `general/agent/` | `WORKING.md`, `PLANNING.md`, `TALKING.md`, `GIT.md`, `SUPPRESSIONS.md` | always |
-| code | `general/code/` | `NAMING.md`, `NAMING-FILES.md`, `COMMENTS.md`, `ERRORS.md`, `LOGGING.md`, `TESTING.md`, `SECRETS.md`, `SECURITY.md`, `CONFIGURATION.md`, `DEPENDENCIES.md`, `GENERATED.md`, `ACCESSIBILITY.md`, `CLI.md` | always |
-| prose | `general/prose/` | `WRITING.md`, `DOCS.md`, `DOCS-FORMAT.md`, `DOCS-CONTENT.md`, `DOCS-MEDIA.md`, `DOCS-SURFACES.md`, `DOCS-REVIEW.md` | always |
-| language | `language/` | `TYPESCRIPT.md`, `JAVASCRIPT.md`, `PYTHON.md` with `python/TYPING.md`, `DESIGN.md`, `FLOW.md`, `PACKAGING.md`, `SWIFT.md`, `BASH.md` with `bash/LANGUAGE.md`, `SAFETY.md`, `OPERATIONS.md`, `SQL.md`, `HTML.md`, `CSS.md`, `YAML.md`, plus `naming/<LANGUAGE>.md` for each except YAML | the language preset |
-| runtime | `runtime/<name>/` | `NODE.md`, `BUN.md`, `DENO.md`, `BROWSER.md`, `WORKERS.md` | detected runtime |
-| framework | `framework/<name>/` | `NEXTJS.md` with `SECURITY.md`, `REACT.md`, `EXPRESS.md` with `API.md` and `OPENAPI.md`, `FASTAPI.md` with `RUNTIME.md`, `SWIFTUI.md`, `UIKIT.md` | the framework preset |
-| library | `library/<name>/` | `ZOD.md`, `DRIZZLE.md`, `TRPC.md`, `TANSTACKQUERY.md`, `ZUSTAND.md`, `REACTHOOKFORM.md`, `NEXTINTL.md` | the library preset |
-| tool | `tool/<name>/` | `DOCKER.md`, `NGINX.md`, `VITEST.md`, `PLAYWRIGHT.md`, `GITHUB-ACTIONS.md`, `XCODE.md`, `TAILWIND.md`, `COMMITLINT.md`, `TASKS.md` | the tool preset |
-| platform | `platform/supabase/` | `SUPABASE.md` | the platform preset |
-| database | `database/postgres/` | `POSTGRES.md` | the database preset |
-| shared | `shared/` | `http/HTTP.md`, `i18n/I18N.md` | any preset that lists the shared block |
-| repository | `repository/static-site/` | `STATIC-SITE.md` | the repository preset |
-| templates | `templates/docs/`, `templates/project/` | document templates; project architecture templates | offered once at init, never upgraded |
-| project | the repository's own | whatever the team writes | never written by gspot |
+| Layer      | Directory                               | Files                                                                                                                                                                                                                                                                                  | Installed when                         |
+| ---------- | --------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------- |
+| agent      | `general/agent/`                        | `WORKING.md`, `PLANNING.md`, `TALKING.md`, `GIT.md`, `SUPPRESSIONS.md`                                                                                                                                                                                                                 | always                                 |
+| code       | `general/code/`                         | `NAMING.md`, `NAMING-FILES.md`, `COMMENTS.md`, `ERRORS.md`, `LOGGING.md`, `TESTING.md`, `SECRETS.md`, `SECURITY.md`, `CONFIGURATION.md`, `DEPENDENCIES.md`, `GENERATED.md`, `ACCESSIBILITY.md`, `CLI.md`                                                                               | always                                 |
+| prose      | `general/prose/`                        | `WRITING.md`, `DOCS.md`, `DOCS-FORMAT.md`, `DOCS-CONTENT.md`, `DOCS-MEDIA.md`, `DOCS-SURFACES.md`, `DOCS-REVIEW.md`                                                                                                                                                                    | always                                 |
+| language   | `language/`                             | `TYPESCRIPT.md`, `JAVASCRIPT.md`, `PYTHON.md` with `python/TYPING.md`, `DESIGN.md`, `FLOW.md`, `PACKAGING.md`, `SWIFT.md`, `BASH.md` with `bash/LANGUAGE.md`, `SAFETY.md`, `OPERATIONS.md`, `SQL.md`, `HTML.md`, `CSS.md`, `YAML.md`, plus `naming/<LANGUAGE>.md` for each except YAML | the language preset                    |
+| runtime    | `runtime/<name>/`                       | `NODE.md`, `BUN.md`, `DENO.md`, `BROWSER.md`, `WORKERS.md`                                                                                                                                                                                                                             | detected runtime                       |
+| framework  | `framework/<name>/`                     | `NEXTJS.md` with `SECURITY.md`, `REACT.md`, `EXPRESS.md` with `API.md` and `OPENAPI.md`, `FASTAPI.md` with `RUNTIME.md`, `SWIFTUI.md`, `UIKIT.md`                                                                                                                                      | the framework preset                   |
+| library    | `library/<name>/`                       | `ZOD.md`, `DRIZZLE.md`, `TRPC.md`, `TANSTACKQUERY.md`, `ZUSTAND.md`, `REACTHOOKFORM.md`, `NEXTINTL.md`                                                                                                                                                                                 | the library preset                     |
+| tool       | `tool/<name>/`                          | `DOCKER.md`, `NGINX.md`, `VITEST.md`, `PLAYWRIGHT.md`, `GITHUB-ACTIONS.md`, `XCODE.md`, `TAILWIND.md`, `COMMITLINT.md`, `TASKS.md`                                                                                                                                                     | the tool preset                        |
+| platform   | `platform/supabase/`                    | `SUPABASE.md`                                                                                                                                                                                                                                                                          | the platform preset                    |
+| database   | `database/postgres/`                    | `POSTGRES.md`                                                                                                                                                                                                                                                                          | the database preset                    |
+| shared     | `shared/`                               | `http/HTTP.md`, `i18n/I18N.md`                                                                                                                                                                                                                                                         | any preset that lists the shared block |
+| repository | `repository/static-site/`               | `STATIC-SITE.md`                                                                                                                                                                                                                                                                       | the repository preset                  |
+| templates  | `templates/docs/`, `templates/project/` | document templates; project architecture templates                                                                                                                                                                                                                                     | offered once at init, never upgraded   |
+| project    | the repository's own                    | whatever the team writes                                                                                                                                                                                                                                                               | never written by gspot                 |
 
 Each preset manifest names its files under `[rules]`. A file belongs to exactly one preset.
 
@@ -41,26 +41,26 @@ the selection into the repository's project layer once. gspot never upgrades a p
 copy opens with `<!-- gspot-template: IOS-ARCHITECTURE 0.4.0 -->`, so `upgrade --check` can report
 that the template changed upstream; merging is the person's choice.
 
-| Template | Content |
-| --- | --- |
-| `IOS-ARCHITECTURE.md` | MVVM with Clean Architecture boundaries: layers and dependency direction, feature organization, ViewModels, domain layer, use cases, repositories, DTOs and mapping, dependency injection and scoped factories, protocols, state management, navigation and coordinators, services and platform boundaries, networking |
-| `API-ARCHITECTURE.md` | the Express modular monolith: ownership map, module boundaries, endpoint structure, entry points, domain logic, cross-module calls, data access, provider integrations, configuration and environment, production operations, nginx and runtime, performance |
-| `DOCKER-ML.md` | image stack ownership, build contexts, CUDA base images, dependency inputs, Python and shell inside images, models and artifacts, Hugging Face downloads |
-| `SUPABASE-DEPLOYMENT.md` | the scripted remote deployment flow and its order |
-| `INFERENCE-VOCABULARY.md` | engine, quantization, scenario and metric names for a model-serving repository |
+| Template                  | Content                                                                                                                                                                                                                                                                                                                |
+| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `IOS-ARCHITECTURE.md`     | MVVM with Clean Architecture boundaries: layers and dependency direction, feature organization, ViewModels, domain layer, use cases, repositories, DTOs and mapping, dependency injection and scoped factories, protocols, state management, navigation and coordinators, services and platform boundaries, networking |
+| `API-ARCHITECTURE.md`     | the Express modular monolith: ownership map, module boundaries, endpoint structure, entry points, domain logic, cross-module calls, data access, provider integrations, configuration and environment, production operations, nginx and runtime, performance                                                           |
+| `DOCKER-ML.md`            | image stack ownership, build contexts, CUDA base images, dependency inputs, Python and shell inside images, models and artifacts, Hugging Face downloads                                                                                                                                                               |
+| `SUPABASE-DEPLOYMENT.md`  | the scripted remote deployment flow and its order                                                                                                                                                                                                                                                                      |
+| `INFERENCE-VOCABULARY.md` | engine, quantization, scenario and metric names for a model-serving repository                                                                                                                                                                                                                                         |
 
 ## What the merge dropped and the repair restored
 
 A heading comparison between the four source corpora and the merged corpus found general
 content with no counterpart. The repair pass restored each into the file named.
 
-| Restored | Into |
-| --- | --- |
-| Docker: image stack ownership, build contexts, CUDA, models, Hugging Face downloads | `templates/project/DOCKER-ML.md`; layering and cache discipline was already in `tool/docker/DOCKER.md` |
-| Swift: networking and API clients | `language/SWIFT.md` (the neutral rules) and `templates/project/IOS-ARCHITECTURE.md` (the layered version) |
-| General: verification and tests policy, once | `general/agent/WORKING.md` |
+| Restored                                                                                        | Into                                                                                                                    |
+| ----------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Docker: image stack ownership, build contexts, CUDA, models, Hugging Face downloads             | `templates/project/DOCKER-ML.md`; layering and cache discipline was already in `tool/docker/DOCKER.md`                  |
+| Swift: networking and API clients                                                               | `language/SWIFT.md` (the neutral rules) and `templates/project/IOS-ARCHITECTURE.md` (the layered version)               |
+| General: verification and tests policy, once                                                    | `general/agent/WORKING.md`                                                                                              |
 | Static site: boundaries, build, routes, HTML, CSS and content naming, tests and fixtures naming | `repository/static-site/STATIC-SITE.md`, `language/naming/HTML.md`, `language/naming/CSS.md`, `general/code/TESTING.md` |
-| The iOS and API architecture, Supabase deployment, inference vocabulary | `templates/project/` |
+| The iOS and API architecture, Supabase deployment, inference vocabulary                         | `templates/project/`                                                                                                    |
 
 Both guards are clean as of 2026-09-18. The completeness check: 7,616 source statements, 6,443
 matched exactly or as duplicates, 255 at the fuzzy ratio, 354 listed in `DROPPED.md`, 564 with
@@ -72,7 +72,7 @@ items and 28 long sentences and paragraphs, and stated 63 conditional modals as 
 rule dropped. The enforcement markers: 5,303 statements, 2,354 unenforced. What Phase 6 still
 owes is code, not editing: the assembler and the corpus lint inside the binary.
 
-The guard is mechanical: a completeness check normalises every statement (sentence or list
+The guard is mechanical: a completeness check normalizes every statement (sentence or list
 item) in the four source corpora and asserts it appears in the merged corpus or a project
 template, or is listed in `rules/DROPPED.md` with a reason. The check runs in gspot's own gate
 until the four repositories have migrated, then the source corpora are removed.
@@ -98,15 +98,15 @@ casing rule, the cross-language casing decisions are written in `general/code/NA
 the missing general, language and tool files exist. Each remaining item is a check in gspot's
 own gate so the corpus cannot regress.
 
-| Defect | Fix | Guard |
-| --- | --- | --- |
-| Six global substitutions damaged the source forks: `control` became `command`, `object` became `item`, `dynamic` became `configured`, `custom` became `project`, `package manager` became `package coordinator`, `base64` became `encodedBytes` | Read every file for the phrases (`access command`, `command flow`, `inversion of command`, `z.item(`, `configured SQL`, `configured import`, `package coordinator`, `encodedBytes`) and restore the word | Vale `gspot.corruption` existence rule over the corpus with those phrases |
-| 154 uses of `should`, plus `may`, `might`, `could`, `would` | Rewrite as an imperative or a statement of fact | Vale `gspot.modals` |
-| Title Case in H2 and below | Sentence case | Vale `gspot.headings` |
-| Cross-file pointers (`see NAMING.md`) | Restate the one sentence the block needs | corpus lint: no link to another rule file |
-| The same rule stated in two layers | Keep the lower layer's copy | corpus lint: duplicate statement detection on normalised sentences |
-| `DOCS.md` at 2,990 lines restates formatter and markdownlint decisions | Cut to what an agent needs before the linter runs; the tools own the rest | size ceiling per file, 800 lines, with `DOCS.md`, `PYTHON.md`, `BASH.md` and `FASTAPI.md` baselined |
-| Rules that name a reference repository's paths or products | Replace with the concept | Vale `gspot.file-paths`, `integrity/stale-paths` |
+| Defect                                                                                                                                                                                                                                          | Fix                                                                                                                                                                                                      | Guard                                                                                               |
+| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
+| Six global substitutions damaged the source forks: `control` became `command`, `object` became `item`, `dynamic` became `configured`, `custom` became `project`, `package manager` became `package coordinator`, `base64` became `encodedBytes` | Read every file for the phrases (`access command`, `command flow`, `inversion of command`, `z.item(`, `configured SQL`, `configured import`, `package coordinator`, `encodedBytes`) and restore the word | Vale `gspot.corruption` existence rule over the corpus with those phrases                           |
+| 154 uses of `should`, plus `may`, `might`, `could`, `would`                                                                                                                                                                                     | Rewrite as an imperative or a statement of fact                                                                                                                                                          | Vale `gspot.modals`                                                                                 |
+| Title Case in H2 and below                                                                                                                                                                                                                      | Sentence case                                                                                                                                                                                            | Vale `gspot.headings`                                                                               |
+| Cross-file pointers (`see NAMING.md`)                                                                                                                                                                                                           | Restate the one sentence the block needs                                                                                                                                                                 | corpus lint: no link to another rule file                                                           |
+| The same rule stated in two layers                                                                                                                                                                                                              | Keep the lower layer's copy                                                                                                                                                                              | corpus lint: duplicate statement detection on normalized sentences                                  |
+| `DOCS.md` at 2,990 lines restates formatter and markdownlint decisions                                                                                                                                                                          | Cut to what an agent needs before the linter runs; the tools own the rest                                                                                                                                | size ceiling per file, 800 lines, with `DOCS.md`, `PYTHON.md`, `BASH.md` and `FASTAPI.md` baselined |
+| Rules that name a reference repository's paths or products                                                                                                                                                                                      | Replace with the concept                                                                                                                                                                                 | Vale `gspot.file-paths`, `integrity/stale-paths`                                                    |
 
 The pass is editorial work and lands in its own commits, one file at a time, each with the
 Vale run clean for that file.
@@ -205,7 +205,7 @@ unknown ids.
 ## Completeness
 
 `bun reference-rules/lint/completeness-check.ts` reads the four source `rules/` folders,
-normalises every list item (lowercase, punctuation stripped, the six corrupted words restored),
+normalizes every list item (lowercase, punctuation stripped, the six corrupted words restored),
 and requires each to match a corpus or template statement, heading or sentence exactly, at a
 word-bigram ratio of 0.85, or at a word-set overlap of 0.8, or to be listed in
 `reference-rules/DROPPED.md` with a reason. `--write-dropped` appends the reasons the script can
@@ -220,4 +220,4 @@ source corpora are removed.
   the intent and names the check.
 - It does not enumerate directories. Layout belongs to the project layer.
 - It does not tell an agent to run commands the gate already runs. It says: run `gspot check
-  --staged`.
+--staged`.

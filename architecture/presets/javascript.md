@@ -4,11 +4,11 @@ Kind: language. Requires: structure, naming, formatting, spelling.
 
 ## Detects and claims
 
-| | |
-| --- | --- |
-| Detect | `.js`, `.jsx`, `.mjs`, `.cjs` in the tree; a `node` shebang |
-| Claims | `.js`, `.jsx`, `.mjs`, `.cjs`, extensionless files with a `node` shebang |
-| Required inspections | format, syntax, style, types, structure, naming, prose, spelling |
+|                      |                                                                          |
+| -------------------- | ------------------------------------------------------------------------ |
+| Detect               | `.js`, `.jsx`, `.mjs`, `.cjs` in the tree; a `node` shebang              |
+| Claims               | `.js`, `.jsx`, `.mjs`, `.cjs`, extensionless files with a `node` shebang |
+| Required inspections | format, syntax, style, types, structure, naming, prose, spelling         |
 
 ## Tools
 
@@ -17,21 +17,21 @@ knip.
 
 ## Generated configuration
 
-| Target | Stub | Holds |
-| --- | --- | --- |
+| Target                    | Stub               | Holds                                                                                                                                                                                                                                                    |
+| ------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.gspot/eslint.config.js` | `eslint.config.js` | shared with typescript when both are selected; globals per runtime (node, browser, worker, commonjs) chosen by file class; `sourceType` per extension; the same structural, direction and placement rules; `no-unused-vars` with `args: all` for scripts |
-| `.gspot/jsconfig.json` | `jsconfig.json` | `checkJs`, `strict`, `noEmit`; type checking of plain JavaScript through JSDoc |
+| `.gspot/jsconfig.json`    | `jsconfig.json`    | `checkJs`, `strict`, `noEmit`; type checking of plain JavaScript through JSDoc                                                                                                                                                                           |
 
 The types directory rule applies to JavaScript as JSDoc: `@typedef` and `@callback` only in
 files under `[architecture] types_directory`.
 
 ## Checks
 
-| Id | Stage | Command |
-| --- | --- | --- |
-| `javascript/eslint` | commit | as typescript; cognitive complexity through `sonarjs/cognitive-complexity` and cyclomatic through core `complexity`, `max-statements` and `max-classes-per-file` from `[limits]`; cycles through `import-x/no-cycle`, CommonJS included |
-| `javascript/checkjs` | commit | `tsc -p .gspot/jsconfig.json` |
-| `javascript/knip` | push | knip |
+| Id                   | Stage  | Command                                                                                                                                                                                                                                 |
+| -------------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `javascript/eslint`  | commit | as typescript; cognitive complexity through `sonarjs/cognitive-complexity` and cyclomatic through core `complexity`, `max-statements` and `max-classes-per-file` from `[limits]`; cycles through `import-x/no-cycle`, CommonJS included |
+| `javascript/checkjs` | commit | `tsc -p .gspot/jsconfig.json`                                                                                                                                                                                                           |
+| `javascript/knip`    | push   | knip                                                                                                                                                                                                                                    |
 
 ## Settings
 

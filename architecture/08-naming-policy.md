@@ -6,7 +6,7 @@ and how a repository extends it. The policy is data. The naming engine in
 
 ## Why a term list
 
-The rules an agent breaks most are judgements a linter cannot make: prefer duplication over the
+The rules an agent breaks most are judgments a linter cannot make: prefer duplication over the
 wrong abstraction, add no defensive logic for impossible states, keep one implementation per
 concept. The term list is the mechanisable shadow of those rules. A speculative guard is named
 `ensureConfigIfNeeded`. A parallel implementation is named `enhancedHandler`. A concept with no
@@ -51,16 +51,16 @@ The shipped policy is `presets/naming/policy.json`. The repository extends it th
 
 Terms are whole identifier parts. One entry covers every separator and casing.
 
-| Group | Removable | Terms |
-| --- | --- | --- |
-| containers | yes | `core`, `common`, `generic`, `misc`, `stuff`, `thing`, `things`, `details`, `info`, `object`, `data` (reserved), `catalog`, `catalogue`, `corpus`, `taxonomy`, `tmp`, `temp` |
-| roles | yes | `helper`, `helpers`, `util`, `utils`, `manager`, `handler`, `processor`, `service`, `wrapper`, `shim`, `shims`, `support` |
-| marketing | no | `advanced`, `enhanced`, `improved`, `intelligent`, `smart`, `modern`, `robust`, `seamless`, `ultimate`, `comprehensive`, `optimized`, `reusable`, `custom`, `final`, `latest`, `old`, `new`, `legacy`, `plus`, `combined`, `v2` (through the digit ban) |
-| defensive | no | `ensure`, `maybe`, `likely`, `should`, `if needed`, `ifneeded`, `if available`, `ifavailable`, `if changed`, `ifchanged`, `if possible`, `ifpossible`, `or throw`, `orthrow`, `waitfor`, `with retries`, `transient`, `belt and suspenders`, `fallback`, `load bearing`, `loadbearing` |
-| verbs | yes | `render`, `generate`, `sync`, `synchronize`, `synchronise`, `materialize`, `materialise`, `coerce`, `scoped`, `bind` |
-| verbs-strict | yes | `load`, `loaded`, `loader`, `loaders`, `loading`, `fetch`, `resolve`, `resolving`, `resolution` |
-| conjunctions | yes | `and`, `or`, `with`, `when`, `what`, `whatever`, `once`, `plus` |
-| test | yes | `fixture`, `fixtures`, `test case`, `testcase`, `under test`, `undertest`, `edge case`, `edge cases`, `snapshot`, `snapshots` (scoped to non-test code) |
+| Group        | Removable | Terms                                                                                                                                                                                                                                                                                  |
+| ------------ | --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| containers   | yes       | `core`, `common`, `generic`, `misc`, `stuff`, `thing`, `things`, `details`, `info`, `object`, `data` (reserved), `catalog`, `catalogue`, `corpus`, `taxonomy`, `tmp`, `temp`                                                                                                           |
+| roles        | yes       | `helper`, `helpers`, `util`, `utils`, `manager`, `handler`, `processor`, `service`, `wrapper`, `shim`, `shims`, `support`                                                                                                                                                              |
+| marketing    | no        | `advanced`, `enhanced`, `improved`, `intelligent`, `smart`, `modern`, `robust`, `seamless`, `ultimate`, `comprehensive`, `optimized`, `reusable`, `custom`, `final`, `latest`, `old`, `new`, `legacy`, `plus`, `combined`, `v2` (through the digit ban)                                |
+| defensive    | no        | `ensure`, `maybe`, `likely`, `should`, `if needed`, `ifneeded`, `if available`, `ifavailable`, `if changed`, `ifchanged`, `if possible`, `ifpossible`, `or throw`, `orthrow`, `waitfor`, `with retries`, `transient`, `belt and suspenders`, `fallback`, `load bearing`, `loadbearing` |
+| verbs        | yes       | `render`, `generate`, `sync`, `synchronize`, `synchronise`, `materialize`, `materialise`, `coerce`, `scoped`, `bind`                                                                                                                                                                   |
+| verbs-strict | yes       | `load`, `loaded`, `loader`, `loaders`, `loading`, `fetch`, `resolve`, `resolving`, `resolution`                                                                                                                                                                                        |
+| conjunctions | yes       | `and`, `or`, `with`, `when`, `what`, `whatever`, `once`, `plus`                                                                                                                                                                                                                        |
+| test         | yes       | `fixture`, `fixtures`, `test case`, `testcase`, `under test`, `undertest`, `edge case`, `edge cases`, `snapshot`, `snapshots` (scoped to non-test code)                                                                                                                                |
 
 This is the union of the four reference policies plus `load bearing` (also `load-bearing` and
 `loadBearing` through part splitting) and `bind`. Project-specific terms in them (`runpsql`,
@@ -132,14 +132,14 @@ in one named file: HTTP headers (`Content-Type`, `Retry-After`), ARIA attributes
 These are the defaults for `[naming.<language>]`; a repository changes them per language and
 per category (see Extension below).
 
-| Language | Files | Directories | Types | Functions | Parameters | Variables | Properties | Other | Max chars | Max words |
-| --- | --- | --- | --- | --- | --- | --- | --- | --- | --- | --- |
-| TypeScript | kebab | kebab | pascal | camel | camel | camel, upper-snake | camel | routes kebab, path parameters camel, operation ids camel | 35 | 4 |
-| JavaScript | kebab | kebab | pascal (classes) | camel | camel | camel, upper-snake | camel, upper-snake | routes kebab | 35 | 4 |
-| Python | snake | snake | pascal (classes, exceptions ending `Error`, type aliases) | snake (functions, methods) | snake | snake, upper-snake (constants) | snake, upper-snake (attributes) | modules snake, packages snake | 35 | 4 |
-| Swift | pascal, pascal-plus (`View+Extension`) | pascal | pascal | camel | camel | camel | camel | enum cases camel | 40 | 5 |
-| Shell | kebab, snake | kebab, snake | none | snake | none | snake, upper-snake | none | none | 35 | 4 |
-| SQL | snake-migration (`YYYYMMDDHHMMSS_name.sql`) | snake | none | snake | snake | none | none | schemas, tables, columns, indexes, triggers, policies snake | 55 | 7 |
+| Language   | Files                                       | Directories  | Types                                                     | Functions                  | Parameters | Variables                      | Properties                      | Other                                                       | Max chars | Max words |
+| ---------- | ------------------------------------------- | ------------ | --------------------------------------------------------- | -------------------------- | ---------- | ------------------------------ | ------------------------------- | ----------------------------------------------------------- | --------- | --------- |
+| TypeScript | kebab                                       | kebab        | pascal                                                    | camel                      | camel      | camel, upper-snake             | camel                           | routes kebab, path parameters camel, operation ids camel    | 35        | 4         |
+| JavaScript | kebab                                       | kebab        | pascal (classes)                                          | camel                      | camel      | camel, upper-snake             | camel, upper-snake              | routes kebab                                                | 35        | 4         |
+| Python     | snake                                       | snake        | pascal (classes, exceptions ending `Error`, type aliases) | snake (functions, methods) | snake      | snake, upper-snake (constants) | snake, upper-snake (attributes) | modules snake, packages snake                               | 35        | 4         |
+| Swift      | pascal, pascal-plus (`View+Extension`)      | pascal       | pascal                                                    | camel                      | camel      | camel                          | camel                           | enum cases camel                                            | 40        | 5         |
+| Shell      | kebab, snake                                | kebab, snake | none                                                      | snake                      | none       | snake, upper-snake             | none                            | none                                                        | 35        | 4         |
+| SQL        | snake-migration (`YYYYMMDDHHMMSS_name.sql`) | snake        | none                                                      | snake                      | snake      | none                           | none                            | schemas, tables, columns, indexes, triggers, policies snake | 55        | 7         |
 
 Case patterns:
 
@@ -158,11 +158,11 @@ message.
 
 Acronyms follow the language, and the splitter knows which convention it is reading:
 
-| Language | Acronym form | Examples |
-| --- | --- | --- |
-| TypeScript, JavaScript | a word: initial capital, rest lowercase | `parseHttpUrl`, `userId`, `jsonBody` |
-| Swift | uppercase initialism; lowercase only when it starts a camel name | `avatarURL`, `userID`, `apiClient`, `HTTPClient` |
-| Python, Shell, SQL | lowercase inside snake_case | `http_url`, `user_id`, `json_body` |
+| Language               | Acronym form                                                     | Examples                                         |
+| ---------------------- | ---------------------------------------------------------------- | ------------------------------------------------ |
+| TypeScript, JavaScript | a word: initial capital, rest lowercase                          | `parseHttpUrl`, `userId`, `jsonBody`             |
+| Swift                  | uppercase initialism; lowercase only when it starts a camel name | `avatarURL`, `userID`, `apiClient`, `HTTPClient` |
+| Python, Shell, SQL     | lowercase inside snake_case                                      | `http_url`, `user_id`, `json_body`               |
 
 A run of capitals is one part (`HTTPClient` splits to `http`, `client`; `userID` to `user`,
 `id`). A platform name keeps its spelling and is listed under `external` (`XMLHttpRequest`,

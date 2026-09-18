@@ -28,7 +28,7 @@ gspot/
 ├── docs/                       the manual (Starlight site); see Docs
 ├── packages/
 │   ├── cli/                    the binary
-│   ├── eslint-plugin/          eslint-plugin-gspot
+│   ├── eslint-plugin/          @gspot/eslint-plugin
 │   └── npm/                    the npm launcher and the platform package template
 ├── presets/                    one folder per preset
 ├── prose/                      the gspot Vale style
@@ -58,10 +58,11 @@ goes.
 
 ```text
 packages/cli/
-├── package.json                name gspot-cli (private); bin is not published from here
+├── package.json                name @gspot/cli (private); bin is not published from here
 ├── tsconfig.json
 ├── build.ts                    bun build --compile per target; embeds grammars, presets, prose, rules, schema
-├── grammars/                   tree-sitter WASM, one per grammar
+├── publish.ts                  stamps the platform packages, writes checksums, publishes at one version
+├── grammars/                   tree-sitter WASM, one per grammar; copied from the grammar packages at build, swift.wasm vendored
 │   ├── bash.wasm
 │   ├── css.wasm
 │   ├── html.wasm
@@ -92,7 +93,7 @@ packages/cli/
 │   ├── doctor/                 what doctor prints
 │   ├── output/                 everything that reaches a terminal or a file
 │   └── platform/               the few things that differ per operating system
-├── types/                      every type alias of the package (D-30); type-only imports
+├── types/                      every type alias of the package (D-30); type-only imports; modules.d.ts declares packages that ship no types
 └── tests/
     ├── unit/                   mirrors src/: one test file per source file that has logic
     └── snapshots/              one folder per preset: every generated file, byte for byte
@@ -102,9 +103,10 @@ packages/cli/
 
 Fifteen files, one per command, each under sixty lines: `init.ts`, `check.ts`, `sync.ts`,
 `ignore.ts`, `add.ts`, `remove.ts`, `allow.ts`, `set.ts`, `declare.ts`, `why.ts`, `explain.ts`,
-`doctor.ts`, `upgrade.ts`, `uninstall.ts`, `completion.ts`. A command file registers its flags
-with commander, calls one function from another folder, and hands the result to `output/`. No
-logic lives here.
+`doctor.ts`, `upgrade.ts`, `uninstall.ts`, `completion.ts`, plus `emit.ts`, the one function
+that prints a result as text or JSON and turns gspot's own errors into exit 2. A command file
+registers its flags with commander, calls one function from another folder, and hands the result
+to `emit`. No logic lives here.
 
 ### `config/`
 
@@ -113,81 +115,93 @@ Literal tables only: no function, no control flow, no import of anything but typ
 gspot's `gspot.toml`. A value lives here when a reviewer might tune it or a message prints it; an
 algorithm's own constant stays where it is used (D-22).
 
-| File | Holds |
-| --- | --- |
-| `patterns.ts` | the regexes: shebang lines, generated-file banners other tools write, the `gspot-template` header line, path-shaped tokens for `stale-paths`, runner task references (`mise run`, `bun run`, `npm run`) |
-| `markers.ts` | the managed-block markers, the generated-file header text, the `.gspot/version` line format, the inline `gspot-ignore` comment shapes per comment style |
-| `reasons.ts` | the refused reasons (`N/A`, `TBD`, `-`, empty) and the `carried from <file> at init` template |
-| `file-tags.ts` | the `identify`-style table: extension to tag, shebang to tag, the executable and binary rules |
-| `env-files.ts` | the environment-file patterns (`.env*`, `.dev.vars*`) and the template names (`.env.example`, `.env.template`, `.env.sample`) |
+| File           | Holds                                                                                                                                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `patterns.ts`  | the regexes: shebang lines, generated-file banners other tools write, the `gspot-template` header line, path-shaped tokens for `stale-paths`, runner task references (`mise run`, `bun run`, `npm run`) |
+| `markers.ts`   | the managed-block markers, the generated-file header text, the `.gspot/version` line format, the inline `gspot-ignore` comment shapes per comment style                                                 |
+| `reasons.ts`   | the refused reasons (`N/A`, `TBD`, `-`, empty) and the `carried from <file> at init` template                                                                                                           |
+| `file-tags.ts` | the `identify`-style table: extension to tag, shebang to tag, the executable and binary rules                                                                                                           |
+| `env-files.ts` | the environment-file patterns (`.env*`, `.dev.vars*`) and the template names (`.env.example`, `.env.template`, `.env.sample`)                                                                           |
 
 ### `src/policy/`
 
-| File | Holds |
-| --- | --- |
-| `schema.ts` | the zod schema of `gspot.toml`: presets, scopes, limits (root and per language), naming, architecture, structure, tools, ignore, declare, check, hooks, ci, rules, editor, coverage, runner |
-| `local-schema.ts` | the one-key schema of `gspot.local.toml` |
-| `load.ts` | read, parse (smol-toml), validate, resolve scopes; every load error through `zod-validation-error` and `messages.ts` |
-| `merge.ts` | preset default, framework override, scope table, root table; lists append, scalars replace, conflicts fail |
-| `write.ts` | the one writer the six commands share: `toml-patch` append, replace, remove; validate as load; run sync |
-| `loosening.ts` | the loosening-needs-a-reason rule, reading `config/reasons.ts` |
-| `settings.ts` | the settings surface: every key, its direction, its default, its source, for `set`, `doctor --settings` and the docs |
-| `messages.ts` | every load and write message in plain English, one function per message, tested |
-| `json-schema.ts` | `z.toJSONSchema` into `schema/gspot.schema.json` and `run-record.schema.json` |
+| File              | Holds                                                                                                                                                                                       |
+| ----------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `validate.ts`     | the whole validation a load performs after the schema: the selection and the settings surface; `write.ts` and the session both call it                                                      |
+| `near.ts`         | closest-match suggestions for a mistyped preset, check or setting                                                                                                                           |
+| `propose.ts`      | the proposed `gspot.toml` at `init`: selection, scopes, carried lists, choices                                                                                                              |
+| `commands.ts`     | the six writing commands as functions: `ignore`, `add`, `remove`, `allow`, `set`, `declare`                                                                                                 |
+| `schema.ts`       | the zod schema of `gspot.toml`: presets, scopes, limits (root and per language), naming, architecture, structure, tools, ignore, declare, check, hooks, ci, rules, editor, coverage, runner |
+| `local-schema.ts` | the one-key schema of `gspot.local.toml`                                                                                                                                                    |
+| `load.ts`         | read, parse (smol-toml), validate, resolve scopes; every load error through `zod-validation-error` and `messages.ts`                                                                        |
+| `merge.ts`        | preset default, framework override, scope table, root table; lists append, scalars replace, conflicts fail                                                                                  |
+| `write.ts`        | the one writer the six commands share: `toml-patch` append, replace, remove; validate as load; run sync                                                                                     |
+| `loosening.ts`    | the loosening-needs-a-reason rule, reading `config/reasons.ts`                                                                                                                              |
+| `settings.ts`     | the settings surface: every key, its direction, its default, its source, for `set`, `doctor --settings` and the docs                                                                        |
+| `messages.ts`     | every load and write message in plain English, one function per message, tested                                                                                                             |
+| `json-schema.ts`  | `z.toJSONSchema` into `schema/gspot.schema.json` and `run-record.schema.json`                                                                                                               |
 
 ### `src/presets/`
 
-| File | Holds |
-| --- | --- |
+| File                 | Holds                                                                                                                                                                   |
+| -------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `manifest-schema.ts` | the zod schema of `manifest.toml`: preset, detect, claims (extensions, filenames, tags), tools, configs, checks with `summary`, `why`, `fix`, settings, required, rules |
-| `load.ts` | read every embedded manifest, validate, refuse a check without a stage or a config without a reader |
-| `select.ts` | selection: requires, transitive, the three always-on repository presets, conflicts, order |
-| `detect.ts` | the detection table: extensions, shebangs, tags, manifests, dependencies; names unknown languages through `linguist-languages` |
-| `claims.ts` | which selected preset claims which file, per scope |
-| `catalog.ts` | the list `explain <preset>` and the docs generator read |
+| `load.ts`            | read every embedded manifest, validate, refuse a check without a stage or a config without a reader                                                                     |
+| `select.ts`          | selection: requires, transitive, the three always-on repository presets, conflicts, order                                                                               |
+| `detect.ts`          | the detection table: extensions, shebangs, tags, manifests, dependencies; names unknown languages through `linguist-languages`                                          |
+| `claims.ts`          | which selected preset claims which file, per scope                                                                                                                      |
+| `catalog.ts`         | the list `explain <preset>` and the docs generator read                                                                                                                 |
 
 ### `src/repository/`
 
-| File | Holds |
-| --- | --- |
-| `tracked.ts` | `git ls-files --cached --others --exclude-standard -z` (tracked or would be tracked), symlinks and submodules; the `globby` walk with `ignore` when there is no repository |
-| `natures.ts` | source, generated, vendored, binary from `[[declare]]`, `.gitattributes`, banners and a content sniff |
-| `tags.ts` | file tags from `config/file-tags.ts`: extension, shebang, executable bit, content |
-| `scopes.ts` | scopes from `[[scope]]` and from workspaces (`@manypkg/get-packages`, uv, Cargo) |
-| `staged.ts` | `git diff --cached --name-only --diff-filter=ACMRT` and the unstaged-changes note |
-| `manifests.ts` | readers for `package.json` (`@npmcli/package-json`), `pyproject.toml`, `Package.swift`, the platform files detection needs |
-| `existing-tooling.ts` | what `init` lists: configuration files at conventional paths, hooks, CI, agent files, home-grown lint folders |
+| File                  | Holds                                                                                                                                                                      |
+| --------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `tracked.ts`          | `git ls-files --cached --others --exclude-standard -z` (tracked or would be tracked), symlinks and submodules; the `globby` walk with `ignore` when there is no repository |
+| `natures.ts`          | source, generated, vendored, binary from `[[declare]]`, `.gitattributes`, banners and a content sniff                                                                      |
+| `tags.ts`             | file tags from `config/file-tags.ts`: extension, shebang, executable bit, content                                                                                          |
+| `scopes.ts`           | scopes from `[[scope]]` and from workspaces (`@manypkg/get-packages`, uv, Cargo)                                                                                           |
+| `staged.ts`           | `git diff --cached --name-only --diff-filter=ACMRT` and the unstaged-changes note                                                                                          |
+| `manifests.ts`        | readers for `package.json` (`@npmcli/package-json`), `pyproject.toml`, `Package.swift`, the platform files detection needs                                                 |
+| `existing-tooling.ts` | what `init` lists: configuration files at conventional paths, hooks, CI, agent files, home-grown lint folders                                                              |
 
 ### `src/run/`
 
-| File | Holds |
-| --- | --- |
-| `plan.ts` | the check graph for a run: stage, scope, file sets, requirements, skips |
+| File             | Holds                                                                                                              |
+| ---------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `session.ts`     | one session per command: policy, manifests, repository, selection and merged view per scope                        |
+| `plan.ts`        | the check graph for a run: stage, scope, file sets, requirements, skips                                            |
+| `execute.ts`     | the orchestrator: plan, run, ignores, baselines, record, exit code                                                 |
+| `check.ts`       | the `check` command as a function: pin, staged files, the environment-file refusal, the report                     |
 | `tool-runner.ts` | spawn (`Bun.spawn`, `cross-spawn` on Windows), file lists, exit codes, `count_regex`, `tool_errors`, missing tools |
-| `engines.ts` | dispatch to the built-in engines by `engine =` in the manifest |
-| `concurrency.ts` | `p-limit` per stage; fixer order under `--fix` |
-| `cache.ts` | `.gspot/cache/`: key on tool version, configuration hash, content hashes; `cache` verdicts |
-| `baselines.ts` | gspot's count files; drives ESLint suppressions and basedpyright's baseline (D-54); `sync --baseline` |
-| `ignores.ts` | the `[[ignore]]` filter and the inline `gspot-ignore` syntax; the suppression census input |
-| `fixers.ts` | `--fix`: codemods, imports, manifests, formatters, then the checks again; `--dry-run` through `diff` |
-| `record.ts` | `.gspot/last.json`, `--json`, and the SARIF rendering through `node-sarif-builder` |
-| `reproduce.ts` | the reproduce line per failing check |
-| `version-pin.ts` | `.gspot/version` against the running binary; the exit-2 refusal |
+| `engines.ts`     | dispatch to the built-in engines by `engine =` in the manifest                                                     |
+| `concurrency.ts` | `p-limit` per stage; fixer order under `--fix`                                                                     |
+| `cache.ts`       | `.gspot/cache/`: key on tool version, configuration hash, content hashes; `cache` verdicts                         |
+| `baselines.ts`   | gspot's count files; drives ESLint suppressions and basedpyright's baseline (D-54); `sync --baseline`              |
+| `ignores.ts`     | the `[[ignore]]` filter and the inline `gspot-ignore` syntax; the suppression census input                         |
+| `fixers.ts`      | `--fix`: codemods, imports, manifests, formatters, then the checks again; `--dry-run` through `diff`               |
+| `record.ts`      | `.gspot/last.json`, `--json`, and the SARIF rendering through `node-sarif-builder`                                 |
+| `reproduce.ts`   | the reproduce line per failing check                                                                               |
+| `version-pin.ts` | `.gspot/version` against the running binary; the exit-2 refusal                                                    |
 
 ### `src/render/`
 
-| File | Holds |
-| --- | --- |
-| `templates.ts` | render a preset template with the merged settings; the generated-file header |
-| `targets.ts` | every generated file for the selection: path, template, stub |
-| `stubs.ts` | one-line stubs at conventional paths; `jsonc-parser` for `tsconfig.json` `extends` |
-| `managed-blocks.ts` | marker blocks in `CLAUDE.md`, `AGENTS.md`, `.gitignore`, `.editorconfig`, `.vscode/*.json` (`jsonc-parser`), `lefthook.yml` (`yaml`) |
-| `hooks.ts` | `.gspot/hooks/*`, `core.hooksPath`, the husky and lefthook forms, executable bits through git |
-| `runner-surface.ts` | `.mise/conf.d/gspot.toml`, `package.json` scripts and devDependencies (`nypm`, `@npmcli/package-json`), the uv dependency group |
-| `workflow.ts` | `.github/workflows/gspot.yml` |
-| `drift.ts` | `sync --check`: render in memory, find generated files by header, compare bytes, print the diff |
-| `takeover.ts` | delete the old configuration, carry the exception lists (typos, gitleaks, osv, licenses, disabled rules as ignores), print the plan lines |
-| `uninstall.ts` | the inverse of `init` |
+| File                   | Holds                                                                                                                                     |
+| ---------------------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
+| `templates.ts`         | render a preset template through `eta` with the merged settings; the generated-file header                                                |
+| `sync.ts`              | write every generated file, block and merge; remove strays; set the hooks path                                                            |
+| `sync-command.ts`      | the `sync` command as a function: `--check`, `--baseline`, `--project-templates`                                                          |
+| `install.ts`           | the `init` command as a function: detection, questions, plan, write, install step, baselines                                              |
+| `upgrade.ts`           | the `upgrade` command as a function                                                                                                       |
+| `uninstall-command.ts` | the `uninstall` command as a function                                                                                                     |
+| `targets.ts`           | every generated file for the selection: path, template, stub                                                                              |
+| `stubs.ts`             | one-line stubs at conventional paths; `jsonc-parser` for `tsconfig.json` `extends`                                                        |
+| `managed-blocks.ts`    | marker blocks in `CLAUDE.md`, `AGENTS.md`, `.gitignore`, `.editorconfig`, `.vscode/*.json` (`jsonc-parser`), `lefthook.yml` (`yaml`)      |
+| `hooks.ts`             | `.gspot/hooks/*`, `core.hooksPath`, the husky and lefthook forms, executable bits through git                                             |
+| `runner-surface.ts`    | `.config/mise/conf.d/gspot.toml`, `package.json` scripts and devDependencies (`nypm`, `@npmcli/package-json`), the uv dependency group    |
+| `workflow.ts`          | `.github/workflows/gspot.yml`                                                                                                             |
+| `drift.ts`             | `sync --check`: render in memory, find generated files by header, compare bytes, print the diff                                           |
+| `takeover.ts`          | delete the old configuration, carry the exception lists (typos, gitleaks, osv, licenses, disabled rules as ignores), print the plan lines |
+| `uninstall.ts`         | the inverse of `init`                                                                                                                     |
 
 ### `src/structure/`
 
@@ -226,7 +240,7 @@ naming/
 ├── validate.ts                 case, length, words, digits, duplicate words, structural prefixes, path rules
 ├── paths.ts                    file stems and directory names; migration names; Next.js segments
 ├── report.ts                   the finding text with the policy source
-└── extractors/                 one per language, tree-sitter queries to categorised identifiers
+└── extractors/                 one per language, tree-sitter queries to categorized identifiers
     ├── typescript.ts           also covers javascript
     ├── python.ts
     ├── swift.ts
@@ -243,7 +257,7 @@ accept list).
 
 ### `src/integrity/`
 
-One file per check, named after the id: `allowlists-resolve.ts`, `baselines-current.ts`,
+`dispatch.ts` chooses the analysis a check names; then one file per check, named after the id: `allowlists-resolve.ts`, `baselines-current.ts`,
 `config-purity.ts`, `css-usage.ts`, `dependency-alignment.ts`, `dependency-ownership.ts`,
 `docs-headings.ts`, `docs-links.ts`, `env-files.ts`, `generated-drift.ts`,
 `generated-fresh.ts`, `gitleaks-baseline.ts`, `install-policy.ts`, `large-files.ts`,
@@ -268,7 +282,8 @@ are removed.
 `probes.ts` (locate and version every tool: `node_modules/.bin`, `.venv/bin`, mise shims,
 `PATH`), `coverage.ts` (unchecked and partial files), `changes.ts` (detected not selected,
 configuration not owned, changed outside gspot, each with its command), `settings.ts` (the
-`--settings` listing), `newer-version.ts` (`latest-version`, once, when a person runs it).
+`--settings` listing), `newer-version.ts` (`latest-version`, once, when a person runs it),
+`report.ts` (the report as data and as text), `command.ts` (the `doctor` command as a function).
 
 ### `src/output/`
 
@@ -284,7 +299,8 @@ metadata), `why.ts`, `completion.ts` (`@bomb.sh/tab` adapter).
 `paths.ts` (`node:path`, forward slashes in selectors, the platform form for tools),
 `spawn.ts` (`Bun.spawn`, `cross-spawn` for `.cmd` shims), `executable-bit.ts`
 (`git update-index --chmod=+x`), `install-hints.ts` (mise, Homebrew, apt, winget, scoop per
-platform).
+platform), `assets.ts` (where gspot's own data lives: the repository from source, the embedded
+files in the binary; `build.ts` writes the index).
 
 ### `types/`
 
@@ -295,7 +311,7 @@ platform).
 
 ```text
 packages/eslint-plugin/
-├── package.json                name eslint-plugin-gspot; version equals the binary's
+├── package.json                name @gspot/eslint-plugin; version equals the binary's
 ├── tsconfig.json
 ├── build.ts                    bun build to ESM and CommonJS
 ├── src/
@@ -325,9 +341,8 @@ packages/npm/
 │   ├── package.json            bin, optionalDependencies on every @gspot/cli-* at the same version, no scripts
 │   ├── gspot.js                resolves process.platform and process.arch to the installed platform package; fails with the install hint
 │   └── README.md
-└── platform/                   the template release.yml stamps once per target
-    ├── package.json            name @gspot/cli-<os>-<arch>, os and cpu fields, the binary as its one file
-    └── README.md
+└── platform/
+    └── README.md               the README every platform package ships; publish.ts writes each package.json (name @gspot/cli-<os>-<arch>, os and cpu fields, the binary as its one file) from its target table
 ```
 
 Targets: `darwin-arm64`, `darwin-x64`, `linux-x64`, `linux-arm64`, `win32-x64`.
@@ -343,43 +358,43 @@ One folder per preset, forty-two: `bash`, `cloudflare`, `commits`, `config-files
 
 Every folder holds `manifest.toml`. Beside it, by kind:
 
-| Preset | Files beside the manifest |
-| --- | --- |
-| `typescript` | `eslint.config.js.tmpl`, `tsconfig.base.json.tmpl`, `knip.json.tmpl` |
-| `javascript` | `eslint.fragment.js.tmpl` (globals per file class, sourceType), `jsconfig.json.tmpl` |
-| `python` | `ruff.toml.tmpl`, `basedpyrightconfig.json.tmpl`, `pyproject.fragment.toml.tmpl` (importlinter, deptry, vulture), `rules/` ast-grep: `header-comments-before-imports.yml`, `no-blocking-io-in-async.yml` |
-| `swift` | `swiftlint.yml.tmpl`, `swiftlint.tests.yml.tmpl`, `swiftformat.tmpl`, `periphery.yml.tmpl`, `rules/header-comments-before-imports.yml`, `semgrep/ios.yml` |
-| `bash` | `shellcheckrc.tmpl`, `editorconfig.fragment.tmpl`, `rules/` ast-grep: `shell-branches.yml`, `shell-nesting.yml`, `shell-mutable-assignments.yml`, `semgrep/hooks.yml` |
-| `sql` | `sqlfluff.cfg.tmpl` |
-| `css` | `stylelint.json.tmpl` |
-| `html` | `html-validate.templates.json.tmpl`, `html-validate.built.json.tmpl` |
-| `markdown` | `markdownlint.jsonc.tmpl` |
-| `nextjs` | `eslint.fragment.js.tmpl` (next config, boundaries, server-only, client environment, entry-file overrides) |
-| `express` | `eslint.fragment.js.tmpl`, `spectral.yaml.tmpl`, `semgrep/api.yml` |
-| `fastapi` | `ruff.fragment.toml.tmpl`, `semgrep/python.yml` |
-| `supabase` | `deno.json.tmpl`, `eslint.fragment.js.tmpl` (Deno globals for functions), `v8r.fragment.yml.tmpl`, `rules/service-role-containment.yml`, `semgrep/supabase.yml` |
-| `postgres` | `squawk.toml.tmpl`, `sqlfluff.fragment.cfg.tmpl` |
-| `cloudflare` | `eslint.fragment.js.tmpl` (worker globals), `semgrep/workers.yml` |
-| `docker` | `hadolint.yaml.tmpl`, `trivy.yaml.tmpl` |
-| `nginx` | `gixy.cfg.tmpl` |
-| `xcode` | `v8r.fragment.yml.tmpl` (test plan and asset catalogue schemas) |
-| `vitest` | `eslint.fragment.js.tmpl` (test overrides) |
-| `pytest` | `ruff.fragment.toml.tmpl`, `pyproject.fragment.toml.tmpl` |
-| `zod`, `drizzle`, `trpc`, `tanstack-query`, `zustand`, `react-hook-form`, `i18n` | `eslint.fragment.js.tmpl` |
-| `structure` | `rules/` ast-grep, one directory per rule with one file per grammar (`call-through/python.yml`, `call-through/swift.yml`, `call-through/bash.yml`, `trivial-function/...`, `header-comments-before-imports/...`) |
-| `naming` | `policy.json` (the shipped policy: groups, reserved, external, per-language tables, path rules) |
-| `formatting` | `editorconfig.tmpl`, `prettier.json.tmpl`, `prettierignore.tmpl` |
-| `spelling` | `typos.toml.tmpl` |
-| `docs` | `lychee.toml.tmpl` |
-| `commits` | `commitlint.config.js.tmpl` |
-| `secrets` | `gitleaks.toml.tmpl` |
-| `dependencies` | `osv-scanner.toml.tmpl`, `syncpack.json.tmpl`, `install-policy.fragment.tmpl` (bunfig, npmrc, pnpm-workspace entries) |
-| `licenses` | `licenses.json.tmpl` |
-| `config-files` | `taplo.toml.tmpl`, `yamllint.yml.tmpl`, `v8r.yml.tmpl` |
-| `vulnerabilities` | `semgrep/secrets.yml`, `semgrep/vendor/` (the pinned upstream OWASP, python, bash and secrets sets, one file each), `codeql/` (`javascript.yml`, `python.yml`, `swift.yml` query suites) |
-| `duplication` | `jscpd.json.tmpl` |
-| `prose` | `vale.ini.tmpl` |
-| `static-site` | `linkinator.json.tmpl`, `size-limit.json.tmpl` |
+| Preset                                                                           | Files beside the manifest                                                                                                                                                                                        |
+| -------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `typescript`                                                                     | `eslint.config.js.tmpl`, `tsconfig.base.json.tmpl`, `knip.json.tmpl`                                                                                                                                             |
+| `javascript`                                                                     | `eslint.fragment.js.tmpl` (globals per file class, sourceType), `jsconfig.json.tmpl`                                                                                                                             |
+| `python`                                                                         | `ruff.toml.tmpl`, `basedpyrightconfig.json.tmpl`, `pyproject.fragment.toml.tmpl` (importlinter, deptry, vulture), `rules/` ast-grep: `header-comments-before-imports.yml`, `no-blocking-io-in-async.yml`         |
+| `swift`                                                                          | `swiftlint.yml.tmpl`, `swiftlint.tests.yml.tmpl`, `swiftformat.tmpl`, `periphery.yml.tmpl`, `rules/header-comments-before-imports.yml`, `semgrep/ios.yml`                                                        |
+| `bash`                                                                           | `shellcheckrc.tmpl`, `editorconfig.fragment.tmpl`, `rules/` ast-grep: `shell-branches.yml`, `shell-nesting.yml`, `shell-mutable-assignments.yml`, `semgrep/hooks.yml`                                            |
+| `sql`                                                                            | `sqlfluff.cfg.tmpl`                                                                                                                                                                                              |
+| `css`                                                                            | `stylelint.json.tmpl`                                                                                                                                                                                            |
+| `html`                                                                           | `html-validate.templates.json.tmpl`, `html-validate.built.json.tmpl`                                                                                                                                             |
+| `markdown`                                                                       | `markdownlint.jsonc.tmpl`                                                                                                                                                                                        |
+| `nextjs`                                                                         | `eslint.fragment.js.tmpl` (next config, boundaries, server-only, client environment, entry-file overrides)                                                                                                       |
+| `express`                                                                        | `eslint.fragment.js.tmpl`, `spectral.yaml.tmpl`, `semgrep/api.yml`                                                                                                                                               |
+| `fastapi`                                                                        | `ruff.fragment.toml.tmpl`, `semgrep/python.yml`                                                                                                                                                                  |
+| `supabase`                                                                       | `deno.json.tmpl`, `eslint.fragment.js.tmpl` (Deno globals for functions), `v8r.fragment.yml.tmpl`, `rules/service-role-containment.yml`, `semgrep/supabase.yml`                                                  |
+| `postgres`                                                                       | `squawk.toml.tmpl`, `sqlfluff.fragment.cfg.tmpl`                                                                                                                                                                 |
+| `cloudflare`                                                                     | `eslint.fragment.js.tmpl` (worker globals), `semgrep/workers.yml`                                                                                                                                                |
+| `docker`                                                                         | `hadolint.yaml.tmpl`, `trivy.yaml.tmpl`                                                                                                                                                                          |
+| `nginx`                                                                          | `gixy.cfg.tmpl`                                                                                                                                                                                                  |
+| `xcode`                                                                          | `v8r.fragment.yml.tmpl` (test plan and asset catalogue schemas)                                                                                                                                                  |
+| `vitest`                                                                         | `eslint.fragment.js.tmpl` (test overrides)                                                                                                                                                                       |
+| `pytest`                                                                         | `ruff.fragment.toml.tmpl`, `pyproject.fragment.toml.tmpl`                                                                                                                                                        |
+| `zod`, `drizzle`, `trpc`, `tanstack-query`, `zustand`, `react-hook-form`, `i18n` | `eslint.fragment.js.tmpl`                                                                                                                                                                                        |
+| `structure`                                                                      | `rules/` ast-grep, one directory per rule with one file per grammar (`call-through/python.yml`, `call-through/swift.yml`, `call-through/bash.yml`, `trivial-function/...`, `header-comments-before-imports/...`) |
+| `naming`                                                                         | `policy.json` (the shipped policy: groups, reserved, external, per-language tables, path rules)                                                                                                                  |
+| `formatting`                                                                     | `editorconfig.tmpl`, `prettier.json.tmpl`, `prettierignore.tmpl`                                                                                                                                                 |
+| `spelling`                                                                       | `typos.toml.tmpl`                                                                                                                                                                                                |
+| `docs`                                                                           | `lychee.toml.tmpl`                                                                                                                                                                                               |
+| `commits`                                                                        | `commitlint.config.js.tmpl`                                                                                                                                                                                      |
+| `secrets`                                                                        | `gitleaks.toml.tmpl`                                                                                                                                                                                             |
+| `dependencies`                                                                   | `osv-scanner.toml.tmpl`, `syncpack.json.tmpl`, `install-policy.fragment.tmpl` (bunfig, npmrc, pnpm-workspace entries)                                                                                            |
+| `licenses`                                                                       | `licenses.json.tmpl`                                                                                                                                                                                             |
+| `config-files`                                                                   | `taplo.toml.tmpl`, `yamllint.yml.tmpl`, `v8r.yml.tmpl`                                                                                                                                                           |
+| `vulnerabilities`                                                                | `semgrep/secrets.yml`, `semgrep/vendor/` (the pinned upstream OWASP, python, bash and secrets sets, one file each), `codeql/` (`javascript.yml`, `python.yml`, `swift.yml` query suites)                         |
+| `duplication`                                                                    | `jscpd.json.tmpl`                                                                                                                                                                                                |
+| `prose`                                                                          | `vale.ini.tmpl`                                                                                                                                                                                                  |
+| `static-site`                                                                    | `linkinator.json.tmpl`, `size-limit.json.tmpl`                                                                                                                                                                   |
 
 A `*.fragment.*` template contributes a section to a file another preset owns (the ESLint flat
 config, `ruff.toml`, `pyproject.toml`, `v8r.yml`); `render/targets.ts` concatenates fragments in

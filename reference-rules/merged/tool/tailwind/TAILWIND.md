@@ -6,7 +6,7 @@ title: Tailwind CSS
 
 # Tailwind CSS
 
-- The theme is the token source. Colours, spacing, radii, fonts, and breakpoints are declared in
+- The theme is the token source. Colors, spacing, radii, fonts, and breakpoints are declared in
   the theme configuration and referenced by name. An arbitrary value (`w-[13px]`,
   `text-[#3b82f6]`) is a finding unless it carries a reason comment. `enforced-by: css/stylelint`
 - Class order follows the official ordering plugin; the formatter owns it and a hand-ordered list

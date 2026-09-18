@@ -17,10 +17,10 @@ of `feat`, `fix`, `docs`, `style`, `refactor`, `perf`, `test`, `build`, `ci`, `c
 
 ## Checks
 
-| Id | Stage | Command |
-| --- | --- | --- |
+| Id                   | Stage   | Command                                                         |
+| -------------------- | ------- | --------------------------------------------------------------- |
 | `commits/commitlint` | message | `commitlint --config .gspot/commitlint.config.js --edit <file>` |
-| `commits/range` | push | `commitlint --from <base> --to HEAD` over the pushed commits |
+| `commits/range`      | push    | `commitlint --from <base> --to HEAD` over the pushed commits    |
 
 ## Settings
 

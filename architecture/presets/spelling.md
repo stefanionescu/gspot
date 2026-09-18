@@ -18,8 +18,8 @@ reason as a comment.
 
 ## Checks
 
-| Id | Stage | Command |
-| --- | --- | --- |
+| Id               | Stage  | Command                                                                         |
+| ---------------- | ------ | ------------------------------------------------------------------------------- |
 | `spelling/typos` | commit | `typos --config .gspot/typos.toml {files}`; fix `--write-changes`, order format |
 
 ## Settings

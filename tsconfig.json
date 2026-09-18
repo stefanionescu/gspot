@@ -1,0 +1,30 @@
+{
+    "compilerOptions": {
+        "strict": true,
+        "target": "ESNext",
+        "module": "Preserve",
+        "moduleResolution": "bundler",
+        "moduleDetection": "force",
+        "allowImportingTsExtensions": true,
+        "verbatimModuleSyntax": true,
+        "erasableSyntaxOnly": true,
+        "noEmit": true,
+        "skipLibCheck": true,
+        "types": ["bun"],
+        "noUncheckedIndexedAccess": true,
+        "exactOptionalPropertyTypes": true,
+        "noImplicitOverride": true,
+        "forceConsistentCasingInFileNames": true,
+        "noImplicitReturns": true,
+        "noFallthroughCasesInSwitch": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "resolveJsonModule": true,
+        "paths": {
+            "#cli/*": ["./packages/cli/src/*"],
+            "#config/*": ["./packages/cli/config/*"],
+            "#types/*": ["./packages/cli/types/*"]
+        }
+    },
+    "include": ["packages/**/*.ts", "tests/**/*.ts", "docs/generate.ts"],
+    "exclude": ["node_modules", "dist", "**/node_modules", "packages/cli/build", "tests/repositories/**/fixtures"]
+}

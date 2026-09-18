@@ -1,5 +1,5 @@
 extends: occurrence
-message: "A sentence longer than 30 words. Split it."
+message: 'A sentence longer than 30 words. Split it.'
 level: error
 scope: sentence
 max: 30

@@ -1,0 +1,41 @@
+#:schema https://gspot.dev/schema/gspot.schema.json
+
+# The policy of this repository under gspot. Every setting has a command that writes it:
+# gspot set, allow, ignore, declare, add, remove. Run gspot explain <anything> for what it means.
+
+version = 1
+presets = [ "bash", "spelling" ]
+
+[[scope]]
+path = "packages/cli"
+presets = []
+
+[[scope]]
+path = "packages/eslint-plugin"
+presets = []
+
+[hooks]
+manager = "gspot"
+
+[ci]
+provider = "github"
+
+[rules]
+install = true
+directory = ".gspot/rules"
+
+[coverage]
+strict = false
+
+[runner]
+surface = "mise"
+
+[tools]
+
+[tools.typos]
+words = [ { word = "udid", reason = "Apple's device identifier API name." }, { word = "certifi", reason = "The Python certificate package name." }, { word = "axe", reason = "The axe-core accessibility package name." }, { word = "Virtua", reason = "The Virtua list virtualisation library." }, { word = "virtua", reason = "The Virtua list virtualisation library." }, { word = "synchronise", reason = "British spellings the naming policy bans on purpose." }, { word = "synchronised", reason = "British spellings the naming policy bans on purpose." }, { word = "materialise", reason = "British spellings the naming policy bans on purpose." } ]
+exclude = [ { paths = [ "reference-rules/lint/vale/styles/gspot/us-english.yml" ], reason = "A list of British spellings mapped to their US forms." } ]
+
+[[declare]]
+paths = [ "reference-rules/lint/completeness-report.json" ]
+produced_by = "bun reference-rules/lint/completeness-check.ts"

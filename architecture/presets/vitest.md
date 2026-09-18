@@ -4,9 +4,9 @@ Kind: tool. Requires: typescript or javascript.
 
 ## Detects and claims
 
-| | |
-| --- | --- |
-| Detect | `vitest` in dependencies |
+|        |                                                                                                 |
+| ------ | ----------------------------------------------------------------------------------------------- |
+| Detect | `vitest` in dependencies                                                                        |
 | Claims | test files: `**/*.{test,spec}.{ts,tsx,js}`, `**/tests/**`, `**/__tests__/**`, `vitest.config.*` |
 
 ## Tools
@@ -25,11 +25,11 @@ The three rules the reference repository measured and left off enter with a base
 
 ## Checks
 
-| Id | Stage | Command |
-| --- | --- | --- |
-| `typescript/eslint` | commit | with the test overrides |
-| `vitest/coverage` | push | `vitest run --coverage` with thresholds from `[tools.vitest] coverage` (default 80 lines, branches, functions, statements) |
-| `gspot/no-support-in-dirs`, `gspot/no-tests-support-imports` | commit | test support lives in the declared support directory |
+| Id                                                           | Stage  | Command                                                                                                                    |
+| ------------------------------------------------------------ | ------ | -------------------------------------------------------------------------------------------------------------------------- |
+| `typescript/eslint`                                          | commit | with the test overrides                                                                                                    |
+| `vitest/coverage`                                            | push   | `vitest run --coverage` with thresholds from `[tools.vitest] coverage` (default 80 lines, branches, functions, statements) |
+| `gspot/no-support-in-dirs`, `gspot/no-tests-support-imports` | commit | test support lives in the declared support directory                                                                       |
 
 ## Settings
 

@@ -24,7 +24,7 @@ title: Xcode
   user-specific is committed. `enforced-by: config-files/plist`
 - Groups mirror directories. A file that exists on disk is in the project once, in the group that
   matches its path. `enforced-by: config-files/plist`
-- Resources are in asset catalogs; colours and images are referenced by name, never by literal. `enforced-by: config-files/plist`
+- Resources are in asset catalogs; colors and images are referenced by name, never by literal. `enforced-by: config-files/plist`
 - `Info.plist` values that vary by configuration come from build settings
   (`$(PRODUCT_BUNDLE_IDENTIFIER)`), not from edited plist copies. `enforced-by: config-files/plist`
 

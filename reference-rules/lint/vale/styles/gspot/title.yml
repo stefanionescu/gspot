@@ -4,8 +4,8 @@ level: error
 scope: heading.h1
 match: $title
 exceptions:
-  - nginx
-  - next-intl
-  - tRPC
-  - gspot
-  - iOS
+    - nginx
+    - next-intl
+    - tRPC
+    - gspot
+    - iOS

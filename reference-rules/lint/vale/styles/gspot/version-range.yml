@@ -3,6 +3,6 @@ message: "Version range '%s'. Pin the version the rule applies to, or drop it."
 level: error
 nonword: true
 tokens:
-  - "\\bv?\\d+\\.x\\b"
-  - "\\d+\\+ or (later|newer)"
-  - "\\bor (later|newer|higher)(?![-\\w])"
+    - "\\bv?\\d+\\.x\\b"
+    - "\\d+\\+ or (later|newer)"
+    - "\\bor (later|newer|higher)(?![-\\w])"

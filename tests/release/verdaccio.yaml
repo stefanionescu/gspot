@@ -1,0 +1,19 @@
+# A throwaway registry for the launcher test: packages are published here and installed back with --ignore-scripts.
+storage: ./storage
+auth:
+    htpasswd:
+        file: ./htpasswd
+uplinks: {}
+packages:
+    '@gspot/*':
+        access: $all
+        publish: $anonymous
+        unpublish: $anonymous
+    'gspot':
+        access: $all
+        publish: $anonymous
+        unpublish: $anonymous
+    '**':
+        access: $all
+        publish: $anonymous
+log: { type: stdout, format: pretty, level: error }

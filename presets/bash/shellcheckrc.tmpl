@@ -1,0 +1,7 @@
+shell=bash
+source-path=SCRIPTDIR
+external-sources=true
+enable=all
+<% const off = rulesOff('bash/shellcheck'); if (off.length > 0) { %>disable=<%= off.join(',') %>
+<% } %><% const extras = extra('shellcheck'); if (extras) { for (const [key, value] of Object.entries(extras)) { if (key !== 'reason') { %><%= key %>=<%= value %>
+<% } } } %>

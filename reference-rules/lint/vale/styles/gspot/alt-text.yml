@@ -4,5 +4,5 @@ level: error
 scope: raw
 nonword: true
 tokens:
-  - "!\\[\\]\\((?!img/decorative)"
-  - "!\\[(?:Image|Graphic|Picture) of"
+    - "!\\[\\]\\((?!img/decorative)"
+    - "!\\[(?:Image|Graphic|Picture) of"

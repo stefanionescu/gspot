@@ -1,0 +1,60 @@
+name: release
+on:
+    push:
+        tags: ['v*']
+permissions:
+    contents: write
+    id-token: write
+    attestations: write
+jobs:
+    build:
+        strategy:
+            matrix:
+                include:
+                    - target: bun-darwin-arm64
+                      os: macos-latest
+                      npm: darwin-arm64
+                    - target: bun-darwin-x64
+                      os: macos-latest
+                      npm: darwin-x64
+                    - target: bun-linux-x64
+                      os: ubuntu-latest
+                      npm: linux-x64
+                    - target: bun-linux-arm64
+                      os: ubuntu-latest
+                      npm: linux-arm64
+                    - target: bun-windows-x64
+                      os: ubuntu-latest
+                      npm: win32-x64
+        runs-on: ${{ matrix.os }}
+        steps:
+            - uses: actions/checkout@34e114876b0b11c390a56381ad4ec7f4b0d0a6ae
+            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566
+            - run: bun install --frozen-lockfile
+            - run: bun packages/cli/build.ts --target ${{ matrix.target }}
+            - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be
+              with:
+                  subject-path: dist/*
+            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02
+              with:
+                  name: ${{ matrix.npm }}
+                  path: dist/*
+    publish:
+        needs: build
+        runs-on: ubuntu-latest
+        steps:
+            - uses: actions/checkout@34e114876b0b11c390a56381ad4ec7f4b0d0a6ae
+            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566
+            - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093
+              with:
+                  path: dist
+                  merge-multiple: true
+            - run: bun install --frozen-lockfile
+            - run: bun packages/cli/publish.ts --tag ${{ github.ref_name }}
+              env:
+                  NPM_CONFIG_PROVENANCE: 'true'
+            - uses: softprops/action-gh-release@72f2c25fcb47643c292f7107632f7a47c1df5cd8
+              with:
+                  files: |
+                      dist/gspot-*
+                      dist/checksums.txt

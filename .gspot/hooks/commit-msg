@@ -1,0 +1,5 @@
+#!/usr/bin/env bash
+# Written by gspot. Run `gspot uninstall` to remove.
+set -euo pipefail
+read -ra gspot_command <<<"${GSPOT_BIN:-mise exec -- gspot}"
+exec "${gspot_command[@]}" check --stage message --message-file "$@"

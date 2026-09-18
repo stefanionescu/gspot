@@ -4,10 +4,10 @@ Kind: framework. Requires: typescript or javascript.
 
 ## Detects and claims
 
-| | |
-| --- | --- |
-| Detect | `express` in dependencies |
-| Claims | nothing by path; adds rules to the scope's JavaScript checks |
+|                         |                                                                             |
+| ----------------------- | --------------------------------------------------------------------------- |
+| Detect                  | `express` in dependencies                                                   |
+| Claims                  | nothing by path; adds rules to the scope's JavaScript checks                |
 | Architecture it assumes | none. Routers, handlers and middleware live wherever the project puts them. |
 
 ## Tools
@@ -25,12 +25,12 @@ object). Boundaries from `[architecture]` when the scope declares elements.
 
 ## Checks
 
-| Id | Stage | Command |
-| --- | --- | --- |
-| `security/semgrep` api pack | push | raw query interpolation, `res.send` of raw input, unvalidated redirect, JWT `none` and decode without verify, unauthenticated routes without rate limit, stack traces in responses, secrets in logs, SSRF from user input, `child_process` exec, dynamic require, `console.log` in source, non-null assertion chains, `@ts-ignore`, `eval` |
-| `express/openapi-lint` | commit | `spectral lint <document>` when `[tools.openapi] document` is set |
-| `express/openapi-fresh` | push | the generator in `[tools.openapi] produced_by` leaves the document unchanged |
-| `express/routes-tested` | push | every route file has a test file that names it (through `[tools.express] route_glob` and `test_glob`) |
+| Id                          | Stage  | Command                                                                                                                                                                                                                                                                                                                                    |
+| --------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `security/semgrep` api pack | push   | raw query interpolation, `res.send` of raw input, unvalidated redirect, JWT `none` and decode without verify, unauthenticated routes without rate limit, stack traces in responses, secrets in logs, SSRF from user input, `child_process` exec, dynamic require, `console.log` in source, non-null assertion chains, `@ts-ignore`, `eval` |
+| `express/openapi-lint`      | commit | `spectral lint <document>` when `[tools.openapi] document` is set                                                                                                                                                                                                                                                                          |
+| `express/openapi-fresh`     | push   | the generator in `[tools.openapi] produced_by` leaves the document unchanged                                                                                                                                                                                                                                                               |
+| `express/routes-tested`     | push   | every route file has a test file that names it (through `[tools.express] route_glob` and `test_glob`)                                                                                                                                                                                                                                      |
 
 ## Settings
 

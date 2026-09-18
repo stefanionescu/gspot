@@ -3,4 +3,4 @@ message: "'since' is ambiguous between time and cause. Use 'because' or 'after'.
 level: error
 ignorecase: true
 tokens:
-  - "\\bsince\\b"
+    - "\\bsince\\b"

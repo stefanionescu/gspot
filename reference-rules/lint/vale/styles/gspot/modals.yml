@@ -3,7 +3,7 @@ message: "Modal verb '%s'. State the rule or the fact."
 level: error
 ignorecase: true
 tokens:
-  - should
-  - could
-  - would
-  - might
+    - should
+    - could
+    - would
+    - might

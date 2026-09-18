@@ -23,3 +23,23 @@ bun-debug.log*
 
 # gspot writes its own entries here as a managed block, from `gspot init`.
 # Do not add /.gspot/ by hand.
+
+# Build output and files copied from packages at build time
+/dist/
+/packages/cli/build/
+/packages/cli/grammars/*.wasm
+!/packages/cli/grammars/swift.wasm
+
+# >>> gspot managed >>>
+gspot.local.toml
+.gspot/cache/
+.gspot/last.json
+.gspot/last.sarif
+.gspot/vale/styles/Google/
+.gspot/vale/styles/Microsoft/
+.gspot/vale/styles/write-good/
+.gspot/vale/styles/proselint/
+.gspot/vale/styles/alex/
+.gspot/vale/styles/RedHat/
+.gspot/vale/styles/Readability/
+# <<< gspot managed <<<

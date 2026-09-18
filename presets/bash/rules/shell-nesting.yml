@@ -1,0 +1,18 @@
+# Compound statements nested deeper than limits.bash.function_nesting.
+id: shell-nesting
+language: bash
+rule:
+    any:
+        - kind: if_statement
+        - kind: while_statement
+        - kind: for_statement
+        - kind: case_statement
+        - kind: until_statement
+    inside:
+        any:
+            - kind: if_statement
+            - kind: while_statement
+            - kind: for_statement
+            - kind: case_statement
+            - kind: until_statement
+        stopBy: end

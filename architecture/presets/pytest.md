@@ -4,10 +4,10 @@ Kind: tool. Requires: python.
 
 ## Detects and claims
 
-| | |
-| --- | --- |
+|        |                                                                |
+| ------ | -------------------------------------------------------------- |
 | Detect | `pytest` in dependencies or dependency groups; `[tool.pytest]` |
-| Claims | `tests/**/*.py`, `test_*.py`, `*_test.py`, `conftest.py` |
+| Claims | `tests/**/*.py`, `test_*.py`, `*_test.py`, `conftest.py`       |
 
 ## Tools
 
@@ -21,12 +21,12 @@ with `testpaths` from claims and `addopts = "-q --strict-markers --strict-config
 
 ## Checks
 
-| Id | Stage | Command |
-| --- | --- | --- |
-| `python/ruff` | commit | with `PT001` to `PT027` on |
-| `pytest/coverage` | push | `pytest --cov --cov-fail-under=<threshold>` |
-| `structure/trivial-function` | commit | `pytest.fixture` is an exempt decorator |
-| `naming/identifiers` | commit | `test_` is a structural prefix for test functions; `fixtures` stays banned as a directory name |
+| Id                           | Stage  | Command                                                                                        |
+| ---------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
+| `python/ruff`                | commit | with `PT001` to `PT027` on                                                                     |
+| `pytest/coverage`            | push   | `pytest --cov --cov-fail-under=<threshold>`                                                    |
+| `structure/trivial-function` | commit | `pytest.fixture` is an exempt decorator                                                        |
+| `naming/identifiers`         | commit | `test_` is a structural prefix for test functions; `fixtures` stays banned as a directory name |
 
 ## Settings
 

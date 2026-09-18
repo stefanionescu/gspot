@@ -9,7 +9,7 @@ title: Task Template
 Template. Remove sections that do not apply. Do not publish empty headings or placeholder
 prose.
 
-````markdown
+```markdown
 # ACTION_GOAL
 
 State the outcome and when to use the task.
@@ -37,4 +37,4 @@ State the diagnostic check, cause, and resolution.
 ## Next steps
 
 - [DESCRIPTIVE_DESTINATION](RELATIVE_LINK)
-````
+```

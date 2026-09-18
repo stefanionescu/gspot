@@ -339,4 +339,3 @@ type ProviderSubmitOrderResponse = {
     providerStatus: string;
 };
 ```
-

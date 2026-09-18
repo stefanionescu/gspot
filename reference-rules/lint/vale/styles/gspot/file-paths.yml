@@ -4,4 +4,4 @@ level: error
 scope: paragraph
 nonword: true
 tokens:
-  - "(?<!`)\\b[a-z0-9_-]+/[a-z0-9_./-]+\\.(?:ts|js|py|swift|sh|sql|md|json|toml|yml|yaml)\\b(?!`)"
+    - "(?<!`)\\b[a-z0-9_-]+/[a-z0-9_./-]+\\.(?:ts|js|py|swift|sh|sql|md|json|toml|yml|yaml)\\b(?!`)"

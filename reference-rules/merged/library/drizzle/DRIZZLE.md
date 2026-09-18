@@ -6,7 +6,6 @@ title: Drizzle
 
 # Drizzle
 
-
 Some sections below name Supabase, because it is the Postgres platform these rules were written
 against and its pooler, auth and storage behavior change what is correct. Those passages apply
 when the project is on that platform. On any other Postgres, read them as the shape of the problem

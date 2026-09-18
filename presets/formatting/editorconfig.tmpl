@@ -1,0 +1,27 @@
+root = true
+
+[*]
+charset = utf-8
+end_of_line = <%= format.line_ending %>
+insert_final_newline = <%= format.final_newline %>
+trim_trailing_whitespace = true
+indent_style = <%= format.indent_style %>
+indent_size = <%= format.indent_width %>
+
+[*.{sh,bash,zsh}]
+indent_style = <%= format.indent_style %>
+indent_size = <%= format.indent_width %>
+switch_case_indent = true
+
+[*.{yml,yaml}]
+indent_size = 2
+
+[*.md]
+trim_trailing_whitespace = false
+
+[Makefile]
+indent_style = tab
+<% const extras = extra('editorconfig'); if (extras) { for (const [key, value] of Object.entries(extras)) { if (key !== 'reason' && typeof value === 'object' && value !== null) { %>
+[<%= key %>]
+<% for (const [option, setting] of Object.entries(value)) { %><%= option %> = <%= setting %>
+<% } } } } %>

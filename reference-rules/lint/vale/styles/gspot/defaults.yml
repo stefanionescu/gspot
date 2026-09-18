@@ -5,5 +5,5 @@ ignorecase: true
 scope: paragraph
 nonword: true
 tokens:
-  - "defaults? to \\d"
-  - "by default,? \\d"
+    - "defaults? to \\d"
+    - "by default,? \\d"

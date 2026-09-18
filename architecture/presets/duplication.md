@@ -13,9 +13,9 @@ formats from the selected languages, ignore by nature, reporters `console` and `
 
 ## Checks
 
-| Id | Stage | Command |
-| --- | --- | --- |
-| `duplication/jscpd` | push | `jscpd --config .gspot/jscpd.json {files}` per language format |
+| Id                  | Stage | Command                                                        |
+| ------------------- | ----- | -------------------------------------------------------------- |
+| `duplication/jscpd` | push  | `jscpd --config .gspot/jscpd.json {files}` per language format |
 
 Function-level duplicates are caught earlier by `sonarjs/no-identical-functions` and
 `structure/duplicate-functions`; jscpd catches the rest.

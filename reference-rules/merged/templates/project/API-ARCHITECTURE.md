@@ -259,7 +259,6 @@ queue.on('message', async (message) => {
 });
 ```
 
-
 ## Domain logic
 
 Modules receive explicit domain inputs, not Express objects. Domain code returns
@@ -414,7 +413,6 @@ function validateProviderConfig(value: Record<string, unknown>, ctx: z.Refinemen
     }
 }
 ```
-
 
 ## Production operations
 

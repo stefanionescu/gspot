@@ -12,7 +12,7 @@ requirement in every repository and made the previous design assume mise to get 
 ## D-02 The ESLint plugin hosts the JavaScript and TypeScript structural rules
 
 The 21 rules the reference repositories wrote as ESLint rules stay ESLint rules, in
-`eslint-plugin-gspot`, so editors show them and the tested semantics survive. Rejected: one
+`@gspot/eslint-plugin`, so editors show them and the tested semantics survive. Rejected: one
 ast-grep engine for every language, which loses editor feedback and rewrites tested code.
 
 ## D-03 Everything is an error; a baseline is the adoption device
@@ -42,7 +42,7 @@ checksummed downloader and lockfile, which re-implemented mise.
 
 ## D-07 mise is recommended, never required
 
-gspot writes `.mise/conf.d/gspot.toml` when mise is present and proposes mise when nothing is.
+gspot writes `.config/mise/conf.d/gspot.toml` when mise is present and proposes mise when nothing is.
 Without it, gspot writes to the package manager the repository has. Rejected: mise as the only
 runner, which fails the stranger with a plain npm repository.
 
@@ -114,7 +114,7 @@ ownership map and MVVM stack to strangers.
 ## D-19 A maintained tool wins
 
 An original analysis exists only where the manifest records the tools searched and why none
-expresses the rule. Rejected: the reference pattern of writing a careful analyser four times.
+expresses the rule. Rejected: the reference pattern of writing a careful analyzer four times.
 
 ## D-20 Limits ship at the strictest value observed
 
@@ -220,7 +220,7 @@ name.
 
 After the yes, `init` runs the runner's install step so the first `check` runs every tool.
 `--no-install` opts out. Rejected: writing pins and leaving the install to the person, which
-made the first run a wall of `MISSING`.
+made the first run a wall of `missing`.
 
 ## D-37 `add`, `remove` and `why`
 
@@ -306,7 +306,7 @@ facts about their repository, not policy.
 
 Every command prints lines; `--json` prints a documented object. The only interactive moments
 are the questions `init` and `upgrade` ask through `@clack/prompts`, skipped under `--yes`, `CI`
-or no terminal. commander parses and writes help; picocolors colours; zod validates; smol-toml
+or no terminal. commander parses and writes help; picocolors colors; zod validates; smol-toml
 reads and `@decimalturn/toml-patch` writes `gspot.toml`; `consola` carries messages on stderr.
 The full table, one library per job, is in [12-repository-layout.md](12-repository-layout.md);
 what stays gspot's own is listed under it. No terminal UI framework,
@@ -361,7 +361,7 @@ about a typo after they saved and switched windows.
 ## D-54 Where a tool has its own baseline, gspot drives it
 
 ESLint's bulk suppressions and basedpyright's baseline file live under `.gspot/baseline/` and
-are written at `init`, read on every run and pruned by `sync --baseline`. The editor honours the
+are written at `init`, read on every run and pruned by `sync --baseline`. The editor honors the
 same file, so the editor and the gate agree. Every other check uses gspot's count file. Rejected:
 one gspot-owned format for everything, which made the editor show findings the gate had
 baselined.
@@ -424,3 +424,40 @@ v1 is Phases 0 through 6. Rejected: the earlier cut that shipped after Phase 4 a
 prose, the corpus and CodeQL, which handed every early adopter a second migration when the agent
 rule files arrived, and which put the part of gspot that makes it more than a linter runner into
 "later".
+
+## D-62 Build order follows the two goals
+
+The build runs Phase 0, then Phase 1 with gspot's own repository as the acceptance repository,
+then the preset set yap-swift-app selects together with the corpus assembler, then Python, then
+the web presets, then release. 13-roadmap.md records this order and keeps every "done when" row.
+Rejected: the language order the roadmap first had, which reached Swift last and yap-swift-app
+fourth, so the repository with the most to replace was proven last.
+
+## D-63 Templates render through `eta`
+
+Every `*.tmpl` under `presets/` renders through `eta`, one maintained template engine for JS, JSON,
+TOML, YAML, INI and Vale output alike. Rejected: a placeholder renderer of gspot's own, which is a
+template engine with fewer tests and one more thing to document.
+
+## D-64 The reference ESLint rules have no tests upstream
+
+No test file exists beside any reference `quality/` ESLint rule. The rule tests in
+`packages/eslint-plugin/tests/rules/` are written new from each rule's semantics and messages, and
+the port is checked by running the reference plugin and gspot's over one planted scope and
+comparing findings. Rejected: skipping the tests because the reference had none, which leaves
+twenty-six rules with no fixture.
+
+## D-65 gspot's own hook resolves the development binary through `GSPOT_BIN`
+
+Until a release exists, `mise.toml` in gspot's repository sets `GSPOT_BIN` to run the CLI from
+source with Bun, and the hook body already reads `${GSPOT_BIN:-gspot}`. Once the first tag
+exists, `.config/mise/conf.d/gspot.toml` pins gspot through `ubi:` like any other repository and the
+environment entry goes. Rejected: a special case in `init` for gspot's own repository.
+
+## D-66 One naming scheme for the packages
+
+The launcher on npm is `gspot`. Every other package is scoped: `@gspot/cli` (the private
+workspace package that builds the binary), `@gspot/eslint-plugin` (published; the flat config
+registers it under the plugin key `gspot`, so rule ids stay `gspot/<rule>`), and
+`@gspot/cli-<os>-<arch>` (the platform packages). Rejected: the mixed set the first draft had
+(`gspot-cli`, `eslint-plugin-gspot`, `@gspot/cli-*`), three conventions for one project.

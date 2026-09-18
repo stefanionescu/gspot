@@ -13,9 +13,9 @@ schema before `.query`, `.mutation` or `.subscription`; no `any` in a procedure 
 
 ## Checks
 
-| Id | Stage | Command |
-| --- | --- | --- |
-| `typescript/eslint` | commit | with the selectors |
+| Id                       | Stage  | Command                                                                                         |
+| ------------------------ | ------ | ----------------------------------------------------------------------------------------------- |
+| `typescript/eslint`      | commit | with the selectors                                                                              |
 | `trpc/router-boundaries` | commit | routers live in the server element of `[architecture]`; the client imports only the router type |
 
 ## Settings

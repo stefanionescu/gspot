@@ -128,8 +128,8 @@ CREATE TABLE public.message_delivery_attempts (
 
 Rules:
 
-- SQL function names use verb phrases or domain operation names. `enforced-by: naming/identifiers`
-These verbs govern function names, not migration filenames.
+- SQL function names use verb phrases or domain operation names. These verbs govern function
+  names, not migration filenames. `enforced-by: naming/identifiers`
 
 - Retrieval functions use `get_` regardless of whether they return one row,
   an optional row, a collection, or a paginated collection. Do not use
@@ -235,4 +235,3 @@ avatar_images
 avatars/user_01hxx8j2r6/profile.png
 reports/report_01hxx8j2r6/export.pdf
 ```
-

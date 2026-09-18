@@ -14,23 +14,23 @@ vale, with the pinned packages: Google, Microsoft, write-good, proselint, alex, 
 
 ## Generated configuration
 
-| Target | Holds |
-| --- | --- |
-| `.gspot/vale.ini` | `StylesPath`, `MinAlertLevel = suggestion`, the packages, `BasedOnStyles`, `TokenIgnores` for code spans, URLs, tool directives (`eslint-disable`, `@ts-expect-error`, `swiftlint:`, `shellcheck`, `nosemgrep`, `MARK: -`, JSDoc tags), spelling rules off (typos owns spelling), the disabled-rule list with its reasons in comments |
-| `.gspot/vale/styles/gspot/*.yml` | the 30 rules: `dashes`, `present-state`, `modals`, `hedging`, `marketing`, `idioms`, `since`, `self-reference`, `file-paths`, `locations`, `defaults`, `future`, `version-range`, `interface-verbs`, `us-english`, `possessives`, `headings`, `title`, `heading-names`, `sentence-length`, `step-length`, `paragraph-length`, `acronyms`, `link-text`, `alt-text`, `placeholders`, `dates`, `currency`, `symbols`, `corruption` |
-| `.gspot/vale/styles/config/vocabularies/gspot/accept.txt` | the tool and product names from `[prose] vocabulary` |
+| Target                                                    | Holds                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.gspot/vale.ini`                                         | `StylesPath`, `MinAlertLevel = suggestion`, the packages, `BasedOnStyles`, `TokenIgnores` for code spans, URLs, tool directives (`eslint-disable`, `@ts-expect-error`, `swiftlint:`, `shellcheck`, `nosemgrep`, `MARK: -`, JSDoc tags), spelling rules off (typos owns spelling), the disabled-rule list with its reasons in comments                                                                                           |
+| `.gspot/vale/styles/gspot/*.yml`                          | the 30 rules: `dashes`, `present-state`, `modals`, `hedging`, `marketing`, `idioms`, `since`, `self-reference`, `file-paths`, `locations`, `defaults`, `future`, `version-range`, `interface-verbs`, `us-english`, `possessives`, `headings`, `title`, `heading-names`, `sentence-length`, `step-length`, `paragraph-length`, `acronyms`, `link-text`, `alt-text`, `placeholders`, `dates`, `currency`, `symbols`, `corruption` |
+| `.gspot/vale/styles/config/vocabularies/gspot/accept.txt` | the tool and product names from `[prose] vocabulary`                                                                                                                                                                                                                                                                                                                                                                            |
 
 Style packages are fetched by `vale sync` at setup into an ignored directory. Only the gspot
 style and vocabulary are tracked.
 
 ## Checks
 
-| Id | Stage | Command |
-| --- | --- | --- |
-| `prose/vale` | commit | `vale --config .gspot/vale.ini --output=line --no-exit {files}` per grammar; any alert fails |
-| `prose/source-bans` | commit | no `<!-- vale` directive in Markdown; no `/* */` in SQL |
-| `prose/messages` | commit | the three ESLint selectors: error messages start uppercase, client messages carry no interpolated identifiers, log calls use a stable message; Ruff `EM101`, `EM102`, `G004` |
-| `prose/doc-tags` | commit | `jsdoc/no-types`; SwiftLint custom rule `///` over `/** */` |
+| Id                  | Stage  | Command                                                                                                                                                                      |
+| ------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `prose/vale`        | commit | `vale --config .gspot/vale.ini --output=line --no-exit {files}` per grammar; any alert fails                                                                                 |
+| `prose/source-bans` | commit | no `<!-- vale` directive in Markdown; no `/* */` in SQL                                                                                                                      |
+| `prose/messages`    | commit | the three ESLint selectors: error messages start uppercase, client messages carry no interpolated identifiers, log calls use a stable message; Ruff `EM101`, `EM102`, `G004` |
+| `prose/doc-tags`    | commit | `jsdoc/no-types`; SwiftLint custom rule `///` over `/** */`                                                                                                                  |
 
 ## Settings
 

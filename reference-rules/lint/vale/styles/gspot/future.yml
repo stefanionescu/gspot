@@ -3,13 +3,13 @@ message: "Future promise '%s'. Document what exists."
 level: error
 ignorecase: true
 tokens:
-  - will be added
-  - will be supported
-  - coming soon
-  - in the future
-  - planned
-  - roadmap
-  - eventually
-  - for now
-  - later on
-  - TODO
+    - will be added
+    - will be supported
+    - coming soon
+    - in the future
+    - planned
+    - roadmap
+    - eventually
+    - for now
+    - later on
+    - TODO

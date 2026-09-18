@@ -418,9 +418,9 @@ data operation or in the existing design note.
 - For the previous model, choose appropriate explicit `fetch` cache/revalidation and supported route
   options for the installed release. `React.cache` alone does not make a query persist across
   requests. `enforced-by: integrity/manifest-policy`
-- With supported Cache Components enabled, cache only deliberately reusable data/UI with `use
-  cache`; assign its lifetime and tags. Put uncached or request-dependent work behind suitable
-  Suspense boundaries. `unenforced`
+- With supported Cache Components enabled, cache only deliberately reusable data/UI with
+  `use cache`; assign its lifetime and tags. Put uncached or request-dependent work behind
+  suitable Suspense boundaries. `unenforced`
 - Read request values outside shared cached functions and pass validated arguments. Do not paste
   `dynamic = 'force-static'`, `revalidate`, or Edge assumptions into this model. `unenforced`
 - Keep private data private across every cache layer. Include all relevant identity, tenant, locale,

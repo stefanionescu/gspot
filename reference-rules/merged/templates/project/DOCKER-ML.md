@@ -57,7 +57,7 @@ handling, NVIDIA CUDA image constraints, and this repository's runtime model.
 | Shared Docker code   | `docker/common/` owns only behavior that is truly common to both stacks.                        |
 | Dependency authority | `pyproject.toml` and `uv.lock` are canonical. Generated requirements are compatibility exports. |
 | Runtime Python       | Images must target the repository Python version from `pyproject.toml` and `mise.toml`.         |
-| Shell                | Image scripts follow the Bash rules.                                                      |
+| Shell                | Image scripts follow the Bash rules.                                                            |
 | Docker lint          | Hadolint is the Docker lint authority through `mise run lint:docker`.                           |
 | Security             | Docker security checks come from Hadolint plus the repository security task.                    |
 | Secrets              | BuildKit secrets and runtime environment variables are allowed. Baked secrets are forbidden.    |
@@ -97,7 +97,6 @@ Do not build by changing directories and relying on ambient paths:
 cd docker/vllm
 docker build .
 ```
-
 
 ## Base images and CUDA
 

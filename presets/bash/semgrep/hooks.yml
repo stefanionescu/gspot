@@ -1,0 +1,15 @@
+rules:
+    - id: gspot.hooks.curl-pipe-shell
+      languages: [bash]
+      severity: ERROR
+      message: A script is downloaded and run in one step; nobody can read what runs. Download it to a file, check it, then run it.
+      pattern-either:
+          - pattern: curl ... | sh
+          - pattern: curl ... | bash
+          - pattern: wget ... | sh
+          - pattern: wget ... | bash
+    - id: gspot.hooks.eval
+      languages: [bash]
+      severity: ERROR
+      message: eval runs a string as code; build the command as an array instead.
+      pattern: eval ...

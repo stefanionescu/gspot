@@ -186,7 +186,7 @@ inactive data the app can afford to keep. These settings solve different problem
 | `staleTime: 'static'`                                          | For a supporting release, prevents invalidation-driven and automatic staleness-based refetches; use only for values fixed for that cache lifetime |
 | `gcTime`                                                       | How long unused query data remains before garbage collection; does not set freshness or limit an active history                                   |
 | `refetchOnMount`, `refetchOnWindowFocus`, `refetchOnReconnect` | Events that can refresh stale data; tune them for the resource instead of disabling them globally to hide duplicate requests                      |
-| `refetchInterval`                                              | Independent polling schedule; bound its cost and stop it when the interaction stops needing polling                                             |
+| `refetchInterval`                                              | Independent polling schedule; bound its cost and stop it when the interaction stops needing polling                                               |
 
 Do not classify revocable permissions or changing account state as static reference data. Browser `enforced-by: typescript/eslint @tanstack/query/exhaustive-deps`
 cache freshness never replaces server authorization. Invalidate or replace the relevant identity's

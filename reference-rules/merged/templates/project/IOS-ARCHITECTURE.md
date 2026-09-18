@@ -161,7 +161,6 @@ Rules:
   before returning.
 - Domain builds and tests without the app target's UI framework.
 
-
 ## MVVM
 
 MVVM means:
