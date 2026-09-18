@@ -119,3 +119,26 @@ export const SECONDS_PER_DAY = 86_400;
 
 /** A URL inside a lockfile, up to the quote, the space or the bracket that ends it. */
 export const LOCKFILE_URL = /\b(?:https?|git\+https?|git\+ssh|git):\/\/[^\s"',)\]]+/gu;
+
+/** What every Docker ignore file keeps out of the build. */
+export const DOCKERIGNORE_ENTRIES = ['.git', 'node_modules', '.env'];
+
+/** The Compose file patterns. */
+export const COMPOSE_FILES = [
+    '**/docker-compose*.yml',
+    '**/docker-compose*.yaml',
+    '**/compose*.yml',
+    '**/compose*.yaml',
+];
+
+/** The image of one Compose service; every pattern below reads a trimmed line with single spaces. */
+export const COMPOSE_IMAGE = /^image: ["']?(?<found>[^ "'#]+)/u;
+
+/** The certificate a server block opens. */
+export const NGINX_CERTIFICATE = /^ssl_(?:trusted_)?certificate (?<found>[^; ]+)/u;
+
+/** The key a server block opens. */
+export const NGINX_KEY = /^ssl_certificate_key (?<found>[^; ]+)/u;
+
+/** A host nginx resolves when it reads the file: a proxy target or an upstream server. */
+export const NGINX_UPSTREAM = /^(?:proxy_pass https?:\/\/|server )(?<found>[A-Za-z][\w.-]*)/u;

@@ -719,3 +719,10 @@ License forbids shipping them inside another tool. The reference rules `no-conso
 
 A command part `{each:<flag>:<setting>}` becomes the flag and one value for every value of a
 list setting. `tools.semgrep.rules` uses it to pass the repository's own rule files.
+
+## D-95 A tool that prints JSON needs no code
+
+`[[checks]] output` takes `format = "json"`. `items` is the dotted path to the list, `children`
+is the list inside each item when findings nest under a file, and `fields` maps `file`, `line`,
+`column`, `rule` and `message` to the tool's keys. gixy, squawk, sqlfluff, SwiftLint, and Ruff
+all print JSON, so their presets stay data. Rejected: one parser in the binary for each tool.

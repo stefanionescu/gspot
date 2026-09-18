@@ -1,5 +1,6 @@
 // Findings from a tool's output: one parser per output format a manifest can declare.
 import type { Finding } from '#types/finding.ts';
+import { parseJson } from '#cli/run/json-output.ts';
 import type { CheckSpec, OutputFormat } from '#types/manifest.ts';
 import type { EslintFile, EslintEntry, RegexParser } from '#types/run.ts';
 
@@ -152,6 +153,9 @@ function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string)
     switch (output.format) {
         case 'none': {
             return [];
+        }
+        case 'json': {
+            return parseJson(spec.id, output, stdout, spec.fix);
         }
         case 'eslint-json': {
             return parseEslintJson(spec.id, stdout, spec.fix, root);

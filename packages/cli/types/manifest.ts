@@ -41,7 +41,10 @@ export type Claims = {
 };
 
 export type OutputFormat = {
-    format: 'regex' | 'grouped' | 'eslint-json' | 'lines' | 'none';
+    format: 'regex' | 'grouped' | 'eslint-json' | 'json' | 'lines' | 'none';
+    items?: string | undefined;
+    children?: string | undefined;
+    fields?: Partial<Record<'file' | 'line' | 'column' | 'rule' | 'message', string | undefined>> | undefined;
     pattern?: string;
     file_pattern?: string;
     fixable?: string;

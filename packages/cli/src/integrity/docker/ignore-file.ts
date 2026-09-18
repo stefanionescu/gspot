@@ -1,0 +1,44 @@
+// An ignore file beside every Dockerfile, with the entries that keep history, dependencies and secrets out of the build.
+import { join } from 'node:path';
+import type { EngineInput } from '#types/run.ts';
+import type { Finding } from '#types/finding.ts';
+import { existsSync, readFileSync } from 'node:fs';
+import { DOCKERIGNORE_ENTRIES } from '#config/integrity.ts';
+
+function isDockerfile(path: string): boolean {
+    const name = path.slice(path.lastIndexOf('/') + 1);
+    return name === 'Dockerfile' || name.startsWith('Dockerfile.') || name.endsWith('.dockerfile');
+}
+
+function folderOf(path: string): string {
+    return path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
+}
+
+function missingEntries(text: string): string[] {
+    const lines = new Set(text.split('\n').map((line) => line.trim().replaceAll(/^\/|\/$/gu, '')));
+    return DOCKERIGNORE_ENTRIES.filter((entry) =>
+        [entry, `**/${entry}`, `${entry}*`, `**/${entry}*`].every((form) => !lines.has(form)),
+    );
+}
+
+/**
+ * One finding for each Dockerfile folder with no ignore file, or with one that lets a required entry through.
+ * @param input the engine input
+ * @returns the findings
+ */
+export function dockerignore(input: EngineInput): Promise<Finding[]> {
+    const dockerfiles = input.session.repository.files.filter((file) => isDockerfile(file.path));
+    const folders = new Map(dockerfiles.map((file) => [folderOf(file.path), file.path]));
+    const findings = folders.entries().flatMap(([folder, dockerfile]): Finding[] => {
+        const path = folder === '' ? '.dockerignore' : `${folder}/.dockerignore`;
+        const base = { check: input.spec.id, line: 1, fixable: false };
+        if (!existsSync(join(input.root, path)))
+            return [{ ...base, file: dockerfile, rule: 'missing', message: `No ${path} sits beside this Dockerfile.` }];
+        const missing = missingEntries(readFileSync(join(input.root, path), 'utf8'));
+        if (missing.length === 0) return [];
+        return [
+            { ...base, file: path, rule: 'entries', message: `The ignore file lets through: ${missing.join(', ')}.` },
+        ];
+    });
+    return Promise.resolve(findings.toArray());
+}

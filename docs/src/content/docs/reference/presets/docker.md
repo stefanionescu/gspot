@@ -1,0 +1,42 @@
+---
+title: "Docker"
+description: "Dockerfiles and Compose files: hadolint, a Compose file that parses, an ignore file beside every Dockerfile, and Trivy over the configuration."
+---
+
+Dockerfiles and Compose files: hadolint, a Compose file that parses, an ignore file beside every Dockerfile, and Trivy over the configuration.
+
+Kind: tool. Requires: `config-files`.
+
+## Tools
+
+- hadolint 2.14.0
+- trivy 0.69.3
+- docker
+
+## Generated configuration
+
+- `.gspot/hadolint.yaml`
+- `.gspot/trivy.yaml`
+- `.gspot/trivyignore`
+- `.gspot/trivy-findings.tpl`
+
+## Checks
+
+| Check                                                              | Stage  | What it finds                                                                                                                                     |
+| ------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`docker/hadolint`](/reference/rules/docker/hadolint/)             | commit | Lints every Dockerfile, and runs ShellCheck over its RUN lines.                                                                                   |
+| [`docker/compose-config`](/reference/rules/docker/compose-config/) | push   | Asks Docker Compose to parse every Compose file, which needs no running daemon.                                                                   |
+| [`docker/dockerignore`](/reference/rules/docker/dockerignore/)     | commit | Checks that an ignore file sits beside every Dockerfile and keeps the git folder, installed dependencies, and environment files out of the build. |
+| [`docker/trivy-config`](/reference/rules/docker/trivy-config/)     | push   | Scans Dockerfiles and Compose files for misconfiguration: a root user, a missing health check, an exposed secret.                                 |
+| [`docker/trivy-image`](/reference/rules/docker/trivy-image/)       | manual | Scans every image a Compose file names for known vulnerabilities in its packages.                                                                 |
+
+## Settings
+
+- `tools.hadolint.trusted_registries`: The registries a base image may come from; empty allows any.
+- `tools.trivy.severity`: The severities Trivy reports, as a comma-separated list.
+- `tools.trivy.ignore`: Trivy ids accepted: the id and the reason.
+- `tools.trivy.timeout`: How long one Trivy scan may take.
+
+## Rule files
+
+- `tool/docker/DOCKER.md`

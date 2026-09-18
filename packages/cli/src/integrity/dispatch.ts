@@ -13,12 +13,15 @@ import { taskPolicy } from '#cli/integrity/task-policy.ts';
 import { readmeShape } from '#cli/integrity/readme/shape.ts';
 import { suppressions } from '#cli/integrity/suppressions.ts';
 import { docsHeadings } from '#cli/integrity/docs-headings.ts';
+import { nginxTest } from '#cli/integrity/nginx/config-test.ts';
 import { installPolicy } from '#cli/integrity/install-policy.ts';
 import { lockfileFresh } from '#cli/integrity/lockfile/fresh.ts';
 import { lockfileHosts } from '#cli/integrity/lockfile/hosts.ts';
 import { readmePresent } from '#cli/integrity/readme/present.ts';
+import { trivyImage } from '#cli/integrity/docker/image-scan.ts';
 import { generatedDrift } from '#cli/integrity/generated-drift.ts';
 import { manifestPolicy } from '#cli/integrity/manifest-policy.ts';
+import { dockerignore } from '#cli/integrity/docker/ignore-file.ts';
 import { allowlistsMatch } from '#cli/integrity/allowlists-match.ts';
 import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
 import { configurationPurity } from '#cli/integrity/config-purity.ts';
@@ -46,6 +49,9 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'nginx-test': nginxTest,
+    dockerignore,
+    'trivy-image': trivyImage,
     'install-policy': installPolicy,
     'lockfile-hosts': lockfileHosts,
     codeql,

@@ -1,0 +1,62 @@
+[preset]
+id = "nginx"
+kind = "tool"
+title = "nginx"
+description = "nginx configuration: gixy for the security mistakes, and the server's own parser in a container for the rest."
+
+[detect]
+paths = ["**/nginx.conf", "**/nginx/**/*.conf", "**/nginx/*.conf"]
+
+[claims]
+paths = ["**/nginx.conf", "**/nginx/**/*.conf", "**/nginx/*.conf"]
+natures = ["source"]
+
+[[tools]]
+name = "gixy"
+version = "0.2.53"
+pypi = "gixy-ng"
+mise = "pipx:gixy-ng"
+windows = false
+version_regex = "(\\d+\\.\\d+\\.\\d+)"
+
+[[tools]]
+name = "docker"
+provider = "host"
+
+[[configs]]
+template = "gixy.cfg.tmpl"
+target = ".gspot/gixy.cfg"
+
+[[checks]]
+id = "nginx/gixy"
+stage = "commit"
+platform = ["macos", "linux"]
+command = ["gixy", "--config", "{config:gixy}", "--format", "json", "{file}"]
+inspection = ["security"]
+output = {format = "json", fields = {file = "path", line = "line", rule = "plugin", message = "summary"}}
+summary = "Reads every nginx file for the mistakes that open a server: request forgery, path traversal through alias, header injection, a disclosed version."
+why = "These mistakes parse, serve traffic, and look like any other location block until somebody uses them."
+fix = "Change the block the way the rule's page says. Turn one rule off with gspot ignore nginx/gixy --rule <name> --reason."
+
+[[checks]]
+id = "nginx/config-test"
+stage = "push"
+runs = "once"
+requires = "docker"
+engine = "integrity"
+analysis = "nginx-test"
+tool = "docker"
+inspection = ["syntax"]
+summary = "Runs nginx -t over every main configuration file inside the nginx image. It mounts a throwaway certificate and resolves the upstream names."
+why = "Only nginx knows whether nginx accepts the file, and the other place to learn it is the restart in production."
+fix = "Read the line nginx names. Set tools.nginx.image to the image the deployment runs."
+
+[[settings]]
+name = "tools.nginx.image"
+kind = "string"
+direction = "neutral"
+default = "nginx:stable-alpine"
+summary = "The image nginx -t runs in; name the one the deployment uses."
+
+[rule_files]
+tool = ["tool/nginx/NGINX.md"]

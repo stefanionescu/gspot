@@ -16,18 +16,18 @@ gixy, docker (host) for `nginx -t`.
 
 ## Checks
 
-| Id                  | Stage        | Command                                                                                                                                                  |
-| ------------------- | ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `nginx/gixy`        | commit       | `gixy <file>`                                                                                                                                            |
-| `nginx/config-test` | push, docker | `docker compose -f <compose> run --rm --no-deps <service> nginx -t`; the image, network aliases and volumes come from the compose file, never from gspot |
+| Id                  | Stage        | Command                                                                                   |
+| ------------------- | ------------ | ----------------------------------------------------------------------------------------- |
+| `nginx/gixy`        | commit       | `gixy --format json <file>` (the `gixy-ng` package; the original reads no current Python) |
+| `nginx/config-test` | push, docker | `docker run --rm` of `tools.nginx.image` with the file mounted, then `nginx -t`           |
 
-The service name comes from `[tools.nginx] compose_service`; when unset, the first service whose
-image starts with `nginx`. A throwaway self-signed certificate is generated into a temporary
-directory for the test and removed after.
+The check reads each `nginx.conf`. Every `ssl_certificate` and `ssl_certificate_key` path gets a
+throwaway self-signed pair mounted at that path. The pair lives in a temporary directory that the check removes. Every upstream and `proxy_pass` host name resolves to `127.0.0.1` through `--add-host`.
+Nothing comes from a Compose file, so a repository with no Compose file runs the same test.
 
 ## Settings
 
-`tools.nginx.compose_file`, `tools.nginx.compose_service`, a gixy check turned off is `gspot ignore nginx/gixy --rule <check> --reason`.
+`tools.nginx.image` (default `nginx:stable-alpine`); a gixy check turned off is `gspot ignore nginx/gixy --rule <check> --reason`.
 
 ## Rule files
 
