@@ -2,12 +2,10 @@
 import { join } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
 import type { FormatSettings } from '#types/config.ts';
+import { shippedFormat } from '#cli/presets/listing.ts';
 import type { ExistingTooling } from '#types/repository.ts';
 import { askChoice, isConfirmed } from '#cli/output/prompts.ts';
 import type { InitAnswers, InitOptions } from '#types/lifecycle.ts';
-
-const SHIPPED_TAB_WIDTH = 4;
-const SHIPPED_PRINT_WIDTH = 120;
 
 const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
     { value: 'gspot', label: 'gspot writes .gspot/hooks' },
@@ -43,8 +41,9 @@ function differingFormat(parsed: Record<string, unknown>): Partial<FormatSetting
     const tabWidth = parsed['tabWidth'];
     const printWidth = parsed['printWidth'];
     const trailingComma = parsed['trailingComma'];
-    if (typeof tabWidth === 'number' && tabWidth !== SHIPPED_TAB_WIDTH) found.indent_width = tabWidth;
-    if (typeof printWidth === 'number' && printWidth !== SHIPPED_PRINT_WIDTH) found.print_width = printWidth;
+    const shipped = shippedFormat();
+    if (typeof tabWidth === 'number' && tabWidth !== shipped['indent_width']) found.indent_width = tabWidth;
+    if (typeof printWidth === 'number' && printWidth !== shipped['print_width']) found.print_width = printWidth;
     if (trailingComma === 'es5' || trailingComma === 'none') found.trailing_comma = trailingComma;
     return { ...found, ...flagFormat(parsed) };
 }

@@ -2,6 +2,8 @@
 import { presetManifests } from '#cli/presets/read-manifests.ts';
 import type { ListingRow, CheckSpec, Manifest } from '#types/manifest.ts';
 
+const FORMAT_PREFIX = 'format.';
+
 /**
  * One manifest as a listing row.
  * @param manifest the manifest
@@ -33,4 +35,17 @@ export function allChecks(): Map<string, { check: CheckSpec; preset: Manifest }>
         for (const check of manifest.checks)
             if (!checks.has(check.id)) checks.set(check.id, { check, preset: manifest });
     return checks;
+}
+
+/**
+ * The shipped formatter settings: the defaults of every `format.*` setting the formatting preset declares.
+ * @returns the settings by key, without the `format.` prefix
+ */
+export function shippedFormat(): Record<string, unknown> {
+    const settings = presetManifests().get('formatting')?.settings ?? [];
+    return Object.fromEntries(
+        settings
+            .filter((setting) => setting.name.startsWith(FORMAT_PREFIX) && setting.default !== undefined)
+            .map((setting) => [setting.name.slice(FORMAT_PREFIX.length), setting.default]),
+    );
 }

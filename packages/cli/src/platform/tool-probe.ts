@@ -2,10 +2,11 @@
 import semver from 'semver';
 import { join } from 'node:path';
 import { homedir } from 'node:os';
-import { existsSync } from 'node:fs';
 import type { ToolPin } from '#types/manifest.ts';
 import type { ToolProbe } from '#types/doctor.ts';
+import { existsSync, readFileSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { miseHome } from '#cli/platform/environment.ts';
 import { installHint } from '#cli/platform/install-hints.ts';
 
 const VERSION_TIMEOUT_MS = 15_000;
@@ -25,7 +26,7 @@ function candidates(root: string, name: string): string[] {
         join(root, 'node_modules', '.bin'),
         join(root, '.venv', 'bin'),
         join(root, '.venv', 'Scripts'),
-        join(homedir(), '.local', 'share', 'mise', 'shims'),
+        join(miseHome() ?? join(homedir(), '.local', 'share', 'mise'), 'shims'),
     ];
     const found = directories.flatMap((dir) => names.map((file) => join(dir, file))).filter((path) => existsSync(path));
     const onPath = Bun.which(name);
@@ -50,6 +51,28 @@ function stateFor(found: string, want: string, floor: string): ToolProbe['state'
     if (lowest !== null && semver.lt(version, lowest)) return 'outdated';
     const pinned = semver.coerce(want);
     return pinned !== null && semver.gt(version, pinned) ? 'newer' : 'ok';
+}
+
+// A library is imported, never run: its version is the one its package.json holds, in the root or in a scope.
+function libraryVersion(root: string, scopes: string[], name: string): { path: string; version: string } | undefined {
+    for (const scope of ['', ...scopes]) {
+        const path = join(root, scope, 'node_modules', name, 'package.json');
+        if (!existsSync(path)) continue;
+        const parsed = JSON.parse(readFileSync(path, 'utf8')) as { version?: string };
+        if (parsed.version !== undefined) return { path, version: parsed.version };
+    }
+    return undefined;
+}
+
+function probeLibrary(root: string, scopes: string[], tool: ToolPin): ToolProbe {
+    const hint = installHint(tool);
+    const name = tool.installers['npm'] ?? tool.name;
+    const found = libraryVersion(root, scopes, name);
+    const want = tool.version === undefined ? {} : { want: tool.version };
+    if (found === undefined) return { name: tool.name, state: 'missing', hint, ...want };
+    const floor = tool.floor ?? tool.version ?? found.version;
+    const state = tool.version === undefined ? 'ok' : stateFor(found.version, tool.version, floor);
+    return { name: tool.name, state, path: found.path, found: found.version, hint, floor, ...want };
 }
 
 function probeUncached(root: string, tool: ToolPin): ToolProbe {
@@ -91,13 +114,14 @@ export function locateTool(root: string, name: string): string | undefined {
  * Probes one tool. Cached per process.
  * @param root the repository root
  * @param tool the pin
+ * @param scopes the scope paths, where a library may be installed beside the root
  * @returns where the tool is, its version and its state
  */
-export function probeTool(root: string, tool: ToolPin): ToolProbe {
+export function probeTool(root: string, tool: ToolPin, scopes: string[] = []): ToolProbe {
     const key = `${root}\n${tool.name}`;
     const cached = probeCache.get(key);
     if (cached) return cached;
-    const probe = probeUncached(root, tool);
+    const probe = tool.kind === 'library' ? probeLibrary(root, scopes, tool) : probeUncached(root, tool);
     probeCache.set(key, probe);
     return probe;
 }

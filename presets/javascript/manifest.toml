@@ -21,67 +21,79 @@ floor = "9.38.0"
 
 [[tools]]
 name = "@eslint/js"
+kind = "library"
 version = "10.0.1"
 npm = "@eslint/js"
 
 [[tools]]
 name = "@gspot/eslint-plugin"
+kind = "library"
 version = "0.1.0"
 npm = "@gspot/eslint-plugin"
 
 [[tools]]
 name = "eslint-plugin-sonarjs"
+kind = "library"
 version = "4.2.0"
 npm = "eslint-plugin-sonarjs"
 floor = "3.0.0"
 
 [[tools]]
 name = "eslint-plugin-unicorn"
+kind = "library"
 version = "74.0.0"
 npm = "eslint-plugin-unicorn"
 floor = "63.0.0"
 
 [[tools]]
 name = "eslint-plugin-security"
+kind = "library"
 version = "4.0.1"
 npm = "eslint-plugin-security"
 
 [[tools]]
 name = "eslint-plugin-n"
+kind = "library"
 version = "18.3.0"
 npm = "eslint-plugin-n"
 floor = "17.24.0"
 
 [[tools]]
 name = "eslint-plugin-jsdoc"
+kind = "library"
 version = "64.3.9"
 npm = "eslint-plugin-jsdoc"
 floor = "50.8.0"
 
 [[tools]]
 name = "eslint-plugin-regexp"
+kind = "library"
 version = "3.3.0"
 npm = "eslint-plugin-regexp"
 floor = "2.10.0"
 
 [[tools]]
 name = "eslint-plugin-import-x"
+kind = "library"
 version = "4.17.1"
 npm = "eslint-plugin-import-x"
 
 [[tools]]
 name = "@eslint-community/eslint-plugin-eslint-comments"
+kind = "library"
 version = "4.8.0"
 npm = "@eslint-community/eslint-plugin-eslint-comments"
 
 [[tools]]
 name = "eslint-plugin-boundaries"
+kind = "library"
 version = "7.2.0"
 npm = "eslint-plugin-boundaries"
 floor = "5.0.0"
 
 [[tools]]
 name = "eslint-plugin-package-json"
+kind = "library"
 version = "1.8.0"
 npm = "eslint-plugin-package-json"
 
@@ -92,6 +104,7 @@ npm = "eslint-config-prettier"
 
 [[tools]]
 name = "globals"
+kind = "library"
 version = "17.12.0"
 npm = "globals"
 
@@ -103,6 +116,7 @@ floor = "5.85.0"
 
 [[tools]]
 name = "typescript"
+kind = "library"
 version = "5.9.3"
 npm = "typescript"
 

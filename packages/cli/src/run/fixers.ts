@@ -3,10 +3,10 @@ import { tmpdir } from 'node:os';
 import { dirname, join } from 'node:path';
 import { createTwoFilesPatch } from 'diff';
 import { run } from '#cli/platform/spawn.ts';
-import { probeTool } from '#cli/doctor/probes.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { byFixOrder } from '#cli/run/concurrency.ts';
 import { substitute } from '#cli/run/tool-runner.ts';
+import { probeTool } from '#cli/platform/tool-probe.ts';
 import type { FixReport, Session, PlannedCheck } from '#types/run.ts';
 import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 

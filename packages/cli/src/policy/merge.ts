@@ -1,5 +1,6 @@
 // The merged view a renderer reads for one scope: every setting resolved, limits and naming by language, tool slots by tool.
 import type { Manifest } from '#types/manifest.ts';
+import { shippedFormat } from '#cli/presets/listing.ts';
 import { listSettings, settingValue } from '#cli/policy/settings.ts';
 
 import type {
@@ -11,16 +12,6 @@ import type {
     ExposedSettings,
 } from '#types/config.ts';
 
-const FORMAT_DEFAULTS: FormatSettings = {
-    indent_style: 'space',
-    indent_width: 4,
-    print_width: 120,
-    line_ending: 'lf',
-    newline_at_end: true,
-    quotes: 'single',
-    trailing_comma: 'all',
-    semicolons: true,
-};
 const TOOL_PREFIX = 'tools.';
 const RESERVED_SLOTS = new Set(['extra', 'enabled']);
 
@@ -108,7 +99,7 @@ export function mergeForScope(
         presets: selected.map((manifest) => manifest.preset.id),
         settings,
         reasons,
-        format: { ...FORMAT_DEFAULTS, ...policy.format, ...policy.scopeTables[scope]?.format },
+        format: { ...(shippedFormat() as FormatSettings), ...policy.format, ...policy.scopeTables[scope]?.format },
         limit: (key, language) => limitOf(layer, key, language),
         tool: (name) => toolSlots(settings, toolTables(policy, scope, name), name),
         toolEnabled: (name) => settingValue(surface, policy, `tools.${name}.enabled`, scope)?.value !== false,

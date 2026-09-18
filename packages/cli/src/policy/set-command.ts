@@ -3,14 +3,15 @@ import * as messages from '#cli/policy/messages.ts';
 import type { SetOptions } from '#types/commands.ts';
 import type { SettingSpec } from '#types/manifest.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { isLoosening } from '#cli/policy/loosening.ts';
 // gspot set: one setting at a time, checked against the surface, with a reason when the change loosens.
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import type { TomlTable, Mutation } from '#types/config.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
 import type { CommandResult, ScopeSelection, Session } from '#types/run.ts';
-import { appendList, deleteKey, removeFromList, setKey } from '#cli/policy/write.ts';
 import { commitPolicy, refuseBadReason, requireReason } from '#cli/policy/commit-policy.ts';
+import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
 
 const NEAR_LIMIT = 12;
 const RULE_KEY_DEPTH = 3;
@@ -43,10 +44,8 @@ function unknownSetting(selection: ScopeSelection, key: string): PolicyError {
 }
 
 function holderFor(raw: TomlTable, scope: string | undefined): TomlTable {
-    if (scope === undefined) return raw;
-    const scopes = (raw['scope'] as TomlTable[] | undefined) ?? [];
-    const holder = scopes.find((entry) => entry['path'] === scope);
-    if (!holder) throw new PolicyError([messages.scopeMissing(scope)]);
+    const holder = scopeHolder(raw, scope);
+    if (!holder) throw new PolicyError([messages.scopeMissing(scope ?? '')]);
     return holder;
 }
 
@@ -57,17 +56,10 @@ function shaped(parsed: unknown[], isList: boolean): unknown {
     return Array.isArray(only) ? (only as unknown[]) : parsed;
 }
 
-function isNumberLoosening(spec: SettingSpec, value: unknown, shipped: unknown): boolean {
-    if (typeof value !== 'number' || typeof shipped !== 'number') return false;
-    if (spec.direction === 'ceiling') return value > shipped;
-    return spec.direction === 'floor' && value < shipped;
-}
-
-function isLoosening(spec: SettingSpec, o: SetOptions, value: unknown, shipped: unknown): boolean {
-    if (spec.direction === 'loosening') return true;
+function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped: unknown): boolean {
     const isListEdit = spec.kind === 'list' && (o.remove || o.replace);
     if (isListEdit) return spec.direction !== 'neutral';
-    return isNumberLoosening(spec, value, shipped);
+    return isLoosening(spec, value, shipped);
 }
 
 function setMutation(o: SetOptions, isList: boolean, value: unknown): Mutation {
@@ -122,7 +114,7 @@ function writeValue(
     );
     const shipped = selection.surface.defaults.get(spec.name)?.value;
     const where = `gspot set ${o.key}`;
-    if (isLoosening(spec, o, value, shipped))
+    if (isReasonOwed(spec, o, value, shipped))
         requireReason(o.reason, where, `${where} ${o.items.join(' ')} --reason "..."`);
     else refuseBadReason(o.reason, where);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;

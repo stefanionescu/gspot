@@ -21,19 +21,13 @@ const GSPOT_DIRECTORY = '.gspot/';
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
 
-function configurationName(target: string): string {
-    const bare = target.startsWith(GSPOT_DIRECTORY) ? target.slice(GSPOT_DIRECTORY.length) : target;
-    const dot = bare.indexOf('.');
-    return dot === -1 ? bare : bare.slice(0, dot);
-}
-
 function toTool(raw: RawTool): ToolPin {
     const installers: Record<string, string> = {};
     for (const key of INSTALLER_KEYS) {
         const value = raw[key];
         if (value !== undefined) installers[key] = value;
     }
-    const tool: ToolPin = { name: raw.name, windows: raw.windows, installers };
+    const tool: ToolPin = { name: raw.name, kind: raw.kind, windows: raw.windows, installers };
     if (raw.version !== undefined) tool.version = raw.version;
     if (raw.floor !== undefined) tool.floor = raw.floor;
     if (raw.provider !== undefined) tool.provider = raw.provider;
@@ -125,6 +119,17 @@ function checkRequires(manifests: Map<string, Manifest>): void {
         for (const required of manifest.preset.requires)
             if (!manifests.has(required))
                 throw new ManifestError(manifest.preset.id, [`it requires \`${required}\`, which does not exist.`]);
+}
+
+/**
+ * The name a `{config:<name>}` placeholder uses for a target: the file name under .gspot without its extensions.
+ * @param target the target path
+ * @returns the name
+ */
+export function configurationName(target: string): string {
+    const bare = target.startsWith(GSPOT_DIRECTORY) ? target.slice(GSPOT_DIRECTORY.length) : target;
+    const dot = bare.indexOf('.');
+    return dot === -1 ? bare : bare.slice(0, dot);
 }
 
 /** A manifest that the schema or the design refuses. */

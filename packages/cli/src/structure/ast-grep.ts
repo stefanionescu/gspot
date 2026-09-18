@@ -1,10 +1,10 @@
 // The ast-grep runner: a preset rule over files, its matches as JSON, counted per enclosing function.
 import { join } from 'node:path';
-import { locateTool } from '#cli/doctor/probes.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { readAsset } from '#cli/platform/assets.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { AstGrepMatch } from '#types/structure.ts';
+import { locateTool } from '#cli/platform/tool-probe.ts';
 
 const RULE_CACHE = join('.gspot', 'cache', 'ast-grep');
 

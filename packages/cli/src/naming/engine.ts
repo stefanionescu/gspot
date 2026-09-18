@@ -6,11 +6,11 @@ import type { Finding } from '#types/finding.ts';
 import { isKnownCase } from '#cli/naming/cases.ts';
 import { identifiersOf } from '#cli/naming/extract.ts';
 import type { TrackedFile } from '#types/repository.ts';
-import { effectivePolicy } from '#cli/naming/policy.ts';
 import { languagePresets } from '#cli/presets/select.ts';
 import { nameFinding } from '#cli/naming/name-finding.ts';
 import { nameProblems } from '#cli/naming/validate-name.ts';
 import { isClaimed, pathMatcher } from '#cli/presets/claims.ts';
+import { effectivePolicy, shippedPolicy } from '#cli/naming/policy.ts';
 import { directoryIdentifiers, fileIdentifier } from '#cli/naming/paths.ts';
 import type { EffectivePolicy, Identifier, NamingContext } from '#types/naming.ts';
 
@@ -89,9 +89,9 @@ async function schemaFindings(input: EngineInput, policy: EffectivePolicy): Prom
                 `A [[naming.rules]] entry names the case "${name}", which is not one of camel, pascal, pascal-plus, kebab, snake, upper-snake or snake-migration.`,
         );
     const removable = new Set(
-        Object.entries(policy.languages).length === 0
-            ? []
-            : ['containers', 'roles', 'verbs', 'verbs-strict', 'conjunctions', 'test'],
+        Object.entries(shippedPolicy().groups)
+            .filter(([, group]) => group.removable)
+            .map(([name]) => name),
     );
     const groups = naming.remove_groups
         .filter((entry) => !removable.has(entry.group))

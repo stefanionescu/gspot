@@ -1,11 +1,11 @@
 // explain: a check, a tool rule, a preset or a setting, in plain words.
 import type { Session } from '#types/run.ts';
 import { nearMatches } from '#cli/policy/near.ts';
-import { probeTool } from '#cli/doctor/probes.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Explanation } from '#types/output.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import type { ResolvedSetting } from '#types/config.ts';
+import { probeTool } from '#cli/platform/tool-probe.ts';
 import { allChecks, toRow } from '#cli/presets/listing.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';

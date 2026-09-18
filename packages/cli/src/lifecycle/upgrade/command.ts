@@ -1,14 +1,13 @@
 // upgrade: report what a version changes, move the pin, re-render, baseline what arrives, install.
-import { run } from '#cli/platform/spawn.ts';
-import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
+import type { CommandResult } from '#types/run.ts';
 import { isConfirmed } from '#cli/output/prompts.ts';
 import { applyAll } from '#cli/emit/apply-command.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { firstRun } from '#cli/lifecycle/first-check.ts';
 import type { UpgradeOptions } from '#types/lifecycle.ts';
 import { newerVersion } from '#cli/doctor/newer-version.ts';
-import type { BaselineFile, CommandResult } from '#types/run.ts';
-import { writeBaselines, isBaselineAllowed } from '#cli/run/baselines.ts';
+import { installTools } from '#cli/lifecycle/install-tools.ts';
 import { GSPOT_VERSION, pinnedVersion, writePin } from '#cli/run/version-pin.ts';
 import { upgradeReport, upgradeReportLines } from '#cli/lifecycle/upgrade/report.ts';
 
@@ -37,41 +36,6 @@ function actionLines(target: string, isInstalling: boolean): string[] {
     ];
 }
 
-function installCommand(surface: string): string[] {
-    if (surface === 'mise') return ['mise', 'install'];
-    if (surface === 'uv') return ['uv', 'sync', '--group', 'gspot'];
-    return [surface, 'install'];
-}
-
-async function installAfterUpgrade(root: string, surface: string): Promise<string> {
-    const command = installCommand(surface);
-    if (surface === 'mise') await run(['mise', 'trust', '.config/mise/conf.d/gspot.toml'], { cwd: root });
-    const result = await run(command, { cwd: root });
-    const shown = command.join(' ');
-    return result.code === 0 ? `ran ${shown}` : `${shown} failed; gspot doctor names what is missing`;
-}
-
-async function baselineAfterUpgrade(root: string): Promise<BaselineFile[]> {
-    const fresh = await openSession(root);
-    const outcome = await executeRun(fresh, {
-        stage: 'all',
-        skips: [],
-        localSkips: fresh.policyFiles.local.skip,
-        fix: false,
-        isDryRun: false,
-        noCache: true,
-    });
-    const allowed = new Set(
-        fresh.scopes.flatMap((scope) =>
-            scope.selected.flatMap((manifest) =>
-                manifest.checks.filter((check) => isBaselineAllowed(check.inspection)).map((check) => check.id),
-            ),
-        ),
-    );
-    const findings = outcome.record.checks.flatMap((check) => check.findings);
-    return writeBaselines(root, findings, (check) => allowed.has(check));
-}
-
 async function applyUpgrade(
     root: string,
     options: UpgradeOptions,
@@ -81,10 +45,10 @@ async function applyUpgrade(
 ): Promise<CommandResult> {
     writePin(root, target);
     const session = await openSession(root);
-    await applyAll(session, options.binaryPath);
+    const synced = await applyAll(session, options.binaryPath);
     const { surface } = session.policyFiles.policy.runner;
-    const installNote = surface !== 'none' && options.install ? await installAfterUpgrade(root, surface) : '';
-    const written = await baselineAfterUpgrade(root);
+    const installNote = await installTools(root, surface, synced, options.install);
+    const { baselines: written } = await firstRun(root);
     const noun = written.length === 1 ? 'baseline' : 'baselines';
     const install = installNote === '' ? '' : `; ${installNote}`;
     lines.push(

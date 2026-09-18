@@ -18,7 +18,6 @@ import type {
 } from '#types/naming.ts';
 
 const POLICY_ASSET = 'presets/naming/policy.json';
-const NEVER_REMOVED = new Set(['marketing', 'defensive']);
 const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
 
 function toSet(names: string[] | undefined): Set<string> | undefined {
@@ -57,7 +56,7 @@ function writtenRule(rule: NamingRule, index: number): PathRule {
 
 function groupTerms(shipped: ShippedPolicy, naming: NamingSettings): Term[] {
     const removed = new Set(
-        naming.remove_groups.map((entry) => entry.group).filter((group) => !NEVER_REMOVED.has(group)),
+        naming.remove_groups.map((entry) => entry.group).filter((group) => shipped.groups[group]?.removable === true),
     );
     return Object.entries(shipped.groups)
         .filter(([group]) => !removed.has(group))

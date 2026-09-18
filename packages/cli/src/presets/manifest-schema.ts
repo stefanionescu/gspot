@@ -22,6 +22,7 @@ const outputSchema = z.strictObject({
 
 const toolSchema = z.strictObject({
     name: z.string(),
+    kind: z.enum(['binary', 'library']).default('binary'),
     version: z.string().optional(),
     floor: z.string().optional(),
     provider: z.literal('host').optional(),

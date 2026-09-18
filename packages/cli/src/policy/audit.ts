@@ -1,6 +1,7 @@
 // Every written key checked against the surface: unknown keys, loosenings without a reason, extra keys with a slot.
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { shippedPolicy } from '#cli/naming/policy.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { WrittenValue, Policy, ExposedSettings } from '#types/config.ts';
 import { asRecord, policyValue, specFor, writtenKeys } from '#cli/policy/settings.ts';
@@ -98,6 +99,6 @@ export function validateAgainstSurface(surface: ExposedSettings, policy: Policy)
         problems.push(...extraProblems(surface, table));
     }
     for (const { group } of policy.naming.remove_groups)
-        if (group === 'marketing' || group === 'defensive') problems.push(messages.groupNotRemovable(group));
+        if (shippedPolicy().groups[group]?.removable === false) problems.push(messages.groupNotRemovable(group));
     return problems;
 }

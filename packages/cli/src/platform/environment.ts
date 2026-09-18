@@ -31,6 +31,15 @@ export function jobsWanted(): number | undefined {
 }
 
 /**
+ * Where mise keeps its data, when MISE_DATA_DIR or XDG_DATA_HOME says so.
+ * @returns the directory, or undefined for the default under the home directory
+ */
+export function miseHome(): string | undefined {
+    if (isSet('MISE_DATA_DIR')) return process.env['MISE_DATA_DIR'];
+    return isSet('XDG_DATA_HOME') ? `${process.env['XDG_DATA_HOME'] ?? ''}/mise` : undefined;
+}
+
+/**
  * True when GSPOT_RELEASE_TEST asks for the release test, which needs a registry and a built binary.
  * @returns whether the release test runs
  */

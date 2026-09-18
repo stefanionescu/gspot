@@ -2,9 +2,9 @@
 import type { Session } from '#types/run.ts';
 import type { Painter } from '#types/output.ts';
 import { paint } from '#cli/output/messages.ts';
-import { probeTool } from '#cli/doctor/probes.ts';
 import { everyManifest } from '#cli/run/session.ts';
 import { changeReport } from '#cli/doctor/changes.ts';
+import { probeTool } from '#cli/platform/tool-probe.ts';
 import { coverageReport } from '#cli/doctor/coverage.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
 import { collectPins } from '#cli/emit/runner-surface.ts';
@@ -30,7 +30,7 @@ function hooksLine(tool: string): string {
 }
 
 function stateLabel(tool: ToolProbe, colors: Painter): string {
-    const { red, yellow, green, dim } = colors;
+    const { red, green, dim } = colors;
     switch (tool.state) {
         case 'ok': {
             return green('ok');
@@ -42,7 +42,7 @@ function stateLabel(tool: ToolProbe, colors: Painter): string {
             return red('outdated');
         }
         case 'newer': {
-            return yellow('newer');
+            return red('newer');
         }
         case 'host': {
             return dim('host');
@@ -61,7 +61,7 @@ function versionText(tool: ToolProbe): string {
 function toolLines(tools: ToolProbe[], colors: Painter): string[] {
     const width = Math.max(...tools.map((tool) => `${tool.name} ${tool.want ?? ''}`.length)) + VERSION_GAP;
     return tools.map((tool) => {
-        const isBroken = tool.state === 'missing' || tool.state === 'outdated';
+        const isBroken = tool.state !== 'ok' && tool.state !== 'host';
         const tail = isBroken ? (tool.hint ?? '') : (tool.path ?? '');
         const label = stateLabel(tool, colors).padEnd(LABEL_WIDTH);
         return `  ${label} ${versionText(tool).padEnd(width)} ${tail}`.trimEnd();
@@ -137,9 +137,10 @@ function versionLine(report: DoctorReport): string {
  * @returns the report, with exit code 1 when a tool is missing or outdated
  */
 export function doctorReport(session: Session, pinned: string | undefined, newer: string | undefined): DoctorReport {
-    const tools = collectPins(everyManifest(session)).map((tool) => probeTool(session.root, tool));
+    const scopePaths = session.scopes.map((entry) => entry.scope.path).filter((path) => path !== '');
+    const tools = collectPins(everyManifest(session)).map((tool) => probeTool(session.root, tool, scopePaths));
     const { policy } = session.policyFiles;
-    const isBroken = tools.some((tool) => tool.state === 'missing' || tool.state === 'outdated');
+    const isBroken = tools.some((tool) => tool.state !== 'ok' && tool.state !== 'host');
     return {
         tools,
         coverage: coverageReport(session),

@@ -38,6 +38,14 @@ function coverSource(session: Session, file: TrackedFile, report: CoverageReport
     if (missing.length > 0) report.partial.push({ path: file.path, missing });
 }
 
+// A binary file is read by the secrets scan alone, and by nothing when no secrets preset is selected.
+function binaryReason(session: Session): string {
+    const isScanned = session.scopes.some((scope) =>
+        scope.selected.some((manifest) => manifest.preset.id === 'secrets'),
+    );
+    return isScanned ? 'binary: secrets scan only' : 'binary: not checked';
+}
+
 /**
  * The coverage report for a session.
  * @param session the session
@@ -46,7 +54,7 @@ function coverSource(session: Session, file: TrackedFile, report: CoverageReport
 export function coverageReport(session: Session): CoverageReport {
     const report: CoverageReport = { unchecked: [], partial: [], checked: 0 };
     for (const file of session.repository.files) {
-        if (file.nature === 'binary') report.unchecked.push({ path: file.path, reason: 'binary: secrets scan only' });
+        if (file.nature === 'binary') report.unchecked.push({ path: file.path, reason: binaryReason(session) });
         else if (file.nature === 'source') coverSource(session, file, report);
         else report.checked += 1;
     }

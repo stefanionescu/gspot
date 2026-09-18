@@ -197,3 +197,15 @@ export function removeFromList(key: string, entries: unknown[]): Mutation {
         );
     };
 }
+
+/**
+ * The table a command writes into: the document itself, or the [[scope]] entry with that path.
+ * @param raw the parsed document
+ * @param scope the scope path, if any
+ * @returns the table, or undefined when no scope has that path
+ */
+export function scopeHolder(raw: TomlTable, scope: string | undefined): TomlTable | undefined {
+    if (scope === undefined) return raw;
+    const scopes = (raw['scope'] as TomlTable[] | undefined) ?? [];
+    return scopes.find((entry) => entry['path'] === scope);
+}

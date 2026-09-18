@@ -49,6 +49,7 @@ export type OutputFormat = {
 
 export type ToolPin = {
     name: string;
+    kind?: 'binary' | 'library';
     version?: string;
     floor?: string;
     provider?: 'host';

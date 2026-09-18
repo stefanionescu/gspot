@@ -2,12 +2,13 @@
 import { dirname, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { existsSync, mkdirSync } from 'node:fs';
-import { probeTool } from '#cli/doctor/probes.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { pushBase } from '#cli/repository/staged.ts';
 import type { SpawnResult } from '#types/platform.ts';
 import { parseOutput } from '#cli/run/parse-output.ts';
+import { probeTool } from '#cli/platform/tool-probe.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
+import { configurationName } from '#cli/presets/read-manifests.ts';
 import type { ToolPin, CheckSpec, ConfigurationTarget } from '#types/manifest.ts';
 import type { ToolRunState, PreparedCommand, Substitutions, Session, PlannedCheck } from '#types/run.ts';
 
@@ -28,12 +29,6 @@ function allConfigs(session: Session, planned: PlannedCheck): ConfigurationTarge
         .flatMap((manifest) => manifest.configs)
         .toArray();
     return [...own, ...every];
-}
-
-function configurationName(target: string): string {
-    const bare = target.startsWith('.gspot/') ? target.slice('.gspot/'.length) : target;
-    const dot = bare.indexOf('.');
-    return dot === -1 ? bare : bare.slice(0, dot);
 }
 
 function configurationPath(session: Session, planned: PlannedCheck, name: string): string {

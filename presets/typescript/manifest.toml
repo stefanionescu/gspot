@@ -21,6 +21,7 @@ npm = "typescript"
 
 [[tools]]
 name = "typescript-eslint"
+kind = "library"
 version = "8.70.0"
 npm = "typescript-eslint"
 floor = "8.29.0"

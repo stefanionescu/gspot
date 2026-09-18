@@ -1,6 +1,7 @@
 // gspot add and gspot remove: the preset list of the root or of one scope.
 import { nearMatches } from '#cli/policy/near.ts';
 import type { CommandResult } from '#types/run.ts';
+import { scopeHolder } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
@@ -11,10 +12,8 @@ import { presetManifests } from '#cli/presets/read-manifests.ts';
 import type { AddOptions, RemoveOptions } from '#types/commands.ts';
 
 function presetHolder(raw: TomlTable, scope: string | undefined): TomlTable {
-    if (scope === undefined) return raw;
-    const scopes = (raw['scope'] as TomlTable[] | undefined) ?? [];
-    const holder = scopes.find((entry) => entry['path'] === scope);
-    if (!holder) throw new PolicyError([messages.scopeMissing(scope)]);
+    const holder = scopeHolder(raw, scope);
+    if (!holder) throw new PolicyError([messages.scopeMissing(scope ?? '')]);
     return holder;
 }
 
