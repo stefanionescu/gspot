@@ -22,3 +22,4 @@ the commit that closes its row.
 The list grows as each file is written.
 
 - [00-delete-first.md](00-delete-first.md): the four presets, the removed commands and flags, and every key, field, and rule nothing uses.
+- [01-first-fixes.md](01-first-fixes.md): CI, the checks that destroy work, the checks that pass when they did not run, and the other wrong answers.
