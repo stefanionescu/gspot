@@ -6,6 +6,8 @@ periphery = "3.6.0"
 "github:sbdchd/squawk" = "2.64.0"
 golangci-lint = "2.13.2"
 "go:golang.org/x/vuln/cmd/govulncheck" = "1.8.0"
+"cargo:cargo-audit" = "0.22.2"
+"cargo:cargo-deny" = "0.20.2"
 
 [env]
 GSPOT_BIN = "bun {{config_root}}/packages/cli/src/main.ts"

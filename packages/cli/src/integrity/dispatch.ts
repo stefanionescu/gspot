@@ -1,6 +1,7 @@
 // The integrity engine: one function per check, chosen by `analysis =` in the manifest.
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
+import { rustClippy } from '#cli/cargo/lints.ts';
 import { codeql } from '#cli/integrity/codeql.ts';
 import { fences } from '#cli/integrity/fences.ts';
 import { localeFiles } from '#cli/web/locales.ts';
@@ -49,6 +50,7 @@ import { pythonBlockingCalls } from '#cli/pyproject/blocking-calls.ts';
 import { PYTHON_STRUCTURE } from '#cli/pyproject/structure/analyses.ts';
 import { goFileLength, goFunctionLength } from '#cli/golang/lengths.ts';
 import { assetFolders, stringFiles } from '#cli/apple/xcode/resources.ts';
+import { rustAdvisories, rustCratePolicy } from '#cli/cargo/advisories.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/postgres/history.ts';
 import { trackedDependencies } from '#cli/integrity/tracked-dependencies.ts';
 import { swiftAnalyze, swiftBuild, swiftPeriphery } from '#cli/apple/build.ts';
@@ -122,6 +124,9 @@ const checks: Record<string, IntegrityCheck> = {
     'html-scripts': htmlScripts,
     'html-copy': htmlCopy,
     'css-module-usage': cssModuleUsage,
+    'rust-clippy': rustClippy,
+    'rust-advisories': rustAdvisories,
+    'rust-crate-policy': rustCratePolicy,
     'go-mod-tidy': goModTidy,
     'go-vulnerabilities': goVulnerabilities,
     'go-file-length': goFileLength,
