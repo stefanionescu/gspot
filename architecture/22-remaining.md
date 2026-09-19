@@ -211,6 +211,7 @@ with no line here fails the placement check.
 - [ ] K-195: Delete the pin of `pyproject-fmt` from the python preset.
 - [ ] K-205: The docs build runs `reference-pages.ts` first, the pages are git-ignored, and the `docs/generated` check goes.
 - [ ] K-240: Delete the runner value `uv` until a reference repository needs it.
+- [ ] K-259: Drop the scratch entry from `.gitignore`, run pytest of the tests in their own folder, and move the managed block to the end of the file.
 - [ ] S-10: The Vale half of the rules lint goes, and the rule files are read by `prose/vale` like every other text.
 
 ### The first fixes, with CI green before anything else
@@ -250,6 +251,7 @@ with no line here fails the placement check.
 - [ ] K-253: Make the workflow gspot writes follow `GITHUB-ACTIONS.md`: a pinned runner image, a timeout, and a concurrency group. Name the tasks as D-116 decides.
 - [ ] K-254: Run `bash -n` over Bash files alone, `zsh -n` over `.zsh` files, and `bats --count` over `.bats` files.
 - [ ] K-257: Write every file through a temporary file and a rename, and let a failed cache write be one line on stderr.
+- [ ] K-258: Make `perFileCommands` put the file where `{file}` stands, pass `--no-env-resolution` to Compose, and test the check on a file with an `env_file`.
 
 ### Row 1: Takeover deletes nothing it does not own
 
@@ -572,7 +574,6 @@ Not done in this read, and owed before the fixes start:
 - 12 rule files of the framework, library, and tool layers, which the owner chose to have read:
   `nextjs/SECURITY.md`, two fastapi files, seven library guides, `I18N.md`, and `DOCKER.md`. 33 other rule files stay
   unread by the owner's choice.
-- The flags of `docker compose`, because Docker is absent on this machine.
 
 Nothing else is owed. Every file of code, every test, every template, every manifest, and every
 document of this folder is read.
@@ -588,3 +589,5 @@ Checked on September 19, 2026, with the row that holds what was found:
 - The 48 preset pages and `16-file-tree.md`, by eye (S-18, K-254 to K-256, T-36).
 - The flags each manifest passes, against the help text of the pinned tool (K-251).
 - A full disk, on a 12 MB disk image: the policy file is cut in half (K-257).
+- The Compose check, run with Docker Compose 5.5.1: it fails on every file (K-258).
+- The `.gitignore` of this repository against what git tracks and what sits on disk (K-259).
