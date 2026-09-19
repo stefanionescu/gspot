@@ -26,3 +26,5 @@ The list grows as each file is written.
 - [02-takeover.md](02-takeover.md): what `init` reads, what it proposes, and what it carries.
 - [03-hooks.md](03-hooks.md): the hook of the repository, the command names of the team, and lint tables in a shared manifest.
 - [04-speed.md](04-speed.md): cache keys, one parse for a scope, one session for `init`, and an incremental Swift build.
+- [05-written-files.md](05-written-files.md): the first commit, the mark, what `apply` may delete, and the one baseline file.
+- [06-config.md](06-config.md): the text of `gspot.toml`, one word for one idea, one path for every widening, and scopes.
