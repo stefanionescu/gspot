@@ -21,7 +21,7 @@ setting with its value and where the value comes from (D-118, D-131).
 
 **Logic.** `listing.ts` already builds what `explain <preset>` prints. `list` adds the state from
 `presets/levels.ts`, `run/ignores.ts`, and the `waits_for` key. Each preset of the second group
-ends with its `gspot add` line (D-143). `--json` prints the same data.
+ends with its `gspot add` line. `--json` prints the same data.
 
 **What goes.** `doctor --settings`.
 

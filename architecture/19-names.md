@@ -59,14 +59,14 @@ in the commit that applies it.
 | `hooks.tool = "shared"`                                                        | the stash `hooks-existing`                        | `existing` (D-101)                                                                                                 |
 | `repository-check.test.ts`, `scope-languages.test.ts`                          | `tests/repositories/`                             | `declared-check.test.ts`, `scope-presets.test.ts` (D-113)                                                          |
 
-preset, check, finding, baseline, ignore, scope, stage and profile stay: other tools use them
+preset, check, finding, ignore, scope, stage and profile stay: other tools use them
 the same way.
 
 ## Check names that change family
 
 A built-in check carries the family of the preset that ships it (D-146). The family `integrity`
 keeps the checks over the config and the files gspot writes: `policy`, `generated-drift`,
-`baselines-current`, `config-purity`, `suppressions`, `allowlists-match`, `task-policy`, and
+`config-purity`, `suppressions`, `allowlists-match`, `task-policy`, and
 `large-files`. Every other id moves, and the old id is an unknown id (D-134):
 
 | Today                                                                             | Becomes                                                                                     |

@@ -59,6 +59,7 @@ exactly one fix file fails it.
 - [ ] K-259: Drop the scratch entry from `.gitignore`, run pytest of the tests in their own folder, and move the managed block to the end of the file.
 - [ ] S-10: The Vale half of the rules lint goes, and the rule files are read by `prose/vale` like every other text.
 - [ ] K-282: Close K-204 alone first, and delete a thing in the commit that builds what replaces it.
+- [ ] K-290: Delete the baseline, the first check of `init`, and every run that `add`, `upgrade`, and a level change start (D-165).
 
 ### The First Fixes
 
@@ -75,9 +76,8 @@ exactly one fix file fails it.
 - [ ] K-254: Run `bash -n` over Bash files alone, `zsh -n` over `.zsh` files, and `bats --count` over `.bats` files.
 - [ ] K-258: Make `perFileCommands` put the file where `{file}` stands, pass `--no-env-resolution` to Compose, and test the check on a file with an `env_file`.
 - [ ] K-37: Take the bare name `hooks` out of `HOOK_DIRECTORIES`.
-- [ ] K-45: Write no record for a run of the `message` stage (D-105).
+- [ ] K-45: Write no report for a run of the `message` stage (D-105).
 - [ ] K-61: Rename `packages/cli/rules-lint` to `packages/cli/rules` and the alias to `#rules/*`.
-- [ ] K-103: Print no baseline line in the init plan before a check has run.
 - [ ] K-108: Make a missing `[hooks]` table mean gspot does nothing there, as `[ci]` and `[runner]` do (D-130).
 - [ ] K-109: Never replace a `package.json` script the developer has, `prepare` included.
 - [ ] K-114: Let a `gspot-ignore` comment work for every check an engine runs. The test reads the engine of the check, not its id.
@@ -137,8 +137,8 @@ exactly one fix file fails it.
 - [ ] K-43: Hash `.gspot/` once for a run, key each check on the config files it names, and hash files without base64 (D-102).
 - [ ] K-44: Drop cache entries older than 30 days, and move the Swift build folder to the cache folder of the platform (D-102).
 - [ ] K-71: Closes with K-44.
-- [ ] K-53: Make init open one session, apply once, and run the commit stage alone (D-102).
-- [ ] K-127: Make `upgrade` run only the checks the new version changes, and print an image finding as one line.
+- [ ] K-53: Make init open one session, apply once, install the tools, and run no check (D-165).
+- [ ] K-127: Make `upgrade` run no check, and print an image finding as one line.
 - [ ] K-125: Read the first bytes of a file, not the whole file, for `head`, the binary sniff, and the banner.
 - [ ] K-138: Parse each source file once for both naming checks.
 - [ ] K-148: One parsed set for a scope and a run, shared the way the shell index is.
@@ -154,7 +154,6 @@ exactly one fix file fails it.
 - [ ] A-5: End `init` by offering the fix run, and refuse a local skip of a check whose tool is present (D-103).
 - [ ] K-72: Add one managed block to `.gitattributes`: `.gspot/** linguist-generated`.
 - [ ] K-118: Check in the redo of the app whether `apply` spares the hand-made gitleaks baseline, and make `apply` delete only files it wrote.
-- [ ] K-46: Print the findings of the files whose count rose, and one line for the rest (D-104).
 
 ### The Config Text and Scopes
 
@@ -167,7 +166,6 @@ exactly one fix file fails it.
 - [ ] K-215: D-144, with the table in [19-names.md](19-names.md) and a test over the manifests.
 - [ ] K-224: Each changes in the commit of its rename.
 - [ ] K-228: The two switches go, and the id becomes `xcode/asset-catalogs`.
-- [ ] K-216: D-143, one path for every widening.
 - [ ] K-222: The YAML block leaves the EditorConfig template, so one value holds for every tool.
 - [ ] K-48: Propose a scope for every folder with a project file, and keep scope files under `.gspot/<scope>/` (D-108).
 
@@ -313,7 +311,7 @@ exactly one fix file fails it.
 - [ ] T-11: Rename `repository-check.test.ts` and `scope-languages.test.ts` (T-31).
 - [ ] T-34: The fixture is a project Xcode generated.
 - [ ] T-20: Change the four tests that expect a defect, each in the commit that fixes its defect.
-- [ ] T-35: Each of these changes in the commit that changes its subject (D-104, D-129 to D-133, D-144).
+- [ ] T-35: Each of these changes in the commit that changes its subject (D-129 to D-133, D-144, D-165).
 
 ### Checks That Assume One Layout
 
@@ -378,7 +376,6 @@ exactly one fix file fails it.
 - [ ] K-130: Read the rule lists of every tool template in the upgrade report, not only lines shaped like ESLint.
 - [ ] K-185: Explain looks in every scope, and prints the value of each scope that holds the key.
 - [ ] K-243: Report a config that does not load with its file, its line, and a plain sentence. Print the hooks line of the uninstall plan only when the path will be unset.
-- [ ] K-194: Findings of the `security`, `dependencies`, and `secrets` inspections are still held, so adoption is not blocked, and every full `gspot check` prints one line for each of them.
 
 ### The Recommended Level
 
@@ -405,9 +402,8 @@ exactly one fix file fails it.
 - [ ] K-96: Add `--ci gitlab`, and look for `.gitlab-ci.yml` beside `.github` (D-133).
 - [ ] K-284: Delete `tools.<name>.enabled` and `gspot allow`, add `extra_checks`, and install no tool whose every check is ignored (D-160).
 - [ ] K-285: Rename `profile save` to `gspot export`, and carry an `[[ignore]]` with no path in a profile (D-161).
-- [ ] K-286: Name the baseline a tool keeps `.gspot/baseline.<tool>.json` (D-162).
 - [ ] K-287: Say name for a check, a preset, a rule, and a setting, and rename the manifest key `id` to `name` (D-163).
-- [ ] K-288: Add `--dry-run` to `install`, `apply`, `baseline`, `add`, and `remove`, and build `gspot list baseline` (D-163).
+- [ ] K-288: Add `--dry-run` to `install`, `apply`, `add`, and `remove` (D-163).
 - [ ] K-289: Make a reason optional, with `require_reasons` for a repository that wants it (D-164).
 
 ### gspot Checks Itself

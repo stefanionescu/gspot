@@ -42,6 +42,6 @@ style and vocabulary are tracked.
 
 ## Rollout
 
-Prose enters with a baseline per rule like any other check, so a repository with a backlog
-adopts it on day one. The `gspot` style ships every rule as an error; the shipped list of
+The prose checks read the files a change touches, so a repository with a backlog of old text is
+not blocked by it (D-165).
 disabled upstream rules and the reason for each is in the template.

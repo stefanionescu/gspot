@@ -400,3 +400,34 @@ it, or in this step when nothing replaces it.
 **Tests.** After each commit of this step, the run on GitHub is green.
 
 **Done when.** The order of the index says so.
+
+## K-290: the baseline and the first check
+
+**What is wrong.** `init`, `add`, `upgrade`, and a level change each run checks and write counts,
+one file for each rule. A rise in a count fails a run, and a command lowers the counts. The first
+install in yap-swift-app took 35 minutes and wrote 112 files that nobody reads. The owner decided
+on 2026-09-19 that gspot manages the tools and the developer decides when to lint (D-165).
+
+**Target.** Installing gspot runs no check, and nothing records old findings. `gspot check`
+reports what it finds today. An old repository adopts gspot through the files a change touches,
+the level `recommended`, `gspot ignore`, and `git commit --no-verify`.
+
+**Files.** Deleted: `run/baselines.ts`, `lifecycle/first-check.ts`, `emit/first-baseline.ts`,
+`emit/lower-baselines.ts`, `emit/prune-baselines.ts`, `integrity/baselines-current.ts`, their
+unit tests, and `.gspot/baselines/` of this repository. Changed: `run/execute.ts`,
+`output/reporter.ts`, `policy/add-command.ts`, `lifecycle/upgrade/command.ts`,
+`presets/manifest-schema.ts`, and the manifests of javascript, typescript, and python.
+
+**Logic.** `execute.ts` loses the baseline step between the findings and the verdict, so a
+finding that is not ignored fails its check. The manifest keys `baseline_file`,
+`baseline_command`, and `prune_command` go. ESLint loses `{suppressions}`, and basedpyright loses
+`--baselinefile`. The CI job checks what a change touches, and `[ci] run = "all"` makes it
+check everything.
+
+**What goes.** `apply --lower-baselines`, `apply --baseline`, `NEVER_BASELINED`, the baseline
+lines of the reporter, the init plan line about baselines, and the widening step of D-143.
+
+**Tests.** The planted installs hold that `init` starts no tool but the installers. A planted
+repository with an old finding in an untouched file commits a change to another file.
+
+**Done when.** A search of `packages/` for `baseline` finds only the file gitleaks keeps.

@@ -15,13 +15,12 @@ The 21 rules the reference repositories wrote as ESLint rules stay ESLint rules,
 `@gspot/eslint-plugin`, so editors show them and the tested semantics survive. Rejected: one
 ast-grep engine for every language, which loses editor feedback and rewrites tested code.
 
-## D-03 Everything is an error; a baseline is the adoption device
+## D-03 Everything is an error
 
-No warning level. `init` records the current count per rule; `check` fails when a count rises.
-D-119 replaces the rejection this decision first held, of a `recommended` level beside a fuller
-one. The install in yap-swift-app showed what a baseline alone gives a stranger: about 23,000
-findings on the first run. Everything is still an error, and there is still no warning level. Rejected: no baseline, which makes a new rule an upgrade nobody
-takes.
+No warning level. A finding is an error, or the rule is off. D-119 adds two levels, so a stranger
+starts with the rules that find defects. D-165 removes the baseline this decision first held: the
+install in yap-swift-app wrote about 23,000 findings into files nobody read. An old repository
+adopts gspot by checking the files a change touches.
 
 ## D-04 Coverage is a report
 
@@ -331,11 +330,7 @@ about a typo after they saved and switched windows.
 
 ## D-54 Where a tool has its own baseline, gspot drives it
 
-The bulk suppressions of ESLint and the baseline file of basedpyright live under `.gspot/baseline/` and
-are written at `init`, read on every run and pruned by `apply --baseline`. The editor honors the
-same file, so the editor and the gate agree. Every other check uses the gspot count file. Rejected:
-one gspot-owned format for everything, which made the editor show findings the gate had
-baselined.
+Replaced by D-165.
 
 ## D-55 Completions come from `tab`, in v1
 
@@ -744,20 +739,13 @@ Replaced by D-122.
 
 ## D-103 init offers the fix run, and no local file hides a failure
 
-Format, syntax, schema, coverage, and build findings still enter no baseline. init ends by
-offering `gspot check --fix`, and says how many files it changes. The person reads the diff and
-commits it. `gspot.local.toml` skips a check only when its tool cannot run on this machine, and
-every summary line counts the local skips. No new policy key comes with this.
-
-Rejected: a baseline for format findings, because nobody lowers it by hand and it never reaches
-zero.
+`gspot init` runs no check (D-165). Its last lines name `gspot check` and `gspot check --fix`, and
+the developer runs them when they want. `gspot.local.toml` skips a check only when its tool
+cannot run on this machine, and every summary line counts the local skips.
 
 ## D-104 One baseline file, and a rise prints what rose
 
-Baselines live in `.gspot/baseline.json`, sorted, one path on each line. When a count rises, the
-run prints the findings of the files whose count rose and one line that counts the rest. A tool
-that keeps its own baseline names the file in its manifest. Rejected: one file for each rule,
-which put 112 files in the app and made two branches conflict on the same path map.
+Replaced by D-165.
 
 ## D-105 The message run writes no record, and a build folder is no cache entry
 
@@ -900,16 +888,17 @@ which is an install the owner did not ask for.
 
 ## D-122 gspot check is the truth, and the hooks are the fast path
 
-| When                          | What runs                                                                     |
-| ----------------------------- | ----------------------------------------------------------------------------- |
-| `gspot check`                 | every check over the whole repository                                         |
-| the commit hook               | staged files, and the whole-project checks of a project a staged file sits in |
-| the push hook                 | files changed from the upstream branch, by the same rule                      |
-| `gspot check --at manual`, CI | the checks that build, test, or scan a whole project                          |
+| When                         | What runs                                                                     |
+| ---------------------------- | ----------------------------------------------------------------------------- |
+| `gspot check`                | every check over the whole repository                                         |
+| the commit hook              | staged files, and the whole-project checks of a project a staged file sits in |
+| the push hook                | files changed from the upstream branch, by the same rule                      |
+| `gspot check --stage manual` | the checks that build, test, or scan a whole project                          |
+| CI                           | what the change touches, or everything with `[ci] run = "all"`                |
 
-Checking only what changed keeps the whole repository clean, because init holds every old finding
-in the baseline. After that a new finding comes from a changed file, or from a whole-project
-check, and those run in full when a file of their project changes. A full run alone sees the
+Checking only what a change touches lets an old repository adopt gspot with no record of old
+findings (D-165). A file is judged when somebody changes it, and a whole-project check runs in
+full when a file of its project changes. A full run alone sees the
 world change, such as a new advisory. `gspot doctor` prints the date of the last full run. This folds D-102 in. Rejected: a full run on every push, which
 took 45 minutes in the app.
 
@@ -992,8 +981,7 @@ list people type daily, `typos`. `profile check` folds into `init --from --dry-r
 
 ## D-132 Baselines have a command
 
-`gspot baseline` lowers every count to the last full run, and `gspot baseline <check>` writes
-the first count of one check. `apply` writes generated files and does nothing else.
+Replaced by D-165.
 
 ## D-133 GitLab beside GitHub, and gspot owns no CI file it did not create
 
@@ -1168,18 +1156,7 @@ styles.
 
 ## D-143 Every widening takes one path
 
-A repository widens what gspot checks in four ways: `gspot add <preset>`, `level = "all"`, a
-rule turned back on, and an upgrade that brings new rules. All four run the same step that the
-first install runs. The new checks run once, their findings go into the baseline, and the
-output says how many were held for each check. The gate passes that day, and a count cannot
-rise after it.
-
-A developer who took a few presets at init and wants everything runs two commands.
-`gspot list` prints what was found in the repository and is not selected, with the one
-`gspot add` line that selects it. `gspot set level all` turns on the second level.
-
-Rejected: a `gspot add --all` flag, which selects presets for languages the repository does not
-hold.
+Replaced by D-165.
 
 ## D-144 One idea has one word in a setting name
 
@@ -1402,9 +1379,7 @@ no link: the repository does not point back at it (D-79).
 
 ## D-162 A tool that keeps its own baseline keeps it under one name form
 
-The files are `.gspot/baseline.<tool>.json`, beside `.gspot/baseline.json`: `baseline.eslint.json`
-for the bulk suppressions of ESLint, and `baseline.basedpyright.json`. A file of a scope sits
-under `.gspot/<scope>/`. The manifest of the tool names the file in `baseline_file`.
+Replaced by D-165.
 
 ## D-163 One word for the name of a thing, and `--dry-run` wherever many lines change
 
@@ -1425,6 +1400,31 @@ notice ships as a file beside the binary and in each package.
 
 This amends D-12. An `[[ignore]]` and a loosened setting may carry a `reason`. A reason prints with
 `--verbose` and travels in a profile. By default gspot requires no reason, so turning a rule off
-is one short command. `require_reasons = true` at the top of `gspot.toml`
+is one short command.
+
+`require_reasons = true` at the top of `gspot.toml`
 brings the old rule back for a team that wants it, and this repository sets it. With that key, a
-reason that says nothing, such as `N/A` or `TBD`, is refused.
+reason that says nothing, such as `N/A` or `TBD`, is refused. The same key decides whether
+`integrity/suppressions` asks a suppression comment in the code for a reason.
+
+## D-165 gspot has no baseline, and installing it runs no check
+
+Decided by the owner on 2026-09-19. gspot manages the lint tools and the rules of a repository.
+It does not decide when a developer lints, and it blocks nobody.
+
+- `gspot init` detects, writes the config, and installs the tools. It runs no check, so an
+  install takes as long as the downloads take. The same holds for `gspot add`, `gspot upgrade`,
+  and `gspot set level all`: each turns checks on and runs none.
+- Nothing records old findings. `.gspot/baseline.json`, the baseline a tool keeps itself, the
+  command `gspot baseline`, the check `integrity/baselines-current`, and the widening step are
+  gone. `gspot check` reports what it finds today, and nothing else.
+- An old repository adopts gspot through what already exists. The hooks and the CI job check the
+  files a change touches (`--staged`, `--changed`). The level `recommended` keeps taste out.
+  `gspot ignore` turns a check or a rule off. `git commit --no-verify` and `git push --no-verify`
+  pass a hook, and the failing run names them.
+- The developer decides when to run `gspot check` over the whole repository, and when to run
+  `gspot check --fix`.
+
+This replaces D-54, D-104, D-132, D-143, and D-162, and amends D-03, D-103, and D-122. Rejected:
+a baseline that falls and never rises, which made the first install run every check and write
+hundreds of counts that nobody reads.

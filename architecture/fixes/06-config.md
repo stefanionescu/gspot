@@ -98,8 +98,7 @@ rule is turned off under `prose.disabled`, and every other rule through `[[ignor
 have an off switch of their own, `tools.docs.readme_shape` and `tools.xcode.orphan_assets`. The id
 `xcode/asset-catalogues` uses the British spelling.
 
-Templates still name paths that D-104 and
-D-127 move.
+Templates still name paths that D-127 moves, and the baseline folder that D-165 deletes.
 
 **Target.** The table of D-144: a skipped list ends in `_allowed`, one folder in `_directory`, a
 list of globs in `_files`. A rule of any tool is turned off through `[[ignore]]` alone.
@@ -119,28 +118,6 @@ level `all` alone.
 table.
 
 **Done when.** That test passes with no exception list.
-
-## K-216: one path for every widening
-
-**What is wrong.** Nothing decided what happens to findings when a repository moves to
-`level = "all"`, turns a rule back on, runs `gspot add`, or upgrades into new rules. Each path
-handled it differently, in `emit/first-baseline.ts` and `policy/add-command.ts`.
-
-**Target.** All four run the step the first install runs (D-143). The new checks run once, their
-findings go into the baseline, and the output says how many were held for each check.
-
-**Files.** New `lifecycle/widen.ts`, called by `policy/add-command.ts`, `policy/set-command.ts`,
-`policy/ignore-command.ts` (for `--remove`), and `lifecycle/upgrade/command.ts`.
-
-**Logic.** `widen(session, before, after)` takes two check lists, runs what is new at the commit
-stage, and writes the counts through `run/baselines.ts`.
-
-**What goes.** The baseline code inside `add-command.ts`.
-
-**Tests.** A planted repository moves to `level = "all"` and holds a passing gate and a count
-line for each new check.
-
-**Done when.** That case passes for all four paths.
 
 ## K-222: two tools set the YAML indent in opposite ways
 

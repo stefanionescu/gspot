@@ -24,8 +24,8 @@ the commit that closes its row.
 - [02-takeover.md](02-takeover.md): what `init` reads, what it proposes, and what it carries.
 - [03-hooks.md](03-hooks.md): the hook of the repository, the command names of the team, and lint tables in a shared manifest.
 - [04-speed.md](04-speed.md): cache keys, one parse for a scope, one session for `init`, and an incremental Swift build.
-- [05-written-files.md](05-written-files.md): the first commit, the mark, what `apply` may delete, and the one baseline file.
-- [06-config.md](06-config.md): the text of `gspot.toml`, one word for one idea, one path for every widening, and scopes.
+- [05-written-files.md](05-written-files.md): the local skip, the mark, and what `apply` may delete.
+- [06-config.md](06-config.md): the text of `gspot.toml`, one word for one idea, and scopes.
 - [07-levels.md](07-levels.md): the level key, templates that render by level, and what `recommended` holds in each preset.
 - [08-frameworks.md](08-frameworks.md): lint tools under `.gspot/`, the ESLint pin, shared rules in component files, every linter of a framework, and naming rules in the framework preset.
 - [09-manifests.md](09-manifests.md): one file for each check name, and every fact about a preset in its manifest.
@@ -35,7 +35,7 @@ the commit that closes its row.
 - [13-words.md](13-words.md): the renames of the source, the words a person reads, and the `layer:` key.
 - [14-push.md](14-push.md): cache keys of a repository check, and a push hook that checks what is pushed.
 - [15-top-level.md](15-top-level.md): the root of this repository.
-- [16-output.md](16-output.md): progress lines, the summary, what `doctor` asks git, and held security findings.
+- [16-output.md](16-output.md): progress lines, the summary, and what `doctor` asks git.
 - [17-recommended.md](17-recommended.md): no edit of a `tsconfig.json`, and the house rules that move to `all`.
 - [18-one-copy.md](18-one-copy.md): one analysis for each idea, in every language.
 - [19-gitlab.md](19-gitlab.md): the flag names, and GitLab.

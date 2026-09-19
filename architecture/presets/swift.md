@@ -39,7 +39,7 @@ Every check here is a platform skip on Linux and Windows.
 
 The five SwiftLint rules the reference repository measured and left off (`no_magic_numbers`,
 `type_contents_order`, `one_declaration_per_file`, `file_types_order`, `no_empty_block`) are on
-and enter with a baseline.
+and are part of the level `all`.
 
 ## Shipped rule sets
 
@@ -76,7 +76,7 @@ prefer_key_path implicit_return redundant_self local_doc_comment period_spacing
 prefer_self_type_over_type_of_self unneeded_override
 ```
 
-SwiftLint opt-in rules added beyond the reference set, on with a baseline at `init`:
+SwiftLint opt-in rules added beyond the reference set, at the level `all`:
 
 ```text
 no_magic_numbers type_contents_order one_declaration_per_file file_types_order no_empty_block

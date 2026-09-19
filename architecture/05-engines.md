@@ -18,7 +18,7 @@ where each draws its line against writing original analysis.
 ```
 
 Every engine returns the same record: check name, file, line, column, rule, message, and whether
-a fixer exists. The reporter, the baseline and the ignore filter never know which engine spoke.
+a fixer exists. The reporter and the ignore filter never know which engine spoke.
 
 ## 1. Tool runner
 
@@ -106,7 +106,7 @@ For every language that is not JavaScript or TypeScript, and for repository-leve
 - **One analysis for each idea.** An analysis asks a small table of its language for node
   kinds, and names no language (D-149).
 - **An id for each language.** The manifest of each language lists the idea under an id of its
-  own, such as `python/call-through`. A baseline and an ignore then hold one language (D-98).
+  own, such as `python/call-through`. An ignore then holds one language (D-98).
 - **TypeScript in the editor.** TypeScript keeps its ESLint rules (D-02). One table of cases
   holds both implementations to the same answers.
 - **One count.** Every line limit gspot owns counts code lines, through one function.
@@ -193,7 +193,6 @@ Repository-level assertions. Each is small, reads git or a manifest, and answers
 | `typescript/tsconfig-options`     | Are the required compiler options on?                                                                                                                                                                                                                                                                                                                                                    |
 | `typescript/typecheck-membership` | Does every governed source file belong to a type-check project?                                                                                                                                                                                                                                                                                                                          |
 | `integrity/task-policy`           | Do the required runner tasks exist, with no runtime-named folders and no stale paths?                                                                                                                                                                                                                                                                                                    |
-| `integrity/baselines-current`     | Does every baseline name a rule that exists?                                                                                                                                                                                                                                                                                                                                             |
 | `secrets/env-files`               | Is no `.env*` file except a template staged?                                                                                                                                                                                                                                                                                                                                             |
 | `i18n/locales`                    | Do every locale's messages parse as ICU, have no empty values, and match the base locale's keys? Is every message key used?                                                                                                                                                                                                                                                              |
 | `css/usage`                       | Is every CSS module class used, and every used class defined?                                                                                                                                                                                                                                                                                                                            |

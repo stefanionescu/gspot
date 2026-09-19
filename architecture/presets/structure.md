@@ -10,7 +10,7 @@ Every file a language preset claims. The engine dispatches by grammar.
 ## Checks
 
 One analysis holds each idea, over a small table of node kinds for each language (D-149). The
-manifest of each language lists the idea under an id of its own, so a baseline and an ignore hold
+manifest of each language lists the idea under an id of its own, so an ignore holds
 one language (D-98). `structure/call-through` reads shell, and the same idea is
 `python/call-through`, `swift/call-through`, and `sql/call-through`. TypeScript and JavaScript
 keep their ESLint rules, such as `gspot/no-call-through`, so an editor shows them (D-02).
@@ -32,8 +32,7 @@ Facts about folders hold for every language, and the structure engine alone repo
 `structure/file-directory-collision`, and `structure/folder-names`.
 
 The preset also ships the checks over the config and the files gspot writes:
-`integrity/policy`, `integrity/generated-drift`, `integrity/baselines-current`,
-`integrity/config-purity`, `integrity/suppressions`, `integrity/allowlists-match`,
+`integrity/policy`, `integrity/generated-drift`, `integrity/config-purity`, `integrity/suppressions`, `integrity/allowlists-match`,
 `integrity/task-policy`, and `integrity/large-files`.
 
 ## Settings

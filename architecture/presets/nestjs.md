@@ -25,7 +25,7 @@ The Nest generator names a file for its feature and its kind: `cats.controller.t
 writes and for `.spec` files, and `structure/prefix-collisions` reads those rules (D-112).
 
 The acceptance bar is a planted module, controller, and service written the Nest way. They pass
-every commit check with no baseline.
+every commit check.
 
 ## Tools
 

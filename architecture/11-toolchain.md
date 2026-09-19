@@ -186,19 +186,19 @@ presets available, not selected
   vitest  vitest in package.json          gspot add vitest
 
 action on upgrade
-  move the pin to 0.5.0, write .gspot/ again, install the tools, run and hold what the new checks find
+  move the pin to 0.5.0, write .gspot/ again, install the tools
 ```
 
 The rules section compares the rule lists of two configs as data, for every tool whose config
-lists rules. `gspot upgrade` moves the pin, runs `apply`, installs the tools, and takes the
-widening step for checks that are new or whose config changed (D-143). It never edits
+lists rules. `gspot upgrade` moves the pin, runs `apply`, and installs the tools. It runs no
+check (D-165). It never edits
 `gspot.toml` and never commits. Before the first release, a removed setting is an unknown key (D-134). From the first release
 on, `upgrade` rewrites a renamed key and lists the rewrite in its plan (D-159).
 
 ## Rollback
 
-`gspot upgrade --to 0.4.0` writes the files of the older version. Generated files, the baseline
-file, and rule files are tracked, so `git revert` of the upgrade commit followed by `gspot apply`
+`gspot upgrade --to 0.4.0` writes the files of the older version. Generated files and rule files
+are tracked, so `git revert` of the upgrade commit followed by `gspot apply`
 also brings the earlier state back.
 
 ## Network

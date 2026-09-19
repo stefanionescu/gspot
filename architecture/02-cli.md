@@ -16,8 +16,7 @@ gspot check      [<check>] [--staged] [--changed] [--since <ref>] [--fix] [--dry
                  [--stage commit|push|manual] [--scope <path>] [--skip <check>] [--no-cache]
 gspot install    [--dry-run]
 gspot apply      [--dry-run]
-gspot baseline   [<check>] [--dry-run]
-gspot list       [settings | baseline [<check>]]
+gspot list       [settings]
 gspot explain    <check> | <tool>/<rule> | <preset> | <setting> | <path>
 gspot doctor
 gspot ignore     <check> [--paths <glob>...] [--rule <rule>] [--reason <text>] [--remove]
@@ -35,7 +34,7 @@ env:    NO_COLOR  CI  GSPOT_JOBS  GSPOT_HOOK (set by the hooks gspot writes)
 exit:   0 passed   1 findings   2 gspot did not run
 ```
 
-Sixteen commands. A teammate who clones a repository runs one, `gspot install`. A developer
+Fifteen commands. A teammate who clones a repository runs one, `gspot install`. A developer
 learns three more first: `gspot check`, `gspot check --changed`,
 and `gspot check --staged` (D-123). Four commands write one entry of `gspot.toml`: `ignore`,
 `set`, `add`, and `remove`.
@@ -55,7 +54,7 @@ The checklist is [clig.dev](https://clig.dev/). What it means here:
   terminal is exit 2, and the message names the flag.
 - A mistyped command or flag prints the closest match.
 - `--dry-run` shows what happens and writes nothing. Every command that changes more than one
-  line has it: `init`, `install`, `apply`, `baseline`, `add`, `remove`, `upgrade`, `uninstall`,
+  line has it: `init`, `install`, `apply`, `add`, `remove`, `upgrade`, `uninstall`,
   and `check --fix`. `ignore` and `set` change one line of a tracked file, and `git diff` shows
   it (D-163).
 - One word names a thing: its name. A check, a preset, a rule, and a setting each have a name,
@@ -169,10 +168,8 @@ Continue? [y/N]
 ```
 
 A no writes nothing. After the yes, `init` runs `gspot install`. `--no-install` skips it and
-prints that one command. Then `init` runs the commit stage once, holds what it finds, and
-prints one line for each check that holds findings. It prints the security, dependency, and
-secret counts apart from the others. It ends by offering `gspot check --fix`, with the number of
-files the fix run changes (D-103).
+prints that one command. `init` runs no check (D-165). Its last lines name the three commands a developer learns, and
+`gspot check --fix`, so the developer decides when to lint and when to fix.
 
 ### Takeover
 
@@ -276,16 +273,12 @@ api        typescript/eslint         fail      512 files  21.4s
 supabase   sql/sqlfluff              unchanged  83 files
 ios        swift/swiftlint           missing   swiftlint 0.63.2 is not installed. Run: mise install
 
-baseline   security/semgrep 3   dependencies/osv 1      gspot list baseline <check>
-rose       typescript/eslint:vitest/expect-expect  2 new in src/routes/turn.test.ts; 97 in the baseline elsewhere
-
 failed: typescript/eslint, swift/swiftlint
-12 checks passed, 2 failed, 101 findings in the baseline, 3 new, 26 s
+12 checks passed, 2 failed, 3 findings, 26 s
 ```
 
-When a held count rises, the run prints the findings of the files whose count rose, and one line
-that counts the rest (D-104). Every full run prints one `baseline` line for the security,
-dependency, and secret checks that hold findings. A failing run from a hook ends with the
+`gspot check` reports what it finds today. Nothing records old findings, and nothing is held
+back (D-165). A failing run from a hook ends with the
 command that reproduces it and with `git commit --no-verify` as the way past it.
 
 Every run but the message run writes three files under `.gspot/`: `report.json`,
@@ -311,20 +304,6 @@ Writes every generated file from `gspot.toml`, and does nothing else. It takes n
 
 Drift is a check: `integrity/generated-drift` fails a generated file that differs from what the
 policy writes (D-152).
-
-## `baseline`
-
-The baseline is the list of findings that were already in the repository when gspot arrived. gspot
-writes them down, one count for each rule and file, in `.gspot/baseline.json`. A run passes as
-long as no count goes up, so old problems do not block anybody and new ones fail at once. When
-somebody fixes old findings, the counts in the file are too high, and `gspot baseline` lowers
-them to what the last full run found. A count never goes up by a command.
-
-`gspot list baseline` prints what the baseline holds, and `gspot list baseline <check>` prints the
-findings of one check.
-`gspot baseline <check>` runs one check and writes its first counts, for a check that starts
-to work after `init` (D-132). It never raises a count, and it refuses a report that is not a
-full run. Baselines live in one file, `.gspot/baseline.json`, sorted, one path on a line.
 
 ## `list`
 
@@ -401,7 +380,7 @@ is the one way to turn a rule off, for every tool.
 
 An entry with the same check, rule, and
 reason gains the path, so one reason is one entry. `--remove` deletes a matching entry, and the
-check then runs through the widening step below. A spelling finding prints the
+check is on again from the next run. A spelling finding prints the
 `gspot set tools.typos.words <word>` line that accepts its word.
 
 One comment form silences a finding of a gspot engine, for every check that engine runs:
@@ -416,9 +395,9 @@ A suppression without a reason is a finding, in every comment style gspot reads.
 ## `add`, `remove`
 
 `gspot add nextjs vitest` appends presets to the root selection, or to a scope with `--scope`.
-It runs `apply` and then the widening step (D-143): the new checks run once, their findings are
-held, and the output says how many were held for each check. `gspot set level all`, a rule
-turned back on, and an upgrade that brings new rules take the same step. `gspot remove vitest`
+It runs `apply` and `install`, and runs no check (D-165). `gspot set level all`, a rule turned
+back on, and an upgrade that brings new rules work the same way: the checks are on from the next
+run. `gspot remove vitest`
 does the reverse, files included.
 
 ## `set`
@@ -451,7 +430,7 @@ with a new pin, rule files that changed, and presets now available for what the 
 command that asks the network for a newer gspot.
 
 `gspot upgrade` prints the same report as its plan, then asks. On a yes it moves the version
-pin, runs `apply` and `install`, and takes the widening step for checks that are new or whose config changed.
+pin, and runs `apply` and `install`. It runs no check.
 It never writes `gspot.toml` and never commits. `--to` moves to an exact version.
 
 ## `uninstall`
@@ -495,5 +474,5 @@ beside `--from` win over the profile.
 | Code | Meaning                                                                                                                |
 | ---- | ---------------------------------------------------------------------------------------------------------------------- |
 | 0    | every check ran and passed, or the command completed                                                                   |
-| 1    | findings, a held count that rose, a generated file that drifted, or a missing tool                                     |
+| 1    | findings, a generated file that drifted, or a missing tool                                                             |
 | 2    | gspot did not run: unreadable `gspot.toml`, unknown preset, unknown command, unanswered question, version pin mismatch |

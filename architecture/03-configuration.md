@@ -14,7 +14,6 @@ merge.
 | `.gspot/pyproject.toml`, `uv.lock`                      | gspot                         | yes     | the Python lint tools gspot pins (D-157)                                                      |
 | `.gspot/node_modules/`, `.gspot/.venv/`                 | gspot                         | no      | where those tools install                                                                     |
 | `.gspot/version`                                        | gspot                         | yes     | the gspot version this repository runs, one line                                              |
-| `.gspot/baseline.json`                                  | gspot                         | yes     | every held count, sorted, one path on a line (D-104)                                          |
 | `.gspot/hooks/*`                                        | gspot                         | yes     | git hooks, only where the repository had none (D-101)                                         |
 | `.gspot/rules/**`                                       | gspot                         | yes     | the installed rule files                                                                      |
 | `.gspot/cache/**`                                       | gspot                         | no      | verdicts keyed on their inputs, dropped after 30 days                                         |
@@ -157,6 +156,7 @@ push       = "changed"            # or "all" (D-123)
 
 [ci]
 provider = "github"               # github | gitlab
+run      = "changed"              # or "all": what the CI job checks (D-165)
 sarif    = true                   # upload findings to code scanning, where the repository has it
 
 [runner]
@@ -276,26 +276,16 @@ preset default
 Lists append and drop repeats. Scalars replace. Two presets that set one scalar to two values
 fail at load with both presets named, and a root value settles it.
 
-## Baselines
+## An old repository
 
-`.gspot/baseline.json` maps a check, then a rule, then a path, to a count. It is sorted, and
-each path stands on a line of its own. Two branches that each change a count then merge with a
-conflict on one line or none (D-104).
+gspot records no old findings, and installing it runs no check (D-165). `gspot check` reports
+what it finds today. An old repository adopts gspot through four things that need no record:
 
-- `init` runs the commit stage once and holds what it finds. The gate passes that day.
-- A tool with a baseline of its own keeps its file: `.gspot/baseline.eslint.json` for the bulk
-  suppressions of ESLint, and `.gspot/baseline.basedpyright.json` (D-162). The editor honors it.
-- `check` fails when a count rises. It prints the findings of the files whose count rose, and one
-  line that counts the rest.
-- `gspot baseline` lowers every count to the last full run, and never raises one. A run of one
-  check, of one scope, or of staged files is refused, because its counts are partial.
-- `gspot baseline <check>` writes the first counts of one check.
-- Every widening takes one path (D-143): `gspot add`, `level = "all"`, a rule turned back on,
-  and an upgrade. The new checks run once, their findings are held, and the output says how many.
-- Format, syntax, and schema findings are never held. `init` offers the fix run for them (D-103).
-- A failing build, a failing test run, and coverage under its floor are never held.
-- Findings of the security, dependency, and secret checks are held, so adoption is not blocked.
-  Every full run prints one line for each of those checks that holds findings.
+- The hooks and the CI job check the files a change touches, so a file is judged when somebody
+  changes it.
+- The level `recommended` holds what finds a defect, and leaves taste out.
+- `gspot ignore` turns a check or a rule off. It works for the whole repository or for some paths.
+- `git commit --no-verify` passes a hook, and a failing run names it.
 
 ## `gspot.local.toml`
 

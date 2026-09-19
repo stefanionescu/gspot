@@ -6,15 +6,16 @@ This document decides where checks run: git hooks, the CI job, and the tasks of 
 
 `gspot check` is the truth, and the hooks are the fast path (D-122).
 
-| When                             | What runs                                                                      |
-| -------------------------------- | ------------------------------------------------------------------------------ |
-| `gspot check`                    | every check of the commit and push stages, over the whole repository           |
-| the commit hook                  | staged files, and the whole-project checks of a project a staged file sits in  |
-| the push hook                    | the commits being pushed, by the same rule, against the upstream branch        |
-| `gspot check --stage manual`, CI | the checks that build, test, or scan a whole project, or that need credentials |
+| When                         | What runs                                                                      |
+| ---------------------------- | ------------------------------------------------------------------------------ |
+| `gspot check`                | every check of the commit and push stages, over the whole repository           |
+| the commit hook              | staged files, and the whole-project checks of a project a staged file sits in  |
+| the push hook                | the commits being pushed, by the same rule, against the upstream branch        |
+| `gspot check --stage manual` | the checks that build, test, or scan a whole project, or that need credentials |
+| CI                           | what the change touches, or everything with `[ci] run = "all"`                 |
 
-Checking only what changed keeps the whole repository clean, because `init` holds every old
-finding. After that a new finding comes from a changed file or from a whole-project check. A
+Checking only what a change touches is how an old repository adopts gspot, because gspot records
+no old findings (D-165). A file is judged when somebody changes it. A
 full run alone sees the world change, such as a new advisory, and `gspot doctor` prints the date
 of the last full run. `[hooks] push = "all"` is for a team that wants the full run on push
 (D-123).
@@ -46,8 +47,7 @@ pass. A check that waits for a setting prints `skipped` and names the setting.
 2. Runs the commit-stage checks over the staged files that each check claims.
 3. Runs a commit-stage project check when a staged file is in its scope, or when `gspot.toml` or
    a generated file is staged.
-4. Holds the count of each staged file: it does not grow for a held rule.
-5. Fails when a `.env*` file is staged, unless it is a template.
+4. Fails when a `.env*` file is staged, unless it is a template.
 
 Staged mode reads the working-tree content of each staged path, not the staged blob. No stash
 happens. When a staged file also has unstaged changes, the output says
@@ -173,7 +173,7 @@ jobs:
                       .gspot/.venv
                   key: gspot-${{ runner.os }}-${{ hashFiles('.gspot/*.lock', '.mise/conf.d/gspot-tools.toml') }}
             - run: gspot install
-            - run: gspot check
+            - run: gspot check --changed # or gspot check, with [ci] run = "all"
             - uses: actions/upload-artifact@<pinned sha>
               if: always()
               with: { name: gspot-report, path: .gspot/report.* }
@@ -240,7 +240,7 @@ same data (D-105). Its shape is part of `gspot.schema.json`. The report holds:
 - the version, the stage, the start time, and the duration;
 - each check with its status, file count, findings, and duration;
 - the source files checked and unchecked;
-- the ignores applied, the held counts, and the suppressions by form.
+- the ignores applied, and the suppressions by form.
 
 Paths in the report are relative to the repository. The CI job uploads a SARIF file with
 locations for the tools that give them.

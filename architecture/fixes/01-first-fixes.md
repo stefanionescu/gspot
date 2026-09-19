@@ -97,7 +97,7 @@ after every check ran, and the verdict is lost.
 written still prints its findings and keeps its exit code.
 
 **Files.** New `emit/atomic-write.ts`. Callers: `policy/write.ts`, `emit/apply-command.ts`,
-`emit/managed-blocks.ts`, `run/baselines.ts`, `run/record/write.ts`, `run/cache.ts`.
+`emit/managed-blocks.ts`, `run/record/write.ts`, `run/cache.ts`.
 
 **Logic.** `writeWhole(path, text)` writes `<path>.<pid>.tmp` in the same folder, then renames
 it, and removes the temporary file when the write throws. `writeCached` and `writeRecord` catch
@@ -218,22 +218,20 @@ first, and that answer wins over any folder name.
 
 **Done when.** That case passes.
 
-## K-45: the message run overwrites the record
+## K-45: the message run overwrites the report
 
-**What is wrong.** `writeRecord` runs after every run, the `commit-msg` run included. The
-baseline command then reads a record of one check.
+**What is wrong.** `writeRecord` runs after every run, the `commit-msg` run included. After one
+commit the report of the last full run is gone, and `gspot doctor` cannot say when that run was.
 
-**Target.** A run of the `message` stage writes no record (D-105).
+**Target.** A run of the `message` stage writes no report (D-105).
 
 **Files.** `run/execute.ts`, `run/record/write.ts`.
 
 **Logic.** `execute.ts` calls `writeRecord` only for a stage other than `message`.
-`run/baseline-command.ts` refuses a record that is not a full run, and says which command makes
-one.
 
 **What goes.** Nothing.
 
-**Tests.** `hooks.test.ts` commits, then holds that `last.json` still names the earlier run.
+**Tests.** `hooks.test.ts` commits, then holds that the report still names the earlier run.
 
 **Done when.** That case passes.
 
@@ -255,25 +253,6 @@ the alias change: `packages/cli/package.json` and `tsconfig.json` lose `#rules-l
 **Tests.** The existing unit tests, moved.
 
 **Done when.** A search for `rules-lint` finds nothing.
-
-## K-103: the init plan states a result nobody measured
-
-**What is wrong.** `buildInitPlan` sets `baselines: { rules: 0, findings: 0 }`
-(`lifecycle/init/plan.ts:126`), and `baselineLine` prints that every check passes.
-
-**Target.** The plan says that the first check runs after the files are written. The result of
-that check prints the held counts (D-143).
-
-**Files.** `lifecycle/init/plan.ts`, `output/plan-text.ts`, `types/lifecycle.ts`.
-
-**Logic.** `TakeoverPlan` loses `baselines`. `first-check.ts` prints one line for each check that
-holds findings: the check name and the count.
-
-**What goes.** `baselineLine`.
-
-**Tests.** The plan snapshot of `init --dry-run` holds no line with the word baseline.
-
-**Done when.** That snapshot passes.
 
 ## K-108: a missing `[hooks]` table
 

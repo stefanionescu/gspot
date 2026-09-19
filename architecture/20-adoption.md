@@ -102,12 +102,12 @@ Two defects make it slower than it needs to be:
 
 - The `manual` stage holds checks that build, test, or scan a whole project. It exists today
   and five checks use it. `swift/build`, the analyzer, periphery, and the coverage checks move
-  to it. The CI workflow runs it, and so does `gspot check --stage manual` (D-132).
+  to it. `gspot check --stage manual` runs it.
 - The pre-push hook runs the push stage over the scopes that hold a changed file, measured from
   the merge base.
 - `gspot check` with no flag still runs everything, and says how long each stage took.
-- init runs the commit stage, writes baselines, and ends. It prints the command that runs the
-  other stages and baselines them (`gspot baseline --stage manual`, D-131).
+- init runs no check (D-165). It installs the tools and ends, and its last lines name
+  `gspot check`.
 - A cache key holds the hash of the configuration files the check names, not of all of
   `.gspot/`. The generated hash is computed once for each run.
 - The Swift build folder moves to the cache folder of the platform. The verdict cache stays in
@@ -122,13 +122,10 @@ passes on one machine and fails on every other. `GSPOT-MIGRATION.md` says so, an
 still opens its results with the words `0 fail`. The debt it lists is small: 87 findings in 69 files, which
 one fix run clears.
 
-**Why the rule stays.** A baseline of format findings never shrinks, because nobody fixes a
-format finding by hand.
+**Design (D-103, D-165).**
 
-**Design (D-103).**
-
-- init ends by offering `gspot check --fix`, and says how many files it changes. The person
-  reads the diff and commits it. No new policy key comes with this.
+- gspot has no baseline, and init runs no check. Its last lines name `gspot check --fix`, and the
+  developer runs it when they want.
 - `gspot.local.toml` keeps one purpose: a tool that cannot run on this machine. A skip of a
   check whose tool is present is refused.
 - Every summary line counts the checks a local skip removed.
@@ -140,15 +137,9 @@ for one rule and a map of every path to its count. `applyBaselines` keeps every 
 rule when its count rises, so one new `explicit_acl` finding prints 5,894 findings. Two
 branches that touch the same rule change the same path map and conflict at merge.
 
-**Design (D-104).**
-
-- One file, `.gspot/baseline.json`, sorted by check, rule and path, one path on each line, so a
-  merge conflict is a line conflict a person can resolve.
-- A rise prints the findings in the files whose count rose, and one line for the rest:
-  `5,893 more are held`.
-- A tool that keeps a baseline of its own keeps its file. The engine learns the name of that
-  file from the manifest, not from a pattern in `run/baselines.ts`.
-- `apply --lower-baselines` rewrites the one file and prints what fell.
+**Design (D-165).** The owner decided on 2026-09-19 that gspot has no baseline. The 112 files go,
+and nothing takes their place. `gspot check` reports what it finds today, the hooks check the
+files a change touches, and `git commit --no-verify` passes a hook.
 
 ## A-7 The run record loses the run that matters
 
@@ -158,7 +149,7 @@ reads that file, so a commit between a full check and the lowering leaves it not
 
 **Design (D-105).** One condition in `run/execute.ts`: a run of the `message` stage writes no
 report. The file stays one file in one place, under the name [19-names.md](19-names.md) gives it,
-`.gspot/report.json`. `gspot baseline` reads it and refuses a report that is no full run.
+`.gspot/report.json`. `gspot doctor` reads it for the date of the last full run.
 
 ## A-8 One policy file, written badly
 
@@ -425,20 +416,20 @@ Each row names the decision that answers it. A row marked open has a gap row in
 | ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- |
 | has an empty repository                                                   | init installs what reads no language; `gspot check` names a language that arrives later, with the `gspot add` line       | D-125                               |
 | has a folder that is no git repository, or another version control system | init says so, proposes no preset that needs git, and scans secrets by files; the git flags exit 2 with one sentence      | K-214, K-271                        |
-| has a repository with no linting                                          | init proposes presets in three groups, installs `recommended`, holds old findings in one baseline                        | D-104, D-119, D-120                 |
+| has a repository with no linting                                          | init proposes presets in three groups, installs `recommended`, runs no check, and the hooks check what a change touches  | D-119, D-120, D-165                 |
 | has linting, hooks, and tasks of their own                                | hooks and tasks are added to, never replaced; old config is carried in both directions; every file not carried is listed | D-101, D-109, D-114 to D-117, K-193 |
 | has a monorepo                                                            | one scope for each project file; one `gspot.toml`; a check reads the files of its scope                                  | D-108, K-149                        |
 | wants some presets only                                                   | the three questions, or `--presets` and `--without`                                                                      | D-120                               |
-| wants everything later                                                    | `gspot list`, `gspot add`, `gspot set level all`; new findings are held                                                  | D-118, D-143                        |
+| wants everything later                                                    | `gspot list`, `gspot add`, `gspot set level all`; the new checks are on from the next run                                | D-118, D-160                        |
 | wants one rule off, back on, or one check above the level on              | `gspot ignore` with a reason, `--remove`, and `gspot set extra_checks`                                                   | D-160                               |
 | wants to change a limit                                                   | `gspot set limits.<name>`, with a reason when it loosens; the number holds in every framework                            | D-138                               |
 | wants a check of their own                                                | a `[[check]]` entry that runs any command                                                                                | 03-configuration.md                 |
 | wants the same setup in the next repository                               | `gspot export`, then `gspot init --from` a file, a URL, or `github:owner/repo`                                           | D-161                               |
-| adds a language or a framework later                                      | `gspot check` names it; `gspot add` selects it; its findings are held                                                    | D-125, D-143                        |
+| adds a language or a framework later                                      | `gspot check` names it; `gspot add` selects it; its checks are on from the next run                                      | D-125                               |
 | meets a finding                                                           | `gspot explain`, `gspot check --fix`, or `gspot ignore`                                                                  | D-131                               |
 | must commit past a failing hook                                           | `--no-verify`; the failure text names it, and the push and CI still check                                                | D-117, D-123                        |
 | clones the repository on a new machine                                    | `gspot install`, alone or through the setup entry; a clone that is not set up says so on every run                       | D-156                               |
-| upgrades gspot                                                            | `gspot upgrade` prints what changes; new rules are held like any widening                                                | D-143                               |
+| upgrades gspot                                                            | `gspot upgrade` prints what changes; new rules are on from the next run                                                  | D-165                               |
 | works on GitLab, also self-hosted                                         | `--ci gitlab` writes `.gitlab/ci/gspot.yml` with a code quality report; the system is found by its file                  | D-133, K-277                        |
 | works on another CI system                                                | no file; the plan prints the three lines to paste, and one guide shows them                                              | K-278                               |
 | uses the pre-commit framework, lint-staged, or simple-git-hooks           | the gspot line goes into the hook tool the repository has                                                                | K-275                               |
@@ -459,7 +450,7 @@ which are installed, and which are off.
 
 **Design (D-118).** `gspot list` prints the presets in three groups: languages, frameworks, and
 concerns. Under each installed preset it prints the checks with a state: on, off with the
-reason, or held by a baseline with the count. `gspot list <preset>` prints one preset. `--json` prints the
+reason, off by level, or waiting for a setting. `gspot list <preset>` prints one preset. `--json` prints the
 same for an agent. The data is what `explain` and the manual already read.
 
 ## A-22 A preset is all or nothing

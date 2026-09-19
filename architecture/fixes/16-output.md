@@ -2,8 +2,7 @@
 
 Row 21 of the build order. A run of 45 minutes printed nothing until it ended, then 255 lines, and
 its summary held no count and no time. `doctor` printed what the config says and never asked git.
-This step changes what a person reads, and one thing about what is held: a security finding is
-never hidden in a baseline without a word.
+This step changes what a person reads.
 
 ## K-81: a run prints nothing until it ends
 
@@ -23,7 +22,7 @@ the log, and the JSON report is written beside them.
 
 **Logic.** `execute.ts` takes an `onResult` callback, and `progress.ts` prints one line for each
 result on a terminal, and one line for each failed result elsewhere. A cached pass prints
-`unchanged`. The summary is one line: checks passed, failed, held findings, new findings, and
+`unchanged`. The summary is one line: checks passed, checks failed, findings, and
 seconds. The workflow runs plain `gspot check`, so the findings are in the log, and it keeps
 `.gspot/report.*` as artifacts. No flag is needed, because every run writes those files.
 
@@ -106,24 +105,3 @@ sentence. The uninstall plan prints the hooks line only when the path will be un
 **Tests.** Unit tests for each message, and an upgrade fixture where SwiftLint gains a rule.
 
 **Done when.** They pass.
-
-## K-194: a known vulnerability is held like a finding of style
-
-**What is wrong.** `init` baselines a vulnerability, a security finding, and a found secret. The
-gate passes from the first run, and the one trace is a baseline file. `NEVER_BASELINED` names
-format, syntax, schema, coverage, and build, and no kind of security.
-
-**Target.** Those findings are still held, so adoption is not blocked. Every full `gspot check`
-prints one line for each check of the `security`, `dependencies`, and `secrets` groups that holds
-findings: the check, the count, and the command that lists them.
-
-**Files.** `run/baselines.ts`, `output/reporter.ts`, `lifecycle/first-check.ts`.
-
-**Logic.** `first-check.ts` prints those counts at the end of `init`, apart from the others.
-`gspot list baseline <check>` lists the findings the baseline holds for a check (D-163).
-
-**What goes.** Nothing.
-
-**Tests.** A planted package with a known advisory holds a passing gate and the line.
-
-**Done when.** It passes.

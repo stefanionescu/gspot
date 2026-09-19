@@ -35,7 +35,7 @@ files under `[architecture] types_directory`.
 
 ## Settings
 
-The ESLint check reads `.gspot/baseline.eslint.json` the way the typescript preset describes. `tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform preset claims it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
+`tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform preset claims it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
 
 `sourceType`
 follows the Node resolution: the nearest `package.json` `type`, then `.mjs` and `.cjs`.
@@ -51,5 +51,5 @@ The rendered knip ignore list carries `.gspot/commitlint.config.cjs` when the co
 ## Not covered here
 
 Type checking of untyped JavaScript is `checkJs` with JSDoc; no reference repository did it and
-it enters with a baseline. Lizard and madge are not used: sonarjs and import-x do their jobs in
+it is part of the level `all`. Lizard and madge are not used: sonarjs and import-x do their jobs in
 the editor.

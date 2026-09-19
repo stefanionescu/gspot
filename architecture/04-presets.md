@@ -178,7 +178,6 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - `runs = "per-file-list"` receives the claimed file list as `{files}`. `runs = "per-scope"` runs once from the scope root and reports its own inputs. Its cache key and file count cover every
   tracked text file under the scope, child scopes included, because the tool reads the project
   rather than the claimed files.
-- A tool that keeps a baseline of its own names `baseline_file`, and `gspot baseline` drives it.
 - A check carries `level`, `recommended` or `all`, and a check with no level fails to load (D-119).
 - A check takes `waits_for`, the setting it needs. With the setting unset the check prints
   `skipped` and names it.

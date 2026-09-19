@@ -29,9 +29,9 @@ The ESLint config gains, over test files: `vitest/no-focused-tests` (not fixable
 `no-disabled-tests`, `no-identical-title`, `no-standalone-expect`, `no-commented-out-tests`,
 `expect-expect`, `valid-describe-callback`, `no-conditional-expect`, `valid-expect`,
 `prefer-strict-equal`; `@typescript-eslint/no-non-null-assertion` off; jsdoc off; a
-`no-restricted-syntax` selector counting `toMatchSnapshot` calls for the baseline.
+`no-restricted-syntax` selector that reports a test file made of `toMatchSnapshot` calls alone.
 
-The three rules the reference repository measured and left off enter with a baseline.
+The three rules the reference repository measured and left off are part of the level `all`.
 
 ## Checks
 

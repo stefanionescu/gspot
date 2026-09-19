@@ -41,32 +41,29 @@ run and removes entries whose file time is over 30 days. `platform/paths.ts` gai
 **Done when.** A second `gspot check` in this repository reads the cache for every check whose
 inputs did not change, after an edit of one generated file.
 
-## K-53: `init` opens three sessions and applies twice
+## K-53: `init` opens three sessions, applies twice, and runs every check
 
 Closes K-53 and K-127.
 
 **What is wrong.** `lifecycle/init/command.ts` opens a session to propose, one to apply, and one
-to check, and `first-check.ts` applies again. The first run covers every stage. `upgrade` runs
-every check of every stage again, as `init` does.
+to check, and `first-check.ts` applies again and runs every stage. `upgrade` runs every check of
+every stage again, as `init` does. A finding of the image scan is twenty lines joined into one.
 
-**Target.** `init` opens one session, applies once, and runs the commit stage alone (D-102). The
-first counts of a later stage are written by `gspot baseline` after a full run (D-132).
-`upgrade` runs only the checks the new version adds or changes.
+**Target.** `init` opens one session, applies once, installs the tools, and runs no check
+(D-165). `upgrade` moves the pin, applies, installs, and runs no check.
 
-**Files.** `lifecycle/init/command.ts`, `lifecycle/first-check.ts`, `lifecycle/upgrade/command.ts`,
-`checks/docker/trivy-image.ts`.
+**Files.** `lifecycle/init/command.ts`, `lifecycle/upgrade/command.ts`,
+`checks/docker/trivy-image.ts`. Deleted: `lifecycle/first-check.ts`.
 
 **Logic.** `openSession` returns a session that `applyAll` updates in place with the files it
-wrote. `upgrade` runs a check whose id the last record does not hold, and a check whose generated
-config file the apply of the upgrade changed. The apply report already lists those files. A finding of the image scan is one line:
-the package, the advisory id, and the fixed version.
+wrote. A finding of the image scan is one line: the package, the advisory, and the fixed version.
 
-**What goes.** The second and third `openSession` of `init`, and the second `applyAll`.
+**What goes.** The second and third `openSession` of `init`, the second `applyAll`, and every
+check run that `init` and `upgrade` start.
 
-**Tests.** A unit test counts `openSession` calls in `init`. The planted install with defaults
-holds that no push-stage check ran.
+**Tests.** A unit test counts `openSession` calls in `init`, and holds that `init` starts no check.
 
-**Done when.** `init --yes` in the planted Swift package ends in under a minute on the CI runner.
+**Done when.** `init --yes` in the planted Swift package ends when the tools are installed.
 
 ## K-125: whole files read for their first bytes
 

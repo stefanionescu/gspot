@@ -42,17 +42,17 @@ and gets findings from the hooks with a message it can act on.
 Each promise names the test that holds it. A promise with no test is a row of
 [18-gaps.md](18-gaps.md).
 
-| Promise                                        | What it means                                                                                                              | Held by                                                                   |
-| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| One command installs it                        | `gspot init --yes` gives a passing gate on the day it runs, by holding the findings that exist                             | the six planted installs, and one generated project for each generator    |
-| The first install never changes a build        | gspot edits no `tsconfig.json`, no `package.json` beyond its launcher line, and no `pyproject.toml` (D-126, D-145)         | the planted installs compare every file of the developer before and after |
-| gspot deletes only what it owns                | takeover deletes a file one tool owns, `apply` deletes a file that carries its mark, and no check writes into the tree     | the takeover cases, and the planted cases for untracked files             |
-| One file configures it                         | `gspot.toml` holds every choice, and each has a one-line command                                                           | the completion test and the settings test over the manifests              |
-| Nothing is silent                              | an ignore has a reason and prints, a skipped check prints why, a held count prints, and a check whose tool is absent fails | the failing case of every check, and the report shape test                |
-| Nothing is hidden in the ignore file of a tool | gspot hands every tool a file list, and `doctor` names a file or a kind of file no check reads                             | the coverage tests of `doctor`                                            |
-| An upgrade is a diff                           | generated configuration is tracked, and `upgrade --dry-run` lists every rule that changes, for every tool                  | the upgrade fixture                                                       |
-| The rules an agent reads match the checks      | a rule file follows the level, names no tool of another preset, and its good examples pass their linter                    | the rules lint                                                            |
-| gspot obeys its own rules                      | this repository runs gspot at the level `all` with no `[[ignore]]` entry                                                   | the gate of this repository, green on GitHub                              |
+| Promise                                        | What it means                                                                                                                           | Held by                                                                   |
+| ---------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| One command installs it                        | `gspot init --yes` detects, writes the config, and installs the tools. It runs no check, and the developer decides when to lint (D-165) | the six planted installs, and one generated project for each generator    |
+| The first install never changes a build        | gspot edits no `tsconfig.json`, no `package.json` beyond its launcher line, and no `pyproject.toml` (D-126, D-145)                      | the planted installs compare every file of the developer before and after |
+| gspot deletes only what it owns                | takeover deletes a file one tool owns, `apply` deletes a file that carries its mark, and no check writes into the tree                  | the takeover cases, and the planted cases for untracked files             |
+| One file configures it                         | `gspot.toml` holds every choice, and each has a one-line command                                                                        | the completion test and the settings test over the manifests              |
+| Nothing is silent                              | an ignore has a reason and prints, a skipped check prints why, and a check whose tool is absent fails                                   | the failing case of every check, and the report shape test                |
+| Nothing is hidden in the ignore file of a tool | gspot hands every tool a file list, and `doctor` names a file or a kind of file no check reads                                          | the coverage tests of `doctor`                                            |
+| An upgrade is a diff                           | generated configuration is tracked, and `upgrade --dry-run` lists every rule that changes, for every tool                               | the upgrade fixture                                                       |
+| The rules an agent reads match the checks      | a rule file follows the level, names no tool of another preset, and its good examples pass their linter                                 | the rules lint                                                            |
+| gspot obeys its own rules                      | this repository runs gspot at the level `all` with no `[[ignore]]` entry                                                                | the gate of this repository, green on GitHub                              |
 
 ## The developer's day
 
@@ -68,7 +68,7 @@ Each promise names the test that holds it. A promise with no test is a row of
   `gspot set limits.function_lines 80 --reason "..."`, or `gspot set tools.typos.words <word>`. Each writes
   one entry to `gspot.toml`, and each prints on every run.
 - Add a language. `gspot add python`, or `gspot doctor` to see what appeared after the install
-  and the command that adds it. The new checks run once, and what they find is held.
+  and the command that adds it. The new checks are on from the next run.
 - Wonder what a finding means. `gspot explain <check>` says what the check looks for, what goes
   wrong without it, and what to do, in plain words.
 - Upgrade. Run `gspot upgrade`. Read the plan: new rules for every tool, tool pins, and rule
@@ -77,8 +77,8 @@ Each promise names the test that holds it. A promise with no test is a row of
 ## Principles
 
 - **Everything is an error.** No warning level. Two levels decide what runs: `recommended`
-  holds what finds a defect, and `all` adds the house style. Adoption uses a baseline that
-  falls and never rises.
+  holds what finds a defect, and `all` adds the house style. An old repository adopts gspot by checking the
+  files a change touches, and gspot records no old findings.
 - **A maintained tool wins.** gspot writes original analysis only where no maintained tool
   expresses the rule, and the preset names the tools it searched.
 - **Detect, never assume.** gspot learns the repository from its tracked files and manifests.

@@ -84,15 +84,15 @@ name. One term list serves identifiers, file names, and prose.
 
 ### Slop in tests
 
-| Pattern                                           | Check                                                                                                            |
-| ------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------- |
-| A test with no assertion                          | `vitest/expect-expect`; Ruff `PT` family; SwiftLint `empty_xctest_method`                                        |
-| An assertion inside a condition                   | `vitest/no-conditional-expect`                                                                                   |
-| A focused or disabled test                        | `vitest/no-focused-tests`, `no-disabled-tests`; Ruff `PT`                                                        |
-| A test named after an edge case, a fixture folder | naming test-slop group                                                                                           |
-| A non-test file beside tests                      | `gspot/tests-directory-contents`                                                                                 |
-| A snapshot-only test suite                        | `vitest/prefer-strict-equal` and a baseline on `toMatchSnapshot` count through a `no-restricted-syntax` selector |
-| Coverage below the threshold                      | `vitest/coverage`, `pytest/coverage` at push                                                                     |
+| Pattern                                           | Check                                                                                                   |
+| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| A test with no assertion                          | `vitest/expect-expect`; Ruff `PT` family; SwiftLint `empty_xctest_method`                               |
+| An assertion inside a condition                   | `vitest/no-conditional-expect`                                                                          |
+| A focused or disabled test                        | `vitest/no-focused-tests`, `no-disabled-tests`; Ruff `PT`                                               |
+| A test named after an edge case, a fixture folder | naming test-slop group                                                                                  |
+| A non-test file beside tests                      | `gspot/tests-directory-contents`                                                                        |
+| A snapshot-only test suite                        | `vitest/prefer-strict-equal` and a count of `toMatchSnapshot` through a `no-restricted-syntax` selector |
+| Coverage below the threshold                      | `vitest/coverage`, `pytest/coverage` at push                                                            |
 
 ### Slop in dependencies and configuration
 
@@ -127,7 +127,6 @@ so every kind gets a check.
 | Documentation paths     | every path in Markdown, comments, and config lists exists                                                                                    | `docs/stale-paths`                                        | commit                                                    |
 | Documentation links     | every relative link and anchor resolves; external links resolve at manual                                                                    | `docs/links`, `docs/links-external`                       | commit, manual                                            |
 | Allowlists and ignores  | every entry matches at least one tracked file                                                                                                | `integrity/allowlists-match`                              | commit                                                    |
-| Baselines               | every baseline names a rule that exists; no count rose                                                                                       | `integrity/baselines-current`, the baseline verdict       | commit                                                    |
 | Rule files              | the installed rule files equal the assembled render                                                                                          | `integrity/generated-drift`                               | push                                                      |
 | Agent index             | the managed block in `CLAUDE.md` and `AGENTS.md` matches the installed files                                                                 | `integrity/generated-drift`                               | commit                                                    |
 | Hooks                   | the gspot line is in the hook or its task, for every hook form                                                                               | `integrity/task-policy`                                   | commit                                                    |
@@ -136,7 +135,7 @@ so every kind gets a check.
 | CSS modules             | every class defined is used and every class used is defined                                                                                  | `css/usage`                                               | push                                                      |
 | Type-check membership   | every governed file belongs to a type-check project                                                                                          | `typescript/typecheck-membership`                         | commit                                                    |
 | Coverage of the tree    | files no preset claims are listed; strict mode fails on them                                                                                 | `doctor`; `[coverage] strict`                             | push                                                      |
-| Suppression census      | the count per form never rises without a baseline update                                                                                     | `integrity/suppressions`                                  | commit                                                    |
+| Suppression census      | a suppression comment names its rule, and carries a reason where `require_reasons` is on                                                     | `integrity/suppressions`                                  | commit                                                    |
 | Install policy          | the package manager's release-age and scanner settings still hold; the installed tree equals the lockfile                                    | `dependencies/install-policy`                             | commit when a manifest or lockfile is staged; push        |
 | Shell headers           | every executable script's header still names its runtime and description                                                                     | `structure/shell-script-header`                           | commit                                                    |
 | Security allowlists     | every gitleaks baseline fingerprint, osv ignore, Semgrep rule ignore and CodeQL false positive carries a reason and names a path that exists | `secrets/gitleaks-baseline`, `integrity/allowlists-match` | commit                                                    |

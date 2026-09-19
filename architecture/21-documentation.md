@@ -53,7 +53,6 @@ The guides that exist stay and are rewritten with real output. The guides that a
 | Customize                 | How to take only some of it, turn a rule off and on, and change a limit         |
 | Profiles                  | How a team keeps one setup across many repositories                             |
 | A check of your own       | How to run my script as part of the gate                                        |
-| Baselines                 | Why old findings do not fail, and how the count falls                           |
 | Hooks and CI              | What runs on commit, on push, and in CI, and how to pass a failing hook         |
 | Uninstall                 | How to leave and get my old files back                                          |
 | Troubleshooting           | A missing tool, a slow check, a version pin that differs                        |
