@@ -1002,7 +1002,7 @@ The typescript preset writes no `extends` into a `tsconfig.json` at that level, 
 
 - exact dependency versions and the release age;
 - a README in each scope and the banned headings;
-- the shell script header and the migration header;
+- the shell script header;
 - the types folder and the folder with one file.
   The banned terms stay
   `recommended`. The sentence about subagents leaves the managed block: a repository says that in its own
