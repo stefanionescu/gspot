@@ -2,9 +2,9 @@
 
 One file for each step of the order in `architecture/13-roadmap.md`. A file holds one section
 for each row of [18-gaps.md](../18-gaps.md) that its step closes. Every section has the same seven
-headings, so a reader finds the same thing in the same place.
+labels in bold, so a reader finds the same thing in the same place.
 
-| Heading       | Holds                                                                                           |
+| Label         | Holds                                                                                           |
 | ------------- | ----------------------------------------------------------------------------------------------- |
 | What is wrong | the evidence of the row: the file, the function, and the run that showed it                     |
 | Target        | how it works afterwards, as behavior a test can hold                                            |
@@ -20,3 +20,5 @@ the commit that closes its row.
 ## The files
 
 The list grows as each file is written.
+
+- [00-delete-first.md](00-delete-first.md): the four presets, the removed commands and flags, and every key, field, and rule nothing uses.
