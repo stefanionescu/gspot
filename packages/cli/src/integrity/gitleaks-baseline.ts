@@ -26,7 +26,8 @@ export function gitleaksBaseline(input: EngineInput): Promise<Finding[]> {
         ...(explained.has(entry.Fingerprint)
             ? []
             : [finding(input, 'no-reason', `The baseline entry ${entry.Fingerprint} has no reason.`)]),
-        ...(existsSync(join(input.root, entry.File))
+        // An entry with a commit is a finding in history: the file may be gone, and the commit still holds the value.
+        ...((entry.Commit ?? '') !== '' || existsSync(join(input.root, entry.File))
             ? []
             : [
                   finding(

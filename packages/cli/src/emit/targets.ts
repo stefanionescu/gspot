@@ -77,9 +77,10 @@ function isWanted(config: ConfigurationTarget, session: Session): boolean {
     return session.scopes.some((entry) => entry.selected.some((manifest) => manifest.preset.id === wanted));
 }
 
-function isRenderedHere(config: ConfigurationTarget, selection: ScopeSelection): boolean {
-    if (config.fragment === true) return false;
-    return config.per_scope === true || selection.scope.path === '';
+// A target that is not written for each scope is written once, by the first scope that selects its preset.
+// The set of targets already seen keeps the root first, so a preset the root selects is rendered with the root settings.
+function isRenderedHere(config: ConfigurationTarget): boolean {
+    return config.fragment !== true;
 }
 
 function configurationFiles(
@@ -90,7 +91,7 @@ function configurationFiles(
     seen: Set<string>,
 ): void {
     for (const config of manifest.configs) {
-        if (!isRenderedHere(config, selection) || !isWanted(config, session)) continue;
+        if (!isRenderedHere(config) || !isWanted(config, session)) continue;
         const target = targetPath(selection.scope.path, config);
         if (seen.has(target)) continue;
         seen.add(target);

@@ -59,9 +59,9 @@ describe('init refusals', () => {
             expect(refused.stderr).toContain('--allow-dirty');
             expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
             const allowed = run(fixture.path, ['init', '--yes', '--presets', 'bash', '--allow-dirty', ...QUIET], {
-                PATH: toolsPath(['ast-grep']),
+                PATH: `${join(import.meta.dir, '../../node_modules/.bin')}:${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
             });
-            expect(allowed.code).toBe(0);
+            expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS,
     );

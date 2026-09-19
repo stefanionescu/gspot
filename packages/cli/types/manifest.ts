@@ -45,6 +45,8 @@ export type OutputFormat = {
     items?: string | undefined;
     children?: string | undefined;
     line_base?: number | undefined;
+    /** What the file group of a finding holds: a path in the repository, or a link target that need not exist. */
+    file_is?: 'path' | 'link' | undefined;
     fields?: Partial<Record<'file' | 'line' | 'column' | 'rule' | 'message', string | undefined>> | undefined;
     pattern?: string;
     file_pattern?: string;

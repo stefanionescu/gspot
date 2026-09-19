@@ -11,5 +11,21 @@
         "skipLibCheck": true,
         "resolveJsonModule": true
     },
-    "include": ["../packages/npm/gspot/gspot.js"]
+    "include": ["../**/*.js", "../**/*.mjs", "../**/*.cjs"],
+    "exclude": [
+        "../**/node_modules/**",
+        "./**",
+        "../.gspot/**",
+        "../**/eslint.config.mjs",
+        "../**/eslint.config.js",
+        "../**/eslint.config.cjs",
+        "../**/dist/**",
+        "../**/build/**",
+        "../**/coverage/**",
+        "../**/.build/**",
+        "../**/DerivedData/**",
+        "../packages/cli/grammars/swift.wasm",
+        "../schema/**",
+        "../docs/public/schema/**"
+    ]
 }

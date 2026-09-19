@@ -1,5 +1,6 @@
 // The proposed gspot.toml at init: the selection, the scopes, the carried lists, the choices.
 import { stringify } from 'smol-toml';
+import { patch } from '@decimalturn/toml-patch';
 import { SCHEMA_LINE } from '#config/markers.ts';
 import type { CarriedLists } from '#types/lifecycle.ts';
 import type { TomlTable, Proposal } from '#types/config.ts';
@@ -73,6 +74,17 @@ function mergeProfile(document: TomlTable, tables: TomlTable | undefined): void 
     }
 }
 
+// The settings of a scope are written the way gspot set writes them, as one inline table inside the scope.
+// The patcher refuses a document where one scope holds an inline tools table and another a sub-table.
+function bodyText(document: TomlTable): string {
+    const scopes = (document['scope'] as TomlTable[] | undefined) ?? [];
+    const bare = { ...document, scope: scopes.map(({ tools: _tools, ...rest }) => rest) };
+    const plain = stringify(scopes.length === 0 ? document : bare);
+    const seed = plain.endsWith('\n') ? plain : `${plain}\n`;
+    if (scopes.every((scope) => scope['tools'] === undefined)) return seed;
+    return patch(seed, document, { inlineTableStart: 2, bracketSpacing: false });
+}
+
 /**
  * The gspot.toml text for a proposal.
  * @param proposal the proposal
@@ -89,7 +101,5 @@ export function proposeText(proposal: Proposal): string {
     document['rules'] = { directory: '.gspot/rules', ...asTable(document['rules']), install: proposal.rules };
     document['inspection'] = { strict: false, ...asTable(document['inspection']) };
     document['runner'] = { ...asTable(document['runner']), surface: proposal.runner };
-    const body = stringify(document);
-    const ended = body.endsWith('\n') ? body : `${body}\n`;
-    return `${PREFACE}${ended}`;
+    return `${PREFACE}${bodyText(document)}`;
 }

@@ -33,6 +33,7 @@ const KEY_ID = ['AKIA', 'IOSFODNN7', 'EXAMPLA'].join('');
 const SETTINGS = `aws_access_key_id = "${KEY_ID}"\n`;
 const BASELINE = JSON.stringify([
     { Fingerprint: 'old.py:aws-access-token:1', File: 'old.py', RuleID: 'aws-access-token' },
+    { Fingerprint: 'abc123:gone.md:generic-api-key:4', File: 'gone.md', RuleID: 'generic-api-key', Commit: 'abc123' },
 ]);
 
 describe('the secrets preset', () => {
@@ -76,6 +77,8 @@ describe('the secrets preset', () => {
             expect(baseline.code).toBe(1);
             expect(baseline.stdout).toContain('has no reason');
             expect(baseline.stdout).toContain('names old.py, which is gone');
+            // An entry with a commit lives in history, where a deleted file still holds its value.
+            expect(baseline.stdout).not.toContain('names gone.md');
             const network = JSON.parse(
                 run(fixture.path, ['check', '--at', 'commit', '--json'], environment).stdout,
             ) as {

@@ -178,6 +178,9 @@ describe('init in a repository with an Xcode project', () => {
             const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
             expect(policy).toContain('project = "App.xcodeproj"');
             expect(policy).toContain('scheme = "App"');
+            // A later write into the same scope must still patch the file init wrote.
+            const later = run(fixture.path, ['set', '--scope', 'ios', 'tools.xcode.destination', 'platform=macOS'], {});
+            expect(later.code, later.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 3,
     );

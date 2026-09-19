@@ -2,6 +2,7 @@
 import { dirname, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { existsSync, mkdirSync } from 'node:fs';
+import { isCrash } from '#cli/run/broken-tool.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { pushBase } from '#cli/repository/staged.ts';
 import type { SpawnResult } from '#types/platform.ts';
@@ -273,7 +274,8 @@ async function runCommands(
         }
         if (result.missing)
             return { ...base, status: 'missing', note: `${tool.name} could not be started: ${result.stderr.trim()}` };
-        if (isBroken(spec, result)) {
+        const parsed = parseOutput(spec, result.stdout, result.stderr, state.root);
+        if (isBroken(spec, result) || isCrash(spec, result, parsed, [cwd, state.root])) {
             const detail = firstLine(result, `${tool.name} exited ${String(result.code)}`);
             const note = `${tool.name} broke: ${detail}`;
             return { ...base, status: 'error', duration: performance.now() - started, note, command: argv };

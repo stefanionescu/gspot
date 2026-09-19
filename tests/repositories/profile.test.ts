@@ -90,3 +90,60 @@ describe('profiles', () => {
         PLANTED_TIMEOUT_MS,
     );
 });
+
+describe('gspot set on a loosening list', () => {
+    test(
+        'an item that carries its own reason needs no flag, and --reason fills an item that has none',
+        async () => {
+            await using fixture = await createFixture({ 'scripts/a.sh': script });
+            commitAll(fixture.path);
+            run(
+                fixture.path,
+                [
+                    'init',
+                    '--yes',
+                    '--presets',
+                    'bash',
+                    '--without',
+                    'naming',
+                    '--runner',
+                    'none',
+                    '--ci',
+                    'none',
+                    '--hooks',
+                    'none',
+                    '--no-install',
+                ],
+                TOOLS,
+            );
+            const own = run(
+                fixture.path,
+                ['set', 'tools.typos.exclude', '{"paths":["a/**"],"reason":"Text in another language lives here."}'],
+                TOOLS,
+            );
+            expect(own.code, own.stderr).toBe(0);
+            const filled = run(
+                fixture.path,
+                [
+                    'set',
+                    'tools.typos.exclude',
+                    '{"paths":["b/**"]}',
+                    '--reason',
+                    'Fixtures that hold typos on purpose.',
+                ],
+                TOOLS,
+            );
+            expect(filled.code, filled.stderr).toBe(0);
+            const policy = await tables(fixture.path);
+            const written = policy['tools'] as {
+                typos: { exclude: { paths: string[]; reason: string }[] };
+            };
+            expect(written.typos.exclude.map((entry) => entry.reason)).toEqual([
+                'Text in another language lives here.',
+                'Fixtures that hold typos on purpose.',
+            ]);
+            expect(run(fixture.path, ['set', 'tools.typos.exclude', '{"paths":["c/**"]}'], TOOLS).code).not.toBe(0);
+        },
+        PLANTED_TIMEOUT_MS,
+    );
+});

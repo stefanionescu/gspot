@@ -52,7 +52,7 @@ exclude = [{paths = ["prose/styles/gspot/us-english.yml"], reason = "A list of B
 
 [[naming.rules]]
 paths = ["packages/cli/types/integrity.ts"]
-names = ["Fingerprint", "File", "RuleID"]
+names = ["Fingerprint", "File", "RuleID", "Commit"]
 exclude = true
 reason = "gitleaks writes these keys in its report and its baseline, and the type names them as they are."
 

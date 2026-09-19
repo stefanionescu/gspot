@@ -59,7 +59,22 @@ function shaped(parsed: unknown[], isList: boolean): unknown {
     return Array.isArray(only) ? (only as unknown[]) : parsed;
 }
 
+// A list item that is a table carries its own reason; one sentence there is what a loosening list asks for.
+function hasOwnReasons(value: unknown): boolean {
+    const items = Array.isArray(value) ? (value as unknown[]) : [];
+    return items.length > 0 && items.every((item) => typeof (item as { reason?: unknown } | null)?.reason === 'string');
+}
+
+// The reason given on the command line goes into every table item that has none.
+function reasonsFilled(value: unknown, reason: string | undefined): unknown {
+    if (reason === undefined || !Array.isArray(value)) return value;
+    return (value as unknown[]).map((item) =>
+        item !== null && typeof item === 'object' && !('reason' in item) ? { ...item, reason } : item,
+    );
+}
+
 function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped: unknown): boolean {
+    if (spec.kind === 'list' && !o.remove && hasOwnReasons(value)) return false;
     const isListEdit = spec.kind === 'list' && (o.remove || o.replace);
     if (isListEdit) return spec.direction !== 'neutral';
     return isLoosening(spec, value, shipped);
@@ -111,9 +126,12 @@ function writeValue(
     if (o.items.length === 0)
         throw new PolicyError([`gspot set ${o.key} needs a value, or --default to remove yours.`]);
     const isList = spec.kind === 'list';
-    const value = shaped(
-        o.items.map((text) => parseValue(text)),
-        isList,
+    const value = reasonsFilled(
+        shaped(
+            o.items.map((text) => parseValue(text)),
+            isList,
+        ),
+        isList ? o.reason : undefined,
     );
     const shipped = selection.surface.defaults.get(spec.name)?.value;
     const where = `gspot set ${o.key}`;
