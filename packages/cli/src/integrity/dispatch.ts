@@ -8,6 +8,7 @@ import { routesTested } from '#cli/express/routes.ts';
 import { envFiles } from '#cli/integrity/env/files.ts';
 import { licensesNpm } from '#cli/integrity/licenses.ts';
 import type { IntegrityCheck } from '#types/integrity.ts';
+import { cssModuleUsage } from '#cli/web/module-usage.ts';
 import { typesFresh } from '#cli/supabase/types-fresh.ts';
 import { envExample } from '#cli/integrity/env/example.ts';
 import { largeFiles } from '#cli/integrity/large-files.ts';
@@ -20,6 +21,7 @@ import { testCoverage } from '#cli/apple/xctest/coverage.ts';
 import { suppressions } from '#cli/integrity/suppressions.ts';
 import { copiedBlocks } from '#cli/integrity/copied-blocks.ts';
 import { docsHeadings } from '#cli/integrity/docs-headings.ts';
+import { htmlCopy, htmlScripts } from '#cli/web/html-checks.ts';
 import { migrationDocs } from '#cli/postgres/migration-docs.ts';
 import { nginxTest } from '#cli/integrity/nginx/config-test.ts';
 import { installPolicy } from '#cli/integrity/install-policy.ts';
@@ -71,6 +73,9 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'html-scripts': htmlScripts,
+    'html-copy': htmlCopy,
+    'css-module-usage': cssModuleUsage,
     ...PYTHON_STRUCTURE,
     'python-import-linter': importLinter,
     'python-blocking-calls': pythonBlockingCalls,

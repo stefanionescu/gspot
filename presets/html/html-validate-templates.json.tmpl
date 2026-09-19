@@ -1,0 +1,12 @@
+{
+    "extends": ["html-validate:recommended"],
+    "rules": <%= json(Object.assign({
+        "doctype-style": ["error", { "style": "lowercase" }],
+        "element-required-attributes": "error",
+        "no-inline-style": "error",
+        "no-raw-characters": "error",
+        "void-style": ["error", { "style": "selfclosing" }],
+        "wcag/h37": "error",
+        "no-autoplay": "off"
+    }, Object.fromEntries(rulesOff('html/html-validate').map((rule) => [rule, "off"])))) %>
+}

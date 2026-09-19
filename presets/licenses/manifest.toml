@@ -33,7 +33,7 @@ fix = "Replace the package, or record it with gspot allow licenses <name@version
 name = "tools.licenses.allow"
 kind = "list"
 direction = "neutral"
-default = ["MIT", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
+default = ["MIT", "MIT-0", "ISC", "BSD-2-Clause", "BSD-3-Clause", "Apache-2.0", "0BSD", "CC0-1.0", "CC-BY-3.0", "CC-BY-4.0", "Unlicense", "BlueOak-1.0.0", "Python-2.0"]
 summary = "The SPDX license ids a dependency may report."
 
 [[settings]]

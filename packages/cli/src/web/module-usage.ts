@@ -1,0 +1,100 @@
+// CSS modules against the code that imports them: every class defined is read, and every class read is defined.
+import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import type { EngineInput } from '#types/run.ts';
+import type { Finding } from '#types/finding.ts';
+import { parserFor } from '#cli/naming/parsers.ts';
+
+const MODULE_SUFFIX = /\.module\.(?:css|scss|pcss)$/u;
+const CODE_SUFFIX = /\.(?:tsx?|jsx?|mjs)$/u;
+
+function moduleImport(name: string): RegExp {
+    const escaped = name.replaceAll('.', String.raw`\.`);
+    return new RegExp(String.raw`import\s+(?<binding>\w+)\s+from\s+['"][^'"]*${escaped}['"]`, 'u');
+}
+
+function camel(name: string): string {
+    return name.replaceAll(/-(?<letter>[a-z\d])/gu, (_match, letter: string) => letter.toUpperCase());
+}
+
+function sheetFindings(
+    input: EngineInput,
+    sheet: string,
+    defined: string[],
+    code: { path: string; text: string }[],
+): Finding[] {
+    const name = sheet.slice(sheet.lastIndexOf('/') + 1);
+    const importers = code.flatMap((file) => {
+        const binding = moduleImport(name).exec(file.text)?.groups?.['binding'];
+        return binding === undefined ? [] : [{ ...file, read: readClasses(file.text, binding) }];
+    });
+    if (importers.length === 0) return [];
+    const known = new Set(defined.flatMap((entry) => [entry, camel(entry)]));
+    const read = new Set(importers.flatMap((file) => file.read));
+    const base = { check: input.spec.id, line: 1, fixable: false };
+    const unused = defined
+        .filter((entry) => !read.has(entry) && !read.has(camel(entry)))
+        .map((entry) => ({
+            ...base,
+            file: sheet,
+            rule: 'unused-class',
+            message: `No importer reads the class ${entry}.`,
+        }));
+    const missing = importers.flatMap((file) =>
+        file.read
+            .filter((entry) => !known.has(entry))
+            .map((entry) => ({
+                ...base,
+                file: file.path,
+                rule: 'undefined-class',
+                message: `${name} defines no class ${entry}.`,
+            })),
+    );
+    return [...unused, ...missing];
+}
+
+/**
+ * The classes a stylesheet defines, read through the embedded grammar so a comment or a value never counts.
+ * @param text the stylesheet
+ * @returns the class names, once each
+ */
+export async function definedClasses(text: string): Promise<string[]> {
+    const parser = await parserFor('css');
+    const tree = parser.parse(text);
+    if (tree === null) return [];
+    const found = tree.rootNode.descendantsOfType('class_name').map((node) => node.text);
+    tree.delete();
+    return [...new Set(found)];
+}
+
+/**
+ * The classes code reads from a module it binds to a name: binding.name and binding['name'].
+ * @param text the code
+ * @param binding the name the module is imported under
+ * @returns the class names, once each
+ */
+export function readClasses(text: string, binding: string): string[] {
+    const dotted = new RegExp(String.raw`\b${binding}\.(?<name>[A-Za-z_]\w*)`, 'gu');
+    const indexed = new RegExp(String.raw`\b${binding}\[['"](?<name>[^'"]+)['"]\]`, 'gu');
+    const found = [...text.matchAll(dotted), ...text.matchAll(indexed)].map((match) => match.groups?.['name'] ?? '');
+    return [...new Set(found)];
+}
+
+/**
+ * The findings of every CSS module of the scope.
+ * @param input the engine input
+ * @returns the findings
+ */
+export async function cssModuleUsage(input: EngineInput): Promise<Finding[]> {
+    const paths = input.files.filter((file) => file.nature === 'source').map((file) => file.path);
+    const code = paths
+        .filter((path) => CODE_SUFFIX.test(path))
+        .map((path) => ({ path, text: readFileSync(join(input.root, path), 'utf8') }));
+    const findings: Finding[] = [];
+    const sheets = paths.filter((path) => MODULE_SUFFIX.test(path));
+    for (const sheet of sheets) {
+        const defined = await definedClasses(readFileSync(join(input.root, sheet), 'utf8'));
+        findings.push(...sheetFindings(input, sheet, defined, code));
+    }
+    return findings;
+}

@@ -1,0 +1,64 @@
+[preset]
+id = "css"
+kind = "language"
+title = "CSS"
+requires = ["formatting"]
+recommends = ["spelling"]
+description = "Stylesheets: stylelint with the standard rules, Prettier for layout, and CSS module classes that are both defined and used."
+
+[detect]
+extensions = [".css", ".scss", ".pcss"]
+
+[claims]
+extensions = [".css", ".scss", ".pcss"]
+natures = ["source"]
+
+[[tools]]
+name = "stylelint"
+version = "16.23.1"
+floor = "16.0.0"
+npm = "stylelint"
+
+[[tools]]
+name = "stylelint-config-standard"
+kind = "library"
+version = "39.0.0"
+npm = "stylelint-config-standard"
+
+[[configs]]
+template = "stylelint.json.tmpl"
+target = ".gspot/stylelint.json"
+header = false
+stub = {path = ".stylelintrc.json", body = "{\n    \"extends\": \"./.gspot/stylelint.json\"\n}\n"}
+
+[[checks]]
+id = "css/stylelint"
+stage = "commit"
+command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}", "--formatter", "unix", "--allow-empty-input", "{files}"]
+fix_command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}", "--fix", "--allow-empty-input", "{files}"]
+fix_order = "codemod"
+inspection = ["style", "syntax"]
+output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$"}
+summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
+why = "A browser skips a declaration it cannot read without a word, so a typo in a property ships as a missing style."
+fix = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule <name> --reason."
+
+[[checks]]
+id = "integrity/css-usage"
+stage = "push"
+runs = "per-scope"
+engine = "integrity"
+analysis = "css-module-usage"
+claims = {extensions = [".css", ".scss", ".pcss", ".ts", ".tsx", ".js", ".jsx"]}
+inspection = ["consistency"]
+summary = "For every CSS module, checks that the code uses each class it defines, and that each class the code reads is defined."
+why = "A class the code reads and the stylesheet lacks is undefined at run time, and the element silently loses its style."
+fix = "Delete the class nobody reads, or define the class the code reads."
+
+[inspections]
+".css" = ["format", "syntax", "style", "spelling"]
+".scss" = ["format", "syntax", "style", "spelling"]
+".pcss" = ["format", "syntax", "style", "spelling"]
+
+[rule_files]
+language = ["language/CSS.md", "language/naming/CSS.md"]

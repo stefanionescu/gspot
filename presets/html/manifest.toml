@@ -1,0 +1,82 @@
+[preset]
+id = "html"
+kind = "language"
+title = "HTML"
+requires = ["formatting"]
+recommends = ["spelling"]
+description = "HTML files: html-validate for structure and accessibility, no inline script or handler, and templates that hold placeholders in place of copy."
+
+[detect]
+extensions = [".html", ".htm"]
+
+[claims]
+extensions = [".html", ".htm"]
+natures = ["source"]
+
+[[tools]]
+name = "html-validate"
+version = "10.0.0"
+floor = "9.0.0"
+npm = "html-validate"
+
+[[configs]]
+template = "html-validate-templates.json.tmpl"
+target = ".gspot/html-validate-templates.json"
+header = false
+stub = {path = ".htmlvalidate.json", body = "{\n    \"extends\": [\"./.gspot/html-validate-templates.json\"]\n}\n"}
+
+[[configs]]
+template = "html-validate-built.json.tmpl"
+target = ".gspot/html-validate-built.json"
+header = false
+
+[[checks]]
+id = "html/html-validate"
+stage = "commit"
+command = ["html-validate", "--config", "{config:html-validate-templates}", "--formatter", "json", "{files}"]
+inspection = ["syntax", "style", "accessibility"]
+output = {format = "json", children = "messages", fields = {file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message"}}
+summary = "Validates every HTML file: elements where they may sit, required attributes, text alternatives, and one style for void elements."
+why = "A browser repairs broken markup in its own way, and a screen reader reads what the repair left."
+fix = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/html-validate --rule <name> --reason."
+
+[[checks]]
+id = "html/scripts"
+stage = "commit"
+engine = "integrity"
+analysis = "html-scripts"
+inspection = ["security"]
+summary = "Refuses executable inline script, event handler attributes, javascript: links, and document.write in HTML files."
+why = "A content security policy that allows inline script allows an injected one too, so the policy only holds when the pages hold none."
+fix = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
+
+[[checks]]
+id = "html/copy"
+stage = "commit"
+engine = "integrity"
+analysis = "html-copy"
+inspection = ["structure"]
+summary = "In the template files named by tools.html.template_files, checks that text a person reads is a placeholder and never a literal."
+why = "Copy written into a template is copy no translator and no content file ever sees."
+fix = "Replace the text with a placeholder and put the words in the content file. Exclude a path under tools.html.copy_excluded with a reason."
+
+[[settings]]
+name = "tools.html.template_files"
+kind = "list"
+direction = "tightening"
+default = []
+summary = "The HTML files that are templates filled from content; empty turns the copy check off."
+
+[[settings]]
+name = "tools.html.copy_excluded"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Template paths that may hold literal text, each with a reason."
+
+[inspections]
+".html" = ["format", "syntax", "style", "spelling"]
+".htm" = ["format", "syntax", "style", "spelling"]
+
+[rule_files]
+language = ["language/HTML.md", "language/naming/HTML.md"]

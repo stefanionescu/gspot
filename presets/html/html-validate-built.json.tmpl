@@ -1,0 +1,12 @@
+{
+    "extends": ["html-validate:recommended"],
+    "rules": <%= json(Object.assign({
+        "wcag/h37": "error",
+        "no-autoplay": "off",
+        "no-inline-style": "off",
+        "no-raw-characters": "off",
+        "void-style": "off",
+        "doctype-style": "off",
+        "no-trailing-whitespace": "off"
+    }, Object.fromEntries(rulesOff('static-site/html-validate-built').map((rule) => [rule, "off"])))) %>
+}
