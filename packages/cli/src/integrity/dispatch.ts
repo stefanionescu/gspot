@@ -38,6 +38,7 @@ import { allowlistsMatch } from '#cli/integrity/allowlists-match.ts';
 import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
 import { configurationPurity } from '#cli/integrity/config-purity.ts';
 import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
+import { buildReproducible, siteBuilds } from '#cli/web/site/build.ts';
 import { gitleaksBaseline } from '#cli/integrity/gitleaks-baseline.ts';
 import { pythonBlockingCalls } from '#cli/pyproject/blocking-calls.ts';
 import { PYTHON_STRUCTURE } from '#cli/pyproject/structure/analyses.ts';
@@ -50,8 +51,18 @@ import { orphanSources, projectSymlinks, testPlans } from '#cli/apple/xcode/proj
 import { disabledTests, noSleep, recordingMode } from '#cli/apple/xctest/line-checks.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/supabase/config-checks.ts';
 import { dependencyOwnership, importLinter, typecheckMembership } from '#cli/pyproject/project.ts';
+import { deadAssets, securityHeaders, svgCompressed, webManifest } from '#cli/web/site/source-checks.ts';
 import { entitlementsPolicy, transportSecurity, xcconfigLines } from '#cli/apple/xcode/settings-files.ts';
 import { definerSearchPath, explicitGrants, foreignKeyIndexes, rlsPresent } from '#cli/postgres/schema/checks.ts';
+
+import {
+    builtMarkup,
+    deadSelectors,
+    externalLinks,
+    internalLinks,
+    sitemapMatches,
+    sizeLimits,
+} from '#cli/web/site/output-checks.ts';
 
 const checks: Record<string, IntegrityCheck> = {
     'generated-drift': generatedDrift,
@@ -73,6 +84,18 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'site-build': siteBuilds,
+    'site-build-reproducible': buildReproducible,
+    'site-built-markup': builtMarkup,
+    'site-dead-selectors': deadSelectors,
+    'site-links-internal': internalLinks,
+    'site-links-external': externalLinks,
+    'site-size': sizeLimits,
+    'site-sitemap': sitemapMatches,
+    'site-dead-assets': deadAssets,
+    'site-svg': svgCompressed,
+    'site-webmanifest': webManifest,
+    'site-security-headers': securityHeaders,
     'html-scripts': htmlScripts,
     'html-copy': htmlCopy,
     'css-module-usage': cssModuleUsage,

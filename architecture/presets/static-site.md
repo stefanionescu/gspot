@@ -12,7 +12,7 @@ as files: the checks that only make sense over built output.
 
 ## Tools
 
-html-validate, purgecss, linkinator, svgo, size-limit; bun or node to serve the output. Cycle
+html-validate, purgecss, linkinator, svgo. linkinator serves the output folder itself. Cycle
 and complexity checks come from the javascript preset (import-x, sonarjs); madge and Lizard are
 not used.
 
@@ -27,8 +27,8 @@ not used.
 | `static-site/links-internal`      | push, build     | serve the output, `linkinator --recurse --check-css --check-fragments` over the seed routes; mailto, tel, and sms skipped                                                                                                                                                             |
 | `static-site/links-external`      | manual, network | the same with external links, `[tools.linkinator] status_overrides` and `skip`                                                                                                                                                                                                        |
 | `static-site/dead-assets`         | push            | every file under `assets/**` is referenced from a template, a stylesheet, or a script                                                                                                                                                                                                 |
-| `static-site/svg`                 | commit          | `svgo --check`                                                                                                                                                                                                                                                                        |
-| `static-site/size`                | push, build     | `size-limit` against `[tools.site] size_limits`                                                                                                                                                                                                                                       |
+| `static-site/svg`                 | commit          | svgo over each file to standard output; a smaller result is a finding, because svgo has no check mode                                                                                                                                                                                 |
+| `static-site/size`                | push, build     | the compressed weight of the output paths each entry of `[tools.site] size_limits` names; built in, so no size-limit package and no second configuration                                                                                                                              |
 | `static-site/sitemap`             | push, build     | every route in the sitemap is in the output; every HTML page is in the sitemap unless excluded                                                                                                                                                                                        |
 | `static-site/webmanifest`         | commit          | validates against the schema                                                                                                                                                                                                                                                          |
 | `integrity/security-headers`      | commit          | `_headers` sets `X-Frame-Options`, `X-Content-Type-Options: nosniff`, `Referrer-Policy`; HTML paths carry a revalidating `Cache-Control`; hashed assets are immutable. Here because a site of files has no other place to set headers; a framework app sets them in its configuration |
