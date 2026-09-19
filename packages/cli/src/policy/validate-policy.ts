@@ -15,10 +15,16 @@ export function assertPolicyComplete(policy: Policy): void {
     const manifests = presetManifests();
     const problems: string[] = [];
     const rootSelected = selectForScope(policy.presets, [], manifests);
+    // A scope table is read against the settings of the presets that scope selects, the root presets included.
+    const scopeSurfaces = new Map(
+        policy.scopes.map((scope) => [
+            scope.path,
+            exposedSettings(selectForScope(policy.presets, scope.presets, manifests)),
+        ]),
+    );
     problems.push(
         ...excludeProblems(policy.rules.exclude),
-        ...validateAgainstSurface(exposedSettings(rootSelected), policy),
+        ...validateAgainstSurface(exposedSettings(rootSelected), policy, scopeSurfaces),
     );
-    for (const scope of policy.scopes) selectForScope(policy.presets, scope.presets, manifests);
     if (problems.length > 0) throw new PolicyError([...new Set(problems)]);
 }

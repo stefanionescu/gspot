@@ -1,9 +1,10 @@
-// The install step of init and upgrade: the package.json pins, then the tool install through the runner surface.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { detectPackageManager } from 'nypm';
 import { run } from '#cli/platform/spawn.ts';
 import type { Manifest } from '#types/manifest.ts';
+// The install step of init and upgrade: the package.json pins, then the tool install through the runner surface.
+import { mergedPins } from '#cli/emit/kept-pins.ts';
 import type { InitAnswers } from '#types/lifecycle.ts';
 import type { ApplyReport, PackageContent } from '#types/emit.ts';
 import { npmPins, npmScripts } from '#cli/emit/runner-surface.ts';
@@ -48,7 +49,7 @@ export async function updatePackageJson(
         : await manifestEditor.create(root);
     const current = manifest.content as PackageContent;
     manifest.update({
-        devDependencies: { ...current.devDependencies, ...npmPins(everySelected, runner) },
+        devDependencies: mergedPins(current.devDependencies, npmPins(everySelected, runner)),
         scripts: { ...current.scripts, ...npmScripts() },
     });
     await manifest.save();

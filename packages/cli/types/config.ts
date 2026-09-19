@@ -180,6 +180,8 @@ export type Proposal = {
     runner: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none';
     format?: Partial<FormatSettings>;
     typesDirectory?: string;
+    /** The Xcode project and scheme init found, for the tools.xcode table. */
+    xcode?: { scope: string; project: string; scheme?: string };
     commitScopes?: string[];
 };
 

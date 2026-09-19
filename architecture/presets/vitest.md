@@ -13,6 +13,12 @@ Kind: tool. Requires: typescript or javascript.
 
 @vitest/eslint-plugin, @vitest/coverage-istanbul or v8.
 
+## Versions
+
+The repository owns the version of its test framework. The preset pins neither `vitest` nor
+`@vitest/coverage-v8`, and its floor is Vitest 2. The same holds for the Supabase CLI
+in the supabase preset. A pin never lowers an exact version a `package.json` already holds.
+
 ## Generated configuration
 
 The ESLint config gains, over test files: `vitest/no-focused-tests` (not fixable),

@@ -18,13 +18,19 @@ function nonEmpty(table: Record<string, unknown[]>): TomlTable | undefined {
     return kept.length === 0 ? undefined : Object.fromEntries(kept);
 }
 
-function toolTables(carried: CarriedLists, commitScopes: string[] | undefined): TomlTable {
+function xcodeTable(xcode: Proposal['xcode']): TomlTable | undefined {
+    if (xcode === undefined) return undefined;
+    return xcode.scheme === undefined ? { project: xcode.project } : { project: xcode.project, scheme: xcode.scheme };
+}
+
+function toolTables(carried: CarriedLists, commitScopes: string[] | undefined, xcode?: Proposal['xcode']): TomlTable {
     const tables: Record<string, TomlTable | undefined> = {
         typos: nonEmpty({ words: carried.typosWords, exclude: carried.typosExcludes }),
         gitleaks: nonEmpty({ allow: carried.gitleaksAllow }),
         osv: nonEmpty({ ignore: carried.osvIgnores }),
         licenses: nonEmpty({ allow: carried.licenseAllow, exceptions: carried.licenseExceptions }),
         commitlint: nonEmpty({ scopes: commitScopes ?? [] }),
+        xcode: xcode?.scope === '' ? xcodeTable(xcode) : undefined,
     };
     return Object.fromEntries(Object.entries(tables).filter(([, table]) => table !== undefined));
 }
@@ -32,7 +38,11 @@ function toolTables(carried: CarriedLists, commitScopes: string[] | undefined): 
 function headTables(proposal: Proposal): TomlTable {
     const document: TomlTable = { version: 1, presets: proposal.presets };
     if (proposal.scopes.length > 0)
-        document['scope'] = proposal.scopes.map((scope) => ({ path: scope.path, presets: scope.presets }));
+        document['scope'] = proposal.scopes.map((scope) => ({
+            path: scope.path,
+            presets: scope.presets,
+            ...(proposal.xcode?.scope === scope.path ? { tools: { xcode: xcodeTable(proposal.xcode) } } : {}),
+        }));
     if (proposal.format !== undefined && Object.keys(proposal.format).length > 0) document['format'] = proposal.format;
     if (proposal.typesDirectory !== undefined) document['architecture'] = { types_directory: proposal.typesDirectory };
     return document;
@@ -70,7 +80,7 @@ function mergeProfile(document: TomlTable, tables: TomlTable | undefined): void 
  */
 export function proposeText(proposal: Proposal): string {
     const document = headTables(proposal);
-    const tools = toolTables(proposal.carried, proposal.commitScopes);
+    const tools = toolTables(proposal.carried, proposal.commitScopes, proposal.xcode);
     if (Object.keys(tools).length > 0) document['tools'] = tools;
     if (proposal.carried.ignores.length > 0) document['ignore'] = ignoreTables(proposal.carried);
     mergeProfile(document, proposal.profileTables);

@@ -72,6 +72,7 @@ function scopeSelection(
         detectPresets(context.files, context.manifests, context.facts, scope.path)
             .filter((proposal) => isScopeCandidate(context, proposal.preset, without))
             .map((proposal) => proposal.preset);
+    // A language stays out of a scope only while the root really keeps it: some source of it lies outside every scope.
     const atRoot = new Set(rootIds);
     return ids.filter((id) => !atRoot.has(id) || context.manifests.get(id)?.preset.kind !== 'language');
 }
@@ -175,9 +176,13 @@ export function selectForInit(inputs: InitInputs): InitSelection {
     const rootProposals = detectPresets(repo.files, manifests, facts);
     const proposedRoot = rootSelection(context, rootProposals, hasScopes);
     const scopeProposals = new Map<string, string[]>();
+    const heldAtRoot = proposedRoot.filter((id) => {
+        const manifest = manifests.get(id);
+        return manifest?.preset.kind !== 'language' || !hasScopes || hasSourceOutsideScopes(context, manifest, scopes);
+    });
     for (const scope of scopes)
         if (scope.path !== '')
-            scopeProposals.set(scope.path, scopeSelection(context, scope, scopeFlags.get(scope.path), proposedRoot));
+            scopeProposals.set(scope.path, scopeSelection(context, scope, scopeFlags.get(scope.path), heldAtRoot));
     const inScopes = new Set(scopeProposals.values().toArray().flat());
     const keptRoot = hasScopes ? rootLanguagesKept(context, proposedRoot, scopes, inScopes) : proposedRoot;
     const rootIds = listedPresets(options, [...keptRoot, ...inScopes], manifests).filter((id) => !inScopes.has(id));

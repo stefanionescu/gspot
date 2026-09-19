@@ -82,22 +82,30 @@ function extraProblems(surface: ExposedSettings, table: Partial<Policy>): string
     return problems;
 }
 
+function tableProblems(surface: ExposedSettings, table: Partial<Policy>, scope: string | undefined): string[] {
+    const keys = writtenKeys(table).flatMap((key) => keyProblems(surface, table, scope, key));
+    return [...keys, ...extraProblems(surface, table)];
+}
+
 /**
  * Validates every written key against the surface and the loosening rule.
  * @param surface the surface of the selection
  * @param policy the loaded policy
+ * @param scopeSurfaces the surface of each scope by its path; a scope table is read against its own
  * @returns the problems in plain English, empty when the policy is sound
  */
-export function validateAgainstSurface(surface: ExposedSettings, policy: Policy): string[] {
+export function validateAgainstSurface(
+    surface: ExposedSettings,
+    policy: Policy,
+    scopeSurfaces = new Map<string, ExposedSettings>(),
+): string[] {
     const problems = [...surface.problems];
     const tables: { table: Partial<Policy>; scope?: string }[] = [
         { table: policy },
         ...Object.entries(policy.scopeTables).map(([scope, table]) => ({ table, scope })),
     ];
-    for (const { table, scope } of tables) {
-        for (const key of writtenKeys(table)) problems.push(...keyProblems(surface, table, scope, key));
-        problems.push(...extraProblems(surface, table));
-    }
+    for (const { table, scope } of tables)
+        problems.push(...tableProblems(scopeSurfaces.get(scope ?? '') ?? surface, table, scope));
     for (const { group } of policy.naming.remove_groups)
         if (shippedPolicy().groups[group]?.removable === false) problems.push(messages.groupNotRemovable(group));
     return problems;

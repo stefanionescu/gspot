@@ -125,6 +125,27 @@ why = "With arbitrary loads the app speaks plain HTTP to anyone, and one forgott
 fix = "Remove the key, and add an exception for the one host that needs it."
 
 [[settings]]
+name = "tools.xcode.project"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The Xcode project or workspace, relative to the scope; empty builds the Swift package."
+
+[[settings]]
+name = "tools.xcode.scheme"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The shared scheme the build, the analyzer, and Periphery use."
+
+[[settings]]
+name = "tools.xcode.destination"
+kind = "string"
+direction = "neutral"
+default = "generic/platform=iOS Simulator"
+summary = "The xcodebuild destination."
+
+[[settings]]
 name = "tools.xcode.allowed_entitlements"
 kind = "list"
 direction = "tightening"

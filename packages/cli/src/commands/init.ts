@@ -56,7 +56,7 @@ export function registerInit(program: Command): void {
         .option(
             '--scope <path=ids>',
             'A scope and its presets; repeat for each scope',
-            (value: string, previous: string[]) => [...previous, value],
+            (value: string, previous: string[] | undefined) => [...(previous ?? []), value],
         )
         .option(
             '--own <tools>',

@@ -35,7 +35,10 @@ function parseValue(text: string): unknown {
     return isStructured ? parseStructured(text) : text;
 }
 
-function unknownSetting(selection: ScopeSelection, key: string): PolicyError {
+function unknownSetting(session: Session, selection: ScopeSelection, key: string): PolicyError {
+    // A setting of a preset that lives in a scope is set in that scope; say which one.
+    const holder = session.scopes.find((entry) => specFor(entry.surface, key) !== undefined);
+    if (holder !== undefined) return new PolicyError([messages.settingInScope(key, holder.scope.path)]);
     const depth = key.startsWith('tools.') ? 2 : 1;
     const prefix = key.split('.').slice(0, depth).join('.');
     const all = selection.surface.specs.keys().toArray();
@@ -137,7 +140,7 @@ export async function setCommand(o: SetOptions): Promise<CommandResult> {
     const session = await openSession(root);
     const selection = selectionFor(session, o.scope);
     const match = specFor(selection.surface, o.key);
-    if (!match) throw unknownSetting(selection, o.key);
+    if (!match) throw unknownSetting(session, selection, o.key);
     refuseRuleOff(match.spec, o);
     if (!o.toDefault) return writeValue(root, session, selection, o, match.spec);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;

@@ -99,4 +99,29 @@ describe('init refusals', () => {
         },
         PLANTED_TIMEOUT_MS,
     );
+
+    test(
+        'a --scope flag given twice writes both scopes with their presets',
+        async () => {
+            await using fixture = await createFixture({ 'tools/a.sh': script, 'jobs/b.sh': script });
+            commitAll(fixture.path);
+            const argv = [
+                'init',
+                '--yes',
+                '--hooks',
+                'none',
+                '--scope',
+                'tools=bash',
+                '--scope',
+                'jobs=bash',
+                ...QUIET,
+            ];
+            const init = run(fixture.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
+            expect(init.stderr).not.toContain('did not run');
+            const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
+            expect(policy).toContain('path = "tools"');
+            expect(policy).toContain('path = "jobs"');
+        },
+        PLANTED_TIMEOUT_MS,
+    );
 });

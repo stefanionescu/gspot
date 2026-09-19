@@ -5,6 +5,7 @@ import type { Proposal } from '#types/config.ts';
 import type { Manifest } from '#types/manifest.ts';
 import type { ScopeEntry } from '#types/repository.ts';
 import { noLongerRuns } from '#cli/lifecycle/takeover.ts';
+import { xcodeProposal } from '#cli/lifecycle/xcode-proposal.ts';
 import { pinnedTwice, collectPins, npmPins } from '#cli/emit/runner-surface.ts';
 import type { CarriedLists, InitAnswers, InitPlanInputs, InitSelection, TakeoverPlan } from '#types/lifecycle.ts';
 
@@ -48,6 +49,14 @@ function runnerRows(answers: InitAnswers, everySelected: Manifest[]): TakeoverPl
     ];
 }
 
+function xcodeFor(root: string, selection: InitSelection): Proposal['xcode'] {
+    if (!selection.selectedIds.has('xcode')) return undefined;
+    return xcodeProposal(
+        root,
+        selection.scopes.map((scope) => scope.path),
+    );
+}
+
 /**
  * Builds the proposal gspot.toml is rendered from.
  * @param root the repository root
@@ -67,6 +76,7 @@ export function buildProposal(
     const commitScopes = hasCommitScopes ? [...scopes.map((scope) => scope.name), 'root', 'hooks', 'deps'] : undefined;
     const typesDirectory = TYPES_DIRECTORIES.find((dir) => existsSync(join(root, dir)));
     const hasTypes = typesDirectory !== undefined && selection.selectedIds.has('typescript');
+    const xcode = xcodeFor(root, selection);
     return {
         presets: selection.rootIds,
         scopes: scopes.map((scope) => ({ path: scope.path, presets: selection.scopeProposals.get(scope.path) ?? [] })),
@@ -78,6 +88,7 @@ export function buildProposal(
         ...(answers.format ? { format: answers.format } : {}),
         ...(commitScopes ? { commitScopes } : {}),
         ...(hasTypes ? { typesDirectory } : {}),
+        ...(xcode ? { xcode } : {}),
     };
 }
 

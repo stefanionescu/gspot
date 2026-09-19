@@ -9,9 +9,9 @@ Kind: tool. Requires: `javascript`.
 
 ## Tools
 
-- vitest 4.1.11
+- vitest
 - @vitest/eslint-plugin 1.3.4
-- @vitest/coverage-v8 4.1.11
+- @vitest/coverage-v8
 
 ## Checks
 

@@ -90,7 +90,7 @@ const CASES: PlantedCase[] = [
     {
         id: 'xcode/entitlements-policy',
         files: { 'App/App.entitlements': ENTITLED },
-        policy: '[tools.xcode]\nallowed_entitlements = ["aps-environment"]\n',
+        policyEdit: ['[tools.xcode]\n', '[tools.xcode]\nallowed_entitlements = ["aps-environment"]\n'],
         expected: 'com.apple.developer.healthkit is not an allowed entitlement',
     },
     {
@@ -143,5 +143,42 @@ describe('the xcode preset', () => {
             expect(linked.stdout).toContain('A symlink to Home.swift');
         },
         PLANTED_TIMEOUT_MS * 5,
+    );
+});
+
+describe('init in a repository with an Xcode project', () => {
+    test(
+        'writes the project and the first shared scheme into the scope that holds them',
+        async () => {
+            await using fixture = await createFixture({
+                'ios/App.xcodeproj/project.pbxproj': PROJECT,
+                'ios/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme': '<Scheme/>\n',
+                'ios/App/Home.swift': HOME,
+            });
+            commitAll(fixture.path);
+            const argv = [
+                'init',
+                '--yes',
+                '--scope',
+                'ios=swift,xcode',
+                '--without',
+                'spelling,naming,structure',
+                '--runner',
+                'none',
+                '--ci',
+                'none',
+                '--hooks',
+                'none',
+                '--no-rules',
+                '--no-install',
+            ];
+            await install(fixture.path, argv, {
+                PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec', 'taplo', 'yamllint']),
+            });
+            const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
+            expect(policy).toContain('project = "App.xcodeproj"');
+            expect(policy).toContain('scheme = "App"');
+        },
+        PLANTED_TIMEOUT_MS * 3,
     );
 });

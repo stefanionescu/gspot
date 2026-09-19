@@ -14,7 +14,6 @@ natures = ["source"]
 
 [[tools]]
 name = "vitest"
-version = "4.1.11"
 floor = "2.0.0"
 npm = "vitest"
 
@@ -27,7 +26,6 @@ npm = "@vitest/eslint-plugin"
 [[tools]]
 name = "@vitest/coverage-v8"
 kind = "library"
-version = "4.1.11"
 npm = "@vitest/coverage-v8"
 
 [[checks]]

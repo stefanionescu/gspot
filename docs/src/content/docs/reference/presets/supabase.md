@@ -10,7 +10,7 @@ Kind: platform. Requires: `postgres`.
 ## Tools
 
 - deno 2.6.6
-- supabase 2.40.7
+- supabase
 
 ## Generated configuration
 

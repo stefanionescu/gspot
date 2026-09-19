@@ -27,6 +27,9 @@ Kind: tool. Requires: `config-files`.
 
 ## Settings
 
+- `tools.xcode.project`: The Xcode project or workspace, relative to the scope; empty builds the Swift package.
+- `tools.xcode.scheme`: The shared scheme the build, the analyzer, and Periphery use.
+- `tools.xcode.destination`: The xcodebuild destination.
 - `tools.xcode.allowed_entitlements`: The entitlements the app may hold; empty turns the check off.
 - `tools.xcode.orphan_assets`: Whether an asset no source names is a finding.
 

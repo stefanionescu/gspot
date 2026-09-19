@@ -3,6 +3,7 @@ import { dirname, join } from 'node:path';
 import { planRun } from '#cli/run/plan.ts';
 import type { RunRecord } from '#types/record.ts';
 import { computeDrift } from '#cli/emit/drift.ts';
+import { mergedPins } from '#cli/emit/kept-pins.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { lowerBaselines } from '#cli/run/baselines.ts';
 import { applyBlock } from '#cli/emit/managed-blocks.ts';
@@ -61,7 +62,7 @@ async function writePackages(session: Session, rendered: RenderedSet, report: Ap
         const { default: manifestEditor } = await import('@npmcli/package-json');
         const manifest = await manifestEditor.load(session.root);
         const content = manifest.content as PackageContent;
-        const merged = Object.entries({ ...content.devDependencies, ...output.devDependencies });
+        const merged = Object.entries(mergedPins(content.devDependencies, output.devDependencies));
         const devDependencies = Object.fromEntries(merged.toSorted(([a], [b]) => a.localeCompare(b)));
         const scripts =
             Object.keys(output.scripts).length > 0 ? { ...content.scripts, ...output.scripts } : content.scripts;

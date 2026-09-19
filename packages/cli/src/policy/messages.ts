@@ -292,3 +292,14 @@ export function checkEntryIncomplete(id: string, field: string): string {
 export function limitUnknown(key: string, known: string[]): string {
     return `\`${key}\` is not a limit any check reads. The limits that exist are ${list(known)}.`;
 }
+
+/**
+ * A setting belongs to a preset that one scope selects.
+ * @param key the setting
+ * @param scope the scope path, empty for the root
+ * @returns the message
+ */
+export function settingInScope(key: string, scope: string): string {
+    const place = scope === '' ? 'the root; leave --scope out' : `the scope \`${scope}\`; add --scope ${scope}`;
+    return `A preset exposes \`${key}\` in ${place}.`;
+}
