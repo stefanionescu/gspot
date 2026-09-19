@@ -25,3 +25,4 @@ The list grows as each file is written.
 - [01-first-fixes.md](01-first-fixes.md): CI, the checks that destroy work, the checks that pass when they did not run, and the other wrong answers.
 - [02-takeover.md](02-takeover.md): what `init` reads, what it proposes, and what it carries.
 - [03-hooks.md](03-hooks.md): the hook of the repository, the command names of the team, and lint tables in a shared manifest.
+- [04-speed.md](04-speed.md): cache keys, one parse for a scope, one session for `init`, and an incremental Swift build.
