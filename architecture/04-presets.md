@@ -254,9 +254,34 @@ Signals, in the order `init` prints them:
 | `.md` files                                                                                                                           | markdown                                                                                                                                                                                                              |
 | `.json`, `.yaml`, `.toml` files                                                                                                       | config-files                                                                                                                                                                                                          |
 | any repository                                                                                                                        | structure, naming, formatting, docs, secrets, dependencies, commits, spelling                                                                                                                                         |
-| `go.mod`, `Cargo.toml`, `Gemfile`, `manage.py`, `vite.config.*`, Expo `app.json`, `nest-cli.json`, `svelte.config.*`, `vue.config.*`  | nothing yet; `init` prints "no preset for go; 212 files unchecked" and `doctor` lists them. The language name and the extension list come from GitHub Linguist's data (`linguist-languages`), not a table gspot keeps |
+| `go.mod`, `Cargo.toml`, `Gemfile`, `manage.py`                                                                                        | nothing yet; `init` prints "no preset for go; 212 files unchecked" and `doctor` lists them. The language name and the extension list come from GitHub Linguist's data (`linguist-languages`), not a table gspot keeps |
 
 Detection reads manifests and file names. It never reads code to guess a framework.
+
+## One rule set, every framework
+
+A framework changes which plugins run. It does not change the rules of the language under it
+(D-137, D-138, D-141).
+
+- Every shared rule reads every code file: `js`, `ts`, `jsx`, `tsx`, and the component endings
+  a framework preset claims (`.vue`, `.svelte`, `.svelte.ts`).
+- A limit is the same number in every framework: lines for each file, lines for each function,
+  parameters, depth, statements, and complexity. No preset may change one.
+- A framework turns a shared rule off only in its manifest, with a reason. A test compares the
+  final ESLint config of a component file with that of a plain `ts` file, and fails on a
+  difference that is not on the list.
+- A framework preset holds every linter written for the framework. That is the recommended set
+  of each plugin, an accessibility plugin, the type checker that reads its files, and the test
+  rules of its runner.
+
+| Framework    | Lint                                                                                                    | Accessibility                                 | Type check            | Tests                           | Turned off, and why                                                                 |
+| ------------ | ------------------------------------------------------------------------------------------------------- | --------------------------------------------- | --------------------- | ------------------------------- | ----------------------------------------------------------------------------------- |
+| react        | `eslint-plugin-react`, `eslint-plugin-react-hooks`, `eslint-plugin-react-refresh`                       | `eslint-plugin-jsx-a11y`                      | `tsc`                 | vitest or jest, testing-library | nothing                                                                             |
+| nextjs       | react, `@next/eslint-plugin-next`, six checks of its own                                                | from react                                    | `tsc` with the plugin | from react                      | the one-file-folder rule, for route files the framework finds by name               |
+| react-native | react, `@react-native/eslint-plugin`, `eslint-plugin-react-native`, `eslint-plugin-expo`, `expo-doctor` | none yet: the plugin ends at ESLint 8 (D-142) | `tsc`                 | jest, testing-library           | `jsx-a11y`, which reads DOM elements that React Native does not have                |
+| nestjs       | `@darraghor/eslint-plugin-nestjs-typed`                                                                 | none: a server                                | `tsc` with decorators | jest                            | `no-extraneous-class` for a decorated class; `class-methods-use-this`, for handlers |
+| vue          | `eslint-plugin-vue`                                                                                     | `eslint-plugin-vuejs-accessibility`           | `vue-tsc`             | vitest, testing-library         | nothing                                                                             |
+| svelte       | `eslint-plugin-svelte`                                                                                  | `svelte-check`                                | `svelte-check`        | vitest, testing-library         | the one-file-folder rule, for SvelteKit route files                                 |
 
 ## Catalog
 

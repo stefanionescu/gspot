@@ -10,7 +10,6 @@ One page per preset. Each page states what the preset detects and claims, the to
 | javascript | `.js`, `node` shebang     | ESLint, `checkJs`, knip                                           | [javascript.md](javascript.md) |
 | python     | `.py`, `pyproject.toml`   | Ruff, basedpyright, import-linter, pydoclint, deptry, vulture     | [python.md](python.md)         |
 | swift      | `.swift`, `Package.swift` | SwiftLint, SwiftFormat, Periphery, xcodebuild                     | [swift.md](swift.md)           |
-| ruby       | `.rb`, `Gemfile`          | RuboCop, bundler-audit                                            | [ruby.md](ruby.md)             |
 | bash       | `.sh`, shell shebang      | ShellCheck, shfmt, `bash -n`, the shell analyses                  | [bash.md](bash.md)             |
 | sql        | `.sql`                    | sqlfluff, libpg-query                                             | [sql.md](sql.md)               |
 | css        | `.css`                    | stylelint, Prettier                                               | [css.md](css.md)               |
@@ -19,19 +18,19 @@ One page per preset. Each page states what the preset detects and claims, the to
 
 ## Frameworks, platforms, databases
 
-| Preset       | Detects                  | Adds                                                                                                             | Page                               |
-| ------------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
-| nextjs       | `next`                   | eslint-config-next, boundaries, server-only, client environment, route segments, next config, CSS usage, locales | [nextjs.md](nextjs.md)             |
-| react        | `react`                  | the hooks and compiler rules as errors, keys, new-tab links, markup from a string                                | [react.md](react.md)               |
-| vue          | `vue`, `.vue`            | the Vue plugin over component files, every rule an error                                                         | [vue.md](vue.md)                   |
-| svelte       | `svelte`, `.svelte`      | the Svelte plugin over component files, every rule an error                                                      | [svelte.md](svelte.md)             |
-| nestjs       | `@nestjs/core`           | decorator compiler options, controllers that reach data through a service, no circular modules                   | [nestjs.md](nestjs.md)             |
-| react-native | `react-native`, `expo`   | the Expo environment rules, keyed lists, styles out of the render, no secret in AsyncStorage                     | [react-native.md](react-native.md) |
-| express      | `express`                | Semgrep API pack, OpenAPI lint and freshness, route tests                                                        | [express.md](express.md)           |
-| fastapi      | `fastapi`                | Ruff FAST, OpenAPI freshness, blocking IO in async                                                               | [fastapi.md](fastapi.md)           |
-| supabase     | `supabase/config.toml`   | Deno lint, migration names, types freshness, storage policies, service-role containment, Semgrep pack            | [supabase.md](supabase.md)         |
-| postgres     | Postgres SQL             | squawk, migration docs, immutability, RLS, grants, search path, foreign-key indexes                              | [postgres.md](postgres.md)         |
-| cloudflare   | `wrangler.*`, `_headers` | config schemas, headers and redirects syntax, security headers, env types                                        | [cloudflare.md](cloudflare.md)     |
+| Preset       | Detects                  | Adds                                                                                                                     | Page                               |
+| ------------ | ------------------------ | ------------------------------------------------------------------------------------------------------------------------ | ---------------------------------- |
+| nextjs       | `next`                   | eslint-config-next, boundaries, server-only, client environment, route segments, next config, CSS usage, locales         | [nextjs.md](nextjs.md)             |
+| react        | `react`                  | the React, hooks, accessibility and fast-refresh plugins, testing-library on tests, component and hook names             | [react.md](react.md)               |
+| vue          | `vue`, `.vue`            | the Vue and accessibility plugins, `vue-tsc`, the shared rules over component files                                      | [vue.md](vue.md)                   |
+| svelte       | `svelte`, `.svelte`      | the Svelte plugin, `svelte-check`, Prettier for components, the shared rules over component files, SvelteKit route names | [svelte.md](svelte.md)             |
+| nestjs       | `@nestjs/core`           | the nestjs-typed plugin, a tsconfig with decorators, controllers that reach data through a service, no circular modules  | [nestjs.md](nestjs.md)             |
+| react-native | `react-native`, `expo`   | the React Native and Expo plugins, `expo-doctor`, keyed lists, no secret in AsyncStorage, platform file names            | [react-native.md](react-native.md) |
+| express      | `express`                | Semgrep API pack, OpenAPI lint and freshness, route tests                                                                | [express.md](express.md)           |
+| fastapi      | `fastapi`                | Ruff FAST, OpenAPI freshness, blocking IO in async                                                                       | [fastapi.md](fastapi.md)           |
+| supabase     | `supabase/config.toml`   | Deno lint, migration names, types freshness, storage policies, service-role containment, Semgrep pack                    | [supabase.md](supabase.md)         |
+| postgres     | Postgres SQL             | squawk, migration docs, immutability, RLS, grants, search path, foreign-key indexes                                      | [postgres.md](postgres.md)         |
+| cloudflare   | `wrangler.*`, `_headers` | config schemas, headers and redirects syntax, security headers, env types                                                | [cloudflare.md](cloudflare.md)     |
 
 ## Tools
 
@@ -42,6 +41,7 @@ One page per preset. Each page states what the preset detects and claims, the to
 | ansible | `ansible.cfg`                     | ansible-lint                                                                             | [ansible.md](ansible.md) |
 | xcode   | `*.xcodeproj`                     | plist, xcconfig, xcstrings, asset catalogues, test plans, orphan sources, entitlements   | [xcode.md](xcode.md)     |
 | vitest  | `vitest`                          | the vitest ESLint rules, coverage threshold, test support placement                      | [vitest.md](vitest.md)   |
+| jest    | `jest`, `jest.config.*`           | the jest ESLint rules, the same ten as vitest, coverage threshold                        | [jest.md](jest.md)       |
 | pytest  | `pytest`                          | Ruff PT, coverage threshold                                                              | [pytest.md](pytest.md)   |
 | xctest  | `import XCTest`, `import Testing` | disabled tests with reasons, no sleeps, no recording mode, snapshot references, coverage | [xctest.md](xctest.md)   |
 

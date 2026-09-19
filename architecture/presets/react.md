@@ -9,24 +9,44 @@ Kind: framework. Requires: javascript. Recommends: typescript, css, vitest.
 
 ## Tools
 
-eslint-plugin-react-hooks 6.1.1 and eslint-plugin-react 7.37.5, as libraries.
+As libraries, each with ESLint 9 in its range (D-142):
 
-eslint-plugin-jsx-a11y is left out until a release names ESLint 10 in its peer range.
+- eslint-plugin-react 7.37.5 and eslint-plugin-react-hooks 7.1.1;
+- eslint-plugin-jsx-a11y 6.10.2 and eslint-plugin-react-refresh 0.5.7;
+- eslint-plugin-testing-library 7.16.2.
 
 ## Generated configuration
 
+Every shared rule of the javascript and typescript presets reads the files of this framework
+too, with the same limits (D-137). A rule this preset turns off stands in its manifest with a
+reason (D-138), and the page lists each one.
+
 The ESLint config gains one block over `js`, `jsx`, `ts`, and `tsx` files:
 
+- the `recommended` and `jsx-runtime` sets of the React plugin, with the React version set to
+  `detect`;
 - every rule of the `recommended-latest` set of the hooks plugin, as an error. The set holds the
-  rules of hooks, `exhaustive-deps`, and the React Compiler rules. The plugin ships two of them as
-  warnings, and the gate allows no warning.
-- `react/jsx-key`, `react/jsx-no-target-blank`, `react/no-array-index-key`, `react/no-danger`,
-  `react/no-unstable-nested-components`, `react/jsx-no-constructed-context-values`,
-  `react/no-object-type-as-default-prop`, and `react/self-closing-comp`.
+  rules of hooks, `exhaustive-deps`, and the React Compiler rules. The plugin ships two of them
+  as warnings, and the gate allows no warning;
+- the `recommended` set of `jsx-a11y`, which is the enforcement of the accessibility guide;
+- `react-refresh/only-export-components`, so a file of components keeps its state on a reload;
+- `react/no-array-index-key`, `react/no-danger`, `react/no-unstable-nested-components`,
+  `react/jsx-no-constructed-context-values`, and `react/no-object-type-as-default-prop`.
 
-The React plugin finds the installed React through an ESLint function that ESLint 10 took out, and
-every rule that asks for the version fails to load. The generated config reads the version from
-`node_modules/react/package.json`, in the root and then in each scope, and hands it to the plugin.
+Over test files, the `react` set of the testing-library plugin. At the `all` level:
+`react/self-closing-comp`.
+
+## Names
+
+`[[naming.rules]]` of this preset (D-112):
+
+- a function that returns JSX is in PascalCase, and a hook starts with `use`;
+- a callback may start with `handle`;
+- a file that holds one component may carry its name.
+
+## Turned off
+
+Nothing.
 
 ## Checks
 

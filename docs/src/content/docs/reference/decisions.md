@@ -853,7 +853,7 @@ the first one.
 ## D-108 A folder with a project file is a scope, and scope files have one place
 
 init proposes a scope for a folder that holds `package.json`, `pyproject.toml`,
-`Package.swift`, an `.xcodeproj`, or a `Gemfile`. A workspace member list wins where one
+`Package.swift`, or an `.xcodeproj`. A workspace member list wins where one
 exists. Generated configuration for a scope lives under `.gspot/<scope>/`, and only a pointer stub
 lives in the scope folder.
 
@@ -1092,14 +1092,16 @@ removed. [19-names.md](https://github.com/stefanionescu/gspot/blob/main/architec
 The default level of D-119 is called `recommended`. The first name, `core`, is a banned term of
 the containers group, and `recommended` is the word ESLint and Biome already taught developers.
 
-## D-136 The go, rust and django presets are deleted
+## D-136 The go, rust, django and ruby presets are deleted
 
-Recorded 2026-09-19. The owner never asked for these three presets. They came from the Phase 7
+Recorded 2026-09-19. The owner never asked for these presets. `ruby` joined the list the same
+day, with RuboCop, bundler-audit, its rule file, and its test. `react`, `react-native`, `nestjs`,
+`vue` and `svelte` stay, by the owner's word, and D-137 to D-141 say what they must hold. They came from the Phase 7
 list, which an earlier pass of this folder wrote by itself and then built. None of the six
-reference repositories holds Go, Rust or Django code, so nothing proves them against a real
+reference repositories holds Go, Rust, Django or Ruby code, so nothing proves them against a real
 repository.
 
-All three go whole, by D-134. That means the manifests, the templates, the engine code, and
+All four go whole, by D-134. That means the manifests, the templates, the engine code, and
 the types. It also means the Go grammar, the Cargo workspace reader, the tests, the rule files,
 the preset pages, and the generated reference pages. The "Delete first" table of the phases document lists the paths. A repository that holds `go.mod`, `Cargo.toml`
 or `manage.py` is told that no preset reads those files, as [04-presets.md](https://github.com/stefanionescu/gspot/blob/main/architecture/04-presets.md)
@@ -1107,3 +1109,111 @@ already says.
 
 A preset enters this folder when the owner asks for it, or when a reference repository needs it.
 Rejected: keeping the code because it exists and its tests pass.
+
+## D-137 The shared rules read every code file, component files included
+
+Recorded 2026-09-19. The ESLint template applied every shared block to a fixed list of eight
+endings. A `.vue` or a `.svelte` file got the rules of its plugin and nothing else. It got no line
+limit, no complexity ceiling, no sonarjs, no unicorn, no security rule, no gspot rule, and no
+banned syntax.
+The page of the vue preset stated that as the design.
+
+A framework preset names its component endings under `claims` in its manifest. The template
+builds its list of code files from the endings of the languages plus those. Every shared block
+reads that list. The Vue and Svelte parsers hand ESLint the script of a component as a syntax
+tree, so the shared rules run on it as they are.
+
+One ESLint check reads those files. `vue/eslint` and `svelte/eslint`, which copied its command
+for another ending, are deleted.
+
+Rejected: a copy of the limit rules inside each framework fragment, which is the same number in
+six places.
+
+## D-138 A framework turns a shared rule off in its manifest, with a reason, and a test holds the list
+
+A fragment writes no `off`. A preset lists each shared rule it turns off, with the files and
+the reason, in its manifest, and the template renders the list. A limit is never on it: lines
+for each file, lines for each function, parameters, depth, statements, and complexity are the
+same number in every framework.
+
+One test for each framework asks ESLint for the final config of a component file and of a plain
+`ts` file in the planted repository of that framework. The test fails when the two differ by a
+rule that is not on the list. That test is what keeps two frameworks from drifting apart.
+
+Three reasons stand today:
+
+- a Nest module is a decorated class with no members, and Nest calls a handler as a method;
+- `jsx-a11y` reads DOM elements, and React Native has none;
+- a route file of Next.js or SvelteKit is found by its name, so it may be the one file of its
+  folder.
+
+Rejected: a comment beside a hand-written `off`, which no test can read.
+
+## D-139 The rules of a library and of a framework live in its own preset
+
+A fragment exports its banned-syntax selectors, and the javascript template joins the selectors
+of every selected fragment into the one `no-restricted-syntax` rule. The template asks for no
+preset by name (K-197). The selectors of React Native and of Nest move into their presets. The
+decorator flags of Nest leave the shared `tsconfig.base.json` and sit in a tsconfig file of the
+nestjs preset (K-201).
+
+## D-140 Type check, format, style, and names reach a component file
+
+Each part uses a key that exists:
+
+- `vue-tsc` takes over `typescript/tsc` in a scope that selects vue, through `takes_over`,
+  because `tsc` cannot read a `.vue` file. `svelte-check --fail-on-warnings` does the same for
+  svelte, and it reports the accessibility warnings of the Svelte compiler;
+- Prettier reads `.vue` by itself and `.svelte` through `prettier-plugin-svelte`, which the
+  svelte preset pins. Both endings join the claims of the formatting preset;
+- where the css preset is selected, stylelint reads the `<style>` block through `postcss-html`;
+- the naming engine reads the script block through the TypeScript extractor, with the line
+  offset of the block, and the tag table learns both endings (K-128).
+
+## D-141 Every framework preset holds every linter that exists for it, and a jest preset ships
+
+A framework preset is never thinner than its linters allow. Each holds the recommended set of
+each plugin written for it, an accessibility plugin, and the test rules of its runner:
+
+- react: `eslint-plugin-react` recommended with `jsx-runtime`, `eslint-plugin-react-hooks`
+  recommended-latest, `eslint-plugin-jsx-a11y` recommended, `eslint-plugin-react-refresh`;
+- nextjs: react, plus `@next/eslint-plugin-next` core-web-vitals and its six checks;
+- react-native: react, plus `@react-native/eslint-plugin`, `eslint-plugin-react-native`,
+  `eslint-plugin-expo`, and `expo-doctor` at the push stage. `eslint-plugin-react-native-a11y`
+  is left out, because its range ends at ESLint 8 (D-142), and its page says so;
+- nestjs: `@darraghor/eslint-plugin-nestjs-typed` recommended;
+- vue: `eslint-plugin-vue` recommended, `eslint-plugin-vuejs-accessibility` recommended;
+- svelte: `eslint-plugin-svelte` recommended, and `svelte-check` for accessibility.
+
+Nest and React Native test with Jest by default, so a `jest` preset ships beside `vitest`. It
+holds the same ten test rules through `eslint-plugin-jest`, which also reads `bun:test` (S-8).
+`eslint-plugin-testing-library` reads the test files of react, vue, and svelte, each in its own
+flavor. The split of D-119 is the same in every framework. The recommended set of a plugin and the
+rules that find a defect are `recommended`. A rule of layout or style is `all`.
+
+The names of a framework are `[[naming.rules]]` of its preset (D-112):
+
+- components in PascalCase, and hooks and composables that start with `use`;
+- the kind suffix of a Nest file, and the platform suffix of a React Native file;
+- the route names of Next.js and SvelteKit.
+
+Each pin is read from the registry on the day it is written (K-206). Rejected: Nuxt, Angular,
+Astro, Remix, Playwright and Cypress presets, which nobody asked for (D-136).
+
+## D-142 gspot pins the newest ESLint that every plugin it ships supports
+
+Decided by the owner on 2026-09-19. gspot pinned ESLint 10, and three plugins it
+already shipped did not support it. `eslint-plugin-react` ends at 9.7. `eslint-plugin-react-hooks`
+6.1.1 and `@tanstack/eslint-plugin-query` end at 9. The plugins D-141 adds for React and React
+Native end at 9 too.
+
+The pin is ESLint 9, at 9.39.5 on the day of this decision. `@eslint/js` follows it.
+`eslint-plugin-unicorn` goes to 65.0.1, the last version that runs on ESLint 9. gspot moves to
+ESLint 10 on the day every plugin it ships names 10 in its range.
+
+The release test that asks the registry for every pin (K-206) also reads the ESLint range of
+each plugin, and fails when the pinned ESLint is outside one.
+
+Rejected: staying on ESLint 10 with `@eslint-react/eslint-plugin` and a fork of the
+accessibility plugin at version 0.2.0. That path leaves React Native with no plugin for its
+styles.

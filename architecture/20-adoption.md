@@ -225,7 +225,7 @@ does not. The stub goes into the scope folder in both cases.
 **Design (D-108).**
 
 - init proposes a scope for every folder that holds a project file: `package.json`,
-  `pyproject.toml`, `Package.swift`, `*.xcodeproj`, `Gemfile`. A
+  `pyproject.toml`, `Package.swift`, `*.xcodeproj`. A
   workspace member list still wins where one exists.
 - One rule for scope files: generated configuration lives under `.gspot/<scope>/`, and only a
   pointer stub lives inside the scope folder. [12-repository-layout.md](12-repository-layout.md)
@@ -295,8 +295,7 @@ clean: it holds 724 Swift files with PascalCase names.
 ## A-15 Naming by language and by framework
 
 **Evidence.** `presets/naming/policy.json` holds case tables for six languages: TypeScript,
-JavaScript, Python, Swift, Bash, and SQL. `naming/extract.ts` holds five extractors. Ruby ships as a preset with no table and no extractor, and its manifest does not recommend
-`naming`. Go and Rust did the same, and are deleted (D-136). Nothing tells the person that names in those files go unchecked.
+JavaScript, Python, Swift, Bash, and SQL. `naming/extract.ts` holds five extractors. Go, Rust and Ruby shipped as presets with no table and no extractor, and are deleted (D-136). Nothing tells the person that names in those files go unchecked.
 
 No framework layer exists:
 
@@ -314,7 +313,6 @@ No framework layer exists:
   framework.
 - `gspot doctor` and the init plan list each language preset with "names: checked" or "names:
   not checked".
-- An extractor for Ruby is not part of the Adoption phase.
 
 ## What a repository already has
 

@@ -19,14 +19,22 @@ eslint-config-next, @eslint/compat, eslint-plugin-react-hooks (through next), es
 
 The typescript flat config gains, in order:
 
-- `eslint-config-next` core-web-vitals and typescript (wrapped by `@eslint/compat` on ESLint 10);
+- the `core-web-vitals` set of `@next/eslint-plugin-next`, on ESLint 9 (D-142);
 - the `[architecture]` boundaries (route, feature, shared);
 - `gspot/require-server-only` over server files and `gspot/no-client-environment` over every file;
 - the React rules come from the `react` preset, which this one requires; `@next/next/no-async-client-component`;
-- the framework-entry overrides that turn off `no-trivial-files`, `no-export-only-files`, `no-reexports-outside-index` and `no-single-file-folders` for `page`, `layout`, `template`, `default`, `loading`, `error`, `not-found`, `global-error`, `route`, `middleware` and `proxy` files.
+- the rules under "Turned off" below, rendered from the manifest (D-138).
 
 Server files: `**/server/**`, `**/*.server.*`, `features/*/server/**`, `lib/**/server.*`, and any
 file with `'use server'`. Client files: any file with `'use client'`.
+
+## Turned off
+
+| Rule                                                                                                   | Files                                                                                                                              | Why                                                                                          |
+| ------------------------------------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------- |
+| `structure/single-file-folder`, `gspot/no-trivial-files`, `gspot/no-export-only-files`, `no-reexports` | `page`, `layout`, `template`, `default`, `loading`, `error`, `not-found`, `global-error`, `route`, `middleware`, and `proxy` files | the framework finds these files by name, so a folder holds one and the file holds one export |
+
+Every shared rule and every limit holds in a Next.js app as it does anywhere else (D-137).
 
 ## Checks
 
