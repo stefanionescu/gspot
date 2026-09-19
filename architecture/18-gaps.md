@@ -136,6 +136,11 @@ The rows below come from the read of September 19, 2026, after the install in ya
 | K-106 | Types that only tests use sit in the types of the shipped binary: `SpawnOutcome`, `Registry`, `PlantedCase`, `AcceptanceRun`, `ComponentShape`. Two doc comments in `types/` describe a type that is gone.                                                                                                                                                                                                                                                                                                                                         | `types/run.ts`, `types/lifecycle.ts`                                                                                                 |
 | K-107 | `CarriedLists` has one hand-written field for each tool it knows (typos, pyright, sqlfluff, semgrep, gitleaks, osv, licenses), and so does the code that fills and prints it. A new tool means edits in five files (K-39).                                                                                                                                                                                                                                                                                                                         | `types/lifecycle.ts`, `lifecycle/carry.ts`, `policy/propose.ts`, `lifecycle/init/plan.ts`                                            |
 | K-108 | A `gspot.toml` with no `[hooks]` table means `hooks.tool = "gspot"`: `apply` then points `core.hooksPath` at `.gspot/hooks`. A missing `[ci]` or `[runner]` table means none. D-130 needs one rule for all three: a missing table means gspot does nothing there.                                                                                                                                                                                                                                                                                  | `policy/normalize.ts` (`normalizeScalars`)                                                                                           |
+| K-109 | With the runner `npm`, `bun` or `pnpm`, gspot writes the scripts `check`, `check:fix`, `apply` and `prepare` into `package.json`, and its value replaces a script of that name the developer already has. `prepare` is an npm lifecycle script that many repositories use for husky or a build. `uninstall` removes a script only when it still holds the value of gspot, so the original is gone.                                                                                                                                                 | `emit/runner-surface.ts` (`npmScripts`), `emit/apply-command.ts` (`writePackages`)                                                   |
+| K-110 | Two constants called `SUPPRESSION_FORMS` hold two lists of the same comment forms, in two files, with different content: one forbids `nosemgrep` and the other counts it.                                                                                                                                                                                                                                                                                                                                                                          | `config/markers.ts`, `config/integrity.ts`                                                                                           |
+| K-111 | The markers of the lint stack this project replaced still ship: `lint:justify`, and five `lint:allow-...` comments for shell scripts. With `gspot-ignore` that makes three ways to silence a finding in a comment. Under D-134 the old two are deleted.                                                                                                                                                                                                                                                                                            | `config/shell.ts` (`MARKERS`), `config/markers.ts`, `config/integrity.ts`                                                            |
+| K-112 | The heading "Table of contents" is banned in every Markdown file, and a README with more than six sections must hold a heading called "Contents". A developer reads these as one rule that contradicts itself.                                                                                                                                                                                                                                                                                                                                     | `config/docs.ts`, `integrity/readme/shape.ts`, `integrity/docs-headings.ts`                                                          |
+| K-113 | `explain` holds the documentation source of five tools by name (ruff, swiftlint, shellcheck, markdownlint, eslint). A manifest has no key for the page of a rule, so the 40 other tools get "the documentation of the tool has the page".                                                                                                                                                                                                                                                                                                          | `output/explain.ts` (`TOOL_RULE_SOURCES`)                                                                                            |
 
 ## Test gaps
 
@@ -251,17 +256,18 @@ K-35 is decided in D-93.
 Read line by line:
 
 - `commands/` (all 17 files), `program.ts` and `main.ts`;
+- `types/config.ts`, `manifest.ts`, `run.ts`, `lifecycle.ts` and `emit.ts`;
 - `lifecycle/` except `questions.ts` and `upgrade/`;
 - `run/` except `engines.ts`, `file-batches.ts`, `json-output.ts`, `list-arguments.ts`, `parse-output.ts` and `ignores.ts`;
 - `emit/targets.ts`, `hooks.ts`, `stubs.ts`, `runner-surface.ts`, `apply-command.ts` and `managed-blocks.ts`;
 - `integrity/` except the two `docker/` files, `nginx/`, `gems.ts` and `ansible-lint.ts`;
 - `platform/tool-probe.ts`, `spawn.ts`, `install-hints.ts` and `assets.ts`;
 - `doctor/` except `settings.ts` and `newer-version.ts`;
-- `output/reporter.ts`, `plan-text.ts` and `detection.ts`;
-- `policy/schema.ts`, `messages.ts`, `propose.ts`, `write.ts`, `loosening.ts`, `audit.ts`, `problems.ts`, `merge.ts`, `read-policy.ts`, `set-command.ts`, `ignore-command.ts` and `add-command.ts`;
+- `output/reporter.ts`, `plan-text.ts`, `detection.ts`, `why.ts` and the first half of `explain.ts`;
+- `policy/schema.ts`, `settings.ts`, `normalize.ts`, `messages.ts`, `propose.ts`, `write.ts`, `loosening.ts`, `audit.ts`, `problems.ts`, `merge.ts`, `read-policy.ts`, `set-command.ts`, `ignore-command.ts` and `add-command.ts`;
 - `repository/scopes.ts` and `existing-tooling.ts`, `presets/detect.ts`;
 - `structure/engine.ts`, `directories.ts`, `analyses/prefix-collisions.ts` and `folder-names.ts`;
-- `config/patterns.ts`, `carry.ts`, `reasons.ts` and `markers.ts`;
+- `config/patterns.ts`, `carry.ts`, `reasons.ts`, `markers.ts`, `docs.ts` and the first half of `integrity.ts`;
 - the plugin entry `plugin.ts` and the rule `no-prefix-collisions`;
 - five test files, the test harness, and the guard test.
 
@@ -279,7 +285,7 @@ Read by measurement:
 
 Not read:
 
-- `types/`, the rest of `config/`, `policy/settings.ts` and `normalize.ts`, `output/explain.ts` and `why.ts`;
+- the 23 smaller files of `types/`, and `config/shell.ts`, `prose.ts`, `file-tags.ts`, `postgres.ts`, `supabase.ts`, `env-files.ts`, `grammars.ts` and `cases.ts`;
 - the bodies of 25 plugin rules and of their tests, the bodies of the unit tests, and the bodies of 43 repository tests;
 - the templates of every preset, and the six guides beyond a word search.
 

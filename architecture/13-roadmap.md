@@ -110,13 +110,14 @@ key, its test, and every mention in this folder and in the manual.
 | the nine `copy = true` stubs (K-47)                                                                                    | seven manifests, `emit/targets.ts`                        |
 | the language names in the banned folder names (K-86)                                                                   | `config/shell.ts`                                         |
 
-The first five fixes are a few lines each, and each gets a planted test:
+The first six fixes are a few lines each, and each gets a planted test:
 
 1. Takeover keeps `setup.cfg` and `tox.ini` (K-36).
 2. A folder named `hooks` is no hooks folder (K-37).
 3. A run of the `message` stage writes no record (K-45, D-105).
 4. `rules-lint` becomes `rules` (K-61).
 5. The nine `copy = true` stubs leave their manifests (K-47, D-100).
+6. gspot never replaces a `package.json` script the developer has (K-109).
 
 | Order | Deliverable                                                                                                                                                            | Done when                                                                                                                                                                                                                       |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
