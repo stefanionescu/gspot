@@ -5,6 +5,11 @@ code, the flag or key, its test, and every mention in `architecture/` and in the
 commit. Nothing is renamed to a softer form, and no message is written for a thing that is gone.
 An old key is an unknown key, and an old flag is an unknown flag.
 
+K-204 closes before this step starts, so every deletion runs under a working CI (K-282). A
+deletion whose replacement lives in a later fix file moves into that file: `apply --check` goes
+with `integrity/generated-drift` (K-246), `apply --lower-baselines` with `gspot baseline` (K-46),
+and `doctor --settings` with `gspot list` (K-62).
+
 The order inside the step: the four presets first, because they are the largest cut. Then the
 command surface, then the dead keys and fields, then the plugin rules, then the repository files.
 
@@ -91,7 +96,9 @@ of a file under `.gspot/`. A JSON copy loses its mark, so `uninstall` cannot tel
 **Files.** Deleted at the root: `.commitlintrc.json`, `.gitleaks.toml`,
 `.markdownlint-cli2.jsonc`, `.prettierrc.json`, `.prettierignore`, `.semgrepignore`,
 `.shellcheckrc`, `.taplo.toml`, `.v8rrc.yml`, `.yamllint.yml`, `osv-scanner.toml`, `typos.toml`,
-and `eslint.config.mjs`. `emit/stubs.ts` becomes `emit/pointers.ts`.
+and `eslint.config.mjs`. `emit/stubs.ts` becomes `emit/pointers.ts`. A tool with an include form
+gets a pointer in place of its copy. Prettier and commitlint take a re-export, and the table of
+K-269 in [23-scenarios.md](23-scenarios.md) holds every tool.
 
 **Logic.** The manifest key `copy` leaves `presets/manifest-schema.ts`, and `emit/targets.ts`
 loses the branch that writes a copy. `.editorconfig` stays at the root, because the formatting
@@ -293,7 +300,7 @@ runs. The runner `uv` is accepted, its hint says `uv sync --group gspot`, and no
 group.
 
 **Target.** `--runner` takes `mise`, `npm`, `pnpm`, `yarn`, and `bun`. The Python tools install
-through mise, or under `.gspot/` as row 12 decides.
+under `.gspot/` with uv, as D-157 decides ([08-frameworks.md](08-frameworks.md), K-266).
 
 **Files.** `presets/manifest-schema.ts`, `presets/read-manifests.ts` (`INSTALLER_KEYS`),
 `emit/targets.ts:106`, `emit/apply-command.ts:31`, `platform/install-hints.ts`,
@@ -373,3 +380,21 @@ the words about prose from its summary.
 `prose/vale` only.
 
 **Done when.** `vale` is spawned from one file, `src/prose/vale.ts`.
+
+## K-282: the order works against itself
+
+**What is wrong.** The index deleted first and fixed CI second, so the largest deletion ran with
+no working CI. It deleted three flags before the commands that replace them exist.
+
+**Target.** K-204 alone comes first. A thing is deleted in the commit that builds what replaces
+it, or in this step when nothing replaces it.
+
+**Files.** [22-remaining.md](../22-remaining.md), and the three sections this file points at.
+
+**Logic.** None in the code.
+
+**What goes.** Nothing.
+
+**Tests.** After each commit of this step, the run on GitHub is green.
+
+**Done when.** The order of the index says so.

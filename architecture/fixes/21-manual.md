@@ -27,3 +27,25 @@ block true (S-11). The guide on editors says to point the ESLint extension at `.
 
 **Done when.** Both pass, and a reader who follows the first guide in `examples/package/` sees
 the output the guide shows.
+
+## S-19: six questions no guide answers
+
+**What is wrong.** The list of guides in [21-documentation.md](../21-documentation.md) misses
+six pages. They are a teammate who joins, an editor, another CI system, a config below the git
+root, a run beside an old lint, and a folder with no git.
+
+**Target.** Six more guides, each under two pages, each written from a run in `examples/`.
+
+**Files.** `docs/src/content/docs/guides/`: `joined-a-repository.md`, `editors.md`, `other-ci.md`,
+`below-the-git-root.md`, `beside-your-old-lint.md`, and `without-git.md`.
+
+**Logic.** The first guide is three lines: clone, `gspot install`, commit. The editors guide
+holds the pointer table of K-269 and the setting of each editor for a tool with no pointer. The
+fifth says what runs twice while both setups exist, and the order in which to remove the old
+one.
+
+**What goes.** Nothing.
+
+**Tests.** `docs/samples` parses every command and config block of the six.
+
+**Done when.** It passes, and each guide was followed once in `examples/` by hand.

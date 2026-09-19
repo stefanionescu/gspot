@@ -833,10 +833,11 @@ calls still runs the old lint.
 
 ## D-115 The setup entry of the repository installs the hooks
 
-`core.hooksPath` belongs to one clone. gspot never sets it where a tracked file sets it. Where
-gspot owns the hooks, init adds `gspot apply` to the setup task or the `prepare` script the
-repository has. `gspot doctor` and `gspot check` report a clone whose policy names hooks and that
-runs none.
+`core.hooksPath` belongs to one clone. gspot never sets it where a tracked file sets it. With a
+yes, `init` adds the one line `gspot install` to the setup entry the repository already has: a
+`setup` task, a `prepare` script, or a Makefile target (D-156). An added line is no replaced
+script. `gspot doctor` and `gspot check` report a clone whose config names hooks and that runs
+none.
 
 ## D-116 Existing command names keep working
 
@@ -1322,3 +1323,45 @@ repository (K-230). A good example in a rule file passes the linter of its prese
 A `[[check]]` was cached on the files its `paths` name, and its command read more, so a failure
 outlived its cause (K-69). `paths` says when the check runs. `inputs` says what it reads, and the
 cache key holds those files. A check with no `inputs` is never cached.
+
+## D-156 `gspot install` sets up one clone
+
+A teammate who clones a repository that uses gspot had no way to get the lint tools and the
+hooks. D-145 took the `prepare` script away, and `apply` only writes files (D-132). The command
+is `gspot install`, the word a developer already knows from `npm install`, `mise install`,
+`lefthook install`, and `pre-commit install`. It installs the mise tools, `.gspot/node_modules`,
+`.gspot/.venv`, and the hooks of this clone. It writes no tracked file, and it is safe to run
+twice.
+
+`init` and `upgrade` end by calling it, and `--no-install` skips it. The CI job of gspot runs it
+as its one setup step. A clone that is not set up never fails without a word: `gspot check`,
+`gspot doctor`, and a missing tool each print `Run: gspot install`.
+
+Rejected: `check` installs what it misses, because a lint run that downloads packages breaks
+offline and in CI and surprises the person who ran it. Also rejected: a guide with two commands
+to copy, which every team then wraps in a script of its own.
+
+## D-157 Python tools install under `.gspot/` with uv
+
+The Python tools had no home without mise, after the `uv` runner left (K-240). They install the
+way D-145 installs the npm tools: from a generated `.gspot/pyproject.toml` and its `uv.lock`,
+into `.gspot/.venv`. uv is the one host tool a Python repository needs, and gspot writes nothing
+into the `pyproject.toml` of the developer (D-117). Rejected: the `pipx` backend of mise alone,
+which leaves a Python developer without mise with every Python check missing.
+
+## D-158 Before the first release, a repository installs from a local registry
+
+The redo of yap-swift-app comes before any release, and `.gspot/package.json` needs
+`@gspot/eslint-plugin`, which is on no registry. The `verdaccio` registry of the test harness
+serves the launcher, the platform package, and the plugin. The variable `GSPOT_REGISTRY` points
+`gspot install` at it, and no tracked file holds the address. The variable goes with the first
+release, as `GSPOT_BIN` does (D-65). Rejected: a packed file under a `file:` path, which writes a
+path of one machine into a tracked file. Also rejected: a public prerelease, which cannot be
+undone and needs the npm name settled first (K-121).
+
+## D-159 After the first release, a rename ships with its rewrite
+
+D-134 rests on two facts: gspot has no release, and it has one install. From the first release
+on, `gspot upgrade` rewrites a renamed key of `gspot.toml`, and its plan lists each rewrite.
+The `version` key of the file moves only for a change `upgrade` cannot rewrite. A removed flag
+stays an unknown flag, and its message names what took its place for one major version.

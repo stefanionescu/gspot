@@ -59,3 +59,46 @@ first runs.
 nothing in the registry.
 
 **Done when.** It passes, and `npm view gspot` names this project.
+
+## K-280: Alpine, and the first download
+
+**What is wrong.** The five targets leave out Alpine, where the glibc binary does not start. Many
+GitLab and Docker images are Alpine. A macOS binary that a browser downloads is quarantined, and
+a Windows one meets SmartScreen.
+
+**Target.** Seven targets, and an install guide that says what each system shows.
+
+**Files.** `config/targets.ts`, `packages/cli/build.ts`, `packages/cli/publish.ts`,
+`packages/npm/gspot/gspot.js`, `emit/workflow.ts`.
+
+**Logic.** `targets.ts` gains `linux-x64-musl` and `linux-arm64-musl`, built with the musl
+targets of Bun. The launcher reads the libc of the machine before it picks a platform package.
+The macOS binaries are signed ad hoc at build, and the guide names `xattr -d` for a browser
+download. mise and npm installs are not quarantined, and the guide recommends them first.
+
+**What goes.** Nothing.
+
+**Tests.** The release job runs `gspot --version` in an Alpine container for both musl targets.
+
+**Done when.** It passes.
+
+## K-281: renames after the first release
+
+**What is wrong.** D-134 forbids every alias and rests on gspot having no release. Nothing says
+what a rename costs a user afterwards.
+
+**Target.** D-159: `gspot upgrade` rewrites a renamed key of `gspot.toml`, and its plan lists
+each rewrite.
+
+**Files.** `lifecycle/upgrade/command.ts`, new `lifecycle/upgrade/renames.ts`,
+`policy/write.ts`.
+
+**Logic.** `renames.ts` holds one table: the version, the old key, and the new key. `upgrade`
+applies the rows between the pinned version and its own through the one writer. The table is
+empty at the first release.
+
+**What goes.** Nothing before the release. D-134 holds until then.
+
+**Tests.** A unit test with one row in the table.
+
+**Done when.** It passes.

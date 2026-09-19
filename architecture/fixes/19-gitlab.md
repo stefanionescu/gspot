@@ -42,8 +42,9 @@ job is told so and gets no second job.
 `policy/schema.ts`.
 
 **Logic.** Detection reads a `.gitlab-ci.yml` file or a GitLab remote, then a `.github/` folder or
-a GitHub remote. The GitLab job uses the mise image, caches `.gspot/cache/`, and uploads the
-SARIF report as a code quality artifact.
+a GitHub remote. The GitLab job runs `gspot install`, caches `.gspot/cache/`, and uploads a code quality report.
+GitLab reads the CodeClimate format there and not SARIF, so `check --report` writes that third
+format beside the JSON and the SARIF file ([23-scenarios.md](23-scenarios.md), K-277).
 
 **What goes.** Nothing.
 

@@ -42,3 +42,4 @@ the commit that closes its row.
 - [20-self-check.md](20-self-check.md): templates, tests, and documents under the gate of this repository.
 - [21-manual.md](21-manual.md): the README, the guides, and the site.
 - [22-launch.md](22-launch.md): Windows, and a release that fails before it ships something broken.
+- [23-scenarios.md](23-scenarios.md): root pointers, no git, git edge cases, line ends, merges, more hook tools, both CI jobs, other CI systems, and other agent files.

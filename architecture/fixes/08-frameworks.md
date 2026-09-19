@@ -316,6 +316,97 @@ writes one pointer file into each claimed test folder, with `parent_config` set 
 
 **Done when.** That case passes.
 
+## K-264: a fresh clone gets no tools and no hooks
+
+Closes K-264, K-265, K-266, and K-283.
+
+**What is wrong.** A teammate who clones a repository that uses gspot has no lint tools and no
+hooks, and no document says how to get them. The redo of yap-swift-app cannot install, because
+`@gspot/eslint-plugin` and the launcher are on no registry before the first release. The Python
+tools have no home without mise. Without mise the plan does not count what a developer installs
+by hand.
+
+**Target.** `gspot install` sets up one clone (D-156). It installs the mise tools,
+`.gspot/node_modules`, `.gspot/.venv` (D-157), and the hooks, writes no tracked file, and is safe
+to run twice. Before the first release it takes its packages from the local registry that
+`GSPOT_REGISTRY` names (D-158).
+
+**Files.** New `commands/install.ts`. `lifecycle/install-tools.ts` becomes the function behind
+it. New `emit/tool-environment.ts` beside `emit/tool-packages.ts`. `platform/tool-probe.ts`,
+`platform/missing-tool.ts`, `lifecycle/init/plan.ts`, `emit/workflow.ts`, `emit/gitlab.ts`,
+`tests/harness/registry.ts`.
+
+**Logic.** `tool-environment.ts` writes `.gspot/pyproject.toml` from every tool with a `pypi`
+name, and `install` runs `uv sync --project .gspot`. The probe looks under `.gspot/.venv/bin`
+after `.gspot/node_modules/.bin`. `init` and `upgrade` call the function, and `--no-install`
+skips it. With a yes, `init` adds the line `gspot install` to the setup entry the repository
+has (D-115).
+
+`missing-tool.ts` prints `Run: gspot install` for a tool gspot can install, and the
+platform hint for a host tool. `check` prints the same line once when the hooks of the config do
+not run in this clone. The plan counts the binaries that need mise, and where mise is absent it
+shows the one line that installs mise and then all of them.
+
+**What goes.** The two commands that `--no-install` printed, the `mise install` step of both CI
+jobs, and the linked `node_modules` of the planted tests (T-32).
+
+**Tests.** A planted clone: `git clone` of an installed repository, then `gspot check` holds the
+line, then `gspot install`, then a commit runs the hook. A planted Python repository with no mise
+and uv alone runs `python/ruff`. The harness starts the registry and sets `GSPOT_REGISTRY` for
+every planted install.
+
+**Done when.** Those cases pass, and the redo of the app installs from the local registry.
+
+## K-267: the install inside `.gspot/` does not see the repository around it
+
+**What is wrong.** npm reads the project `.npmrc` beside the `package.json` it installs, so the
+registry, the proxy, and the token of the root are missed. A pnpm workspace whose globs reach
+`.gspot/` takes it as a member. Yarn Berry refuses a nested folder that is no part of its
+project.
+
+**Target.** The install under `.gspot/` works behind a private registry, inside a workspace, and
+under each of the four package managers.
+
+**Files.** `lifecycle/install-tools.ts`.
+
+**Logic.** The function asks the package manager for the registry settings at the root, through
+`npm config list --json` and its matches. It passes them to the install as environment values,
+so no token is written to a file. It installs with the flag that keeps a project apart:
+`--ignore-workspace` for pnpm, and an empty `yarn.lock` with its own `.yarnrc.yml` for Yarn
+Berry. The lockfile under `.gspot/` belongs to the package manager the repository uses.
+
+**What goes.** Nothing.
+
+**Tests.** One planted case for each package manager, and one with a registry that needs a
+token, served by the harness registry.
+
+**Done when.** The five cases pass.
+
+## K-268: the tools of the developer now read `.gspot/`
+
+**What is wrong.** With D-145 the linters of the developer stay. Their ESLint lints the generated
+config, their Prettier reformats it, knip and osv-scanner read its lockfile, and Renovate opens
+pull requests against the pins of gspot.
+
+**Target.** The plan tells the developer the one ignore line for each such tool, and gspot never
+reports its own folder to them twice.
+
+**Files.** `lifecycle/init/plan.ts`, the takeover rows of the manifests, the dependencies
+manifest.
+
+**Logic.** A takeover row takes `ignore_hint`, the line that tool needs, such as `.gspot/` for
+`.prettierignore` or `"ignorePaths": [".gspot/**"]` for Renovate. The plan prints the hints of
+the tools it found under removal by hand. The checks of gspot skip `.gspot/node_modules` and
+`.gspot/.venv`. `dependencies/osv` reports an advisory in a lockfile of gspot apart from the
+others, with `gspot upgrade` as its fix.
+
+**What goes.** Nothing.
+
+**Tests.** A planted repository with Renovate and Prettier of its own holds both hints in the
+plan.
+
+**Done when.** It passes.
+
 ## What each language and framework holds
 
 The presets `go`, `rust`, `django` and `ruby` leave (D-136). The table lists what stays. A cell

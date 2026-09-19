@@ -11,15 +11,19 @@ that closes its row.
 The order is fixed by D-121.
 
 1. Delete the branch `chore/gspot` of yap-swift-app on this machine. Push nothing there.
-2. Delete what nothing uses: [00-delete-first.md](fixes/00-delete-first.md).
-3. Make CI run for the first time (K-204), then close the other wrong answers:
-   [01-first-fixes.md](fixes/01-first-fixes.md). Nothing counts as done before that run is green.
-4. Do the rows of the Adoption phase in the order of the fix files, from
-   [02-takeover.md](fixes/02-takeover.md) to [20-self-check.md](fixes/20-self-check.md).
-5. Redo the install in yap-swift-app and measure it ([11-layouts.md](fixes/11-layouts.md)). Ask
-   the owner before any other repository.
-6. Write the README, the manual, and the site: [21-manual.md](fixes/21-manual.md).
-7. Close the rows of [22-launch.md](fixes/22-launch.md). Then comes the first release of the
+2. Make CI run for the first time: K-204 alone, from [01-first-fixes.md](fixes/01-first-fixes.md).
+   Nothing counts as done before that run is green.
+3. Delete what nothing uses: [00-delete-first.md](fixes/00-delete-first.md). A thing with a
+   replacement is deleted in the commit that builds the replacement (K-282).
+4. Close the other wrong answers of [01-first-fixes.md](fixes/01-first-fixes.md).
+5. Do the rows of the Adoption phase in the order of the fix files, from
+   [02-takeover.md](fixes/02-takeover.md) to [20-self-check.md](fixes/20-self-check.md), and then
+   [23-scenarios.md](fixes/23-scenarios.md).
+6. Redo the install in yap-swift-app from the local registry (D-158), on a new branch, and
+   measure it ([11-layouts.md](fixes/11-layouts.md)). Push nothing there. Each failure becomes
+   a row. Ask the owner before any other repository.
+7. Write the README, the manual, and the site: [21-manual.md](fixes/21-manual.md).
+8. Close the rows of [22-launch.md](fixes/22-launch.md). Then comes the first release of the
    binary and the plugin.
 
 ## Every row, by fix file
@@ -54,6 +58,7 @@ exactly one fix file fails it.
 - [ ] K-205: The docs build runs `reference-pages.ts` first, the pages are git-ignored, and the `docs/generated` check goes.
 - [ ] K-259: Drop the scratch entry from `.gitignore`, run pytest of the tests in their own folder, and move the managed block to the end of the file.
 - [ ] S-10: The Vale half of the rules lint goes, and the rule files are read by `prose/vale` like every other text.
+- [ ] K-282: Close K-204 alone first, and delete a thing in the commit that builds what replaces it.
 
 ### The First Fixes
 
@@ -217,6 +222,12 @@ exactly one fix file fails it.
 - [ ] K-248: Carry the iOS and the Python Semgrep packs first. Build each other ledger row that names an unbuilt check, or mark it cut with its reason.
 - [ ] K-249: Raise the eight pins that sit below what a reference repository runs, and fail the release test on a pin below the floor the ledger records.
 - [ ] K-256: Write a nested SwiftLint file over the test folders the xctest preset claims, with the three rules off.
+- [ ] K-264: Build `gspot install`, call it from `init`, `upgrade`, and both CI jobs, and name it in every message about a missing tool (D-156).
+- [ ] K-265: Serve the launcher and the plugin from the registry of the harness, reached through `GSPOT_REGISTRY` (D-158).
+- [ ] K-266: Install the Python tools from a generated `.gspot/pyproject.toml` into `.gspot/.venv` with uv (D-157).
+- [ ] K-283: Count in the plan the binaries that need mise, and show the one line that installs mise and then all of them.
+- [ ] K-267: Pass the registry settings of the root to the install under `.gspot/`, and keep it a project of its own under each package manager.
+- [ ] K-268: Print one ignore hint for each tool of the developer that reads `.gspot/`, and report advisories in the lockfiles of gspot apart.
 
 ### The Manifest Owns What the Preset Knows
 
@@ -421,6 +432,7 @@ exactly one fix file fails it.
 
 - [ ] G-10: Write the README, the guides, and the landing page that 21-documentation.md lists, from real output.
 - [ ] K-202: The guides are rewritten after the redo of the app, from real output ([21-documentation.md](21-documentation.md)), and S-11 keeps them true.
+- [ ] S-19: Write the six guides a stranger needs, each from a run in `examples/`.
 
 ### Before Launch
 
@@ -432,6 +444,24 @@ exactly one fix file fails it.
 - [ ] K-121: Confirm this project owns the npm name `gspot` before any command asks the registry about it.
 - [ ] K-244: Name Homebrew in an install hint only for a tool with no pin, give a `github` installer its tag form, and ask all four registries in the release test.
 - [ ] K-245: Write one notice file at build from the license of every bundled dependency and grammar, and embed it. Give the Swift grammar a build script that names its source commit.
+- [ ] K-280: Add the two musl targets, sign the macOS binaries, and say in the install guide what each system shows.
+- [ ] K-281: Rewrite renamed keys in `gspot upgrade` from one table, from the first release on (D-159).
+
+### Every Place a Developer Comes From
+
+[23-scenarios.md](fixes/23-scenarios.md)
+
+- [ ] K-269: Hold a `pointer` form for each tool in its manifest, and write the table of root pointers.
+- [ ] K-270: Take `.editorconfig` over like a Prettier file, and carry its values into `[format]`.
+- [ ] K-271: State what each git flag answers with no git, add a `gitleaks dir` check, and name other version control as this same mode.
+- [ ] K-272: Give each of the eight git cases one stated behavior and one planted case.
+- [ ] K-273: Add `.gspot/** text eol=lf` to the managed `.gitattributes` block.
+- [ ] K-274: Report a conflict marker under `.gspot/` as one finding that names `gspot apply` and `gspot install`.
+- [ ] K-275: Add the pre-commit framework, lint-staged, and `simple-git-hooks` as hook forms.
+- [ ] K-276: Give the GitHub job least permissions, a SARIF upload that can work, the merge queue event, and a cache.
+- [ ] K-277: Write the CodeClimate report, set the clone depth, and find GitLab by its file.
+- [ ] K-278: Print the three CI lines under `--no-ci`, and show them for four systems in one guide.
+- [ ] K-279: Write the index of rule files into every agent file the repository holds (`[rules] agents`).
 
 ## Names, workarounds, and leftovers to clean
 
