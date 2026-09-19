@@ -174,7 +174,7 @@ Nothing in the release path is code gspot wrote:
 | Rule files         | the repository check `rules/lint` reads front matter, links, size, the layer of each file, fences, and each good example (K-261)                                                 |
 | Self               | `gspot check` on gspot, with no `[[ignore]]` entry                                                                                                                               |
 
-`tests/harness/` holds the init command lines, the fixture text, the tool lists, and the timeouts
+`tests/config/` holds the init command lines, the fixture text, the tool lists, and the timeouts
 that test files share (D-113). The harness fails a test whose `init` exits with an error (T-27).
 
 Tests never call the network. Tools run in CI through mise pins, and a missing tool fails the

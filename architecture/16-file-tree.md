@@ -305,10 +305,12 @@ a root pointer for a tool with an include form. It writes nothing into `package.
 ```text
 tests/
 ├── harness/                    planted.ts, registry.ts, worktree.ts, verdaccio.yaml, and the test-only types
+├── config/                     the init command lines, fixture text, tool lists, and timeouts tests share (D-113)
 ├── repositories/
 │   ├── <preset>.test.ts        init as a developer runs it, then check: exit code, check lines, findings
-│   └── fixtures/xcode/         a project that Xcode wrote, which the xcode tests plant (T-34)
-└── release/                    binary.test.ts, publish.test.ts, install.test.ts
+│   ├── fixtures/xcode/         a project that Xcode wrote, which the xcode tests plant (T-34)
+│   └── generated/              one project for each generator, committed as the generator wrote it (T-33)
+└── release/                    binary, publish, and install tests, the registry test of every pin, and the timing test
 ```
 
 Unit tests sit under `packages/cli/tests/unit/` and `packages/eslint-plugin/tests/rules/`.

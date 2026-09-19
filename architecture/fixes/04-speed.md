@@ -196,6 +196,6 @@ manifest marks it `runs = "per-scope"` and it passes the test (D-122).
 
 **What goes.** Nothing.
 
-**Tests.** That test, which also closes T-12 for the staged run.
+**Tests.** That test. The timed test of a large repository is in [10-tests.md](10-tests.md).
 
 **Done when.** It passes, and a commit of one file in this repository ends in under ten seconds.
