@@ -1,0 +1,5 @@
+    {
+        files: CODE,
+        plugins: { zod: zodPlugin },
+        rules: <%~ json(Object.fromEntries(["no-any-schema", "no-coerce-boolean", "no-empty-custom-schema", "no-native-enum", "no-promise-schema", "no-throw-in-refine", "no-number-schema-with-finite", "prefer-top-level-string-formats", "prefer-strict-object", "prefer-meta", "prefer-meta-last", "require-brand-type-parameter"].map((rule) => [`zod/${rule}`, "error"])), 0) %>,
+    },

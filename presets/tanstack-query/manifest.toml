@@ -1,0 +1,23 @@
+[preset]
+id = "tanstack-query"
+kind = "library"
+title = "TanStack Query"
+requires = ["javascript"]
+description = "TanStack Query: the query rules of ESLint for dependency lists, stable clients, and query options in order."
+
+[detect]
+dependencies = ["@tanstack/react-query", "@tanstack/query-core"]
+
+[[tools]]
+name = "@tanstack/eslint-plugin-query"
+kind = "library"
+version = "5.91.2"
+npm = "@tanstack/eslint-plugin-query"
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/eslint.config.mjs"
+fragment = true
+
+[rule_files]
+library = ["library/tanstack-query/TANSTACKQUERY.md"]

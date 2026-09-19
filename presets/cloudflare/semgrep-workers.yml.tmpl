@@ -1,0 +1,61 @@
+rules:
+  - id: workers-no-user-controlled-fetch
+    patterns:
+      - pattern-either:
+          - pattern: fetch($REQUEST.url, ...)
+          - pattern: fetch($URL.searchParams.get(...), ...)
+    message: SSRF risk. Validate and allowlist outbound fetch targets.
+    languages: [javascript, typescript]
+    severity: ERROR
+    paths:
+      include:
+        - '/functions/**'
+    metadata:
+      cwe: ['CWE-918']
+      category: security
+
+  - id: workers-no-dom-html-sinks
+    pattern-either:
+      - pattern: $ELEMENT.innerHTML = $VALUE
+      - pattern: $ELEMENT.outerHTML = $VALUE
+      - pattern: $ELEMENT.insertAdjacentHTML($POSITION, $VALUE)
+      - pattern: document.write($VALUE)
+    message: DOM XSS risk. Use textContent, DOM node creation, or trusted static markup.
+    languages: [javascript, typescript]
+    severity: ERROR
+    paths:
+      include:
+        - '/shared/**'
+
+  - id: workers-no-wildcard-cors-origin
+    pattern-either:
+      - pattern: |
+          "Access-Control-Allow-Origin": "*"
+      - pattern: |
+          'Access-Control-Allow-Origin': '*'
+      - pattern: $HEADERS.set("Access-Control-Allow-Origin", "*")
+      - pattern: $HEADERS.append("Access-Control-Allow-Origin", "*")
+    message: Cloudflare middleware must not send wildcard CORS origins.
+    languages: [javascript, typescript]
+    severity: ERROR
+    paths:
+      include:
+        - '/functions/**'
+
+  - id: workers-no-unvalidated-request-json
+    patterns:
+      - pattern: await $REQUEST.json()
+      - pattern-not-inside: |
+          const $BODY = await $REQUEST.json()
+          ...
+          validateRequestJson($BODY)
+      - pattern-not-inside: |
+          const $BODY = await $REQUEST.json()
+          ...
+          assertValidRequestJson($BODY)
+    message: Request JSON must pass through the landing request validator before use.
+    languages: [javascript, typescript]
+    severity: ERROR
+    paths:
+      include:
+        - '/functions/**'

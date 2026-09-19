@@ -1,0 +1,7 @@
+    {
+        files: CODE,
+        ignores: <%~ json(settings['tools.zustand.store_files'] ?? ['**/store.ts', '**/stores/*.ts', '**/store/*.ts', '**/*.store.ts'], 0) %>,
+        rules: {
+            'no-restricted-imports': ['error', { paths: [{ name: 'zustand', importNames: ['create', 'createStore'], message: 'Create a store in a store file, once for the module, and export its hook.' }] }],
+        },
+    },

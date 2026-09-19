@@ -1,0 +1,27 @@
+    {
+        files: ['**/*.{js,jsx,ts,tsx}'],
+        plugins: { '@next/next': nextPlugin, 'react-hooks': reactHooks, react },
+        settings: { react: { version: 'detect' } },
+        rules: {
+            ...nextPlugin.configs['core-web-vitals'].rules,
+            ...reactHooks.configs['recommended-latest'].rules,
+            '@next/next/no-async-client-component': 'error',
+            'react/no-array-index-key': 'error',
+            'react/no-danger': 'error',
+            'gspot/no-client-environment': 'error',
+        },
+    },
+    {
+        files: ['**/server/**', '**/*.server.*', '**/features/*/server/**', '**/lib/**/server.*'],
+        rules: { 'gspot/require-server-only': 'error' },
+    },
+    {
+        // The framework finds these files by name, so a folder holds one of them and the file holds one export.
+        files: ['**/{page,layout,template,default,loading,error,not-found,global-error,route,middleware,proxy}.{js,jsx,ts,tsx}'],
+        rules: {
+            'gspot/no-trivial-files': 'off',
+            'gspot/no-export-only-files': 'off',
+            'gspot/no-reexports-outside-index': 'off',
+            'gspot/no-single-file-folders': 'off',
+        },
+    },

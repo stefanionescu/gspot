@@ -1,0 +1,59 @@
+[preset]
+id = "drizzle"
+kind = "library"
+title = "Drizzle"
+requires = ["javascript"]
+description = "Drizzle: no update or delete without a where, raw SQL only where the policy allows it, relations for every reference, and migrations that match the schema."
+
+[detect]
+dependencies = ["drizzle-orm"]
+
+[[tools]]
+name = "eslint-plugin-drizzle"
+kind = "library"
+version = "0.2.3"
+npm = "eslint-plugin-drizzle"
+
+[[tools]]
+name = "drizzle-kit"
+floor = "0.20.0"
+npm = "drizzle-kit"
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/eslint.config.mjs"
+fragment = true
+
+[[checks]]
+id = "drizzle/relations-complete"
+stage = "commit"
+engine = "integrity"
+analysis = "drizzle-relations"
+claims = {extensions = [".ts"]}
+inspection = ["structure"]
+summary = "Checks that every table with a reference has a relations entry."
+why = "The query builder joins through relations, so a reference without one works in SQL and is missing in code."
+fix = "Add a relations call for the table."
+
+[[checks]]
+id = "drizzle/migrations-fresh"
+stage = "push"
+runs = "per-scope"
+engine = "integrity"
+analysis = "drizzle-migrations"
+tool = "drizzle-kit"
+claims = {extensions = [".ts", ".sql"]}
+inspection = ["consistency"]
+summary = "Asks drizzle-kit to write migrations, and fails when it writes one."
+why = "A schema change with no migration works on the machine that pushed the schema and nowhere else."
+fix = "Run drizzle-kit generate and commit the migration."
+
+[[settings]]
+name = "tools.drizzle.raw_sql_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Paths that may hold raw SQL templates, each with a reason."
+
+[rule_files]
+library = ["library/drizzle/DRIZZLE.md"]

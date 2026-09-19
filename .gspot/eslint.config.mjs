@@ -78,20 +78,9 @@ const sizeRules = {
     complexity: ['error', limits.cyclomatic],
 };
 
-const coreRules = {
-    'no-useless-constructor': 'error',
-    'no-useless-return': 'error',
-    'no-useless-call': 'error',
-    'no-useless-rename': 'error',
-    'no-duplicate-imports': 'off',
-    eqeqeq: ['error', 'always'],
-    'no-param-reassign': 'error',
-    'prefer-const': 'error',
-    'padding-line-between-statements': ['error', { blankLine: 'always', prev: ['function', 'class'], next: ['function', 'class'] }],
-    'lines-between-class-members': ['error', 'always'],
-    'no-empty': ['error', { allowEmptyCatch: false }],
-    'no-restricted-syntax': [
-        'error',
+// One rule holds every selector, because a later block that sets the rule replaces the earlier one. The library
+// selectors join the base ones here, and each block below lists all that apply to its files.
+const BASE_SELECTORS = [
         { selector: 'TSEnumDeclaration', message: 'Use a literal union or an as-const object instead of an enum.' },
         { selector: 'TSAsExpression[expression.type="TSAsExpression"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
         { selector: 'TSTypeAssertion[expression.type="TSTypeAssertion"]', message: 'Do not assert twice. Narrow the value, improve the type, or add a typed boundary.' },
@@ -104,7 +93,34 @@ const coreRules = {
         { selector: 'NewExpression[callee.name=/Error$/] > TemplateLiteral.arguments:first-child[quasis.0.value.raw=/^[a-z]/]', message: 'Start an error message with a capital letter.' },
         { selector: 'CallExpression[callee.property.name=/^(json|send)$/] ObjectExpression > Property[key.name=/^(message|error)$/] > TemplateLiteral.value[expressions.length>0]', message: 'A message a client reads names no identifier; put the value in its own field.' },
         { selector: 'CallExpression[callee.object.name=/^(logger|log|console)$/][callee.property.name=/^(debug|info|warn|error|fatal|trace)$/] > TemplateLiteral.arguments:first-child[expressions.length>0]', message: 'Log a stable message and pass the values as fields.' },
-    ],
+];
+const LIBRARY_SELECTORS = [
+];
+const RAW_SQL_SELECTORS = [
+];
+const PROCEDURE_SELECTORS = [
+];
+const RAW_SQL_ALLOWED = [];
+const ROUTER_FILES = ['**/routers/**/*.ts', '**/*router*.ts', '**/trpc/**/*.ts'];
+const librarySelectorBlocks = LIBRARY_SELECTORS.length + RAW_SQL_SELECTORS.length + PROCEDURE_SELECTORS.length === 0 ? [] : [
+    { files: CODE, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS] } },
+    ...(RAW_SQL_ALLOWED.length === 0 ? [] : [{ files: RAW_SQL_ALLOWED, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS] } }]),
+    ...(PROCEDURE_SELECTORS.length === 0 ? [] : [{ files: ROUTER_FILES, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS, ...PROCEDURE_SELECTORS] } }]),
+];
+
+const coreRules = {
+    'no-useless-constructor': 'error',
+    'no-useless-return': 'error',
+    'no-useless-call': 'error',
+    'no-useless-rename': 'error',
+    'no-duplicate-imports': 'off',
+    eqeqeq: ['error', 'always'],
+    'no-param-reassign': 'error',
+    'prefer-const': 'error',
+    'padding-line-between-statements': ['error', { blankLine: 'always', prev: ['function', 'class'], next: ['function', 'class'] }],
+    'lines-between-class-members': ['error', 'always'],
+    'no-empty': ['error', { allowEmptyCatch: false }],
+    'no-restricted-syntax': ['error', ...BASE_SELECTORS],
 };
 
 const gspotRules = {
@@ -548,6 +564,7 @@ export default [
     ...tseslint.configs.disableTypeChecked.files ? [{ ...tseslint.configs.disableTypeChecked, files: JAVASCRIPT }] : [],
     { files: TESTS, rules: { '@typescript-eslint/no-non-null-assertion': 'off', '@typescript-eslint/no-magic-numbers': 'off', '@typescript-eslint/explicit-module-boundary-types': 'off', '@typescript-eslint/no-unsafe-assignment': 'off' } },
 
+    ...librarySelectorBlocks,
     { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },
     {
         files: SCRIPTS,

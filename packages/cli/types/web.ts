@@ -18,3 +18,6 @@ export type SiteBuild = {
 
 /** One size ceiling of the policy: the output paths it sums and the most kilobytes they may weigh, compressed. */
 export type SizeLimit = { paths: string[]; kb: number; reason?: string };
+
+/** Where the message files live and which locale is the base. */
+export type Translations = { directory?: string; base?: string };

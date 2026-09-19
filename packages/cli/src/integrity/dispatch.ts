@@ -3,6 +3,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { codeql } from '#cli/integrity/codeql.ts';
 import { fences } from '#cli/integrity/fences.ts';
+import { localeFiles } from '#cli/web/locales.ts';
 import { adminKey } from '#cli/supabase/admin-key.ts';
 import { routesTested } from '#cli/express/routes.ts';
 import { envFiles } from '#cli/integrity/env/files.ts';
@@ -49,8 +50,11 @@ import { swiftAnalyze, swiftBuild, swiftPeriphery } from '#cli/apple/build.ts';
 import { sqlBlockComments, sqlFileLength, sqlSyntax } from '#cli/sql/checks.ts';
 import { orphanSources, projectSymlinks, testPlans } from '#cli/apple/xcode/project.ts';
 import { disabledTests, noSleep, recordingMode } from '#cli/apple/xctest/line-checks.ts';
+import { dependencyAlignment, frameworkFile, routeSegments } from '#cli/web/next-checks.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/supabase/config-checks.ts';
+import { drizzleMigrations, drizzleRelations, trpcBoundaries } from '#cli/web/library-checks.ts';
 import { dependencyOwnership, importLinter, typecheckMembership } from '#cli/pyproject/project.ts';
+import { envTypesFresh, headersSyntax, redirectsSyntax, wranglerFile } from '#cli/web/edge-files.ts';
 import { deadAssets, securityHeaders, svgCompressed, webManifest } from '#cli/web/site/source-checks.ts';
 import { entitlementsPolicy, transportSecurity, xcconfigLines } from '#cli/apple/xcode/settings-files.ts';
 import { definerSearchPath, explicitGrants, foreignKeyIndexes, rlsPresent } from '#cli/postgres/schema/checks.ts';
@@ -84,6 +88,17 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'trpc-boundaries': trpcBoundaries,
+    'drizzle-relations': drizzleRelations,
+    'drizzle-migrations': drizzleMigrations,
+    'next-route-segments': routeSegments,
+    'next-config': frameworkFile,
+    'dependency-alignment': dependencyAlignment,
+    'locale-files': localeFiles,
+    'cloudflare-headers': headersSyntax,
+    'cloudflare-redirects': redirectsSyntax,
+    'cloudflare-wrangler': wranglerFile,
+    'cloudflare-env-types': envTypesFresh,
     'site-build': siteBuilds,
     'site-build-reproducible': buildReproducible,
     'site-built-markup': builtMarkup,
