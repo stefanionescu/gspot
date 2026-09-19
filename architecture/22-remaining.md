@@ -247,6 +247,7 @@ with no line here fails the placement check.
 - [ ] K-250: Make the two SPDX packages and the Markdown parser dependencies that do their job. Use or drop each other library the two documents name.
 - [ ] K-251: Drop `--skip-updates` from the dotenv fixer, give v8r its config through `V8R_CONFIG_FILE`, and fail the contract test on a flag the pinned tool lacks.
 - [ ] K-252: Report a run whose report cannot be written in one line on stderr, and keep its findings and its exit code.
+- [ ] K-253: Make the workflow gspot writes follow `GITHUB-ACTIONS.md`: a pinned runner image, a timeout, and a concurrency group. Name the tasks as D-116 decides.
 
 ### Row 1: Takeover deletes nothing it does not own
 
@@ -562,9 +563,12 @@ By the order of the owner, nothing below is touched before its step.
 
 Not done in this read, and owed before the fixes start:
 
-- 68 of the 107 rule files were read by script and not by a person. The owner stopped that read
-  on September 19, 2026.
-- The 48 preset pages and `16-file-tree.md`, by eye (S-14 holds what a script found).
+- 19 rule files of the framework, library, and tool layers, which the owner chose to have read:
+  `nextjs/SECURITY.md`, two fastapi files, `SWIFTUI.md`, `UIKIT.md`, seven library guides,
+  `SUPABASE.md`, `POSTGRES.md`, `I18N.md`, `DOCKER.md`, and three more. 33 other rule files stay
+  unread by the owner's choice.
+- 42 of the 48 preset pages, by eye. The six framework pages and `jest` are read.
+- `16-file-tree.md` by eye (S-14 holds what a script found).
 - The flags each manifest passes, against the help text of the pinned version.
 
 Checked on September 19, 2026, with the row that holds what was found:
