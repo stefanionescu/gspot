@@ -74,3 +74,29 @@ mark is never a stray.
 `apply`, and a line for it in `doctor`.
 
 **Done when.** That case passes.
+
+## K-296: nobody wrote down what the `.gitignore` block holds
+
+**What is wrong.** No document lists the lines of the block, or says what happens in a
+repository with no `.gitignore`. `gitignoreBlock()` in `emit/managed-blocks.ts` lists each Vale
+package by hand and holds `.gspot/last.sarif`, a file name that is gone.
+
+**Target.** D-170. The block holds the untracked paths of gspot alone, and it comes from the
+manifests. gspot creates the file where none exists and adds no line for the files of the
+developer.
+
+**Files.** `emit/managed-blocks.ts`, `emit/targets.ts`, the prose manifest, `commands/uninstall.ts`.
+
+**Logic.** The fixed lines are `gspot.local.toml`, `.gspot/cache/`, `.gspot/node_modules/`,
+`.gspot/.venv/`, and `.gspot/report.*`. A manifest adds a line through a field named
+`untracked`, and the prose manifest names the folder of each Vale package there. The block goes
+at the end of the file. In a folder with no git, `targets.ts` leaves the block out. `uninstall`
+removes the block, and deletes the file when the block was all it held.
+
+**What goes.** The hand-written list in `gitignoreBlock()`, and the line `.gspot/last.sarif`.
+
+**Tests.** Three planted cases: no `.gitignore`, one with lines of the developer, and a folder
+with no git. `uninstall.test.ts` holds that a file gspot created is deleted.
+
+**Done when.** They pass, and `git status` is clean after `gspot install` in each planted
+repository.

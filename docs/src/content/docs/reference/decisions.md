@@ -908,7 +908,7 @@ took 45 minutes in the app.
 ## D-123 Three commands and one setting
 
 A developer learns `gspot check`, `gspot check --changed` and `gspot check --staged`. `--changed`
-is `--since` with the upstream branch as its ref, and `--since <ref>` stays for another ref.
+compares with the upstream branch, and `--changed=<ref>` compares with another ref (D-169).
 `[hooks] push = "changed"` is the default, and `"all"` is for a team that wants the full run on
 push. Finer switches stay in `--help`. Rejected: a setting for each hook and each stage, which
 gives power nobody asked for and a page of options to read first.
@@ -1466,10 +1466,74 @@ removes its block and leaves the rest of the file. This amends D-101 and D-115.
 
 Some checks read a whole project: a type checker, a dead code tool, an import graph. With no
 baseline (D-165), such a check reports every old problem of the project on every push, and the
-developer passes the hook every time. In a run with `--staged`, `--changed`, or `--since`, a
+developer passes the hook every time. In a run with `--staged` or `--changed`, a
 whole-project check still reads the whole project, because it has to.
 
 gspot then keeps the
 findings in the files the change touches. The exit code comes from those alone. One line counts
 the rest: `214 more findings in files you did not change (gspot check)`. `gspot check` with no
 such flag reports everything.
+
+## D-169 One flag names the changed files
+
+`--changed` and `--since <ref>` were one idea under two names. `--changed` stays and takes an
+optional ref. `gspot check --changed` compares with the upstream branch, and
+`gspot check --changed=<ref>` compares with that ref. The value needs the equals sign, as
+`git diff --color=always` does, because a bare word after the flag is a path.
+
+The push hook and both CI jobs pass the base commit this way. `--since` goes, with no alias
+(D-134). This amends D-123.
+
+## D-170 The `.gitignore` block holds the paths of gspot alone
+
+gspot writes one managed block into `.gitignore`. It creates the file where the repository has
+none. Where the file exists, the block goes at the end, and no other line is read or moved.
+
+| Line                           | Why git never tracks it                |
+| ------------------------------ | -------------------------------------- |
+| `gspot.local.toml`             | the skips of one machine               |
+| `.gspot/cache/`                | verdicts of past runs                  |
+| `.gspot/node_modules/`         | the installed npm tools                |
+| `.gspot/.venv/`                | the installed Python tools             |
+| `.gspot/report.*`              | the reports of the last run            |
+| one line for each Vale package | downloaded styles under `.gspot/vale/` |
+
+The block comes from the manifests, so a new untracked path needs no edit by hand. gspot adds
+no line for the files of the developer, such as `node_modules/` or `.DS_Store`. Those lines
+belong to the developer, and a lint tool that edits them is a surprise. A folder with no git
+gets no `.gitignore`, and `gspot apply` writes the block once the folder is a repository.
+
+## D-171 The npm tools install with what the machine has
+
+The npm lint tools need a package manager and a JavaScript runtime. The install under `.gspot/`
+takes the first of these it finds:
+
+1. the package manager of the root of the repository;
+2. the package manager of the first JavaScript project;
+3. bun, then npm, whichever the machine has;
+4. bun, pinned in the mise file of gspot, under the mise runner.
+
+A Swift or a Python repository has no Node, so npm is no safe last answer there. bun is one
+binary that mise installs in seconds. It also runs a tool whose first line names `node` on a
+machine with no Node. With none of the four, the npm checks print `missing` with the command that
+installs bun. Rejected: npm as the fixed last answer, which assumes Node on every machine.
+
+## D-172 A missing tool never blocks the setup
+
+`init` needs gspot and nothing else. It reads, proposes, and writes the config on any machine.
+What a machine lacks is reported with the command that adds it, and gspot installs no system
+software unasked. pre-commit, lefthook, and mise work the same way.
+
+| The machine lacks                    | What happens                                                                   |
+| ------------------------------------ | ------------------------------------------------------------------------------ |
+| git, or the folder is no repository  | `init` and `check` run, and no hook is written (K-271)                         |
+| mise                                 | the plan counts the binaries mise brings, and prints the line that installs it |
+| a package manager for the npm tools  | D-171                                                                          |
+| uv                                   | mise installs it from the mise file of gspot; without mise it is `missing`     |
+| a host tool, such as Xcode or Docker | the checks that need it print `missing` with the hint of the platform          |
+
+`gspot install` installs everything it is able to. It then lists what is left, each with its
+command, and exits 1. `init` has written the config by then and exits 0. `gspot check` runs
+every check whose tool exists. A check whose tool is absent prints `missing` and fails the run,
+because a silent skip gives two verdicts on two machines. `gspot.local.toml` skips a tool that
+one machine lacks, and the skip prints.

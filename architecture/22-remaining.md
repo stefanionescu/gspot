@@ -155,6 +155,7 @@ exactly one fix file fails it.
 - [ ] A-5: End `init` by offering the fix run, and refuse a local skip of a check whose tool is present (D-103).
 - [ ] K-72: Add one managed block to `.gitattributes`: `.gspot/** linguist-generated`.
 - [ ] K-118: Check in the redo of the app whether `apply` spares the hand-made gitleaks baseline, and make `apply` delete only files it wrote.
+- [ ] K-296: Build the `.gitignore` block from the manifests, and create the file where none exists (D-170).
 
 ### The Config Text and Scopes
 
@@ -227,6 +228,7 @@ exactly one fix file fails it.
 - [ ] K-283: Count in the plan the binaries that need mise, and show the one line that installs mise and then all of them.
 - [ ] K-267: Pass the registry settings of the root to the install under `.gspot/`, and keep it a project of its own under each package manager.
 - [ ] K-268: Print one ignore hint for each tool of the developer that reads `.gspot/`, and report advisories in the lockfiles of gspot apart.
+- [ ] K-297: Never block the setup on a missing tool, and install the npm tools with bun where no JavaScript exists (D-171, D-172).
 
 ### The Manifest Owns What the Preset Knows
 
@@ -354,7 +356,8 @@ exactly one fix file fails it.
 - [ ] K-69: Cache a `[[check]]` only on the inputs it names, or never.
 - [ ] K-70: Make the pre-push hook check the commits being pushed, not the working tree.
 - [ ] K-293: In a run over changed files, keep the findings in those files and count the rest in one line (D-168).
-- [ ] K-294: Pass the base commit to `--since` in both CI jobs, and name the package manager the install under `.gspot/` takes.
+- [ ] K-294: Pass the base commit as `--changed=<commit>` in both CI jobs, and name the package manager the install under `.gspot/` takes.
+- [ ] K-295: Give `--changed` an optional ref, and delete `--since` (D-169).
 
 ### The Top Level of This Repository
 

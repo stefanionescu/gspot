@@ -191,7 +191,7 @@ when every gap it names has left 18-gaps.md.
 | What a repository gets from init                            | K-72, K-118                                                                                                                                                                                 | 5             |
 | Release                                                     | K-121, K-145, K-164, K-244, K-245, K-263, K-280, K-281                                                                                                                                      | before launch |
 | The README, the manual, and the site                        | G-10, K-202, S-19                                                                                                                                                                           | after 15      |
-| Every place a developer comes from                          | K-271, K-272, K-273, K-274, K-275, K-276, K-277, K-278, K-279, K-284, K-285, K-287, K-288, K-289, K-291, K-292, K-293, K-294                                                                | 23b           |
+| Every place a developer comes from                          | K-271, K-272, K-273, K-274, K-275, K-276, K-277, K-278, K-279, K-284, K-285, K-287, K-288, K-289, K-291, K-292, K-293, K-294, K-295, K-296, K-297                                           | 23b           |
 | Tests                                                       | T-2 to T-12, T-14 to T-18, T-19 to T-23, T-24 to T-26, T-27 to T-36, G-2, K-28                                                                                                              | 14            |
 
 The order is fixed by D-121. The branch `chore/gspot` of yap-swift-app is deleted first, on

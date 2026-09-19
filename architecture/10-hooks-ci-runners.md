@@ -56,7 +56,7 @@ happens. When a staged file also has unstaged changes, the output says
 ## The push hook
 
 The push hook checks the files of the commits being pushed. Git gives it the local and the remote
-id, and the hook checks the files that differ between them, in place. A file with uncommitted
+id, and the hook runs `gspot check --changed=<remote id>` over the files that differ, in place. A file with uncommitted
 work outside that list is not read, so it never refuses a push. Where a pushed file also has
 uncommitted changes, the output says so, as staged mode does.
 
@@ -145,6 +145,7 @@ for a tool is kept, and `doctor` reports a version below the floor of the preset
 
 The npm lint tools are no part of the runner. They install under `.gspot/`, from
 `.gspot/package.json`, with the package manager the repository uses, under every runner (D-145).
+A repository with no JavaScript takes bun or npm, whichever the machine has (D-171).
 
 ## CI
 
@@ -180,7 +181,7 @@ jobs:
                       .gspot/.venv
                   key: gspot-${{ runner.os }}-${{ hashFiles('.gspot/*.lock', '.mise/conf.d/gspot-tools.toml') }}
             - run: gspot install
-            - run: gspot check --since ${{ github.event.pull_request.base.sha || github.event.before }}
+            - run: gspot check --changed=${{ github.event.pull_request.base.sha || github.event.before }}
               # or plain gspot check, with [ci] run = "all"
             - uses: actions/upload-artifact@<pinned sha>
               if: always()

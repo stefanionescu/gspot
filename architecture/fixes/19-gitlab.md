@@ -13,7 +13,7 @@ three flags and a `--no-` flag on two.
 
 **Target.** The table of [02-cli.md](../02-cli.md): `--dry-run` on `init`, `upgrade`,
 `uninstall`, and `check --fix`; `--no-ci`, `--no-hooks`, `--no-runner`, `--no-rules`, and
-`--no-install`; `check --changed` as `--since` the upstream branch (D-123);
+`--no-install`; `check --changed[=<ref>]`, with the upstream branch as the default ref (D-169);
 `[hooks] push = "changed"` or `"all"`.
 
 **Files.** `commands/*.ts`, `program.ts`, `run/check-command.ts`, `policy/schema.ts`.

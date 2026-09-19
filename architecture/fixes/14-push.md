@@ -33,7 +33,7 @@ tree. Uncommitted work in unrelated files refuses a push of clean commits.
 **Files.** `emit/hooks.ts`, `run/check-command.ts`, `repository/staged.ts`.
 
 **Logic.** Git gives the hook the local and the remote id on stdin. The hook passes them as
-`gspot check --since <remote id>`, which reads the files that differ, in place. A first push has
+`gspot check --changed=<remote id>`, which reads the files that differ, in place. A first push has
 a zero remote id, and the hook then takes the commits no remote branch holds (K-272). Where a
 pushed file also has uncommitted changes, the output says so, as staged mode does. No worktree
 and no stash: a second checkout has none of the installed dependencies a type checker needs.
@@ -61,19 +61,42 @@ counts the rest. CI compares with the commit before the change.
 **Files.** `run/execute.ts`, `output/reporter.ts`, `emit/workflow.ts`, `emit/gitlab.ts`,
 `lifecycle/install-tools.ts`.
 
-**Logic.** `execute.ts` knows the changed file list of a run with `--staged`, `--changed`, or
-`--since`. After a whole-project check it keeps the findings whose file is on that list, and the
+**Logic.** `execute.ts` knows the changed file list of a run with `--staged` or
+`--changed`. After a whole-project check it keeps the findings whose file is on that list, and the
 exit code comes from those. The reporter prints one line with the count of the others and the
 command that shows them.
 
 The GitHub job passes the base of the pull request, or the commit before
-the push, to `--since`. The GitLab job passes `CI_MERGE_REQUEST_DIFF_BASE_SHA`, or
+the push, as `--changed=<commit>`. The GitLab job passes `CI_MERGE_REQUEST_DIFF_BASE_SHA`, or
 `CI_COMMIT_BEFORE_SHA`. The install under `.gspot/` takes the package manager of the root, then
-of the first JavaScript project, then npm.
+of the first JavaScript project, then what D-171 names.
 
-**What goes.** `gspot check --changed` in both CI jobs.
+**What goes.** The bare `gspot check --changed` in both CI jobs.
 
 **Tests.** A planted TypeScript project with an old type error in `a.ts` pushes a change to `b.ts`
-and passes, with the one line about `a.ts`. A unit test of each CI file holds the `--since` value.
+and passes, with the one line about `a.ts`. A unit test of each CI file holds the `--changed=` value.
 
 **Done when.** Both pass.
+
+## K-295: two flags name one idea
+
+**What is wrong.** `gspot check --changed` compares with the upstream branch. `--since <ref>`
+does the same from another ref. A developer reads two flags and learns one thing.
+
+**Target.** D-169. `--changed` takes an optional ref, written `--changed=<ref>`. `--since` is
+gone, with no alias.
+
+**Files.** `program.ts`, `run/check-command.ts`, `repository/changed.ts`, `emit/hooks.ts`,
+`emit/workflow.ts`, `emit/gitlab.ts`.
+
+**Logic.** The parser reads the value only after an equals sign, so `gspot check --changed api`
+checks the folder `api`. With no value the ref is `@{upstream}`, then the default branch
+(K-272). The push hook writes `--changed=<remote id>`, and both CI jobs write
+`--changed=<base commit>`.
+
+**What goes.** The option `--since`, its help text, and its branch in `check-command.ts`.
+
+**Tests.** `check-command.test.ts` holds both forms, holds that `--changed api` reads `api` as a
+path, and holds that `--since` is an unknown option with exit 2.
+
+**Done when.** It passes, and no document or help text holds the word `--since`.

@@ -12,7 +12,7 @@ gspot init       [--yes] [--dry-run] [--from <profile>] [--presets <names>] [--w
                  [--hooks gspot|husky|lefthook|pre-commit|simple-git-hooks|existing] [--no-hooks] [--ci github|gitlab] [--no-ci]
                  [--runner mise|npm|pnpm|yarn|bun] [--no-runner] [--format keep|shipped]
                  [--no-rules] [--no-checks] [--no-install] [--allow-dirty]
-gspot check      [<path>...] [--staged] [--changed] [--since <ref>] [--fix] [--dry-run]
+gspot check      [<path>...] [--staged] [--changed[=<ref>]] [--fix] [--dry-run]
                  [--only <check>] [--skip <check>] [--stage commit|push|manual] [--no-cache]
 gspot install    [--dry-run]
 gspot apply      [--dry-run]
@@ -224,6 +224,10 @@ line to the setup entry the repository already has, such as a `setup` task or a 
 script (D-115). A clone that is not set up says so: `gspot check`, `gspot doctor`, and a missing
 tool each print `Run: gspot install`. `check` never installs by itself.
 
+A missing tool never blocks the setup (D-172). `install` installs what it is able to, lists the
+rest with the command for each, and exits 1. The npm tools install with the package manager of
+the repository, and with bun or npm where the repository has none (D-171).
+
 ## `check`
 
 Runs checks and prints findings. `gspot check` is the truth, and the hooks are the fast path
@@ -234,7 +238,7 @@ Runs checks and prints findings. `gspot check` is the truth, and the hooks are t
 | `gspot check`                          | every check of the commit and push stages, over the whole repository           |
 | `gspot check --staged`                 | the commit stage over staged files, which is what the commit hook runs         |
 | `gspot check --changed`                | the commit and push stages over files that differ from the upstream branch     |
-| `gspot check --since <ref>`            | the same, from another ref                                                     |
+| `gspot check --changed=<ref>`          | the same, from another ref, which the push hook and the CI job pass (D-169)    |
 | `gspot check --stage manual`           | the checks that build, test, or scan a whole project, or that need the network |
 | `gspot check src/app.ts docs`          | those files and folders, as `eslint` and `ruff check` take paths               |
 | `gspot check api`                      | one project of a monorepo, because a scope is a folder                         |
@@ -243,7 +247,7 @@ Runs checks and prints findings. `gspot check` is the truth, and the hooks are t
 | `gspot check --fix --dry-run`          | the diff of every fix, and no write                                            |
 | `gspot check --skip <id>`              | skips one check this run, printed and recorded                                 |
 
-A run with `--staged`, `--changed`, or `--since` reports findings in the files the change
+A run with `--staged` or `--changed` reports findings in the files the change
 touches (D-168). A check that reads a whole project, such as a type checker, still reads it, and
 one line counts what it found in other files.
 
@@ -257,8 +261,8 @@ Results are cached in `.gspot/cache/`. The key holds the tool version, the confi
 check names, and the content of every file it read. A cached pass prints `unchanged`. Entries
 older than 30 days are dropped.
 
-In a folder with no git, `gspot check` runs every check that needs no history. `--staged`,
-`--changed`, and `--since` exit 2 there with one sentence that says why. With no upstream,
+In a folder with no git, `gspot check` runs every check that needs no history. `--staged` and
+`--changed` exit 2 there with one sentence that says why. With no upstream,
 `--changed` uses the default branch and says which ref it took. In a shallow clone it names
 `git fetch --unshallow`.
 

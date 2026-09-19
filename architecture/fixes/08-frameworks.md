@@ -477,3 +477,33 @@ using the version the repository holds is no way out.
 D-145 in [14-decisions.md](../14-decisions.md) is the answer, and the owner accepted it on
 September 19, 2026. The lint tools of gspot are tools and not dependencies of the repository.
 They install under `.gspot/`, and the `package.json` of the developer keeps the ESLint it has.
+
+## K-297: nothing says what a machine without mise, Node, or uv gets
+
+**What is wrong.** The install under `.gspot/` ended at npm, which a Swift or a Python machine
+does not have. No document says whether `init` stops on a missing tool, what `gspot install`
+exits with, or who installs mise.
+
+**Target.** D-171 and D-172. A missing tool never blocks the setup. `init` writes the config on
+any machine, `install` installs what it is able to and lists the rest, and gspot installs no
+system software unasked.
+
+**Files.** `lifecycle/install-tools.ts`, `platform/missing-tool.ts`, `platform/install-hints.ts`,
+`emit/mise.ts`, `lifecycle/init/plan.ts`.
+
+**Logic.** `install-tools.ts` picks the package manager in the order of D-171: the root, the
+first JavaScript project, bun or npm on the machine, then bun from the mise file of gspot.
+`emit/mise.ts` pins bun only in that last case, and pins uv where a Python tool is selected. Each
+step of the install runs even when an earlier one failed. The command ends with one list of what
+is left, each entry with its command, and exits 1 when the list is not empty. `init` exits 0
+once the config is written, and prints the same list.
+
+**What goes.** The npm branch at the end of the package manager choice, and any `throw` in
+`init` for a tool that is absent.
+
+**Tests.** Three planted machines, each a `PATH` with tools left out. A Swift repository with
+mise and no Node installs the npm tools through bun. A Python repository with no mise and no uv
+ends `install` with exit 1 and one line for uv. A repository with nothing but gspot finishes
+`init` with exit 0.
+
+**Done when.** The three cases pass.

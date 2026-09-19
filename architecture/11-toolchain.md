@@ -99,6 +99,7 @@ fails a pin below what a reference repository runs.
 | a Python tool                     | `.gspot/.venv`, from `.gspot/pyproject.toml`, with uv (D-157)                                 |
 | a host tool, such as `xcodebuild` | nowhere; `doctor` reports whether it is present                                               |
 | any tool, with no mise            | nowhere; `doctor` prints the install command of the platform                                  |
+| a repository with no JavaScript   | the npm tools install with bun or npm, whichever the machine has, bun first (D-171)           |
 
 `gspot install` runs all of these for one clone (D-156). The lint tools of gspot are tools, not
 dependencies of the repository (D-145). gspot never writes

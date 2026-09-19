@@ -54,7 +54,7 @@ root pointer of Prettier and through `gspot check --fix`, and holds equal bytes.
 
 ## K-271: a folder with no git is half decided
 
-**What is wrong.** Nothing says what `--staged`, `--changed`, `--since`, and the hooks answer in
+**What is wrong.** Nothing says what `--staged`, `--changed`, and the hooks answer in
 a folder with no git. Both gitleaks checks read git history, so such a folder gets no secret
 scan. Other version control systems are not named.
 
@@ -65,7 +65,7 @@ finds.
 **Files.** `run/check-command.ts`, `presets/secrets/manifest.toml`, `doctor/changes.ts`,
 `repository/tracked.ts`.
 
-**Logic.** `--staged`, `--changed`, and `--since` exit 2 with one sentence: this folder is no git
+**Logic.** `--staged` and `--changed` exit 2 with one sentence: this folder is no git
 repository, so run `gspot check`. The secrets preset gains `secrets/gitleaks-files`, which runs
 `gitleaks dir`, with `needs_git = false`, and the two history checks take `needs_git = true`.
 `doctor` prints one line when a `.git` folder appeared after `init`, with the commands that add
