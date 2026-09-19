@@ -1,6 +1,9 @@
 {
     "version": 1,
-    "matching": { "wholeParts": true, "caseInsensitive": true },
+    "matching": {
+        "wholeParts": true,
+        "caseInsensitive": true
+    },
     "banDigits": true,
     "banDuplicateWords": true,
     "groups": {
@@ -134,9 +137,18 @@
         }
     },
     "reserved": [
-        { "term": "data", "allowedFor": ["API success envelope field"] },
-        { "term": "message", "allowedFor": ["API client message field"] },
-        { "term": "id", "allowedFor": ["identifier word"] },
+        {
+            "term": "data",
+            "allowedFor": ["API success envelope field"]
+        },
+        {
+            "term": "message",
+            "allowedFor": ["API client message field"]
+        },
+        {
+            "term": "id",
+            "allowedFor": ["identifier word"]
+        },
         {
             "term": "config",
             "allowedFor": [
@@ -146,7 +158,10 @@
                 "configuration property"
             ]
         },
-        { "term": "values", "allowedFor": ["SQL VALUES clause"] }
+        {
+            "term": "values",
+            "allowedFor": ["SQL VALUES clause"]
+        }
     ],
     "external": [
         "spawnSync",
@@ -277,20 +292,48 @@
             "maxWords": 4,
             "acronyms": "word",
             "categories": {
-                "files": { "case": ["kebab"] },
-                "directories": { "case": ["kebab"] },
-                "types": { "case": ["pascal"] },
-                "classes": { "case": ["pascal"] },
-                "functions": { "case": ["camel"] },
-                "methods": { "case": ["camel"] },
-                "parameters": { "case": ["camel"] },
-                "variables": { "case": ["camel", "upper-snake"] },
-                "constants": { "case": ["camel", "upper-snake"] },
-                "properties": { "case": ["camel"] },
-                "routes": { "case": ["kebab"] },
-                "path_parameters": { "case": ["camel"] },
-                "operation_ids": { "case": ["camel"] },
-                "enum_cases": { "case": ["pascal", "camel"] }
+                "files": {
+                    "case": ["kebab"]
+                },
+                "directories": {
+                    "case": ["kebab"]
+                },
+                "types": {
+                    "case": ["pascal"]
+                },
+                "classes": {
+                    "case": ["pascal"]
+                },
+                "functions": {
+                    "case": ["camel"]
+                },
+                "methods": {
+                    "case": ["camel"]
+                },
+                "parameters": {
+                    "case": ["camel"]
+                },
+                "variables": {
+                    "case": ["camel", "upper-snake"]
+                },
+                "constants": {
+                    "case": ["camel", "upper-snake"]
+                },
+                "properties": {
+                    "case": ["camel"]
+                },
+                "routes": {
+                    "case": ["kebab"]
+                },
+                "path_parameters": {
+                    "case": ["camel"]
+                },
+                "operation_ids": {
+                    "case": ["camel"]
+                },
+                "enum_cases": {
+                    "case": ["pascal", "camel"]
+                }
             }
         },
         "javascript": {
@@ -298,17 +341,39 @@
             "maxWords": 4,
             "acronyms": "word",
             "categories": {
-                "files": { "case": ["kebab"] },
-                "directories": { "case": ["kebab"] },
-                "types": { "case": ["pascal"] },
-                "classes": { "case": ["pascal"] },
-                "functions": { "case": ["camel"] },
-                "methods": { "case": ["camel"] },
-                "parameters": { "case": ["camel"] },
-                "variables": { "case": ["camel", "upper-snake"] },
-                "constants": { "case": ["camel", "upper-snake"] },
-                "properties": { "case": ["camel", "upper-snake"] },
-                "routes": { "case": ["kebab"] }
+                "files": {
+                    "case": ["kebab"]
+                },
+                "directories": {
+                    "case": ["kebab"]
+                },
+                "types": {
+                    "case": ["pascal"]
+                },
+                "classes": {
+                    "case": ["pascal"]
+                },
+                "functions": {
+                    "case": ["camel"]
+                },
+                "methods": {
+                    "case": ["camel"]
+                },
+                "parameters": {
+                    "case": ["camel"]
+                },
+                "variables": {
+                    "case": ["camel", "upper-snake"]
+                },
+                "constants": {
+                    "case": ["camel", "upper-snake"]
+                },
+                "properties": {
+                    "case": ["camel", "upper-snake"]
+                },
+                "routes": {
+                    "case": ["kebab"]
+                }
             }
         },
         "python": {
@@ -316,21 +381,51 @@
             "maxWords": 4,
             "acronyms": "lower",
             "categories": {
-                "files": { "case": ["snake"] },
-                "directories": { "case": ["snake"] },
-                "modules": { "case": ["snake"] },
-                "packages": { "case": ["snake"] },
-                "types": { "case": ["pascal"] },
-                "type_aliases": { "case": ["pascal"] },
-                "classes": { "case": ["pascal"] },
-                "exceptions": { "case": ["pascal"] },
-                "functions": { "case": ["snake"] },
-                "methods": { "case": ["snake"] },
-                "parameters": { "case": ["snake"] },
-                "variables": { "case": ["snake", "upper-snake"] },
-                "constants": { "case": ["upper-snake"] },
-                "attributes": { "case": ["snake", "upper-snake"] },
-                "properties": { "case": ["snake"] }
+                "files": {
+                    "case": ["snake"]
+                },
+                "directories": {
+                    "case": ["snake"]
+                },
+                "modules": {
+                    "case": ["snake"]
+                },
+                "packages": {
+                    "case": ["snake"]
+                },
+                "types": {
+                    "case": ["pascal"]
+                },
+                "type_aliases": {
+                    "case": ["pascal"]
+                },
+                "classes": {
+                    "case": ["pascal"]
+                },
+                "exceptions": {
+                    "case": ["pascal"]
+                },
+                "functions": {
+                    "case": ["snake"]
+                },
+                "methods": {
+                    "case": ["snake"]
+                },
+                "parameters": {
+                    "case": ["snake"]
+                },
+                "variables": {
+                    "case": ["snake", "upper-snake"]
+                },
+                "constants": {
+                    "case": ["upper-snake"]
+                },
+                "attributes": {
+                    "case": ["snake", "upper-snake"]
+                },
+                "properties": {
+                    "case": ["snake"]
+                }
             }
         },
         "swift": {
@@ -338,17 +433,39 @@
             "maxWords": 5,
             "acronyms": "initialism",
             "categories": {
-                "files": { "case": ["pascal", "pascal-plus"] },
-                "directories": { "case": ["pascal"] },
-                "types": { "case": ["pascal"] },
-                "classes": { "case": ["pascal"] },
-                "functions": { "case": ["camel"] },
-                "methods": { "case": ["camel"] },
-                "parameters": { "case": ["camel"] },
-                "variables": { "case": ["camel"] },
-                "constants": { "case": ["camel"] },
-                "properties": { "case": ["camel"] },
-                "enum_cases": { "case": ["camel"] }
+                "files": {
+                    "case": ["pascal", "pascal-plus"]
+                },
+                "directories": {
+                    "case": ["pascal"]
+                },
+                "types": {
+                    "case": ["pascal"]
+                },
+                "classes": {
+                    "case": ["pascal"]
+                },
+                "functions": {
+                    "case": ["camel"]
+                },
+                "methods": {
+                    "case": ["camel"]
+                },
+                "parameters": {
+                    "case": ["camel"]
+                },
+                "variables": {
+                    "case": ["camel"]
+                },
+                "constants": {
+                    "case": ["camel"]
+                },
+                "properties": {
+                    "case": ["camel"]
+                },
+                "enum_cases": {
+                    "case": ["camel"]
+                }
             }
         },
         "bash": {
@@ -356,11 +473,21 @@
             "maxWords": 4,
             "acronyms": "lower",
             "categories": {
-                "files": { "case": ["kebab", "snake"] },
-                "directories": { "case": ["kebab", "snake"] },
-                "functions": { "case": ["snake"] },
-                "variables": { "case": ["snake", "upper-snake"] },
-                "constants": { "case": ["upper-snake"] }
+                "files": {
+                    "case": ["kebab", "snake"]
+                },
+                "directories": {
+                    "case": ["kebab", "snake"]
+                },
+                "functions": {
+                    "case": ["snake"]
+                },
+                "variables": {
+                    "case": ["snake", "upper-snake"]
+                },
+                "constants": {
+                    "case": ["upper-snake"]
+                }
             }
         },
         "sql": {
@@ -368,16 +495,36 @@
             "maxWords": 7,
             "acronyms": "lower",
             "categories": {
-                "files": { "case": ["snake-migration", "snake"] },
-                "directories": { "case": ["snake"] },
-                "functions": { "case": ["snake"] },
-                "parameters": { "case": ["snake"] },
-                "schemas": { "case": ["snake"] },
-                "tables": { "case": ["snake"] },
-                "columns": { "case": ["snake"] },
-                "indexes": { "case": ["snake"] },
-                "triggers": { "case": ["snake"] },
-                "policies": { "case": ["snake"] }
+                "files": {
+                    "case": ["snake-migration", "snake"]
+                },
+                "directories": {
+                    "case": ["snake"]
+                },
+                "functions": {
+                    "case": ["snake"]
+                },
+                "parameters": {
+                    "case": ["snake"]
+                },
+                "schemas": {
+                    "case": ["snake"]
+                },
+                "tables": {
+                    "case": ["snake"]
+                },
+                "columns": {
+                    "case": ["snake"]
+                },
+                "indexes": {
+                    "case": ["snake"]
+                },
+                "triggers": {
+                    "case": ["snake"]
+                },
+                "policies": {
+                    "case": ["snake"]
+                }
             }
         }
     },
@@ -441,8 +588,16 @@
             "exclude": true,
             "reason": "git names its hooks."
         },
-        { "paths": ["**/e2e/**"], "categories": ["directories", "files"], "allowDigits": true },
-        { "paths": ["**/migrations/**"], "categories": ["files"], "allowDigits": true },
+        {
+            "paths": ["**/e2e/**"],
+            "categories": ["directories", "files"],
+            "allowDigits": true
+        },
+        {
+            "paths": ["**/migrations/**"],
+            "categories": ["files"],
+            "allowDigits": true
+        },
         {
             "paths": ["**/app/**", "**/pages/**"],
             "categories": ["files"],
@@ -493,6 +648,13 @@
             "names": ["ADVANCED"],
             "exclude": true,
             "reason": "The docs template names the advanced guide."
+        },
+        {
+            "paths": ["**/test_*.py", "**/*_test.py", "**/tests/**/*.py", "**/conftest.py"],
+            "languages": ["python"],
+            "categories": ["functions", "methods"],
+            "structuralPrefix": "^test_",
+            "reason": "The test runner finds a test by this prefix."
         }
     ]
 }

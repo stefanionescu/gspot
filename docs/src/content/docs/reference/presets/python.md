@@ -1,0 +1,54 @@
+---
+title: "Python"
+description: "Python sources: Ruff for lint and layout, basedpyright for types, import contracts, docstrings that match signatures, unused dependencies, and dead code."
+---
+
+Python sources: Ruff for lint and layout, basedpyright for types, import contracts, docstrings that match signatures, unused dependencies, and dead code.
+
+Kind: language. Requires: `formatting`.
+
+## Tools
+
+- ruff 0.16.8
+- basedpyright 1.40.1
+- lint-imports 2.15
+- pydoclint 0.9.1
+- deptry 0.25.1
+- vulture 2.16
+- validate-pyproject 0.26
+- pyproject-fmt 2.29.4
+
+## Generated configuration
+
+- `.gspot/ruff.toml`
+- `.gspot/basedpyrightconfig.json`
+
+## Checks
+
+| Check                                                                                | Stage  | What it finds                                                                                                                   |
+| ------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------- |
+| [`python/ruff`](/reference/rules/python/ruff/)                                       | commit | Lints every Python file with the shipped Ruff families, the security family included.                                           |
+| [`python/ruff-format`](/reference/rules/python/ruff-format/)                         | commit | Checks the layout of every Python file against the Ruff formatter.                                                              |
+| [`python/basedpyright`](/reference/rules/python/basedpyright/)                       | commit | Type checks the project with basedpyright in its strictest mode.                                                                |
+| [`python/import-linter`](/reference/rules/python/import-linter/)                     | commit | Runs the import contracts of the project, when pyproject.toml holds any.                                                        |
+| [`python/pydoclint`](/reference/rules/python/pydoclint/)                             | commit | Checks that every docstring names the arguments, the return, and the exceptions its function really has.                        |
+| [`python/deptry`](/reference/rules/python/deptry/)                                   | push   | Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones.                    |
+| [`python/vulture`](/reference/rules/python/vulture/)                                 | push   | Finds functions, classes, and variables nothing uses.                                                                           |
+| [`python/pyproject`](/reference/rules/python/pyproject/)                             | commit | Validates every pyproject.toml against the packaging schemas.                                                                   |
+| [`integrity/dependency-ownership`](/reference/rules/integrity/dependency-ownership/) | commit | Checks that pyproject.toml owns every dependency: no hand-kept requirements file, and no pip install outside the allowed paths. |
+| [`integrity/typecheck-membership`](/reference/rules/integrity/typecheck-membership/) | commit | Checks that every path the type check leaves out still matches a tracked file.                                                  |
+
+## Settings
+
+- `tools.dependencies.pip_install_allowed`: Paths that may run pip install, such as an image that installs one build tool, each with a reason.
+- `tools.basedpyright.exclude`: Paths basedpyright leaves out, such as files that need another dependency set, each with a reason.
+- `tools.vulture.ignore_names`: Names vulture treats as used, such as functions a framework calls.
+
+## Rule files
+
+- `language/PYTHON.md`
+- `language/python/TYPING.md`
+- `language/python/DESIGN.md`
+- `language/python/FLOW.md`
+- `language/python/PACKAGING.md`
+- `language/naming/PYTHON.md`

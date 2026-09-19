@@ -5,7 +5,8 @@ import type { BaselineVerdict } from '#types/record.ts';
 import type { BaselineFile, RuleCount } from '#types/run.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
-const NEVER_BASELINED = new Set(['format', 'syntax', 'schema']);
+// A test run that fails, or coverage under its floor, is fixed or decided in the policy; a count of failures is no baseline.
+const NEVER_BASELINED = new Set(['format', 'syntax', 'schema', 'coverage']);
 
 const FOREIGN_FILES = new Set(['eslint.json', 'basedpyright.json']);
 

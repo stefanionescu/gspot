@@ -47,6 +47,7 @@ export function grammarFor(path: string, language: string): GrammarName | undefi
     if (DECLARATION_FILE.test(path)) return undefined;
     if (language === 'bash') return 'bash';
     if (language === 'swift') return 'swift';
+    if (language === 'python') return 'python';
     if (language === 'javascript') return 'javascript';
     if (language !== 'typescript') return undefined;
     return path.endsWith('.tsx') ? 'tsx' : 'typescript';

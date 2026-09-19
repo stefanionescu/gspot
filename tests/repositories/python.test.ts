@@ -1,0 +1,104 @@
+// Planted repository for the python preset: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
+import { createFixture } from 'fs-fixture';
+import type { PlantedCase } from '#types/run.ts';
+import { describe, expect, test } from 'bun:test';
+import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
+
+const INIT = [
+    'init',
+    '--yes',
+    '--presets',
+    'python',
+    '--without',
+    'naming,structure,spelling,dependencies',
+    '--runner',
+    'none',
+    '--ci',
+    'none',
+    '--hooks',
+    'none',
+    '--no-rules',
+    '--no-install',
+];
+const PROJECT = '[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n';
+const CLEAN =
+    '"""Arithmetic the planted tests call."""\n\n\ndef double(value: int) -> int:\n    """Double a number.\n\n    Args:\n        value: The number.\n\n    Returns:\n        Twice the number.\n    """\n    return value * 2\n';
+const MODULE = 'planted/math.py';
+
+const CASES: PlantedCase[] = [
+    {
+        id: 'python/ruff',
+        files: {
+            [MODULE]: `${CLEAN}\n\ndef run(code: str) -> object:\n    """Run code.\n\n    Args:\n        code: The code.\n\n    Returns:\n        What it gave.\n    """\n    return eval(code)\n`,
+        },
+        expected: 'S307',
+    },
+    {
+        id: 'python/ruff-format',
+        files: { [MODULE]: CLEAN.replace('return value * 2', () => 'return value*2') },
+        expected: 'not formatted the way Ruff formats it',
+    },
+    {
+        id: 'python/basedpyright',
+        files: { [MODULE]: CLEAN.replace('return value * 2', () => 'return str(value)') },
+        expected: 'reportReturnType',
+    },
+    {
+        id: 'python/pydoclint',
+        files: { [MODULE]: CLEAN.replace('        value: The number.\n', () => '        amount: The number.\n') },
+        expected: 'DOC',
+    },
+    {
+        id: 'python/vulture',
+        files: { 'planted/unused.py': '"""A module that imports what it never uses."""\n\nimport colorsys\n' },
+        expected: "unused import 'colorsys'",
+    },
+    {
+        id: 'python/pyproject',
+        files: { 'pyproject.toml': PROJECT.replace('version = "1.0.0"', () => 'version = 7') },
+        expected: 'pyproject.toml',
+    },
+    {
+        id: 'integrity/dependency-ownership',
+        files: { 'requirements.txt': 'requests==2.32.0\n' },
+        expected: 'a second owner of the dependencies',
+    },
+    {
+        id: 'integrity/dependency-ownership',
+        files: { 'scripts/setup.sh': '#!/usr/bin/env bash\npip install requests\n' },
+        expected: 'installs versions nobody reviewed',
+    },
+    {
+        id: 'integrity/typecheck-membership',
+        files: {},
+        policy: '[[tools.basedpyright.exclude]]\npaths = ["planted/gone.py"]\nreason = "A file that needed another dependency set."\n',
+        expected: 'matches no tracked file',
+    },
+];
+
+describe('the python preset', () => {
+    test(
+        'every python check fires on its planted defect',
+        async () => {
+            await using fixture = await createFixture({
+                'pyproject.toml': PROJECT,
+                'planted/__init__.py': '"""The planted package."""\n',
+                [MODULE]: CLEAN,
+            });
+            commitAll(fixture.path);
+            const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
+            await install(fixture.path, INIT, environment);
+            const checkIds = new Set([...CASES.map((planted) => planted.id), 'python/import-linter', 'python/deptry']);
+            for (const id of checkIds) {
+                const clean = run(fixture.path, ['check', id, '--no-cache'], environment);
+                expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+            }
+            for (const planted of CASES) {
+                const outcome = await runPlanted(fixture.path, planted, environment);
+                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout + outcome.stderr, planted.id).toContain(planted.expected);
+            }
+        },
+        PLANTED_TIMEOUT_MS * 6,
+    );
+});

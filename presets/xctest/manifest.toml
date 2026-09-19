@@ -68,7 +68,7 @@ platform = ["macos"]
 engine = "integrity"
 analysis = "xctest-coverage"
 claims = {extensions = [".swift"]}
-inspection = ["tests"]
+inspection = ["coverage"]
 summary = "Runs the tests with coverage and holds each target named in tools.xctest.coverage to its floor."
 why = "A floor keeps new code from arriving untested."
 fix = "Add tests for the target, or lower its floor with a reason."

@@ -364,6 +364,8 @@ values fail at load with both presets named; a person resolves it with an explic
   A count below the baseline passes and prints.
 - `apply --lower-baselines` lowers every baseline to the last run's counts. It never raises one.
 - Format, syntax, and schema findings never baseline. A formatter run fixes them in one commit.
+- A failing test run and coverage under its floor never baseline. The floor is a setting, and a
+  person lowers it with a reason.
 - A baseline for a rule that has been removed is reported by `apply --check` and removed by
   `apply --lower-baselines`.
 

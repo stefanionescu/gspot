@@ -58,6 +58,6 @@ describe('identifiersOf', () => {
     });
 
     test('a language without an extractor yields nothing', async () => {
-        expect(await identifiersOf('a.py', 'x = 1', 'python')).toEqual([]);
+        expect(await identifiersOf('a.rb', 'x = 1', 'ruby')).toEqual([]);
     });
 });

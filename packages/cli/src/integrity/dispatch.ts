@@ -37,6 +37,7 @@ import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
 import { configurationPurity } from '#cli/integrity/config-purity.ts';
 import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
 import { gitleaksBaseline } from '#cli/integrity/gitleaks-baseline.ts';
+import { pythonBlockingCalls } from '#cli/pyproject/blocking-calls.ts';
 import { assetFolders, stringFiles } from '#cli/apple/xcode/resources.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/postgres/history.ts';
 import { trackedDependencies } from '#cli/integrity/tracked-dependencies.ts';
@@ -45,6 +46,7 @@ import { sqlBlockComments, sqlFileLength, sqlSyntax } from '#cli/sql/checks.ts';
 import { orphanSources, projectSymlinks, testPlans } from '#cli/apple/xcode/project.ts';
 import { disabledTests, noSleep, recordingMode } from '#cli/apple/xctest/line-checks.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/supabase/config-checks.ts';
+import { dependencyOwnership, importLinter, typecheckMembership } from '#cli/pyproject/project.ts';
 import { entitlementsPolicy, transportSecurity, xcconfigLines } from '#cli/apple/xcode/settings-files.ts';
 import { definerSearchPath, explicitGrants, foreignKeyIndexes, rlsPresent } from '#cli/postgres/schema/checks.ts';
 
@@ -68,6 +70,10 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'python-import-linter': importLinter,
+    'python-blocking-calls': pythonBlockingCalls,
+    'python-dependency-ownership': dependencyOwnership,
+    'python-typecheck-membership': typecheckMembership,
     'copied-blocks': copiedBlocks,
     'xctest-disabled': disabledTests,
     'xctest-sleep': noSleep,

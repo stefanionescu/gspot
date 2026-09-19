@@ -1,0 +1,237 @@
+[preset]
+id = "python"
+kind = "language"
+title = "Python"
+requires = ["formatting"]
+recommends = ["structure", "naming", "spelling", "dependencies"]
+description = "Python sources: Ruff for lint and layout, basedpyright for types, import contracts, docstrings that match signatures, unused dependencies, and dead code."
+
+[detect]
+extensions = [".py"]
+filenames = ["pyproject.toml"]
+shebangs = ["python", "python3"]
+
+[claims]
+extensions = [".py", ".pyi"]
+filenames = ["pyproject.toml"]
+natures = ["source"]
+
+[[tools]]
+name = "ruff"
+version = "0.16.8"
+floor = "0.9.0"
+mise = "ruff"
+pypi = "ruff"
+brew = "ruff"
+
+[[tools]]
+name = "basedpyright"
+version = "1.40.1"
+floor = "1.20.0"
+mise = "pipx:basedpyright"
+pypi = "basedpyright"
+
+[[tools]]
+name = "lint-imports"
+version = "2.15"
+mise = "pipx:import-linter"
+pypi = "import-linter"
+version_regex = "v?(\\d+\\.\\d+(?:\\.\\d+)?)"
+
+[[tools]]
+name = "pydoclint"
+version = "0.9.1"
+mise = "pipx:pydoclint"
+pypi = "pydoclint"
+
+[[tools]]
+name = "deptry"
+version = "0.25.1"
+floor = "0.20.0"
+mise = "pipx:deptry"
+pypi = "deptry"
+
+[[tools]]
+name = "vulture"
+version = "2.16"
+floor = "2.11"
+mise = "pipx:vulture"
+pypi = "vulture"
+version_regex = "(\\d+\\.\\d+(?:\\.\\d+)?)"
+
+[[tools]]
+name = "validate-pyproject"
+version = "0.26"
+mise = "pipx:validate-pyproject"
+pypi = "validate-pyproject"
+version_regex = "(\\d+\\.\\d+(?:\\.\\d+)?)"
+
+[[tools]]
+name = "pyproject-fmt"
+version = "2.29.4"
+mise = "pipx:pyproject-fmt"
+pypi = "pyproject-fmt"
+
+[[configs]]
+template = "ruff.toml.tmpl"
+target = ".gspot/ruff.toml"
+
+[[configs]]
+template = "basedpyrightconfig.json.tmpl"
+target = ".gspot/basedpyrightconfig.json"
+per_scope = true
+header = false
+
+[[checks]]
+id = "python/ruff"
+stage = "commit"
+command = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--output-format", "json", "{files}"]
+fix_command = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--fix", "--quiet", "{files}"]
+fix_order = "codemod"
+claims = {extensions = [".py", ".pyi"]}
+inspection = ["style", "structure", "security"]
+output = {format = "json", fields = {file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message"}}
+summary = "Lints every Python file with the shipped Ruff families, the security family included."
+why = "Ruff holds the rules of a dozen older tools in one pass fast enough to run at every commit."
+fix = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore python/ruff --rule <code> --reason, and add --paths to limit it."
+
+[[checks]]
+id = "python/ruff-format"
+stage = "commit"
+command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--check", "--output-format", "concise", "{files}"]
+fix_command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--quiet", "{files}"]
+fix_order = "format"
+claims = {extensions = [".py", ".pyi"]}
+inspection = ["format"]
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", message = "This file is not formatted the way Ruff formats it."}
+summary = "Checks the layout of every Python file against the Ruff formatter."
+why = "One layout everywhere keeps a diff about the change."
+fix = "Run gspot check --fix."
+
+[[checks]]
+id = "python/basedpyright"
+stage = "commit"
+runs = "per-scope"
+cwd = "scope"
+command = ["basedpyright", "-p", "{config:basedpyrightconfig}", "--baselinefile", "{baseline}", "--outputjson"]
+baseline_file = ".gspot/baselines/basedpyright.json"
+baseline_command = ["basedpyright", "-p", "{config:basedpyrightconfig}", "--baselinefile", "{baseline}", "--writebaseline"]
+claims = {extensions = [".py", ".pyi"]}
+inspection = ["types"]
+output = {format = "json", items = "generalDiagnostics", line_base = 0, fields = {file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message"}}
+summary = "Type checks the project with basedpyright in its strictest mode."
+why = "A type error found here is a crash that never reaches a user."
+fix = "Fix the type, or narrow it where the value arrives. Exclude a file that needs another dependency set under tools.basedpyright.exclude with a reason."
+
+[[checks]]
+id = "python/import-linter"
+stage = "commit"
+runs = "per-scope"
+cwd = "scope"
+engine = "integrity"
+analysis = "python-import-linter"
+tool = "lint-imports"
+claims = {extensions = [".py"], filenames = ["pyproject.toml"]}
+inspection = ["structure"]
+summary = "Runs the import contracts of the project, when pyproject.toml holds any."
+why = "A layer that imports the layer above it turns an architecture into a diagram nobody follows."
+fix = "Move the import to the side the contract allows, or change the contract with a reason in its name."
+
+[[checks]]
+id = "python/pydoclint"
+stage = "commit"
+command = ["pydoclint", "--style", "google", "--allow-init-docstring", "true", "--quiet", "{files}"]
+claims = {extensions = [".py"]}
+inspection = ["prose"]
+output = {format = "grouped", file_pattern = "^(?<file>\\S.*\\.py)$", pattern = "^\\s+(?<line>\\d+): (?<rule>DOC\\d+): (?<message>.*)$"}
+summary = "Checks that every docstring names the arguments, the return, and the exceptions its function really has."
+why = "A docstring that disagrees with the signature is worse than none, because people trust it."
+fix = "Bring the docstring in line with the signature."
+
+[[checks]]
+id = "python/deptry"
+stage = "push"
+runs = "per-scope"
+cwd = "scope"
+command = ["deptry", ".", "--no-ansi"]
+claims = {extensions = [".py"], filenames = ["pyproject.toml"]}
+inspection = ["consistency"]
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<rule>DEP\\d+) (?<message>.*)$"}
+summary = "Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones."
+why = "An import that works through somebody else's dependency breaks the day they drop it."
+fix = "Declare the dependency, or remove the one nothing imports. Turn one rule off with gspot ignore python/deptry --rule <code> --reason."
+
+[[checks]]
+id = "python/vulture"
+stage = "push"
+runs = "per-scope"
+cwd = "scope"
+command = ["vulture", ".", "--min-confidence", "80", "--exclude", ".venv,node_modules,build,dist,.gspot", "{each:--ignore-names:tools.vulture.ignore_names}"]
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}
+summary = "Finds functions, classes, and variables nothing uses."
+why = "Dead code is read and maintained by people who cannot tell it is dead."
+fix = "Delete the code, or list a name a framework calls under tools.vulture.ignore_names."
+
+[[checks]]
+id = "python/pyproject"
+stage = "commit"
+command = ["validate-pyproject", "{file}"]
+claims = {filenames = ["pyproject.toml"]}
+tool = "validate-pyproject"
+inspection = ["schema"]
+output = {format = "lines"}
+summary = "Validates every pyproject.toml against the packaging schemas."
+why = "A key the build backend does not know is ignored without a word."
+fix = "Correct the key the message names."
+
+[[checks]]
+id = "integrity/dependency-ownership"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "python-dependency-ownership"
+inspection = ["consistency"]
+summary = "Checks that pyproject.toml owns every dependency: no hand-kept requirements file, and no pip install outside the allowed paths."
+why = "Two owners of the dependency list drift apart, and the image installs what the lockfile never saw."
+fix = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Allow a path under tools.dependencies.pip_install_allowed with a reason."
+
+[[checks]]
+id = "integrity/typecheck-membership"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "python-typecheck-membership"
+inspection = ["consistency"]
+summary = "Checks that every path the type check leaves out still matches a tracked file."
+why = "An exclusion that outlives its file hides the next file that takes the name."
+fix = "Remove the entry from tools.basedpyright.exclude."
+
+[[settings]]
+name = "tools.dependencies.pip_install_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Paths that may run pip install, such as an image that installs one build tool, each with a reason."
+
+[[settings]]
+name = "tools.basedpyright.exclude"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Paths basedpyright leaves out, such as files that need another dependency set, each with a reason."
+
+[[settings]]
+name = "tools.vulture.ignore_names"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Names vulture treats as used, such as functions a framework calls."
+
+[inspections]
+".py" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
+".pyi" = ["format", "syntax", "style", "types"]
+
+[rule_files]
+language = ["language/PYTHON.md", "language/python/TYPING.md", "language/python/DESIGN.md", "language/python/FLOW.md", "language/python/PACKAGING.md", "language/naming/PYTHON.md"]

@@ -4,6 +4,7 @@ import { grammarFor, parserFor } from '#cli/naming/parsers.ts';
 import { sqlIdentifiers } from '#cli/naming/extractors/sql.ts';
 import { bashIdentifiers } from '#cli/naming/extractors/bash.ts';
 import { swiftIdentifiers } from '#cli/naming/extractors/swift.ts';
+import { pythonIdentifiers } from '#cli/naming/extractors/python.ts';
 import { typescriptIdentifiers } from '#cli/naming/extractors/typescript.ts';
 
 /**
@@ -23,6 +24,7 @@ export async function identifiersOf(file: string, text: string, language: string
     try {
         if (grammar === 'bash') return bashIdentifiers(tree.rootNode, file);
         if (grammar === 'swift') return swiftIdentifiers(tree.rootNode, file);
+        if (grammar === 'python') return pythonIdentifiers(tree.rootNode, file);
         return typescriptIdentifiers(tree.rootNode, file, language);
     } finally {
         tree.delete();

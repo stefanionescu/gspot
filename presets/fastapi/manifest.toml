@@ -1,0 +1,78 @@
+[preset]
+id = "fastapi"
+kind = "framework"
+title = "FastAPI"
+requires = ["python"]
+recommends = ["security", "pytest"]
+description = "A FastAPI service: the FastAPI and async rules of Ruff, and no blocking call inside an async function. The OpenAPI document lints and matches the app, and Semgrep reads the request handling."
+
+[detect]
+dependencies = ["fastapi"]
+
+[[tools]]
+name = "spectral"
+version = "6.15.0"
+npm = "@stoplight/spectral-cli"
+mise = "npm:@stoplight/spectral-cli"
+
+[[configs]]
+template = "spectral.yaml.tmpl"
+target = ".gspot/spectral.yaml"
+
+[[configs]]
+template = "semgrep-fastapi.yml.tmpl"
+target = ".gspot/semgrep/fastapi.yml"
+needs = "security"
+
+[[checks]]
+id = "fastapi/openapi-lint"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "openapi-lint"
+tool = "spectral"
+claims = {extensions = [".yaml", ".yml", ".json"]}
+inspection = ["style"]
+summary = "Lints the OpenAPI document named in tools.openapi.document with the Spectral OpenAPI rules."
+why = "Clients are written from this document, so an operation with no id becomes somebody's broken client."
+fix = "Change the route metadata that writes the document, then export it again."
+
+[[checks]]
+id = "fastapi/openapi-fresh"
+stage = "push"
+runs = "once"
+engine = "integrity"
+analysis = "openapi-fresh"
+inspection = ["consistency"]
+summary = "Runs the command in tools.openapi.produced_by and fails when it changes the document."
+why = "A committed document that lags the routes describes a service that does not exist."
+fix = "Run the command and commit the document it writes."
+
+[[checks]]
+id = "fastapi/no-blocking-io-in-async"
+stage = "commit"
+engine = "integrity"
+analysis = "python-blocking-calls"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Refuses time.sleep, the requests library, and a plain open inside an async function."
+why = "A blocking call inside an async function stops the event loop, so every other request waits for it."
+fix = "Use asyncio.sleep, an async HTTP client, or run the call in a worker thread."
+
+[[settings]]
+name = "tools.openapi.document"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The committed OpenAPI document; empty turns both OpenAPI checks off."
+
+[[settings]]
+name = "tools.openapi.produced_by"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The command that writes the OpenAPI document from the app."
+
+[rule_files]
+framework = ["framework/fastapi/FASTAPI.md", "framework/fastapi/RUNTIME.md"]
+shared = ["shared/http/HTTP.md"]
