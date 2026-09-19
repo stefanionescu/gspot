@@ -35,7 +35,7 @@ function platformManifest(platform: { os: string; cpu: string }, version: string
         name: `@gspot/cli-${platform.os}-${platform.cpu}`,
         version,
         description: `The gspot binary for ${platform.os} ${platform.cpu}. Install the gspot package instead; it picks this one for you.`,
-        license: 'MIT',
+        license: 'Apache-2.0',
         repository: 'github:stefanionescu/gspot',
         os: [platform.os],
         cpu: [platform.cpu],
