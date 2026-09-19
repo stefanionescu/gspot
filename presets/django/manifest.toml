@@ -1,0 +1,90 @@
+[preset]
+id = "django"
+kind = "framework"
+title = "Django"
+requires = ["python"]
+recommends = ["pytest", "security", "postgres"]
+description = "A Django project: the Django rules of Ruff, django-upgrade for the version the project targets, migrations that are named, reversible, and current, and settings that are safe to deploy."
+
+[detect]
+filenames = ["manage.py"]
+dependencies = ["django", "Django"]
+
+[[tools]]
+name = "django-upgrade"
+version = "1.32.0"
+mise = "pipx:django-upgrade"
+
+[[checks]]
+id = "django/upgrade"
+stage = "commit"
+runs = "per-file-list"
+command = ["django-upgrade", "--check", "--target-version", "{setting:tools.django.target_version}", "{files}"]
+fix_command = ["django-upgrade", "--exit-zero-even-if-changed", "--target-version", "{setting:tools.django.target_version}", "{files}"]
+fix_order = "codemod"
+tool = "django-upgrade"
+claims = {extensions = [".py"]}
+inspection = ["style"]
+output = {format = "regex", pattern = "^Would rewrite (?<file>.+)$", message = "django-upgrade rewrites this file for the Django version the project targets."}
+summary = "Checks that no file uses a form django-upgrade rewrites for the Django version the project targets."
+why = "A deprecated form works until the release that removes it, and that release arrives as one large, urgent change."
+fix = "Run gspot check --fix, which runs django-upgrade over the files, and read the diff."
+
+[[checks]]
+id = "django/migration-names"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "django-migration-names"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Checks that no migration keeps the name Django gave it, such as 0004_auto_20260101_1200."
+why = "A migration named auto says nothing in a list of forty, and the list is what a person reads during an incident."
+fix = "Rename the file for what it does, such as 0004_add_invoice_due_date, and update every dependency that names it."
+
+[[checks]]
+id = "django/migration-reversible"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "django-migration-reversible"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Checks that every RunPython names its reverse function and every RunSQL names its reverse SQL."
+why = "A migration with no way back turns a bad deploy into a restore from backup."
+fix = "Pass reverse_code to RunPython and reverse_sql to RunSQL. Pass the noop of RunPython where going back needs no work."
+
+[[checks]]
+id = "django/settings"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "django-settings"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Checks that no settings module a deploy reads turns DEBUG on, allows every host, or holds the secret key as text."
+why = "DEBUG prints settings and source to anyone who causes an error, and a secret key in the repository signs sessions for everyone who can read it."
+fix = "Read DEBUG, ALLOWED_HOSTS, and SECRET_KEY from the environment. Keep development values in a module named local, dev, development, or test."
+
+[[checks]]
+id = "django/migrations-fresh"
+stage = "push"
+runs = "per-scope"
+engine = "integrity"
+analysis = "django-migrations-fresh"
+requires = "build"
+claims = {filenames = ["manage.py"], extensions = [".py"]}
+inspection = ["structure"]
+summary = "Runs makemigrations --check, which fails when a model changed and no migration records it."
+why = "A model that differs from its migrations works on the machine that ran migrate by hand and nowhere else."
+fix = "Run python manage.py makemigrations, name the migration, and commit it."
+
+[[settings]]
+name = "tools.django.target_version"
+kind = "string"
+direction = "neutral"
+default = "auto"
+summary = "The Django version django-upgrade rewrites for. auto reads it from the dependencies in pyproject.toml."
+
+[rule_files]
+framework = ["framework/django/DJANGO.md"]

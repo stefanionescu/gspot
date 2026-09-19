@@ -34,6 +34,7 @@ import { requiredRules } from '#cli/integrity/required-rules.ts';
 import { trivyImage } from '#cli/integrity/docker/image-scan.ts';
 import { referenceOwners } from '#cli/apple/xctest/references.ts';
 import { SWIFT_STRUCTURE } from '#cli/apple/structure/analyses.ts';
+import { djangoSettings } from '#cli/pyproject/django/settings.ts';
 import { generatedDrift } from '#cli/integrity/generated-drift.ts';
 import { manifestPolicy } from '#cli/integrity/manifest-policy.ts';
 import { dockerignore } from '#cli/integrity/docker/ignore-file.ts';
@@ -50,6 +51,7 @@ import { pythonBlockingCalls } from '#cli/pyproject/blocking-calls.ts';
 import { PYTHON_STRUCTURE } from '#cli/pyproject/structure/analyses.ts';
 import { goFileLength, goFunctionLength } from '#cli/golang/lengths.ts';
 import { assetFolders, stringFiles } from '#cli/apple/xcode/resources.ts';
+import { djangoMigrationsFresh } from '#cli/pyproject/django/freshness.ts';
 import { rustAdvisories, rustCratePolicy } from '#cli/cargo/advisories.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/postgres/history.ts';
 import { trackedDependencies } from '#cli/integrity/tracked-dependencies.ts';
@@ -62,6 +64,7 @@ import { projectValid, migrationNames, storagePolicies } from '#cli/supabase/con
 import { drizzleMigrations, drizzleRelations, trpcBoundaries } from '#cli/web/library-checks.ts';
 import { dependencyOwnership, importLinter, typecheckMembership } from '#cli/pyproject/project.ts';
 import { envTypesFresh, headersSyntax, redirectsSyntax, wranglerFile } from '#cli/web/edge-files.ts';
+import { djangoMigrationNames, djangoMigrationReversible } from '#cli/pyproject/django/migrations.ts';
 import { deadAssets, securityHeaders, svgCompressed, webManifest } from '#cli/web/site/source-checks.ts';
 import { entitlementsPolicy, transportSecurity, xcconfigLines } from '#cli/apple/xcode/settings-files.ts';
 import { definerSearchPath, explicitGrants, foreignKeyIndexes, rlsPresent } from '#cli/postgres/schema/checks.ts';
@@ -124,6 +127,10 @@ const checks: Record<string, IntegrityCheck> = {
     'html-scripts': htmlScripts,
     'html-copy': htmlCopy,
     'css-module-usage': cssModuleUsage,
+    'django-migration-names': djangoMigrationNames,
+    'django-migration-reversible': djangoMigrationReversible,
+    'django-settings': djangoSettings,
+    'django-migrations-fresh': djangoMigrationsFresh,
     'rust-clippy': rustClippy,
     'rust-advisories': rustAdvisories,
     'rust-crate-policy': rustCratePolicy,
