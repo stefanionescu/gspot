@@ -9,6 +9,8 @@ golangci-lint = "2.13.2"
 "cargo:cargo-audit" = "0.22.2"
 "cargo:cargo-deny" = "0.20.2"
 "pipx:django-upgrade" = "1.32.0"
+"gem:rubocop" = "1.91.0"
+"gem:bundler-audit" = "0.9.3"
 
 [env]
 GSPOT_BIN = "bun {{config_root}}/packages/cli/src/main.ts"

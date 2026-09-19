@@ -12,6 +12,7 @@ One page per preset. Each page states what the preset detects and claims, the to
 | swift      | `.swift`, `Package.swift` | SwiftLint, SwiftFormat, Periphery, xcodebuild                     | [swift.md](swift.md)           |
 | go         | `.go`, `go.mod`           | gofmt, golangci-lint, govulncheck, the Go grammar                 | [go.md](go.md)                 |
 | rust       | `.rs`, `Cargo.toml`       | rustfmt, Clippy, cargo-audit, cargo-deny                          | [rust.md](rust.md)             |
+| ruby       | `.rb`, `Gemfile`          | RuboCop, bundler-audit                                            | [ruby.md](ruby.md)             |
 | bash       | `.sh`, shell shebang      | ShellCheck, shfmt, `bash -n`, the shell analyses                  | [bash.md](bash.md)             |
 | sql        | `.sql`                    | sqlfluff, libpg-query                                             | [sql.md](sql.md)               |
 | css        | `.css`                    | stylelint, Prettier                                               | [css.md](css.md)               |

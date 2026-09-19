@@ -1,0 +1,71 @@
+[preset]
+id = "ruby"
+kind = "language"
+title = "Ruby"
+requires = ["structure", "formatting"]
+recommends = ["spelling", "dependencies", "security"]
+description = "Ruby source and gems: RuboCop with every new cop on and the complexity ceilings of the other languages, and bundler-audit over Gemfile.lock."
+
+[detect]
+filenames = ["Gemfile"]
+extensions = [".rb"]
+
+[claims]
+extensions = [".rb", ".rake", ".gemspec"]
+filenames = ["Gemfile", "Gemfile.lock", "Rakefile", ".rubocop.yml"]
+natures = ["source"]
+
+[[tools]]
+name = "ruby"
+provider = "host"
+
+[[tools]]
+name = "rubocop"
+version = "1.91.0"
+mise = "gem:rubocop"
+
+[[tools]]
+name = "bundler-audit"
+version = "0.9.3"
+mise = "gem:bundler-audit"
+version_command = ["version"]
+
+[[configs]]
+template = "rubocop.yml.tmpl"
+target = ".gspot/rubocop.yml"
+stub = {path = ".rubocop.yml", body = "inherit_from: {target}"}
+
+[[checks]]
+id = "ruby/rubocop"
+stage = "commit"
+runs = "per-file-list"
+command = ["rubocop", "--config", "{config:rubocop}", "--force-exclusion", "--format", "json", "{files}"]
+fix_command = ["rubocop", "--config", "{config:rubocop}", "--force-exclusion", "--autocorrect", "{files}"]
+fix_order = "codemod"
+tool = "rubocop"
+claims = {extensions = [".rb", ".rake", ".gemspec"], filenames = ["Gemfile", "Rakefile"]}
+inspection = ["format", "syntax", "style"]
+output = {format = "json", items = "files", children = "offenses", fields = {file = "path", line = "location.line", column = "location.column", rule = "cop_name", message = "message"}}
+summary = "Runs RuboCop with every cop on, the new ones included, and the complexity ceilings the other languages hold."
+why = "Ruby lets one thing be written ten ways, and a team that reads one way reads faster."
+fix = "Run gspot check --fix for the cops that correct themselves, then read each remaining line; the cop name leads to its page in the RuboCop manual."
+
+[[checks]]
+id = "ruby/bundler-audit"
+stage = "push"
+runs = "per-scope"
+requires = "network"
+engine = "integrity"
+analysis = "ruby-advisories"
+tool = "bundler-audit"
+claims = {filenames = ["Gemfile.lock", "Gemfile"]}
+inspection = ["dependencies"]
+summary = "Checks Gemfile.lock against the Ruby advisory database, and the Gemfile for a source over plain HTTP."
+why = "A gem with a known vulnerability is one the whole world can read the exploit for."
+fix = "Upgrade the gem to a patched version the finding names: run bundle update with the name of the gem."
+
+[inspections]
+".rb" = ["format", "syntax", "style", "spelling"]
+
+[rule_files]
+language = ["language/RUBY.md"]

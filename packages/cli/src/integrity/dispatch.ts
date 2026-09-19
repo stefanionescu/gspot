@@ -8,6 +8,7 @@ import { localeFiles } from '#cli/web/locales.ts';
 import { adminKey } from '#cli/supabase/admin-key.ts';
 import { routesTested } from '#cli/express/routes.ts';
 import { envFiles } from '#cli/integrity/env/files.ts';
+import { rubyAdvisories } from '#cli/integrity/gems.ts';
 import { licensesNpm } from '#cli/integrity/licenses.ts';
 import type { IntegrityCheck } from '#types/integrity.ts';
 import { cssModuleUsage } from '#cli/web/module-usage.ts';
@@ -131,6 +132,7 @@ const checks: Record<string, IntegrityCheck> = {
     'django-migration-reversible': djangoMigrationReversible,
     'django-settings': djangoSettings,
     'django-migrations-fresh': djangoMigrationsFresh,
+    'ruby-advisories': rubyAdvisories,
     'rust-clippy': rustClippy,
     'rust-advisories': rustAdvisories,
     'rust-crate-policy': rustCratePolicy,

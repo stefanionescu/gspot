@@ -57,8 +57,8 @@ repository.
 
 ## Presets that do not ship
 
-Every preset with a file under [presets/](presets/README.md) ships: 50 of them. Two Phase 7
-presets have no file there yet: `react-native` and `ruby`.
+Every preset with a file under [presets/](presets/README.md) ships: 51 of them. One Phase 7
+preset has no file there yet: `react-native`.
 
 ## Order of work
 
