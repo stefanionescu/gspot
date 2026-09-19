@@ -163,28 +163,28 @@ subagents, and adds: "These files are installed copies. Change `[rules]` in `gsp
 file fails the load with the near matches. `general/agent/WORKING.md` and
 `general/prose/WRITING.md` cannot be excluded while the block tells the reader to open them first.
 
-The block is regenerated on every `apply`; text outside the markers is never read or moved. The
-table lists layers by area, names each file, and states precedence. When the repository has a
+The block is written again on every `apply`, and text outside the markers is never read or moved.
+The block is a plain list: one line for each selected preset, with its rule files as links. When the repository has a
 project rule directory (`[rules] project = "rules/project"`), the block links it last.
 
-## Corpus lint
+## The rules lint
 
-The corpus lint belongs to this repository, not to the binary's commands (D-86). It runs as the
-`[[check]]` entry `rules/lint` in this repository's `gspot.toml`, at the commit stage, over
-`rules/**`. `gspot apply --check` in another repository reports drift and nothing else. The word
-lists below live beside the script under `packages/cli/rules-lint/` and are not embedded:
+The rules lint belongs to this repository, not to the commands of the binary (D-86). It runs as
+the `[[check]]` entry `rules/lint` in the `gspot.toml` of this repository, at the commit stage,
+over `rules/**`. Its code sits in `packages/cli/src/rules/`. Prose is no part of it: `prose/vale`
+reads the rule files like every other text.
 
-- Front matter present; layer matches the path; preset is an id or `none`; title equals the H1.
-
-- No file links to another rule file.
-- No file exceeds 800 lines.
-- The layer boundary word list holds in agent, code, prose and language files: no reference
-  repository, product, layout path, or deployment target outside code formatting.
-- Every fenced code block has a language tag from the allowed set and is closed.
-- The corruption phrase list from the repair pass returns nothing.
-- No file names gspot, one of its engines or a `gspot.toml` table, or says `enforced by`.
-- Vale with the `gspot` style under `prose/styles/gspot/` (30 rules, every alert an error) when
-  the binary is installed.
+- Front matter holds `preset` and `title`. The folder says the rest, so a `layer` key is refused.
+- Every rule file is listed by one manifest. A file no manifest lists fails the lint (D-154).
+- No file links to another rule file, and no file exceeds 800 lines.
+- A list item is a whole sentence. An item that stops at a comma or at `and` fails.
+- A section that describes checks of the level `all` carries the mark `<!-- level: all -->`, and
+  the assembler leaves it out at `recommended`.
+- A fenced example under a line that starts with `Good` passes the linter of its preset. The lint
+  runs those examples at the push stage.
+- No file names a tool or a library of another preset. The word list is built from the
+  manifests. The words `quality/` and the names of the reference repositories are refused.
+- A rule id that a file names is on in the template of its preset, or the file says it is off.
 
 ## Completeness
 

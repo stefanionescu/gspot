@@ -99,32 +99,34 @@ For every language that is not JavaScript or TypeScript, and for repository-leve
 - **Declarative rules.** ast-grep YAML files under each preset, executed through the ast-grep
   CLI (`ast-grep scan --json`), which gspot pins as a tool. Node kinds match tree-sitter's.
 - **Counted rules.** Rules that need a count (barrel ceiling, shell branches, nesting, mutable assignments) run the YAML and gspot counts the matches per file or per enclosing function.
-- **Cross-file index.** Before any analysis runs, the engine builds one index per scope:
-  declarations by file, calls and references by name, imports by module.
-- **Index readers.** The trivial-function, private-prefix, unused-function and env-access analyses read it. It is built once per run
-  and cached with the results.
-- **Original analyses.** Kept to what a pattern cannot express, each with the tools searched
-  recorded in the manifest:
+- **One parse for a scope.** A source file is parsed once for a scope and a run. The naming
+  engine, every structure analysis, and the cross-file index share the trees.
+- **Cross-file index.** Before any analysis runs, the engine builds one index for each scope:
+  declarations by file, calls and references by name, and imports by module.
+- **One analysis for each idea.** An analysis asks a small table of its language for node
+  kinds, and names no language (D-149).
+- **An id for each language.** The manifest of each language lists the idea under an id of its
+  own, such as `python/call-through`. A baseline and an ignore then hold one language (D-98).
+- **TypeScript in the editor.** TypeScript keeps its ESLint rules (D-02). One table of cases
+  holds both implementations to the same answers.
+- **One count.** Every line limit gspot owns counts code lines, through one function.
 
-| Analysis                                                                                                                                         | Languages                                                                                                                  | Why original                                                                                                                       |
-| ------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------- |
-| trivial-function, two forms: forwarding-only (any call count) and single-use with at most two executable statements or ten AST nodes (inline it) | python, swift, bash                                                                                                        | Decorator, protocol, dataclass hook, dunder and `main` exemptions plus a cross-module reference count need context a pattern lacks |
-| call-through                                                                                                                                     | python, swift, bash                                                                                                        | Parameter list and argument list identity                                                                                          |
-| private-prefix                                                                                                                                   | python, bash                                                                                                               | Compares `__all__` and cross-file call counts with names                                                                           |
-| private-before-public                                                                                                                            | python, swift, bash                                                                                                        | Order of top-level declarations by visibility                                                                                      |
-| single-file-folder                                                                                                                               | all                                                                                                                        | A directory is not a node                                                                                                          |
-| prefix-collisions                                                                                                                                | all                                                                                                                        | Compares sibling names                                                                                                             |
-| file-directory-collision                                                                                                                         | all                                                                                                                        | A file stem equal to a sibling directory name                                                                                      |
-| env-access-owner                                                                                                                                 | python (`os.environ`), swift (`ProcessInfo.processInfo.environment`), bash (`${VAR}` reads of names declared in the owner) | Cross-file: the owner is one declared module                                                                                       |
-| file-length, function-length                                                                                                                     | bash, sql, python (code lines, not raw lines)                                                                              | Counting code lines excludes blanks, comments, docstrings                                                                          |
-| unused-functions, dead-parameters                                                                                                                | bash                                                                                                                       | No maintained tool exists for shell                                                                                                |
-| duplicate-function-bodies                                                                                                                        | bash, swift                                                                                                                | Normalized body comparison across files                                                                                            |
-| import graph: cycles, boundaries, layout                                                                                                         | python                                                                                                                     | Contracts across files                                                                                                             |
-| package exports: `__all__` placement, ceiling, duplicates, alias constants, export-only modules                                                  | python                                                                                                                     | Reads `__all__` contents                                                                                                           |
-| runtime singletons, lazy export hooks                                                                                                            | python                                                                                                                     | Name and shape combined                                                                                                            |
-| shell script policy, safety, config defaults, config guards, architecture boundaries, interpreter policy, ssh blocks, heredocs, embeds           | bash                                                                                                                       | Line-level policies over shell that ShellCheck has no rule for                                                                     |
-| migration documentation and section layout                                                                                                       | sql                                                                                                                        | Comment structure around statements                                                                                                |
-| HTML copy and script policy                                                                                                                      | html                                                                                                                       | Text nodes and attributes                                                                                                          |
+| Idea                                                                | Level       | Bash | Python | Swift | TypeScript | SQL |
+| ------------------------------------------------------------------- | ----------- | ---- | ------ | ----- | ---------- | --- |
+| File and function length                                            | recommended | yes  | yes    | yes   | yes        | yes |
+| Call-through                                                        | recommended | yes  | yes    | yes   | yes        | yes |
+| Duplicate functions                                                 | recommended | yes  | yes    | yes   | yes        | no  |
+| Unused functions, dead parameters                                   | recommended | yes  | yes    | yes   | yes        | no  |
+| Import cycles                                                       | recommended | no   | yes    | no    | yes        | no  |
+| Folder facts: one file, prefix, file beside folder                  | recommended | yes  | yes    | yes   | yes        | yes |
+| Shell safety: strict mode, a trap for `mktemp`, a discarded failure | recommended | yes  | no     | no    | no         | no  |
+| Environment owner                                                   | all         | yes  | yes    | yes   | yes        | no  |
+| Import layout and boundaries                                        | all         | no   | yes    | no    | yes        | no  |
+| Export-only files, alias constants                                  | all         | no   | yes    | no    | yes        | no  |
+| Private before public, doc comment form                             | all         | yes  | yes    | yes   | yes        | no  |
+| Script header, config owner, section order                          | all         | yes  | no     | no    | no         | no  |
+| Migration documents and section layout                              | all         | no   | no     | no    | no         | yes |
+| HTML copy and inline scripts                                        | all         | no   | no     | no    | no         | no  |
 
 - **Parse errors are findings.** A tree with an `ERROR` or `MISSING` node fails the file with the
   byte offset and surrounding text. The engine never returns an empty result for a file it
