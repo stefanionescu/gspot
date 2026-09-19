@@ -852,8 +852,8 @@ the first one.
 
 ## D-108 A folder with a project file is a scope, and scope files have one place
 
-init proposes a scope for a folder that holds `package.json`, `pyproject.toml`, `Cargo.toml`,
-`go.mod`, `Package.swift`, an `.xcodeproj`, or a `Gemfile`. A workspace member list wins where one
+init proposes a scope for a folder that holds `package.json`, `pyproject.toml`,
+`Package.swift`, an `.xcodeproj`, or a `Gemfile`. A workspace member list wins where one
 exists. Generated configuration for a scope lives under `.gspot/<scope>/`, and only a pointer stub
 lives in the scope folder.
 
@@ -1022,9 +1022,9 @@ The shipped folder rule keeps its list, the language names included: it is part 
 terms, which stay. This repository needs two of those names, because a folder that holds the
 Swift checks is called `swift`. Its own `gspot.toml` allows them under
 `structure.folder_name_allowed`, with a reason. `apple/` becomes `swift/`, `pyproject/` becomes
-`python/`, and the two test folders follow. `golang/` becomes `go/` and `cargo/` becomes
-`rust/`, which no list bans. Rejected: the names `apple`, `pyproject`, `golang` and `cargo`, which
-passed the check and told a reader nothing.
+`python/`, and the two test folders follow. Rejected: the names `apple` and `pyproject`, which
+passed the check and told a reader nothing. The folders `golang/` and `cargo/` are deleted, not
+renamed (D-136).
 
 ## D-129 One word for a run that writes nothing
 
@@ -1091,3 +1091,19 @@ removed. [19-names.md](https://github.com/stefanionescu/gspot/blob/main/architec
 
 The default level of D-119 is called `recommended`. The first name, `core`, is a banned term of
 the containers group, and `recommended` is the word ESLint and Biome already taught developers.
+
+## D-136 The go, rust and django presets are deleted
+
+Recorded 2026-09-19. The owner never asked for these three presets. They came from the Phase 7
+list, which an earlier pass of this folder wrote by itself and then built. None of the six
+reference repositories holds Go, Rust or Django code, so nothing proves them against a real
+repository.
+
+All three go whole, by D-134. That means the manifests, the templates, the engine code, and
+the types. It also means the Go grammar, the Cargo workspace reader, the tests, the rule files,
+the preset pages, and the generated reference pages. The "Delete first" table of the phases document lists the paths. A repository that holds `go.mod`, `Cargo.toml`
+or `manage.py` is told that no preset reads those files, as [04-presets.md](https://github.com/stefanionescu/gspot/blob/main/architecture/04-presets.md)
+already says.
+
+A preset enters this folder when the owner asks for it, or when a reference repository needs it.
+Rejected: keeping the code because it exists and its tests pass.

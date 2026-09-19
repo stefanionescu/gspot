@@ -212,9 +212,10 @@ were choices.
 
 ## A-11 Scopes come from workspaces only
 
-**Evidence.** `workspaceScopes` reads npm workspaces, the uv workspace, and the Cargo workspace.
+**Evidence.** `workspaceScopes` reads npm workspaces, the uv workspace, and the Cargo workspace. The Cargo
+reader goes with the rust preset (D-136).
 The app has `api/`, `supabase/` and `ios/`. `ios/` is no workspace member, so the install
-needed three hand-typed `--scope` flags. A repository with a Swift folder, a Go module, or two
+needed three hand-typed `--scope` flags. A repository with a Swift folder or two
 independent `package.json` files gets no scope.
 
 Scope files land in two places. `targetInScope` puts a per-scope target under
@@ -224,7 +225,7 @@ does not. The stub goes into the scope folder in both cases.
 **Design (D-108).**
 
 - init proposes a scope for every folder that holds a project file: `package.json`,
-  `pyproject.toml`, `Cargo.toml`, `go.mod`, `Package.swift`, `*.xcodeproj`, `Gemfile`. A
+  `pyproject.toml`, `Package.swift`, `*.xcodeproj`, `Gemfile`. A
   workspace member list still wins where one exists.
 - One rule for scope files: generated configuration lives under `.gspot/<scope>/`, and only a
   pointer stub lives inside the scope folder. [12-repository-layout.md](12-repository-layout.md)
@@ -294,9 +295,8 @@ clean: it holds 724 Swift files with PascalCase names.
 ## A-15 Naming by language and by framework
 
 **Evidence.** `presets/naming/policy.json` holds case tables for six languages: TypeScript,
-JavaScript, Python, Swift, Bash, and SQL. `naming/extract.ts` holds five extractors. Go, Rust and
-Ruby ship as presets with no table and no extractor, and their manifests do not recommend
-`naming`. Nothing tells the person that names in those files go unchecked.
+JavaScript, Python, Swift, Bash, and SQL. `naming/extract.ts` holds five extractors. Ruby ships as a preset with no table and no extractor, and its manifest does not recommend
+`naming`. Go and Rust did the same, and are deleted (D-136). Nothing tells the person that names in those files go unchecked.
 
 No framework layer exists:
 
@@ -314,7 +314,7 @@ No framework layer exists:
   framework.
 - `gspot doctor` and the init plan list each language preset with "names: checked" or "names:
   not checked".
-- Extractors for Go, Rust, and Ruby are not part of the Adoption phase.
+- An extractor for Ruby is not part of the Adoption phase.
 
 ## What a repository already has
 
@@ -397,7 +397,7 @@ of the repository keeps running (A-16), its own variables keep working.
 
 ## Making it yours
 
-A developer who meets 52 presets and 250 checks asks three things. What exists? How does a
+A developer who meets 49 presets and 250 checks asks three things. What exists? How does a
 person take only some of it? How does a choice travel to the next repository? Most of the answer
 exists, and none of it is shown.
 

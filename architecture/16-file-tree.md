@@ -161,7 +161,7 @@ algorithm's own constant stays where it is used (D-22).
 | `tracked.ts`          | `git ls-files --cached --others --exclude-standard -z` (tracked or would be tracked), symlinks and submodules; the `globby` walk with `ignore` when there is no repository |
 | `natures.ts`          | source, generated, vendored, binary from `[[declare]]`, `.gitattributes`, banners, and a content sniff                                                                     |
 | `tags.ts`             | file tags from `config/file-tags.ts`: extension, shebang, executable bit, content                                                                                          |
-| `scopes.ts`           | scopes from `[[scope]]` and from workspaces (`@manypkg/get-packages`, uv, Cargo)                                                                                           |
+| `scopes.ts`           | scopes from `[[scope]]` and from workspaces (`@manypkg/get-packages`, uv)                                                                                                  |
 | `staged.ts`           | `git diff --cached --name-only --diff-filter=ACMRT` and the unstaged-changes note                                                                                          |
 | `manifests.ts`        | readers for `package.json` (`@npmcli/package-json`), `pyproject.toml`, `Package.swift`, the platform files detection needs                                                 |
 | `existing-tooling.ts` | what `init` lists: configuration files at conventional paths, hooks, CI, agent files, home-grown lint folders                                                              |

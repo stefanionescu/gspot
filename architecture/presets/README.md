@@ -10,8 +10,6 @@ One page per preset. Each page states what the preset detects and claims, the to
 | javascript | `.js`, `node` shebang     | ESLint, `checkJs`, knip                                           | [javascript.md](javascript.md) |
 | python     | `.py`, `pyproject.toml`   | Ruff, basedpyright, import-linter, pydoclint, deptry, vulture     | [python.md](python.md)         |
 | swift      | `.swift`, `Package.swift` | SwiftLint, SwiftFormat, Periphery, xcodebuild                     | [swift.md](swift.md)           |
-| go         | `.go`, `go.mod`           | gofmt, golangci-lint, govulncheck, the Go grammar                 | [go.md](go.md)                 |
-| rust       | `.rs`, `Cargo.toml`       | rustfmt, Clippy, cargo-audit, cargo-deny                          | [rust.md](rust.md)             |
 | ruby       | `.rb`, `Gemfile`          | RuboCop, bundler-audit                                            | [ruby.md](ruby.md)             |
 | bash       | `.sh`, shell shebang      | ShellCheck, shfmt, `bash -n`, the shell analyses                  | [bash.md](bash.md)             |
 | sql        | `.sql`                    | sqlfluff, libpg-query                                             | [sql.md](sql.md)               |
@@ -28,7 +26,6 @@ One page per preset. Each page states what the preset detects and claims, the to
 | vue          | `vue`, `.vue`            | the Vue plugin over component files, every rule an error                                                         | [vue.md](vue.md)                   |
 | svelte       | `svelte`, `.svelte`      | the Svelte plugin over component files, every rule an error                                                      | [svelte.md](svelte.md)             |
 | nestjs       | `@nestjs/core`           | decorator compiler options, controllers that reach data through a service, no circular modules                   | [nestjs.md](nestjs.md)             |
-| django       | `manage.py`, `django`    | Ruff DJ, django-upgrade, migrations named, reversible and current, settings safe to deploy                       | [django.md](django.md)             |
 | react-native | `react-native`, `expo`   | the Expo environment rules, keyed lists, styles out of the render, no secret in AsyncStorage                     | [react-native.md](react-native.md) |
 | express      | `express`                | Semgrep API pack, OpenAPI lint and freshness, route tests                                                        | [express.md](express.md)           |
 | fastapi      | `fastapi`                | Ruff FAST, OpenAPI freshness, blocking IO in async                                                               | [fastapi.md](fastapi.md)           |

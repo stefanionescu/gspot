@@ -70,7 +70,7 @@ Reads the repository, proposes a policy, writes it after a yes.
    `go.mod`, `Cargo.toml`, `Gemfile`, `supabase/config.toml`, `wrangler.*`, `next.config.*`,
    `Dockerfile*`, `docker-compose*`, `nginx.conf`.
 3. Workspace declarations: `workspaces` in `package.json`, `pnpm-workspace.yaml`, Lerna, and Rush
-   (through `@manypkg/get-packages`), uv workspaces, Cargo workspaces. These define scopes. A
+   (through `@manypkg/get-packages`), and uv workspaces. These define scopes. A
    stray manifest in a tools folder does not.
 4. Existing tool configuration at conventional paths, for the takeover table.
 5. Existing hooks (`.husky/`, `lefthook.yml`, `.githooks/`, `core.hooksPath`), CI
