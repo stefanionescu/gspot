@@ -363,6 +363,14 @@ values fail at load with both presets named; a person resolves it with an explic
 - `check` fails when the count exceeds the baseline, or when a touched file's own count grows.
   A count below the baseline passes and prints.
 - `apply --lower-baselines` lowers every baseline to the last run's counts. It never raises one.
+  It reads the count the run recorded for each baseline, held findings included: a held count is a
+  count, not zero.
+- A check the last run did not read in full keeps its baseline untouched. That covers a run of
+  one check, a run of one scope, and a check skipped on this machine.
+- A run that read only staged or changed files is refused, because its counts are partial.
+- One baseline holds the count of a rule over the whole repository. The findings of every scope
+  are added up before the comparison. Compared scope by scope, each scope had room to grow up to
+  the whole count.
 - Format, syntax, and schema findings never baseline. A formatter run fixes them in one commit.
 - A failing build, a failing test run, and coverage under its floor never baseline. The floor is a setting, and a
   person lowers it with a reason.

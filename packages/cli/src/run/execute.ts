@@ -4,7 +4,6 @@ import { readFileSync } from 'node:fs';
 import { planRun } from '#cli/run/plan.ts';
 import { applyFixers } from '#cli/run/fixers.ts';
 import type { RunRecord } from '#types/record.ts';
-import type { CheckResult } from '#types/finding.ts';
 import { runEngineCheck } from '#cli/run/engines.ts';
 import { reproduceLine } from '#cli/run/reproduce.ts';
 import { SUPPRESSION_FORMS } from '#config/markers.ts';
@@ -12,19 +11,11 @@ import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { stageLimiter } from '#cli/run/concurrency.ts';
 import { writeRecord } from '#cli/run/record/write.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
+import type { CheckResult, Finding } from '#types/finding.ts';
 import { applyBaselines, readBaselines } from '#cli/run/baselines.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
 import { textHash, cacheKey, fileHash, readCached, writeCached } from '#cli/run/cache.ts';
-
-import type {
-    FilterVerdicts,
-    FilterInputs,
-    IgnoreUse,
-    RunOptions,
-    RunOutcome,
-    Session,
-    PlannedCheck,
-} from '#types/run.ts';
+import type { FilterInputs, IgnoreUse, RunOptions, RunOutcome, Session, PlannedCheck, Sifted } from '#types/run.ts';
 
 const NEVER_CACHED = new Set(['integrity/generated-drift', 'commits/commitlint', 'commits/range']);
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
@@ -133,25 +124,6 @@ function census(session: Session, files: { path: string }[]): Record<string, num
     return counts;
 }
 
-function filterResult(root: string, check: PlannedCheck, result: CheckResult, filtering: FilterInputs): FilterVerdicts {
-    const inline = applyInlineIgnores(root, result.findings);
-    const ignored = applyIgnores(
-        inline,
-        filtering.ignores.filter((entry) => entry.check === check.id),
-    );
-    const baselined = applyBaselines(
-        ignored.kept,
-        filtering.baselines.filter((baseline) => baseline.check === check.id),
-        filtering.staged,
-    );
-    result.findings = baselined.kept;
-    result.baselined = baselined.baselined;
-    const isFailing = result.findings.length > 0 || baselined.verdicts.some((verdict) => !verdict.held);
-    if (isFailing) result.status = 'fail';
-    else if (result.status !== 'cache') result.status = 'ok';
-    return { verdicts: baselined.verdicts, uses: ignored.uses };
-}
-
 function mergeUses(into: Map<string, IgnoreUse>, uses: IgnoreUse[]): void {
     for (const use of uses) {
         const key = JSON.stringify(use.entry);
@@ -174,6 +146,38 @@ function ignoreRows(uses: Map<string, IgnoreUse>): RunRecord['ignores'] {
         .toArray();
 }
 
+// What is left of one result after the inline ignores and the ignores of the policy.
+function withoutIgnored(
+    root: string,
+    sifted: Sifted,
+    filtering: FilterInputs,
+    uses: Map<string, IgnoreUse>,
+): Finding[] {
+    const inline = applyInlineIgnores(root, sifted.result.findings);
+    const ignored = applyIgnores(
+        inline,
+        filtering.ignores.filter((entry) => entry.check === sifted.check.id),
+    );
+    mergeUses(uses, ignored.uses);
+    return ignored.kept;
+}
+
+// A baseline holds the count of a rule over the whole repository, so the findings of every scope are counted together.
+// Counted scope by scope, each scope grows up to the whole count and the gate still passes.
+function heldByCheck(ran: Sifted[], filtering: FilterInputs): Map<string, ReturnType<typeof applyBaselines>> {
+    const ids = new Set(ran.map((entry) => entry.check.id));
+    return new Map(
+        ids.values().map((id): [string, ReturnType<typeof applyBaselines>] => [
+            id,
+            applyBaselines(
+                ran.filter((entry) => entry.check.id === id).flatMap((entry) => entry.remaining),
+                filtering.baselines.filter((baseline) => baseline.check === id),
+                filtering.staged,
+            ),
+        ]),
+    );
+}
+
 function filterAll(
     root: string,
     active: PlannedCheck[],
@@ -181,19 +185,27 @@ function filterAll(
     filtering: FilterInputs,
     uses: Map<string, IgnoreUse>,
 ): RunRecord['baselines'] {
-    const verdicts: RunRecord['baselines'] = [];
-    for (const [index, result] of results.entries()) {
+    const paired = results.flatMap((result, index): Sifted[] => {
         const check = active[index];
-        if (!check) continue;
-        if (RAN_STATUSES.has(result.status)) {
-            const filtered: FilterVerdicts = filterResult(root, check, result, filtering);
-            verdicts.push(...filtered.verdicts);
-            mergeUses(uses, filtered.uses);
-        }
+        return check === undefined ? [] : [{ check, result, remaining: [] }];
+    });
+    const ran = paired.filter((entry) => RAN_STATUSES.has(entry.result.status));
+    for (const entry of ran) entry.remaining = withoutIgnored(root, entry, filtering, uses);
+    const held = heldByCheck(ran, filtering);
+    for (const { check, result, remaining } of ran) {
+        const kept = new Set(held.get(check.id)?.kept);
+        result.findings = remaining.filter((finding) => kept.has(finding));
+        result.baselined = remaining.length - result.findings.length;
+        if (result.findings.length > 0) result.status = 'fail';
+        else if (result.status !== 'cache') result.status = 'ok';
+    }
+    for (const { check, result } of paired)
         if (FAILED_STATUSES.has(result.status))
             result.reproduce = reproduceLine(result.id, result.scope, check.spec.stage);
-    }
-    return verdicts;
+    return held
+        .values()
+        .flatMap((outcome) => outcome.verdicts)
+        .toArray();
 }
 
 function isActive(check: PlannedCheck): boolean {
@@ -244,6 +256,7 @@ export async function executeRun(session: Session, options: RunOptions): Promise
         inspection: { checked: checkedSources.length, unchecked: sources.length - checkedSources.length },
         suppressions: census(session, checkedSources),
         unstaged: 0,
+        narrowed: options.staged !== undefined || options.since !== undefined,
         failed,
         exitCode: failed.length > 0 ? 1 : 0,
     };

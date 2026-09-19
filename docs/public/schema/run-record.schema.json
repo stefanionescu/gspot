@@ -146,6 +146,17 @@
                     },
                     "held": {
                         "type": "boolean"
+                    },
+                    "paths": {
+                        "type": "object",
+                        "propertyNames": {
+                            "type": "string"
+                        },
+                        "additionalProperties": {
+                            "type": "integer",
+                            "minimum": -9007199254740991,
+                            "maximum": 9007199254740991
+                        }
                     }
                 },
                 "required": [
@@ -153,7 +164,8 @@
                     "rule",
                     "count",
                     "baseline",
-                    "held"
+                    "held",
+                    "paths"
                 ],
                 "additionalProperties": false
             }
@@ -253,6 +265,9 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
         },
+        "narrowed": {
+            "type": "boolean"
+        },
         "failed": {
             "type": "array",
             "items": {
@@ -278,6 +293,7 @@
         "inspection",
         "suppressions",
         "unstaged",
+        "narrowed",
         "failed",
         "exitCode"
     ],

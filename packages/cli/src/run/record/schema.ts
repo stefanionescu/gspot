@@ -33,6 +33,7 @@ const baselineVerdict = z.strictObject({
     count: z.number().int(),
     baseline: z.number().int(),
     held: z.boolean(),
+    paths: z.record(z.string(), z.number().int()),
 });
 
 const ignoreUse = z.strictObject({
@@ -59,6 +60,7 @@ export const recordSchema = z.strictObject({
     inspection: z.strictObject({ checked: z.number().int(), unchecked: z.number().int() }),
     suppressions: z.record(z.string(), z.number().int()),
     unstaged: z.number().int(),
+    narrowed: z.boolean(),
     failed: z.array(z.string()),
     exitCode: z.number().int(),
 });

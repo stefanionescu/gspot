@@ -1,5 +1,5 @@
-import type { Finding } from '#types/finding.ts';
-import type { BaselineVerdict, RunRecord } from '#types/record.ts';
+import type { RunRecord } from '#types/record.ts';
+import type { CheckResult, Finding } from '#types/finding.ts';
 import type { TrackedFile, Repository, ScopeEntry } from '#types/repository.ts';
 // Type aliases of the run modules.
 import type { CheckSpec, Manifest, OutputFormat, ToolPin } from '#types/manifest.ts';
@@ -141,7 +141,8 @@ export type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; h
 export type FilterInputs = { baselines: BaselineFile[]; ignores: IgnoreEntry[]; staged: Set<string> | undefined };
 
 /** What filtering one check's findings produced. */
-export type FilterVerdicts = { verdicts: BaselineVerdict[]; uses: IgnoreUse[] };
+/** One result on its way through the filters: the check, its result, and the findings no ignore took. */
+export type Sifted = { check: PlannedCheck; result: CheckResult; remaining: Finding[] };
 
 /** One check to plan: its spec and the manifest it came from, none for a [[check]] entry. */
 export type PlanEntry = { spec: CheckSpec; manifest?: Manifest };

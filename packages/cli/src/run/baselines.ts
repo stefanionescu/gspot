@@ -53,12 +53,38 @@ function verdictFor(
         count,
         baseline: baseline.count,
         held: isWithinCount && !isGrown,
+        paths: current?.paths ?? {},
     };
 }
 
 function writeBaseline(root: string, file: BaselineFile): void {
     mkdirSync(dir(root), { recursive: true });
     writeFileSync(join(dir(root), fileName(file.check, file.rule)), `${JSON.stringify(file, null, JSON_INDENT)}\n`);
+}
+
+// A check that is gone takes its baseline along. A check the run did not read in full, or a rule it holds no verdict for, says nothing.
+function fateOf(
+    baseline: BaselineFile,
+    current: BaselineVerdict | undefined,
+    known: { existingChecks: Set<string>; complete: Set<string> },
+): 'kept' | 'removed' | 'compared' {
+    if (!known.existingChecks.has(baseline.check)) return 'removed';
+    if (current === undefined || !known.complete.has(baseline.check)) return 'kept';
+    return current.count === 0 ? 'removed' : 'compared';
+}
+
+function lowerOne(
+    root: string,
+    baseline: BaselineFile,
+    current: BaselineVerdict,
+    outcome: { lowered: string[]; rose: string[] },
+): void {
+    const name = `${baseline.check}:${baseline.rule}`;
+    if (current.count > baseline.count) outcome.rose.push(name);
+    else if (current.count < baseline.count || JSON.stringify(current.paths) !== JSON.stringify(baseline.paths)) {
+        writeBaseline(root, { ...baseline, count: current.count, paths: current.paths });
+        outcome.lowered.push(name);
+    }
 }
 
 /**
@@ -167,32 +193,31 @@ export function applyBaselines(
 }
 
 /**
- * Lowers every baseline to the last run's counts; never raises one; removes files for rules with no findings and rules that are gone.
+ * Lowers baselines to the last run's counts; never raises one; removes files for rules with no findings and rules that are gone.
+ * A baseline whose check the run did not read in full is kept as it is: a check that did not run found nothing, which is no count of zero.
  * @param root the repository root
- * @param findings the findings of the last run
+ * @param verdicts what the last run counted for each baseline, held findings included
  * @param existingChecks the ids of the checks that still exist
- * @returns which baselines were lowered, removed, or refused because the count rose
+ * @param complete the ids of the checks the last run read in full
+ * @returns which baselines were lowered, removed, kept untouched, or refused because the count rose
  */
 export function lowerBaselines(
     root: string,
-    findings: Finding[],
+    verdicts: BaselineVerdict[],
     existingChecks: Set<string>,
-): { lowered: string[]; removed: string[]; rose: string[] } {
-    const counts = countByRule(findings);
-    const lowered: string[] = [];
-    const removed: string[] = [];
-    const rose: string[] = [];
+    complete: Set<string>,
+): { lowered: string[]; removed: string[]; rose: string[]; kept: string[] } {
+    const counts = new Map(verdicts.map((verdict) => [keyOf(verdict.check, verdict.rule), verdict]));
+    const outcome = { lowered: [] as string[], removed: [] as string[], rose: [] as string[], kept: [] as string[] };
     for (const baseline of readBaselines(root)) {
         const name = `${baseline.check}:${baseline.rule}`;
         const current = counts.get(keyOf(baseline.check, baseline.rule));
-        if (!current || !existingChecks.has(baseline.check)) {
+        const fate = fateOf(baseline, current, { existingChecks, complete });
+        if (fate === 'kept') outcome.kept.push(name);
+        else if (fate === 'removed') {
             rmSync(join(dir(root), fileName(baseline.check, baseline.rule)), { force: true });
-            removed.push(name);
-        } else if (current.count > baseline.count) rose.push(name);
-        else if (current.count < baseline.count || JSON.stringify(current.paths) !== JSON.stringify(baseline.paths)) {
-            writeBaseline(root, { ...baseline, count: current.count, paths: current.paths });
-            lowered.push(name);
-        }
+            outcome.removed.push(name);
+        } else if (current !== undefined) lowerOne(root, baseline, current, outcome);
     }
-    return { lowered, removed, rose };
+    return outcome;
 }

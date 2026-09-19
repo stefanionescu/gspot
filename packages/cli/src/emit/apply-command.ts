@@ -1,19 +1,17 @@
 // Write every generated file, block and merge; remove strays; set the hooks path. The apply command as a function.
 import { dirname, join } from 'node:path';
-import type { RunRecord } from '#types/record.ts';
 import { computeDrift } from '#cli/emit/drift.ts';
+import { openSession } from '#cli/run/session.ts';
 import { mergedPins } from '#cli/emit/kept-pins.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
-import { lowerBaselines } from '#cli/run/baselines.ts';
 import { applyBlock } from '#cli/emit/managed-blocks.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import type { Session, CommandResult } from '#types/run.ts';
 import { firstBaseline } from '#cli/emit/first-baseline.ts';
 import { hasPackagePins, emitAll } from '#cli/emit/targets.ts';
+import { lowerFromLastRun } from '#cli/emit/lower-baselines.ts';
 import { markExecutable } from '#cli/platform/executable-bit.ts';
-import { openSession, everyManifest } from '#cli/run/session.ts';
 import { hasPackages, installPackages } from '#cli/prose/vale.ts';
-import { pruneToolBaselines } from '#cli/emit/prune-baselines.ts';
 import { isLefthookHeld, lefthookText } from '#cli/emit/lefthook.ts';
 import { installHooksPath, removeHooksPath } from '#cli/emit/hooks.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -104,34 +102,6 @@ function checkDrift(session: Session): CommandResult {
     const drift = computeDrift(session);
     const text = drift.length === 0 ? 'every generated file matches its render\n' : driftText(drift);
     return { text, json: { drift }, exitCode: drift.length === 0 ? 0 : 1 };
-}
-
-async function lowerFromLastRun(root: string, session: Session): Promise<CommandResult> {
-    const last = join(root, '.gspot', 'last.json');
-    if (!existsSync(last))
-        return {
-            text: 'There is no last run to read. Run gspot check first.\n',
-            json: { error: 'no-last-run' },
-            exitCode: 2,
-        };
-    const record = JSON.parse(readFileSync(last, 'utf8')) as RunRecord;
-    const findings = record.checks.flatMap((check) => check.findings);
-    const existing = new Set([
-        ...everyManifest(session).flatMap((manifest) => manifest.checks.map((check) => check.id)),
-        ...session.policyFiles.policy.checks.map((check) => check.id),
-    ]);
-    const result = lowerBaselines(root, findings, existing);
-    const pruned = await pruneToolBaselines(session);
-    const lines = [
-        ...pruned.map((id) => `pruned   ${id}  (the tool's own suppressions file)`),
-        ...result.lowered.map((id) => `lowered  ${id}`),
-        ...result.removed.map((id) => `removed  ${id}`),
-        ...result.rose.map(
-            (id) => `rose     ${id}  (a baseline never rises; fix the findings or add an ignore with a reason)`,
-        ),
-    ];
-    const text = lines.length === 0 ? "every baseline is already at the last run's count" : lines.join('\n');
-    return { text: `${text}\n`, json: { ...result, pruned }, exitCode: result.rose.length > 0 ? 1 : 0 };
 }
 
 async function installProsePackages(session: Session, report: ApplyReport): Promise<void> {

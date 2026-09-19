@@ -8,6 +8,8 @@ export type BaselineVerdict = {
     count: number;
     baseline: number;
     held: boolean;
+    /** How many findings of the rule each file holds in this run, which is what lowering a baseline writes. */
+    paths: Record<string, number>;
 };
 
 export type RunRecord = {
@@ -23,6 +25,8 @@ export type RunRecord = {
     inspection: { checked: number; unchecked: number };
     suppressions: Record<string, number>;
     unstaged: number;
+    /** True when the run read only the staged files or the files a ref does not hold yet, so its counts are partial. */
+    narrowed: boolean;
     failed: string[];
     exitCode: number;
 };
