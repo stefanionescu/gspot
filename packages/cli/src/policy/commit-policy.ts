@@ -1,5 +1,6 @@
 // What every writing command ends with: one mutation of gspot.toml, validated as load does, then apply. The reason rules live here too.
 import type { Mutation } from '#types/config.ts';
+import type { ApplyReport } from '#types/emit.ts';
 import { openSession } from '#cli/run/session.ts';
 import type { CommandResult } from '#types/run.ts';
 import { writePolicy } from '#cli/policy/write.ts';
@@ -14,14 +15,14 @@ import { isReasonAccepted } from '#cli/policy/loosening.ts';
  * @param mutation the change to the raw document
  * @param isDryRun when true nothing is written and apply does not run
  * @param describe the text that tells the user what changed
- * @returns the command result with exit code 0
+ * @returns the command result with exit code 0, and what apply wrote
  */
 export async function commitPolicy(
     root: string,
     mutation: Mutation,
     isDryRun: boolean,
     describe: string,
-): Promise<CommandResult> {
+): Promise<CommandResult & { applied?: ApplyReport }> {
     const result = writePolicy(root, mutation, isDryRun);
     if (isDryRun)
         return {
@@ -30,8 +31,8 @@ export async function commitPolicy(
             exitCode: 0,
         };
     const session = await openSession(root);
-    await applyAll(session);
-    return { text: `${describe}\n`, json: { changed: result.changed }, exitCode: 0 };
+    const applied = await applyAll(session);
+    return { text: `${describe}\n`, json: { changed: result.changed }, exitCode: 0, applied };
 }
 
 /**

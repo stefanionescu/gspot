@@ -1,15 +1,19 @@
+import type { ApplyReport } from '#types/emit.ts';
 // gspot add and gspot remove: the preset list of the root or of one scope.
 import { nearMatches } from '#cli/policy/near.ts';
-import type { CommandResult } from '#types/run.ts';
+import { openSession } from '#cli/run/session.ts';
 import type { Manifest } from '#types/manifest.ts';
 import { scopeHolder } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { probeTool } from '#cli/platform/tool-probe.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { firstRun } from '#cli/lifecycle/first-check.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
+import type { CommandResult, Session } from '#types/run.ts';
 import type { TomlTable, Mutation } from '#types/config.ts';
 import { commitPolicy } from '#cli/policy/commit-policy.ts';
+import { installTools } from '#cli/lifecycle/install-tools.ts';
 import type { AddOptions, RemoveOptions } from '#types/commands.ts';
 import { requireChain, selectPresets } from '#cli/presets/select.ts';
 import { configurationName, presetManifests } from '#cli/presets/read-manifests.ts';
@@ -39,6 +43,16 @@ function arrivedChecks(added: Manifest[], manifests: Map<string, Manifest>): Set
     return new Set([...own, ...readers]);
 }
 
+// A pin that package.json already held is no change to apply, yet its package may be absent: a preset taken out
+// and added again leaves the pin and nothing installed. The package manager runs for a missing library too.
+function owed(session: Session, added: Manifest[], applied: ApplyReport): ApplyReport {
+    const scopes = session.scopes.map((scope) => scope.scope.path);
+    const isMissing = added
+        .flatMap((manifest) => manifest.tools)
+        .some((tool) => tool.kind === 'library' && probeTool(session.root, tool, scopes).state === 'missing');
+    return isMissing && applied.packages.length === 0 ? { ...applied, packages: ['package.json'] } : applied;
+}
+
 /**
  * gspot add: appends presets to the root list or to one scope's list.
  * @param o the parsed flags
@@ -60,14 +74,29 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
         holder['presets'] = list;
     };
     const where = o.scope === undefined ? '' : ` to scope ${o.scope}`;
-    const result = await commitPolicy(root, mutation, o.isDryRun, `added ${o.presets.join(', ')}${where}`);
-    if (o.isDryRun) return result;
+    const { applied, ...result } = await commitPolicy(
+        root,
+        mutation,
+        o.isDryRun,
+        `added ${o.presets.join(', ')}${where}`,
+    );
+    if (applied === undefined) return result;
+    // A library the new preset pins is installed now, as at init: the configuration just written imports it.
+    const session = await openSession(root);
+    const added = selectPresets(o.presets, manifests);
+    const installed = await installTools(
+        root,
+        session.policyFiles.policy.runner.surface,
+        owed(session, added, applied),
+        true,
+    );
     // What the new presets find today enters a baseline, as at init; the checks that were here before keep their counts.
-    const arrived = arrivedChecks(selectPresets(o.presets, manifests), manifests);
-    const { baselines } = await firstRun(root, arrived);
-    const count = baselines.reduce((sum, file) => sum + file.count, 0);
-    const line = `baseline: ${String(baselines.length)} rules with ${String(count)} findings\n`;
-    return { ...result, text: `${result.text}${line}` };
+    const arrived = arrivedChecks(added, manifests);
+    const { baselines, toolBaselines } = await firstRun(root, arrived);
+    const count = [...baselines, ...toolBaselines].reduce((sum, file) => sum + file.count, 0);
+    const held = `baseline: ${String(count)} findings of the added presets are held\n`;
+    const note = installed === '' ? '' : `${installed}\n`;
+    return { ...result, text: `${result.text}${note}${held}` };
 }
 
 /**
