@@ -24,7 +24,10 @@ yap-landing, and slopshop end with no check in error; a run on a public reposito
 Phase 7 shape is owed.
 
 gspot runs on yap-swift-app: branch `chore/gspot` of that repository holds the migration (D-97),
-and [17-migration.md](17-migration.md) lists the defects it exposed. Each one is fixed with a test.
+and [17-migration.md](17-migration.md) lists the defects it exposed. The defects of the engine that
+the run exposed are fixed with a test. The defects of the install itself are not:
+[20-adoption.md](20-adoption.md) lists them, and the Adoption phase of
+[13-roadmap.md](13-roadmap.md) orders the work.
 
 ## Gaps
 
@@ -50,6 +53,53 @@ Each row was reproduced by running the command in the second column.
 | K-17 | The core names preset ids: `swift`, `prose`, `typescript` and `commits`.                                                         | `emit/targets.ts`, `emit/apply.ts`, `emit/init-plan.ts` |
 | K-24 | The shared structure context carries `bashText`, `bashList` and `bashSetting`. Every code analysis is for shell.                 | `structure/engine.ts`                                   |
 | K-28 | The ESLint template holds 411 lines of JavaScript, and its test holds 21.                                                        | `presets/javascript/eslint.config.js.tmpl`              |
+
+The rows below come from the read of September 19, 2026, after the install in yap-swift-app.
+[20-adoption.md](20-adoption.md) holds the design for the rows that name a section of it.
+
+| Id   | Gap                                                                                                                                                                                                                                                                 | Owner                                                                                                                           |
+| ---- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
+| K-36 | Takeover deletes `setup.cfg` and `tox.ini` when the `sql` preset is selected, because both sit in the sqlfluff path list. No guard reads the file for other sections (A-10).                                                                                        | `config/patterns.ts`, `lifecycle/takeover.ts`                                                                                   |
+| K-37 | A root folder named `hooks` reads as a git hooks folder (A-3).                                                                                                                                                                                                      | `config/patterns.ts` (`HOOK_DIRECTORIES`)                                                                                       |
+| K-38 | K-17 is wider than recorded. The core also names `nestjs` and seven tool file prefixes, `eslint` and `basedpyright` baseline files, ESLint flags behind `{suppressions}`, the ESLint crash banner, three check ids in `NEVER_CACHED`, and `xcode` in the init plan. | `structure/analyses/prefix-collisions.ts`, `run/baselines.ts`, `run/tool-runner.ts`, `run/execute.ts`, `lifecycle/init/plan.ts` |
+| K-39 | K-14 is still open in three tables: `OWNER_PRESET` (29 tools), `CHECK_BY_TOOL` (13 tools) and the nine tool tables of `propose.ts`. A preset manifest owns none of it.                                                                                              | `lifecycle/takeover.ts`, `config/carry.ts`, `policy/propose.ts`                                                                 |
+| K-40 | The init proposal holds values of one repository: `TYPES_DIRECTORIES` lists `api/types`, and the commit scopes always gain `root`, `hooks` and `deps`.                                                                                                              | `lifecycle/init/plan.ts`                                                                                                        |
+| K-41 | Disabled ESLint rules are read line by line: any line of the old configuration shaped `name: 0,` becomes an `[[ignore]]` entry, whether or not it sits in a rules table.                                                                                            | `lifecycle/carry.ts` (`disabledEslint`)                                                                                         |
+| K-42 | A fixer receives every file in one command line. A check splits its files under the argument limit of the platform (`fileBatches`), and `--fix` does not. A fixer that exits nonzero is not reported.                                                               | `run/fixers.ts`                                                                                                                 |
+| K-43 | `generatedHash` hashes every file under `.gspot/` once for each planned check, and any change there clears every cached verdict (A-4). `fileHash` encodes a whole file as base64 before it hashes it.                                                               | `run/execute.ts`, `run/cache.ts`                                                                                                |
+| K-44 | The cache has no limit and no eviction, and the Swift build folder sits inside it, inside the repository (A-4).                                                                                                                                                     | `run/cache.ts`, `apple/build.ts`                                                                                                |
+| K-45 | Every run overwrites `last.json`, the `commit-msg` run included, and `apply --lower-baselines` reads it (A-7).                                                                                                                                                      | `run/record/write.ts`, `emit/lower-baselines.ts`                                                                                |
+| K-46 | A baseline count that rises prints every finding of the rule (A-6).                                                                                                                                                                                                 | `run/baselines.ts` (`applyBaselines`)                                                                                           |
+| K-47 | Nine stubs copy the whole generated file to the root, against the one-line rule of [03-configuration.md](03-configuration.md). A JSON stub carries no mark (A-1, A-2).                                                                                              | seven manifests, `emit/targets.ts` (`copyStubContent`)                                                                          |
+| K-48 | Scopes come from npm, uv and Cargo workspaces only. A per-scope target lands in one of two places by the spelling of its path (A-11).                                                                                                                               | `repository/scopes.ts`, `run/scope-paths.ts`                                                                                    |
+| K-49 | `prefixOf` splits at `-` and `.` only, so the prefix rule is blind in snake_case and PascalCase code. Non-source files count as peers. The plugin holds a second copy of the function (A-14).                                                                       | `structure/directories.ts`, `packages/eslint-plugin/src/files.ts`                                                               |
+| K-50 | The naming policy holds no framework layer and names Next.js for every repository. Go, Rust and Ruby have no case table and no extractor, and no output says so (A-15).                                                                                             | `presets/naming/policy.json`, `naming/extract.ts`                                                                               |
+| K-51 | Scope settings are written as inline tables hundreds of characters wide, because the TOML patcher refuses a document that mixes inline tables and sub-tables (A-8).                                                                                                 | `policy/propose.ts`, `policy/write.ts`                                                                                          |
+| K-52 | `[inspection] strict = false` changes nothing in the Swift preset: 95 opt-in SwiftLint rules are on for every repository (A-13).                                                                                                                                    | `presets/swift/swiftlint.yml.tmpl`                                                                                              |
+| K-53 | init opens three sessions and applies twice, and the first run has no way to leave out the push stage (A-4).                                                                                                                                                        | `lifecycle/init/command.ts`, `lifecycle/first-check.ts`                                                                         |
+| K-54 | The word `render` stays in more than 100 places (`RenderedSet`, `isRenderedHere`, `renderedPaths`, "Re-render" in the mise task text), and `synced` in 15, although [19-names.md](19-names.md) says every rename is applied.                                        | `emit/`, `lifecycle/`, `types/emit.ts`                                                                                          |
+| K-55 | The default hooks folder `.githooks` is written in two files of the uncommitted hooks work.                                                                                                                                                                         | `emit/targets.ts`, `lifecycle/uninstall-command.ts`                                                                             |
+
+## Test gaps
+
+Most planted tests are sound: they run the check on a clean repository, plant one defect, and
+read the message. The rows below are where a test proves less than its name says, or where no
+test exists.
+
+| Id   | Gap                                                                                                                                                                                                                               | Evidence                                                  |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| T-1  | No test installs with the mise runner. Every test passes `--runner none`. The mise file, the `mise exec -- gspot` hook line and `mise install` never run in a test, and that is the path the app took.                            | `grep -l "'mise'" tests/repositories/*.ts` prints nothing |
+| T-2  | One test runs a default `init`, and it is skipped unless `GSPOT_ACCEPTANCE` is set. 30 test files pass `--without`, most of them to drop `naming`, `spelling` and `structure`, so no preset is tested with the set a person gets. | `tests/repositories/reference.test.ts`                    |
+| T-3  | Four test files use a scope. None holds two scopes with different languages, a nested scope, or a scope that is not a workspace member.                                                                                           | `grep -l "'--scope'" tests/repositories/*.ts`             |
+| T-4  | Seven tests run `init` through `run()` and never read its result. `install()` exists for this and 49 calls use it.                                                                                                                | `structure.test.ts`, `repository-check.test.ts`           |
+| T-5  | Expected text that the file path already holds: `'turn'` for `jobs/turn.sh`, `'helpers'` for `helpers/first.sh`. The test passes when the message is wrong.                                                                       | `tests/repositories/structure.test.ts`                    |
+| T-6  | The prefix rule is planted with dash names only (K-49).                                                                                                                                                                           | `tests/repositories/structure.test.ts`                    |
+| T-7  | Takeover has one test. No test plants `setup.cfg`, a `hooks/` folder of source files, `.mise/tasks/`, or hooks that must keep running (K-36, K-37).                                                                               | `tests/repositories/takeover.test.ts`                     |
+| T-8  | `toolsPath` leaves out a tool that mise cannot find and says nothing. The test then fails on a `missing` status with a message about the check, not about the machine.                                                            | `tests/harness/planted.ts`                                |
+| T-9  | The init command line is written out 60 times, and a `package.json` literal 18 times. Tool names, timeouts and fixture text sit at the top of each test file.                                                                     | `grep -c "'--no-install'" tests/repositories/*.test.ts`   |
+| T-10 | `lifecycle/`, `doctor/`, `commands/`, `platform/`, `apple/`, `web/`, `pyproject/` and `supabase/` hold no unit test. The unit tests hold 2,197 lines for 24,650 lines of source.                                                  | `ls packages/cli/tests/unit`                              |
+| T-11 | Two test files have names that do not say what they test: `repository-check.test.ts` tests a `[[check]]` entry, and `scope-languages.test.ts` tests presets selected in a scope.                                                  | `tests/repositories/`                                     |
+| T-12 | No test measures time. Nothing fails when `init` or a staged check gets slower.                                                                                                                                                   | `tests/performance` does not exist                        |
 
 A person can turn the naming check off today with `gspot ignore naming/identifiers` and a reason,
 and can turn one tool off with `tools.<name>.enabled = false` and a reason. G-5 is about the
@@ -133,19 +183,43 @@ The other rows need no decision. Each one is a defect against text this folder a
 
 K-35 is decided in D-93.
 
-## Not read
+## What the September 19 read covered
 
-These files were not read line by line:
+Read line by line:
 
-- `output/`, except `completion.ts` and `prompts.ts`;
-- `repository/manifests.ts`, `repository/existing-tooling.ts` and `repository/tags.ts`;
-- `platform/paths.ts`, `platform/install-hints.ts` and `platform/executable-bit.ts`;
-- most of `config/` and all of `types/`;
-- 23 of the 26 ESLint rules and nine of the 23 structure analyses;
-- `integrity/fences.ts`, `integrity/readme/`, `integrity/docs-headings.ts` and
-  `integrity/tsconfig-options.ts`;
-- the text of the rule corpus, the six guides of the manual, and documents 01 to 12 of this
-  folder in full.
+- `lifecycle/` except `questions.ts`, `upgrade/`, and the parts of `carry.ts` below the readers;
+- `run/plan.ts`, `execute.ts`, `check-command.ts`, `cache.ts`, `baselines.ts`, `tool-runner.ts`,
+  `fixers.ts`, `broken-tool.ts`, `session.ts`, `scope-paths.ts` and `record/write.ts`;
+- `emit/targets.ts`, `hooks.ts`, `stubs.ts` and `runner-surface.ts`;
+- `repository/scopes.ts`, `existing-tooling.ts`, and `presets/detect.ts`;
+- `policy/propose.ts` and `write.ts`;
+- `structure/engine.ts`, `directories.ts`, `analyses/prefix-collisions.ts`, and the plugin rule
+  `no-prefix-collisions`;
+- `naming/extract.ts`, `paths.ts`, and `presets/naming/policy.json`;
+- `config/patterns.ts`, `carry.ts`, `reasons.ts`, `markers.ts`, and the head of `shell.ts`;
+- `tests/harness/planted.ts`, and four test files in full: `structure`, `repository-check`,
+  `scope-languages` and `hooks`;
+- in yap-swift-app: `gspot.toml`, `gspot.local.toml`, every root stub, the hooks, the mise
+  file, the list of baselines, `last.json`, and the head of `GSPOT-MIGRATION.md`.
+
+Searched, not read:
+
+- the other 48 test files, by their titles, their init flags and their skips;
+- every preset manifest, for `stub`, `stage` and `naming` keys;
+- all of `packages/cli/src`, for preset ids, tool names, suppressions, and environment reads.
+
+Not read:
+
+- `doctor/`, `integrity/`, `output/`, `platform/`, `profile/`, `prose/`, `rules/`, `apple/`,
+  `pyproject/`, `web/`, `sql/`, `postgres/`, `supabase/`, `cargo/`, `golang/`, `express/`;
+- the other 19 files of `policy/` and 8 of `run/`;
+- `types/`, and `config/` beyond the files named above;
+- `packages/eslint-plugin` beyond one rule, and its 27 rule tests;
+- the unit tests under `packages/cli/tests/unit`;
+- the templates of every preset.
+
+The gap rows above are therefore a floor. A read of the folders in the last list comes before the
+Adoption phase closes.
 
 The comparison with other tools comes from their documented behavior, not from a fresh read of
 their repositories.

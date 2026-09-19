@@ -770,3 +770,124 @@ ESLint rules that must be on for a file with that ending. The check asks ESLint 
 configuration of one tracked file per ending (`eslint --print-config`). A rule the policy turned
 off with a reason is a decision and is not reported. The first run of this check found that the
 React hooks rules were never on in the nextjs preset, which is the class of defect it exists for.
+
+## D-100 The root holds a pointer or nothing, and every written file carries its mark
+
+Nine stubs copied the whole generated file to the root, and a JSON copy lost its mark
+([20-adoption.md](https://github.com/stefanionescu/gspot/blob/main/architecture/20-adoption.md), A-1 and A-2). A root file exists only for a tool that a person
+or an editor runs without gspot, and only as a pointer to `.gspot/`: `extends`, `inherit_from`,
+`parent_config`, or a re-export. A tool with no include form gets no root file, unless the policy
+names it under `[editor] root_files`. A file that cannot hold a comment holds the `_gspot` key, or
+takes a form of the tool that holds a comment.
+
+Rejected: copies for editor support by default,
+because the root then holds more lint files after the install than before it.
+
+## D-101 gspot adds to the hooks a repository has
+
+A repository with hooks keeps them: gspot writes one managed block into each hook file it needs,
+in the folder git already runs, and leaves `core.hooksPath` alone. gspot owns the hooks path only
+where no hooks exist. `hooks.tool` takes the value `existing` for this form. The bare folder name
+`hooks` is no hooks folder. The generated line needs no environment variable.
+
+Rejected: the
+takeover of the hooks path with a warning line in the plan, because `--yes` accepts it
+unread and the hooks of a team stop without anybody choosing that.
+
+## D-102 The slow checks move to the manual stage, and a push runs what changed
+
+The `manual` stage of [10-hooks-ci-runners.md](https://github.com/stefanionescu/gspot/blob/main/architecture/10-hooks-ci-runners.md) already exists for checks
+that take minutes. Five checks use it. A check that builds, tests, or scans a whole project
+belongs there. `swift/build`, the analyzer, periphery, and the coverage checks move to it.
+
+The pre-push hook runs the push stage over the scopes that hold a changed file. It does not run
+the commit stage over the whole tree. init runs the commit stage only, and `gspot apply --baseline --at <stage>` writes the first baselines of a later stage. A cache key holds the hashes of the configuration files its
+check names, not of all of `.gspot/`.
+
+Rejected: a time budget for each hook that skips what does
+not fit, because a gate that skips checks by the clock gives a different verdict on a slow
+machine.
+
+## D-103 Formatting is fixed in one commit, and no local file hides a failure
+
+Format, syntax, schema, coverage and build findings still enter no baseline. init offers the fix
+run as one commit of layout changes. Until that run is clean, the policy holds
+`[adoption] format_pending = true`, the format checks report without failing, and `gspot doctor`
+says so. The key is tracked, so every machine agrees. `gspot.local.toml` skips a check only when
+its tool cannot run on this machine. Every summary line counts the local skips.
+
+Rejected: a
+baseline for format findings, because nobody lowers it by hand and it never reaches zero.
+
+## D-104 One baseline file, and a rise prints what rose
+
+Baselines live in `.gspot/baseline.json`, sorted, one path on each line. When a count rises, the
+run prints the findings of the files whose count rose and one line that counts the rest. A tool
+that keeps its own baseline names the file in its manifest. Rejected: one file for each rule,
+which put 112 files in the app and made two branches conflict on the same path map.
+
+## D-105 Run records and the cache leave the repository
+
+Each stage writes its own record, and the `message` stage writes none. Records and the cache live
+in the cache folder of the platform, under a key made from the repository path. The cache has a
+size limit and drops the oldest entries first. A build folder of a tool is part of that cache. The
+`.gitignore` block holds one line.
+
+Rejected: keeping them under `.gspot/` with better ignore
+rules, because a 7 GB folder inside a repository slows every tool that walks the tree.
+
+## D-106 One policy file, readable, with produced lists beside it
+
+`gspot.toml` stays the one policy. A scope setting is a sub-table, never an inline table. A list
+that a tool produces, such as the gitleaks fingerprints, lives in `.gspot/exceptions/<tool>.toml`,
+and the policy names that file. One reason may cover many entries. init writes the groups of the
+policy in a fixed order with a comment above each. The mise file is
+`.config/mise/conf.d/gspot-tools.toml`, so one file in a repository is called `gspot.toml`.
+
+Rejected: a second policy file for exceptions that a person edits, because two files a person
+edits is two places to look for every answer.
+
+## D-107 init has a trial form
+
+`gspot init --trial` writes `gspot.toml` and `.gspot/` and nothing else, so `gspot check` runs
+beside the setup a repository has. `gspot init --finish` prints the full plan and does the rest.
+Rejected: a dry run only, because a plan on a screen does not show a developer what the findings
+look like in their own code.
+
+## D-108 A folder with a project file is a scope, and scope files have one place
+
+init proposes a scope for a folder that holds `package.json`, `pyproject.toml`, `Cargo.toml`,
+`go.mod`, `Package.swift`, an `.xcodeproj`, or a `Gemfile`. A workspace member list wins where one
+exists. Generated configuration for a scope lives under `.gspot/<scope>/`, and only a pointer stub
+lives in the scope folder.
+
+## D-109 Takeover deletes only a file that one tool owns, and it lists tasks
+
+A file that more than one tool reads is never deleted: the plan names the section to remove by
+hand. Task files, package scripts and make targets that call an owned tool are listed in the plan
+and never edited. `uninstall` prints the commit init started from.
+
+## D-110 Opt-in rules of taste are off unless the policy asks
+
+A preset marks each opt-in rule `core` or `strict`. `[inspection] strict = false` leaves the
+strict group off. The banned terms of the naming policy are not part of this: they stay on.
+
+## D-111 The prefix of a file name is its first word
+
+`structure/prefix-collisions` and the plugin rule split a stem the way the naming engine does:
+dash, underscore, dot, and case boundary. A peer is a source file that a language preset claims. A
+manifest declares the names its framework fixes, and the analysis names no preset. One function
+holds the split, and the plugin imports it.
+
+## D-112 A framework preset carries its naming rules
+
+`react`, `vue`, `svelte`, `react-native`, `nextjs` and `nestjs` each hold `[[naming.rules]]` in
+their manifest. The shared policy names no framework. The init plan and `gspot doctor` say, for
+each language preset, whether names are checked.
+
+## D-113 Tests keep their fixed values in one place, and test the path a person takes
+
+`tests/config/` holds the init command lines, the manifests, the fixture text, the tool lists and
+the timeouts. One planted test installs with defaults and the mise runner in a repository of two
+scopes. `toolsPath` fails with the name of the tool it cannot find. `repository-check.test.ts`
+becomes `declared-check.test.ts`, and `scope-languages.test.ts` becomes `scope-presets.test.ts`.

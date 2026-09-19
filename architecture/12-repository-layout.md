@@ -152,6 +152,11 @@ Nothing in the release path is code gspot wrote:
 | Corpus                                   | `gspot apply --check` over the corpus (front matter, links, size, layer boundary, fences, corruption, Vale)                                                                                                                                                                                                                                                                                                                                                                                                                     | gspot's own gate; interim home `reference-rules/lint/` until `packages/cli/src/rules/` exists |
 | Self                                     | `gspot check` on gspot, no ignores                                                                                                                                                                                                                                                                                                                                                                                                                                                                                              | gspot's own gate                                                                              |
 
+D-113 adds `tests/config/`, which holds the init command lines, the manifests, the fixture
+text, the tool lists and the timeouts that the test files repeat. It also adds one planted install
+with defaults, the mise runner, and two scopes. The Snapshot, Parity, and Performance rows above
+have no test yet ([18-gaps.md](18-gaps.md), T-12).
+
 Tests never call the network. Tools run in CI through mise pins; a missing tool fails the test
 run, never skips it. The acceptance suite needs the reference repositories checked out beside
 gspot and is the one suite that runs outside CI. A `--json` test asserts the documented shape

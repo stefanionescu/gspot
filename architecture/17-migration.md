@@ -348,6 +348,16 @@ The WebSocket lines of the reference rule files live in the project templates
 files in slopshop stay unclaimed, and `doctor` lists them. `@eslint/json` is a dependency in two
 repositories, and no configuration uses it.
 
+## What the first run of the migration showed
+
+The branch `chore/gspot` exists and cannot merge. [20-adoption.md](20-adoption.md) lists why, and
+the Adoption phase of [13-roadmap.md](13-roadmap.md) ends with the branch redone from a release.
+Three things on the branch are workarounds and leave with that redo:
+
+- the `file:../gspot/packages/eslint-plugin` link in `package.json`;
+- the untracked `gspot.local.toml` that skips eight checks on one machine;
+- the figure "0 fail" in `GSPOT-MIGRATION.md`, which comes from a run with those skips.
+
 ## How the migration runs
 
 0. When exception lists live inside the lint folder rather than at conventional paths (a `shellcheckrc`, an osv config, a gitleaks allowlist, a license policy), `git mv` them to the conventional path. Takeover carries them from there and does not search for them.

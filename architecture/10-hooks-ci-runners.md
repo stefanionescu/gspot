@@ -13,6 +13,11 @@ Every check declares one stage. The stage decides which hook runs it.
 | `manual`  | checks that take minutes or need credentials: CodeQL, external link verification, image scans                                                                                                     | the whole tree                                                               | none; `gspot check --at manual` and the CI workflow |
 | `message` | commitlint                                                                                                                                                                                        | the commit message                                                           | commit-msg                                          |
 
+The code differs from this table in two ways ([20-adoption.md](20-adoption.md), A-4). The
+pre-push hook runs the commit stage and the push stage over the whole tree. Checks that take
+minutes, such as `swift/build` and the analyzer, declare `push` and not `manual`. D-102 decides
+both: those checks move to `manual`, and a push runs the push stage over the scopes that changed.
+
 A check requires nothing, or one of `build`, `docker`, `network`. A requirement puts the check in
 `push` at least. A `docker` requirement with no daemon fails; there is no silent pass.
 
@@ -44,6 +49,11 @@ unstaged changes` so nobody mistakes the verdict for a verdict on the commit alo
 | `lefthook` | a `gspot` block in `lefthook.yml`                                                         | `lefthook.yml` exists |
 | `husky`    | `.husky/pre-commit`, `pre-push`, `commit-msg` lines                                       | `.husky/` exists      |
 | `none`     | nothing                                                                                   | the person says no    |
+
+D-101 replaces the default. A repository with hooks of its own keeps them: `hooks.tool =
+"existing"` writes one managed block into each hook file of the folder git already runs, and
+leaves `core.hooksPath` alone. `gspot` is proposed only where no hooks exist. The folder name
+`hooks` alone is no sign of git hooks.
 
 The hook runs under the Bash 3.2 that macOS ships, because `#!/usr/bin/env bash` finds that one
 on a machine with no newer Bash (D-85). The body uses no option and no syntax newer than 3.2. A
@@ -182,7 +192,9 @@ Every failing check prints the command that runs it alone: `gspot check typescri
 
 ## The run record
 
-Every run writes `.gspot/last.json`, and `gspot check --json` prints the same record. Its shape
+Every run writes `.gspot/last.json`, and `gspot check --json` prints the same record. D-105
+decides one record for each stage, none for `message`, kept outside the repository, because the
+`commit-msg` run overwrites the record that `apply --lower-baselines` reads. Its shape
 is published as `schema/run-record.schema.json`. The record holds:
 
 - the version, the stage, the start time and the duration;
