@@ -12,8 +12,8 @@ gspot init       [--yes] [--dry-run] [--from <profile>] [--presets <names>] [--w
                  [--hooks gspot|husky|lefthook|pre-commit|simple-git-hooks|existing] [--no-hooks] [--ci github|gitlab] [--no-ci]
                  [--runner mise|npm|pnpm|yarn|bun] [--no-runner] [--format keep|shipped]
                  [--no-rules] [--no-checks] [--no-install] [--allow-dirty]
-gspot check      [<check>] [--staged] [--changed] [--since <ref>] [--fix] [--dry-run]
-                 [--stage commit|push|manual] [--scope <path>] [--skip <check>] [--no-cache]
+gspot check      [<path>...] [--staged] [--changed] [--since <ref>] [--fix] [--dry-run]
+                 [--only <check>] [--skip <check>] [--stage commit|push|manual] [--no-cache]
 gspot install    [--dry-run]
 gspot apply      [--dry-run]
 gspot list       [settings]
@@ -114,6 +114,7 @@ Asked in a terminal, in three groups (D-120). Each has a flag, and `--yes` takes
 
 | Question                               | Proposal                                                    | Flag                      |
 | -------------------------------------- | ----------------------------------------------------------- | ------------------------- |
+| Projects found, in a monorepo          | all found; an unticked project goes into `exclude`          | `--scope`, `--without`    |
 | Languages and frameworks found         | all found                                                   | `--presets`, `--without`  |
 | Tools found                            | all found                                                   | `--presets`, `--without`  |
 | Checks that fit any repository         | structure, naming, formatting, spelling, secrets            | `--presets`, `--without`  |
@@ -228,18 +229,19 @@ tool each print `Run: gspot install`. `check` never installs by itself.
 Runs checks and prints findings. `gspot check` is the truth, and the hooks are the fast path
 (D-122).
 
-| Form                            | Runs                                                                           |
-| ------------------------------- | ------------------------------------------------------------------------------ |
-| `gspot check`                   | every check of the commit and push stages, over the whole repository           |
-| `gspot check --staged`          | the commit stage over staged files, which is what the commit hook runs         |
-| `gspot check --changed`         | the commit and push stages over files that differ from the upstream branch     |
-| `gspot check --since <ref>`     | the same, from another ref                                                     |
-| `gspot check --stage manual`    | the checks that build, test, or scan a whole project, or that need the network |
-| `gspot check typescript/eslint` | one check                                                                      |
-| `gspot check --scope api`       | one scope                                                                      |
-| `gspot check --fix`             | every fixer in order, then the checks again                                    |
-| `gspot check --fix --dry-run`   | the diff of every fix, and no write                                            |
-| `gspot check --skip <id>`       | skips one check this run, printed and recorded                                 |
+| Form                                   | Runs                                                                           |
+| -------------------------------------- | ------------------------------------------------------------------------------ |
+| `gspot check`                          | every check of the commit and push stages, over the whole repository           |
+| `gspot check --staged`                 | the commit stage over staged files, which is what the commit hook runs         |
+| `gspot check --changed`                | the commit and push stages over files that differ from the upstream branch     |
+| `gspot check --since <ref>`            | the same, from another ref                                                     |
+| `gspot check --stage manual`           | the checks that build, test, or scan a whole project, or that need the network |
+| `gspot check src/app.ts docs`          | those files and folders, as `eslint` and `ruff check` take paths               |
+| `gspot check api`                      | one project of a monorepo, because a scope is a folder                         |
+| `gspot check --only typescript/eslint` | one check; repeat the flag for more                                            |
+| `gspot check --fix`                    | every fixer in order, then the checks again                                    |
+| `gspot check --fix --dry-run`          | the diff of every fix, and no write                                            |
+| `gspot check --skip <id>`              | skips one check this run, printed and recorded                                 |
 
 A check above the level of the repository is not planned. A check that waits for a setting
 prints `skipped` and names the setting. A check whose tool is absent prints `missing` and fails
@@ -269,7 +271,7 @@ api        typescript/tsc            ok        512 files   4.2s
 api        typescript/eslint         fail      512 files  21.4s
   src/routes/turn.ts:41:3  gspot/no-call-through  This function passes its arguments straight through to buildTurn.
     help: Call buildTurn directly and delete this function, or give it real work.
-  reproduce: gspot check typescript/eslint --scope api
+  reproduce: gspot check api --only typescript/eslint
 supabase   sql/sqlfluff              unchanged  83 files
 ios        swift/swiftlint           missing   swiftlint 0.63.2 is not installed. Run: mise install
 

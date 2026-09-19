@@ -50,6 +50,9 @@ level   = "recommended"           # or "all" (D-119)
 require_reasons = false           # true: every ignore and every loosened setting needs a reason (D-164)
 extra_checks = ["structure/single-file-folder"]   # checks of the level all, turned on one by one (D-160)
 
+# Folders and files gspot never reads. Files that git ignores are left out already.
+exclude = ["legacy", "third_party"]
+
 # The selection. Presets are bare names.
 presets = ["typescript", "bash", "sql", "supabase", "docker", "markdown"]
 
@@ -181,6 +184,8 @@ strict = false                    # true: a source file no check reads fails the
   preset has fails to load, with the settings that exist under that table.
 - A wrong entry does not stop `gspot check`. The run uses the rest of the file and reports the
   entry as a finding of `integrity/policy`. The writing commands and `apply` refuse such a file.
+- `exclude` lists folders and files that no check reads and `doctor` does not count. `init`
+  fills it with each project the developer leaves out.
 - A `[[scope]]` path names a folder that exists. Scopes nest, and a file belongs to the deepest
   scope that holds it.
 - A selector that names a folder means everything under it: `src`, `src/`, and `src/**` are one

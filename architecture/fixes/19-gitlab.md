@@ -114,3 +114,28 @@ planted `gspot ignore` with no reason writes the entry. The same command with `r
 on exits 2.
 
 **Done when.** The three pass.
+
+## K-291: check one file, and leave a project out
+
+**What is wrong.** `gspot check` takes a check name where every lint tool takes paths, so
+`gspot check src/app.ts` is an unknown check. A developer who wants gspot in two of the five
+projects of a monorepo has no key for that.
+
+**Target.** D-166. `gspot check [<path>...]`, `--only <check>`, and `exclude` in `gspot.toml`.
+
+**Files.** `commands/check.ts`, `run/check-command.ts`, `run/plan.ts`, `policy/schema.ts`,
+`repository/tracked.ts`, `lifecycle/init/questions.ts`, `run/reproduce.ts`.
+
+**Logic.** `plan.ts` keeps the files under the given paths, and then the checks that claim them.
+A path that is a scope plans the whole-project checks of that scope too. `tracked.ts` drops the
+files under `exclude` before anything else reads them, so no check, no count, and no `doctor`
+line sees them. The first question of `init` in a monorepo lists the projects found, and an
+unticked one goes into `exclude`. The reproduce line is `gspot check <path> --only <check>`.
+
+**What goes.** The check name as a positional argument, and `--scope` on `check`. `--scope` stays
+on `add`, `remove`, and `set`, where it names the scope a change is written to.
+
+**Tests.** A planted monorepo of three projects takes two at `init`, and `gspot check` reads no
+file of the third. `gspot check api/src/a.ts --fix` changes that one file.
+
+**Done when.** Both pass.

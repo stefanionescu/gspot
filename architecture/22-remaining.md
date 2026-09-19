@@ -405,6 +405,7 @@ exactly one fix file fails it.
 - [ ] K-287: Say name for a check, a preset, a rule, and a setting, and rename the manifest key `id` to `name` (D-163).
 - [ ] K-288: Add `--dry-run` to `install`, `apply`, `add`, and `remove` (D-163).
 - [ ] K-289: Make a reason optional, with `require_reasons` for a repository that wants it (D-164).
+- [ ] K-291: Make `check` take paths, add `--only` and `exclude`, and take `--scope` off `check` (D-166).
 
 ### gspot Checks Itself
 

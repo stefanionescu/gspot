@@ -229,7 +229,7 @@ table in the code holds the seven targets, with the `uname` pair of each. The jo
 ## Reproduce lines
 
 Every failing check prints the command that runs it alone:
-`gspot check typescript/eslint --scope api`. The line is the same in the hook, in CI, and in the
+`gspot check api --only typescript/eslint`. The line is the same in the hook, in CI, and in the
 terminal.
 
 ## The report

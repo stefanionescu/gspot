@@ -1428,3 +1428,16 @@ It does not decide when a developer lints, and it blocks nobody.
 This replaces D-54, D-104, D-132, D-143, and D-162, and amends D-03, D-103, and D-122. Rejected:
 a baseline that falls and never rises, which made the first install run every check and write
 hundreds of counts that nobody reads.
+
+## D-166 `check` takes paths, and a repository can leave a folder out
+
+`gspot check` took a check name as its argument and had no way to read one file. ESLint, Ruff,
+Prettier, and Biome all take paths there, so gspot does too: `gspot check src/app.ts docs` reads
+those files and folders. A scope is a folder, so `gspot check api` reads one project of a
+monorepo, and `--scope` leaves `check`. One check is `--only <check>`, the pair of `--skip`. Every
+flag composes with a path: `gspot check api --changed --fix`.
+
+`exclude` at the top of `gspot.toml` lists folders and files gspot never reads. `init` detects
+each project of a monorepo (D-108) and asks which to take. A project the developer leaves out
+goes into `exclude`, and `gspot set exclude --remove <path>` brings it back. Rejected: an
+`[[ignore]]` for each check of the folder, which is fifty entries for one wish.
