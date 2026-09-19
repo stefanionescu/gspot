@@ -4,7 +4,8 @@
         settings: { react: { version: 'detect' } },
         rules: {
             ...nextPlugin.configs['core-web-vitals'].rules,
-            ...reactHooks.configs['recommended-latest'].rules,
+            // The plugin ships this set as a list of one block, and its warnings are errors here: the gate allows no warning.
+            ...Object.fromEntries(Object.keys(reactHooks.configs['recommended-latest'][0].rules).map((rule) => [rule, 'error'])),
             '@next/next/no-async-client-component': 'error',
             'react/no-array-index-key': 'error',
             'react/no-danger': 'error',

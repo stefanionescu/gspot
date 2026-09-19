@@ -97,6 +97,7 @@ export type CheckSpec = {
     engine?: string;
     analysis?: string;
     reported_by?: string;
+    takes_over?: string;
     limit?: string;
     count_regex?: string;
     tool_errors?: string;
@@ -138,6 +139,7 @@ export type Manifest = {
     settings: SettingSpec[];
     inspections: Record<string, string[]>;
     rule_files: Record<string, string[]>;
+    required_rules: Record<string, string[]>;
     dir: string;
 };
 

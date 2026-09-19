@@ -90,6 +90,7 @@ const checkSchema = z.strictObject({
     engine: z.string().optional(),
     analysis: z.string().optional(),
     reported_by: z.string().optional(),
+    takes_over: z.string().optional(),
     limit: z.string().optional(),
     count_regex: z.string().optional(),
     tool_errors: z.string().optional(),
@@ -153,4 +154,5 @@ export const manifestSchema = z.strictObject({
     settings: z.array(settingSchema).default([]),
     inspections: stringListTable.default({}),
     rule_files: stringListTable.default({}),
+    required_rules: stringListTable.default({}),
 });

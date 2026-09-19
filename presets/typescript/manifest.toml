@@ -100,3 +100,7 @@ summary = "The path aliases every tsconfig gets, in tsconfig paths form; read fr
 
 [rule_files]
 language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
+
+[required_rules]
+ts = ["eqeqeq", "max-lines", "sonarjs/cognitive-complexity", "gspot/private-before-public", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-floating-promises"]
+tsx = ["eqeqeq", "@typescript-eslint/no-explicit-any", "@typescript-eslint/no-floating-promises"]

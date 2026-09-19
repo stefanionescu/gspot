@@ -33,7 +33,7 @@ file with `'use server'`. Client files: any file with `'use client'`.
 | Id                               | Stage       | Command                                                                                                                                 |
 | -------------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `typescript/eslint`              | commit      | with the additions above                                                                                                                |
-| `nextjs/typecheck`               | commit      | `tsc --noEmit` with `next-env.d.ts`                                                                                                     |
+| `nextjs/typecheck`               | commit      | `next typegen` under `CI=1`, then `tsc --noEmit`; takes over `typescript/tsc` in its scope (D-99)                                       |
 | `nextjs/build`                   | push, build | `next build` when `[tools.next] build_in_gate = true`                                                                                   |
 | `integrity/route-segments`       | commit      | no segment holds both `page` and `route`                                                                                                |
 | `integrity/next-config`          | commit      | `next.config.*` parsed as syntax: no secret in `env`, no `eslint.ignoreDuringBuilds`, no `typescript.ignoreBuildErrors`                 |
@@ -53,6 +53,7 @@ file with `'use server'`. Client files: any file with `'use client'`.
 | `architecture.imports_allowed` (from, to, reason)  | none                                                                    |
 | `tools.next.translations` (directory, base locale) | detected from next-intl configuration                                   |
 | `tools.next.build_in_gate`                         | false                                                                   |
+| `tools.next.build_flags`                           | `[]`; `["--webpack"]` for an app that does not build with Turbopack     |
 | `tools.eslint.restricted_imports` (name, message)  | none; the reference picture-component rule is one entry                 |
 
 ## Rule files

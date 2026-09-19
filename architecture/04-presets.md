@@ -147,9 +147,13 @@ language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
 - `reported_by` names the check whose run carries this check's findings, such as
   `markdown/prettier`, which `formatting/prettier` reports. The check shows as skipped with that
   note.
+- `takes_over` names a check whose work this check does itself. In a scope that plans both,
+  the named check is skipped with the note `<taker> runs it here` (D-99).
 - `[inspections]` lists, for each extension, the inspection kinds a file of that extension must
   receive. `doctor` reports a file that misses one as partly checked.
 - `[rule_files]` lists the corpus files the preset installs, by layer.
+- `[required_rules]` lists, for a file ending, the ESLint rules that must be on for a file with
+  that ending. `integrity/required-rules` reads it (D-99).
 - A check id is `<family>/<name>`. The family is the engine or the tool family that produces the
   finding (`structure`, `naming`, `integrity`, `prose`, `security`, or the preset's own id), not
   always the preset. `gspot explain <check-id>` prints the preset that ships it.

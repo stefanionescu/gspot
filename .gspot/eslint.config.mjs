@@ -357,10 +357,14 @@ const commentRules = {
     '@eslint-community/eslint-comments/no-unused-disable': 'error',
 };
 
+// A pair of patterns in one list means both hold, so a pattern as wide as **/* still reaches code files only.
 const importStyleOverrides = [
     {
         "files": [
-            "**/*"
+            [
+                "**/*",
+                "**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
+            ]
         ],
         "rules": {
             "gspot/import-path-style": [

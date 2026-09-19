@@ -16,7 +16,7 @@ natures = ["source"]
 [[tools]]
 name = "@next/eslint-plugin-next"
 kind = "library"
-version = "15.5.4"
+version = "16.3.5"
 npm = "@next/eslint-plugin-next"
 
 [[tools]]
@@ -35,6 +35,30 @@ npm = "eslint-plugin-react"
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/eslint.config.mjs"
 fragment = true
+
+[[checks]]
+id = "nextjs/typecheck"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "next-types"
+takes_over = "typescript/tsc"
+inspection = ["types"]
+summary = "Has Next.js write its types, then type-checks the app with the strict compiler options."
+why = "A fresh clone holds no next-env.d.ts and no route types, so a plain tsc run fails on imports the framework resolves."
+fix = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
+
+[[checks]]
+id = "nextjs/build"
+stage = "push"
+runs = "per-scope"
+engine = "integrity"
+analysis = "next-build"
+requires = "build"
+inspection = ["build"]
+summary = "Builds the app with next build, for a repository that set tools.next.build_in_gate."
+why = "Some mistakes show only at build time: a server import in a client file, or a page that cannot be prerendered."
+fix = "Run next build and read the first error it prints."
 
 [[checks]]
 id = "integrity/route-segments"
@@ -81,6 +105,20 @@ why = "A message that does not parse throws when its screen renders, in the one 
 fix = "Correct the message, or add the missing key to the locale."
 
 [[settings]]
+name = "tools.next.build_in_gate"
+kind = "boolean"
+direction = "tightening"
+default = false
+summary = "Whether the push stage builds the app with next build."
+
+[[settings]]
+name = "tools.next.build_flags"
+kind = "list"
+direction = "neutral"
+default = []
+summary = "The flags next build runs with, such as --webpack for an app that does not build with Turbopack."
+
+[[settings]]
 name = "tools.next.translations"
 kind = "table"
 direction = "neutral"
@@ -88,3 +126,6 @@ summary = "Where the message files live and which locale is the base: directory 
 
 [rule_files]
 framework = ["framework/nextjs/NEXTJS.md", "framework/react/REACT.md"]
+
+[required_rules]
+tsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "@next/next/no-html-link-for-pages", "@next/next/no-async-client-component", "react/no-danger"]

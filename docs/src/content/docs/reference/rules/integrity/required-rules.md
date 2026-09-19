@@ -1,0 +1,22 @@
+---
+title: "integrity/required-rules"
+description: "Checks that the configuration ESLint resolves for a file still turns on every rule the presets require."
+---
+
+Checks that the configuration ESLint resolves for a file still turns on every rule the presets require.
+
+## Why
+
+The configuration is put together from the blocks of many presets, and a later block can turn off a rule that an earlier one turned on.
+
+## What to do
+
+Run gspot apply to write the configuration again. A rule the repository decided against is recorded with gspot ignore, which carries a reason.
+
+## Where it runs
+
+- Preset: [the javascript preset](/reference/presets/javascript/)
+- Stage: push
+- Engine: integrity
+
+Turn it off for a path with a reason: `gspot ignore integrity/required-rules --paths <glob> --reason "<why>"`.

@@ -1,11 +1,12 @@
 // Planted repository for the nextjs and i18n presets: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
 import { join } from 'node:path';
-import { symlinkSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
+import { chmodSync, symlinkSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
+const OWNER_WRITES = 0o644;
 const MODULES = join(import.meta.dir, '../../node_modules');
 const INIT = [
     'init',
@@ -24,10 +25,12 @@ const INIT = [
     '--no-install',
 ];
 const manifest = (reactDom: string): string =>
-    `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "15.5.4",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "${reactDom}"\n    }\n}\n`;
+    `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "next": "16.3.5",\n        "next-intl": "4.3.9",\n        "react": "19.1.1",\n        "react-dom": "${reactDom}"\n    }\n}\n`;
 const CONFIG = '// The framework configuration.\nconst config = { reactStrictMode: true };\n\nexport default config;\n';
 const PAGE =
     '// The home page.\n\n/**\n * Renders the home page.\n * @returns the page\n */\nexport default function Page(): string {\n    return "home";\n}\n';
+const LAYOUT =
+    '// The root layout.\nimport type { ReactNode } from \'react\';\n\n/**\n * Wraps every page.\n * @param props the children\n * @param props.children the page\n * @returns the document\n */\nexport default function Layout({ children }: Readonly<{ children: ReactNode }>): ReactNode {\n    return (\n        <html lang="en">\n            <body>{children}</body>\n        </html>\n    );\n}\n';
 const TRANSLATIONS = '[tools.next]\ntranslations = {directory = "messages", base = "en"}\n';
 
 const CASES: PlantedCase[] = [
@@ -53,6 +56,21 @@ const CASES: PlantedCase[] = [
         expected: 'react is 19.1.1 and react-dom is 18.3.1',
     },
     {
+        id: 'nextjs/typecheck',
+        files: {
+            'app/count.ts':
+                '// A planted file.\n\n/** A number that holds text. */\nexport const count: number = "three";\n',
+        },
+        expected: 'TS2322',
+    },
+    {
+        id: 'nextjs/build',
+        files: { 'app/page.tsx': PAGE.replace('return "home";', 'return missing;') },
+        // Turbopack refuses the linked node_modules folder of a planted repository, so the fixture builds with webpack.
+        policy: '[tools.next]\nbuild_in_gate = true\nbuild_flags = ["--webpack"]\n',
+        expected: 'next build failed',
+    },
+    {
         id: 'integrity/locales',
         files: { 'messages/de.json': '{\n    "home": { "title": "Start" }\n}\n' },
         policy: TRANSLATIONS,
@@ -76,6 +94,7 @@ describe('the nextjs and i18n presets', () => {
                 'tsconfig.json': '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "include": ["app"]\n}\n',
                 'next.config.mjs': CONFIG,
                 'app/page.tsx': PAGE,
+                'app/layout.tsx': LAYOUT,
                 'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
                 'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
             });
@@ -93,8 +112,24 @@ describe('the nextjs and i18n presets', () => {
             const written = await Bun.file(join(fixture.path, '.gspot/eslint.config.mjs')).text();
             expect(written).toContain("nextPlugin.configs['core-web-vitals']");
             expect(written).toContain('i18next/no-literal-string');
+            // A later block that turns a required rule off is what integrity/required-rules exists to see.
+            const held = run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
+            expect(held.code, held.stdout + held.stderr).toBe(0);
+            chmodSync(join(fixture.path, '.gspot/eslint.config.mjs'), OWNER_WRITES);
+            const loosened = written.replace("'react/no-danger': 'error'", "'react/no-danger': 'off'");
+            await Bun.write(join(fixture.path, '.gspot/eslint.config.mjs'), loosened);
+            const seen = run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
+            expect(seen.code, seen.stdout + seen.stderr).toBe(1);
+            expect(seen.stdout).toContain('react/no-danger is off for app/layout.tsx');
+            await Bun.write(join(fixture.path, '.gspot/eslint.config.mjs'), written);
+            const yielded = run(fixture.path, ['check', 'typescript/tsc', '--no-cache'], environment);
+            expect(yielded.stdout).toContain('nextjs/typecheck runs it here');
+            // Text written into the markup is what the i18n rule exists for, and a rule that runs proves its plugin works.
+            const literal = LAYOUT.replace('<body>{children}</body>', '<body>Welcome{children}</body>');
+            await Bun.write(join(fixture.path, 'app/layout.tsx'), literal);
             const lint = run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
             expect(lint.stdout + lint.stderr).not.toContain('broke');
+            expect(lint.stdout).toContain('i18next/no-literal-string');
         },
         PLANTED_TIMEOUT_MS * 6,
     );

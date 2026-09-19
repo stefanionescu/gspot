@@ -8,9 +8,9 @@ Kind: library. Requires: typescript, zod when `@hookform/resolvers` is present.
 
 ## Generated configuration
 
-The ESLint config gains `no-restricted-syntax` selectors: `useForm` carries a `resolver`; no
-uncontrolled `register` on a component that also passes `value`; `handleSubmit` wraps every
-submit handler.
+The ESLint config gains `no-restricted-syntax` selectors: `useForm` carries a `resolver`, and
+`handleSubmit` wraps every submit handler. A selector cannot see that one element holds both a
+`register` spread and a `value`, so that rule lives in the rule file only.
 
 ## Checks
 

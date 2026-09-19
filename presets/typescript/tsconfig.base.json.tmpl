@@ -12,9 +12,15 @@
         "noPropertyAccessFromIndexSignature": true,
         "skipLibCheck": true,
         "isolatedModules": true,
-        "target": "ES2022",
+        "target": "ES2022",<% if (has('nextjs')) { %>
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "jsx": "react-jsx",
+        "lib": ["DOM", "DOM.Iterable", "ES2022"],
+        "noEmit": true,
+        "plugins": [{"name": "next"}],<% } else { %>
         "module": "NodeNext",
-        "moduleResolution": "NodeNext",
+        "moduleResolution": "NodeNext",<% } %>
         "resolveJsonModule": true,
         "esModuleInterop": true,
         "types": <%= json(settings['tools.typescript.types'] ?? []) %><% const paths = tool('typescript').paths; if (paths && Object.keys(paths).length > 0) { %>,

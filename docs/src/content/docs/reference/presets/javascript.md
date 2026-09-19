@@ -35,11 +35,12 @@ Kind: language. Requires: `structure`.
 
 ## Checks
 
-| Check                                                        | Stage  | What it finds                                                     |
-| ------------------------------------------------------------ | ------ | ----------------------------------------------------------------- |
-| [`javascript/eslint`](/reference/rules/javascript/eslint/)   | commit | Runs ESLint with the shipped rule set over every JavaScript file. |
-| [`javascript/checkjs`](/reference/rules/javascript/checkjs/) | commit | Type-checks plain JavaScript through its JSDoc comments.          |
-| [`javascript/knip`](/reference/rules/javascript/knip/)       | push   | Finds files, exports, and dependencies nothing uses.              |
+| Check                                                                    | Stage  | What it finds                                                                                           |
+| ------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------- |
+| [`javascript/eslint`](/reference/rules/javascript/eslint/)               | commit | Runs ESLint with the shipped rule set over every JavaScript file.                                       |
+| [`javascript/checkjs`](/reference/rules/javascript/checkjs/)             | commit | Type-checks plain JavaScript through its JSDoc comments.                                                |
+| [`javascript/knip`](/reference/rules/javascript/knip/)                   | push   | Finds files, exports, and dependencies nothing uses.                                                    |
+| [`integrity/required-rules`](/reference/rules/integrity/required-rules/) | push   | Checks that the configuration ESLint resolves for a file still turns on every rule the presets require. |
 
 ## Settings
 

@@ -749,3 +749,21 @@ hold two languages and one `gspot ignore` silence both.
 
 Ruff owns what Ruff already checks. `import-layout` is `E402` and `PLC0415`, and `import-boundary`
 is the import contracts of `python/import-linter`, so neither has an analysis of its own.
+
+## D-99 One check may take the work of another, and a preset names the rules it requires
+
+`nextjs/typecheck` has Next.js write `next-env.d.ts` and the route types, then runs `tsc`. A fresh
+clone holds neither file, so `typescript/tsc` alone fails there. Two type checks in one scope print
+every error twice. A check may therefore carry `takes_over = "<check id>"`: in a scope that
+plans both, the named check is skipped with the note `<taker> runs it here`. A taker that is
+itself skipped takes nothing.
+
+The framework command runs with `CI=1`, because Next.js otherwise installs the packages it misses
+with whatever package manager it finds. The `tsconfig.json` it rewrites is put back as committed.
+A check never installs anything and never leaves a tracked file changed.
+
+`integrity/required-rules` reads a `[required_rules]` table in each manifest: a file ending, and the
+ESLint rules that must be on for a file with that ending. The check asks ESLint for the resolved
+configuration of one tracked file per ending (`eslint --print-config`). A rule the policy turned
+off with a reason is a decision and is not reported. The first run of this check found that the
+React hooks rules were never on in the nextjs preset, which is the class of defect it exists for.

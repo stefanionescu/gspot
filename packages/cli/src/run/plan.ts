@@ -213,16 +213,33 @@ function narrowSet(options: PlanOptions): Set<string> | undefined {
     return options.since ? new Set(options.since) : undefined;
 }
 
+// A check that takes another over runs that work itself, so the other one yields in the same scope.
+// Naming the other check on the command line changes nothing: the taker still owns the work here.
+function yielded(planned: PlannedCheck[], entries: PlanEntry[], options: PlanOptions): PlannedCheck[] {
+    const skipped = new Set([...options.skips, ...options.localSkips]);
+    const takers = new Map(
+        entries.flatMap(({ spec }): [string, string][] =>
+            spec.takes_over === undefined || skipped.has(spec.id) ? [] : [[spec.takes_over, spec.id]],
+        ),
+    );
+    return planned.map((check) => {
+        const taker = takers.get(check.id);
+        if (taker === undefined || check.skip) return check;
+        return { ...check, skip: { source: 'rules', note: `${taker} runs it here` } };
+    });
+}
+
 function planScope(context: PlanContext, seenRepoChecks: Set<string>, wholeSeen: Set<string>): PlannedCheck[] {
     const planned: PlannedCheck[] = [];
-    for (const entry of entriesFor(context.session, context.scope, seenRepoChecks)) {
+    const entries = entriesFor(context.session, context.scope, seenRepoChecks);
+    for (const entry of entries) {
         if (!isWanted(entry.spec, context.options)) continue;
         const isWholeCheck = entry.spec.runs === 'once';
         if (isWholeCheck && wholeSeen.has(entry.spec.id)) continue;
         if (isWholeCheck) wholeSeen.add(entry.spec.id);
         planned.push(planOne(context, entry, isWholeCheck));
     }
-    return planned;
+    return yielded(planned, entries, context.options);
 }
 
 /**

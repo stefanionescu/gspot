@@ -102,9 +102,14 @@ function substituteOne(session: Session, planned: PlannedCheck, part: string, su
         .replaceAll('{baseline}', () => toPlatform(baselinePath(session, planned) ?? ''));
 }
 
+// ESLint opens a crash with a greeting and its version, and the cause is the line after those.
+function isBanner(line: string): boolean {
+    return line.trim() === '' || line.startsWith('Oops!') || line.startsWith('ESLint: ');
+}
+
 function firstLine(result: SpawnResult, placeholder: string): string {
     const text = result.stderr.trim() === '' ? result.stdout.trim() : result.stderr.trim();
-    return (text === '' ? placeholder : text).split('\n', 1)[0] ?? placeholder;
+    return text.split('\n').find((line) => !isBanner(line)) ?? placeholder;
 }
 
 function tailLines(result: SpawnResult, placeholder: string): string {

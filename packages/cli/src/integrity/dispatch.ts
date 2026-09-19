@@ -29,6 +29,7 @@ import { installPolicy } from '#cli/integrity/install-policy.ts';
 import { lockfileFresh } from '#cli/integrity/lockfile/fresh.ts';
 import { lockfileHosts } from '#cli/integrity/lockfile/hosts.ts';
 import { readmePresent } from '#cli/integrity/readme/present.ts';
+import { requiredRules } from '#cli/integrity/required-rules.ts';
 import { trivyImage } from '#cli/integrity/docker/image-scan.ts';
 import { referenceOwners } from '#cli/apple/xctest/references.ts';
 import { generatedDrift } from '#cli/integrity/generated-drift.ts';
@@ -40,6 +41,7 @@ import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
 import { configurationPurity } from '#cli/integrity/config-purity.ts';
 import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
 import { buildReproducible, siteBuilds } from '#cli/web/site/build.ts';
+import { frameworkBuild, frameworkTypes } from '#cli/web/app-build.ts';
 import { gitleaksBaseline } from '#cli/integrity/gitleaks-baseline.ts';
 import { pythonBlockingCalls } from '#cli/pyproject/blocking-calls.ts';
 import { PYTHON_STRUCTURE } from '#cli/pyproject/structure/analyses.ts';
@@ -93,6 +95,9 @@ const checks: Record<string, IntegrityCheck> = {
     'drizzle-migrations': drizzleMigrations,
     'next-route-segments': routeSegments,
     'next-config': frameworkFile,
+    'next-types': frameworkTypes,
+    'next-build': frameworkBuild,
+    'required-rules': requiredRules,
     'dependency-alignment': dependencyAlignment,
     'locale-files': localeFiles,
     'cloudflare-headers': headersSyntax,
