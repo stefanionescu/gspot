@@ -34,8 +34,15 @@ function pathInScope(scope: string, path: string): string {
     return scope === '' ? path : `${scope}/${path}`;
 }
 
+// The presets whose fragments a target takes: a target written for one scope asks that scope, and a target written once asks every scope.
+function fragmentOwners(session: Session, selection: ScopeSelection, owner: ConfigurationTarget): Manifest[] {
+    if (owner.per_scope === true) return selection.selected;
+    const every = [selection, ...session.scopes].flatMap((entry) => entry.selected);
+    return new Map(every.map((manifest) => [manifest.preset.id, manifest])).values().toArray();
+}
+
 function fragmentsFor(session: Session, selection: ScopeSelection, owner: ConfigurationTarget): string {
-    return selection.selected
+    return fragmentOwners(session, selection, owner)
         .flatMap((manifest) =>
             manifest.configs
                 .filter((fragment) => fragment.fragment === true && fragment.target === owner.target)

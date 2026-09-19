@@ -208,6 +208,171 @@ summary = "Checks that every path the type check leaves out still matches a trac
 why = "An exclusion that outlives its file hides the next file that takes the name."
 fix = "Remove the entry from tools.basedpyright.exclude."
 
+[[checks]]
+id = "python/file-length"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-file-length"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Checks that no Python file has more code lines than the ceiling."
+why = "A long module holds more than one job, and the second job is the one nobody finds."
+fix = "Split the module by the job, or raise limits.file_lines for python with a reason."
+
+[[checks]]
+id = "python/function-length"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-function-length"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Checks that no Python function has more code lines than the ceiling."
+why = "A function that fills a screen does several things, and a reader has to hold all of them."
+fix = "Move one job of the function into a function of its own."
+
+[[checks]]
+id = "python/trivial-function"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-trivial-function"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Finds top-level functions of one or two statements that one place calls."
+why = "A tiny function with one caller makes the reader jump to read two lines."
+fix = "Inline the body at its caller, or allow the name under structure.python.trivial_allowed with a reason."
+
+[[checks]]
+id = "python/call-through"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-call-through"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Finds functions that pass their parameters straight to one other call."
+why = "A function that only forwards adds a name to learn and nothing to read."
+fix = "Call the other function directly, and delete this one."
+
+[[checks]]
+id = "python/placeholder-docstring"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-placeholder-docstring"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Finds docstrings that hold a placeholder word, or the name of the function again."
+why = "A docstring that says nothing passes the docstring rule and wastes the line."
+fix = "Say what the function does that its name does not, or for whom it exists."
+
+[[checks]]
+id = "python/private-prefix"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-private-prefix"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "In a module with an export list, checks that every other definition starts with an underscore, and that the list holds no such name."
+why = "A name that is public by accident gets imported, and then it cannot change."
+fix = "Add the underscore, or list the name in the export list."
+
+[[checks]]
+id = "python/private-before-public"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-private-before-public"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Checks that private functions sit above the public functions of a module."
+why = "A reader who meets the parts first understands what is built from them."
+fix = "Move the private functions above the first public one."
+
+[[checks]]
+id = "python/exports-at-bottom"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-exports-at-bottom"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Checks that the export list is the last statement of its module."
+why = "A reader looks for the public surface in one place."
+fix = "Move the export list to the end of the module."
+
+[[checks]]
+id = "python/no-lazy-exports"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-no-lazy-exports"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Refuses a module-level attribute hook that makes names appear at run time."
+why = "A name that appears only at run time hides from the type checker, the editor, and the reader."
+fix = "Import the names and list them."
+
+[[checks]]
+id = "python/package-exports"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-package-exports"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Checks that a package exports no more names than the ceiling."
+why = "A package that exports everything has no surface, so every change to it is a breaking one."
+fix = "Split the package, or export fewer names."
+
+[[checks]]
+id = "python/import-cycles"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-import-cycles"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Finds first-party modules that import each other in a circle."
+why = "A circle imports in one order and fails in another, and the order changes with an unrelated edit."
+fix = "Move what both sides need into a third module."
+
+[[checks]]
+id = "python/no-singletons"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "python-no-singletons"
+claims = {extensions = [".py"]}
+inspection = ["structure"]
+summary = "Finds objects built at import time and kept in a module variable."
+why = "Every importer shares the one instance, and no test gets a fresh one."
+fix = "Build the object where the program starts, and pass it in. Allow a name under structure.python.singletons_allowed with a reason."
+
+[[settings]]
+name = "structure.python.trivial_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Tiny functions that stay functions: the paths, the names, and the reason."
+
+[[settings]]
+name = "structure.python.singletons_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Module variables that may hold an object built at import time: the paths, the names, and the reason."
+
+[[settings]]
+name = "structure.python.max_package_exports"
+kind = "number"
+direction = "ceiling"
+default = 20
+summary = "The most names a package may list in its export list."
+
 [[settings]]
 name = "tools.dependencies.pip_install_allowed"
 kind = "list"

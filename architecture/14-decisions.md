@@ -738,3 +738,14 @@ real repository: the old lint folder, hooks, tasks, rule files, and pins go, gsp
 report, and nobody fixes them here, because the app is not the subject. A gspot defect the run
 exposes is fixed in gspot. Rejected: a worktree run only, which proves the plan and leaves the
 old setup in place.
+
+## D-98 A structure check carries the name of its language
+
+`structure/trivial-function` reads shell scripts, and one check id maps to one analysis. The
+same idea over Python is `python/trivial-function`, and over Swift `swift/trivial-function`. A
+repository that selects both presets runs both. Each has its own baseline and its own ignore
+entries. Rejected: one id with an analysis for each language behind it, which makes one baseline
+hold two languages and one `gspot ignore` silence both.
+
+Ruff owns what Ruff already checks. `import-layout` is `E402` and `PLC0415`, and `import-boundary`
+is the import contracts of `python/import-linter`, so neither has an analysis of its own.

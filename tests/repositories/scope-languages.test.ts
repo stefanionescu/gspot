@@ -46,6 +46,8 @@ describe('typescript in a scope', () => {
             await install(fixture.path, argv, environment);
             const lint = run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
             expect(lint.stdout + lint.stderr).not.toContain('Parsing error');
+            const written = await Bun.file(join(fixture.path, '.gspot/eslint.config.mjs')).text();
+            expect(written).toContain('tseslint.configs.strictTypeChecked');
             expect(lint.stdout).toContain('typescript/eslint');
         },
         PLANTED_TIMEOUT_MS * 4,

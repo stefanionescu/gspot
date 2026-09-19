@@ -25,21 +25,36 @@ Kind: language. Requires: `formatting`.
 
 ## Checks
 
-| Check                                                                                | Stage  | What it finds                                                                                                                   |
-| ------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------- |
-| [`python/ruff`](/reference/rules/python/ruff/)                                       | commit | Lints every Python file with the shipped Ruff families, the security family included.                                           |
-| [`python/ruff-format`](/reference/rules/python/ruff-format/)                         | commit | Checks the layout of every Python file against the Ruff formatter.                                                              |
-| [`python/basedpyright`](/reference/rules/python/basedpyright/)                       | commit | Type checks the project with basedpyright in its strictest mode.                                                                |
-| [`python/import-linter`](/reference/rules/python/import-linter/)                     | commit | Runs the import contracts of the project, when pyproject.toml holds any.                                                        |
-| [`python/pydoclint`](/reference/rules/python/pydoclint/)                             | commit | Checks that every docstring names the arguments, the return, and the exceptions its function really has.                        |
-| [`python/deptry`](/reference/rules/python/deptry/)                                   | push   | Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones.                    |
-| [`python/vulture`](/reference/rules/python/vulture/)                                 | push   | Finds functions, classes, and variables nothing uses.                                                                           |
-| [`python/pyproject`](/reference/rules/python/pyproject/)                             | commit | Validates every pyproject.toml against the packaging schemas.                                                                   |
-| [`integrity/dependency-ownership`](/reference/rules/integrity/dependency-ownership/) | commit | Checks that pyproject.toml owns every dependency: no hand-kept requirements file, and no pip install outside the allowed paths. |
-| [`integrity/typecheck-membership`](/reference/rules/integrity/typecheck-membership/) | commit | Checks that every path the type check leaves out still matches a tracked file.                                                  |
+| Check                                                                                | Stage  | What it finds                                                                                                                        |
+| ------------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------------ |
+| [`python/ruff`](/reference/rules/python/ruff/)                                       | commit | Lints every Python file with the shipped Ruff families, the security family included.                                                |
+| [`python/ruff-format`](/reference/rules/python/ruff-format/)                         | commit | Checks the layout of every Python file against the Ruff formatter.                                                                   |
+| [`python/basedpyright`](/reference/rules/python/basedpyright/)                       | commit | Type checks the project with basedpyright in its strictest mode.                                                                     |
+| [`python/import-linter`](/reference/rules/python/import-linter/)                     | commit | Runs the import contracts of the project, when pyproject.toml holds any.                                                             |
+| [`python/pydoclint`](/reference/rules/python/pydoclint/)                             | commit | Checks that every docstring names the arguments, the return, and the exceptions its function really has.                             |
+| [`python/deptry`](/reference/rules/python/deptry/)                                   | push   | Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones.                         |
+| [`python/vulture`](/reference/rules/python/vulture/)                                 | push   | Finds functions, classes, and variables nothing uses.                                                                                |
+| [`python/pyproject`](/reference/rules/python/pyproject/)                             | commit | Validates every pyproject.toml against the packaging schemas.                                                                        |
+| [`integrity/dependency-ownership`](/reference/rules/integrity/dependency-ownership/) | commit | Checks that pyproject.toml owns every dependency: no hand-kept requirements file, and no pip install outside the allowed paths.      |
+| [`integrity/typecheck-membership`](/reference/rules/integrity/typecheck-membership/) | commit | Checks that every path the type check leaves out still matches a tracked file.                                                       |
+| [`python/file-length`](/reference/rules/python/file-length/)                         | commit | Checks that no Python file has more code lines than the ceiling.                                                                     |
+| [`python/function-length`](/reference/rules/python/function-length/)                 | commit | Checks that no Python function has more code lines than the ceiling.                                                                 |
+| [`python/trivial-function`](/reference/rules/python/trivial-function/)               | commit | Finds top-level functions of one or two statements that one place calls.                                                             |
+| [`python/call-through`](/reference/rules/python/call-through/)                       | commit | Finds functions that pass their parameters straight to one other call.                                                               |
+| [`python/placeholder-docstring`](/reference/rules/python/placeholder-docstring/)     | commit | Finds docstrings that hold a placeholder word, or the name of the function again.                                                    |
+| [`python/private-prefix`](/reference/rules/python/private-prefix/)                   | commit | In a module with an export list, checks that every other definition starts with an underscore, and that the list holds no such name. |
+| [`python/private-before-public`](/reference/rules/python/private-before-public/)     | commit | Checks that private functions sit above the public functions of a module.                                                            |
+| [`python/exports-at-bottom`](/reference/rules/python/exports-at-bottom/)             | commit | Checks that the export list is the last statement of its module.                                                                     |
+| [`python/no-lazy-exports`](/reference/rules/python/no-lazy-exports/)                 | commit | Refuses a module-level attribute hook that makes names appear at run time.                                                           |
+| [`python/package-exports`](/reference/rules/python/package-exports/)                 | commit | Checks that a package exports no more names than the ceiling.                                                                        |
+| [`python/import-cycles`](/reference/rules/python/import-cycles/)                     | commit | Finds first-party modules that import each other in a circle.                                                                        |
+| [`python/no-singletons`](/reference/rules/python/no-singletons/)                     | commit | Finds objects built at import time and kept in a module variable.                                                                    |
 
 ## Settings
 
+- `structure.python.trivial_allowed`: Tiny functions that stay functions: the paths, the names, and the reason.
+- `structure.python.singletons_allowed`: Module variables that may hold an object built at import time: the paths, the names, and the reason.
+- `structure.python.max_package_exports`: The most names a package may list in its export list.
 - `tools.dependencies.pip_install_allowed`: Paths that may run pip install, such as an image that installs one build tool, each with a reason.
 - `tools.basedpyright.exclude`: Paths basedpyright leaves out, such as files that need another dependency set, each with a reason.
 - `tools.vulture.ignore_names`: Names vulture treats as used, such as functions a framework calls.

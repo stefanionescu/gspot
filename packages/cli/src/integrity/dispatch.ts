@@ -38,6 +38,7 @@ import { configurationPurity } from '#cli/integrity/config-purity.ts';
 import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
 import { gitleaksBaseline } from '#cli/integrity/gitleaks-baseline.ts';
 import { pythonBlockingCalls } from '#cli/pyproject/blocking-calls.ts';
+import { PYTHON_STRUCTURE } from '#cli/pyproject/structure/analyses.ts';
 import { assetFolders, stringFiles } from '#cli/apple/xcode/resources.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/postgres/history.ts';
 import { trackedDependencies } from '#cli/integrity/tracked-dependencies.ts';
@@ -70,6 +71,7 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    ...PYTHON_STRUCTURE,
     'python-import-linter': importLinter,
     'python-blocking-calls': pythonBlockingCalls,
     'python-dependency-ownership': dependencyOwnership,

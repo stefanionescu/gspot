@@ -1,0 +1,104 @@
+// The parsed Python modules of one run, and the functions they define.
+import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import type { Node } from 'web-tree-sitter';
+import type { EngineInput } from '#types/run.ts';
+import { parserFor } from '#cli/naming/parsers.ts';
+import type { PythonFunction, PythonModule } from '#types/pyproject.ts';
+
+function definitionOf(statement: Node): Node {
+    return statement.type === 'decorated_definition'
+        ? (statement.childForFieldName('definition') ?? statement)
+        : statement;
+}
+
+function isDocstring(statement: Node | undefined): boolean {
+    return statement?.type === 'expression_statement' && statement.namedChildren[0]?.type === 'string';
+}
+
+// The value assigned to __all__ by a statement, or undefined when the statement assigns something else.
+function exportList(statement: Node): Node | undefined {
+    const assignment = statement.type === 'expression_statement' ? statement.namedChildren[0] : undefined;
+    if (assignment?.type !== 'assignment' || assignment.childForFieldName('left')?.text !== '__all__') return undefined;
+    return assignment.childForFieldName('right') ?? undefined;
+}
+
+/**
+ * Parses every claimed Python source file.
+ * @param input the engine input
+ * @returns the modules
+ */
+export async function pythonModules(input: EngineInput): Promise<PythonModule[]> {
+    const parser = await parserFor('python');
+    const modules: PythonModule[] = [];
+    for (const file of input.files) {
+        if (file.nature !== 'source' || !file.path.endsWith('.py')) continue;
+        const text = readFileSync(join(input.root, file.path), 'utf8');
+        const tree = parser.parse(text);
+        if (tree === null) continue;
+        const statements = tree.rootNode.namedChildren.filter((child) => child.type !== 'comment');
+        modules.push({
+            path: file.path,
+            lines: text.split('\n'),
+            tree,
+            statements: statements.map((node) => definitionOf(node)),
+        });
+    }
+    return modules;
+}
+
+/**
+ * The statements of a function body without its docstring.
+ * @param definition the function definition
+ * @returns the statements
+ */
+export function bodyOf(definition: Node): Node[] {
+    const statements = (definition.childForFieldName('body')?.namedChildren ?? []).filter(
+        (child) => child.type !== 'comment',
+    );
+    return isDocstring(statements[0]) ? statements.slice(1) : statements;
+}
+
+/**
+ * The docstring text of a function, or undefined.
+ * @param definition the function definition
+ * @returns the text inside the quotes
+ */
+export function docstringOf(definition: Node): string | undefined {
+    const first = (definition.childForFieldName('body')?.namedChildren ?? []).find((child) => child.type !== 'comment');
+    if (!isDocstring(first)) return undefined;
+    const content = first?.namedChildren[0]?.namedChildren.find((part) => part.type === 'string_content');
+    return content?.text.trim() ?? '';
+}
+
+/**
+ * Every function of a module, nested ones included.
+ * @param module the module
+ * @returns the functions
+ */
+export function functionsOf(module: PythonModule): PythonFunction[] {
+    return module.tree.rootNode.descendantsOfType('function_definition').map((node) => ({
+        path: module.path,
+        name: node.childForFieldName('name')?.text ?? '',
+        node,
+        isDecorated: node.parent?.type === 'decorated_definition',
+        isTopLevel:
+            (node.parent?.type === 'decorated_definition' ? node.parent.parent : node.parent)?.type === 'module',
+        body: bodyOf(node),
+    }));
+}
+
+/**
+ * The names a module lists in __all__, or undefined when it has no such list.
+ * @param module the module
+ * @returns the names and the statement that holds them
+ */
+export function exportedNames(module: PythonModule): { names: string[]; statement: Node } | undefined {
+    const statement = module.statements.find((entry) => exportList(entry) !== undefined);
+    const list = statement === undefined ? undefined : exportList(statement);
+    if (statement === undefined || list === undefined) return undefined;
+    const names = list.namedChildren
+        .filter((item) => item.type === 'string')
+        .map((item) => item.text.replaceAll(/^["']|["']$/gu, ''));
+    return { names, statement };
+}
