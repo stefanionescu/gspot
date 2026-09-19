@@ -117,8 +117,7 @@ expresses the rule. Rejected: the reference pattern of writing a careful analyze
 
 ## D-20 Limits ship at the strictest value observed
 
-Shell function length is 40, not 100. A repository above the limit gets a baseline, not a
-weaker rule. Rejected: the loosest value, which makes the limit decorative.
+Replaced by D-119 and D-126.
 
 ## D-21 preset ids are bare names
 
@@ -133,10 +132,7 @@ logic) only.
 
 ## D-23 Seven commands in v1
 
-`init`, `check`, `apply`, `rules`, `doctor`, `upgrade`, `uninstall`. `fix` is a flag on `check`;
-coverage lives in `doctor`; the last run is a file. Rejected: fourteen verbs, half of which
-printed things nobody asked for. Superseded in part: D-32 and D-37 add the six writing commands,
-`why` and `explain`; D-45 folds `rules` into `apply`; D-55 adds `completion`. The count is fifteen.
+Replaced by D-131.
 
 ## D-24 No environment variables turn checks off
 
@@ -259,10 +255,7 @@ Superseded by D-45 on where the report lives: `doctor`, not an `init` flag.
 
 ## D-43 Copied project templates carry their origin version
 
-A project template copied into the project layer opens with a `gspot-template` header naming the
-template and the gspot version. `upgrade --check` reports when that template changed upstream;
-nothing merges it. Rejected: upgrading project files, which the project owns; rejected: no header,
-which left the person unaware that the source they copied had moved on.
+Replaced by D-134, because project templates were never built.
 
 ## D-44 One way to turn a rule off
 
@@ -282,13 +275,7 @@ covered, so a person had two commands to remember for one question.
 
 ## D-46 Takeover replaces; it carries exception lists only
 
-At `init`, an owned tool's existing configuration file is deleted (git keeps it; the plan prints
-`git show HEAD:<path>`) and the gspot one is written. Carried into `gspot.toml`: typos words, gitleaks
-allowlists and baseline fingerprints, osv ignored advisories, license exceptions, and rules
-turned off, which become `[[ignore]]` entries with the reason `carried from <file> at init`.
-Nothing else is read. Rejected: one loader per tool that carries every option into `[tools.<name>]` or `extra`. That is twenty loaders to write and maintain, and it preserves the old policy inside the new one, so the repository never adopts the shipped rule set. Rejected:
-carrying nothing, which makes a person re-type a typo list and a gitleaks allowlist that are
-facts about their repository, not policy.
+Replaced by D-109 and D-150.
 
 ## D-47 Static output, one library per job
 
@@ -403,7 +390,7 @@ v1 is Phases 0 through 6. Rejected: the earlier cut that shipped after Phase 4 a
 
 ## D-62 Build order follows the two goals
 
-The build runs Phase 0, then Phase 1 with this repository as the acceptance repository. Then come the preset set yap-swift-app selects together with the corpus assembler, then Python, then the web presets, then release. `13-roadmap.md` records this order and keeps every "done when" row. Rejected: the language order that document first had, which reached Swift last and yap-swift-app fourth, so the repository with the most to replace was proven last.
+Replaced by D-121.
 
 ## D-63 Templates render through `eta`
 
@@ -490,20 +477,7 @@ Rejected: allowances in `gspot.toml` for the corpus folders, which repeat in eve
 
 ## D-72 The prose gate keeps the corpus ceilings and turns off the upstream rules that contradict the corpus
 
-Recorded 2026-09-18, when the prose preset first ran over the text of gspot and reported 9,821 alerts. Three changes. The length ceilings default to what the corpus was written to: 30 words a sentence, 45 words a list item, 6 sentences a paragraph. The ledger's 25 and 20 came from one reference repository's own limits and failed 932 corpus statements.
-
-The Vale reject list rendered from the naming policy is gone, amending [D-26](#d-26-prose-and-identifiers-share-one-vocabulary). The corpus itself writes `an advanced guide`, `modern Bash` and `a new file`, so the identifier bans are not prose bans. The Vale rules `marketing` and `hedging` own the prose.
-
-Seventy more upstream rules are off, each with its reason in the rendered `vale.ini`:
-
-- product terminology from another company (Google's `app` for `application`, Microsoft's `personal digital assistant` for `agent`, Red Hat's `shell prompt`);
-- rules a gspot rule already owns (semicolons, future tense, headings, dashes, hedges);
-- rules that report the same thing under three names (the Oxford comma, ellipses, spacing, quotes);
-- rules that misread technical words (`disabled` as a slur, `primitive` as a type, `swallow` as profanity).
-
-Tables are a skipped scope. A ledger cell is a list of identifiers and rule names, not a sentence, and the rules that judge prose have nothing to say about it. The `future` rule matches `is planned`, `are planned`, `planned for` and `planned to`, not the bare word, because a planned check is what the planner produces. No token ignore covers code spans: the Markdown parser drops code, and a backtick pattern swallowed every fenced block, so the code spans after it were read as prose.
-
-The URL token ignore stops at a closing parenthesis, because a link target that swallowed its `)` left the code spans after it read as prose. Rejected: a baseline for the 1,345 semicolons, which hides the corpus's own unenforced rule. Also rejected: trimming the packages, because the rules that stay (the Oxford comma, `there is`, repeated words, the Harper grammar rules) find real slips.
+Replaced by D-151.
 
 ## D-73 Rule files name no check
 
@@ -555,35 +529,11 @@ which puts a file in every repository for the few that need it.
 
 ## D-77 One binary compares the disk with its own render
 
-Recorded 2026-09-18, with `upgrade`. A binary carries one version of the presets, so
-`upgrade --check` cannot ask an older version what it shipped. It compares what the repository
-holds on disk with what this binary renders and pins.
-
-The report holds the drift of every generated file and rule file, and the rule names that
-appear or vanish in a configuration diff. It holds the tool pins the runner surface has on disk
-against the manifests. It lists the presets detection proposes that the policy does not select,
-and the `extra` keys that now have a slot.
-
-Two lines of the earlier report are gone: the coverage change and the refusal when the target
-claims fewer files, both of which need the older binary's claim set. Rejected: embedding every
-past manifest in the binary, which grows without bound for a report nobody reads twice.
+Replaced by D-129 and D-152.
 
 ## D-78 The reference pages of the manual stay source files
 
-Recorded 2026-09-18, with the docs site. `docs/reference-pages.ts` writes one page per command,
-preset, check and setting, plus the engines page and the decision log, from the binary's own
-data. It formats each page with Prettier so the tree stays stable. The pages carry no generated header on purpose. The check texts (`summary`, `why`, `fix`) live
-in TOML manifests, which the prose engine cannot read. The generated Markdown is where Vale
-reads them.
-
-Drift is caught by the repository check `docs/generated`, which runs the writer with `--check`
-at the commit stage. Root-relative links inside the site are validated by the Starlight build
-through `starlight-links-validator`, and lychee excludes them. The `docs/` folder is a scope
-with the typescript preset alone. The site's own configuration files are TypeScript, and the
-scope's `tsconfig.json` uses the Bundler resolution the Astro plugins need.
-
-Rejected: a generated header, which takes the check texts out of the prose gate, and Markdown
-links with file extensions, which the site does not serve.
+Replaced by D-153.
 
 ## D-79 A profile carries a policy between repositories
 
@@ -627,11 +577,7 @@ command-line rules it has no use for.
 
 ## D-82 The build order is hardening, 5, 2, 4, 3
 
-The build order in `13-roadmap.md` is: the hardening phase, then Phase 5
-(security), Phase 2 (Python, SQL, containers), Phase 4 (Swift) and Phase 3 (the web). The
-acceptance run on yap-swift-app needs the security presets, SQL, Supabase, Docker, and nginx
-before the Swift presets can close it. Amends D-62. Rejected: Swift first, which ends with a
-repository whose secrets, advisories, licenses, and migrations nothing checks.
+Replaced by D-121.
 
 ## D-83 `init` validates, writes, runs, then deletes
 
@@ -796,17 +742,7 @@ unread and the hooks of a team stop without anybody choosing that.
 
 ## D-102 The slow checks move to the manual stage, and a push runs what changed
 
-The `manual` stage of [10-hooks-ci-runners.md](https://github.com/stefanionescu/gspot/blob/main/architecture/10-hooks-ci-runners.md) already exists for checks
-that take minutes. Five checks use it. A check that builds, tests, or scans a whole project
-belongs there. `swift/build`, the analyzer, periphery, and the coverage checks move to it.
-
-The pre-push hook runs the push stage over the scopes that hold a changed file. It does not run
-the commit stage over the whole tree. init runs the commit stage only, and `gspot apply --baseline --at <stage>` writes the first baselines of a later stage. A cache key holds the hashes of the configuration files its
-check names, not of all of `.gspot/`.
-
-Rejected: a time budget for each hook that skips what does
-not fit, because a gate that skips checks by the clock gives a different verdict on a slow
-machine.
+Replaced by D-122.
 
 ## D-103 init offers the fix run, and no local file hides a failure
 
@@ -865,9 +801,7 @@ and never edited. `uninstall` prints the commit init started from.
 
 ## D-110 Opt-in rules of taste are off unless the policy asks
 
-A preset marks each opt-in rule `recommended` or `all`. The key is `level` at the top of
-`gspot.toml` (D-119). The first form of this decision used `[inspection] strict`, and D-119
-replaced it. The banned terms of the naming policy are not part of this: they stay on.
+Replaced by D-119.
 
 ## D-111 The prefix of a file name is its first word
 
@@ -1316,3 +1250,75 @@ is no lint tool, so gspot writes that one line at `init` and removes it at `unin
 no other package, no `prepare` script, and no pin of a tool. The hooks are installed by the setup
 entry of the repository (D-115). Rejected: a global install only, which leaves a clone with no
 way to get the version the repository pins.
+
+## D-148 The type check extends the config of the repository and never edits it
+
+The typescript preset wrote `extends` into the `tsconfig.json` of the developer and set options
+that change emit and resolution (K-74, K-201). gspot writes `.gspot/tsconfig.check.json`,
+which extends the file of the repository and adds flags that only add errors: `strict` at
+`recommended`, and three more at `all`. `typescript/tsc` runs through that file. Where the file
+of the repository holds `references`, the check builds them as they are. Rejected: a shared base
+the developer extends, because a Vite, Vue, or Svelte app then stops resolving its imports.
+
+## D-149 An idea is written once, and each language lists it under its own id
+
+The trivial-function, call-through, and duplicate-function logic existed three times, with three
+sets of constants. The ideas did not hold in every language alike (K-87, K-235). One
+analysis holds each idea over the syntax tree, and a small table for each language names its
+node kinds.
+
+D-98 stands: the manifest of each language lists the idea under an id of its own, so
+a baseline and an ignore hold one language. D-02 stands: TypeScript keeps its ESLint rules, and
+one table of cases holds both implementations to the same answers.
+The fix file of that row holds the table of what runs where. Rejected: moving
+the TypeScript rules into the structure engine, which loses what an editor shows.
+
+## D-150 A manifest holds every fact about its preset, and takeover carries both ways
+
+The CLI named presets, tools, and check ids in tables of its own (K-38, K-39). Every such fact is
+a key of a manifest. The keys hold takeover rows, what is carried from an old file, the version
+command, the baseline file, and the suppression comment. They also hold the page of a rule, what
+a check waits for, and what detects a setting. One unit test fails a preset id, a tool name, or a check id under `src/`
+outside `src/checks/`.
+
+Takeover carries a rule in both directions (K-193): off as an
+`[[ignore]]`, on as `tools.<tool>.rules`, each with its paths. For ESLint it asks ESLint itself
+for the final config, and the plan lists every setting it did not carry. This replaces D-46.
+
+## D-151 The prose preset runs the gspot style alone at the recommended level
+
+Seven Vale packages of other companies shipped to every project, with 93 of their rules turned
+off for reasons about the text of this repository (K-175). `recommended` runs the `gspot`
+style alone, which is what `WRITING.md` tells an agent, and needs no network. `all` adds the
+packages, and the off list with its reasons is data of the prose preset. This replaces D-72.
+
+## D-152 A check never writes into the tree, and every file is written whole
+
+One check ran `git clean`, one ran `git checkout`, and the site checks built into the real
+output folder (K-156, K-159, K-154). A check that needs to run a generator or a build works
+on a copy under `.gspot/cache/`, and compares. The push hook checks the pushed commits in a
+detached worktree when the tree is dirty (K-70). Drift of generated files is a check,
+`integrity/generated-drift`, and `apply --check` is gone (K-246). Every file gspot writes goes to
+a temporary file in the same folder and is renamed, so a full disk leaves the old file whole
+(K-257).
+
+## D-153 The reference pages of the manual are built, not tracked
+
+293 of the 309 tracked files under `docs/` were pages a script writes (K-205). The docs build
+writes them first, git ignores them, and the check `docs/generated` is gone. This replaces D-78.
+The check `docs/samples` keeps the hand-written pages and this folder true: it loads every config
+sample and parses every `gspot` command a document shows (S-11).
+
+## D-154 A rule file installs because a manifest lists it, and follows the level
+
+The assembler installed three general folders by name, and six rule files were installed by
+nothing (K-179, K-232). A rule file installs because a selected manifest lists it, and an
+entry may carry a `when` table, as `[detect]` does. A section of a rule file carries the level of
+the checks it describes, and the assembler leaves out a section above the level of the
+repository (K-230). A good example in a rule file passes the linter of its preset (K-261).
+
+## D-155 A repository check names its inputs
+
+A `[[check]]` was cached on the files its `paths` name, and its command read more, so a failure
+outlived its cause (K-69). `paths` says when the check runs. `inputs` says what it reads, and the
+cache key holds those files. A check with no `inputs` is never cached.
