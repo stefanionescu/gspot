@@ -24,23 +24,21 @@ there. A second SwiftLint configuration for a test folder comes from
 
 ## Checks
 
-| Id                           | Stage       | Command                                                                                                                                                                                                      |
-| ---------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `xctest/disabled`            | commit      | engine: `XCTSkip`, `.disabled(`, `@available(*, unavailable)` on a test, and a `skippedTests` entry in a test plan each carry a reason on the same line or the line above, and the count enters the baseline |
-| `xctest/no-sleep`            | commit      | engine: no `sleep(`, `usleep(`, `Thread.sleep` or `Task.sleep` in a claimed file outside `[tools.xctest] sleep_allowed`                                                                                      |
-| `xctest/recording`           | commit      | engine: no `isRecording = true`, `record: true`, `record: .all` or `withSnapshotTesting(record:` set to a recording mode in a tracked file                                                                   |
-| `xctest/snapshot-references` | commit      | engine: every file under `__Snapshots__/<TestClass>/` names a test class that exists; every reference image is tracked, under LFS when it passes `limits.file_size_kb`                                       |
-| `xctest/coverage`            | push, build | `xcodebuild test -enableCodeCoverage YES`, then `xcrun xccov view --report --json`; line coverage at or above `[tools.xctest] coverage` for each target it names                                             |
-| `xcode/test-plan`            | commit      | from the xcode preset                                                                                                                                                                                        |
+| Id                        | Stage       | Command                                                                                                                                                                                                      |
+| ------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `xctest/disabled`         | commit      | engine: `XCTSkip`, `.disabled(`, `@available(*, unavailable)` on a test, and a `skippedTests` entry in a test plan each carry a reason on the same line or the line above, and the count enters the baseline |
+| `xctest/no-sleep`         | commit      | engine: no `sleep(`, `usleep(`, `Thread.sleep` or `Task.sleep` in a claimed file outside `[tools.xctest] sleep_allowed`                                                                                      |
+| `xctest/recording`        | commit      | engine: no `isRecording = true`, `record: true`, `record: .all` or `withSnapshotTesting(record:` set to a recording mode in a tracked file                                                                   |
+| `xctest/reference-images` | commit      | engine: every file under `__Snapshots__/<TestClass>/` names a test class that exists; every reference image is tracked, under LFS when it passes `limits.file_size_kb`                                       |
+| `xctest/coverage`         | push, build | `xcodebuild test -enableCodeCoverage YES`, then `xcrun xccov view --report --json`; line coverage at or above `[tools.xctest] coverage` for each target it names                                             |
+| `xcode/test-plan`         | commit      | from the xcode preset                                                                                                                                                                                        |
 
 ## Settings
 
 `tools.xctest.coverage` (target, percent; no target named means the check does not run),
-`tools.xctest.sleep_allowed` (paths, reason), `tools.xctest.snapshot_directories` (default
+`tools.xctest.sleep_allowed` (paths, reason), `tools.xctest.reference_directories` (default
 `__Snapshots__`).
 
 ## Rule files
 
-`tool/xctest/XCTEST.md`, `general/code/TESTING.md`. The corpus does not hold `XCTEST.md` yet. It
-is written with this preset from the test sections of the reference `IOS.md`, and
-[09-rules.md](../09-rules.md) lists it.
+`tool/xctest/XCTEST.md`, `general/code/TESTING.md`.

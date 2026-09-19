@@ -68,6 +68,12 @@ names = ["lengthBytesUTF8", "stringToUTF8", "UTF8ToString", "_malloc", "_free", 
 exclude = true
 reason = "Emscripten and libpg-query name these members, and the type spells them as the module exports them."
 
+[[naming.rules]]
+paths = ["packages/cli/types/apple.ts"]
+names = ["shouldTranslate"]
+exclude = true
+reason = "Xcode writes this key in a string file, and the type spells it as the file does."
+
 [architecture]
 roles = {env = "packages/cli/src/platform/environment.ts"}
 

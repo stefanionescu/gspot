@@ -170,9 +170,14 @@ Express and Supabase monorepo, a static site, a Next.js app and a ComfyUI custom
 passes on day one through baselines. Only `check --watch`, the Homebrew tap, and Phase 7 follow
 v1.
 
-The reference repositories are never modified. Every acceptance run happens in a detached
-`git worktree` that is removed afterwards; migrating a repository to gspot is a separate,
-deliberate change its owner makes.
+The reference repositories are never modified by an acceptance run. Every acceptance run happens
+in a detached `git worktree` that is removed afterwards. Migrating a repository is a separate,
+deliberate change its owner asks for.
+
+The owner asked for one: yap-swift-app (D-97). That migration is a deliverable of this build. It
+removes the old lint setup, installs gspot, lints the whole repository, and reports what it
+found, and it fixes nothing in the application code.
+[17-migration.md](17-migration.md) lists what it delivers.
 
 ## Risks
 

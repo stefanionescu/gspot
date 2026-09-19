@@ -364,3 +364,33 @@ repositories, and no configuration uses it.
 6. Commit. The diff is the migration; nothing outside it changed.
 
 The acceptance harness runs steps 1 and 2 in a detached worktree for every reference repository on every release. The plan a person sees is the plan that was tested.
+
+## The yap-swift-app migration is a deliverable
+
+The owner asked for this migration as part of the build (D-97). It changes the real repository,
+on a branch named `chore/gspot`, and nothing is pushed. It is not a worktree run.
+
+What the migration does:
+
+- Installs gspot with the scopes `api`, `supabase`, and `ios`, from source until gspot is published.
+- Removes every piece of the old setup. That covers `quality/`, `.qlty/`, `.githooks/`, and the lint, format, typecheck, knip, dependency, hook, and quality tasks under `.mise/tasks/`.
+- Removes `LINTING.md`, the old `rules/`, `ios/package.json` with `ios/knip.json`, the duplicate linter pins in `mise.toml`, the `quality` workspace entry, the Bearer files, and every config file a generated one replaces.
+- Runs `gspot check` over the whole repository, every stage the machine can run, and `gspot doctor`.
+- Commits in the six steps above, so each step is one diff.
+
+What the migration does not do: it fixes no finding in the application code. The app is not the
+subject of this work. Every finding that arrives enters a baseline, and the count is written down.
+
+What the migration delivers:
+
+| Deliverable                                                                                                                                                | Where                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| The branch `chore/gspot` with the six commits                                                                                                              | yap-swift-app                                              |
+| A findings report: every check, its status, and the count that entered a baseline. It also lists the checks this machine cannot run, each with the reason. | `GSPOT-MIGRATION.md` at the root of the app, on the branch |
+| Every gspot defect the run exposes, fixed in gspot with a planted test, or listed as a gap                                                                 | this repository, [18-gaps.md](18-gaps.md)                  |
+| Proof the old setup is gone: `git ls-files quality .qlty .githooks LINTING.md` prints nothing, and `mise tasks` lists no lint task outside `gspot:*`       | the report                                                 |
+| Proof the hooks run: a commit on the branch goes through `.gspot/hooks`                                                                                    | the report                                                 |
+
+The run is also the hardest test gspot has. Four things count as a gspot defect: a check that
+crashes, a wrong claim, a tool that cannot be found, and a finding on the wrong line. Each one is
+fixed here before the migration continues.

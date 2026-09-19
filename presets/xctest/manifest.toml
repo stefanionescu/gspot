@@ -1,0 +1,99 @@
+[preset]
+id = "xctest"
+kind = "tool"
+title = "Swift Tests"
+requires = ["swift"]
+description = "Swift test files under XCTest, Swift Testing, and snapshot testing. A disabled test says why, no test sleeps, and no snapshot test records. Every reference has its test, and coverage holds a floor."
+
+[detect]
+paths = ["**/*Tests/**/*.swift", "**/*.xctestplan"]
+
+[claims]
+paths = ["**/__Snapshots__/**"]
+natures = ["source", "binary"]
+
+[[checks]]
+id = "xctest/disabled"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xctest-disabled"
+claims = {extensions = [".swift"]}
+inspection = ["tests"]
+summary = "Checks that every skipped or disabled test gives a reason beside it."
+why = "A test turned off with no reason stays off, because nobody knows when it is safe to turn on."
+fix = "Say why the test is off and what turns it back on, or delete the test."
+
+[[checks]]
+id = "xctest/no-sleep"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xctest-sleep"
+claims = {extensions = [".swift"]}
+inspection = ["tests"]
+summary = "Refuses sleep calls in test files outside tools.xctest.sleep_allowed."
+why = "A sleep makes a test slow when it passes and flaky when the machine is slower than the number."
+fix = "Wait on an expectation or a confirmation, or poll a condition with a timeout."
+
+[[checks]]
+id = "xctest/recording"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xctest-recording"
+claims = {extensions = [".swift"]}
+inspection = ["tests"]
+summary = "Refuses a snapshot test left in a recording mode."
+why = "A recording test writes a new reference and passes, so it approves whatever the screen shows."
+fix = "Take the recording flag out, and commit the references it wrote after looking at them."
+
+[[checks]]
+id = "xctest/reference-images"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xctest-references"
+inspection = ["consistency"]
+summary = "Checks that every folder of snapshot references sits beside a test file of the same name."
+why = "References of a deleted test stay in the repository, and every clone pays for them."
+fix = "Delete the references of the test that is gone, or rename the folder after the test file."
+
+[[checks]]
+id = "xctest/coverage"
+stage = "push"
+runs = "per-scope"
+requires = "build"
+platform = ["macos"]
+engine = "integrity"
+analysis = "xctest-coverage"
+claims = {extensions = [".swift"]}
+inspection = ["tests"]
+summary = "Runs the tests with coverage and holds each target named in tools.xctest.coverage to its floor."
+why = "A floor keeps new code from arriving untested."
+fix = "Add tests for the target, or lower its floor with a reason."
+
+[[settings]]
+name = "tools.xctest.coverage"
+kind = "list"
+direction = "floor"
+default = []
+summary = "Coverage floors: a target and the share of lines out of 100. Empty turns the check off."
+
+[[settings]]
+name = "tools.xctest.sleep_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Test paths that may sleep, each with a reason."
+
+[[settings]]
+name = "tools.xctest.reference_directories"
+kind = "list"
+direction = "neutral"
+default = ["__Snapshots__"]
+summary = "The folder names that hold snapshot references."
+
+[rule_files]
+tool = ["tool/xctest/XCTEST.md"]
+general = ["general/code/TESTING.md"]

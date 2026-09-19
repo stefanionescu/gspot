@@ -732,3 +732,12 @@ all print JSON, so their presets stay data. Rejected: one parser in the binary f
 A command part may hold `{setting:<name>}`, which becomes the value the policy holds for that
 setting. `vitest/coverage` passes its four floors to Vitest this way. Rejected: a generated
 Vitest configuration, because the repository owns its `vitest.config` and a second one fights it.
+
+## D-97 The yap-swift-app migration changes the real repository
+
+The owner asked for the migration as part of the build. It runs on the branch `chore/gspot` of the
+real repository: the old lint folder, hooks, tasks, rule files, and pins go, gspot comes in, and
+`gspot check` runs over everything. Findings in the application code enter baselines and a
+report, and nobody fixes them here, because the app is not the subject. A gspot defect the run
+exposes is fixed in gspot. Rejected: a worktree run only, which proves the plan and leaves the
+old setup in place.
