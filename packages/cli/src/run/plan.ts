@@ -103,6 +103,7 @@ function isStageOk(spec: CheckSpec, options: PlanOptions): boolean {
 
 function isWanted(spec: CheckSpec, options: PlanOptions): boolean {
     if (options.only !== undefined && spec.id !== options.only) return false;
+    if (options.among?.has(spec.id) === false) return false;
     if (!isStageOk(spec, options)) return false;
     return spec.engine === undefined || hasEngine(spec.engine);
 }

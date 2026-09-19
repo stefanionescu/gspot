@@ -69,6 +69,8 @@ export type PlanOptions = {
     staged?: string[];
     since?: string[];
     only?: string;
+    /** The checks a run is limited to, for a command that needs a few of them and not the whole gate. */
+    among?: Set<string>;
     scope?: string;
     skips: string[];
     localSkips: string[];

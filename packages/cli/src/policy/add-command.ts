@@ -1,6 +1,7 @@
 // gspot add and gspot remove: the preset list of the root or of one scope.
 import { nearMatches } from '#cli/policy/near.ts';
 import type { CommandResult } from '#types/run.ts';
+import type { Manifest } from '#types/manifest.ts';
 import { scopeHolder } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
@@ -9,14 +10,33 @@ import { firstRun } from '#cli/lifecycle/first-check.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import type { TomlTable, Mutation } from '#types/config.ts';
 import { commitPolicy } from '#cli/policy/commit-policy.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
 import type { AddOptions, RemoveOptions } from '#types/commands.ts';
 import { requireChain, selectPresets } from '#cli/presets/select.ts';
+import { configurationName, presetManifests } from '#cli/presets/read-manifests.ts';
 
 function presetHolder(raw: TomlTable, scope: string | undefined): TomlTable {
     const holder = scopeHolder(raw, scope);
     if (!holder) throw new PolicyError([messages.scopeMissing(scope ?? '')]);
     return holder;
+}
+
+// The checks a new preset brings, and the checks it changes: a preset that adds a fragment to a configuration
+// changes what every check that reads that configuration finds.
+function arrivedChecks(added: Manifest[], manifests: Map<string, Manifest>): Set<string> {
+    const own = added.flatMap((manifest) => manifest.checks.map((check) => check.id));
+    const fragments = new Set(
+        added.flatMap((manifest) =>
+            manifest.configs
+                .filter((config) => config.fragment === true)
+                .map((config) => configurationName(config.target)),
+        ),
+    );
+    const readers = manifests
+        .values()
+        .flatMap((manifest) => manifest.checks)
+        .filter((check) => fragments.values().some((name) => (check.command ?? []).includes(`{config:${name}}`)))
+        .map((check) => check.id);
+    return new Set([...own, ...readers]);
 }
 
 /**
@@ -43,9 +63,7 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
     const result = await commitPolicy(root, mutation, o.isDryRun, `added ${o.presets.join(', ')}${where}`);
     if (o.isDryRun) return result;
     // What the new presets find today enters a baseline, as at init; the checks that were here before keep their counts.
-    const arrived = new Set(
-        selectPresets(o.presets, manifests).flatMap((manifest) => manifest.checks.map((check) => check.id)),
-    );
+    const arrived = arrivedChecks(selectPresets(o.presets, manifests), manifests);
     const { baselines } = await firstRun(root, arrived);
     const count = baselines.reduce((sum, file) => sum + file.count, 0);
     const line = `baseline: ${String(baselines.length)} rules with ${String(count)} findings\n`;

@@ -51,9 +51,9 @@ async function writeToolBaselines(
 }
 
 /**
- * Runs every check once and writes a baseline for each check that allows one and has findings.
+ * Runs the checks once and writes a baseline for each check that allows one and has findings.
  * @param root the repository root
- * @param only the checks that may get a baseline; every check when left out. Adding a preset names its own checks, so a count that rose elsewhere stays a finding.
+ * @param only the checks that run and may get a baseline; every check when left out. Adding a preset names the checks it brings or changes, so nothing else runs and a count that rose elsewhere stays a finding.
  * @returns the run record and the baselines written
  */
 export async function firstRun(root: string, only?: Set<string>): Promise<FirstRun> {
@@ -65,6 +65,7 @@ export async function firstRun(root: string, only?: Set<string>): Promise<FirstR
         fix: false,
         isDryRun: false,
         noCache: true,
+        ...(only === undefined ? {} : { among: only }),
     });
     const findings = outcome.record.checks.flatMap((check) => check.findings);
     const toolBaselines = await writeToolBaselines(session, outcome, only);
