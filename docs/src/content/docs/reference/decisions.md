@@ -1257,7 +1257,7 @@ keeps the word of the tool. A test over the manifests holds the table.
 
 ## D-145 The lint tools of gspot are tools, not dependencies of the repository
 
-Proposed on 2026-09-19. The owner has not accepted it.
+Decided by the owner on 2026-09-19.
 
 gspot pins ESLint 9 (D-142), and today it writes that pin over the version a repository holds
 (K-217). A range is replaced, so a repository on ESLint 8 moves up a major version and one on

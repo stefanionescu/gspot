@@ -127,9 +127,9 @@ with D-142: `@eslint/js` 10.0.1 and `eslint-plugin-unicorn` 74.0.0. Four refuse 
 `eslint-plugin-unicorn`. The shipped rule set cannot run on the ESLint 8 of a developer, so
 using the version the repository holds is no way out.
 
-D-145 in [14-decisions.md](14-decisions.md) proposes the answer: the lint tools of gspot are
-tools and not dependencies of the repository. They install under `.gspot/`, and the
-`package.json` of the developer keeps the ESLint it has. The owner has not accepted it.
+D-145 in [14-decisions.md](14-decisions.md) is the answer, and the owner accepted it on
+September 19, 2026. The lint tools of gspot are tools and not dependencies of the repository.
+They install under `.gspot/`, and the `package.json` of the developer keeps the ESLint it has.
 
 ## Names, workarounds, and leftovers to clean
 
