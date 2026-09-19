@@ -66,8 +66,8 @@ describe('detection', () => {
     });
 
     test('names a language gspot has no preset for through Linguist', () => {
-        const unknown = unknownLanguages([file('main.go'), file('lib.go'), file('x.sh')], manifests);
-        expect(unknown[0]).toEqual({ language: 'Go', extensions: ['.go'], count: 2 });
+        const unknown = unknownLanguages([file('main.kt'), file('lib.kt'), file('x.sh')], manifests);
+        expect(unknown[0]).toEqual({ language: 'Kotlin', extensions: ['.kt'], count: 2 });
     });
 
     test('reads the interpreter from a shebang', () => {
