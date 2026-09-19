@@ -943,3 +943,68 @@ sheet in [17-migration.md](https://github.com/stefanionescu/gspot/blob/main/arch
 
 Rejected: waiting for a release before the redo, because the
 redo is how the fixes are judged.
+
+## D-122 gspot check is the truth, and the hooks are the fast path
+
+| When                          | What runs                                                                     |
+| ----------------------------- | ----------------------------------------------------------------------------- |
+| `gspot check`                 | every check over the whole repository                                         |
+| the commit hook               | staged files, and the whole-project checks of a project a staged file sits in |
+| the push hook                 | files changed from the upstream branch, by the same rule                      |
+| `gspot check --at manual`, CI | the checks that build, test, or scan a whole project                          |
+
+Checking only what changed keeps the whole repository clean, because init holds every old finding
+in the baseline. After that a new finding comes from a changed file, or from a whole-project
+check, and those run in full when a file of their project changes. A full run alone sees the
+world change, such as a new advisory, so `gspot check` records when the last full run was, and a
+hook run says so after seven days. This folds D-102 in. Rejected: a full run on every push, which
+took 45 minutes in the app.
+
+## D-123 Three commands and one setting
+
+A developer learns `gspot check`, `gspot check --changed` and `gspot check --staged`. `--changed`
+is `--since` with the upstream branch as its ref, and `--since <ref>` stays for another ref.
+`[hooks] push = "changed"` is the default, and `"all"` is for a team that wants the full run on
+push. Finer switches stay in `--help`. Rejected: a setting for each hook and each stage, which
+gives power nobody asked for and a page of options to read first.
+
+## D-124 A long run says how long, and shows that it moves
+
+init counts the files and the slow tools, prints an estimate, and asks whether the full first
+check runs now or at another time. `--yes` runs the commit stage and prints the command for the rest. A run
+prints each check as it ends. A passing check prints no line unless `--verbose` asks. The summary
+holds the findings, the checks, and the time of each stage. A run that is stopped keeps the
+verdicts of the checks that ended.
+
+## D-125 An empty repository installs what needs no code
+
+init in a repository with no source installs the presets that read no language: commits,
+formatting, spelling, secrets, and the rule files. `gspot check` names a language that has files
+and no preset, with the `gspot add` command. `preset-arrival.test.ts` covers the second half.
+
+## D-126 The first install never changes a build, and house style is strict
+
+The `core` level of D-119 holds no check that changes what the tools of the developer accept.
+The typescript preset writes no `extends` into a `tsconfig.json` at that level, and
+`integrity/tsconfig-options` is `strict`. The checks of K-75 and K-91 are `strict` too:
+
+- exact dependency versions and the release age;
+- a README in each scope and the banned headings;
+- the shell script header and the migration header;
+- the types folder and the folder with one file.
+  The banned terms stay
+  `core`. The sentence about subagents leaves the managed block: a repository says that in its own
+  part of `CLAUDE.md`.
+
+## D-127 The mise file sits where the repository keeps mise
+
+mise loads a second file only from a `conf.d` folder, so a file of its own is how gspot adds pins
+and tasks and never edits `mise.toml`. The file is `gspot-tools.toml`. It goes into
+`.mise/conf.d/` where `.mise/` exists, and into `.config/mise/conf.d/` otherwise. One constant
+holds the path. This amends D-106.
+
+## D-128 Folder names of languages are allowed, and this repository uses them
+
+`python`, `swift`, `typescript`, `javascript` and `bash` leave the banned folder names. The
+container words stay banned. The folders `pyproject/`, `apple/`, `golang/` and `cargo/` of this
+repository become `python/`, `swift/`, `go/` and `rust/`.

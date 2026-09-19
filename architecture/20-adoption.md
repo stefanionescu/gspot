@@ -177,10 +177,17 @@ holds an inline table and another holds a sub-table, so every scope setting is w
 
 ## A-9 Two files named `gspot.toml`
 
-**Evidence.** The policy is `gspot.toml`. The mise surface is `.config/mise/conf.d/gspot.toml`.
-The folder is the convention of mise. The file name was a choice.
+**Evidence.** The config is `gspot.toml`. The mise file is `.config/mise/conf.d/gspot.toml`. Four
+source files hold that path.
 
-**Design (D-106).** The mise file becomes `.config/mise/conf.d/gspot-tools.toml`.
+**What is forced.** mise loads extra files only from a `conf.d` folder: `mise/conf.d/`,
+`.mise/conf.d/`, or `.config/mise/conf.d/`. A file of its own is the one way gspot adds pins and
+tasks without editing the `mise.toml` of the developer. The folder `.config/` and the file name
+were choices.
+
+**Design (D-127).** The file is `gspot-tools.toml`. It sits in `.mise/conf.d/` where the
+repository has `.mise/`, as all five reference repositories with mise do, and in
+`.config/mise/conf.d/` otherwise.
 
 ## A-10 Takeover misses tasks, and deletes files it does not own
 
