@@ -14,8 +14,11 @@ implemented four times in four repositories and drifts in each.
 
 gspot is the shared house style for AI-written code, delivered as one binary:
 
-- **Configured linters.** gspot writes the configuration for the tools the repository already
-  needs (ESLint, Prettier, Ruff, SwiftLint, ShellCheck, sqlfluff and the rest) at full strictness. It runs them over an explicit file list.
+- **Configured linters.** gspot writes the configuration for the tools the repository needs,
+  such as ESLint, Prettier, Ruff, SwiftLint, ShellCheck, and sqlfluff. It runs each over an
+  explicit file list.
+- **Two levels.** At `recommended` a tool runs its recommended set and the rules that find a
+  defect. The level `all` adds the house style.
 - **The missing rules.** gspot ships the structural, naming, prose, security, and drift checks
   the standard tools lack, as one engine per concern, versioned with the rest.
 - **Agent instructions.** gspot installs rule files that tell an agent how to write code in this
@@ -36,44 +39,46 @@ and gets findings from the hooks with a message it can act on.
 
 ## Promises
 
-1. **One command installs it.** `gspot init --yes` produces a passing gate in any repository gspot
-   has a preset for, on the day it runs, through a baseline of existing findings.
-2. **One file configures it.** `gspot.toml` holds every decision, and every decision has a
-   one-line command that writes it. Nothing else is edited by hand.
-3. **Nothing is silent.** Every ignore carries a reason and prints on every run. Every skipped
-   check prints. Every baseline prints its count. A tool that cannot run fails the checks that need it.
-4. **Nothing is hidden in a tool's own ignore file.** gspot hands every tool an explicit file
-   list. A file is either checked or listed as unchecked in `doctor`.
-5. **Upgrades are reviewable.** Generated configuration is tracked, so an upgrade is a diff a
-   reviewer reads.
-6. **Rules are rules.** The agent files state rules and name no tool or check; which check backs a rule is the ledger's business, not the reader's.
-7. **The tool obeys its own rules.** The gspot repository runs gspot at full strictness with no
-   ignores.
+Each promise names the test that holds it. A promise with no test is a row of
+[18-gaps.md](18-gaps.md).
+
+| Promise                                        | What it means                                                                                                              | Held by                                                                   |
+| ---------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
+| One command installs it                        | `gspot init --yes` gives a passing gate on the day it runs, by holding the findings that exist                             | the six planted installs, and one generated project for each generator    |
+| The first install never changes a build        | gspot edits no `tsconfig.json`, no `package.json` beyond its launcher line, and no `pyproject.toml` (D-126, D-145)         | the planted installs compare every file of the developer before and after |
+| gspot deletes only what it owns                | takeover deletes a file one tool owns, `apply` deletes a file that carries its mark, and no check writes into the tree     | the takeover cases, and the planted cases for untracked files             |
+| One file configures it                         | `gspot.toml` holds every choice, and each has a one-line command                                                           | the completion test and the settings test over the manifests              |
+| Nothing is silent                              | an ignore has a reason and prints, a skipped check prints why, a held count prints, and a check whose tool is absent fails | the failing case of every check, and the report shape test                |
+| Nothing is hidden in the ignore file of a tool | gspot hands every tool a file list, and `doctor` names a file or a kind of file no check reads                             | the coverage tests of `doctor`                                            |
+| An upgrade is a diff                           | generated configuration is tracked, and `upgrade --dry-run` lists every rule that changes, for every tool                  | the upgrade fixture                                                       |
+| The rules an agent reads match the checks      | a rule file follows the level, names no tool of another preset, and its good examples pass their linter                    | the rules lint                                                            |
+| gspot obeys its own rules                      | this repository runs gspot at the level `all` with no `[[ignore]]` entry                                                   | the gate of this repository, green on GitHub                              |
 
 ## The developer's day
 
-- Save a file. The editor shows ESLint, Ruff or SwiftLint findings, including the gspot structural rules for JavaScript and TypeScript, because gspot wrote the configuration those editors read.
+- Save a file. The editor shows Ruff and SwiftLint findings through a root pointer, and ESLint
+  findings once its extension points at `.gspot/`, which the guide on editors shows.
 - Commit. The pre-commit hook runs `gspot check --staged`: the fast checks over staged files
   only. It takes seconds.
-- Push. The pre-push hook runs `gspot check`: everything, including build, container and
-  network checks.
+- Push. The pre-push hook checks the commits being pushed: the files that changed, and the
+  whole-project checks of the projects they sit in. `gspot check` and CI run everything.
 - See a finding. The output names the file, line, rule and message, and prints the command that
   reproduces that one check alone.
 - Disagree with a finding. `gspot ignore <check> --paths <glob> --reason "..."`, or
   `gspot set limits.function_lines 80 --reason "..."`, or `gspot allow typos <word>`. Each writes
   one entry to `gspot.toml`, and each prints on every run.
 - Add a language. `gspot add python`, or `gspot doctor` to see what appeared after the install
-  and the command that adds it. New findings enter a baseline.
+  and the command that adds it. The new checks run once, and what they find is held.
 - Wonder what a finding means. `gspot explain <check>` says what the check looks for, what goes
   wrong without it, and what to do, in plain words.
-- Upgrade. Run `gspot upgrade`. Read the plan: new rules, changed limits, tool bumps, rule file
-  changes, coverage change, templates changed upstream. Say yes. Commit the diff. Nothing you wrote
-  is touched.
+- Upgrade. Run `gspot upgrade`. Read the plan: new rules for every tool, tool pins, and rule
+  file changes. Say yes. Commit the diff. Nothing you wrote is touched.
 
 ## Principles
 
-- **Everything is an error.** No warning level. Adoption uses a baseline that falls and never
-  rises.
+- **Everything is an error.** No warning level. Two levels decide what runs: `recommended`
+  holds what finds a defect, and `all` adds the house style. Adoption uses a baseline that
+  falls and never rises.
 - **A maintained tool wins.** gspot writes original analysis only where no maintained tool
   expresses the rule, and the preset names the tools it searched.
 - **Detect, never assume.** gspot learns the repository from its tracked files and manifests.
@@ -82,20 +87,24 @@ and gets findings from the hooks with a message it can act on.
   that apply to them and nothing else.
 - **Easy to change, impossible to hide.** One TOML line changes a limit or adds a term. The line
   carries a reason and prints every run.
-- **The tool owns a job or leaves it alone.** When gspot owns a linter, no second configuration
-  for that linter exists in the repository.
-- **Take over, list, never guess.** At `init`, gspot replaces the configuration of every tool it has a preset for and carries the repository's exception lists. Everything else it found (other tools, hand-written hooks, home-grown lint folders) is listed and left alone.
+- **gspot brings its own tools and touches none of yours.** Its lint tools install under
+  `.gspot/`. The linters of the developer, their configs, and their plugins stay until the
+  developer removes them.
+- **Take over what one tool owns, and list the rest.** At `init`, gspot deletes a config file
+  only when one tool owns it. A shared file is read and left in place.
+- **Carry both ways.** gspot carries what was turned off and what was turned on, and lists every
+  setting it did not carry.
 - **Written for someone who does not code.** Every message, help text, check summary, and page
   says what happened and what to do next, in plain words, and names the command that does it.
   The prose of gspot itself runs through its own prose engine.
 
 ## Non-goals
 
-- gspot is not a language server. Editors work because gspot writes real configuration at
-  conventional paths.
-- gspot is not a package manager. It pins tool versions and tells the ecosystem's own manager
-  what to install. It downloads nothing.
-- gspot is not a CI system. It writes one workflow file on request.
+- gspot is not a language server. Editors work through a root pointer, where a tool has an
+  include form, and through the guide on editors elsewhere.
+- gspot is not a package manager. It pins tool versions and runs the install of mise and of the
+  package manager the repository uses.
+- gspot is not a CI system. It writes one job, for GitHub or GitLab, on request.
 - gspot does not run tests, build, or deploy. It runs checks.
 - gspot does not manage product configuration. A check that needs a product fact reads the
   product's file.
