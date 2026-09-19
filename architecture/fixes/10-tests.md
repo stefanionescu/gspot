@@ -76,7 +76,7 @@ clone, a `[tool.ruff]` table, or a `lint` script.
 **Target.** Each finding of [20-adoption.md](../20-adoption.md) has one planted case.
 
 **Files.** `tests/repositories/takeover.test.ts`, `hooks.test.ts`, `scope-languages.test.ts` (as
-`scopes.test.ts`), `structure.test.ts`.
+`scope-presets.test.ts`), `structure.test.ts`.
 
 **Logic.** Each fix section of files 01 to 06 names its planted case. The cases are written with their fix and counted here.
 
@@ -281,7 +281,7 @@ the reader never meets a `project.pbxproj` that Xcode wrote.
 project Xcode generated, with groups, build phases, and synchronized folders.
 
 **Files.** Renames: `handheld` to `react-native`, `components` to `vue` and `svelte`, `documents`
-to `docs` and `markdown`, `repository-check` to `checks`, `scope-languages` to `scopes`. New
+to `docs` and `markdown`, `repository-check` to `declared-check`, `scope-languages` to `scope-presets` (D-113). New
 `tests/repositories/fixtures/xcode/`.
 
 **Logic.** Renames and one tracked fixture.

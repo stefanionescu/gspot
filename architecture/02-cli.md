@@ -259,7 +259,7 @@ dependency, and secret checks that hold findings. A failing run from a hook ends
 command that reproduces it and with `git commit --no-verify` as the way past it.
 
 `--quiet` prints failures only. `--verbose` prints every command and every ignore with its
-reason. `--json` prints the report as JSON. `.gspot/last.json` is written after every run but
+reason. `--json` prints the report as JSON. `.gspot/report.json` is written after every run but
 the message run of the commit hook (D-105). Columns are computed from the longest check id.
 
 ## `apply`

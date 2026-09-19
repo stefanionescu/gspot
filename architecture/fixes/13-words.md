@@ -28,10 +28,13 @@ and every template helper named `render`.
 **What is wrong.** `surface`, `layer`, run record, `inspection`, `declare`, policy, nature,
 `Re-render`, and `idempotent` reach a person through messages, help text, guides, and rule files.
 
-**Target.** The words of [19-names.md](../19-names.md): tasks for `surface`, folder for `layer`,
-report for run record, check group for `inspection`, config for policy in text a person reads.
+**Target.** The words of [19-names.md](../19-names.md). `[runner] surface` becomes `[runner] tool`.
+The run record becomes the report: `.gspot/report.json` and `report.schema.json`.
 
-**Files.** `policy/schema.ts` (the key `inspection` becomes `groups`), `commands/*.ts` help text,
+`[inspection] strict` becomes `[coverage] strict`. `[[declare]]` becomes `[[generated]]` with `by`,
+and `[[vendored]]`. Policy becomes config in text a person reads.
+
+**Files.** `policy/schema.ts`, `run/record/` (which becomes `run/report/`), `commands/*.ts` help text,
 `output/messages.ts`, `doctor/report.ts`, the six guides, and the rule files.
 
 **Logic.** A key rename follows D-144, with its row in the names table. Type names inside the

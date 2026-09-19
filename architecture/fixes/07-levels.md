@@ -41,7 +41,9 @@ second adds `strictTypeChecked`, sonarjs, unicorn, and jsdoc. For ruff the first
 is the default rules and the opt-in rules that find a defect. basedpyright runs at `standard`,
 ShellCheck with its default set, and hadolint fails at `warning`.
 
-**What goes.** `[inspection] strict`, and the single rule list of each template.
+**What goes.** `[inspection] strict` as a switch for rules. Its other meaning, that an unchecked
+file fails the run, becomes `[coverage] strict` ([13-words.md](13-words.md)). The single rule
+list of each template goes too.
 
 **Tests.** The snapshots hold both levels for each preset (T-36). A unit test fails a manifest
 check with no `level`.

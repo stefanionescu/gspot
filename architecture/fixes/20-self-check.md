@@ -53,10 +53,10 @@ work of a change ends when its run on GitHub is green.
 **Logic.** The check runs `bun test packages --coverage` and fails under the floor in
 `bunfig.toml`. The docs test fetches the Vale packages in its setup, or fails with the command
 that fetches them. The jest preset of [08-frameworks.md](08-frameworks.md) reads `bun:test`
-through `globalPackage`, and this repository selects it. This repository sets `level = "all"`.
+through `globalPackage`, and this repository selects it. This repository sets `level = "all"` and `[coverage] strict = true`.
 `CONTRIBUTING.md` says that a change is done when its run is green, and how to read the run.
 
-**What goes.** `describe.skipIf` in the docs test, and `[inspection] strict`.
+**What goes.** `describe.skipIf` in the docs test.
 
 **Tests.** These are the tests.
 
