@@ -1276,8 +1276,7 @@ packages, and the off list with its reasons is data of the prose preset. This re
 
 One check ran `git clean`, one ran `git checkout`, and the site checks built into the real
 output folder (K-156, K-159, K-154). A check that needs to run a generator or a build works
-on a copy under `.gspot/cache/`, and compares. The push hook checks the pushed commits in a
-detached worktree when the tree is dirty (K-70). Drift of generated files is a check,
+on a copy under `.gspot/cache/`, and compares. The push hook checks the files of the pushed commits, in place (K-70). Drift of generated files is a check,
 `integrity/generated-drift`, and `apply --check` is gone (K-246). Every file gspot writes goes to
 a temporary file in the same folder and is renamed, so a full disk leaves the old file whole
 (K-257).
@@ -1444,3 +1443,33 @@ flag composes with a path: `gspot check api --changed --fix`.
 each project of a monorepo (D-108) and asks which to take. A project the developer leaves out
 goes into `exclude`, and `gspot set exclude --remove <path>` brings it back. Rejected: an
 `[[ignore]]` for each check of the folder, which is fifty entries for one wish.
+
+## D-167 gspot never takes a hook of a repository away
+
+The first design wrote hooks into `.gspot/hooks/` and pointed `core.hooksPath` there. That setting
+turns every file under `.git/hooks/` off without a word: a hook a developer wrote for one clone,
+and the four hooks git-lfs installs. The rule is that gspot adds one line and takes nothing.
+
+| The repository has                                         | Where the gspot line goes                              |
+| ---------------------------------------------------------- | ------------------------------------------------------ |
+| a hook tool: husky, lefthook, pre-commit, simple-git-hooks | the config of that tool, as one managed block (K-275)  |
+| tracked hooks that `core.hooksPath` points at              | the task the hook calls, or else the hook file (D-114) |
+| hooks under `.git/hooks/`, in this clone alone             | the end of that hook file, as one managed block        |
+| no hooks                                                   | a new `.git/hooks/pre-commit` and `pre-push`           |
+
+gspot never sets `core.hooksPath`, and the folder `.gspot/hooks/` is gone. The first two rows
+are tracked, so `init` writes them once. The last two live in one clone, so `gspot install`
+writes them in each clone, as `lefthook install` and `pre-commit install` do. `gspot uninstall`
+removes its block and leaves the rest of the file. This amends D-101 and D-115.
+
+## D-168 A run over changed files reports findings in those files alone
+
+Some checks read a whole project: a type checker, a dead code tool, an import graph. With no
+baseline (D-165), such a check reports every old problem of the project on every push, and the
+developer passes the hook every time. In a run with `--staged`, `--changed`, or `--since`, a
+whole-project check still reads the whole project, because it has to.
+
+gspot then keeps the
+findings in the files the change touches. The exit code comes from those alone. One line counts
+the rest: `214 more findings in files you did not change (gspot check)`. `gspot check` with no
+such flag reports everything.

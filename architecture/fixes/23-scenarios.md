@@ -98,7 +98,7 @@ submodules, linked worktrees, and a config below the git root.
 | a linked worktree               | shares the hooks of its repository; `check` there says `Run: gspot install` once  |
 | `gspot.toml` below the git root | checks run from the config root; the hook at the git root changes folder first    |
 
-**Files.** `repository/staged.ts`, `run/pushed-tree.ts`, `run/session.ts`, `emit/hooks.ts`,
+**Files.** `repository/staged.ts`, `run/session.ts`, `emit/hooks.ts`,
 `repository/tracked.ts`.
 
 **Logic.** `session.ts` holds two roots: the config root and the git root. Every path in the

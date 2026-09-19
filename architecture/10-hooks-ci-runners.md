@@ -55,10 +55,14 @@ happens. When a staged file also has unstaged changes, the output says
 
 ## The push hook
 
-The push hook checks the commits being pushed. Git gives it the local and the remote id. With a
-clean tree it checks in place, over the files that differ from the remote id. With a dirty tree
-it adds a detached worktree of the local id in the cache folder of the platform, checks there,
-and removes it (D-152). Uncommitted work in unrelated files never refuses a push.
+The push hook checks the files of the commits being pushed. Git gives it the local and the remote
+id, and the hook checks the files that differ between them, in place. A file with uncommitted
+work outside that list is not read, so it never refuses a push. Where a pushed file also has
+uncommitted changes, the output says so, as staged mode does.
+
+A run over changed files reports findings in those files alone (D-168). A type checker still
+reads its whole project, and gspot keeps the findings of the files the change touches. One line
+counts the rest.
 
 ## Hooks
 
@@ -66,27 +70,30 @@ gspot goes where the hook already points (D-114). `init` reads what each hook ca
 the gspot line in a fixed order. The task the hook calls comes first, then the hook file, then
 hooks of its own where none exist.
 
-| `[hooks] tool`     | gspot writes                                                                  | Proposed when                  |
-| ------------------ | ----------------------------------------------------------------------------- | ------------------------------ |
-| `existing`         | one managed block in the task or the hook file that git already runs          | the repository has hooks       |
-| `husky`            | one line in each `.husky/` hook                                               | `.husky/` exists               |
-| `lefthook`         | a `gspot` block in `lefthook.yml`                                             | `lefthook.yml` exists          |
-| `pre-commit`       | one `repo: local` hook in `.pre-commit-config.yaml`, as a managed block       | that file exists               |
-| `simple-git-hooks` | the gspot line in its key of `package.json`, after a yes                      | that key exists                |
-| `gspot`            | `.gspot/hooks/pre-commit`, `pre-push`, and `commit-msg`, and `core.hooksPath` | no hooks exist                 |
-| no table           | nothing                                                                       | the person passes `--no-hooks` |
+| `[hooks] tool`     | gspot writes                                                                            | Proposed when                     |
+| ------------------ | --------------------------------------------------------------------------------------- | --------------------------------- |
+| `existing`         | one managed block in the task or the hook file that git already runs                    | the repository has hooks          |
+| `husky`            | one line in each `.husky/` hook                                                         | `.husky/` exists                  |
+| `lefthook`         | a `gspot` block in `lefthook.yml`                                                       | `lefthook.yml` exists             |
+| `pre-commit`       | one `repo: local` hook in `.pre-commit-config.yaml`, as a managed block                 | that file exists                  |
+| `simple-git-hooks` | the gspot line in its key of `package.json`, after a yes                                | that key exists                   |
+| `gspot`            | one managed block in `.git/hooks/pre-commit` and `pre-push`, written by `gspot install` | no hook tool and no tracked hooks |
+| no table           | nothing                                                                                 | the person passes `--no-hooks`    |
 
-A repository with hooks keeps them, and lines of a task that are no lint stay (D-101). Where a
+A repository with hooks keeps them, and lines of a task that are no lint stay (D-101). gspot
+never sets `core.hooksPath`, because that setting turns every hook under `.git/hooks/` off: a
+hook one developer wrote for one clone, and the hooks git-lfs installs (D-167). Where such a
+local hook exists, `gspot install` adds its block at the end of that file. Where a
 husky hook calls lint-staged, the gspot line goes into the hook, and the plan lists the
-lint-staged entries that run a tool gspot runs too. gspot
-sets `core.hooksPath` only where it owns the hooks, and never where a tracked file sets it. A
+lint-staged entries that run a tool gspot runs too. A
 folder named `hooks` is no sign of git hooks: gspot asks `git config core.hooksPath` first.
 
-`core.hooksPath` is one setting of one clone. `gspot install` installs the hooks of a clone, and
+A hook under `.git/hooks/` belongs to one clone. `gspot install` writes the gspot block of a clone, and
 the setup entry of the repository calls it (D-115, D-156), and `doctor` asks git whether the hooks run in this clone. It names one of three
 states, and ends with the setup command where the hooks exist and do not run.
 
-The hook of gspot runs under the Bash 3.2 that macOS ships (D-85):
+The block gspot writes runs under the Bash 3.2 that macOS ships (D-85). In a new hook file it is
+the whole file:
 
 ```bash
 #!/usr/bin/env bash
@@ -109,7 +116,7 @@ asks the developer for no environment variable. The line itself sets `GSPOT_HOOK
 the reporter to end a failing run with two
 lines: the command that reproduces it, and `git commit --no-verify` as the way past it.
 
-The pre-push hook calls `git lfs pre-push` first where git-lfs is installed. On Windows, git runs
+On Windows, git runs
 hooks through the Bash that Git for Windows installs, and gspot marks them executable through
 `git update-index --chmod=+x`.
 
@@ -173,7 +180,8 @@ jobs:
                       .gspot/.venv
                   key: gspot-${{ runner.os }}-${{ hashFiles('.gspot/*.lock', '.mise/conf.d/gspot-tools.toml') }}
             - run: gspot install
-            - run: gspot check --changed # or gspot check, with [ci] run = "all"
+            - run: gspot check --since ${{ github.event.pull_request.base.sha || github.event.before }}
+              # or plain gspot check, with [ci] run = "all"
             - uses: actions/upload-artifact@<pinned sha>
               if: always()
               with: { name: gspot-report, path: .gspot/report.* }

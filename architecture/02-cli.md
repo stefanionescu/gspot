@@ -186,8 +186,8 @@ A rule is carried in both directions (D-150). A rule the old config turned off b
 kind, and carries the difference from the config it writes. The plan lists every setting it did
 not carry. Every carried entry has the reason `carried from <file> at init`.
 
-Hooks a repository has keep running (D-101). gspot sets `core.hooksPath` only where no hooks
-exist. Agent files are never read, split, or moved: gspot appends one managed block.
+Hooks a repository has keep running, tracked or local to one clone, and gspot never sets
+`core.hooksPath` (D-167). Agent files are never read, split, or moved: gspot appends one managed block.
 
 ### Refusal
 
@@ -242,6 +242,10 @@ Runs checks and prints findings. `gspot check` is the truth, and the hooks are t
 | `gspot check --fix`                    | every fixer in order, then the checks again                                    |
 | `gspot check --fix --dry-run`          | the diff of every fix, and no write                                            |
 | `gspot check --skip <id>`              | skips one check this run, printed and recorded                                 |
+
+A run with `--staged`, `--changed`, or `--since` reports findings in the files the change
+touches (D-168). A check that reads a whole project, such as a type checker, still reads it, and
+one line counts what it found in other files.
 
 A check above the level of the repository is not planned. A check that waits for a setting
 prints `skipped` and names the setting. A check whose tool is absent prints `missing` and fails
@@ -440,7 +444,7 @@ It never writes `gspot.toml` and never commits. `--to` moves to an exact version
 Removes what gspot wrote: `.gspot/`, the mise file, the managed blocks, the CI job, and the
 launcher line. It removes the hook line, or the hooks where gspot wrote them. A task body it
 replaced gets its old body back.
-It leaves `gspot.toml`. It unsets `core.hooksPath` only where gspot had set it.
+It leaves `gspot.toml`. It removes its block from a hook file and leaves the rest of the file.
 
 ## `export`
 

@@ -129,6 +129,7 @@ exactly one fix file fails it.
 - [ ] K-58: Propose new bodies for the `lint` and `format` names a repository has, and write `gspot:*` only where none exists (D-116).
 - [ ] K-59: Read lint tables of `pyproject.toml` and lint keys of `package.json`, carry them, and list them under remove by hand (D-117).
 - [ ] K-60: End a failing hook run with `git commit --no-verify` and the command that reproduces it.
+- [ ] K-292: Never set `core.hooksPath`, delete `.gspot/hooks/`, and let `gspot install` write one block into the hook files of the clone (D-167).
 
 ### Slow Checks and the Cache
 
@@ -352,6 +353,8 @@ exactly one fix file fails it.
 
 - [ ] K-69: Cache a `[[check]]` only on the inputs it names, or never.
 - [ ] K-70: Make the pre-push hook check the commits being pushed, not the working tree.
+- [ ] K-293: In a run over changed files, keep the findings in those files and count the rest in one line (D-168).
+- [ ] K-294: Pass the base commit to `--since` in both CI jobs, and name the package manager the install under `.gspot/` takes.
 
 ### The Top Level of This Repository
 

@@ -20,7 +20,7 @@ apply, also where a tracked setup task sets another folder.
 **Target.** `init` reads what each hook calls, and proposes the gspot line in a fixed order
 (D-114). The task the hook calls comes first, then the hook file, then the hooks of gspot where
 none exist. gspot
-sets `core.hooksPath` only where it owns the hooks. `doctor` says when a clone runs no hooks, with
+never sets `core.hooksPath` (D-167). `doctor` says when a clone runs no hooks, with
 the setup command of the repository (D-115).
 
 **Files.** `repository/existing-tooling.ts`, new `repository/hook-calls.ts`, `emit/hooks.ts`,
@@ -99,5 +99,34 @@ set.
 **What goes.** Nothing.
 
 **Tests.** `hooks.test.ts` holds both lines in the output of a refused commit.
+
+**Done when.** That case passes.
+
+## K-292: gspot turns the local hooks of a developer off
+
+**What is wrong.** `apply` writes `.gspot/hooks/` and points `core.hooksPath` at it. Git then runs
+no file under `.git/hooks/`: a hook one developer wrote for one clone, and the four hooks git-lfs
+installs. Only `pre-push` of git-lfs is called on, and nothing says the others stopped.
+
+**Target.** D-167. gspot adds one line and takes nothing away. It never sets `core.hooksPath`.
+
+**Files.** `emit/hooks.ts`, `emit/apply-command.ts`, `lifecycle/install-tools.ts`,
+`lifecycle/uninstall-command.ts`, `doctor/report.ts`. Deleted: the folder `.gspot/hooks/`.
+
+**Logic.** `init` decides where the line lives, in the order of the table of D-167, and writes the
+tracked forms once. `gspot install` writes the local forms in each clone. For a hook file that
+exists under `.git/hooks/`, it adds its managed block at the end, after what the file already
+runs. For no file, it writes a new one that holds the block alone.
+
+`uninstall` removes the block,
+and deletes a file that held nothing else. `doctor` reads the hook that git will run, by asking
+`git rev-parse --git-path hooks`, and says whether the gspot block is in it.
+
+**What goes.** Every `git config core.hooksPath` call, and the `git lfs pre-push` line of the
+hook gspot wrote.
+
+**Tests.** A planted clone with a hand-written `.git/hooks/pre-commit` and git-lfs installed
+holds, after `gspot install`, both hooks unchanged above the gspot block, and an unset
+`core.hooksPath`.
 
 **Done when.** That case passes.

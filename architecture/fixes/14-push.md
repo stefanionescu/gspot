@@ -25,21 +25,55 @@ passes on the next run with the cache on.
 
 ## K-70: the push hook checks the working tree
 
-**What is wrong.** `emit/hooks.ts` writes a pre-push hook that runs `gspot check` over the tree.
-Uncommitted work in unrelated files refuses a push of clean commits.
+**What is wrong.** `emit/hooks.ts` writes a pre-push hook that runs `gspot check` over the whole
+tree. Uncommitted work in unrelated files refuses a push of clean commits.
 
-**Target.** The hook checks the commits being pushed.
+**Target.** The hook checks the files of the commits being pushed, and nothing else.
 
-**Files.** `emit/hooks.ts`, `run/check-command.ts`, new `run/pushed-tree.ts`.
+**Files.** `emit/hooks.ts`, `run/check-command.ts`, `repository/staged.ts`.
 
-**Logic.** The hook passes the local and remote ids git gives it on stdin. `pushed-tree.ts` adds
-a detached `git worktree` of the local id under `buildFolder(root)`, links `.gspot/node_modules`
-into it, runs the push stage there over the files that differ from the remote id, and removes the
-worktree. With a clean tree it skips the worktree and checks in place.
+**Logic.** Git gives the hook the local and the remote id on stdin. The hook passes them as
+`gspot check --since <remote id>`, which reads the files that differ, in place. A first push has
+a zero remote id, and the hook then takes the commits no remote branch holds (K-272). Where a
+pushed file also has uncommitted changes, the output says so, as staged mode does. No worktree
+and no stash: a second checkout has none of the installed dependencies a type checker needs.
 
-**What goes.** Nothing.
+**What goes.** The full run on push.
 
 **Tests.** `hooks.test.ts` pushes a clean commit with a broken uncommitted file beside it, and
 holds a passing push.
 
 **Done when.** It passes.
+
+## K-293: a whole-project check fails every push of an old repository
+
+Closes K-293 and K-294.
+
+**What is wrong.** With no baseline (D-165), a type checker, knip, and the import checks report
+every old problem of a project on every push, whatever the push changed. The CI job ran
+`gspot check --changed`, and on the default branch that compares the branch with itself. The
+install under `.gspot/` named no package manager for a repository whose projects use different
+ones.
+
+**Target.** D-168. A run over changed files reports findings in those files alone, and one line
+counts the rest. CI compares with the commit before the change.
+
+**Files.** `run/execute.ts`, `output/reporter.ts`, `emit/workflow.ts`, `emit/gitlab.ts`,
+`lifecycle/install-tools.ts`.
+
+**Logic.** `execute.ts` knows the changed file list of a run with `--staged`, `--changed`, or
+`--since`. After a whole-project check it keeps the findings whose file is on that list, and the
+exit code comes from those. The reporter prints one line with the count of the others and the
+command that shows them.
+
+The GitHub job passes the base of the pull request, or the commit before
+the push, to `--since`. The GitLab job passes `CI_MERGE_REQUEST_DIFF_BASE_SHA`, or
+`CI_COMMIT_BEFORE_SHA`. The install under `.gspot/` takes the package manager of the root, then
+of the first JavaScript project, then npm.
+
+**What goes.** `gspot check --changed` in both CI jobs.
+
+**Tests.** A planted TypeScript project with an old type error in `a.ts` pushes a change to `b.ts`
+and passes, with the one line about `a.ts`. A unit test of each CI file holds the `--since` value.
+
+**Done when.** Both pass.
