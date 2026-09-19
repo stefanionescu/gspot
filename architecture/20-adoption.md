@@ -389,6 +389,77 @@ fails prints the findings and nothing else.
 `git commit --no-verify` and `gspot check --staged`, which reproduces the failure. Where the hook
 of the repository keeps running (A-16), its own variables keep working.
 
+## Making it yours
+
+A developer who meets 52 presets and 250 checks asks three things. What exists? How does a
+person take only some of it? How does a choice travel to the next repository? Most of the answer
+exists, and none of it is shown.
+
+| A developer wants to                  | Today                                                                                      |
+| ------------------------------------- | ------------------------------------------------------------------------------------------ |
+| Install only some presets             | `init --presets a,b`, `--without c`, `--scope path=a,b`, `--presets none`                  |
+| Let gspot own only some tools         | `init --own eslint,prettier`                                                               |
+| Turn one check or one rule off        | `gspot ignore <check> --rule <rule> --reason "..."`, for some paths with `--paths`         |
+| Turn it back on                       | `gspot ignore <check> --rule <rule> --remove`                                              |
+| Drop one tool                         | `gspot set tools.<name>.enabled false --reason "..."`                                      |
+| Add or drop a preset later            | `gspot add <preset>`, `gspot remove <preset>`                                              |
+| Add a check of their own              | a `[[check]]` entry in `gspot.toml` that runs any command                                  |
+| Carry the setup to another repository | `gspot profile save team.toml`, then `gspot init --from team.toml`, a URL, or `github:o/r` |
+| Commit or push past a failing hook    | `git commit --no-verify`, `git push --no-verify`                                           |
+| See what exists before choosing       | nothing                                                                                    |
+| Take the basics only                  | nothing                                                                                    |
+
+## A-21 Nobody can see the menu
+
+**Evidence.** `gspot explain <subject>` needs a name the person already knows. `gspot doctor
+--settings` prints settings, not checks. No command prints the presets and checks that exist,
+which are installed, and which are off.
+
+**Design (D-118).** `gspot list` prints the presets in three groups: languages, frameworks, and
+concerns. Under each installed preset it prints the checks with a state: on, off with the
+reason, or held by a baseline with the count. `gspot list <preset>` prints one preset. `--json` prints the
+same for an agent. The data is what `explain` and the manual already read.
+
+## A-22 A preset is all or nothing
+
+**Evidence.** A preset is selected whole. `[inspection] strict = false` is written by init and
+read by almost nothing (K-52). Ruff ships a small default set, and Biome and ESLint ship
+`recommended` beside `strict`, because a first run that prints 23,000 findings ends the trial.
+
+**Design (D-119).** Two levels, the words of D-110: `core` and `strict`. Every check and every
+opt-in tool rule carries one. `core` finds defects. `strict` holds taste, style beyond the
+formatter, and documentation rules. `gspot init --level core` is the default, and
+`[inspection] strict = true` turns the rest on.
+
+The banned terms of the naming policy are `core`
+and stay on.
+
+## A-23 The init question is one list of 52
+
+**Evidence.** `askPresets` in `lifecycle/questions.ts` shows one multiselect of every proposed
+preset.
+
+**Design (D-120).** Three short questions in place of one: the languages found, the frameworks
+found, and the concerns, each item with its one-line description and the number of checks it
+brings. Found items start ticked. `--yes` behaves as it does today.
+
+## A-24 What works and is never said
+
+Bypassing a hook, turning a rule back on, a check of your own, and profiles all work today.
+No guide, no help text, and no README line mentions any of them. This is a documentation gap,
+and [21-documentation.md](21-documentation.md) owns it.
+
+## A-25 The agent file grew from 372 bytes to 21 KB
+
+**Evidence.** Before the install, `CLAUDE.md` in the app held five lines. After it, `CLAUDE.md`
+and `AGENTS.md` hold 21,244 bytes each, and an agent loads the file in every session. The block
+is a table of 56 rule file paths, and the formatter pads every row to the widest one, 570
+characters. Most of the file is spaces.
+
+**Design.** The managed block lists each area with its files as a plain list, one path on each
+line, with no table. It names the rule files of the presets that are selected for the files an
+agent is likely to touch, and points at `.gspot/rules/` for the rest.
+
 ## Whether a developer keeps it
 
 Not today. The reasons, in the order a developer meets them:

@@ -41,6 +41,7 @@ Every repository on the same gspot version runs the same rules. Upgrading gspot 
 | [18-gaps.md](18-gaps.md)                             | Where the repository differs from this folder, with evidence, and the order in which the gaps close                                               |
 | [19-names.md](19-names.md)                           | The names that change, and the one meaning each word keeps                                                                                        |
 | [20-adoption.md](20-adoption.md)                     | What the install in yap-swift-app showed, and the design that answers each defect                                                                 |
+| [21-documentation.md](21-documentation.md)           | What the README, the manual, and the site at gspot.dev hold, and what must be true before launch                                                  |
 | [presets/README.md](presets/README.md)               | One page per preset                                                                                                                               |
 
 Read 01 to 05 to understand the tool. Read 06 to 09 to understand the rules. Read 10 to 19 to

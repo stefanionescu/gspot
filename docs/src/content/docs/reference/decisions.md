@@ -915,3 +915,31 @@ Takeover reads the lint tables of `pyproject.toml` and the lint keys of `package
 what they hold, and never edits the file. The plan lists the table, the lint-only dependencies,
 the workspace entry, and the duplicate pins under `remove by hand`, each with its command.
 `gspot doctor` reports a tool with two configurations.
+
+## D-118 One command shows what exists and what is on
+
+`gspot list` prints presets in three groups and, under each installed preset, its checks with
+their state. It reads the data `explain` reads. Rejected: a longer `doctor`, because `doctor`
+answers what is wrong, and this answers what is there.
+
+## D-119 Two levels, and the first install takes the lower one
+
+Every check and every opt-in tool rule is `core` or `strict`. init installs `core` unless
+`--level strict` or a profile says otherwise, and `[inspection] strict` is the one key that holds
+the choice. The banned terms are `core`. Rejected: a level for each preset, because a person
+then answers 52 questions in place of one.
+
+## D-120 init asks in three groups
+
+The selection question becomes three: languages, frameworks, concerns. Each item shows one line
+of description and its number of checks, and found items start ticked.
+
+## D-121 yap-swift-app first, and one repository at a time after it
+
+The Adoption phase is measured against yap-swift-app alone. When its rows pass, the branch
+`chore/gspot` is deleted and the install is redone from the source tree. The table that opens
+[20-adoption.md](https://github.com/stefanionescu/gspot/blob/main/architecture/20-adoption.md) is then measured again beside the first numbers. The other five reference repositories follow one at a time. Each one is measured against its
+sheet in [17-migration.md](https://github.com/stefanionescu/gspot/blob/main/architecture/17-migration.md).
+
+Rejected: waiting for a release before the redo, because the
+redo is how the fixes are judged.
