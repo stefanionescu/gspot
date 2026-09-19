@@ -563,9 +563,9 @@ By the order of the owner, nothing below is touched before its step.
 
 Not done in this read, and owed before the fixes start:
 
-- 19 rule files of the framework, library, and tool layers, which the owner chose to have read:
-  `nextjs/SECURITY.md`, two fastapi files, `SWIFTUI.md`, `UIKIT.md`, seven library guides,
-  `SUPABASE.md`, `POSTGRES.md`, `I18N.md`, `DOCKER.md`, and three more. 33 other rule files stay
+- 14 rule files of the framework, library, and tool layers, which the owner chose to have read:
+  `nextjs/SECURITY.md`, two fastapi files, seven library guides, `SUPABASE.md`, `POSTGRES.md`,
+  `I18N.md`, and `DOCKER.md`. 33 other rule files stay
   unread by the owner's choice.
 - 42 of the 48 preset pages, by eye. The six framework pages and `jest` are read.
 - `16-file-tree.md` by eye (S-14 holds what a script found).
