@@ -227,6 +227,7 @@ with no line here fails the placement check.
 - [ ] K-193: Carry a rule in both directions: off as an `[[ignore]]`, on as `tools.<tool>.rules`, each with its paths. List every setting that was not carried.
 - [ ] K-214: Init says that the folder is no git repository, and a preset whose checks all need git is not proposed there.
 - [ ] K-237: The list holds the packages of tools a preset pins, read from the manifests, and nothing else.
+- [ ] K-247: Recommend a tool preset only where the repository holds that tool, and write a stub only where D-100 allows one. Read a declared workspace from `package.json` with no lockfile.
 
 ### Row 2: Hooks, the setup entry, and command names
 
@@ -496,6 +497,8 @@ with no line here fails the placement check.
 - [ ] S-12: The work of a change ends when its run on GitHub is green, and the steps in [12-repository-layout.md](12-repository-layout.md) say so.
 - [ ] S-13: Change each document in the commit that builds its decision, and write `17-migration.md` again from the redo of the app.
 - [ ] S-14: Write the preset pages, the ledger ids, the file tree, and the manifest key table by script. Fail the check of S-4 on a name the code lacks.
+- [ ] S-15: Write `01-product.md` again after the Adoption phase, from what the product does, with the test that holds each promise.
+- [ ] S-16: Correct the false sentences of `02`, `03`, `11`, and `19` with S-13, fix the empty list in the unexposed-setting message, and load every example config through the reader (S-11).
 
 ### The README, the manual, and the site
 
