@@ -174,13 +174,14 @@ when every gap it names has left 18-gaps.md.
 | Framework naming                                            | K-133, K-136, K-137                                                                                                                                    | 12            |
 | Lint tools are tools, and every linter that exists is held  | K-217, K-233, K-236                                                                                                                                    | 12            |
 | The same rule in every language                             | K-235                                                                                                                                                  | 23            |
-| The core names no preset and no tool                        | K-13, K-17, K-24, K-79, K-80, K-85, K-107, K-113, K-139, K-179, K-197, K-203, K-220, K-223, K-231, K-232                                               | 13            |
+| The core names no preset and no tool                        | K-13, K-17, K-24, K-79, K-80, K-85, K-107, K-113, K-139, K-179, K-197, K-203, K-220, K-223, K-231, K-232, K-14                                         | 13            |
 | One owner for each idea                                     | G-13, K-55, K-77, K-94, K-98, K-105, K-106, K-110, K-124, K-131, K-165, K-169, K-171, K-177, K-183, K-187, K-188, K-190, K-199                         | 13            |
 | The config and its words                                    | K-88, K-89, K-116, K-215, K-216, K-222, K-224, K-225, K-228                                                                                            | 8 and 18      |
 | Checks that assume one layout                               | K-90, K-144, K-149, K-150, K-153, K-154, K-155, K-160, K-163, K-184, K-191                                                                             | 15            |
 | What a repository gets from init                            | K-72, K-118                                                                                                                                            | 5             |
 | Release                                                     | K-121, K-145, K-164                                                                                                                                    | before launch |
-| Tests                                                       | T-2 to T-12, T-14 to T-18, T-19 to T-23, T-24 to T-26, T-27 to T-35                                                                                    | 14            |
+| The README, the manual, and the site                        | G-10, K-202                                                                                                                                            | after 15      |
+| Tests                                                       | T-2 to T-12, T-14 to T-18, T-19 to T-23, T-24 to T-26, T-27 to T-35, G-2, K-28                                                                         | 14            |
 
 The order is fixed by D-121. The branch `chore/gspot` of yap-swift-app is deleted first, on
 that machine and with no push. Then every gap is fixed here. That step ends when gspot checks itself
