@@ -212,6 +212,7 @@ with no line here fails the placement check.
 - [ ] K-238: Refuse a line break in a `reason`, a `description`, a rule id, and a word, once, in the config schema; then no template has to escape.
 - [ ] K-241: Settle each of the nine contradictions in the rule file, on the side of the decision or the check. Test the rule ids a rule file names against the templates.
 - [ ] K-246: Ship `integrity/generated-drift` in the structure preset. Build `integrity/generated-fresh` with `[[generated]]`, or take its name out of every document.
+- [ ] K-250: Make the two SPDX packages and the Markdown parser dependencies that do their job. Use or drop each other library the two documents name.
 
 ### Row 1: Takeover deletes nothing it does not own
 
@@ -501,6 +502,7 @@ with no line here fails the placement check.
 - [ ] S-14: Write the preset pages, the ledger ids, the file tree, and the manifest key table by script. Fail the check of S-4 on a name the code lacks.
 - [ ] S-15: Write `01-product.md` again after the Adoption phase, from what the product does, with the test that holds each promise.
 - [ ] S-16: Correct the false sentences of `02`, `03`, `11`, and `19` with S-13, fix the empty list in the unexposed-setting message, and load every example config through the reader (S-11).
+- [ ] S-17: Change each false sentence of `04` to `12` in the commit that builds or drops what it says.
 
 ### The README, the manual, and the site
 
@@ -528,8 +530,7 @@ Not done in this read, and owed before the fixes start:
 
 - 68 of the 107 rule files were read by script and not by a person. The owner stopped that read
   on September 19, 2026.
-- The prose of `01` to `12` of this folder, sentence by sentence. Every named check, flag, key,
-  and path is compared by script (S-14).
+- The 48 preset pages and `16-file-tree.md`, by eye (S-14 holds what a script found).
 - The flags each manifest passes, against the help text of the pinned version.
 
 Checked on September 19, 2026, with the row that holds what was found:
