@@ -68,6 +68,11 @@ const CASES: PlantedCase[] = [
     },
 ];
 
+const SWITCHED =
+    'import Foundation\n\nprivate func label(_ count: Int) -> String {\n    switch count {\n    case 0:\n        "none"\n    case 1:\n        "one"\n    default:\n        "many"\n    }\n}\n\n/// The label of a pair.\nfunc pairLabel() -> String {\n    let text = label(2)\n    return text + "!"\n}\n';
+const NEGATED =
+    'import Foundation\n\n/// Whether a name is new.\nfunc isNew(_ name: String) -> Bool {\n    !["a", "b"].contains(name)\n}\n';
+
 describe('the swift preset', () => {
     test(
         'SwiftLint, SwiftFormat and the naming engine fire on their planted defects, and the build waits for push',
@@ -83,6 +88,16 @@ describe('the swift preset', () => {
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
                 expect(outcome.stdout, planted.id).toContain('Sources/App/');
+            }
+            // A switch is one statement and eleven lines, and a negated call says more than the call: neither is a finding.
+            const quiet: PlantedCase[] = [
+                { id: 'swift/trivial-function', files: { 'Sources/App/Label.swift': SWITCHED }, expected: '' },
+                { id: 'swift/call-through', files: { 'Sources/App/Fresh.swift': NEGATED }, expected: '' },
+            ];
+            for (const planted of quiet) {
+                const outcome = await runPlanted(fixture.path, planted, environment);
+                expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(0);
+                expect(outcome.stdout, planted.id).toContain('ok');
             }
             const atCommit = JSON.parse(
                 run(fixture.path, ['check', '--at', 'commit', '--json'], environment).stdout,

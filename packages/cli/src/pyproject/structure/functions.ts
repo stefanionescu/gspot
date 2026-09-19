@@ -4,6 +4,7 @@ import { docstringOf } from '#cli/pyproject/structure/modules.ts';
 import type { PythonFunction, PythonModule, StructureProblem } from '#types/pyproject.ts';
 
 const TRIVIAL_STATEMENTS = 2;
+const TRIVIAL_LINES = 3;
 // The name followed by a bracket appears once where the function is defined and once where its one caller calls it.
 const ONE_CALLER_COUNT = 2;
 const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
@@ -43,9 +44,14 @@ function isForwarding(fn: PythonFunction, call: Node): boolean {
     return names.length > 0 && given.join(',') === names.join(',');
 }
 
+// An if or a match is one statement and many lines, and a body of many lines is no two-line detour.
+function bodyLines(fn: PythonFunction): number {
+    return fn.body.reduce((sum, statement) => sum + statement.endPosition.row - statement.startPosition.row + 1, 0);
+}
+
 function isInlineCandidate(fn: PythonFunction, allowed: Set<string>): boolean {
     if (!fn.isTopLevel || fn.isDecorated || RUNNER_NAMES.test(fn.name) || allowed.has(fn.name)) return false;
-    const isTiny = fn.body.length > 0 && fn.body.length <= TRIVIAL_STATEMENTS;
+    const isTiny = fn.body.length > 0 && fn.body.length <= TRIVIAL_STATEMENTS && bodyLines(fn) <= TRIVIAL_LINES;
     return isTiny && fn.body.every((statement) => statement.type !== 'raise_statement');
 }
 

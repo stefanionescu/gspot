@@ -1,6 +1,7 @@
+// Where things sit in a Swift file: file-local declarations first, and the environment read in one place.
+import type { Node } from 'web-tree-sitter';
 import type { SwiftSource } from '#types/swift.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-// Where things sit in a Swift file: file-local declarations first, and the environment read in one place.
 import type { StructureProblem } from '#types/pyproject.ts';
 import { visibilityOf } from '#cli/apple/structure/sources.ts';
 
@@ -20,6 +21,12 @@ function readLines(source: SwiftSource): number[] {
     );
 }
 
+// An extension carries the name of the type it extends, which is not the name of the thing to move.
+function titleOf(node: Node): string {
+    const name = node.childForFieldName('name')?.text ?? 'This declaration';
+    return node.childForFieldName('declaration_kind')?.text === 'extension' ? `The extension of ${name}` : name;
+}
+
 /**
  * Top-level declarations that are private or fileprivate and sit below one that other files see.
  * @param sources every source of the run
@@ -37,7 +44,7 @@ export function privateBeforePublic(sources: SwiftSource[]): StructureProblem[] 
                 file: source.path,
                 line: node.startPosition.row + 1,
                 rule: 'private-below-shared',
-                text: `${node.childForFieldName('name')?.text ?? 'This declaration'} is ${visibilityOf(node)} and sits below a declaration other files see. File-local declarations come first.`,
+                text: `${titleOf(node)} is ${visibilityOf(node)} and sits below a declaration other files see. File-local declarations come first.`,
             }));
     });
 }

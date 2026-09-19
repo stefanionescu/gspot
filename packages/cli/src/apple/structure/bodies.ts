@@ -4,6 +4,7 @@ import type { StructureProblem } from '#types/pyproject.ts';
 import type { SwiftFunction, SwiftSource } from '#types/swift.ts';
 
 const TRIVIAL_STATEMENTS = 2;
+const TRIVIAL_LINES = 3;
 // The name followed by a bracket appears where the function is declared and where its one caller calls it.
 const ONE_CALLER_COUNT = 2;
 
@@ -16,7 +17,9 @@ function forwardedCall(fn: SwiftFunction): Node | undefined {
     const [only, ...rest] = fn.body;
     if (only === undefined || rest.length > 0) return undefined;
     const value = only.type === 'control_transfer_statement' ? only.childForFieldName('result') : only;
-    return value?.type === 'call_expression' ? value : undefined;
+    // A negated call answers another question than the call does, so its name says something the call does not.
+    const isPlain = value?.type === 'call_expression' && !value.text.startsWith('!');
+    return isPlain ? value : undefined;
 }
 
 function passedArguments(call: Node): string[] {
@@ -29,6 +32,15 @@ function passedArguments(call: Node): string[] {
 function callCount(source: SwiftSource, name: string): number {
     const pattern = new RegExp(String.raw`(?<![\w])${name}\(`, 'gu');
     return source.text.matchAll(pattern).toArray().length;
+}
+
+// A switch or an if is one statement and many lines, and a body of many lines is no two-line detour.
+function bodyLines(fn: SwiftFunction): number {
+    return fn.body.reduce((sum, statement) => sum + statement.endPosition.row - statement.startPosition.row + 1, 0);
+}
+
+function isTiny(fn: SwiftFunction): boolean {
+    return fn.body.length > 0 && fn.body.length <= TRIVIAL_STATEMENTS && bodyLines(fn) <= TRIVIAL_LINES;
 }
 
 function normalized(fn: SwiftFunction): string[] {
@@ -71,8 +83,7 @@ export function trivialFunctions(
     const byPath = new Map(sources.map((source) => [source.path, source]));
     return functions.flatMap((fn) => {
         const source = byPath.get(fn.path);
-        const isTiny = fn.body.length > 0 && fn.body.length <= TRIVIAL_STATEMENTS;
-        if (source === undefined || !isTiny || !fn.isFileLocal || fn.isBound || allowed.has(fn.name)) return [];
+        if (source === undefined || !isTiny(fn) || !fn.isFileLocal || fn.isBound || allowed.has(fn.name)) return [];
         if (callCount(source, fn.name) !== ONE_CALLER_COUNT) return [];
         const text = `${fn.name} holds ${String(fn.body.length)} statement(s) and one place calls it. Write the body at that place.`;
         return [problem(fn, 'trivial-function', text)];
