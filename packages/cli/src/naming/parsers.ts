@@ -46,6 +46,7 @@ export function parserFor(name: GrammarName): Promise<Parser> {
 export function grammarFor(path: string, language: string): GrammarName | undefined {
     if (DECLARATION_FILE.test(path)) return undefined;
     if (language === 'bash') return 'bash';
+    if (language === 'swift') return 'swift';
     if (language === 'javascript') return 'javascript';
     if (language !== 'typescript') return undefined;
     return path.endsWith('.tsx') ? 'tsx' : 'typescript';

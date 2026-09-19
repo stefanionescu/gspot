@@ -80,9 +80,11 @@ export function grammarBytes(name: string): Uint8Array {
     const index = embeddedIndex();
     const embedded = index?.[`grammars/${name}`];
     if (embedded !== undefined) return new Uint8Array(readFileSync(embedded));
-    const source = GRAMMAR_SOURCES[name];
-    if (source === undefined) throw new Error(`No grammar is called ${name}.`);
     const root = developmentRoot();
+    const vendored = join(root, 'packages', 'cli', 'grammars', name);
+    const source = GRAMMAR_SOURCES[name];
+    if (source === undefined && existsSync(vendored)) return new Uint8Array(readFileSync(vendored));
+    if (source === undefined) throw new Error(`No grammar is called ${name}.`);
     const candidates = [join(root, 'packages', 'cli', 'node_modules', source), join(root, 'node_modules', source)];
     const found = candidates.find((candidate) => existsSync(candidate));
     if (found === undefined) throw new Error(`The grammar package for ${name} is not installed; run bun install.`);

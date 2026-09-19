@@ -1,0 +1,171 @@
+[preset]
+id = "swift"
+kind = "language"
+title = "Swift"
+requires = ["formatting"]
+recommends = ["structure", "naming", "spelling"]
+description = "Swift sources: SwiftLint with the opt-in and analyzer rules, SwiftFormat, a build, and Periphery for dead code."
+
+[detect]
+extensions = [".swift"]
+filenames = ["Package.swift"]
+
+[claims]
+extensions = [".swift"]
+filenames = ["Package.swift", "Package.resolved"]
+natures = ["source"]
+
+[[tools]]
+name = "swiftlint"
+version = "0.63.2"
+floor = "0.57.0"
+mise = "swiftlint"
+brew = "swiftlint"
+github = "realm/SwiftLint"
+version_command = ["version"]
+
+[[tools]]
+name = "swiftformat"
+version = "0.61.1"
+floor = "0.54.0"
+mise = "swiftformat"
+brew = "swiftformat"
+github = "nicklockwood/SwiftFormat"
+
+[[tools]]
+name = "periphery"
+version = "3.6.0"
+floor = "3.0.0"
+mise = "periphery"
+brew = "periphery"
+github = "peripheryapp/periphery"
+version_command = ["version"]
+
+[[tools]]
+name = "xcodebuild"
+provider = "host"
+
+[[configs]]
+template = "swiftlint.yml.tmpl"
+target = ".gspot/swiftlint.yml"
+per_scope = true
+stub = {path = ".swiftlint.yml", body = "parent_config: {target}\n"}
+
+[[configs]]
+template = "swiftformat.tmpl"
+target = ".gspot/swiftformat"
+per_scope = true
+stub = {path = ".swiftformat", copy = true}
+
+[[configs]]
+template = "periphery.yml.tmpl"
+target = ".gspot/periphery.yml"
+per_scope = true
+
+[[checks]]
+id = "swift/swiftlint"
+stage = "commit"
+command = ["swiftlint", "lint", "--strict", "--quiet", "--no-cache", "--config", "{config:swiftlint}", "--reporter", "json", "{files}"]
+fix_command = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "--config", "{config:swiftlint}", "{files}"]
+fix_order = "codemod"
+claims = {extensions = [".swift"]}
+inspection = ["style", "structure"]
+output = {format = "json", fields = {file = "file", line = "line", column = "character", rule = "rule_id", message = "reason"}}
+summary = "Lints every Swift file with the shipped SwiftLint rule set, with every warning an error."
+why = "A force unwrap, a retain cycle through a delegate, or a function nobody can hold in their head is cheapest to stop at the commit."
+fix = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore swift/swiftlint --rule <id> --reason."
+
+[[checks]]
+id = "swift/swiftformat"
+stage = "commit"
+command = ["swiftformat", "--lint", "--config", "{config:swiftformat}", "{files}"]
+fix_command = ["swiftformat", "--quiet", "--config", "{config:swiftformat}", "{files}"]
+fix_order = "format"
+claims = {extensions = [".swift"]}
+inspection = ["format"]
+output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?:error|warning): \\((?<rule>\\w+)\\) (?<message>.*)$"}
+summary = "Checks the layout of every Swift file against the shipped SwiftFormat rules."
+why = "One layout everywhere keeps a diff about the change and not about where a brace went."
+fix = "Run gspot check --fix."
+
+[[checks]]
+id = "swift/build"
+stage = "push"
+runs = "per-scope"
+requires = "build"
+platform = ["macos"]
+engine = "integrity"
+analysis = "swift-build"
+inspection = ["types"]
+summary = "Builds the package or the Xcode scheme, and keeps the compiler log for the analyzer."
+why = "Swift has no type check without a build, so the build is the type check."
+fix = "Fix the first compiler error; later ones are often the same mistake."
+
+[[checks]]
+id = "swift/swiftlint-analyze"
+stage = "push"
+runs = "per-scope"
+requires = "build"
+platform = ["macos"]
+engine = "integrity"
+analysis = "swift-analyze"
+tool = "swiftlint"
+inspection = ["structure"]
+summary = "Runs the SwiftLint analyzer rules over the compiler log of the build: unused imports, unused declarations, captured variables."
+why = "These rules need the compiler's view of the code, which a file-by-file lint does not have."
+fix = "Remove what the rule names. Keep an import the analyzer misjudges under tools.swiftlint.keep_imports."
+
+[[checks]]
+id = "swift/periphery"
+stage = "push"
+runs = "per-scope"
+requires = "build"
+platform = ["macos"]
+engine = "integrity"
+analysis = "swift-periphery"
+tool = "periphery"
+inspection = ["structure"]
+summary = "Scans the built project for declarations nothing uses."
+why = "Dead code is read, maintained, and migrated by people who cannot tell it is dead."
+fix = "Delete the declaration, or mark it with a periphery:ignore comment that says who uses it."
+
+[[settings]]
+name = "tools.swiftlint.keep_imports"
+kind = "list"
+direction = "neutral"
+default = ["CoreGraphics"]
+summary = "Imports the analyzer keeps although it sees no use of them."
+
+[[settings]]
+name = "tools.swiftformat.swift_version"
+kind = "string"
+direction = "neutral"
+default = "5.9"
+summary = "The Swift version SwiftFormat formats for."
+
+[[settings]]
+name = "tools.xcode.project"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The Xcode project or workspace, relative to the scope; empty builds the Swift package."
+
+[[settings]]
+name = "tools.xcode.scheme"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The shared scheme the build, the analyzer, and Periphery use."
+
+[[settings]]
+name = "tools.xcode.destination"
+kind = "string"
+direction = "neutral"
+default = "generic/platform=iOS Simulator"
+summary = "The xcodebuild destination."
+
+[inspections]
+".swift" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
+
+[rule_files]
+language = ["language/SWIFT.md", "language/naming/SWIFT.md"]

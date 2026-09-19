@@ -1,0 +1,95 @@
+--indent <%= format.indent_style === 'tab' ? 'tab' : format.indent_width %>
+--indentcase false
+--ifdef indent
+--maxwidth <%= format.print_width %>
+--wraparguments before-first
+--wrapparameters before-first
+--wrapcollections before-first
+--wrapreturntype preserve
+--wrapconditions preserve
+--closingparen same-line
+--nospaceoperators ...,..<
+--operatorfunc spaced
+--ranges spaced
+--allman false
+--elseposition same-line
+--guardelse next-line
+--emptybraces no-space
+--trimwhitespace always
+--linebreaks lf
+--importgrouping length,alpha
+--self init-only
+--header strip
+--swiftversion <%= settings['tools.swiftformat.swift_version'] ?? '5.9' %>
+
+--enable blankLineAfterImports
+--enable blankLinesAroundMark
+--enable blankLinesAtEndOfScope
+--enable blankLinesAtStartOfScope
+--enable blankLinesBetweenScopes
+--enable consecutiveBlankLines
+--enable consecutiveSpaces
+--enable duplicateImports
+--enable elseOnSameLine
+--enable emptyBraces
+--enable hoistPatternLet
+--enable leadingDelimiters
+--enable linebreakAtEndOfFile
+--enable linebreaks
+--enable modifierOrder
+--enable redundantBackticks
+--enable redundantBreak
+--enable redundantClosure
+--enable redundantExtensionACL
+--enable redundantFileprivate
+--enable redundantGet
+--enable redundantInit
+--enable redundantLet
+--enable redundantLetError
+--enable redundantNilInit
+--enable redundantObjc
+--enable redundantParens
+--enable redundantPattern
+--enable redundantRawValues
+--enable redundantReturn
+--enable redundantVoidReturnType
+--enable semicolons
+--enable sortImports
+--enable spaceAroundBraces
+--enable spaceAroundBrackets
+--enable spaceAroundComments
+--enable spaceAroundGenerics
+--enable spaceAroundOperators
+--enable spaceAroundParens
+--enable spaceInsideBraces
+--enable spaceInsideBrackets
+--enable spaceInsideComments
+--enable spaceInsideGenerics
+--enable spaceInsideParens
+--enable strongOutlets
+--enable strongifiedSelf
+--enable todos
+--enable trailingSpace
+--enable typeSugar
+--enable void
+
+--disable redundantSelf
+--disable trailingCommas
+--disable wrapMultilineStatementBraces
+--disable sortSwitchCases
+--disable wrapEnumCases
+--disable unusedArguments
+--disable acronyms
+--disable organizeDeclarations
+--disable sortDeclarations
+--disable markTypes
+--disable trailingClosures
+--disable wrap
+--disable wrapArguments
+--disable wrapAttributes
+--disable initCoderUnavailable
+--disable blankLinesBetweenImports
+--disable numberFormatting
+<% for (const rule of rulesOff('swift/swiftformat')) { -%>
+--disable <%= rule %>
+<% } -%>

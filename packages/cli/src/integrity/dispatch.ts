@@ -36,6 +36,7 @@ import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
 import { gitleaksBaseline } from '#cli/integrity/gitleaks-baseline.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/postgres/history.ts';
 import { trackedDependencies } from '#cli/integrity/tracked-dependencies.ts';
+import { swiftAnalyze, swiftBuild, swiftPeriphery } from '#cli/apple/build.ts';
 import { sqlBlockComments, sqlFileLength, sqlSyntax } from '#cli/sql/checks.ts';
 import { projectValid, migrationNames, storagePolicies } from '#cli/supabase/config-checks.ts';
 import { definerSearchPath, explicitGrants, foreignKeyIndexes, rlsPresent } from '#cli/postgres/schema/checks.ts';
@@ -60,6 +61,9 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'swift-build': swiftBuild,
+    'swift-analyze': swiftAnalyze,
+    'swift-periphery': swiftPeriphery,
     'ansible-lint': ansibleLint,
     'openapi-lint': openapiLint,
     'openapi-fresh': openapiFresh,

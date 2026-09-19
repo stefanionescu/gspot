@@ -27,7 +27,7 @@ swiftlint, swiftformat, periphery, xcodebuild (host), swift (host).
 
 | Id                                                                                                                                         | Stage       | Command                                                                                       |
 | ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------- |
-| `swift/swiftlint`                                                                                                                          | commit      | `swiftlint lint --strict --quiet --config .gspot/swiftlint.yml {files}`                       |
+| `swift/swiftlint`                                                                                                                          | commit      | `swiftlint lint --strict --quiet --config .gspot/swiftlint.yml --reporter json {files}`       |
 | `swift/swiftformat`                                                                                                                        | commit      | `swiftformat --lint --config .gspot/swiftformat {files}`; fix order format                    |
 | `swift/build`                                                                                                                              | push, build | `xcodebuild build-for-testing` or `swift build`, log kept for analyze                         |
 | `swift/swiftlint-analyze`                                                                                                                  | push, build | `swiftlint analyze --strict --compiler-log-path <log>`                                        |
@@ -178,6 +178,10 @@ Periphery: `retain_public`, `retain_objc_accessible`, `retain_assign_only_proper
 `retain_unused_protocol_func_params`, `retain_swift_ui_previews` and `retain_codable_properties`
 are true. `project` and `schemes` come from `tools.xcode.project` and `tools.xcode.scheme`, and
 `init` proposes the first shared scheme `xcodebuild -list` prints.
+
+The engine analyses `trivial-function`, `call-through` and `duplicate-functions` read shell
+scripts today. The SwiftLint rules `type_contents_order`, `file_types_order`, and
+`unused_declaration` cover ordering and dead code for Swift until those analyses read the Swift grammar.
 
 ## Settings
 
