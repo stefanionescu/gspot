@@ -38,8 +38,12 @@ exit:   0 passed   1 findings   2 gspot did not run
 Sixteen commands. A teammate who clones a repository runs one, `gspot install`. A developer
 learns three more first: `gspot check`, `gspot check --changed`,
 and `gspot check --staged` (D-123). Four commands write one entry of `gspot.toml`: `ignore`,
-`set`, `add`, and `remove`. Together they cover every setting the file has, so nobody
-types TOML to change policy. A hand edit stays valid and is checked on load.
+`set`, `add`, and `remove`.
+
+Together they cover every value a finding makes a person change: a rule, a check, a limit, a
+list, a preset, a level. Four tables are written by hand, because each is a small structure
+and no single value: `[[scope]]`, `[[check]]`, `[[naming.rules]]`, and the elements of
+`[architecture]`. A hand edit is checked on load like any other.
 
 ## Conventions
 
