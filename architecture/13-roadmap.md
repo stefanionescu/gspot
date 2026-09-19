@@ -110,7 +110,7 @@ key, its test, and every mention in this folder and in the manual.
 | the nine `copy = true` stubs (K-47)                                                                                    | seven manifests, `emit/targets.ts`                        |
 | the language names in the banned folder names (K-86)                                                                   | `config/shell.ts`                                         |
 
-The first six fixes are a few lines each, and each gets a planted test:
+The first seven fixes are small, and each gets a planted test:
 
 1. Takeover keeps `setup.cfg` and `tox.ini` (K-36).
 2. A folder named `hooks` is no hooks folder (K-37).
@@ -118,6 +118,7 @@ The first six fixes are a few lines each, and each gets a planted test:
 4. `rules-lint` becomes `rules` (K-61).
 5. The nine `copy = true` stubs leave their manifests (K-47, D-100).
 6. gspot never replaces a `package.json` script the developer has (K-109).
+7. No check deletes or rewrites a file of the developer: `drizzle/migrations-fresh` runs in a copy (K-156).
 
 | Order | Deliverable                                                                                                                                                            | Done when                                                                                                                                                                                                                       |
 | ----- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -156,8 +157,8 @@ when every gap it names has left 18-gaps.md.
 | Work                                                       | Gaps it closes                                                     | Goes with row |
 | ---------------------------------------------------------- | ------------------------------------------------------------------ | ------------- |
 | Delete what nothing uses                                   | K-104, K-111, K-115, K-119, K-129, K-146                           | Delete first  |
-| Defects that give a wrong answer, fixed first              | K-103, K-108, K-114, K-134, K-140, K-147                           | first fixes   |
-| Takeover and detection read what a repository really holds | K-42, K-57, K-76, K-78, K-120, K-126, K-128                        | 1 and 2       |
+| Defects that give a wrong answer, fixed first              | K-103, K-108, K-114, K-134, K-140, K-147, K-157                    | first fixes   |
+| Takeover and detection read what a repository really holds | K-42, K-57, K-76, K-78, K-120, K-126, K-128, K-158                 | 1 and 2       |
 | Speed                                                      | K-71, K-125, K-127, K-138, K-143, K-148                            | 3 and 21      |
 | What `check` and `doctor` print                            | K-82, K-83, K-84, K-117, K-122, K-130, K-132                       | 21            |
 | The `core` level holds defects, and `strict` holds taste   | K-63, K-93, K-101, K-112, K-123, K-135, K-141, K-142, K-151, K-152 | 11 and 22     |
