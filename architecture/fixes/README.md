@@ -19,8 +19,6 @@ the commit that closes its row.
 
 ## The files
 
-The list grows as each file is written.
-
 - [00-delete-first.md](00-delete-first.md): the four presets, the removed commands and flags, and every key, field, and rule nothing uses.
 - [01-first-fixes.md](01-first-fixes.md): CI, the checks that destroy work, the checks that pass when they did not run, and the other wrong answers.
 - [02-takeover.md](02-takeover.md): what `init` reads, what it proposes, and what it carries.
@@ -37,3 +35,10 @@ The list grows as each file is written.
 - [13-words.md](13-words.md): the renames of the source, the words a person reads, and the `layer:` key.
 - [14-push.md](14-push.md): cache keys of a repository check, and a push hook that checks what is pushed.
 - [15-top-level.md](15-top-level.md): the root of this repository.
+- [16-output.md](16-output.md): progress lines, the summary, what `doctor` asks git, and held security findings.
+- [17-recommended.md](17-recommended.md): no edit of a `tsconfig.json`, and the house rules that move to `all`.
+- [18-one-copy.md](18-one-copy.md): one analysis for each idea, in every language.
+- [19-gitlab.md](19-gitlab.md): the flag names, and GitLab.
+- [20-self-check.md](20-self-check.md): templates, tests, and documents under the gate of this repository.
+- [21-manual.md](21-manual.md): the README, the guides, and the site.
+- [22-launch.md](22-launch.md): Windows, and a release that fails before it ships something broken.

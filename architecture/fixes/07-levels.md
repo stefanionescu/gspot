@@ -188,19 +188,19 @@ network off.
 `NodeNext`, so a Vite, Vue, or Svelte app that extends the base stops resolving its imports. The
 template asks `has('nextjs')` and `has('nestjs')`.
 
-**Target.** The base holds flags that only add errors (D-126). Every option that changes emit or
-resolution stays in the `tsconfig.json` of the repository.
+**Target.** gspot writes no option that changes emit or resolution (D-126). The type check runs
+through a generated file that extends the `tsconfig.json` of the repository and adds flags that
+only add errors, as [17-recommended.md](17-recommended.md) builds it (K-74).
 
-**Files.** `presets/typescript/tsconfig.base.json.tmpl`, `presets/javascript/jsconfig.json.tmpl`.
+**Files.** `presets/typescript/tsconfig.check.json.tmpl`, `presets/javascript/jsconfig.json.tmpl`.
 
-**Logic.** The base holds `strict`, `noUncheckedIndexedAccess`, `noImplicitOverride`,
-`noFallthroughCasesInSwitch`, and `exactOptionalPropertyTypes` at `all`. `javascript/checkjs`
+**Logic.** The generated file holds `strict` at `recommended`, and three more flags at `all`. `javascript/checkjs`
 reads the `jsconfig.json` of the repository for resolution.
 
 **What goes.** Six options, and the two `has(...)` branches (K-197).
 
-**Tests.** A planted Vite app that extends the base passes `typescript/tsc` with `Bundler`
-resolution of its own.
+**Tests.** A planted Vite app with `Bundler` resolution passes `typescript/tsc`, and its
+`tsconfig.json` is unchanged.
 
 **Done when.** That case passes.
 

@@ -399,7 +399,7 @@ holds the finding.
 
 ## K-178: a statement is reported at the line of its comment
 
-The level of `sql/block-comments` changes with K-161, in the fix file of row 22.
+The level of `sql/block-comments` changes with K-161, in [07-levels.md](07-levels.md).
 
 **What is wrong.** `firstKeyword` in `sql/statements.ts` skips line comments and blank lines, and
 not block comments.
