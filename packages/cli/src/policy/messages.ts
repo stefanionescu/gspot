@@ -303,3 +303,22 @@ export function settingInScope(key: string, scope: string): string {
     const place = scope === '' ? 'the root; leave --scope out' : `the scope \`${scope}\`; add --scope ${scope}`;
     return `A preset exposes \`${key}\` in ${place}.`;
 }
+
+/**
+ * A value in brackets that parses as neither JSON nor TOML.
+ * @param text the value as typed
+ * @returns the message
+ */
+export function unreadableValue(text: string): string {
+    return `The value ${text} reads as neither JSON nor TOML. Write a list as ["a", "b"] and a table as {key = "value"}, inside single quotes for the shell.`;
+}
+
+/**
+ * A list item that is a table written inside quotes.
+ * @param key the setting
+ * @param item the text of the item
+ * @returns the message
+ */
+export function quotedTable(key: string, item: string): string {
+    return `${key} holds a table written inside quotes: ${item}. Take the quotes away, or write it under [[${key}]].`;
+}

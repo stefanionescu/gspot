@@ -35,9 +35,18 @@ function itemReasonProblem(key: string, item: unknown): string | undefined {
     return isReasonAccepted(reason) ? undefined : messages.refusedReason(key, reason);
 }
 
+// A table typed inside quotes is one string to TOML, and nothing reads a string where a table belongs.
+function quotedTableProblem(key: string, item: unknown): string | undefined {
+    const text = typeof item === 'string' ? item.trim() : '';
+    const isQuoted = (text.startsWith('{') && text.endsWith('}')) || (text.startsWith('[{') && text.endsWith('}]'));
+    return isQuoted ? messages.quotedTable(key, text) : undefined;
+}
+
 function listItemProblems(key: string, items: unknown): string[] {
     if (!Array.isArray(items)) return [];
-    return (items as unknown[]).map((item) => itemReasonProblem(key, item)).filter((problem) => problem !== undefined);
+    return (items as unknown[])
+        .flatMap((item) => [itemReasonProblem(key, item), quotedTableProblem(key, item)])
+        .filter((problem) => problem !== undefined);
 }
 
 function looseningProblem(

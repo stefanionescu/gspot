@@ -25,7 +25,7 @@ function input(root: string, paths: string[], tracked = paths): EngineInput {
     const partialView: Partial<MergedView> = { tool: () => ({}) };
     const view = partialView as MergedView;
     const repository: Partial<Repository> = { files: all };
-    const partialSession: Partial<Session> = { repository: repository as Repository };
+    const partialSession: Partial<Session> = { repository: repository as Repository, manifests: new Map() };
     const session = partialSession as Session;
     const spec: Partial<CheckSpec> = { id: 'markdown/fences' };
     const partial: Partial<EngineInput> = { root, scope: '', spec: spec as CheckSpec, files, view, session };

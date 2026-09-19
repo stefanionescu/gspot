@@ -1,3 +1,4 @@
+import { parse as parseToml } from 'smol-toml';
 import { openSession } from '#cli/run/session.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { SetOptions } from '#types/commands.ts';
@@ -17,13 +18,21 @@ const NEAR_LIMIT = 12;
 const RULE_KEY_DEPTH = 3;
 const INTEGER = /^-?\d+$/u;
 const DECIMAL = /^-?\d+\.\d+$/u;
-const STRUCTURED = /^(?:\[.*\]|\{.*\})$/su;
+// A value that opens with a bracket is meant as a list or a table, whether or not it closes.
+const STRUCTURED = /^[[{]/u;
 
+// A value in brackets is a list or a table, written as JSON or the way gspot.toml writes it.
+// Text that reads as neither is refused: kept as a string, it lands in the policy as a quoted table nothing reads.
 function parseStructured(text: string): unknown {
     try {
         return JSON.parse(text);
     } catch {
-        return text;
+        // The TOML form is tried next.
+    }
+    try {
+        return parseToml(`value = ${text}`)['value'];
+    } catch {
+        throw new PolicyError([messages.unreadableValue(text)]);
     }
 }
 

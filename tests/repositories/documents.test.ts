@@ -128,6 +128,17 @@ describe.skipIf(!existsSync(join(STYLES, 'Google')))('the markdown, docs and pro
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
             }
+            // A check id is written like a path. A document that names one means the check, whatever folders exist.
+            const named = await runPlanted(
+                fixture.path,
+                {
+                    id: 'integrity/stale-paths',
+                    files: { 'docs/checks.md': '# A page\n\nThe check `docs/links` reads every link.\n' },
+                    expected: '',
+                },
+                environment,
+            );
+            expect(named.code, named.stdout).toBe(0);
             for (const id of REPORTED_ELSEWHERE) {
                 const skipped = run(fixture.path, ['check', id], environment);
                 expect(skipped.stdout, id).toContain('its findings come from');

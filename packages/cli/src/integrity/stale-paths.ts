@@ -27,6 +27,8 @@ function knownPaths(input: EngineInput): Set<string> {
         const segments = file.path.split('/');
         for (let depth = 1; depth < segments.length; depth += 1) known.add(segments.slice(0, depth).join('/'));
     }
+    // A check id is written like a path, and a document that names supabase/config means the check, not a file.
+    for (const manifest of input.session.manifests.values()) for (const check of manifest.checks) known.add(check.id);
     return known;
 }
 
