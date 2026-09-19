@@ -23,10 +23,11 @@ postcss-modules (inside gspot, for CSS module usage).
 
 ## Checks
 
+`formatting/prettier` formats CSS files, so this preset has no format check of its own.
+
 | Id                   | Stage  | Command                                                                        |
 | -------------------- | ------ | ------------------------------------------------------------------------------ |
 | `css/stylelint`      | commit | `stylelint --config .gspot/stylelint.json {files}`; fix, order codemod         |
-| `css/prettier`       | commit | through formatting                                                             |
 | `css/usage`          | push   | CSS modules: every class defined is used, every class used is defined (nextjs) |
 | `css/dead-selectors` | push   | PurgeCSS over the built output with a safelist (static-site)                   |
 
