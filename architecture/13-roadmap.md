@@ -38,7 +38,7 @@ tests, and runs in the gate of this repository. [18-gaps.md](18-gaps.md) lists w
 | `init`, `check`, `apply`, `doctor`, `uninstall`, `why`, `explain`, `completion`, and the six writing commands | the fifteen-command surface parses and every command works; `explain` renders `summary`, `why` and `fix` for every check in the bash preset; `completion` output from `tab` completes every command in bash and zsh |
 | The npm launcher and one platform package per target                                                          | `bunx gspot --version` works from a local registry on the three platforms with no network and `--ignore-scripts`                                                                                                    |
 | Version pin: `.gspot/version`, the runner pin, the mismatch refusal, `--version`                              | a binary of another version exits 2 on `check` with the two remedies                                                                                                                                                |
-| Hooks, staged mode, `.config/mise/conf.d/gspot.toml`                                                          | a planted repository commits through the hook                                                                                                                                                                       |
+| Hooks, staged mode, `.mise/conf.d/gspot-tools.toml` (D-127)                                                   | a planted repository commits through the hook                                                                                                                                                                       |
 | One preset: bash (ShellCheck, shfmt, `bash -n`)                                                               | `gspot init --yes && gspot check` passes on a repository with one script                                                                                                                                            |
 | Self-lint begins                                                                                              | gspot's own shell scripts and hooks pass under gspot with no ignores                                                                                                                                                |
 
@@ -151,7 +151,11 @@ The first eight fixes are small, and each gets a planted test:
 | 22    | The `recommended` level holds no house style and changes no build (K-74, K-75, K-91, K-92, D-126)                                                                                                          | init on a fresh Next.js project at `recommended` leaves `tsconfig.json` untouched and holds no finding about pinned versions, headers, or README shape                                                                                                                                                        |
 | 23    | This repository names its folders after languages, by its own exception, and keeps one copy of the structure logic (K-86, K-87, D-128, D-135)                                                              | `src/swift/` and `src/python/` exist here, `gspot.toml` holds one `folder_name_allowed` entry for them, and `gspot check` passes with no `[[ignore]]`                                                                                                                                                         |
 | 23b   | The command surface and GitLab (K-95, K-96, D-129 to D-133)                                                                                                                                                | `gspot --help` lists the commands of 02-cli.md; every flag in `--help` appears in a test and in a guide; init in a repository with `.gitlab-ci.yml` writes `.gitlab/ci/gspot.yml` and edits no other CI file                                                                                                  |
-| 24    | gspot checks itself again after the renames, with no ignore entry, and closes the places where it does not check itself (S-1 to S-12, K-166), and installs for itself the tools of the table in 18-gaps.md | `gspot check` passes here and `gspot.toml` holds no `[[ignore]]`; a check writes every template of every preset and parses the result; a hook runs the tests and holds a coverage floor; a broken path in `architecture/` is a finding                                                                        |
+| 24    | gspot checks itself again after the renames, with no ignore entry, and closes the places where it does not check itself (S-1 to S-13, K-166), and installs for itself the tools of the table in 18-gaps.md | `gspot check` passes here and `gspot.toml` holds no `[[ignore]]`; a check writes every template of every preset and parses the result; a hook runs the tests and holds a coverage floor; a broken path in `architecture/` is a finding                                                                        |
+
+The table holds no row 10. It was the trial form of D-107, which the owner cut. A-12 of
+[20-adoption.md](20-adoption.md) has no row either: it closes with the first release of the
+binary and the plugin.
 
 ### Where every other row lands
 
@@ -223,8 +227,8 @@ Phase 4 starts after Phases 5 and 2, which ship the security, SQL, Supabase, Doc
 presets this acceptance run needs.
 
 Acceptance: the worktree harness on yap-swift-app across its three scopes, with the numbers in
-[17-migration.md](17-migration.md) as the pass condition. Every check in `quality/` maps to a gspot check, the 29 configuration files are replaced or carried, and the 35 lint tasks and the 15 duplicate pins are listed. The repository is read, never written; its own gate keeps running
-until its owners migrate it.
+[17-migration.md](17-migration.md) as the pass condition. Every check in `quality/` maps to a gspot check, the 29 configuration files are replaced or carried, and the 35 lint tasks and the 15 duplicate pins are listed. The acceptance run reads the repository and never writes it. The migration the owner asked for
+(D-97) is a separate deliverable, on a branch of its own.
 
 ## Phase 5: prose, security, upgrade
 

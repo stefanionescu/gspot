@@ -79,8 +79,8 @@ A second defect sits beside it: `HOOK_DIRECTORIES` in `config/patterns.ts` holds
 - The hook line calls the pinned gspot through the runner and needs no environment variable.
   `GSPOT_BIN` stays a development switch and leaves the generated text.
 
-The working tree of this repository holds a first form of this (`hooks.tool = "shared"`),
-uncommitted. It follows the design except for the last two points, and its name changes:
+The git stash `hooks-existing` of this repository holds a first form of this
+(`hooks.tool = "shared"`). It follows the design except for the last two points, and its name changes:
 `shared` says nothing about who shares what. The value becomes `existing`.
 
 ## A-4 The gate takes 45 minutes
@@ -102,12 +102,12 @@ Two defects make it slower than it needs to be:
 
 - The `manual` stage holds checks that build, test, or scan a whole project. It exists today
   and five checks use it. `swift/build`, the analyzer, periphery, and the coverage checks move
-  to it. The CI workflow runs it, and so does `gspot check --at manual`.
+  to it. The CI workflow runs it, and so does `gspot check --stage manual` (D-132).
 - The pre-push hook runs the push stage over the scopes that hold a changed file, measured from
   the merge base.
 - `gspot check` with no flag still runs everything, and says how long each stage took.
 - init runs the commit stage, writes baselines, and ends. It prints the command that runs the
-  other stages and baselines them (`gspot apply --baseline --at manual`).
+  other stages and baselines them (`gspot baseline --stage manual`, D-131).
 - A cache key holds the hash of the configuration files the check names, not of all of
   `.gspot/`. The generated hash is computed once for each run.
 - The Swift build folder moves to the cache folder of the platform. The verdict cache stays in
@@ -257,8 +257,8 @@ The shipped banned terms stay as they are. The count that does not come from the
 
 **Design (D-110).** A preset marks each opt-in rule `recommended` or `all`. `recommended` holds rules that
 find defects. `all` adds rules of taste, such as explicit access control on every
-declaration. `[inspection] strict = false`, which init already writes, leaves the strict group
-off. Today that key changes nothing in the Swift preset.
+declaration. The `level` key of D-119 selects the group. Today `[inspection] strict`, which
+init writes, changes nothing in the Swift preset.
 
 ## A-14 Sibling files that share a prefix
 

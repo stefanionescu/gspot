@@ -56,7 +56,7 @@ in the commit that applies it.
 | `src/apple/`, `src/pyproject/`, `tests/repositories/pyproject/`                | the code                                          | `swift/`, `python/`, `tests/repositories/python/` (D-128)                                                          |
 | `packages/cli/rules-lint`, `#rules-lint/*`                                     | the code (K-61)                                   | `packages/cli/rules`, `#rules/*`                                                                                   |
 | `--at`, `upgrade --check`, `--ci none`, `--keep-format`, `--project-templates` | `--help` of four commands                         | `--stage`, `--dry-run`, `--no-ci`, `--format keep` ([02-cli.md](02-cli.md))                                        |
-| `hooks.tool = "shared"`                                                        | the uncommitted hooks work                        | `existing` (D-101)                                                                                                 |
+| `hooks.tool = "shared"`                                                        | the stash `hooks-existing`                        | `existing` (D-101)                                                                                                 |
 | `repository-check.test.ts`, `scope-languages.test.ts`                          | `tests/repositories/`                             | `declared-check.test.ts`, `scope-presets.test.ts` (D-113)                                                          |
 
 preset, check, finding, baseline, ignore, scope, stage and profile stay: other tools use them
