@@ -108,11 +108,14 @@ person can add an `allowed` entry that names the kind.
 Names a platform or framework fixes. They are exact identifiers, matched whole, never patterns:
 Node globals and APIs (`spawnSync`, `setTimeout`, `clearTimeout`, `URLSearchParams`, `console`,
 `document`, `window`, `navigator`, `localStorage`, `sessionStorage`, `CustomEvent`,
-`HTMLElement`, `HTMLDialogElement`), HTTP methods, Next.js exports (`getStaticProps`,
-`getServerSideProps`, `generateMetadata`, `generateStaticParams`), React hooks
-(`useSyncExternalStore`, `getSnapshot`, `getServerSnapshot`), `toJSON`, `ESLint`, Python dunders
+`HTMLElement`, `HTMLDialogElement`), HTTP methods, `toJSON`, `ESLint`, Python dunders
 and `visit_*` visitor methods, `setUp`, `setUpClass`, `tearDown`, `tearDownClass`, environment
 variable names a runtime fixes (`HF_TOKEN`, `CUDA_MODULE_LOADING`, `CODEQL_*`).
+
+The shared policy names no framework. A framework preset carries the names its framework fixes
+as `[[naming.rules]]` in its manifest (D-112). The nextjs preset holds the exports of Next.js
+and its route file names. The react preset holds the hooks of React, and PascalCase for a
+component and its file. Vue, Svelte, and React Native do the same.
 
 Each language preset contributes its external names. A repository adds more under `[naming]
 external`.
@@ -167,16 +170,17 @@ A run of capitals is one part (`HTTPClient` splits to `http`, `client`; `userID`
 
 Predicates: TypeScript, JavaScript, Swift and Python boolean names start with `is`, `has`, `can`,
 `did` or `will`; SQL boolean columns are the bare predicate (`enabled`, `retryable`) and an `is_`
-prefix is a finding. The check reads the declared type where the language exposes one.
+prefix is a finding. The check reads the name and the literal or annotation beside it, and no
+type checker.
 
-`handle` is allowed as a leading verb only in framework callback positions: a React event prop
-(`handleSubmit`), a UIKit `@objc` selector (`handleConfirmButtonTapped`), a Python signal or
-event handler (`handle_sigterm`). Elsewhere it is a `verbs` finding. `Handler` as a type or role
+`handle` as a leading verb is a `verbs` finding in the shared policy. A preset whose framework
+uses the word allows it in its own rules: react for an event prop (`handleSubmit`), express and
+nestjs for a request handler, and swift for an `@objc` selector. `Handler` as a type or role
 suffix is always a `roles` finding.
 
-Next.js route segments are files with their brackets and parentheses stripped:
-`[slug]` is a path parameter in camel case, `(group)` is a directory in kebab case, `@slot`
-likewise. `_private` folders drop the underscore before matching.
+The nextjs preset strips the brackets and parentheses of a route segment before matching:
+`[slug]` is a path parameter in camel case, `(group)` is a folder in kebab case, and `@slot`
+likewise. `_private` folders drop the underscore.
 
 ## Path-scoped rules
 
@@ -217,7 +221,6 @@ The shipped policy carries the rules every repository needs:
 - a leading underscore stripped as a structural prefix for private Python and Bash names;
 - the same for the unused TypeScript and JavaScript parameters and variables ESLint asks to be marked that way;
 - `pre` accepted as a shared prefix in hook directories;
-- the Next.js reserved names (`page`, `layout`, `loading`, `error`, `global-error`, `not-found`, `route`, `template`, `default`, `middleware`, `instrumentation`) excluded as file names under the router directory.
 
 ## Matching
 
@@ -241,8 +244,8 @@ exemptions that whole-part matching does not need.
 
 ## Extraction
 
-The engine extracts identifiers with tree-sitter per language and classifies them. The reference extractors are the acceptance test. On the four reference repositories, the new extractor's record set is a superset of the old one's, checked in the gspot test suite (the parity
-test in [12-repository-layout.md](12-repository-layout.md)).
+The engine extracts identifiers with tree-sitter per language and classifies them. One unit test for each language runs the shipped policy over a short file written the way
+that language and its frameworks are written, and expects no finding (T-19).
 
 Extraction skips: generated files (by nature), lockfiles, the paths a preset excludes
 (`node_modules`, build output, `.git`, caches, `Generated/`, `vendor/`), and string contents.
@@ -285,12 +288,13 @@ A ceiling above the default or a case list wider than the default carries a reas
 not. Every loosening entry prints in every run.
 
 Each key has a writing command: `gspot set naming.banned_terms dispatcher`,
-`gspot set naming.python.parameters.max_words 3`, `gspot allow naming createServiceRoleClient
+`gspot set naming.python.parameters.max_words 3`, `gspot set naming.allowed createServiceRoleClient
 --reason "..."`, `gspot set naming.remove_groups verbs-strict --reason "..."`. The `marketing`
 and `defensive` groups refuse removal by command and by hand alike (D-13).
 
 ## Prose shares the list
 
-The `marketing`, `defensive` and `conjunctions` (for `and/or` in headings) groups render into
-the Vale `gspot` style as substitution and existence rules, so a comment cannot say what an
-identifier cannot say. The Vale rules carry the same messages.
+The Vale `gspot` style bans the words of the `marketing` and `defensive` groups in prose, so a
+comment cannot say what an identifier cannot say. The style holds its own lists under
+`presets/prose/styles/gspot/`, and a unit test holds each list equal to its group of
+`presets/naming/policy.json`.

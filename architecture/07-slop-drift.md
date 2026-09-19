@@ -2,7 +2,8 @@
 
 This document decides the enforcement gspot adds beyond the reference repositories: what
 machine-written slop looks like, what repository drift looks like, and the mechanism that catches
-each. Every row names a check that exists in a preset.
+each. Every row names a check of a preset, a rule of a pinned tool, or a rule of the gspot plugin. Python, Swift, and SQL
+list a shared idea under an id of their own, such as `python/call-through` (D-98, D-149).
 
 ## Slop
 
@@ -23,24 +24,23 @@ name. One term list serves identifiers, file names, and prose.
 | Test slop                                                | `testEdgeCases`, `fixtures/`, `underTest`                      | `naming/identifiers` (test group)                           |
 | A word repeated                                          | `userUserId`, `configConfig`                                   | `naming/identifiers` (duplicate-word ban)                   |
 | A name too long to read                                  | five words, forty characters                                   | `naming/identifiers` (word and length ceilings)             |
-| A file named like its sibling                            | `asset-card.ts`, `asset-list.ts`, `asset-row.ts` in one folder | `gspot/no-prefix-collisions`, `structure/prefix-collisions` |
+| A file named like its sibling                            | `asset-card.ts`, `asset-list.ts`, `asset-row.ts` in one folder | `structure/prefix-collisions`, in every language            |
 
 ### Slop in structure
 
 | Pattern                                                                                | Check                                                                                                           |
 | -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
 | A function that forwards its arguments to one call                                     | `gspot/no-call-through`, `structure/call-through`                                                               |
-| A function with one or two statements that only wraps                                  | `gspot/no-trivial-functions`, `structure/trivial-function`                                                      |
-| A file that only re-exports                                                            | `gspot/no-export-only-files`, `structure/package-exports`                                                       |
+| A file that only re-exports                                                            | `gspot/no-export-only-files`, `python/package-exports`                                                          |
 | A file that only calls imports                                                         | `gspot/no-trivial-files`                                                                                        |
-| A constant that renames another                                                        | `gspot/no-exported-alias-constants`, `structure/package-exports`                                                |
-| A folder with one file                                                                 | `gspot/no-single-file-folders`, `structure/single-file-folder`                                                  |
-| A barrel that grows without bound                                                      | `gspot/max-barrel-reexports`, `structure/package-exports`                                                       |
-| Two identical function bodies                                                          | `sonarjs/no-identical-functions`, `structure/duplicate-functions`, jscpd                                        |
-| A singleton with a getter                                                              | `structure/no-singletons`                                                                                       |
-| A module with a lazy `__getattr__`                                                     | `structure/no-lazy-exports`                                                                                     |
+| A constant that renames another                                                        | `gspot/no-exported-alias-constants`, `python/package-exports`                                                   |
+| A folder with one file                                                                 | `structure/single-file-folder`, at the level `all`                                                              |
+| A barrel that grows without bound                                                      | `gspot/max-barrel-reexports`, `python/package-exports`                                                          |
+| Two identical function bodies                                                          | `sonarjs/no-identical-functions`, the duplicate-functions idea in each language, jscpd                          |
+| A singleton with a getter                                                              | `python/no-singletons`                                                                                          |
+| A module with a lazy `__getattr__`                                                     | `python/no-lazy-exports`                                                                                        |
 | A compatibility wrapper or forwarding script                                           | `structure/shell-script-policy`, the `compat` and `forward` name ban                                            |
-| A re-export kept for a renamed symbol                                                  | `gspot/no-reexports-outside-index`, knip `unused exports`                                                       |
+| A re-export kept for a renamed symbol                                                  | `gspot/no-reexports` with `allowIndex`, knip `unused exports`                                                   |
 | Dead code                                                                              | knip, vulture, Periphery, `structure/unused-functions`, `sonarjs/no-dead-store`                                 |
 | A file or function past the size limit                                                 | `[limits]` through every language's tool                                                                        |
 | Deep nesting and nested callbacks                                                      | `max-nested-callbacks`, `max-depth`, SwiftLint `nesting`, Ruff `PLR1702`, shell nesting count                   |
@@ -48,7 +48,7 @@ name. One term list serves identifiers, file names, and prose.
 | Public declarations scattered among private ones, so a reader cannot find the contract | `structure/private-before-public`, `import-x/exports-last`: private first, public last, in every language       |
 | A private function without the `_` that says so (Python, Bash)                         | `structure/private-prefix`, basedpyright `reportPrivateUsage`                                                   |
 | A type declared beside the value it describes, so the contract lives in forty files    | `gspot/types-placement`: type aliases under the `types/` directory, type-only imports, no runtime exports there |
-| A test importing a runtime module's internals, or source importing test code           | `gspot/import-direction`                                                                                        |
+| A test importing a runtime module's internals, or source importing test code           | `boundaries/element-types`                                                                                      |
 | Environment variables read from anywhere                                               | `gspot/env-access-owner`, `structure/env-access-owner`: one configuration owner                                 |
 | A re-export that exists to shorten an import path                                      | `gspot/no-reexports` with `[structure] reexports = "none"`                                                      |
 
@@ -67,20 +67,20 @@ name. One term list serves identifiers, file names, and prose.
 
 ### Slop in comments and prose
 
-| Pattern                                                                        | Check                                                                                                                                                     |
-| ------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| A comment that narrates history (`previously`, `refactored from`, `no longer`) | Vale `gspot.present-state`                                                                                                                                |
-| A comment that promises the future (`will be added`, `TODO`)                   | Vale `gspot.future`; `unicorn/expiring-todo-comments`; Ruff `TD`, `FIX`; Vale `proselint.Annotations`                                                     |
-| A hedge (`probably`, `should`, `may`, `if needed`)                             | Vale `gspot.modals`, `gspot.hedging`                                                                                                                      |
-| A marketing word (`robust`, `seamless`, `simply`)                              | Vale `gspot.marketing`                                                                                                                                    |
-| An idiom (`belt and suspenders`, `sanity check`)                               | Vale `gspot.idioms`                                                                                                                                       |
-| A path in prose that goes stale                                                | Vale `gspot.file-paths`, `gspot.locations`; `integrity/stale-paths`                                                                                       |
-| A doc comment that restates the signature                                      | `jsdoc/no-types`, `jsdoc/require-description` with `descriptionStyle`; `structure/placeholder-docstring` (a `Handle`, `Provide` or `Returns the` opening) |
-| A vague shell summary (`performs`, `handles`)                                  | `structure/doc-comment` vague-word list                                                                                                                   |
-| Commented-out code                                                             | `sonarjs/no-commented-code`, Ruff `ERA001`                                                                                                                |
-| A doc heading that describes the tree (`Project structure`)                    | Vale `gspot.heading-names`, `integrity/docs-headings`                                                                                                     |
-| Decorative symbols and emoji                                                   | Vale `gspot.symbols`                                                                                                                                      |
-| Em dashes and typographic dashes                                               | Vale `gspot.dashes`, shell doc style                                                                                                                      |
+| Pattern                                                                        | Check                                                                                                                                                  |
+| ------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| A comment that narrates history (`previously`, `refactored from`, `no longer`) | Vale `gspot.present-state`                                                                                                                             |
+| A comment that promises the future (`will be added`, `TODO`)                   | Vale `gspot.future`; `unicorn/expiring-todo-comments`; Ruff `TD`, `FIX`; Vale `proselint.Annotations`                                                  |
+| A hedge (`probably`, `should`, `may`, `if needed`)                             | Vale `gspot.modals`, `gspot.hedging`                                                                                                                   |
+| A marketing word (`robust`, `seamless`, `simply`)                              | Vale `gspot.marketing`                                                                                                                                 |
+| An idiom (`belt and suspenders`, `sanity check`)                               | Vale `gspot.idioms`                                                                                                                                    |
+| A path in prose that goes stale                                                | Vale `gspot.file-paths`, `gspot.locations`; `docs/stale-paths`                                                                                         |
+| A doc comment that restates the signature                                      | `jsdoc/no-types`, `jsdoc/require-description` with `descriptionStyle`; `python/placeholder-docstring` (a `Handle`, `Provide` or `Returns the` opening) |
+| A vague shell summary (`performs`, `handles`)                                  | `structure/doc-comment` vague-word list                                                                                                                |
+| Commented-out code                                                             | `sonarjs/no-commented-code`, Ruff `ERA001`                                                                                                             |
+| A doc heading that describes the tree (`Project structure`)                    | Vale `gspot.heading-names`, `docs/headings`                                                                                                            |
+| Decorative symbols and emoji                                                   | Vale `gspot.symbols`                                                                                                                                   |
+| Em dashes and typographic dashes                                               | Vale `gspot.dashes`, shell doc style                                                                                                                   |
 
 ### Slop in tests
 
@@ -96,50 +96,50 @@ name. One term list serves identifiers, file names, and prose.
 
 ### Slop in dependencies and configuration
 
-| Pattern                                                         | Check                                                                                              |
-| --------------------------------------------------------------- | -------------------------------------------------------------------------------------------------- |
-| A package added and never imported                              | knip, deptry                                                                                       |
-| A version range instead of a pin                                | `integrity/manifest-policy`                                                                        |
-| A second lockfile                                               | `integrity/manifest-policy`                                                                        |
-| A package installed the day it was published                    | `integrity/install-policy`: minimum release age of seven days in the package manager's own setting |
-| No install-time security scanner where the manager supports one | `integrity/install-policy`                                                                         |
-| A binary committed outside LFS                                  | `integrity/large-files`                                                                            |
-| A dependency vulnerable with no recorded reason                 | `dependencies/osv`, every ignore carries a reason                                                  |
-| A license outside the allowlist                                 | `licenses/packages`                                                                                |
-| A config file with logic in it                                  | `integrity/config-purity`                                                                          |
-| A scalar hoisted into a config folder for no reader             | not carried; the reference audit found the inverse check caused the hoisting                       |
+| Pattern                                                         | Check                                                                                                 |
+| --------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| A package added and never imported                              | knip, deptry                                                                                          |
+| A version range instead of a pin                                | `dependencies/manifest-policy`                                                                        |
+| A second lockfile                                               | `dependencies/manifest-policy`                                                                        |
+| A package installed the day it was published                    | `dependencies/install-policy`: minimum release age of seven days in the package manager's own setting |
+| No install-time security scanner where the manager supports one | `dependencies/install-policy`                                                                         |
+| A binary committed outside LFS                                  | `integrity/large-files`                                                                               |
+| A dependency vulnerable with no recorded reason                 | `dependencies/osv`, every ignore carries a reason                                                     |
+| A license outside the allowlist                                 | `licenses/packages`                                                                                   |
+| A config file with logic in it                                  | `integrity/config-purity`                                                                             |
+| A scalar hoisted into a config folder for no reader             | not carried; the reference audit found the inverse check caused the hoisting                          |
 
 ## Drift
 
 Drift is two things that are meant to agree and do not. Nobody notices drift by reading,
 so every kind gets a check.
 
-| Kind                    | Agreement                                                                                                                                    | Check                                                       | Stage                                                     |
-| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------- | --------------------------------------------------------- |
-| Generated configuration | `.gspot/*` equals its render from `gspot.toml`                                                                                               | `integrity/generated-drift` (in `gspot check`)              | commit                                                    |
-| Stubs                   | the conventional-path stub still points at `.gspot/`                                                                                         | `integrity/generated-drift`                                 | commit                                                    |
-| Tool rule set           | the resolved config of every owned tool still enables every rule the preset requires (`eslint --print-config`, `ruff check --show-settings`) | `integrity/required-rules`                                  | push                                                      |
-| Tool versions           | installed versions match the pins                                                                                                            | `doctor`; `check` fails on a missing or outdated tool       | commit                                                    |
-| Runtime pins            | `engines.node`, `.nvmrc`, `.node-version`, `mise` node pin, `requires-python`, `.python-version` agree                                       | `integrity/manifest-policy`                                 | commit                                                    |
-| Lockfile                | manifest and lockfile agree (`--frozen-lockfile --dry-run`, `uv lock --check`)                                                               | `integrity/lockfile-fresh`                                  | commit when a manifest or lockfile is staged; push always |
-| Workspace versions      | one version per dependency across packages; paired packages aligned                                                                          | `integrity/dependency-alignment`                            | push                                                      |
-| Build reproducibility   | building twice gives identical output                                                                                                        | `static-site/build-reproducible`                            | push                                                      |
-| Documentation paths     | every path in Markdown, comments, and config lists exists                                                                                    | `integrity/stale-paths`                                     | commit                                                    |
-| Documentation links     | every relative link and anchor resolves; external links resolve at manual                                                                    | `integrity/docs-links`, `static-site/links-external`        | commit, manual                                            |
-| Allowlists and ignores  | every entry matches at least one tracked file                                                                                                | `integrity/allowlists-match`                                | commit                                                    |
-| Baselines               | every baseline names a rule that exists; no count rose                                                                                       | `integrity/baselines-current`, the baseline verdict         | commit                                                    |
-| Rule files              | the installed rule files equal the assembled render                                                                                          | `integrity/generated-drift`                                 | push                                                      |
-| Agent index             | the managed block in `CLAUDE.md` and `AGENTS.md` matches the installed files                                                                 | `integrity/generated-drift`                                 | commit                                                    |
-| Hooks                   | the three hook files exist and call gspot; `core.hooksPath` points at them                                                                   | `integrity/task-policy`                                     | commit                                                    |
-| Runner tasks            | the required tasks exist in the runner surface                                                                                               | `integrity/task-policy`                                     | commit                                                    |
-| Locale catalogs         | every locale has every key the base locale has; every key is used                                                                            | `integrity/locales`                                         | push                                                      |
-| CSS modules             | every class defined is used and every class used is defined                                                                                  | `integrity/css-usage`                                       | push                                                      |
-| Type-check membership   | every governed file belongs to a type-check project                                                                                          | `integrity/typecheck-membership`                            | commit                                                    |
-| Coverage of the tree    | files no preset claims are listed; strict mode fails on them                                                                                 | `doctor`; `coverage/unchecked`                              | push                                                      |
-| Suppression census      | the count per form never rises without a baseline update                                                                                     | `integrity/suppressions`                                    | commit                                                    |
-| Install policy          | the package manager's release-age and scanner settings still hold; the installed tree equals the lockfile                                    | `integrity/install-policy`                                  | commit when a manifest or lockfile is staged; push        |
-| Shell headers           | every executable script's header still names its runtime and description                                                                     | `structure/shell-interpreter`                               | commit                                                    |
-| Security allowlists     | every gitleaks baseline fingerprint, osv ignore, Semgrep rule ignore and CodeQL false positive carries a reason and names a path that exists | `integrity/gitleaks-baseline`, `integrity/allowlists-match` | commit                                                    |
+| Kind                    | Agreement                                                                                                                                    | Check                                                     | Stage                                                     |
+| ----------------------- | -------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- | --------------------------------------------------------- |
+| Generated configuration | `.gspot/*` equals its render from `gspot.toml`                                                                                               | `integrity/generated-drift` (in `gspot check`)            | commit                                                    |
+| Root pointers           | each root pointer still points at `.gspot/`                                                                                                  | `integrity/generated-drift`                               | commit                                                    |
+| Tool rule set           | the resolved config of every owned tool still enables every rule the preset requires (`eslint --print-config`, `ruff check --show-settings`) | `integrity/required-rules`                                | push                                                      |
+| Tool versions           | installed versions match the pins                                                                                                            | `doctor`; `check` fails on a missing or outdated tool     | commit                                                    |
+| Runtime pins            | `engines.node`, `.nvmrc`, `.node-version`, `mise` node pin, `requires-python`, `.python-version` agree                                       | `dependencies/manifest-policy`                            | commit                                                    |
+| Lockfile                | manifest and lockfile agree (`--frozen-lockfile --dry-run`, `uv lock --check`)                                                               | `dependencies/lockfile-fresh`                             | commit when a manifest or lockfile is staged; push always |
+| Workspace versions      | one version per dependency across packages; paired packages aligned                                                                          | `dependencies/syncpack`                                   | push                                                      |
+| Build reproducibility   | building twice gives identical output                                                                                                        | `static-site/build-reproducible`                          | push                                                      |
+| Documentation paths     | every path in Markdown, comments, and config lists exists                                                                                    | `docs/stale-paths`                                        | commit                                                    |
+| Documentation links     | every relative link and anchor resolves; external links resolve at manual                                                                    | `docs/links`, `docs/links-external`                       | commit, manual                                            |
+| Allowlists and ignores  | every entry matches at least one tracked file                                                                                                | `integrity/allowlists-match`                              | commit                                                    |
+| Baselines               | every baseline names a rule that exists; no count rose                                                                                       | `integrity/baselines-current`, the baseline verdict       | commit                                                    |
+| Rule files              | the installed rule files equal the assembled render                                                                                          | `integrity/generated-drift`                               | push                                                      |
+| Agent index             | the managed block in `CLAUDE.md` and `AGENTS.md` matches the installed files                                                                 | `integrity/generated-drift`                               | commit                                                    |
+| Hooks                   | the gspot line is in the hook or its task, for every hook form                                                                               | `integrity/task-policy`                                   | commit                                                    |
+| Runner tasks            | the task names of `[runner] tasks` exist and call gspot                                                                                      | `integrity/task-policy`                                   | commit                                                    |
+| Locale catalogs         | every locale has every key the base locale has; every key is used                                                                            | `i18n/locales`                                            | push                                                      |
+| CSS modules             | every class defined is used and every class used is defined                                                                                  | `css/usage`                                               | push                                                      |
+| Type-check membership   | every governed file belongs to a type-check project                                                                                          | `integrity/typecheck-membership`                          | commit                                                    |
+| Coverage of the tree    | files no preset claims are listed; strict mode fails on them                                                                                 | `doctor`; `[coverage] strict`                             | push                                                      |
+| Suppression census      | the count per form never rises without a baseline update                                                                                     | `integrity/suppressions`                                  | commit                                                    |
+| Install policy          | the package manager's release-age and scanner settings still hold; the installed tree equals the lockfile                                    | `dependencies/install-policy`                             | commit when a manifest or lockfile is staged; push        |
+| Shell headers           | every executable script's header still names its runtime and description                                                                     | `structure/shell-script-header`                           | commit                                                    |
+| Security allowlists     | every gitleaks baseline fingerprint, osv ignore, Semgrep rule ignore and CodeQL false positive carries a reason and names a path that exists | `secrets/gitleaks-baseline`, `integrity/allowlists-match` | commit                                                    |
 
 ## How a new pattern enters
 
