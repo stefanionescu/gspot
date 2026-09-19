@@ -1,124 +1,109 @@
 # Toolchain
 
-This document decides how gspot itself is installed and pinned, and how the tools gspot drives
-are pinned, obtained, verified, and upgraded. gspot pins; the ecosystem installs; `doctor`
-verifies.
+This document decides how gspot itself is installed and pinned, and how the tools gspot runs are
+pinned, installed, verified, and upgraded. gspot pins, the package managers install, and
+`doctor` verifies.
 
 ## Installing gspot
 
-gspot is one binary per platform, published to GitHub Releases and to npm as a launcher package
-over one package per platform (D-52). Three ways to get it, in the order the manual recommends
-them:
+gspot is one binary for each platform. It is published to GitHub Releases, and to npm as a
+launcher package over one package for each platform (D-52). Three ways to get it:
 
-| Way            | Command                                                                                                                                                                                                                                                            | For                                                                              |
-| -------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------- |
-| mise           | `mise use -g ubi:stefanionescu/gspot` for a global copy; `.config/mise/conf.d/gspot.toml` pins it per repository                                                                                                                                                   | any repository; the only way that needs no Node for a Python or Swift repository |
-| npm, bun, pnpm | `bunx gspot init`, `npx gspot init`; `devDependencies.gspot` pins it per repository. The `gspot` package is a launcher over per-platform packages (`@gspot/cli-<os>-<arch>`) listed as `optionalDependencies`, so the install downloads nothing and runs no script | JavaScript repositories, with nothing installed globally                         |
-| release asset  | download `gspot-<os>-<arch>` from the release page and put it on `PATH`                                                                                                                                                                                            | machines with neither                                                            |
+| Way                  | Command                                                                                         |
+| -------------------- | ----------------------------------------------------------------------------------------------- |
+| mise                 | `mise use -g github:stefanionescu/gspot` for a global copy                                      |
+| npm, pnpm, yarn, bun | `npx gspot init` or `bunx gspot init`; the `gspot` package is a launcher with no install script |
+| release asset        | download `gspot-<os>-<arch>` from the release page and put it on `PATH`                         |
 
-Homebrew, winget, and scoop packages follow v1. A `curl | sh` installer is never offered; the
-corpus bans the pattern and gspot obeys its own rules.
+A `curl | sh` installer is never offered, because the rule files ban the pattern.
 
 A global install exists to run `gspot init` in a repository that has nothing yet. After `init`,
-the repository pins its own version in two places: `.gspot/version` (one line, tracked, read by
-every command) and the runner surface (`[tools] gspot = "0.5.0"` in `.config/mise/conf.d/gspot.toml`
-through the `ubi:` backend, or `devDependencies.gspot` under a package manager). The hook and
-the runner tasks resolve that pinned version (`mise exec -- gspot`, `bunx gspot`), so two people
-on one repository run the same gspot whatever they installed globally.
+the repository pins its own version in two places. `.gspot/version` is one tracked line that
+every command reads. The runner holds the second: the mise file of gspot, or the `gspot` line of
+`devDependencies` (D-147). The hook and the tasks find that pinned version, so two people on one
+repository run the same gspot.
 
-A binary of another version than `.gspot/version` exits 2 on `check`, `apply` and the writing commands. It prints the two ways forward: install the pinned version (`mise install`, the package
-manager's install) or move the pin (`gspot upgrade --to <this version>`). `init`, `doctor`,
-`explain`, `why`, `--version` and `--help` run under any version. With runner `none` the pin is
-`.gspot/version` alone and the hook calls the absolute path `init` recorded.
-
-A newer gspot is announced in three places and nowhere else: the last line of `init`, `doctor`,
-and `upgrade --check`. `check`, `apply` and the hooks never look.
+A binary of another version than `.gspot/version` exits 2 on every command that reads the
+config. It prints the two ways forward: install the pinned version, or move the pin with
+`gspot upgrade --to <this version>`. `init`, `doctor`, `explain`, `list`, `--version`, and
+`--help` run under any version. A newer gspot is announced by `upgrade --dry-run` and nowhere
+else.
 
 ## Where gspot is published
 
-A person outside this repository installs gspot from one of three places, and all three carry the
-same version from one release run:
+All three places carry the same version from one release run:
 
-| Place          | Holds                                                                                    | Used by                                                          |
-| -------------- | ---------------------------------------------------------------------------------------- | ---------------------------------------------------------------- |
-| GitHub release | the five binaries and `checksums.txt`, each binary attested                              | `mise use ubi:stefanionescu/gspot`, the workflow without mise    |
-| npm            | `gspot`, one `@gspot/cli-<os>-<cpu>` package for each target, and `@gspot/eslint-plugin` | `bunx gspot`, `npx gspot`, the ESLint configuration gspot writes |
-| `gspot.dev`    | the manual, `schema/gspot.schema.json` and `schema/run-record.schema.json`               | the `#:schema` line of every `gspot.toml`, editors, SchemaStore  |
+| Place          | Holds                                                                                    | Used by                                                |
+| -------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------ |
+| GitHub release | the five binaries and `checksums.txt`, each binary attested                              | mise, and the CI job without mise                      |
+| npm            | `gspot`, one `@gspot/cli-<os>-<cpu>` package for each target, and `@gspot/eslint-plugin` | `npx gspot`, and `.gspot/package.json`                 |
+| `gspot.dev`    | the manual and `gspot.schema.json`                                                       | the `#:schema` line of every `gspot.toml`, and editors |
 
-Until a release exists, a repository on another machine or a CI runner cannot install gspot, and
-the ESLint configuration cannot resolve `@gspot/eslint-plugin`. On the machine that holds this
-repository, `GSPOT_BIN` names the source entry (`bun <path>/packages/cli/src/main.ts`), the hooks
-read it, and nothing needs publishing. The acceptance runs use that.
+Every published package ships `LICENSE.md` and `NOTICE.md`. The release fails before it
+publishes anything when one binary or one grammar is absent.
 
 The first release needs these, in this order:
 
-1. The npm organization `gspot` and the package name `gspot`.
-2. A public repository, or a token that `ubi` and the workflow can read.
+1. The npm organization `gspot` and the package name `gspot`, owned by this project.
+2. A public repository.
 3. Trusted publishing set up for each package.
-4. The domain serving `docs/dist`.
-5. The hardening phase of [13-roadmap.md](13-roadmap.md) closed.
+4. The domain that serves the manual.
+5. Every row of [18-gaps.md](18-gaps.md) closed, and the Windows job green.
 
 ## Pins
 
-Every preset lists its tools with one version and the name under each installer:
+Every preset lists its tools with one version and the name under each installer. An installer
+that numbers differently carries its own version:
 
 ```toml
 [[tools]]
-name    = "shellcheck"
-version = "0.11.0"
-mise    = "shellcheck"
-brew    = "shellcheck"
-apt     = "shellcheck"
-github  = "koalaman/shellcheck"
+name            = "shellcheck"
+version         = "0.11.0"
+mise            = "shellcheck"
+github          = "koalaman/shellcheck"
+version_command = ["shellcheck", "--version"]
 
 [[tools]]
-name    = "eslint-plugin-unicorn"
-version = "74.0.0"
-npm     = "eslint-plugin-unicorn"
-floor   = "63.0.0"                  # doctor accepts this or newer
+name    = "taplo"
+version = "0.10.0"
+mise    = "taplo"
+npm     = { name = "@taplo/cli", version = "0.7.0" }
 
 [[tools]]
-name    = "ruff"
-version = "0.14.1"
-pypi    = "ruff"
-mise    = "ruff"
+name    = "eslint-plugin-regexp"
+kind    = "library"
+version = "3.3.0"
+npm     = "eslint-plugin-regexp"
 
 [[tools]]
 name     = "xcodebuild"
 provider = "host"                   # present or the check fails; gspot cannot install it
 ```
 
-One gspot version pins one version of every tool. Upgrading gspot moves the pins together, so two
-repositories on the same gspot version run the same tool versions.
+One gspot version pins one version of every tool, so two repositories on one gspot version run
+the same tools. ESLint is pinned at the newest major that every shipped plugin supports (D-142).
+A release test asks each registry for every pin, reads the ESLint range of every plugin, and
+fails a pin below what a reference repository runs.
 
 ## How tools arrive
 
-gspot downloads nothing. It writes pins into the surface the repository already uses and tells
-`doctor` what to verify.
+| Kind of tool                      | Where it installs                                                                             |
+| --------------------------------- | --------------------------------------------------------------------------------------------- |
+| a binary mise can install         | `.mise/conf.d/gspot-tools.toml`, under the mise runner                                        |
+| an npm tool or library            | `.gspot/node_modules`, from `.gspot/package.json`, with the package manager of the repository |
+| a Python tool                     | mise, through its `pipx` backend                                                              |
+| a host tool, such as `xcodebuild` | nowhere; `doctor` reports whether it is present                                               |
+| any tool, with no mise            | nowhere; `doctor` prints the install command of the platform                                  |
 
-| Ecosystem                           | gspot writes                                                                                                                                                                         | Person runs                   |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ----------------------------- |
-| mise (recommended)                  | `.config/mise/conf.d/gspot.toml` `[tools]` with every pin, using `npm:`, `pipx:`, `ubi:` or `github:` backends where mise has no core plugin                                         | `mise install`                |
-| npm, bun, pnpm                      | `devDependencies` in `package.json` for npm tools, after the yes in the plan; written and installed through `nypm`, which detects the manager from the lockfile and `packageManager` | the package manager's install |
-| uv                                  | `[dependency-groups] gspot = [...]` in `pyproject.toml` for Python tools, after the yes                                                                                              | `uv sync --group gspot`       |
-| Homebrew, apt, winget, scoop, cargo | nothing; `doctor` prints the install command for the platform it runs on                                                                                                             | the command                   |
-| host                                | nothing; `doctor` reports presence                                                                                                                                                   | install Xcode, Docker         |
+The lint tools of gspot are tools, not dependencies of the repository (D-145). gspot never writes
+one into `package.json`, and the ESLint of the developer, its config, and its plugins stay as
+they are. The generated ESLint config sits in `.gspot/`, so its imports resolve there. The type
+check keeps the TypeScript of the repository, because `tsc` answers for the build the developer
+ships. An install hint names Homebrew only for a tool with no pin, because Homebrew installs the
+current version alone.
 
-Platform notes: every tool in the presets has a Windows build except `plutil`, `xcodebuild`,
-`xcstringstool`, `swiftlint`, `swiftformat` and `periphery`, which are macOS-only and whose checks
-skip elsewhere as platform skips. `shellcheck`, `shfmt`, `typos`, `ruff`, `basedpyright`,
-`gitleaks`, `osv-scanner`, `hadolint`, `semgrep`, `vale`, `lychee`, `taplo`, `actionlint` and the
-npm tools run natively on Windows.
-
-mise is recommended and proposed first because it handles every backend from one file, and that includes npm and pipx packages. A Python repository then needs no `package.json` to run ESLint over its scripts. Without mise, gspot writes to the runner the repository has and reports the rest.
-
-The ESLint plugins the generated config imports are npm tools. In a JavaScript repository they
-are devDependencies. In a repository without one, mise installs them under `npm:` and gspot
-renders the config to import them from the mise install path. Without mise, JavaScript checks in a
-non-JavaScript repository report `missing` with the mise hint.
-
-`@gspot/eslint-plugin` ships as an npm package from the gspot repository, pinned to the gspot
-version, and arrives the same way.
+Every tool in the presets has a Windows build except `plutil`, `xcodebuild`, `xcstringstool`,
+`swiftlint`, `swiftformat`, and `periphery`. Their checks are platform skips elsewhere.
 
 ## One tool per job
 
@@ -151,34 +136,34 @@ Kept with a stated reason, where overlap looked possible:
 
 ## Verification
 
-`gspot doctor` locates every tool the selection needs, in this order: the repository's own
-`node_modules/.bin` and `.venv/bin`, mise's shims, `PATH`. It runs the tool's version command
-and compares:
+`gspot doctor` finds every tool the selection needs, in this order: `.gspot/node_modules/.bin`,
+the `.venv/bin` of the scope, mise, and `PATH`. It never reads the `node_modules` of the
+repository for a lint tool. It runs the version command the manifest names and compares:
 
 | State    | Meaning                                                 | Effect on `check`                                    |
 | -------- | ------------------------------------------------------- | ---------------------------------------------------- |
 | ok       | present at the pinned version, or at or above the floor | runs                                                 |
 | outdated | present below the floor                                 | fails the checks that need it                        |
-| newer    | present above the pin                                   | runs; `doctor` notes it                              |
+| newer    | present above the pin                                   | runs, and `doctor` notes it                          |
 | missing  | not found                                               | fails the checks that need it, with the install hint |
 
-`check` runs the same probe for the tools its selected checks need and caches the result for the
-run.
+`check` runs the same probe for the tools its checks need, once for a run.
 
 ## Upgrade
 
-`gspot upgrade --check` compares what is on disk with what this binary renders and pins (D-77):
+`gspot upgrade --dry-run` compares what is on disk with what this binary writes and pins:
 
 ```text
 gspot 0.4.0 -> 0.5.0
 
 rules
-  + @typescript-eslint/no-unnecessary-condition  (.gspot/eslint.config.mjs)
-  - gspot/no-imports-after-statements  (.gspot/eslint.config.mjs)
+  + @typescript-eslint/no-unnecessary-condition   typescript/eslint
+  + closure_body_length                           swift/swiftlint
+  - gspot/no-imports-after-statements             typescript/eslint
 
 tools
   ~ eslint  9.38.0 -> 9.41.2
-  + ast-grep  0.45.3  new, required by structure
+  + ast-grep  0.45.3  new, needed by structure
 
 generated configuration
   ~ .gspot/eslint.config.mjs  14 lines changed
@@ -186,39 +171,29 @@ generated configuration
 
 rule files
   ~ .gspot/rules/general/agent/WORKING.md  12 lines changed
-  + .gspot/rules/general/agent/GIT.md  new
 
 presets available, not selected
-  vitest  vitest in package.json
-
-extra keys that now have a slot
-  tools.eslint.globals  move it up
+  vitest  vitest in package.json          gspot add vitest
 
 action on upgrade
-  move the pin to 0.5.0, re-render .gspot/, baseline what arrives, run the install step
+  move the pin to 0.5.0, write .gspot/ again, install the tools, run and hold what the new checks find
 ```
 
-The rules section reads the rule names out of the configuration diffs; the tools section reads
-the pins the runner surface holds on disk (nothing under runner `none`). `gspot upgrade` moves
-the pin in `.gspot/version` and the runner surface, re-renders, and writes baselines for rules
-that arrive with findings. It runs the runner's install step so the bumped tools are present
-(`--no-install` skips it and prints the command), and prints the report. It never edits
-`gspot.toml` and never commits. `--to` names a version other than the running binary's: the
-command then says which binary to install and run.
-
-A setting renamed or removed between versions fails to load with the old name, the new name and
-the release note. Nothing migrates `gspot.toml` automatically.
+The rules section compares the rule lists of two configs as data, for every tool whose config
+lists rules. `gspot upgrade` moves the pin, runs `apply`, installs the tools, and takes the
+widening step for checks that are new or whose config changed (D-143). It never edits
+`gspot.toml` and never commits. A setting that a version removes is an unknown key, and the
+message names the keys that exist (D-134).
 
 ## Rollback
 
-`gspot upgrade --to 0.4.0` re-renders from the older version. Because generated files, baselines
-and rule files are tracked, `git revert` of the upgrade commit followed by `gspot apply` also
-restores the previous state. A baseline written by the newer version for a rule the older one
-lacks is reported by `apply --check` and removed by `apply --lower-baselines`.
+`gspot upgrade --to 0.4.0` writes the files of the older version. Generated files, the baseline
+file, and rule files are tracked, so `git revert` of the upgrade commit followed by `gspot apply`
+also brings the earlier state back.
 
 ## Network
 
-`upgrade --check` and `upgrade` reach the network to read the target version's presets.
-`doctor` and the last line of `init` reach it once to learn whether a newer gspot exists, and
-only when run by a person. `check`, `apply` and the hooks never do. A `network` requirement on a check is the check's own
-(external links, advisory databases) and puts it at `push` or `manual`.
+`upgrade` reaches the network to find a newer gspot and to read it. The install of tools reaches
+the registries. `apply` downloads the Vale packages at the level `all` alone. `check` and the
+hooks never reach the network, except for a check that declares `network`, which sits at `push`
+or `manual`.
