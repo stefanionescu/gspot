@@ -1,0 +1,11 @@
+    {
+        files: CODE,
+        plugins: { expo: expoPlugin },
+        rules: {
+            // The bundler replaces process.env.EXPO_PUBLIC_NAME where it is written out in full, and nowhere else.
+            'expo/no-env-var-destructuring': 'error',
+            'expo/no-dynamic-env-var': 'error',
+            'expo/use-dom-exports': 'error',
+            'expo/prefer-box-shadow': 'error',
+        },
+    },

@@ -21,19 +21,20 @@ One page per preset. Each page states what the preset detects and claims, the to
 
 ## Frameworks, platforms, databases
 
-| Preset     | Detects                  | Adds                                                                                                             | Page                           |
-| ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------ |
-| nextjs     | `next`                   | eslint-config-next, boundaries, server-only, client environment, route segments, next config, CSS usage, locales | [nextjs.md](nextjs.md)         |
-| react      | `react`                  | the hooks and compiler rules as errors, keys, new-tab links, markup from a string                                | [react.md](react.md)           |
-| vue        | `vue`, `.vue`            | the Vue plugin over component files, every rule an error                                                         | [vue.md](vue.md)               |
-| svelte     | `svelte`, `.svelte`      | the Svelte plugin over component files, every rule an error                                                      | [svelte.md](svelte.md)         |
-| nestjs     | `@nestjs/core`           | decorator compiler options, controllers that reach data through a service, no circular modules                   | [nestjs.md](nestjs.md)         |
-| django     | `manage.py`, `django`    | Ruff DJ, django-upgrade, migrations named, reversible and current, settings safe to deploy                       | [django.md](django.md)         |
-| express    | `express`                | Semgrep API pack, OpenAPI lint and freshness, route tests                                                        | [express.md](express.md)       |
-| fastapi    | `fastapi`                | Ruff FAST, OpenAPI freshness, blocking IO in async                                                               | [fastapi.md](fastapi.md)       |
-| supabase   | `supabase/config.toml`   | Deno lint, migration names, types freshness, storage policies, service-role containment, Semgrep pack            | [supabase.md](supabase.md)     |
-| postgres   | Postgres SQL             | squawk, migration docs, immutability, RLS, grants, search path, foreign-key indexes                              | [postgres.md](postgres.md)     |
-| cloudflare | `wrangler.*`, `_headers` | config schemas, headers and redirects syntax, security headers, env types                                        | [cloudflare.md](cloudflare.md) |
+| Preset       | Detects                  | Adds                                                                                                             | Page                               |
+| ------------ | ------------------------ | ---------------------------------------------------------------------------------------------------------------- | ---------------------------------- |
+| nextjs       | `next`                   | eslint-config-next, boundaries, server-only, client environment, route segments, next config, CSS usage, locales | [nextjs.md](nextjs.md)             |
+| react        | `react`                  | the hooks and compiler rules as errors, keys, new-tab links, markup from a string                                | [react.md](react.md)               |
+| vue          | `vue`, `.vue`            | the Vue plugin over component files, every rule an error                                                         | [vue.md](vue.md)                   |
+| svelte       | `svelte`, `.svelte`      | the Svelte plugin over component files, every rule an error                                                      | [svelte.md](svelte.md)             |
+| nestjs       | `@nestjs/core`           | decorator compiler options, controllers that reach data through a service, no circular modules                   | [nestjs.md](nestjs.md)             |
+| django       | `manage.py`, `django`    | Ruff DJ, django-upgrade, migrations named, reversible and current, settings safe to deploy                       | [django.md](django.md)             |
+| react-native | `react-native`, `expo`   | the Expo environment rules, keyed lists, styles out of the render, no secret in AsyncStorage                     | [react-native.md](react-native.md) |
+| express      | `express`                | Semgrep API pack, OpenAPI lint and freshness, route tests                                                        | [express.md](express.md)           |
+| fastapi      | `fastapi`                | Ruff FAST, OpenAPI freshness, blocking IO in async                                                               | [fastapi.md](fastapi.md)           |
+| supabase     | `supabase/config.toml`   | Deno lint, migration names, types freshness, storage policies, service-role containment, Semgrep pack            | [supabase.md](supabase.md)         |
+| postgres     | Postgres SQL             | squawk, migration docs, immutability, RLS, grants, search path, foreign-key indexes                              | [postgres.md](postgres.md)         |
+| cloudflare   | `wrangler.*`, `_headers` | config schemas, headers and redirects syntax, security headers, env types                                        | [cloudflare.md](cloudflare.md)     |
 
 ## Tools
 

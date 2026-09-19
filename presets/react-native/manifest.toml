@@ -1,0 +1,32 @@
+[preset]
+id = "react-native"
+kind = "framework"
+title = "React Native"
+requires = ["react"]
+recommends = ["typescript", "vitest"]
+description = "A React Native or Expo app: the Expo rules for environment variables, and lists that render through FlatList with keys. Styles sit outside the render, touch goes through Pressable, and no secret goes into AsyncStorage."
+
+[detect]
+dependencies = ["react-native", "expo"]
+
+[claims]
+filenames = ["app.json", "app.config.js", "app.config.ts", "metro.config.js", "eas.json"]
+natures = ["source"]
+
+[[tools]]
+name = "eslint-plugin-expo"
+kind = "library"
+version = "1.1.0"
+npm = "eslint-plugin-expo"
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/eslint.config.mjs"
+fragment = true
+
+[rule_files]
+framework = ["framework/react-native/REACT-NATIVE.md"]
+
+[required_rules]
+tsx = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]
+jsx = ["expo/no-env-var-destructuring", "expo/no-dynamic-env-var"]

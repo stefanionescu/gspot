@@ -59,6 +59,7 @@
         "typescript",
         "typescript-eslint",
         "v8r",
+        "eslint-plugin-expo",
         "@nestjs/common",
         "@nestjs/core",
         "reflect-metadata",

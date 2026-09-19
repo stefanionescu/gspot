@@ -19,8 +19,9 @@ that closes it.
 
 ## What is not built
 
-The Phase 7 presets, the deeper unit tests, and the manual rewrite
-(G-10). The acceptance runs over yap-text-inference, yap-landing, and slopshop are owed.
+The deeper unit tests and the manual rewrite (G-10). The acceptance runs over yap-text-inference,
+yap-landing, and slopshop end with no check in error; a run on a public repository of each
+Phase 7 shape is owed.
 
 gspot runs on yap-swift-app: branch `chore/gspot` of that repository holds the migration (D-97),
 and [17-migration.md](17-migration.md) lists the defects it exposed. Each one is fixed with a test.
@@ -57,8 +58,8 @@ repository.
 
 ## Presets that do not ship
 
-Every preset with a file under [presets/](presets/README.md) ships: 51 of them. One Phase 7
-preset has no file there yet: `react-native`.
+Every preset with a file under [presets/](presets/README.md) ships: 52 of them, the nine Phase 7
+presets among them.
 
 ## Order of work
 
