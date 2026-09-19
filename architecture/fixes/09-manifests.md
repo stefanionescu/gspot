@@ -94,8 +94,7 @@ fourteen words written by hand.
 `run/command-parts.ts`, `run/broken-tool.ts`, `platform/tool-probe.ts`,
 `platform/install-hints.ts`, `output/explain.ts`, `prose/vale.ts`, `src/rules/terms.ts`.
 
-**Logic.** A check takes `cached = false`. A tool takes `version_command`, `baseline_file`,
-`suppressions_flag`, `crash_pattern`, and `rule_page`, an address with `{rule}` in it. `explain`
+**Logic.** A check takes `cached = false`. A tool takes `version_command`, `crash_pattern`, and `rule_page`, an address with `{rule}` in it. `explain`
 prints that address for any tool.
 
 A missing tool message comes from `install-hints.ts`, which already

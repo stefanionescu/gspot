@@ -24,7 +24,7 @@ the commit that closes its row.
 - [02-takeover.md](02-takeover.md): what `init` reads, what it proposes, and what it carries.
 - [03-hooks.md](03-hooks.md): the hook of the repository, the command names of the team, and lint tables in a shared manifest.
 - [04-speed.md](04-speed.md): cache keys, one parse for a scope, one session for `init`, and an incremental Swift build.
-- [05-written-files.md](05-written-files.md): the local skip, the mark, and what `apply` may delete.
+- [05-written-files.md](05-written-files.md): the end of the local skip file, the mark, and what `apply` may delete.
 - [06-config.md](06-config.md): the text of `gspot.toml`, one word for one idea, and scopes.
 - [07-levels.md](07-levels.md): the level key, templates that render by level, and what `recommended` holds in each preset.
 - [08-frameworks.md](08-frameworks.md): lint tools under `.gspot/`, the ESLint pin, shared rules in component files, every linter of a framework, and naming rules in the framework preset.

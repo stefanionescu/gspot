@@ -224,8 +224,8 @@ line to the setup entry the repository already has, such as a `setup` task or a 
 script (D-115). A clone that is not set up says so: `gspot check`, `gspot doctor`, and a missing
 tool each print `Run: gspot install`. `check` never installs by itself.
 
-A missing tool never blocks the setup (D-172). `install` installs what it is able to, lists the
-rest with the command for each, and exits 1. The npm tools install with the package manager of
+A missing tool never blocks the setup (D-172). `install` runs every step, lists what is left
+with the command for each, and exits 1 when a tool gspot installs itself did not install. The npm tools install with the package manager of
 the repository, and with bun or npm where the repository has none (D-171).
 
 ## `check`

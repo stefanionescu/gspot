@@ -493,9 +493,11 @@ system software unasked.
 
 **Logic.** `install-tools.ts` picks the package manager in the order of D-171: the root, the
 first JavaScript project, bun or npm on the machine, then bun from the mise file of gspot.
-`emit/mise.ts` pins bun only in that last case, and pins uv where a Python tool is selected. Each
-step of the install runs even when an earlier one failed. The command ends with one list of what
-is left, each entry with its command, and exits 1 when the list is not empty. `init` exits 0
+`emit/mise.ts` pins bun only in that last case, and pins uv where a Python tool is selected.
+
+Each step of the install runs even when an earlier one failed. The command ends with one list of what
+is left, each entry with its command. It exits 1 when a tool gspot installs itself is on the
+list, and a host tool such as Xcode leaves the exit code alone. `init` exits 0
 once the config is written, and prints the same list.
 
 **What goes.** The npm branch at the end of the package manager choice, and any `throw` in

@@ -7,7 +7,7 @@ An old key is an unknown key, and an old flag is an unknown flag.
 
 K-204 closes before this step starts, so every deletion runs under a working CI (K-282). A
 deletion whose replacement lives in a later fix file moves into that file: `apply --check` goes
-with `integrity/generated-drift` (K-246), `apply --lower-baselines` with `gspot baseline` (K-46),
+with `integrity/generated-drift` (K-246), `apply --lower-baselines` with the baseline itself (K-290),
 and `doctor --settings` with `gspot list` (K-62).
 
 The order inside the step: the four presets first, because they are the largest cut. Then the
@@ -55,11 +55,9 @@ Closes D-129 to D-133.
 **What is wrong.** Three commands answer a question another command answers: `why`, `declare`,
 and `profile check`. Several flags are parsed and used by no test and no guide.
 
-**Target.** Sixteen commands: `init`, `check`, `apply`, `baseline`, `list`, `explain`, `doctor`,
-`ignore`, `set`, `add`, `remove`, `allow`, `upgrade`, `uninstall`, `profile save`, and
-`completion`. Later steps remove `allow`, rename `profile save` to `export`, and add `install`
-(D-156, D-160, D-161), which leaves sixteen. This step deletes. The new commands `list` and `baseline` are built in rows 16
-and 6, and `install` in row 12.
+**Target.** The fifteen commands of [02-cli.md](../02-cli.md). This step deletes `why`,
+`declare`, and `profile check`. Later steps remove `allow`, rename `profile save` to `export`,
+and add `install` and `list` (D-156, D-160, D-161).
 
 **Files.** Deleted: `commands/why.ts`, `commands/declare.ts`, `output/why.ts`,
 `policy/declare-command.ts`, and their unit tests. `src/profile/` keeps `read.ts`, `save.ts`, and
@@ -70,8 +68,8 @@ and 6, and `install` in row 12.
 `gspot set vendored <glob>` append the entries `declare` wrote. `policy/allow-command.ts` keeps the list `typos`
 and loses the other six. `doctor` calls no network, so `--offline` has no meaning.
 
-`apply` loses `--check` and `--lower-baselines`. The six edit
-commands lose `--dry-run`, and `upgrade --check` becomes `upgrade --dry-run` (D-129).
+`apply` loses `--check` and `--lower-baselines`. `ignore` and `set`
+lose `--dry-run`, `add` and `remove` keep it (D-163), and `upgrade --check` becomes `upgrade --dry-run` (D-129).
 `uninstall` loses `--keep-hooks`. `check --at` becomes `check --stage`, and `--keep-format` and
 `--shipped-format` become `--format keep` and `--format shipped`.
 

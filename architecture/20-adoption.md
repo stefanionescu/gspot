@@ -126,9 +126,7 @@ one fix run clears.
 
 - gspot has no baseline, and init runs no check. Its last lines name `gspot check --fix`, and the
   developer runs it when they want.
-- `gspot.local.toml` keeps one purpose: a tool that cannot run on this machine. A skip of a
-  check whose tool is present is refused.
-- Every summary line counts the checks a local skip removed.
+- `gspot.local.toml` is gone, and no file skips a check on one machine (D-173).
 
 ## A-6 One baseline file for each rule
 

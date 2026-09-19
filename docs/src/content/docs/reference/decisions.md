@@ -136,8 +136,8 @@ Replaced by D-131.
 
 ## D-24 No environment variables turn checks off
 
-Skips live in `gspot.local.toml` and print. Rejected: sixteen `SKIP_*` variables, one of which
-turned off four scanners at once.
+`--skip` skips one check for one run and prints, and no file holds a skip (D-173). Rejected:
+sixteen `SKIP_*` variables, one of which turned off four scanners at once.
 
 ## D-25 The hook finds gspot through the runner
 
@@ -743,8 +743,8 @@ Replaced by D-122.
 ## D-103 init offers the fix run, and no local file hides a failure
 
 `gspot init` runs no check (D-165). Its last lines name `gspot check` and `gspot check --fix`, and
-the developer runs them when they want. `gspot.local.toml` skips a check only when its tool
-cannot run on this machine, and every summary line counts the local skips.
+the developer runs them when they want. No file skips a check on one
+machine (D-173).
 
 ## D-104 One baseline file, and a rise prints what rose
 
@@ -1457,6 +1457,10 @@ and the four hooks git-lfs installs. The rule is that gspot adds one line and ta
 | hooks under `.git/hooks/`, in this clone alone             | the end of that hook file, as one managed block        |
 | no hooks                                                   | a new `.git/hooks/pre-commit` and `pre-push`           |
 
+New hooks go under `.git/hooks/`, which is where `pre-commit install` and `lefthook install`
+write theirs. A tracked folder such as `.githooks/` saves no step, because `core.hooksPath` is a
+setting of one clone, and every clone sets it again. It also adds a folder to the repository.
+
 gspot never sets `core.hooksPath`, and the folder `.gspot/hooks/` is gone. The first two rows
 are tracked, so `init` writes them once. The last two live in one clone, so `gspot install`
 writes them in each clone, as `lefthook install` and `pre-commit install` do. `gspot uninstall`
@@ -1467,7 +1471,10 @@ removes its block and leaves the rest of the file. This amends D-101 and D-115.
 Some checks read a whole project: a type checker, a dead code tool, an import graph. With no
 baseline (D-165), such a check reports every old problem of the project on every push, and the
 developer passes the hook every time. In a run with `--staged` or `--changed`, a
-whole-project check still reads the whole project, because it has to.
+whole-project check still reads the whole project, because it has to. That is how these tools
+work, and no flag of theirs narrows it: whether an export is unused depends on every file that
+may import it. Such checks sit in the push stage, run for the project of a changed file alone,
+and are cached.
 
 gspot then keeps the
 findings in the files the change touches. The exit code comes from those alone. One line counts
@@ -1491,7 +1498,6 @@ none. Where the file exists, the block goes at the end, and no other line is rea
 
 | Line                           | Why git never tracks it                |
 | ------------------------------ | -------------------------------------- |
-| `gspot.local.toml`             | the skips of one machine               |
 | `.gspot/cache/`                | verdicts of past runs                  |
 | `.gspot/node_modules/`         | the installed npm tools                |
 | `.gspot/.venv/`                | the installed Python tools             |
@@ -1532,8 +1538,32 @@ software unasked. pre-commit, lefthook, and mise work the same way.
 | uv                                   | mise installs it from the mise file of gspot; without mise it is `missing`     |
 | a host tool, such as Xcode or Docker | the checks that need it print `missing` with the hint of the platform          |
 
-`gspot install` installs everything it is able to. It then lists what is left, each with its
-command, and exits 1. `init` has written the config by then and exits 0. `gspot check` runs
-every check whose tool exists. A check whose tool is absent prints `missing` and fails the run,
-because a silent skip gives two verdicts on two machines. `gspot.local.toml` skips a tool that
-one machine lacks, and the skip prints.
+`gspot install` runs every step, and a failed step does not stop the next. It ends with one
+list of what is left, each entry with its command. It exits 1 when a tool gspot installs itself
+did not install. A host tool the developer installs, such as Xcode or Docker, is listed and
+leaves the exit code alone. Running it again installs only what is left.
+
+The install is not all or nothing. Three installers do the work, and a rollback deletes thirty
+good tools because one download failed. `mise install` and `npm install` behave the same way.
+`gspot doctor` shows the state of every tool at any time, so no clone is in an unknown state.
+
+`init` has written the config by then and exits 0. `gspot check` runs every check whose tool
+exists. A check whose tool is absent prints `missing` and fails the run, because a silent skip
+gives two verdicts on two machines.
+
+## D-173 No file skips a check on one machine
+
+`gspot.local.toml` is gone. It held one list, the checks to skip on one machine, and in the app
+it hid eight failing checks from one developer while every other machine failed (A-5). What it
+was for is covered without it:
+
+| The case                                   | What covers it                                        |
+| ------------------------------------------ | ----------------------------------------------------- |
+| a tool that runs on another platform alone | the manifest names the platform, and the check skips  |
+| a tool this machine lacks                  | the check runs only when a file it claims changes     |
+| one run past one check                     | `gspot check --skip <check>`                          |
+| one commit or push past the hook           | `git commit --no-verify`, and the CI job still judges |
+| a check the team does not want             | `gspot ignore <check>`, tracked, for everybody        |
+
+One config file is what a developer expects, and an untracked second one gives two machines two
+verdicts. This replaces the local file of D-24 and amends D-103.

@@ -152,7 +152,7 @@ exactly one fix file fails it.
 
 [05-written-files.md](fixes/05-written-files.md)
 
-- [ ] A-5: End `init` by offering the fix run, and refuse a local skip of a check whose tool is present (D-103).
+- [ ] A-5: End `init` by naming the fix run, and delete `gspot.local.toml` with everything that reads it (D-173).
 - [ ] K-72: Add one managed block to `.gitattributes`: `.gspot/** linguist-generated`.
 - [ ] K-118: Check in the redo of the app whether `apply` spares the hand-made gitleaks baseline, and make `apply` delete only files it wrote.
 - [ ] K-296: Build the `.gitignore` block from the manifests, and create the file where none exists (D-170).

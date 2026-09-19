@@ -206,8 +206,8 @@ What this repository taught, and the general rule each lesson landed as:
   disruptive thing `init` can do unasked (D-58).
 - **Product copy is not documentation**, and needs no mechanism: the ordinary path ignore on the
   prose check does it.
-- **A cut tool's baseline re-enters through the replacement tool's own baseline.** The Lizard
-  allowlist becomes ESLint suppressions, and nothing is lost.
+- **The allowlist of a cut tool is not carried.** gspot records no old finding (D-165), so the
+  Lizard allowlist goes with Lizard.
 - **Nothing else changed.** Large media, lint-only manifests, wrapper scripts, license globs and
   duplicate pins each met an existing rule.
 
@@ -297,15 +297,15 @@ the repository holds this for linting:
 
 - `gspot.toml`: the config. Every exception in it has a reason.
 - `.gspot/`: generated and tracked, never edited. It holds the configuration of each tool, the
-  lint tools, the one baseline file, the rule files, and the version pin.
+  lint tools, the rule files, and the version pin.
 - `.editorconfig`, and a root pointer only for a tool with an include form.
 - `.mise/conf.d/gspot-tools.toml`, or the one launcher line of `package.json`.
 - One managed block each in `CLAUDE.md`, `AGENTS.md`, `.gitignore`, and `.gitattributes`.
 - The gspot line in the hook, or in the task the hook calls.
 
 `mise.toml` pins runtimes and product tools only. The tasks the team types keep their names.
-Every rule the old folder enforced still runs, at the level the repository chose, behind a
-baseline that only falls. Changing anything is one `gspot set` or `gspot ignore` line, and
+Every rule the old folder enforced still runs, at the level the repository chose, over the
+files a change touches. Changing anything is one `gspot set` or `gspot ignore` line, and
 `gspot explain` says what every finding means and what to do.
 
 ## What the yap-swift-app migration waits for
@@ -355,7 +355,6 @@ the Adoption phase of [13-roadmap.md](13-roadmap.md) ends with the branch redone
 Three things on the branch are workarounds and leave with that redo:
 
 - the `file:../gspot/packages/eslint-plugin` link in `package.json`;
-- the untracked `gspot.local.toml` that skips eight checks on one machine;
 - the figure "0 fail" in `GSPOT-MIGRATION.md`, which comes from a run with those skips.
 
 ## How the migration runs
@@ -364,7 +363,7 @@ Three things on the branch are workarounds and leave with that redo:
     - Move anything in the lint folder that is not linting (a deploy script, a generator) out of it now, because the folder is deleted whole in step 3.
 1. `gspot init` in a branch. Read the plan: the delete, carry, change and `no longer runs`
    sections. Say yes.
-2. `gspot check`. Everything passes through baselines; read the counts.
+2. `gspot check`. Read the counts. Nothing records them, and the hooks judge changed files alone.
 3. Delete what `no longer runs` listed: the lint folder, the old hooks, the lint-only tasks and
    workspace packages, the duplicate pins `doctor` names. `gspot check` again.
 4. Rewrite or remove every `carried at init` reason in `gspot.toml` while the old file is one
@@ -389,20 +388,19 @@ What the migration does:
 - Commits in the six steps above, so each step is one diff.
 
 What the migration does not do: it fixes no finding in the application code. The app is not the
-subject of this work. Every finding that may enter a baseline does, and the count is written down.
-Layout, syntax, schema, coverage, and build findings never enter one. The report lists them with
-their counts and the command that clears them, and an untracked `gspot.local.toml` skips those
-checks on the machine that makes the migration commits.
+subject of this work. gspot records no old finding (D-165), so the report lists every check
+with its count and the command that clears it. The migration commits pass the hook with
+`--no-verify` where the app code fails a check, and the report says so.
 
 What the migration delivers:
 
-| Deliverable                                                                                                                                                | Where                                                      |
-| ---------------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
-| The branch `chore/gspot` with the six commits                                                                                                              | yap-swift-app                                              |
-| A findings report: every check, its status, and the count that entered a baseline. It also lists the checks this machine cannot run, each with the reason. | `GSPOT-MIGRATION.md` at the root of the app, on the branch |
-| Every gspot defect the run exposes, fixed in gspot with a planted test, or listed as a gap                                                                 | this repository, [18-gaps.md](18-gaps.md)                  |
-| Proof the old setup is gone: `git ls-files quality .qlty .githooks LINTING.md` prints nothing, and `mise tasks` lists no lint task outside `gspot:*`       | the report                                                 |
-| Proof the hooks run: a commit on the branch runs gspot through the hook the app already has                                                                | the report                                                 |
+| Deliverable                                                                                                                                          | Where                                                      |
+| ---------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------------------- |
+| The branch `chore/gspot` with the six commits                                                                                                        | yap-swift-app                                              |
+| A findings report: every check, its status, and its count of findings. It also lists the checks this machine cannot run, each with the reason.       | `GSPOT-MIGRATION.md` at the root of the app, on the branch |
+| Every gspot defect the run exposes, fixed in gspot with a planted test, or listed as a gap                                                           | this repository, [18-gaps.md](18-gaps.md)                  |
+| Proof the old setup is gone: `git ls-files quality .qlty .githooks LINTING.md` prints nothing, and `mise tasks` lists no lint task outside `gspot:*` | the report                                                 |
+| Proof the hooks run: a commit on the branch runs gspot through the hook the app already has                                                          | the report                                                 |
 
 The run is also the hardest test gspot has. Four things count as a gspot defect: a check that
 crashes, a wrong claim, a tool that cannot be found, and a finding on the wrong line. Each one is
@@ -412,13 +410,11 @@ fixed here before the migration continues.
 
 The install went through, and the first days of use exposed these. Each has a test.
 
-| Defect                                                                                                         | Fix                                                                                         |
-| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| Lowering the baselines after a run of one check removed 107 baseline files                                     | Lowering reads the recorded verdicts, and leaves a check the run did not read in full alone |
-| A baseline was compared scope by scope against a count taken over the whole repository                         | The findings of every scope are added up before the comparison                              |
-| `add zod` ran the whole gate, the Swift analyzer included, and then held nothing                               | `add` runs the checks the preset brings or changes, and installs what it pins               |
-| `doctor` called ansible-lint outdated, because color codes in its version read as a version                    | The probe asks for no color and strips the codes                                            |
-| `doctor` called license-checker-rseidelsohn 5.0.1 outdated, because it prints 4.4.2 about itself               | An npm tool is the version its package holds                                                |
-| `doctor` called `@vitest/coverage-v8` missing in an app that uses istanbul                                     | The repository owns its coverage provider, and names its configuration in a setting         |
-| Spelling held 4,404 findings: the old typos file named no locale, which accepts British and American spellings | Takeover carries the locale, and `en` for a file that names none                            |
-| typos read the Xcode project file, because it forgets its exclude list for a file named on the command line    | Both typos commands pass `--force-exclude`                                                  |
+| Defect                                                                                                         | Fix                                                                                 |
+| -------------------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------- |
+| `add zod` ran the whole gate, the Swift analyzer included, and then held nothing                               | `add` runs the checks the preset brings or changes, and installs what it pins       |
+| `doctor` called ansible-lint outdated, because color codes in its version read as a version                    | The probe asks for no color and strips the codes                                    |
+| `doctor` called license-checker-rseidelsohn 5.0.1 outdated, because it prints 4.4.2 about itself               | An npm tool is the version its package holds                                        |
+| `doctor` called `@vitest/coverage-v8` missing in an app that uses istanbul                                     | The repository owns its coverage provider, and names its configuration in a setting |
+| Spelling held 4,404 findings: the old typos file named no locale, which accepts British and American spellings | Takeover carries the locale, and `en` for a file that names none                    |
+| typos read the Xcode project file, because it forgets its exclude list for a file named on the command line    | Both typos commands pass `--force-exclude`                                          |

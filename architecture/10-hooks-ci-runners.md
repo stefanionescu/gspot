@@ -120,8 +120,8 @@ On Windows, git runs
 hooks through the Bash that Git for Windows installs, and gspot marks them executable through
 `git update-index --chmod=+x`.
 
-Skips: `gspot.local.toml` for a tool this machine lacks, and `--skip` for one run. Both print. No
-environment variable turns a hook off. A hook never runs `--fix`.
+One skip exists: `--skip` for one run, and it prints. No file and no environment variable turns
+a check off on one machine (D-173). A hook never runs `--fix`.
 
 ## Tasks of the runner
 

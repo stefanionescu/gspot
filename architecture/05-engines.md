@@ -41,7 +41,7 @@ Runs external tools. Owns nothing about what they find.
   passed to tools in the platform's form. On Windows, npm-installed tools are `.cmd` shims that
   a plain spawn cannot run; `cross-spawn` resolves them without a shell and without quoting by gspot.
 - **Missing tool.** The check reports `missing` with the install hint and fails.
-- **Skips.** `gspot.local.toml` skips and `--skip` print and record. A `docker` requirement with
+- **Skips.** `--skip` prints and records, and no file holds a skip for one machine (D-173). A `docker` requirement with
   no daemon fails; a platform requirement (`macos`, `linux`) that does not hold passes as
   skipped.
 

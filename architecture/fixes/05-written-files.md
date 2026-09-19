@@ -1,7 +1,7 @@
 # The Files gspot Writes
 
 Rows 4 to 7 of the build order. They cover what gspot leaves in a repository: the root pointers,
-the marks, the report, and what a local skip may hide. After this
+the marks, the report, and the end of the local skip file. After this
 step a developer can tell every file gspot wrote from every file gspot did not, and `apply`
 deletes only the first kind.
 
@@ -16,21 +16,24 @@ Row 4, D-103. No gap row holds it, so [20-adoption.md](../20-adoption.md) is its
 **What is wrong.** In the app an untracked `gspot.local.toml` skipped eight checks, so the gate
 passed on one machine and failed on every other.
 
-**Target.** `gspot.local.toml` has one purpose: a tool that cannot run on this machine. A skip of
-a check whose tool is present exits 2. `init` runs no check (D-165), and its last lines name
-`gspot check` and `gspot check --fix`.
+**Target.** D-173. `gspot.local.toml` is gone, and no file skips a check on one machine. `init`
+runs no check (D-165), and its last lines name `gspot check` and `gspot check --fix`.
 
-**Files.** `policy/local-schema.ts`, `run/plan.ts`, `output/reporter.ts`, `lifecycle/init/command.ts`.
+**Files.** Deleted: `policy/local-schema.ts` and its test. Changed: `policy/read-policy.ts`,
+`run/plan.ts`, `output/reporter.ts`, `emit/managed-blocks.ts`, `lifecycle/init/command.ts`.
 
-**Logic.** `plan.ts` asks `platform/tool-probe.ts` for the tool of each locally skipped check, and
-refuses the skip where the probe finds it. Every summary line counts the checks a local skip
-removed.
+**Logic.** `read-policy.ts` reads `gspot.toml` alone. `plan.ts` loses the local skip list and
+keeps `--skip`. A `gspot.local.toml` that still exists is named once by `doctor` as a file
+nothing reads.
 
-**What goes.** The eight skips of the app, when the app is redone.
+**What goes.** The local schema, the merge of two config files, the line of the `.gitignore`
+block, the count of local skips in the summary, and the eight skips of the app.
 
-**Tests.** A local skip of `bash/shellcheck`, with ShellCheck installed, exits 2.
+**Tests.** A planted `gspot.local.toml` that skips `bash/shellcheck` changes nothing: the check
+runs.
 
-**Done when.** That case passes.
+**Done when.** That case passes, and a search of `packages/` for `local.toml` finds `doctor`
+alone.
 
 ## K-72: generated files show as code in a pull request
 
@@ -87,7 +90,7 @@ developer.
 
 **Files.** `emit/managed-blocks.ts`, `emit/targets.ts`, the prose manifest, `commands/uninstall.ts`.
 
-**Logic.** The fixed lines are `gspot.local.toml`, `.gspot/cache/`, `.gspot/node_modules/`,
+**Logic.** The fixed lines are `.gspot/cache/`, `.gspot/node_modules/`,
 `.gspot/.venv/`, and `.gspot/report.*`. A manifest adds a line through a field named
 `untracked`, and the prose manifest names the folder of each Vale package there. The block goes
 at the end of the file. In a folder with no git, `targets.ts` leaves the block out. `uninstall`

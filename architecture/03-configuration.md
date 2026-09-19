@@ -8,7 +8,6 @@ merge.
 | Path                                                    | Owner                         | Tracked | Purpose                                                                                                                           |
 | ------------------------------------------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------------------------------------------------------------- |
 | `gspot.toml`                                            | the repository                | yes     | the config, written by `init` and changed by the four writing commands or by hand                                                 |
-| `gspot.local.toml`                                      | one machine                   | no      | a skip for a tool that cannot run on this machine, and nothing else                                                               |
 | `.gspot/<tool-file>`                                    | gspot                         | yes     | the generated configuration of each tool, with the mark of gspot                                                                  |
 | `.gspot/package.json`, its lockfile                     | gspot                         | yes     | the npm lint tools gspot pins (D-145)                                                                                             |
 | `.gspot/pyproject.toml`, `uv.lock`                      | gspot                         | yes     | the Python lint tools gspot pins (D-157)                                                                                          |
@@ -290,15 +289,6 @@ what it finds today. An old repository adopts gspot through four things that nee
 - The level `recommended` holds what finds a defect, and leaves taste out.
 - `gspot ignore` turns a check or a rule off. It works for the whole repository or for some paths.
 - `git commit --no-verify` passes a hook, and a failing run names it.
-
-## `gspot.local.toml`
-
-```toml
-skip = ["docker/hadolint"]      # this machine has no Docker
-```
-
-One key. A skip of a check whose tool is present on this machine is refused with exit 2. Skips
-print on every run, and the summary counts them.
 
 ## What a path is
 
