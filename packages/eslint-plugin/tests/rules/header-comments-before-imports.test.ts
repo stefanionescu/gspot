@@ -8,6 +8,8 @@ tester().run('header-comments-before-imports', headerCommentsBeforeImports, {
         "import { a } from './a'; // trailing\nexport const b = a;",
         "import { a } from './a';\n// @ts-expect-error\nconsole.log(a);",
         "import { a } from './a';\n\n/**\n * Doc for b.\n */\nexport const b = a;",
+        // A decorator above export belongs to the class, so the doc comment above it leads the class.
+        "import { Injectable } from './a';\n\n/** Builds greetings. */\n@Injectable()\nexport class Greeter {}",
         "import { a } from './a';\n// leading for import\nimport { c } from './c';\nexport const b = a + c;",
         {
             code: "const a = require('./a');\n\n// Explains b.\nmodule.exports = a;",

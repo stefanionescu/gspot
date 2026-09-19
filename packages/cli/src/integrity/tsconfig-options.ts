@@ -19,6 +19,9 @@ const REQUIRED = [
     'noPropertyAccessFromIndexSignature',
 ];
 
+const DECORATOR_CLASHES = new Set(['verbatimModuleSyntax', 'erasableSyntaxOnly']);
+const DECORATOR_OPTIONS = ['experimentalDecorators', 'emitDecoratorMetadata'];
+
 function readTsconfig(path: string): Tsconfig | undefined {
     try {
         return (parseJsonc(readFileSync(path, 'utf8')) as Tsconfig | undefined) ?? {};
@@ -52,16 +55,26 @@ function isTsconfigName(path: string): boolean {
     return name === 'tsconfig.json' || (name.startsWith('tsconfig.') && name.endsWith('.json'));
 }
 
+// NestJS injects by the types of constructor parameters. That needs decorators with emitted metadata, which
+// verbatimModuleSyntax refuses, and parameter properties, which erasableSyntaxOnly refuses.
+function requiredFor(input: EngineInput): string[] {
+    const selected = input.session.scopes.find((entry) => entry.scope.path === input.scope)?.selected ?? [];
+    if (selected.every((manifest) => manifest.preset.id !== 'nestjs')) return REQUIRED;
+    return [...REQUIRED.filter((option) => !DECORATOR_CLASHES.has(option)), ...DECORATOR_OPTIONS];
+}
+
 function missingOptions(input: EngineInput, path: string): Finding[] {
     const options = resolvedOptions(join(input.root, path));
-    return REQUIRED.filter((option) => options[option] !== true).map((option) => ({
-        check: input.spec.id,
-        file: path,
-        rule: option,
-        message: `${option} is not on in this tsconfig.`,
-        help: 'Keep extends pointing at .gspot/tsconfig.base.json and do not override the strict options.',
-        fixable: false,
-    }));
+    return requiredFor(input)
+        .filter((option) => options[option] !== true)
+        .map((option) => ({
+            check: input.spec.id,
+            file: path,
+            rule: option,
+            message: `${option} is not on in this tsconfig.`,
+            help: 'Keep extends pointing at .gspot/tsconfig.base.json and do not override the strict options.',
+            fixable: false,
+        }));
 }
 
 /**

@@ -100,11 +100,16 @@ const RAW_SQL_SELECTORS = [
 ];
 const PROCEDURE_SELECTORS = [
 ];
+// A controller turns a request into a call, and a service owns the data.
+const CONTROLLER_SELECTORS = [
+];
+const CONTROLLER_FILES = ['**/*.controller.ts'];
 const RAW_SQL_ALLOWED = [];
 const ROUTER_FILES = ['**/routers/**/*.ts', '**/*router*.ts', '**/trpc/**/*.ts'];
-const librarySelectorBlocks = LIBRARY_SELECTORS.length + RAW_SQL_SELECTORS.length + PROCEDURE_SELECTORS.length === 0 ? [] : [
+const librarySelectorBlocks = LIBRARY_SELECTORS.length + RAW_SQL_SELECTORS.length + PROCEDURE_SELECTORS.length + CONTROLLER_SELECTORS.length === 0 ? [] : [
     { files: CODE, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS] } },
     ...(RAW_SQL_ALLOWED.length === 0 ? [] : [{ files: RAW_SQL_ALLOWED, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS] } }]),
+    ...(CONTROLLER_SELECTORS.length === 0 ? [] : [{ files: CONTROLLER_FILES, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS, ...CONTROLLER_SELECTORS] } }]),
     ...(PROCEDURE_SELECTORS.length === 0 ? [] : [{ files: ROUTER_FILES, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS, ...PROCEDURE_SELECTORS] } }]),
 ];
 

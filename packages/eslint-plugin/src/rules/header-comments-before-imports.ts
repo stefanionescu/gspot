@@ -2,6 +2,7 @@
 import { createRule } from '#plugin/rule.ts';
 import { optionsSchema } from '#plugin/options.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
+import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { isImportLike } from '#plugin/rules/import-layout.ts';
 import type { HeaderCommentsOptions } from '#plugin-types/options.ts';
 
@@ -45,11 +46,29 @@ function isTrailing(text: string, comment: TSESTree.Comment, node: TSESTree.Node
     return isBlank(text.slice(node.range[1], comment.range[0]));
 }
 
+// A decorator written above export belongs to the class, and the parser starts the export statement after it.
+// The statement a reader sees starts at the decorator, so a doc comment above the decorator leads the statement.
+function firstDecorator(node: TSESTree.Node): TSESTree.Decorator | undefined {
+    const isExport =
+        node.type === AST_NODE_TYPES.ExportNamedDeclaration || node.type === AST_NODE_TYPES.ExportDefaultDeclaration;
+    const declared = isExport ? node.declaration : node;
+    return declared?.type === AST_NODE_TYPES.ClassDeclaration ? declared.decorators[0] : undefined;
+}
+
+function startOf(node: TSESTree.Node): { offset: number; line: number } {
+    const decorator = firstDecorator(node);
+    const isEarlier = decorator !== undefined && decorator.range[0] < node.range[0];
+    return isEarlier
+        ? { offset: decorator.range[0], line: decorator.loc.start.line }
+        : { offset: node.range[0], line: node.loc.start.line };
+}
+
 function isLeading(text: string, comment: TSESTree.Comment, node: TSESTree.Node, isBlankLineAllowed: boolean): boolean {
-    if (comment.range[1] > node.range[0]) return false;
-    const between = text.slice(comment.range[1], node.range[0]);
+    const start = startOf(node);
+    if (comment.range[1] > start.offset) return false;
+    const between = text.slice(comment.range[1], start.offset);
     if (!isBlank(between)) return false;
-    const distance = node.loc.start.line - comment.loc.end.line;
+    const distance = start.line - comment.loc.end.line;
     if (distance > (isBlankLineAllowed ? 2 : 1)) return false;
     if (!isBlankLineAllowed && BLANK_LINE.test(between)) return false;
     const lineStart = text.lastIndexOf('\n', comment.range[0] - 1) + 1;

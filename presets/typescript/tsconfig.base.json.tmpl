@@ -7,9 +7,11 @@
         "forceConsistentCasingInFileNames": true,
         "noImplicitReturns": true,
         "noFallthroughCasesInSwitch": true,
-        "verbatimModuleSyntax": true,
+<% if (has('nestjs')) { %>        "experimentalDecorators": true,
+        "emitDecoratorMetadata": true,
+<% } else { %>        "verbatimModuleSyntax": true,
         "erasableSyntaxOnly": true,
-        "noPropertyAccessFromIndexSignature": true,
+<% } %>        "noPropertyAccessFromIndexSignature": true,
         "skipLibCheck": true,
         "isolatedModules": true,
         "target": "ES2022",<% if (has('nextjs')) { %>

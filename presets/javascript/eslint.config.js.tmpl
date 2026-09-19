@@ -139,6 +139,8 @@ const LIBRARY_SELECTORS = [
 <% if (has('zustand')) { %>    { selector: "CallExpression[callee.name=/^use[A-Z]\\w*Store$/][arguments.length=0]", message: 'Pass a selector to the store hook, so the component renders when its slice changes and at no other time.' },
 <% } %><% if (has('react-hook-form')) { %>    { selector: "CallExpression[callee.name='useForm']:not(:has(Property[key.name='resolver']))", message: 'Give useForm a resolver, so the schema that types the form also validates it.' },
     { selector: "JSXOpeningElement:has(JSXSpreadAttribute CallExpression[callee.name='register']):has(JSXAttribute[name.name='value'])", message: 'A registered field is uncontrolled. Drop the value attribute, or use a Controller.' },
+<% } %><% if (has('nestjs')) { %>    { selector: "CallExpression[callee.name='forwardRef']", message: 'forwardRef papers over two modules that import each other. Move what both need into a third module.' },
+    { selector: "Decorator[expression.callee.name=/^(Res|Response)$/]:not(:has(Property[key.name='passthrough'][value.value=true]))", message: 'Taking the response object turns off interceptors and the return value. Return the value, or pass { passthrough: true }.' },
 <% } %>];
 const RAW_SQL_SELECTORS = [
 <% if (has('drizzle')) { %>    { selector: "TaggedTemplateExpression[tag.name='sql']", message: 'Raw SQL skips the types of the schema. Use the query builder, or allow the path under tools.drizzle.raw_sql_allowed with a reason.' },
@@ -146,11 +148,18 @@ const RAW_SQL_SELECTORS = [
 const PROCEDURE_SELECTORS = [
 <% if (has('trpc')) { %>    { selector: "CallExpression[callee.property.name=/^(query|mutation|subscription)$/]:not(:has(CallExpression[callee.property.name='input']))", message: 'Give the procedure an input schema before its resolver, even when the input is nothing.' },
 <% } %>];
+// A controller turns a request into a call, and a service owns the data.
+const CONTROLLER_SELECTORS = [
+<% if (has('nestjs')) { %>    { selector: "TSParameterProperty TSTypeReference[typeName.name=/(Repository|DataSource|EntityManager|PrismaClient|PrismaService)$/]", message: 'A controller reaches data through a service. Inject the service, and keep the repository behind it.' },
+    { selector: "Decorator[expression.callee.name=/^(InjectRepository|InjectModel|InjectDataSource)$/]", message: 'A controller reaches data through a service. Inject the service, and keep the repository behind it.' },
+<% } %>];
+const CONTROLLER_FILES = ['**/*.controller.ts'];
 const RAW_SQL_ALLOWED = <%~ json((settings['tools.drizzle.raw_sql_allowed'] ?? []).flatMap((entry) => entry.paths ?? []), 0) %>;
 const ROUTER_FILES = ['**/routers/**/*.ts', '**/*router*.ts', '**/trpc/**/*.ts'];
-const librarySelectorBlocks = LIBRARY_SELECTORS.length + RAW_SQL_SELECTORS.length + PROCEDURE_SELECTORS.length === 0 ? [] : [
+const librarySelectorBlocks = LIBRARY_SELECTORS.length + RAW_SQL_SELECTORS.length + PROCEDURE_SELECTORS.length + CONTROLLER_SELECTORS.length === 0 ? [] : [
     { files: CODE, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS] } },
     ...(RAW_SQL_ALLOWED.length === 0 ? [] : [{ files: RAW_SQL_ALLOWED, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS] } }]),
+    ...(CONTROLLER_SELECTORS.length === 0 ? [] : [{ files: CONTROLLER_FILES, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS, ...CONTROLLER_SELECTORS] } }]),
     ...(PROCEDURE_SELECTORS.length === 0 ? [] : [{ files: ROUTER_FILES, rules: { 'no-restricted-syntax': ['error', ...BASE_SELECTORS, ...LIBRARY_SELECTORS, ...RAW_SQL_SELECTORS, ...PROCEDURE_SELECTORS] } }]),
 ];
 

@@ -1,0 +1,14 @@
+    {
+        files: TYPESCRIPT,
+        rules: {
+            // A module is a decorated class with no members, and the decorator is what it is for.
+            '@typescript-eslint/no-extraneous-class': ['error', { allowWithDecorator: true }],
+            // The framework calls a handler as a method whether it reads the instance or not.
+            'class-methods-use-this': 'off',
+        },
+    },
+    {
+        // The Nest generator names a file for its feature and its kind: cats.controller.ts beside cats.service.ts.
+        files: ['**/*.{controller,service,module,guard,pipe,filter,interceptor,middleware,decorator,gateway,resolver,repository,entity,dto,strategy,provider}.{ts,js}', '**/*.spec.{ts,js}'],
+        rules: { 'gspot/no-prefix-collisions': 'off' },
+    },
