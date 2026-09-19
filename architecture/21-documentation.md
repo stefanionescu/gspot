@@ -58,6 +58,10 @@ The guides that exist stay and are rewritten with real output. The guides that a
 | Uninstall                 | How to leave and get my old files back                                          |
 | Troubleshooting           | A missing tool, a slow check, a version pin that differs                        |
 
+Two guides are wrong today: the scopes guide shows config that gspot refuses, and the findings
+guide says every ignore prints on every run (K-202). Every sample of the manual is run through
+the program, so a guide cannot drift from the code again (S-11).
+
 Each command gets a worked example on its reference page. `docs/readme-shape` requires the
 sections that the README template names, so the README cannot thin out again.
 
