@@ -140,3 +140,56 @@ describe('the swift preset inside a scope', () => {
         PLANTED_TIMEOUT_MS * 4,
     );
 });
+
+const PACKAGE =
+    '// swift-tools-version:5.9\nimport PackageDescription\n\nlet package = Package(\n    name: "App",\n    products: [.library(name: "App", targets: ["App"])],\n    targets: [.target(name: "App")]\n)\n';
+const LIBRARY =
+    '/// Builds the greeting for a person.\npublic func greeting(for name: String) -> String {\n    "hello \\(name)"\n}\n';
+const BUILD_CASES: PlantedCase[] = [
+    {
+        id: 'swift/build',
+        files: { 'Sources/App/Count.swift': '/// A number that holds text.\npublic let count: Int = "three"\n' },
+        expected: "cannot convert value of type 'String'",
+    },
+    {
+        id: 'swift/swiftlint-analyze',
+        files: {
+            'Sources/App/Pair.swift':
+                'import Foundation\n\n/// The size of a pair.\npublic func pairSize(of count: Int) -> Int {\n    count * 2\n}\n',
+        },
+        expected: 'unused_import',
+    },
+    {
+        id: 'swift/periphery',
+        files: {
+            'Sources/App/Pair.swift':
+                '/// The size of a pair.\npublic func pairSize(of count: Int) -> Int {\n    count * 2\n}\n\nprivate func neverCalled() -> Int {\n    count(of: 3)\n}\n\nprivate func count(of size: Int) -> Int {\n    size\n}\n',
+        },
+        expected: "Unused function 'neverCalled()'",
+    },
+];
+
+describe('the swift preset over a package', () => {
+    test(
+        'the build, the analyzer and Periphery run on a Swift package and fire on their planted defects',
+        async () => {
+            await using fixture = await createFixture({
+                '.gitignore': '.build\n',
+                'Package.swift': PACKAGE,
+                'Sources/App/Greeting.swift': LIBRARY,
+            });
+            commitAll(fixture.path);
+            const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'periphery', 'typos', 'ec']) };
+            await install(fixture.path, INIT, environment);
+            for (const planted of BUILD_CASES) {
+                const clean = run(fixture.path, ['check', planted.id, '--no-cache'], environment);
+                expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+                const outcome = await runPlanted(fixture.path, planted, environment);
+                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.stdout, planted.id).toContain('Sources/App/');
+            }
+        },
+        PLANTED_TIMEOUT_MS * 10,
+    );
+});

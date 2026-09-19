@@ -179,6 +179,13 @@ Periphery: `retain_public`, `retain_objc_accessible`, `retain_assign_only_proper
 are true. `project` and `schemes` come from `tools.xcode.project` and `tools.xcode.scheme`, and
 `init` proposes the first shared scheme `xcodebuild -list` prints.
 
+A scope with no Xcode project builds as a Swift package, into a folder under `.gspot/cache` that
+the build empties first. An incremental build logs only the files that changed, and the analyzer
+pairs each file with its compiler call from that log. The package manager hands the compiler its
+sources in a response file, which the analyzer does not open, so gspot writes the file names into
+the log. The log also names files the way SwiftLint does under `/tmp` and `/var` on macOS. An
+analyzer finding carries the id of its SwiftLint rule, such as `unused_import`.
+
 The structure checks read the Swift grammar and carry the language in their ids (D-98):
 `swift/call-through`, `swift/trivial-function`, `swift/duplicate-functions`,
 `swift/private-before-public`, and `swift/env-access-owner`. A function with an attribute or

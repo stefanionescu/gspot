@@ -12,6 +12,8 @@ export type SwiftBuildPlan = {
     /** Where the compiler log is written. */
     log: string;
     argv: string[];
+    /** A folder the build owns and empties first, so the log holds every compiler call and not only the changed files. */
+    scratch?: string;
 };
 
 /** One parsed Swift file of a run. */

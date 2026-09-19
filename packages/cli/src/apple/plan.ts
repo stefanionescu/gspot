@@ -27,7 +27,10 @@ export function swiftBuildPlan(input: EngineInput): SwiftBuildPlan {
     );
     const log = join(folder, 'build.log');
     const project = text(input, 'tools.xcode.project');
-    if (project === '') return { cwd, folder, log, argv: ['swift', 'build', '-v'] };
+    if (project === '') {
+        const scratch = join(folder, 'package');
+        return { cwd, folder, log, scratch, argv: ['swift', 'build', '-v', '--scratch-path', scratch] };
+    }
     const container = project.endsWith(WORKSPACE_SUFFIX) ? '-workspace' : '-project';
     const argv = [
         'xcodebuild',
