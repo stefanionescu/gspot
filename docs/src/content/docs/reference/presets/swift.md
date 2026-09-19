@@ -22,16 +22,23 @@ Kind: language. Requires: `formatting`.
 
 ## Checks
 
-| Check                                                                  | Stage  | What it finds                                                                                                                  |
-| ---------------------------------------------------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------ |
-| [`swift/swiftlint`](/reference/rules/swift/swiftlint/)                 | commit | Lints every Swift file with the shipped SwiftLint rule set, with every warning an error.                                       |
-| [`swift/swiftformat`](/reference/rules/swift/swiftformat/)             | commit | Checks the layout of every Swift file against the shipped SwiftFormat rules.                                                   |
-| [`swift/build`](/reference/rules/swift/build/)                         | push   | Builds the package or the Xcode scheme, and keeps the compiler log for the analyzer.                                           |
-| [`swift/swiftlint-analyze`](/reference/rules/swift/swiftlint-analyze/) | push   | Runs the SwiftLint analyzer rules over the compiler log of the build: unused imports, unused declarations, captured variables. |
-| [`swift/periphery`](/reference/rules/swift/periphery/)                 | push   | Scans the built project for declarations nothing uses.                                                                         |
+| Check                                                                          | Stage  | What it finds                                                                                                                  |
+| ------------------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------------------------------------------ |
+| [`swift/swiftlint`](/reference/rules/swift/swiftlint/)                         | commit | Lints every Swift file with the shipped SwiftLint rule set, with every warning an error.                                       |
+| [`swift/swiftformat`](/reference/rules/swift/swiftformat/)                     | commit | Checks the layout of every Swift file against the shipped SwiftFormat rules.                                                   |
+| [`swift/build`](/reference/rules/swift/build/)                                 | push   | Builds the package or the Xcode scheme, and keeps the compiler log for the analyzer.                                           |
+| [`swift/swiftlint-analyze`](/reference/rules/swift/swiftlint-analyze/)         | push   | Runs the SwiftLint analyzer rules over the compiler log of the build: unused imports, unused declarations, captured variables. |
+| [`swift/periphery`](/reference/rules/swift/periphery/)                         | push   | Scans the built project for declarations nothing uses.                                                                         |
+| [`swift/call-through`](/reference/rules/swift/call-through/)                   | commit | Finds functions that pass their parameters straight to one other call.                                                         |
+| [`swift/trivial-function`](/reference/rules/swift/trivial-function/)           | commit | Finds private functions of one or two statements that one place calls.                                                         |
+| [`swift/duplicate-functions`](/reference/rules/swift/duplicate-functions/)     | commit | Finds functions whose bodies match line for line.                                                                              |
+| [`swift/private-before-public`](/reference/rules/swift/private-before-public/) | commit | Checks that private and fileprivate top-level declarations sit above the ones other files see.                                 |
+| [`swift/env-access-owner`](/reference/rules/swift/env-access-owner/)           | commit | Checks that the process environment is read in one place.                                                                      |
 
 ## Settings
 
+- `structure.swift.trivial_allowed`: Tiny Swift functions that stay functions: the paths, the names, and the reason.
+- `limits.swift.duplicate_min_lines`: The fewest lines two Swift functions must share before they count as duplicates.
 - `tools.swiftlint.keep_imports`: Imports the analyzer keeps although it sees no use of them.
 - `tools.swiftformat.swift_version`: The Swift version SwiftFormat formats for.
 - `tools.xcode.project`: The Xcode project or workspace, relative to the scope; empty builds the Swift package.

@@ -19,7 +19,7 @@ that closes it.
 
 ## What is not built
 
-The Swift structure analyses, the Phase 7 presets, the deeper unit tests, and the manual rewrite
+The Phase 7 presets, the deeper unit tests, and the manual rewrite
 (G-10). The acceptance runs over yap-text-inference, yap-landing, and slopshop are owed.
 
 gspot runs on yap-swift-app: branch `chore/gspot` of that repository holds the migration (D-97),

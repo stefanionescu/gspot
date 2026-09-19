@@ -25,16 +25,16 @@ swiftlint, swiftformat, periphery, xcodebuild (host), swift (host).
 
 ## Checks
 
-| Id                                                                                                                                         | Stage       | Command                                                                                       |
-| ------------------------------------------------------------------------------------------------------------------------------------------ | ----------- | --------------------------------------------------------------------------------------------- |
-| `swift/swiftlint`                                                                                                                          | commit      | `swiftlint lint --strict --quiet --config .gspot/swiftlint.yml --reporter json {files}`       |
-| `swift/swiftformat`                                                                                                                        | commit      | `swiftformat --lint --config .gspot/swiftformat {files}`; fix order format                    |
-| `swift/build`                                                                                                                              | push, build | `xcodebuild build-for-testing` or `swift build`, log kept for analyze                         |
-| `swift/swiftlint-analyze`                                                                                                                  | push, build | `swiftlint analyze --strict --compiler-log-path <log>`                                        |
-| `swift/periphery`                                                                                                                          | push, build | `periphery scan --config .gspot/periphery.yml --strict`                                       |
-| `structure/trivial-function`, `call-through`, `duplicate-functions`, `single-file-folder`, `prefix-collisions`, `file-directory-collision` | commit      | engine                                                                                        |
-| `structure/private-before-public`                                                                                                          | commit      | `private` and `fileprivate` top-level declarations above `internal`, `public` and `open` ones |
-| `structure/env-access-owner`                                                                                                               | commit      | `ProcessInfo.processInfo.environment` read only in the configuration owner                    |
+| Id                                                                          | Stage       | Command                                                                                       |
+| --------------------------------------------------------------------------- | ----------- | --------------------------------------------------------------------------------------------- |
+| `swift/swiftlint`                                                           | commit      | `swiftlint lint --strict --quiet --config .gspot/swiftlint.yml --reporter json {files}`       |
+| `swift/swiftformat`                                                         | commit      | `swiftformat --lint --config .gspot/swiftformat {files}`; fix order format                    |
+| `swift/build`                                                               | push, build | `xcodebuild build-for-testing` or `swift build`, log kept for analyze                         |
+| `swift/swiftlint-analyze`                                                   | push, build | `swiftlint analyze --strict --compiler-log-path <log>`                                        |
+| `swift/periphery`                                                           | push, build | `periphery scan --config .gspot/periphery.yml --strict`                                       |
+| `swift/trivial-function`, `swift/call-through`, `swift/duplicate-functions` | commit      | analyses on the Swift grammar                                                                 |
+| `swift/private-before-public`                                               | commit      | `private` and `fileprivate` top-level declarations above `internal`, `public` and `open` ones |
+| `swift/env-access-owner`                                                    | commit      | `ProcessInfo.processInfo.environment` read only in the configuration owner                    |
 
 Every check here is a platform skip on Linux and Windows.
 
@@ -179,9 +179,13 @@ Periphery: `retain_public`, `retain_objc_accessible`, `retain_assign_only_proper
 are true. `project` and `schemes` come from `tools.xcode.project` and `tools.xcode.scheme`, and
 `init` proposes the first shared scheme `xcodebuild -list` prints.
 
-The engine analyses `trivial-function`, `call-through` and `duplicate-functions` read shell
-scripts today. The SwiftLint rules `type_contents_order`, `file_types_order`, and
-`unused_declaration` cover ordering and dead code for Swift until those analyses read the Swift grammar.
+The structure checks read the Swift grammar and carry the language in their ids (D-98):
+`swift/call-through`, `swift/trivial-function`, `swift/duplicate-functions`,
+`swift/private-before-public`, and `swift/env-access-owner`. A function with an attribute or
+`override` is tied to a caller the file does not show, so the first two leave it alone.
+`swift/trivial-function` reads private and fileprivate functions only, because no other file calls
+them. With no owner under `architecture.roles.env`, one file that reads the environment is the
+owner, and reads in two or more files are all findings.
 
 ## Settings
 

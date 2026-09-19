@@ -32,6 +32,7 @@ import { readmePresent } from '#cli/integrity/readme/present.ts';
 import { requiredRules } from '#cli/integrity/required-rules.ts';
 import { trivyImage } from '#cli/integrity/docker/image-scan.ts';
 import { referenceOwners } from '#cli/apple/xctest/references.ts';
+import { SWIFT_STRUCTURE } from '#cli/apple/structure/analyses.ts';
 import { generatedDrift } from '#cli/integrity/generated-drift.ts';
 import { manifestPolicy } from '#cli/integrity/manifest-policy.ts';
 import { dockerignore } from '#cli/integrity/docker/ignore-file.ts';
@@ -120,6 +121,7 @@ const checks: Record<string, IntegrityCheck> = {
     'html-copy': htmlCopy,
     'css-module-usage': cssModuleUsage,
     ...PYTHON_STRUCTURE,
+    ...SWIFT_STRUCTURE,
     'python-import-linter': importLinter,
     'python-blocking-calls': pythonBlockingCalls,
     'python-dependency-ownership': dependencyOwnership,

@@ -27,6 +27,18 @@ const CAST =
 const SPACED = CLEAN.replace('func greeting', () => 'func   greeting');
 const SNAKE = CLEAN.replace('func greeting', () => 'func make_greeting');
 
+const FORWARD =
+    'import Foundation\n\n/// Builds the greeting for a person.\nfunc welcome(for name: String) -> String {\n    return greeting(for: name)\n}\n';
+const TINY =
+    'import Foundation\n\nprivate func doubled(_ count: Int) -> Int {\n    count * 2\n}\n\n/// The size of a pair.\nfunc pairSize(of count: Int) -> Int {\n    let size = doubled(count)\n    return size + 1\n}\n';
+const BODY =
+    '    let first = name.uppercased()\n    let second = first.lowercased()\n    let third = second + first\n    return third\n';
+const COPIES = `import Foundation\n\n/// One way to mix a name.\nfunc mixed(_ name: String) -> String {\n${BODY}}\n\n/// The same way again.\nfunc blended(_ name: String) -> String {\n${BODY}}\n`;
+const BELOW =
+    'import Foundation\n\n/// The limit other files read.\nlet sharedLimit = 3\n\nprivate let localLimit = 2\n\n/// Adds the two limits.\nfunc bothLimits() -> Int {\n    sharedLimit + localLimit\n}\n';
+const reader = (name: string): string =>
+    `import Foundation\n\n/// Reads one variable.\nfunc ${name}() -> String? {\n    ProcessInfo.processInfo.environment["HOME"]\n}\n`;
+
 const CASES: PlantedCase[] = [
     { id: 'swift/swiftlint', files: { 'Sources/App/Cast.swift': CAST }, expected: 'force_cast' },
     { id: 'swift/swiftformat', files: { 'Sources/App/Greeting.swift': SPACED }, expected: 'consecutiveSpaces' },
@@ -34,6 +46,25 @@ const CASES: PlantedCase[] = [
         id: 'naming/identifiers',
         files: { 'Sources/App/Greeting.swift': SNAKE },
         expected: 'swift function "make_greeting"',
+    },
+    { id: 'swift/call-through', files: { 'Sources/App/Welcome.swift': FORWARD }, expected: 'straight to greeting' },
+    { id: 'swift/trivial-function', files: { 'Sources/App/Pair.swift': TINY }, expected: 'doubled holds 1 statement' },
+    { id: 'swift/duplicate-functions', files: { 'Sources/App/Mix.swift': COPIES }, expected: 'have the same body' },
+    {
+        id: 'swift/private-before-public',
+        files: { 'Sources/App/Limits.swift': BELOW },
+        expected: 'localLimit is private',
+    },
+    {
+        id: 'swift/env-access-owner',
+        files: { 'Sources/App/Home.swift': reader('homeFolder'), 'Sources/App/Shell.swift': reader('shellFolder') },
+        expected: '2 files read the process environment',
+    },
+    {
+        id: 'swift/env-access-owner',
+        files: { 'Sources/App/Home.swift': reader('homeFolder') },
+        policy: '[architecture]\nroles = { env = "Sources/App/Environment.swift" }\n',
+        expected: 'outside the environment owner',
     },
 ];
 
