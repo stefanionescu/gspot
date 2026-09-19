@@ -120,6 +120,10 @@ D-142 pins ESLint 9. What the code does today with the version a repository alre
 answer. No decision covers any of them. The runner `mise` changes nothing here: ESLint and
 every plugin have no mise installer, so they go into `package.json` under every runner but `none`.
 
+The nine new versions the framework pages name (D-141) were asked from npm too: all exist, and
+all accept ESLint 9. `eslint-plugin-react`, `eslint-plugin-jsx-a11y`, and
+`eslint-plugin-react-native` stop at ESLint 9, which is what holds D-142 in place.
+
 The registry was asked on September 19, 2026 for the 28 ESLint packages the manifests pin. All
 exist except `@gspot/eslint-plugin`, which is not published. Two need ESLint 10 and move down
 with D-142: `@eslint/js` 10.0.1 and `eslint-plugin-unicorn` 74.0.0. Four refuse ESLint 8:
@@ -130,6 +134,34 @@ using the version the repository holds is no way out.
 D-145 in [14-decisions.md](14-decisions.md) is the answer, and the owner accepted it on
 September 19, 2026. The lint tools of gspot are tools and not dependencies of the repository.
 They install under `.gspot/`, and the `package.json` of the developer keeps the ESLint it has.
+
+## What the lint tool decision changes
+
+The owner accepted D-145. These are the places that write a lint tool into a file of the
+developer today, read in the code on September 19, 2026. Each one changes with the decision:
+
+- [ ] `emit/targets.ts` (`runnerOutputs`) and `emit/apply-command.ts` (`writePackages`): stop
+      writing `devDependencies` and the scripts `check`, `check:fix`, `apply`, and `prepare`.
+- [ ] `emit/kept-pins.ts` and its test: delete both; no pin is merged into a held version.
+- [ ] `emit/runner-surface.ts` (`miseSurface`): an npm tool is never an `npm:` tool of mise.
+- [ ] A generated `.gspot/package.json` with its lockfile, and an install step that fills
+      `.gspot/node_modules`, which the managed `.gitignore` block lists.
+- [ ] `platform/tool-probe.ts` (`candidates`, `libraryVersion`): look under `.gspot/node_modules`
+      first, and stop reading the `node_modules` of the root.
+- [ ] `lifecycle/uninstall-command.ts` (`removePackagePins`): nothing to remove from `package.json`.
+- [ ] `presets/javascript/knip.json.tmpl`: no lint package left to ignore (K-220).
+- [ ] `doctor` (pinned twice) and `integrity/manifest-policy`: a lint package the developer
+      still holds is listed under remove by hand, never called a duplicate pin.
+- [ ] Every test that links the `node_modules` of this repository into a planted one (T-32).
+
+One point the decision leaves open: under an npm runner the hook calls `bunx gspot`, which
+resolves the `gspot` launcher from the `devDependencies` of the root. The launcher is gspot
+itself and no lint tool. The owner decides whether it stays there.
+
+gspot still writes other files of the developer, and D-145 does not change them. They are the
+managed blocks in `.gitignore`, `CLAUDE.md`, and `AGENTS.md`, the lines under `.husky/`, and the
+block in `lefthook.yml`. They are also the `extends` key of `tsconfig.json` (K-74), the stubs at
+conventional paths (D-100), `.editorconfig`, and the git setting `core.hooksPath` (D-115).
 
 ## Names, workarounds, and leftovers to clean
 
@@ -213,6 +245,8 @@ with no line here fails the placement check.
 - [ ] K-241: Settle each of the nine contradictions in the rule file, on the side of the decision or the check. Test the rule ids a rule file names against the templates.
 - [ ] K-246: Ship `integrity/generated-drift` in the structure preset. Build `integrity/generated-fresh` with `[[generated]]`, or take its name out of every document.
 - [ ] K-250: Make the two SPDX packages and the Markdown parser dependencies that do their job. Use or drop each other library the two documents name.
+- [ ] K-251: Drop `--skip-updates` from the dotenv fixer, give v8r its config through `V8R_CONFIG_FILE`, and fail the contract test on a flag the pinned tool lacks.
+- [ ] K-252: Report a run whose report cannot be written in one line on stderr, and keep its findings and its exit code.
 
 ### Row 1: Takeover deletes nothing it does not own
 
