@@ -28,7 +28,7 @@ runs = "per-file-list"
 command = ["lychee", "--config", "{config:lychee}", "--offline", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
 exclude_setting = "tools.lychee.exclude_paths"
 inspection = ["links"]
-output = {format = "regex", file_is = "link", pattern = "^\\[(?<rule>[A-Z]+)\\] (?<file>[^ ]+) \\| (?<message>.*)$"}
+output = {format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$"}
 summary = "Checks that every relative link names a tracked file and every anchor names a heading."
 why = "A dead link inside the repository is a promise the docs broke without anyone noticing."
 fix = "Point the link at the file or heading that exists, or delete it."
@@ -41,7 +41,7 @@ requires = "network"
 command = ["lychee", "--config", "{config:lychee}", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
 exclude_setting = "tools.lychee.exclude_paths"
 inspection = ["links"]
-output = {format = "regex", file_is = "link", pattern = "^\\[(?<rule>[A-Z]+)\\] (?<file>[^ ]+) \\| (?<message>.*)$"}
+output = {format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$"}
 summary = "Checks every external link over the network."
 why = "An external link rots on its own schedule; this run says which ones did."
 fix = "Update or remove the link, or exclude the URL pattern with a reason under tools.lychee.exclude."
