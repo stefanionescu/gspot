@@ -1,83 +1,79 @@
 # Configuration
 
-This document decides the one file a person edits, the files gspot owns, and how settings merge.
+This document decides the one file a person edits, the files gspot writes, and how settings
+merge.
 
 ## Files
 
-| Path                                               | Owner                              | Tracked | Purpose                                                                                                                                                                                                                 |
-| -------------------------------------------------- | ---------------------------------- | ------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gspot.toml`                                       | the repository                     | yes     | The policy. Written by `init`, changed by the six writing commands (`ignore`, `add`, `remove`, `allow`, `set`, `declare`) or by hand; every load validates it the same way.                                             |
-| `gspot.local.toml`                                 | one machine                        | no      | Local skips. Nothing else.                                                                                                                                                                                              |
-| `.gspot/<tool>.<ext>`                              | gspot                              | yes     | Generated tool configuration. Header names the writer.                                                                                                                                                                  |
-| `.gspot/version`                                   | gspot                              | yes     | The gspot version this repository runs. One line. Written by `init`, moved by `upgrade`.                                                                                                                                |
-| `.gspot/hooks/*`                                   | gspot                              | yes     | Git hooks.                                                                                                                                                                                                              |
-| `.gspot/baselines/*.json`                          | gspot                              | yes     | Recorded finding counts.                                                                                                                                                                                                |
-| `.gspot/rules/**`                                  | gspot                              | yes     | Installed agent rule files.                                                                                                                                                                                             |
-| `.gspot/cache/**`                                  | gspot                              | no      | Check results keyed on inputs.                                                                                                                                                                                          |
-| `.gspot/last.json`                                 | gspot                              | no      | The last run.                                                                                                                                                                                                           |
-| `.gitignore`                                       | gspot, managed block               | yes     | Lists the three untracked paths above: `gspot.local.toml`, `.gspot/cache/`, `.gspot/last.json`.                                                                                                                         |
-| `<conventional path>` stubs                        | gspot                              | yes     | One-line files that point editors at `.gspot/`. Nine stubs copy the whole file today; D-100 ends that.                                                                                                                  |
-| `.editorconfig`                                    | gspot                              | yes     | Owned whole by the formatting preset, rendered from `[format]`; `[tools.editorconfig.extra]` adds a section gspot does not render.                                                                                      |
-| `.config/mise/conf.d/gspot.toml`                   | gspot                              | yes     | Tool pins and tasks under the mise runner.                                                                                                                                                                              |
-| `.github/workflows/gspot.yml`                      | gspot                              | yes     | The CI job, when enabled.                                                                                                                                                                                               |
-| `.vscode/settings.json`, `.vscode/extensions.json` | gspot, managed block               | yes     | Editor wiring, when `[editor] vscode = true`.                                                                                                                                                                           |
-| `gspot.schema.json`                                | gspot, published with each release | no      | The JSON schema of `gspot.toml`, generated from the zod schema and submitted to SchemaStore, so taplo and editors validate the file as they do `mise.toml`. `init` writes a `#:schema` line at the top of `gspot.toml`. |
+| Path                                                     | Owner                         | Tracked | Purpose                                                                            |
+| -------------------------------------------------------- | ----------------------------- | ------- | ---------------------------------------------------------------------------------- |
+| `gspot.toml`                                             | the repository                | yes     | the config, written by `init` and changed by the five writing commands or by hand  |
+| `gspot.local.toml`                                       | one machine                   | no      | a skip for a tool that cannot run on this machine, and nothing else                |
+| `.gspot/<tool-file>`                                     | gspot                         | yes     | the generated configuration of each tool, with the mark of gspot                   |
+| `.gspot/package.json`, its lockfile                      | gspot                         | yes     | the npm lint tools gspot pins (D-145)                                              |
+| `.gspot/node_modules/`                                   | gspot                         | no      | where those tools install                                                          |
+| `.gspot/version`                                         | gspot                         | yes     | the gspot version this repository runs, one line                                   |
+| `.gspot/baseline.json`                                   | gspot                         | yes     | every held count, sorted, one path on a line (D-104)                               |
+| `.gspot/hooks/*`                                         | gspot                         | yes     | git hooks, only where the repository had none (D-101)                              |
+| `.gspot/rules/**`                                        | gspot                         | yes     | the installed rule files                                                           |
+| `.gspot/cache/**`                                        | gspot                         | no      | verdicts keyed on their inputs, dropped after 30 days                              |
+| `.gspot/report.json`, `report.sarif`                     | gspot                         | no      | the last run                                                                       |
+| `.mise/conf.d/gspot-tools.toml`                          | gspot                         | yes     | tool pins under the mise runner (D-127)                                            |
+| `.editorconfig`                                          | gspot                         | yes     | written whole from `[format]`, because editors read no other place                 |
+| a root pointer                                           | gspot                         | yes     | only for a tool with an include form, such as `extends` or `parent_config` (D-100) |
+| `.gitignore`, `.gitattributes`, `CLAUDE.md`, `AGENTS.md` | gspot, one managed block each | yes     | the untracked paths, `.gspot/** linguist-generated`, and the index of rule files   |
+| the hook or task a hook calls                            | gspot, one managed block      | yes     | the gspot line, where the repository has hooks (D-114)                             |
+| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`  | gspot                         | yes     | the CI job, when enabled (D-133)                                                   |
+| `gspot.schema.json`                                      | gspot                         | no      | the JSON Schema of `gspot.toml`, published with each release                       |
 
-Every generated file opens with a header:
+gspot writes nothing else. It never writes a lint tool, a pin, or a script into `package.json`,
+and never a table into `pyproject.toml` (D-117, D-145). Under an npm runner it adds one line, the
+`gspot` launcher (D-147).
+
+Every generated file opens with a mark:
 
 ```text
-# Generated by gspot 0.4.0 from gspot.toml. Do not edit.
-# Change policy: gspot set / allow / ignore, or edit gspot.toml, then run: gspot apply
+# Generated by gspot 0.5.0 from gspot.toml. Do not edit.
+# Change the config with gspot set or gspot ignore, or edit gspot.toml. Then run: gspot apply
 ```
 
-JSON files carry the same text under a `"_gspot"` key. The exception is a JSON file whose reader refuses unknown keys (the Prettier one); it carries none and is known from the rendered list. `apply --check`
-compares every rendered file with the disk and finds strays by the header, so a renamed or copied generated file is still caught. gspot writes them read-only where the platform allows, as projen does.
+A JSON file carries the same text under a `"_gspot"` key. `apply` deletes a file only when it
+carries the mark and the config does not write it. A file with no mark is never deleted. Every
+file is written through a temporary file and a rename (D-152).
 
 ## `gspot.toml`
 
 ```toml
 version = 1
+level   = "recommended"           # or "all" (D-119)
 
-# The selection. Presets are bare names. See presets/README.md.
+# The selection. Presets are bare names.
 presets = ["typescript", "bash", "sql", "supabase", "docker", "markdown"]
 
-# A scope is a subtree with its own selection. Root presets apply everywhere.
+# A scope is a folder with a project file and its own selection. Root presets apply everywhere.
 [[scope]]
 path    = "api"
 presets = ["typescript", "express", "docker", "nginx", "vitest"]
 
+[scope.limits]
+function_lines = { value = 80, reason = "Route tables are one ordered list each." }
+
 [[scope]]
 path    = "ios"
-presets = ["swift", "xcode"]
+presets = ["swift", "xcode", "xctest"]
 
 # Limits. Only keys a check reads exist. A value above the shipped default carries a reason.
-# A root key applies to every language. A language table overrides it for that language only.
 [limits]
 file_lines            = 300
-function_lines        = { value = 80, reason = "Route tables are one ordered list each." }
 cyclomatic_complexity = 8
-cognitive_complexity  = 8
 
 [limits.python]
 file_lines = { value = 400, reason = "Pydantic models for one API surface live in one module." }
-
-[limits.bash]
-file_lines     = 140
-function_lines = 40
 
 # Naming. Extends the shipped policy. Terms are whole identifier parts.
 [naming]
 banned_terms = ["dispatcher", "orchestrator"]
 allowed      = [{ name = "spawnSync", reason = "Node API name" }]
-reserved     = [{ term = "data", allowed_for = ["API success envelope field"] }]
-
-# Per-language ceilings and cases. Defaults are the shipped table in 08-naming-policy.md.
-[naming.python]
-max_chars = 35
-max_words = 4
-
-[naming.python.parameters]
-max_words = { value = 3, reason = "Handler signatures read as one line." }
 
 [naming.swift]
 max_chars = { value = 45, reason = "UIKit delegate methods are long by convention." }
@@ -87,228 +83,161 @@ paths = ["api/scripts/steps/*.sh"]
 categories = ["files"]
 structural_prefix = "^\\d{2}-"
 
-# Architecture. Elements, the import matrix between them, file roles, and the types directory.
+# Architecture. Elements and the imports allowed between them.
 [architecture]
-types_directory = "types"            # every type alias lives here; see structure rules
+types_directory = "types"
 elements = [
-  { name = "app",      paths = ["src/app/**"] },
-  { name = "modules",  paths = ["src/modules/**"] },
-  { name = "platform", paths = ["src/platform/**"] },
-  { name = "env",      paths = ["src/env/**"] },
-  { name = "config",   paths = ["config/**"] },
-  { name = "types",    paths = ["types/**"] },
-  { name = "tests",    paths = ["tests/**"] },
-  { name = "entry",    paths = ["src/main.ts"] },
+  { name = "app",      paths = ["src/app"] },
+  { name = "modules",  paths = ["src/modules"] },
+  { name = "platform", paths = ["src/platform"] },
+  { name = "types",    paths = ["types"] },
 ]
-# default: an element imports only itself. Each row adds the elements it is allowed to import.
-allow = [
-  { from = "app",      to = ["config", "modules", "platform", "env", "types"] },
-  { from = "modules",  to = ["config", "platform", "env", "types"] },
-  { from = "platform", to = ["config", "env", "types"] },
-  { from = "config",   to = ["types"] },
-  { from = "env",      to = ["config", "types"] },
-  { from = "tests",    to = ["app", "modules", "platform", "env", "config", "types", "entry"] },
-  { from = "entry",    to = ["app", "modules", "platform", "env", "config", "types"] },
+edges_allowed = [
+  { from = "app",     to = ["modules", "platform", "types"] },
+  { from = "modules", to = ["platform", "types"] },
 ]
-# Roles drive the shipped import-direction rules. Unset roles fall back to element names.
-roles = { types = "types", config = "config", env = "env", tests = "tests", harness = "tests/harness/**", runtime = ["app", "modules", "platform"] }
 
-[structure]
-reexports = "none"                   # none | index-only
-call_through_allowed = [{ file = "src/openapi/components.ts", name = "buildErrorResponseExample", reason = "Public name is the stable contract." }]
-
-# Per-tool passthrough. Keys are the tool's own option names. Rendered into the template.
-# A tool's own "disable", "ignore" or "exclude rules" option is never a slot: those lines are
-# rendered from the [[ignore]] entries for the check, so what does not run is in one place.
+# Options of a tool, under the tool's own words.
 [tools.eslint]
-rules = { "unicorn/prefer-ternary" = ["error", "only-single-line"] }   # rule options; off is an [[ignore]]
-import_style = { "src/**" = "js", "functions/**" = "ts", "scripts/**" = "extensionless" }
-
-[tools.trufflehog]
-enabled = { value = false, reason = "This repository has no credentials a verifier can test." }
+rules = { "unicorn/prefer-ternary" = ["error", "only-single-line"] }
 
 [tools.typos]
 words = [{ word = "udid", reason = "Apple API name" }]
 
-[tools.markdownlint.extra]           # an option with no slot; rendered verbatim, printed every run
-reason = "MD044 proper names are not a slot yet."
-MD044  = { names = ["gspot", "Supabase"], code_blocks = false }
-
 [tools.commitlint]
-scopes = ["api", "ios", "supabase", "root", "deps"]
+scopes = ["api", "ios", "supabase"]
 
-[[tools.licenses.exceptions]]
+[[tools.licenses.allowed]]
 package = "certifi@2025.8.3"
 license = "MPL-2.0"
 reason  = "The Mozilla Public License covers the certificate bundle, not repository source."
 
-[tools.package-json]
-scripts = "wrappers"                 # any | wrappers | none
-allowed_scripts = { build = "node build/index.js", lint = "gspot check" }
-
-[tools.install]
-min_release_age_days = 7             # bun minimumReleaseAge, npm min-release-age, pnpm minimumReleaseAge
-security_scanner = "@socketsecurity/bun-security-scanner"
-
-# A check this check does not apply to these paths. Reason required. Printed every run.
+# A check does not apply to these paths. One reason, any number of paths. Printed every run.
 [[ignore]]
 check  = "structure/single-file-folder"
-paths  = ["scripts/**"]
-reason = "One launcher script per environment."
+paths  = ["scripts", "tools/one-off"]
+reason = "One launcher script for each environment."
 
-[[ignore]]
-check  = "typescript/eslint"
-rule   = "gspot/no-cross-folder-imports"
-paths  = ["api/config/tests/environment.ts"]
-reason = "The Vitest config loader cannot resolve the @config alias."
-
-# No paths: the rule is off everywhere in the scope. This is how a rule is turned off,
-# for gspot's own checks and for every tool (ShellCheck SC codes, Ruff codes, SwiftLint ids).
-[[ignore]]
-check  = "typescript/eslint"
-rule   = "unicorn/no-null"
-reason = "carried from eslint.config.mjs at init"
-
+# No paths: the rule is off everywhere in the scope. This is how any rule of any tool is turned off.
 [[ignore]]
 check  = "bash/shellcheck"
 rule   = "SC2312"
 reason = "set -e interaction on every correct if-function."
 
 [[ignore]]
-check   = "dependencies/osv"
-finding = "GHSA-vwc7-r8mq-g2x9"
-reason  = "adm-zip symlink overwrite. No fixed release exists."
+check  = "dependencies/osv"
+rule   = "GHSA-vwc7-r8mq-g2x9"
+reason = "adm-zip symlink overwrite. No fixed release exists."
 
-# What a path is. Generated files get freshness and secrets checks; vendored files get secrets and licenses.
-[[declare]]
-paths       = ["api/types/supabase.ts"]
-produced_by = "supabase gen types"
+# What a path is.
+[[generated]]
+paths = ["api/types/supabase.ts"]
 
-[[declare]]
-paths  = ["vendor/**"]
+[[vendored]]
+paths  = ["vendor"]
 reason = "Upstream source, patched only by rebase."
 
-# A script the repository already runs. Joins the graph like a preset check.
+# A script the repository already runs. It joins the run like a preset check.
 [[check]]
-id       = "sql/migration-data"
-command  = ["bunx", "tsx", "supabase/scripts/migrations.ts", "check"]
-paths    = ["supabase/migrations/**/*.sql"]
-stage    = "commit"
+id      = "sql/migration-data"
+command = ["bunx", "tsx", "supabase/scripts/migrations.ts", "check"]
+paths   = ["supabase/migrations/**/*.sql"]       # when it runs
+inputs  = ["supabase/migrations/**/*.sql", "supabase/scripts/migrations.ts"]   # what it reads
+stage   = "commit"
 
+# Absent table: gspot does nothing there (D-130).
 [hooks]
-tool = "gspot"          # gspot | lefthook | husky | none
+tool       = "existing"           # gspot | husky | lefthook | existing
+pre_commit = "mise task lint"     # where the gspot line lives, for "existing"
+push       = "changed"            # or "all" (D-123)
 
 [ci]
-provider = "github"        # github | none
+provider = "github"               # github | gitlab
+
+[runner]
+tool  = "mise"                    # mise | npm | pnpm | yarn | bun
+tasks = { check = "lint", fix = "lint:fix" }     # the task names that call gspot (D-116)
 
 [rules]
 install   = true
 directory = ".gspot/rules"
-project   = "rules/project"
-exclude   = []             # rule files or layer folders to leave out: "general/code/ACCESSIBILITY.md", "library"
+exclude   = []
 
-[editor]
-vscode = true              # writes managed blocks into .vscode/settings.json and extensions.json
-
-[inspection]
-strict = false             # true: unchecked files fail `check`
-
-[runner]
-surface = "mise"           # mise | npm | bun | pnpm | uv | none
+[coverage]
+strict = false                    # true: a source file no check reads fails the run
 ```
 
 ### Rules for the file
 
-- Every setting in the file has a command that writes it (`gspot set`, `allow`, `ignore`,
-  `declare`, `add`, `remove`), and `gspot doctor --settings` prints the key to use. A person who
-  prefers the editor edits the file; the result is the same and is validated on the next load.
-- Presets are bare names. A preset that does not exist fails to load, with the near matches.
-- A setting a selected preset does not expose fails to load, with the settings that exist under
-  that table. The list of exposed settings is finite and `gspot doctor --settings` prints it.
-- A `[[scope]]` path names a directory that exists. Scopes do not nest.
-- Every `[[ignore]]` carries a `reason` that is a sentence. `N/A`, `TBD`, `-` and an empty
-  string are refused. Every ignore prints on every run with `--verbose` and is counted in the
-  summary line.
-- Raising a limit above the shipped default, turning a rule or a tool off, adding a typo word,
-  adding an allowed name: each carries a reason. Lowering a limit or adding a banned term does not.
-- `[limits.<language>]` and `[naming.<language>]` take the language preset ids (`python`,
-  `typescript`, `javascript`, `swift`, `bash`, `sql`). A key there overrides the root key for
-  that language's checks. `[naming.<language>.<category>]` narrows to one identifier category
-  (`files`, `directories`, `types`, `functions`, `parameters`, `variables`, `properties`). The
-  keys are `max_chars`, `max_words` and `case`. A ceiling above the shipped default or a looser
-  case carries a reason.
-- A rule inside a tool is turned off by an `[[ignore]]` with `rule` and no `paths`, never by a
-  tool slot. `[tools.<name>.rules]` holds rule options and rules turned on; `off` there fails to
-  load and names the `ignore` line.
-- The `marketing` and `defensive` term groups cannot be removed as groups. Individual names in
-  them take scoped `allowed` entries.
-- `[[check]]` entries have `id`, `command`, `paths`, `stage`, and optionally `fix`, `count_regex`, `requires` (`build`, `docker`, `network`) and `platform` (`macos`, `linux`, `windows`; a check whose platform is not this machine's is a platform skip and prints so).
-- A `[[check]]` is how a
-  repository runs anything gspot does not ship: a second type-check project under a different
-  dependency set, a generator, a product test. It joins the graph like a preset check, and no
-  preset grows a slot for it.
-- A key gspot does not know fails to load. The one place for an option gspot has no slot for is
-  `[tools.<name>.extra]`, which carries a reason and prints every run; nothing is silent.
+- Every setting has a command that writes it, and `gspot list settings` prints the key. A hand
+  edit gives the same file and is validated on the next load.
+- A preset that does not exist fails to load, with the near matches. A setting no selected
+  preset has fails to load, with the settings that exist under that table.
+- A wrong entry does not stop `gspot check`. The run uses the rest of the file and reports the
+  entry as a finding of `integrity/policy`. The writing commands and `apply` refuse such a file.
+- A `[[scope]]` path names a folder that exists. Scopes nest, and a file belongs to the deepest
+  scope that holds it.
+- A selector that names a folder means everything under it: `src`, `src/`, and `src/**` are one
+  selector.
+- Every `[[ignore]]` carries a `reason` that is a sentence. `N/A`, `TBD`, `-`, and an empty
+  string are refused. A value that reaches a generated file is one line of printable text.
+- A loosening carries a reason: a limit above the shipped default, a rule or a tool turned off,
+  an allowed name. A tightening does not.
+- `[limits.<language>]` and `[naming.<language>]` take the language preset ids. A key there
+  wins over the root key for the checks of that language.
+- A rule of any tool is turned off by an `[[ignore]]` with `rule`, and nowhere else (D-144).
+  `[tools.<name>.rules]` holds rule options and rules turned on.
+- The `marketing` and `defensive` term groups cannot be removed as groups.
+- A `[[check]]` has `id`, `command`, `paths`, `stage`, and optionally `inputs`, `fix`, `output`,
+  `requires`, and `platform`. It is cached only when it names `inputs` (D-155). Its `output` takes
+  every format a manifest check takes.
+- A key gspot does not know fails to load. An old name is an unknown key like any other (D-134).
+
+### Names of settings
+
+One idea has one word (D-144). A list a gspot check skips ends in `_allowed`. One folder ends in
+`_directory`. A list of file globs ends in `_files`. The option of a tool keeps the word of the
+tool. [19-names.md](19-names.md) holds the table, and a test over the manifests holds it.
 
 ### Architecture
 
-`[architecture]` is read by the boundaries rules, the import-direction rules, the types rules
-and the Python contracts. Without it, a scope has one element and the import-direction rules
-use these defaults: `types` is any directory named `types`, `tests` is `tests/**` and test files,
-`harness` is `tests/harness/**`, `config` is `config/**`, `env` is `src/env/**`.
+`[architecture]` is read by the boundaries rules and the types rules, at the level `all`. It has
+three keys: `types_directory`, `elements`, and `edges_allowed`. An element imports only itself
+unless a row of `edges_allowed` adds a target. No default names a folder: a rule with nothing
+configured reports nothing. `init` proposes `types_directory` from what exists.
 
-The shipped import-direction rules, always on:
+### Options of a tool
 
-1. `types` imports only types, exports no runtime value, no function, no class, no default.
-2. `runtime` never imports `tests` or `harness`.
-3. `tests` and `harness` never import a `runtime` element's internals, only its element
-   contract (`index`, `public` or `contracts` files) or `types`.
-4. `config` and `env` never import `runtime`.
+`[tools.<name>]` holds the options a person changes on that tool, under the tool's own names. A
+person who knows ESLint writes `rules = { ... }`, and a person who knows Prettier writes
+`printWidth`. An option the preset does not have fails to load and names the ones that exist.
 
-`types_directory` turns on the types placement rules: no `interface`; every type alias and every
-`as const` object that replaces an enum lives under that directory; imports from it are
-`import type`. Exceptions go through `[[ignore]]` with a reason. `init` proposes the directory
-name from what exists.
+Every tool has `enabled`. Setting it false, with a reason, removes every check that tool runs.
+Every tool also has `[tools.<name>.extra]`: a table written as it stands into the config of the
+tool, with a required `reason`, for an option the preset does not have yet. Every `extra` table
+prints on every run. A key in `extra` that the preset has fails to load and names it.
 
-### Tool passthrough
-
-`[tools.<name>]` holds the options a person changes on that tool. Each preset declares the slots
-its tools expose, with the option's own name, so a person who knows ESLint writes
-`rules = { ... }` and a person who knows Prettier writes `printWidth`. The template renders them
-into the tool's format. An option with no slot fails to load and names the slots that exist.
-A rule slot holds options and rules turned on; turning a rule off is an `[[ignore]]`, so there is
-one place to look for what does not run.
-
-Every tool exposes `enabled`. Setting it false, with a reason, removes every check that tool
-runs and prints the reason every run. This is the control over what runs; `init` is the control
-over what is installed.
-
-Every tool a preset ships exposes the options a real repository sets. A preset that ships a tool
-with no slots for its common options is incomplete.
-
-Every tool also exposes `[tools.<name>.extra]`: a table rendered verbatim into the tool's
-configuration, after the slots, with a required `reason`. It is the escape hatch for an option no
-slot covers yet, so a missing slot never blocks a person. Every `extra` table prints on every run, and `doctor --settings` lists it under "not a slot." `upgrade --check` reports when a new
-release adds a slot for a key an `extra` table holds, so the key moves up and the escape hatch
-empties over time. A key in `extra` that a slot already covers fails to load and names the slot.
+A setting may be detected. `init` fills it from the repository, such as the build command, the
+output folder, the SQL dialect, or the Swift destination, and asks where it finds nothing.
 
 ## Profiles
 
 A profile is a TOML file with the schema of `gspot.toml` and three differences (D-79):
 
-| Difference | Rule                                                                                                                                         |
-| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------- |
-| Head       | `profile = "<name>"` and `selection = "exact"` or `"detect"` stand beside `version` and `presets`.                                           |
-| Left out   | `[[scope]]`, `[[ignore]]`, `[[declare]]`, `[[check]]` and any list entry with `paths` are refused, because a path belongs to one repository. |
-| Reasons    | A loosened setting keeps its reason. The reason travels with the profile.                                                                    |
+| Difference | Rule                                                                                                            |
+| ---------- | --------------------------------------------------------------------------------------------------------------- |
+| Head       | `profile = "<name>"` and `selection = "exact"` or `"detect"` stand beside `version`, `level`, and `presets`     |
+| Left out   | `[[scope]]`, `[[ignore]]`, `[[generated]]`, `[[vendored]]`, `[[check]]`, and any entry with `paths` are refused |
+| Reasons    | a loosened setting keeps its reason, and the reason travels with the profile                                    |
 
-`selection = "exact"` installs the named presets and the presets they require, and nothing else.
-Detection still runs, and the plan lists what it found and did not install. `selection =
-"detect"` adds the detected presets to the named ones. A profile with no tool settings takes
-every shipped default.
+`selection = "exact"` installs the named presets and what they require. Detection still runs,
+and the plan lists what it found and did not install. `selection = "detect"` adds the detected
+presets to the named ones. A profile is read through the same schema as the config, so a value
+it carries is held to the same rules.
 
 ```toml
 version   = 1
+level     = "all"
 profile   = "house-style"
 selection = "exact"
 presets   = ["typescript", "formatting", "spelling", "markdown", "commits"]
@@ -316,18 +245,13 @@ presets   = ["typescript", "formatting", "spelling", "markdown", "commits"]
 [format]
 indent_width = 2
 
-[rules]
-install = true
-exclude = ["general/code/ACCESSIBILITY.md"]
-
 [hooks]
 tool = "lefthook"
 ```
 
-`init --from` copies the profile's tables into the new `gspot.toml`. The repository does not
-point back at the profile, so the policy stays one file and a later change to the profile
-changes nothing here. Rejected: an `extends` key, which makes every check run depend on a second
-file and, for a URL, on the network.
+`init --from` copies the tables of the profile into the new `gspot.toml`. The repository does
+not point back at the profile, so the config stays one file. Rejected: an `extends` key, which
+makes every run depend on a second file and, for an address, on the network.
 
 ## Merge order
 
@@ -335,47 +259,34 @@ For every setting:
 
 ```text
 preset default
-  → framework or platform preset override, in selection order
+  → framework or platform preset, in selection order
   → root table
   → scope table
 ```
 
-Lists append and deduplicate. Scalars replace. Two presets that set the same scalar to different
-values fail at load with both presets named; a person resolves it with an explicit root value.
+Lists append and drop repeats. Scalars replace. Two presets that set one scalar to two values
+fail at load with both presets named, and a root value settles it.
 
 ## Baselines
 
-```json
-{
-  "check": "typescript/eslint",
-  "rule": "vitest/expect-expect",
-  "count": 100,
-  "recorded": "2026-09-17",
-  "paths": { "api/tests/unit/turn.test.ts": 7 }
-}
-```
+`.gspot/baseline.json` maps a check, then a rule, then a path, to a count. It is sorted, and
+each path stands on a line of its own. Two branches that each change a count then merge with a
+conflict on one line or none (D-104).
 
-- `init` writes one file per rule that has findings. The gate passes that day.
-- Where a tool has its own baseline mechanism, gspot drives it instead of counting. ESLint has bulk suppressions (`--suppress-all` at `init`, `--suppressions-location .gspot/baselines/eslint.json` on every run, `--prune-suppressions` under `apply --lower-baselines`); basedpyright has `--writebaseline` with the file under `.gspot/baselines/`.
-- The tool then honors
-  the same file in the editor, so the editor and the gate agree. Every other check uses the count
-  file above. The person sees one command either way.
-- `check` fails when the count exceeds the baseline, or when a touched file's own count grows.
-  A count below the baseline passes and prints.
-- `apply --lower-baselines` lowers every baseline to the last run's counts. It never raises one.
-  It reads the count the run recorded for each baseline, held findings included: a held count is a
-  count, not zero.
-- A check the last run did not read in full keeps its baseline untouched. That covers a run of
-  one check, a run of one scope, and a check skipped on this machine.
-- A run that read only staged or changed files is refused, because its counts are partial.
-- One baseline holds the count of a rule over the whole repository. The findings of every scope
-  are added up before the comparison. Compared scope by scope, each scope had room to grow up to
-  the whole count.
-- Format, syntax, and schema findings never baseline. A formatter run fixes them in one commit.
-- A failing build, a failing test run, and coverage under its floor never baseline. The floor is a setting, and a
-  person lowers it with a reason.
-- A baseline for a rule that has been removed is reported by `apply --check` and removed by
-  `apply --lower-baselines`.
+- `init` runs the commit stage once and holds what it finds. The gate passes that day.
+- A tool with a baseline of its own, such as the bulk suppressions of ESLint or the baseline of
+  basedpyright, keeps its file. The manifest of the tool names it, and the editor honors it.
+- `check` fails when a count rises. It prints the findings of the files whose count rose, and one
+  line that counts the rest.
+- `gspot baseline` lowers every count to the last full run, and never raises one. A run of one
+  check, of one scope, or of staged files is refused, because its counts are partial.
+- `gspot baseline <check-id>` writes the first counts of one check.
+- Every widening takes one path (D-143): `gspot add`, `level = "all"`, a rule turned back on,
+  and an upgrade. The new checks run once, their findings are held, and the output says how many.
+- Format, syntax, and schema findings are never held. `init` offers the fix run for them (D-103).
+- A failing build, a failing test run, and coverage under its floor are never held.
+- Findings of the security, dependency, and secret checks are held, so adoption is not blocked.
+  Every full run prints one line for each of those checks that holds findings.
 
 ## `gspot.local.toml`
 
@@ -383,28 +294,29 @@ values fail at load with both presets named; a person resolves it with an explic
 skip = ["docker/hadolint"]      # this machine has no Docker
 ```
 
-One key. Any other key fails to load with the message that it belongs in `gspot.toml`. Skips
-print on every run.
+One key. A skip of a check whose tool is present on this machine is refused with exit 2. Skips
+print on every run, and the summary counts them.
 
-## Declarations and file natures
+## What a path is
 
-Every tracked path has one nature: `source`, `generated`, `vendored`, `binary`. Sources are
-`[[declare]]`, `.gitattributes` (`linguist-generated`, `linguist-vendored`, `-text`, `filter=lfs`),
-a generated-file banner the preset knows, and a content sniff for binaries, in that order.
+Every tracked path is one of four kinds: source, generated, vendored, or binary. The sources
+are `[[generated]]` and `[[vendored]]`, `.gitattributes`, a banner the preset knows, and the
+first bytes of the file, in that order.
 
-| Nature    | Checks that apply                                                                                                                                                                                                                                              |
-| --------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| source    | everything the selected presets claim for its extension                                                                                                                                                                                                        |
-| generated | secrets, freshness (run `produced_by` and diff). Freshness applies to tracked files only: a generated file that git ignores (`next-env.d.ts`, `cloudflare-env.d.ts`) is regenerated by the build and has nothing to compare, so the check skips it and says so |
-| vendored  | secrets, licenses, security                                                                                                                                                                                                                                    |
-| binary    | secrets, size limit unless under LFS                                                                                                                                                                                                                           |
+| Kind      | Checks that apply                                          |
+| --------- | ---------------------------------------------------------- |
+| source    | everything the selected presets claim for its kind of file |
+| generated | secrets                                                    |
+| vendored  | secrets, licenses, security                                |
+| binary    | secrets, and the size limit unless the file is under LFS   |
 
-A source file no preset claims is `unchecked`. `doctor` lists it. With `[inspection] strict = true`
-it fails `check`.
+A source file that no check reads is unchecked, and `doctor` lists it. With
+`[coverage] strict = true` it fails `check`. A kind of file that gets no format, syntax, style,
+or type check is named by `doctor` and by `gspot list`.
 
 ## Path selectors
 
-One syntax everywhere: root-relative globs, `**` crosses directories, `!` negates after an
-include. A bare directory name is refused with a message: write `dir/**`. This is the syntax a
-misread `.sqlfluffignore` entry violated when it hid 58 of 83 files in a reference repository. gspot never translates its own selectors into a tool's ignore syntax; it passes file lists.
-Selectors use forward slashes on every platform.
+One syntax everywhere: globs from the root, `**` crosses folders, and `!` negates after an
+include. A folder name means everything under it. gspot never translates its own selectors into
+the ignore syntax of a tool: it passes file lists. Selectors use forward slashes on every
+platform.
