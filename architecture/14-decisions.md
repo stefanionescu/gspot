@@ -1285,3 +1285,31 @@ Rejected: writing the pin only where the repository holds no ESLint, and refusin
 where the major version differs. That asks a repository on the newest ESLint to move down
 before it can try gspot. Also rejected: leaving a newer exact version in place, which is what
 the code does today, and which runs plugins on an ESLint they do not support.
+
+## D-146 A built-in check is one file named after its check id
+
+One file registered 130 analyses under names of their own, and the folders of `src/` were named
+after presets and package managers (K-79). A built-in check that is not structure, naming, or
+prose is now one file under `src/checks/`. The folder is the first part of the check id, and the
+file is the second part. `checks/registry.ts` maps the id to the function, and a unit test holds
+that map equal to the manifests. The manifest key `analysis` goes, because the id is the name.
+
+The family `integrity` keeps the checks over the policy and the files gspot writes. A check that
+reads documents, dependencies, licenses, or secrets takes the family of its preset:
+`integrity/docs-headings` becomes `docs/headings`, and `integrity/lockfile-fresh` becomes
+`dependencies/lockfile-fresh`. A parser that several checks use sits in `src/readers/`.
+[16-file-tree.md](16-file-tree.md) holds every move.
+
+Rejected: a registration in each manifest that the build turns into an index, which adds a build
+step to answer a question one table answers. Also rejected: folders named after languages for
+this code (D-128), because `apple/` held the Xcode, the XCTest, and the Swift checks together.
+D-128 still names the two folders `swift` and `python` under `checks/`.
+
+## D-147 The launcher is the one package gspot writes into a manifest
+
+D-145 left one point open: a repository that runs gspot through npm, pnpm, yarn, or bun needs the
+`gspot` launcher in its `devDependencies`. The launcher is the tool the developer chose, and it
+is no lint tool, so gspot writes that one line at `init` and removes it at `uninstall`. It writes
+no other package, no `prepare` script, and no pin of a tool. The hooks are installed by the setup
+entry of the repository (D-115). Rejected: a global install only, which leaves a clone with no
+way to get the version the repository pins.
