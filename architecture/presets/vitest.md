@@ -11,13 +11,17 @@ Kind: tool. Requires: typescript or javascript.
 
 ## Tools
 
-@vitest/eslint-plugin, @vitest/coverage-istanbul or v8.
+@vitest/eslint-plugin. The repository owns its coverage provider, istanbul or v8, as it owns
+Vitest: the preset lists neither as a tool, so `doctor` never calls one missing.
 
 ## Versions
 
 The repository owns the version of its test framework. The preset pins neither `vitest` nor
 `@vitest/coverage-v8`, and its floor is Vitest 2. The same holds for the Supabase CLI
 in the supabase preset. A pin never lowers an exact version a `package.json` already holds.
+
+`tools.vitest.coverage_file` names the Vitest configuration the coverage run reads, relative to the
+scope, for a repository that keeps it where Vitest does not look. It is empty by default.
 
 ## Generated configuration
 

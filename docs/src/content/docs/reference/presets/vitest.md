@@ -11,7 +11,6 @@ Kind: tool. Requires: `javascript`.
 
 - vitest
 - @vitest/eslint-plugin 1.3.4
-- @vitest/coverage-v8
 
 ## Checks
 
@@ -21,6 +20,7 @@ Kind: tool. Requires: `javascript`.
 
 ## Settings
 
+- `tools.vitest.coverage_file`: The Vitest configuration the coverage run reads, relative to the scope, for a repository that keeps it somewhere Vitest does not look.
 - `tools.vitest.coverage_lines`: The smallest share of lines the tests cover, out of 100.
 - `tools.vitest.coverage_branches`: The smallest share of branches the tests cover, out of 100.
 - `tools.vitest.coverage_functions`: The smallest share of functions the tests cover, out of 100.

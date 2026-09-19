@@ -1,4 +1,5 @@
 // Command parts that read the policy: {each:<flag>:<setting>} is the flag and one item for every item of a list, and {setting:<name>} is one value.
+// A setting that holds one string counts as a list of one for {each:…}, and an empty string as an empty list.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { PlannedCheck } from '#types/run.ts';
@@ -17,7 +18,8 @@ const EACH_PLACEHOLDER = /^\{each:(?<flag>[^:]+):(?<setting>[a-z0-9_.-]+)\}$/u;
 export function listArguments(planned: PlannedCheck, part: string): string[] | undefined {
     const groups = EACH_PLACEHOLDER.exec(part)?.groups;
     if (groups === undefined) return undefined;
-    const items = (planned.scope.view.settings[groups['setting'] ?? ''] as string[] | undefined) ?? [];
+    const held = planned.scope.view.settings[groups['setting'] ?? ''] as string[] | string | undefined;
+    const items = typeof held === 'string' ? [held].filter((item) => item !== '') : (held ?? []);
     return items.flatMap((item) => [groups['flag'] ?? '', toPlatform(item)]);
 }
 

@@ -2,6 +2,9 @@
 
 export type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host';
 
+/** The two facts of a package.json that say which package it is. */
+export type PackageFacts = { name?: string; version?: string };
+
 export type ToolProbe = {
     name: string;
     state: ToolState;
