@@ -43,6 +43,9 @@ describe('takeover', () => {
             const policy = readFileSync(join(fixture.path, 'gspot.toml'), 'utf8');
             expect(policy).toContain('The device identifier API name.');
             expect(policy).toContain('carried from typos.toml at init');
+            // The old file named no locale, which accepts every English dialect, so the repository keeps that.
+            expect(policy).toContain('locale = "en"');
+            expect(readFileSync(join(fixture.path, '.gspot/typos.toml'), 'utf8')).toContain('locale = "en"');
             expect(policy).toContain('SC2086');
             expect(policy).toContain('carried from .shellcheckrc at init');
             expect(policy).toContain('no-console');

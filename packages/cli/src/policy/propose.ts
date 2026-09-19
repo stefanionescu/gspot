@@ -14,9 +14,19 @@ const PREFACE = [
     '',
 ].join('\n');
 
+const SHIPPED_LOCALE = 'en-us';
+
 function nonEmpty(table: Record<string, unknown[]>): TomlTable | undefined {
     const kept = Object.entries(table).filter(([, list]) => list.length > 0);
     return kept.length === 0 ? undefined : Object.fromEntries(kept);
+}
+
+// The locale is written only where it differs from the one the preset ships.
+function typosTable(carried: CarriedLists): TomlTable | undefined {
+    const lists = nonEmpty({ words: carried.typosWords, exclude: carried.typosExcludes });
+    const isOwn = carried.typosLocale !== undefined && carried.typosLocale !== SHIPPED_LOCALE;
+    if (!isOwn) return lists;
+    return { locale: carried.typosLocale, ...lists };
 }
 
 function xcodeTable(xcode: Proposal['xcode']): TomlTable | undefined {
@@ -26,7 +36,7 @@ function xcodeTable(xcode: Proposal['xcode']): TomlTable | undefined {
 
 function toolTables(carried: CarriedLists, commitScopes: string[] | undefined, xcode?: Proposal['xcode']): TomlTable {
     const tables: Record<string, TomlTable | undefined> = {
-        typos: nonEmpty({ words: carried.typosWords, exclude: carried.typosExcludes }),
+        typos: typosTable(carried),
         gitleaks: nonEmpty({ allow: carried.gitleaksAllow }),
         sqlfluff: nonEmpty({ exclude: carried.sqlfluffExcludes }),
         semgrep: nonEmpty({ ignore: carried.semgrepIgnores }),

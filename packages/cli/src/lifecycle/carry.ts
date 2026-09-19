@@ -101,7 +101,10 @@ function carryTypos(root: string, path: string, lists: CarriedLists): void {
     const text = readText(root, path);
     const parsed = tryParseToml(text);
     if (!parsed) return;
-    carryTyposWords(text.split('\n'), asRaw(asRaw(parsed['default'])?.['extend-words']) ?? {}, path, lists);
+    const defaults = asRaw(parsed['default']);
+    // typos with no locale accepts British and American spellings alike, and the repository was written under that.
+    lists.typosLocale = asText(defaults?.['locale']) ?? 'en';
+    carryTyposWords(text.split('\n'), asRaw(defaults?.['extend-words']) ?? {}, path, lists);
     const excludes = asStrings(asRaw(parsed['files'])?.['extend-exclude']);
     const kept = excludes.filter((pattern) => !isDefaultExclude(pattern));
     if (kept.length === 0) return;
