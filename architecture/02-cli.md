@@ -526,3 +526,45 @@ detected   bash 3 files  (not in the profile; add it with gspot add bash)
 | 0    | Every check ran and passed, or the command completed                                                            |
 | 1    | Findings, a baseline exceeded, a generated file drifted, a tool missing                                         |
 | 2    | gspot did not run: bad `gspot.toml`, unknown preset, unknown command, unanswered question, version pin mismatch |
+
+## The command surface after the trim
+
+The sections above describe the binary as it is. D-129 to D-133 decide what it becomes. One rule decides what stays: a flag exists when a test uses it and a guide shows it.
+
+What matches the tools a developer already knows, and stays:
+
+| gspot                                                                   | The same as                                          |
+| ----------------------------------------------------------------------- | ---------------------------------------------------- |
+| `gspot check` reads the whole repository when no flag narrows it        | `eslint .`, `ruff check`, `biome check`              |
+| `--fix`                                                                 | ESLint, Ruff, Biome                                  |
+| `--dry-run` on a command that writes many files                         | `npm publish --dry-run`, `git add -n`, `ruff --diff` |
+| `--yes`, `--no-install`, `--allow-dirty`                                | npm, `cargo fix --allow-dirty`                       |
+| `-C <dir>`                                                              | git                                                  |
+| `--json`, `--quiet`, `--verbose`, `--no-color`, the `NO_COLOR` variable | most command-line tools                              |
+| exit 0 clean, 1 findings, 2 wrong usage or config                       | ESLint, Ruff                                         |
+
+What changes:
+
+| Today                                                               | Used by a test or a guide | Becomes                                                                                     |
+| ------------------------------------------------------------------- | ------------------------- | ------------------------------------------------------------------------------------------- |
+| `--dry-run` on `ignore`, `add`, `remove`, `allow`, `set`, `declare` | no                        | gone. Each edits one tracked file, and `git diff` shows the edit                            |
+| `upgrade --check`                                                   | yes                       | `upgrade --dry-run`                                                                         |
+| `apply --check`                                                     | yes                       | gone. `integrity/generated-drift` inside `gspot check` does that job                        |
+| `--ci none`, `--hooks none`, `--runner none`                        | yes                       | `--no-ci`, `--no-hooks`, `--no-runner`, the form `--no-rules` and `--no-install` have       |
+| `--ci github`                                                       | yes                       | `--ci github` or `--ci gitlab`                                                              |
+| `--keep-format`, `--shipped-format`                                 | no                        | `--format keep` or `--format shipped`                                                       |
+| `--project-templates` on `init` and on `apply`                      | no                        | `apply --starter-rules` only                                                                |
+| `uninstall --keep-hooks`                                            | no                        | gone with D-101: gspot takes no hooks path in a repository that has hooks                   |
+| `init --own`, `set --replace`, `set --default`                      | no                        | stay, and each gets a test and a line in a guide                                            |
+| `apply --lower-baselines`, `apply --baseline <id>`                  | yes                       | `gspot baseline`, `gspot baseline <id>`                                                     |
+| `gspot allow` with seven lists                                      | yes                       | `gspot allow typos <word>` stays as the daily shortcut. Every other list goes through `set` |
+| `gspot declare`                                                     | yes                       | gone. `gspot set generated ...` and `gspot set vendored ...` append the same entries        |
+| `gspot why <path>`                                                  | yes                       | `gspot explain <path>`                                                                      |
+| `doctor --settings`                                                 | yes                       | `gspot list settings`                                                                       |
+| `doctor --offline`                                                  | yes                       | gone. `doctor` calls no network, and `upgrade --dry-run` looks for a newer version          |
+| `profile check <profile>`                                           | yes                       | gone. `init --from <profile> --dry-run` reads and validates the same file                   |
+| `check --at <stage>`                                                | yes                       | `check --stage <stage>`                                                                     |
+| `check --message-file`                                              | the hook only             | stays, and leaves `--help`                                                                  |
+
+The commands after the trim: `init`, `check`, `apply`, `baseline`, `list`, `explain`, `doctor`,
+`ignore`, `set`, `add`, `remove`, `allow`, `upgrade`, `uninstall`, `profile save`, `completion`.

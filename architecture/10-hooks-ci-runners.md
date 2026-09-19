@@ -136,6 +136,17 @@ needs the yes.
 
 ## CI workflow
 
+D-133 adds GitLab. `[ci] provider = "gitlab"` writes `.gitlab/ci/gspot.yml` with one job that
+runs `gspot check`, and the init plan shows the line that includes it:
+
+```yaml
+include:
+    - local: .gitlab/ci/gspot.yml
+```
+
+gspot never edits `.gitlab-ci.yml`. The provider is chosen from the repository: its CI files
+first, then the host of its remote.
+
 `[ci] provider = "github"` writes `.github/workflows/gspot.yml`:
 
 ```yaml

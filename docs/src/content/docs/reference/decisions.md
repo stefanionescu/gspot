@@ -1008,3 +1008,37 @@ holds the path. This amends D-106.
 `python`, `swift`, `typescript`, `javascript` and `bash` leave the banned folder names. The
 container words stay banned. The folders `pyproject/`, `apple/`, `golang/` and `cargo/` of this
 repository become `python/`, `swift/`, `go/` and `rust/`.
+
+## D-129 One word for a run that writes nothing
+
+`--dry-run` means "show what happens and write nothing" on `init`, `upgrade`, `uninstall` and
+`check --fix`, and on no other command. `upgrade --check` takes that name. The six commands that
+edit one line of `gspot.toml` lose the flag, because the file is tracked and `git diff` shows the
+edit. Rejected: keeping it everywhere for symmetry, because no test and no guide ever used it on
+those commands.
+
+## D-130 A refusal is a `--no-` flag, never the value `none`
+
+`--no-ci`, `--no-hooks` and `--no-runner` join `--no-rules` and `--no-install`. In `gspot.toml`
+the table is absent where today it holds `"none"`. A developer still needs the refusal: a
+repository with a CI of its own takes no workflow from gspot.
+
+## D-131 A command exists when nothing else answers its question
+
+`why` folds into `explain`, which takes a path. `declare` folds into `set`. `allow` keeps the one
+list people type daily, `typos`. `profile check` folds into `init --from --dry-run`.
+`doctor --settings` moves to `gspot list settings`, and `doctor` calls no network.
+[02-cli.md](https://github.com/stefanionescu/gspot/blob/main/architecture/02-cli.md) holds the table.
+
+## D-132 Baselines have a command
+
+`gspot baseline` lowers every count to the last full run, and `gspot baseline <check-id>` writes
+the first count of one check. `apply` writes generated files and does nothing else.
+
+## D-133 GitLab beside GitHub, and gspot owns no CI file it did not create
+
+`--ci` takes `github` or `gitlab`. The default follows the repository: a `.gitlab-ci.yml` or a
+GitLab remote, a `.github/` folder or a GitHub remote, and no CI otherwise. For GitLab, gspot
+writes `.gitlab/ci/gspot.yml`, and the plan shows the one `include:` line for the developer to
+add to `.gitlab-ci.yml`. gspot never edits that file. A repository whose CI already runs a lint
+job is told so and gets no second job.
