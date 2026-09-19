@@ -33,8 +33,9 @@ The three rules the reference repository measured and left off enter with a base
 
 ## Settings
 
-`tools.vitest.coverage` (percent per metric), `tools.vitest.harness_dir` (default `tests/harness`, the harness role),
-`tools.vitest.test_files`.
+`tools.vitest.coverage_lines`, `coverage_branches`, `coverage_functions` and
+`coverage_statements` (default 80 each), and `tools.vitest.harness_dir` (default `tests/support`).
+The command reads them through `{setting:<name>}` parts.
 
 ## Rule files
 

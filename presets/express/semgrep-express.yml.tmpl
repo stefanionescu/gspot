@@ -1,0 +1,72 @@
+rules:
+    - id: express-raw-query-interpolation
+      patterns:
+          - pattern-either:
+                - pattern: |
+                      $DB(`...${req.body.$FIELD}...`)
+                - pattern: |
+                      $DB(`...${req.query.$FIELD}...`)
+                - pattern: |
+                      $DB(`...${req.params.$FIELD}...`)
+      message: >
+          SQL injection risk - user input interpolated into a database call.
+          Use parameterised queries or an ORM.
+      languages: [typescript, javascript]
+      severity: ERROR
+      metadata:
+          cwe: ['CWE-89']
+          category: security
+
+    - id: express-unvalidated-redirect
+      patterns:
+          - pattern-either:
+                - pattern: |
+                      res.redirect(req.body.$VALUE)
+                - pattern: |
+                      res.redirect(req.query.$VALUE)
+                - pattern: |
+                      res.redirect(req.params.$VALUE)
+      message: >
+          Open redirect - user input passed directly to res.redirect().
+          Validate against an allowlist of URLs.
+      languages: [typescript, javascript]
+      severity: ERROR
+      metadata:
+          cwe: ['CWE-601']
+          category: security
+
+    - id: express-res-send-raw-input
+      patterns:
+          - pattern-either:
+                - pattern: res.send(req.body)
+                - pattern: res.send(req.query)
+                - pattern: res.send(req.params)
+      message: >
+          Reflected XSS risk - raw request data echoed in the response.
+          Sanitize or serialize the data before sending.
+      languages: [typescript, javascript]
+      severity: ERROR
+      metadata:
+          cwe: ['CWE-79']
+          category: security
+
+    - id: express-auth-routes-must-be-rate-limited
+      patterns:
+          - pattern-either:
+                - pattern: |
+                      $APP.use($PATH, ..., supabaseAuthMiddleware, ..., $HANDLER)
+                - pattern: |
+                      $APP.$METHOD($PATH, ..., supabaseAuthMiddleware, ..., $HANDLER)
+          - pattern-not: |
+                $APP.use($PATH, ..., supabaseAuthMiddleware, ..., createAuthRateLimiter(...), ..., $HANDLER)
+          - pattern-not: |
+                $APP.$METHOD($PATH, ..., supabaseAuthMiddleware, ..., createAuthRateLimiter(...), ..., $HANDLER)
+      message: >
+          Authenticated API routes must apply the authenticated user limiter.
+          Route registrations need supabaseAuthMiddleware before createAuthRateLimiter(...)
+          so the limiter runs after auth succeeds.
+      languages: [typescript, javascript]
+      severity: ERROR
+      metadata:
+          cwe: ['CWE-307', 'CWE-770']
+          category: security

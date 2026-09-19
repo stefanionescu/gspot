@@ -726,3 +726,9 @@ list setting. `tools.semgrep.rules` uses it to pass the repository's own rule fi
 is the list inside each item when findings nest under a file, and `fields` maps `file`, `line`,
 `column`, `rule` and `message` to the tool's keys. gixy, squawk, sqlfluff, SwiftLint, and Ruff
 all print JSON, so their presets stay data. Rejected: one parser in the binary for each tool.
+
+## D-96 A command reads one setting by name
+
+A command part may hold `{setting:<name>}`, which becomes the value the policy holds for that
+setting. `vitest/coverage` passes its four floors to Vitest this way. Rejected: a generated
+Vitest configuration, because the repository owns its `vitest.config` and a second one fights it.

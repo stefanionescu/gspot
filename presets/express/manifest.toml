@@ -1,0 +1,93 @@
+[preset]
+id = "express"
+kind = "framework"
+title = "Express"
+requires = ["javascript"]
+recommends = ["security", "vitest"]
+description = "An Express service: the Semgrep rules for request handling, an OpenAPI document that lints and matches its source, and a test for every route file."
+
+[detect]
+dependencies = ["express"]
+
+[[tools]]
+name = "spectral"
+version = "6.15.0"
+npm = "@stoplight/spectral-cli"
+mise = "npm:@stoplight/spectral-cli"
+
+[[configs]]
+template = "semgrep-express.yml.tmpl"
+target = ".gspot/semgrep/express.yml"
+needs = "security"
+
+[[configs]]
+template = "spectral.yaml.tmpl"
+target = ".gspot/spectral.yaml"
+
+[[checks]]
+id = "express/openapi-lint"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "openapi-lint"
+tool = "spectral"
+claims = {extensions = [".yaml", ".yml", ".json"]}
+inspection = ["style"]
+summary = "Lints the OpenAPI document named in tools.openapi.document with the Spectral OpenAPI rules."
+why = "Clients are written from this document, so an operation with no id or an undefined response becomes somebody's broken client."
+fix = "Change the document the way the rule says, or the code that writes it."
+
+[[checks]]
+id = "express/openapi-fresh"
+stage = "push"
+runs = "once"
+engine = "integrity"
+analysis = "openapi-fresh"
+inspection = ["consistency"]
+summary = "Runs the command in tools.openapi.produced_by and fails when it changes the document."
+why = "A committed document that lags the routes describes a service that does not exist."
+fix = "Run the command and commit the document it writes."
+
+[[checks]]
+id = "express/routes-tested"
+stage = "push"
+runs = "once"
+engine = "integrity"
+analysis = "routes-tested"
+inspection = ["tests"]
+summary = "Checks that some test file names every route file."
+why = "A route with no test is the one that changes behavior without anyone noticing."
+fix = "Add a test file for the route, named after it."
+
+[[settings]]
+name = "tools.openapi.document"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The committed OpenAPI document; empty turns both OpenAPI checks off."
+
+[[settings]]
+name = "tools.openapi.produced_by"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The command that writes the OpenAPI document from the code."
+
+[[settings]]
+name = "tools.express.route_glob"
+kind = "list"
+direction = "tightening"
+default = []
+summary = "The route files that each need a test; empty turns the check off."
+
+[[settings]]
+name = "tools.express.test_glob"
+kind = "list"
+direction = "neutral"
+default = ["**/*.test.*", "**/*.spec.*", "**/tests/**"]
+summary = "The files that count as tests of a route."
+
+[rule_files]
+framework = ["framework/express/EXPRESS.md", "framework/express/API.md", "framework/express/OPENAPI.md"]
+shared = ["shared/http/HTTP.md"]
+runtime = ["runtime/node/NODE.md"]

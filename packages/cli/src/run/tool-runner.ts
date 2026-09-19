@@ -7,9 +7,9 @@ import { pushBase } from '#cli/repository/staged.ts';
 import type { SpawnResult } from '#types/platform.ts';
 import { parseOutput } from '#cli/run/parse-output.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
-import { listArguments } from '#cli/run/list-arguments.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
 import { configurationName } from '#cli/presets/read-manifests.ts';
+import { listArguments, settingsFilled } from '#cli/run/list-arguments.ts';
 import type { ToolPin, CheckSpec, ConfigurationTarget } from '#types/manifest.ts';
 import type { ToolRunState, PreparedCommand, Substitutions, Session, PlannedCheck } from '#types/run.ts';
 
@@ -83,7 +83,7 @@ function expandPart(session: Session, planned: PlannedCheck, part: string, sub: 
 }
 
 function substituteOne(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string {
-    return part
+    return settingsFilled(planned, part)
         .replaceAll(CONFIG_PLACEHOLDER, (_match, name: string) =>
             toPlatform(join(session.root, configurationPath(session, planned, name))),
         )

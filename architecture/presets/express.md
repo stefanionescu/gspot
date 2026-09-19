@@ -22,12 +22,12 @@ The scope's ESLint config gains `n/no-process-exit`, `security/*`, and three `no
 
 ## Checks
 
-| Id                          | Stage  | Command                                                                                                                                                                                                                                                                                                                                    |
-| --------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `security/semgrep` api pack | push   | raw query interpolation, `res.send` of raw input, unvalidated redirect, JWT `none` and decode without verify, unauthenticated routes without rate limit, stack traces in responses, secrets in logs, SSRF from user input, `child_process` exec, dynamic require, `console.log` in source, non-null assertion chains, `@ts-ignore`, `eval` |
-| `express/openapi-lint`      | commit | `spectral lint <document>` when `[tools.openapi] document` is set                                                                                                                                                                                                                                                                          |
-| `express/openapi-fresh`     | push   | the generator in `[tools.openapi] produced_by` leaves the document unchanged                                                                                                                                                                                                                                                               |
-| `express/routes-tested`     | push   | every route file has a test file that names it (through `[tools.express] route_glob` and `test_glob`)                                                                                                                                                                                                                                      |
+| Id                              | Stage  | Command                                                                                                                                              |
+| ------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `security/semgrep` express pack | push   | raw query interpolation, `res.send` of raw input, unvalidated redirect, and auth routes with no rate limit; the Node rules ship in `security` (D-94) |
+| `express/openapi-lint`          | commit | `spectral lint --ruleset .gspot/spectral.yaml <document>` when `[tools.openapi] document` is set                                                     |
+| `express/openapi-fresh`         | push   | the generator in `[tools.openapi] produced_by` leaves the document unchanged                                                                         |
+| `express/routes-tested`         | push   | every route file has a test file that names it (through `[tools.express] route_glob` and `test_glob`)                                                |
 
 ## Settings
 

@@ -4,6 +4,7 @@ import type { Finding } from '#types/finding.ts';
 import { codeql } from '#cli/integrity/codeql.ts';
 import { fences } from '#cli/integrity/fences.ts';
 import { adminKey } from '#cli/supabase/admin-key.ts';
+import { routesTested } from '#cli/express/routes.ts';
 import { envFiles } from '#cli/integrity/env/files.ts';
 import { licensesNpm } from '#cli/integrity/licenses.ts';
 import type { IntegrityCheck } from '#types/integrity.ts';
@@ -26,6 +27,7 @@ import { trivyImage } from '#cli/integrity/docker/image-scan.ts';
 import { generatedDrift } from '#cli/integrity/generated-drift.ts';
 import { manifestPolicy } from '#cli/integrity/manifest-policy.ts';
 import { dockerignore } from '#cli/integrity/docker/ignore-file.ts';
+import { openapiFresh, openapiLint } from '#cli/express/openapi.ts';
 import { allowlistsMatch } from '#cli/integrity/allowlists-match.ts';
 import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
 import { configurationPurity } from '#cli/integrity/config-purity.ts';
@@ -57,6 +59,9 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'openapi-lint': openapiLint,
+    'openapi-fresh': openapiFresh,
+    'routes-tested': routesTested,
     'supabase-config': projectValid,
     'supabase-storage': storagePolicies,
     'supabase-migration-names': migrationNames,
