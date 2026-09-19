@@ -402,7 +402,6 @@ exists, and none of it is shown.
 | A developer wants to                  | Today                                                                                      |
 | ------------------------------------- | ------------------------------------------------------------------------------------------ |
 | Install only some presets             | `init --presets a,b`, `--without c`, `--scope path=a,b`, `--presets none`                  |
-| Let gspot own only some tools         | `init --own eslint,prettier`                                                               |
 | Turn one check or one rule off        | `gspot ignore <check> --rule <rule> --reason "..."`, for some paths with `--paths`         |
 | Turn it back on                       | `gspot ignore <check> --rule <rule> --remove`                                              |
 | Drop one tool                         | `gspot set tools.<name>.enabled false --reason "..."`                                      |
@@ -412,6 +411,32 @@ exists, and none of it is shown.
 | Commit or push past a failing hook    | `git commit --no-verify`, `git push --no-verify`                                           |
 | See what exists before choosing       | nothing                                                                                    |
 | Take the basics only                  | nothing                                                                                    |
+
+## Every path a developer takes
+
+Each row names the decision that answers it. A row marked open has a gap row in
+[18-gaps.md](18-gaps.md).
+
+| The developer                               | What happens                                                                                                             | Decided by                          |
+| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- |
+| has an empty repository                     | init installs what reads no language; `gspot check` names a language that arrives later, with the `gspot add` line       | D-125                               |
+| has a folder that is no git repository      | open: init says nothing about it, writes no hooks, and still selects `commits`                                           | K-214                               |
+| has a repository with no linting            | init proposes presets in three groups, installs `recommended`, holds old findings in one baseline                        | D-104, D-119, D-120                 |
+| has linting, hooks, and tasks of their own  | hooks and tasks are added to, never replaced; old config is carried in both directions; every file not carried is listed | D-101, D-109, D-114 to D-117, K-193 |
+| has a monorepo                              | one scope for each project file; one `gspot.toml`; a check reads the files of its scope                                  | D-108, K-149                        |
+| wants some presets only                     | the three questions, or `--presets` and `--without`                                                                      | D-120                               |
+| wants everything later                      | `gspot list`, `gspot add`, `gspot set level all`; new findings are held                                                  | D-118, D-143                        |
+| wants one rule off, or back on              | `gspot ignore` with a reason, and `--remove`                                                                             | D-131                               |
+| wants to change a limit                     | `gspot set limits.<name>`, with a reason when it loosens; the number holds in every framework                            | D-138                               |
+| wants a check of their own                  | a `[[check]]` entry that runs any command                                                                                | 03-configuration.md                 |
+| wants the same setup in the next repository | `gspot profile save`, then `gspot init --from` a file, a URL, or `github:owner/repo`                                     | D-131                               |
+| adds a language or a framework later        | `gspot check` names it; `gspot add` selects it; its findings are held                                                    | D-125, D-143                        |
+| meets a finding                             | `gspot explain`, `gspot check --fix`, or `gspot ignore`                                                                  | D-131                               |
+| must commit past a failing hook             | `--no-verify`; the failure text names it, and the push and CI still check                                                | D-117, D-123                        |
+| clones the repository on a new machine      | the setup entry of the repository installs the hooks and the tools; the pinned version refuses another                   | D-115                               |
+| upgrades gspot                              | `gspot upgrade` prints what changes; new rules are held like any widening                                                | D-143                               |
+| works on GitLab                             | `--ci gitlab` writes `.gitlab/ci/gspot.yml`                                                                              | D-133                               |
+| leaves                                      | `gspot uninstall` removes what gspot wrote; git holds the old files                                                      | D-109                               |
 
 ## A-21 Nobody can see the menu
 

@@ -18,6 +18,21 @@ in the commit that applies it.
   `lifecycle/init/plan.ts`. A command with one file is `<area>/<verb>-command.ts`.
 - A list of entries that a gspot check skips has a key that ends in `_allowed`. A tool's own
   option keeps the tool's word, such as `tools.knip.ignore` and `tools.typos.exclude`.
+- Every key of `gspot.toml` and of a manifest is snake_case, and a measure of all 199 settings
+  found no other case. The words differ where the case does not, so one idea keeps one word:
+
+    | The idea                             | The one word         | Today also                                                                                                         | Becomes                                                                                            |
+    | ------------------------------------ | -------------------- | ------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------- |
+    | entries a gspot check skips          | ends in `_allowed`   | `tools.html.copy_excluded`, `tools.site.sitemap_excluded`, `architecture.allow`, `tools.licenses.exceptions`       | `copy_allowed`, `sitemap_allowed`, `architecture.edges_allowed`, `tools.licenses.packages_allowed` |
+    | a rule of a tool turned off          | `[[ignore]]`         | `prose.disabled`, a second way for Vale alone                                                                      | `gspot ignore prose/vale --rule <id>`; the key goes                                                |
+    | one folder                           | ends in `_directory` | `tools.postgres.migrations_dir`, `tools.supabase.functions_dir`, `tools.vitest.harness_dir`                        | `migrations_directory`, `functions_directory`, `harness_directory`                                 |
+    | a list of file globs                 | ends in `_files`     | `tools.express.route_glob`, `tools.express.test_glob`, `tools.trpc.server_paths`, `tools.supabase.admin_key_paths` | `route_files`, `test_files`, `server_files`, `admin_key_files`                                     |
+    | the option of a tool, under its name | the tool's word      | `tools.knip.ignore`, `tools.typos.exclude`, `tools.linkinator.skip`, `tools.lychee.exclude_paths`                  | stays                                                                                              |
+
+    A preset id, a check id, and a command flag are kebab-case. A field of the JSON output is
+    camelCase, as JSON from a JavaScript tool is. A test reads every manifest and refuses a
+    setting whose last word is outside this table.
+
 - A check id is `<family>/<name>`, and [04-presets.md](04-presets.md) says what the family is.
 
 - A word a person reads in `gspot.toml`, in help text, in output, or in a guide is a word a

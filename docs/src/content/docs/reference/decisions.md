@@ -865,8 +865,9 @@ and never edited. `uninstall` prints the commit init started from.
 
 ## D-110 Opt-in rules of taste are off unless the policy asks
 
-A preset marks each opt-in rule `recommended` or `all`. `[inspection] strict = false` leaves the
-strict group off. The banned terms of the naming policy are not part of this: they stay on.
+A preset marks each opt-in rule `recommended` or `all`. The key is `level` at the top of
+`gspot.toml` (D-119). The first form of this decision used `[inspection] strict`, and D-119
+replaced it. The banned terms of the naming policy are not part of this: they stay on.
 
 ## D-111 The prefix of a file name is its first word
 
@@ -1151,11 +1152,16 @@ Rejected: a comment beside a hand-written `off`, which no test can read.
 
 ## D-139 The rules of a library and of a framework live in its own preset
 
-A fragment exports its banned-syntax selectors, and the javascript template joins the selectors
-of every selected fragment into the one `no-restricted-syntax` rule. The template asks for no
-preset by name (K-197). The selectors of React Native and of Nest move into their presets. The
-decorator flags of Nest leave the shared `tsconfig.base.json` and sit in a tsconfig file of the
-nestjs preset (K-201).
+The same holds for every tool, not for ESLint alone. No template asks for another preset by
+name. Five do today:
+
+- the ruff template asks for pytest and django;
+- the sqlfluff and squawk templates ask for supabase;
+- the knip template asks for nextjs;
+- the tsconfig template asks for nextjs and nestjs.
+
+A preset changes the config of another preset in two ways only. It sets a setting the other
+preset exposes, as supabase sets the SQL dialect. Or it adds a fragment.
 
 ## D-140 Type check, format, style, and names reach a component file
 
@@ -1217,3 +1223,25 @@ each plugin, and fails when the pinned ESLint is outside one.
 Rejected: staying on ESLint 10 with `@eslint-react/eslint-plugin` and a fork of the
 accessibility plugin at version 0.2.0. That path leaves React Native with no plugin for its
 styles.
+
+## D-143 Every widening takes one path
+
+A repository widens what gspot checks in four ways: `gspot add <preset>`, `level = "all"`, a
+rule turned back on, and an upgrade that brings new rules. All four run the same step that the
+first install runs. The new checks run once, their findings go into the baseline, and the
+output says how many were held for each check. The gate passes that day, and a count cannot
+rise after it.
+
+A developer who took a few presets at init and wants everything runs two commands.
+`gspot list` prints what was found in the repository and is not selected, with the one
+`gspot add` line that selects it. `gspot set level all` turns on the second level.
+
+Rejected: a `gspot add --all` flag, which selects presets for languages the repository does not
+hold.
+
+## D-144 One idea has one word in a setting name
+
+The table is in [19-names.md](https://github.com/stefanionescu/gspot/blob/main/architecture/19-names.md). A list a gspot check skips ends in `_allowed`, one
+folder ends in `_directory`, and a list of file globs ends in `_files`. A rule of a tool is
+turned off through `[[ignore]]` and nowhere else, so `prose.disabled` goes. The option of a tool
+keeps the word of the tool. A test over the manifests holds the table.
