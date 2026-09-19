@@ -15,11 +15,15 @@ function summaryOf(record: RunRecord): { failing: RunRecord['checks']; lines: st
 }
 
 // A check with a baseline command (the ESLint suppressions) writes the tool's own file instead of a count file.
-async function writeToolBaselines(session: Session, outcome: RunOutcome): Promise<ToolBaseline[]> {
+async function writeToolBaselines(
+    session: Session,
+    outcome: RunOutcome,
+    only: Set<string> | undefined,
+): Promise<ToolBaseline[]> {
     const written: ToolBaseline[] = [];
     for (const planned of outcome.planned) {
         const command = planned.spec.baseline_command;
-        if (command === undefined) continue;
+        if (command === undefined || only?.has(planned.id) === false) continue;
         const result = outcome.record.checks.find(
             (check) => check.id === planned.id && check.scope === planned.scope.scope.path,
         );
@@ -33,9 +37,10 @@ async function writeToolBaselines(session: Session, outcome: RunOutcome): Promis
 /**
  * Runs every check once and writes a baseline for each check that allows one and has findings.
  * @param root the repository root
+ * @param only the checks that may get a baseline; every check when left out. Adding a preset names its own checks, so a count that rose elsewhere stays a finding.
  * @returns the run record and the baselines written
  */
-export async function firstRun(root: string): Promise<FirstRun> {
+export async function firstRun(root: string, only?: Set<string>): Promise<FirstRun> {
     const session = await openSession(root);
     const outcome = await executeRun(session, {
         stage: 'all',
@@ -46,7 +51,7 @@ export async function firstRun(root: string): Promise<FirstRun> {
         noCache: true,
     });
     const findings = outcome.record.checks.flatMap((check) => check.findings);
-    const toolBaselines = await writeToolBaselines(session, outcome);
+    const toolBaselines = await writeToolBaselines(session, outcome, only);
     const owned = new Set(toolBaselines.map((entry) => entry.check));
     const allowed = new Set(
         session.scopes.flatMap((scope) =>
@@ -61,7 +66,7 @@ export async function firstRun(root: string): Promise<FirstRun> {
     const baselines = writeBaselines(
         root,
         findings,
-        (check) => (allowed.has(check) || declared.has(check)) && !owned.has(check),
+        (check) => (allowed.has(check) || declared.has(check)) && !owned.has(check) && only?.has(check) !== false,
     );
     if (baselines.length > 0) mkdirSync(join(root, '.gspot', 'baselines'), { recursive: true });
     return { record: outcome.record, baselines, toolBaselines };

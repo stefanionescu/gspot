@@ -34,7 +34,7 @@ command = ["markdownlint-cli2", "--no-globs", "--config", "{config:markdownlint}
 fix_command = ["markdownlint-cli2", "--fix", "--no-globs", "--config", "{config:markdownlint}", "{files}"]
 fix_order = "format"
 inspection = ["style"]
-output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+)(?::(?<column>\\d+))? (?<rule>MD\\d+)\\/(?<message>.*)$"}
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+)(?::(?<column>\\d+))?(?: error| warning)? (?<rule>MD\\d+)\\/(?<message>.*)$"}
 summary = "Checks every Markdown file against markdownlint with the shipped rule set."
 why = "Markdown that lints the same everywhere renders the same everywhere."
 fix = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."

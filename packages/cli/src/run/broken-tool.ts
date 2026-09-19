@@ -8,11 +8,15 @@ import type { CheckSpec, OutputFormat } from '#types/manifest.ts';
 // These formats have no file in their findings by design, so a finding with no file says nothing about the tool.
 const FILELESS_FORMATS = new Set(['lines', 'none']);
 
+function hasFileField(output: OutputFormat): boolean {
+    return output.pattern?.includes('(?<file>') ?? output.fields?.file !== undefined;
+}
+
 // Whether the findings of this output name files of the repository: a link target, a coverage floor and a plain line do not.
 function isFileNamed(output: OutputFormat | undefined): boolean {
     if (output === undefined || output.format === 'eslint-json') return true;
-    if (FILELESS_FORMATS.has(output.format) || output.file_is === 'link') return false;
-    return output.pattern?.includes('(?<file>') ?? output.fields?.file !== undefined;
+    if (FILELESS_FORMATS.has(output.format) || (output.file_is ?? 'path') !== 'path') return false;
+    return hasFileField(output);
 }
 
 function isOnDisk(file: string, roots: string[]): boolean {

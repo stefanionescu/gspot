@@ -17,7 +17,7 @@ const outputSchema = z.strictObject({
     items: z.string().optional(),
     children: z.string().optional(),
     line_base: z.union([z.literal(0), z.literal(1)]).optional(),
-    file_is: z.enum(['path', 'link']).optional(),
+    file_is: z.enum(['path', 'link', 'history']).optional(),
     fields: z
         .strictObject({
             file: z.string().optional(),

@@ -4,13 +4,14 @@ import type { CommandResult } from '#types/run.ts';
 import { scopeHolder } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
-import { requireChain } from '#cli/presets/select.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
+import { firstRun } from '#cli/lifecycle/first-check.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import type { TomlTable, Mutation } from '#types/config.ts';
 import { commitPolicy } from '#cli/policy/commit-policy.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
 import type { AddOptions, RemoveOptions } from '#types/commands.ts';
+import { requireChain, selectPresets } from '#cli/presets/select.ts';
 
 function presetHolder(raw: TomlTable, scope: string | undefined): TomlTable {
     const holder = scopeHolder(raw, scope);
@@ -39,7 +40,16 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
         holder['presets'] = list;
     };
     const where = o.scope === undefined ? '' : ` to scope ${o.scope}`;
-    return commitPolicy(root, mutation, o.isDryRun, `added ${o.presets.join(', ')}${where}`);
+    const result = await commitPolicy(root, mutation, o.isDryRun, `added ${o.presets.join(', ')}${where}`);
+    if (o.isDryRun) return result;
+    // What the new presets find today enters a baseline, as at init; the checks that were here before keep their counts.
+    const arrived = new Set(
+        selectPresets(o.presets, manifests).flatMap((manifest) => manifest.checks.map((check) => check.id)),
+    );
+    const { baselines } = await firstRun(root, arrived);
+    const count = baselines.reduce((sum, file) => sum + file.count, 0);
+    const line = `baseline: ${String(baselines.length)} rules with ${String(count)} findings\n`;
+    return { ...result, text: `${result.text}${line}` };
 }
 
 /**
