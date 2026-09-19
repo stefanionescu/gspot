@@ -328,6 +328,8 @@ with no line here fails the placement check.
 - [ ] K-233: The preset claims `.css` alone, and a `scss` preset that pins `stylelint-config-standard-scss` arrives when the owner or a reference repository asks for it (D-136).
 - [ ] K-236: `licenses/npm` becomes one check that runs the scanner gspot already pins, and the supabase preset gains the lint at the `manual` stage.
 - [ ] K-239: Closes with D-145: stop writing `prepare` and the pins into `package.json`.
+- [ ] K-248: Carry the iOS and the Python Semgrep packs first. Build each other ledger row that names an unbuilt check, or mark it cut with its reason.
+- [ ] K-249: Raise the eight pins that sit below what a reference repository runs, and fail the release test on a pin below the floor the ledger records.
 
 ### Row 13: The core names no preset and no tool
 
