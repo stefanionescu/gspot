@@ -156,7 +156,7 @@ when every gap it names has left 18-gaps.md.
 | Work                                                        | Gaps it closes                                                                                                                 | Goes with row |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------- |
 | Delete what nothing uses                                    | K-104, K-111, K-115, K-119, K-129, K-146, K-180                                                                                | Delete first  |
-| Defects that give a wrong answer, fixed first               | K-103, K-108, K-114, K-134, K-140, K-147, K-157, K-170, K-172, K-178, K-181, K-186, K-189                                      | first fixes   |
+| Defects that give a wrong answer, fixed first               | K-103, K-108, K-114, K-134, K-140, K-147, K-157, K-170, K-172, K-178, K-181, K-186, K-189, K-192                               | first fixes   |
 | Takeover and detection read what a repository really holds  | K-42, K-57, K-76, K-78, K-120, K-126, K-128, K-158, K-182                                                                      | 1 and 2       |
 | Speed                                                       | K-71, K-125, K-127, K-138, K-143, K-148, K-162, K-176                                                                          | 3 and 21      |
 | What `check` and `doctor` print                             | K-82, K-83, K-84, K-117, K-122, K-130, K-132, K-185                                                                            | 21            |
@@ -168,7 +168,7 @@ when every gap it names has left 18-gaps.md.
 | Checks that assume one layout                               | K-90, K-144, K-149, K-150, K-153, K-154, K-155, K-160, K-163, K-184, K-191                                                     | 15            |
 | What a repository gets from init                            | K-72, K-118                                                                                                                    | 5             |
 | Release                                                     | K-121, K-145, K-164                                                                                                            | before launch |
-| Tests                                                       | T-2 to T-12, T-14 to T-18                                                                                                      | 14            |
+| Tests                                                       | T-2 to T-12, T-14 to T-18, T-19 to T-23                                                                                        | 14            |
 
 The Adoption phase is measured against yap-swift-app alone (D-121). yap-text-inference,
 yap-landing, slopshop, and the two ComfyUI nodes follow it, one at a time, each against its sheet
