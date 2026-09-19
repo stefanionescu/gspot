@@ -203,6 +203,17 @@ describe('the typescript preset', () => {
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
             }
+            // typos forgets its exclude list for a file named on the command line unless it is told to keep it.
+            const excluded = await runPlanted(
+                fixture.path,
+                {
+                    id: 'spelling/typos',
+                    files: { 'assets/mark.svg': `<svg><title>${MISSPELLED}</title></svg>\n` },
+                    expected: '',
+                },
+                environment,
+            );
+            expect(excluded.code, excluded.stdout).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 5,
     );
