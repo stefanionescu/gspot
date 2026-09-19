@@ -40,12 +40,14 @@ import { openapiFresh, openapiLint } from '#cli/express/openapi.ts';
 import { allowlistsMatch } from '#cli/integrity/allowlists-match.ts';
 import { tsconfigOptions } from '#cli/integrity/tsconfig-options.ts';
 import { configurationPurity } from '#cli/integrity/config-purity.ts';
+import { goModTidy, goVulnerabilities } from '#cli/golang/modules.ts';
 import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
 import { buildReproducible, siteBuilds } from '#cli/web/site/build.ts';
 import { frameworkBuild, frameworkTypes } from '#cli/web/app-build.ts';
 import { gitleaksBaseline } from '#cli/integrity/gitleaks-baseline.ts';
 import { pythonBlockingCalls } from '#cli/pyproject/blocking-calls.ts';
 import { PYTHON_STRUCTURE } from '#cli/pyproject/structure/analyses.ts';
+import { goFileLength, goFunctionLength } from '#cli/golang/lengths.ts';
 import { assetFolders, stringFiles } from '#cli/apple/xcode/resources.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/postgres/history.ts';
 import { trackedDependencies } from '#cli/integrity/tracked-dependencies.ts';
@@ -120,6 +122,10 @@ const checks: Record<string, IntegrityCheck> = {
     'html-scripts': htmlScripts,
     'html-copy': htmlCopy,
     'css-module-usage': cssModuleUsage,
+    'go-mod-tidy': goModTidy,
+    'go-vulnerabilities': goVulnerabilities,
+    'go-file-length': goFileLength,
+    'go-function-length': goFunctionLength,
     ...PYTHON_STRUCTURE,
     ...SWIFT_STRUCTURE,
     'python-import-linter': importLinter,

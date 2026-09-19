@@ -10,6 +10,7 @@ One page per preset. Each page states what the preset detects and claims, the to
 | javascript | `.js`, `node` shebang     | ESLint, `checkJs`, knip                                           | [javascript.md](javascript.md) |
 | python     | `.py`, `pyproject.toml`   | Ruff, basedpyright, import-linter, pydoclint, deptry, vulture     | [python.md](python.md)         |
 | swift      | `.swift`, `Package.swift` | SwiftLint, SwiftFormat, Periphery, xcodebuild                     | [swift.md](swift.md)           |
+| go         | `.go`, `go.mod`           | gofmt, golangci-lint, govulncheck, the Go grammar                 | [go.md](go.md)                 |
 | bash       | `.sh`, shell shebang      | ShellCheck, shfmt, `bash -n`, the shell analyses                  | [bash.md](bash.md)             |
 | sql        | `.sql`                    | sqlfluff, libpg-query                                             | [sql.md](sql.md)               |
 | css        | `.css`                    | stylelint, Prettier                                               | [css.md](css.md)               |

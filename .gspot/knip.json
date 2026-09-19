@@ -84,6 +84,7 @@
         "verdaccio",
         "tree-sitter-bash",
         "tree-sitter-css",
+        "tree-sitter-go",
         "tree-sitter-html",
         "tree-sitter-javascript",
         "tree-sitter-python",
