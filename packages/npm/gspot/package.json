@@ -1,7 +1,7 @@
 {
     "name": "gspot",
     "version": "0.1.0",
-    "description": "One command that installs the house style for AI-written code: configured linters, the missing rules, and agent instructions.",
+    "description": "CLI to lint and enforce rules for LLM generated code bases.",
     "license": "MIT",
     "repository": "github:stefanionescu/gspot",
     "bin": {

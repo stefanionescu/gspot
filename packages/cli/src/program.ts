@@ -42,9 +42,7 @@ function exitCodeFor(error: unknown): number {
 export function buildProgram(): Command {
     const program = new Command('gspot');
     program
-        .description(
-            'One command that installs the house style for AI-written code: configured linters, the missing rules, and agent instructions',
-        )
+        .description('CLI to lint and enforce rules for LLM generated code bases')
         .version(GSPOT_VERSION, '--version', 'Print the version and nothing else')
         .option('--json', 'Print the documented JSON object instead of text')
         .option('--quiet', 'Print failures only')

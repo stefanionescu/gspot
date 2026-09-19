@@ -1,6 +1,6 @@
 ---
 title: gspot
-description: A CLI to lint and enforce rules for LLM generated code bases.
+description: CLI to lint and enforce rules for LLM generated code bases.
 ---
 
 gspot is a CLI to lint and enforce rules for LLM generated code bases. One binary installs the house style. It writes the configuration of the linters a repository already needs, adds the checks those linters lack, and installs the rule files an agent reads. Everything runs from one gate on commit, on push, and in CI.

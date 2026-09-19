@@ -9,7 +9,7 @@ export default defineConfig({
     integrations: [
         starlight({
             title: 'gspot',
-            description: 'A CLI to lint and enforce rules for LLM generated code bases.',
+            description: 'CLI to lint and enforce rules for LLM generated code bases.',
             social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/stefanionescu/gspot' }],
             plugins: [starlightLinksValidator(), starlightLlmsTxt()],
             sidebar: [

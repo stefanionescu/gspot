@@ -1,6 +1,6 @@
 # gspot
 
-A CLI to lint and enforce rules for LLM generated code bases.
+CLI to lint and enforce rules for LLM generated code bases.
 
 ## Requirements
 
