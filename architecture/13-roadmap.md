@@ -179,7 +179,7 @@ when every gap it names has left 18-gaps.md.
 | The config and its words                                    | K-88, K-89, K-116, K-215, K-216, K-222, K-224, K-225, K-228                                                                                            | 8 and 18      |
 | Checks that assume one layout                               | K-90, K-144, K-149, K-150, K-153, K-154, K-155, K-160, K-163, K-184, K-191                                                                             | 15            |
 | What a repository gets from init                            | K-72, K-118                                                                                                                                            | 5             |
-| Release                                                     | K-121, K-145, K-164                                                                                                                                    | before launch |
+| Release                                                     | K-121, K-145, K-164, K-244, K-245                                                                                                                      | before launch |
 | The README, the manual, and the site                        | G-10, K-202                                                                                                                                            | after 15      |
 | Tests                                                       | T-2 to T-12, T-14 to T-18, T-19 to T-23, T-24 to T-26, T-27 to T-35, G-2, K-28                                                                         | 14            |
 

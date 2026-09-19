@@ -505,6 +505,8 @@ with no line here fails the placement check.
 - [ ] K-121: Confirm this project owns the npm name `gspot` before any command asks the registry about it.
 - [ ] K-145: Ship `LICENSE.md` in the `files` of the launcher, the plugin, and each platform package.
 - [ ] K-164: Both scripts stop at the first missing file, and the publish step verifies every package before it publishes the first.
+- [ ] K-244: Name Homebrew in an install hint only for a tool with no pin, give a `github` installer its tag form, and ask all four registries in the release test.
+- [ ] K-245: Write one notice file at build from the license of every bundled dependency and grammar, and embed it. Give the Swift grammar a build script that names its source commit.
 
 ## What is still unchecked
 
@@ -517,13 +519,15 @@ By the order of the owner, nothing below is touched before its step.
 
 Not done in this read, and owed before the fixes start:
 
-- 68 of the 107 rule files were read by script and not by a person.
-- `01` to `12` of this folder were compared with the decisions by a word search, not claim by
-  claim.
-- The pins of the mise, brew and GitHub installers were not asked from their registries. The
-  release test of K-206 does that.
-- What a developer sees when a tool crashes, the config is half written, two runs overlap, or
-  `apply` is stopped midway. Nobody has tried these.
-- The licenses of the bundled dependencies, the grammars and the Vale packages, and a file that
-  gives notice of them.
-- The build of the docs site.
+- 68 of the 107 rule files were read by script and not by a person. The owner stopped that read
+  on September 19, 2026.
+- `01` to `16` of this folder and the preset pages, claim by claim against the code (S-13).
+- The flags each manifest passes, against the help text of the pinned version.
+
+Checked on September 19, 2026, with the row that holds what was found:
+
+- The `why` text of the 205 checks: sound.
+- Every pin on npm, PyPI, crates.io, GitHub, and Homebrew (K-206, K-207, K-244).
+- A tool that crashes, a config cut in half, two runs at once, and `apply` killed midway (K-243).
+- The licenses of the 34 bundled dependencies and the nine grammars (K-245).
+- The build of the docs site: 301 pages, every internal link valid.
