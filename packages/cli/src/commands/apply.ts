@@ -14,6 +14,10 @@ export function registerApply(program: Command): void {
         .description('Re-render every generated file from gspot.toml; idempotent')
         .option('--check', 'Render in memory and fail with a diff when a generated file differs')
         .option('--lower-baselines', "Lower every baseline to the last run's counts; never raise one")
+        .option(
+            '--baseline <check-id>',
+            'Write the first baseline of one check; a baseline that exists is never raised',
+        )
         .option('--project-templates', 'Copy the project templates that match into the project rule layer, once')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
@@ -23,6 +27,7 @@ export function registerApply(program: Command): void {
                         cwd: directoryOf(global),
                         check: flags['check'] === true,
                         lowerBaselines: flags['lowerBaselines'] === true,
+                        baseline: typeof flags['baseline'] === 'string' ? flags['baseline'] : undefined,
                         projectTemplates: flags['projectTemplates'] === true,
                     }),
                 global,

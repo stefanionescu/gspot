@@ -108,3 +108,30 @@ describe('gspot add in a repository that already has findings', () => {
         PLANTED_TIMEOUT_MS * 3,
     );
 });
+
+describe('gspot apply --baseline', () => {
+    test(
+        'writes the first baseline of one check, never raises one that exists, and refuses findings a fixer clears',
+        async () => {
+            await using fixture = await createFixture({ 'db/accounts.sql': CLEAN });
+            commitAll(fixture.path);
+            const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
+            await install(fixture.path, INIT, environment);
+            await Bun.write(`${fixture.path}/db/commented.sql`, '/* Old. */\nSELECT 1;\n');
+            commitAll(fixture.path);
+            expect(run(fixture.path, ['check', 'sql/block-comments', '--no-cache'], environment).code).toBe(1);
+            const first = run(fixture.path, ['apply', '--baseline', 'sql/block-comments'], environment);
+            expect(first.stdout).toContain('baseline: 1 rules of sql/block-comments with 1 findings');
+            expect(run(fixture.path, ['check', 'sql/block-comments', '--no-cache'], environment).code).toBe(0);
+            await Bun.write(`${fixture.path}/db/second.sql`, '/* Older. */\nSELECT 2;\n');
+            commitAll(fixture.path);
+            const again = run(fixture.path, ['apply', '--baseline', 'sql/block-comments'], environment);
+            expect(again.stdout).toContain('has no finding without a baseline');
+            expect(run(fixture.path, ['check', 'sql/block-comments', '--no-cache'], environment).code).toBe(1);
+            const layout = run(fixture.path, ['apply', '--baseline', 'sql/sqlfluff'], environment);
+            expect(layout.code).toBe(2);
+            expect(layout.stdout + layout.stderr).toContain('enter no baseline');
+        },
+        PLANTED_TIMEOUT_MS * 4,
+    );
+});

@@ -35,6 +35,8 @@ export type ApplyOptions = {
     cwd: string;
     check: boolean;
     lowerBaselines: boolean;
+    /** The check that gets its first baseline, when the flag is given. */
+    baseline?: string | undefined;
     projectTemplates: boolean;
 };
 

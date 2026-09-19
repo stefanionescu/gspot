@@ -12,7 +12,7 @@ gspot init      [--yes] [--from <profile>] [--presets <ids>|none] [--without <id
                 [--project-templates] [--runner mise|npm|bun|pnpm|uv|none]
 gspot check     [<check-id>] [--staged] [--since <ref>] [--fix] [--dry-run]
                 [--at commit|push|manual|message] [--scope <path>] [--skip <check-id>]
-gspot apply      [--check] [--lower-baselines] [--project-templates]
+gspot apply      [--check] [--lower-baselines] [--baseline <check>] [--project-templates]
 gspot ignore    <check-id> [--paths <glob>...] [--rule <rule>] [--reason <text>] [--remove]
 gspot add       <preset>... [--scope <path>]
 gspot remove    <preset> [--scope <path>]
@@ -311,6 +311,9 @@ Re-renders every generated file from `gspot.toml`. Idempotent. Run after any edi
 - `--check` also prints the count of rule statements no check enforces. `check` runs this assertion at the `commit` stage.
 - `--lower-baselines` rewrites every baseline from `.gspot/last.json`. Counts fall; a count that rose
   fails.
+- `--baseline <check>` runs one check and writes a baseline for each of its rules that has findings
+  and none yet. It serves a check that starts to work after `init`.
+- `--baseline` never raises a baseline, refuses a run that broke, and refuses findings a fixer clears.
 - `--project-templates` copies the project templates that match the selection into the project
   rule layer, once each; a template that already exists there is never rewritten.
 - Never writes `gspot.toml`.

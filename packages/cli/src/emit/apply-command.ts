@@ -8,6 +8,7 @@ import { lowerBaselines } from '#cli/run/baselines.ts';
 import { applyBlock } from '#cli/emit/managed-blocks.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import type { Session, CommandResult } from '#types/run.ts';
+import { firstBaseline } from '#cli/emit/first-baseline.ts';
 import { hasPackagePins, emitAll } from '#cli/emit/targets.ts';
 import { markExecutable } from '#cli/platform/executable-bit.ts';
 import { openSession, everyManifest } from '#cli/run/session.ts';
@@ -212,6 +213,7 @@ export async function applyCommand(options: ApplyOptions): Promise<CommandResult
     const session = await openSession(root);
     if (options.check) return checkDrift(session);
     if (options.lowerBaselines) return lowerFromLastRun(root, session);
+    if (options.baseline !== undefined) return firstBaseline(session, options.baseline);
     const report = await applyAll(session);
     return { text: reportText(report), json: report, exitCode: 0 };
 }
