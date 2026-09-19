@@ -68,7 +68,8 @@ runs `git checkout --` on the OpenAPI document, which drops uncommitted edits.
 `git checkout`.
 
 **Files.** `checks/drizzle/migrations-fresh.ts` and `checks/express/openapi-fresh.ts`, as
-[16-file-tree.md](../16-file-tree.md) names them, and a new `run/scratch-copy.ts`.
+[16-file-tree.md](../16-file-tree.md) names them, and `run/scratch-copy.ts`. That file takes
+`scratchCopy` out of `run/fixers.ts:57`, where `--dry-run` already uses it.
 
 **Logic.** `scratchCopy(input, paths)` copies the named paths into `.gspot/cache/scratch/<check>/`
 and returns that folder. The drizzle check copies the schema, the config, and the migrations

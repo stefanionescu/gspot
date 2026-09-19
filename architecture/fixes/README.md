@@ -23,3 +23,5 @@ The list grows as each file is written.
 
 - [00-delete-first.md](00-delete-first.md): the four presets, the removed commands and flags, and every key, field, and rule nothing uses.
 - [01-first-fixes.md](01-first-fixes.md): CI, the checks that destroy work, the checks that pass when they did not run, and the other wrong answers.
+- [02-takeover.md](02-takeover.md): what `init` reads, what it proposes, and what it carries.
+- [03-hooks.md](03-hooks.md): the hook of the repository, the command names of the team, and lint tables in a shared manifest.
