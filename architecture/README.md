@@ -42,6 +42,7 @@ Every repository on the same gspot version runs the same rules. Upgrading gspot 
 | [19-names.md](19-names.md)                           | The names that change, and the one meaning each word keeps                                                                                        |
 | [20-adoption.md](20-adoption.md)                     | What the install in yap-swift-app showed, and the design that answers each defect                                                                 |
 | [21-documentation.md](21-documentation.md)           | What the README, the manual, and the site at gspot.dev hold, and what must be true before launch                                                  |
+| [22-remaining.md](22-remaining.md)                   | Everything that is left, in order, with the linters and the custom rules of every language, and what happens to the ESLint of the developer       |
 | [presets/README.md](presets/README.md)               | One page per preset                                                                                                                               |
 
 Read 01 to 05 to understand the tool. Read 06 to 09 to understand the rules. Read 10 to 19 to

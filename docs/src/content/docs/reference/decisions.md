@@ -1254,3 +1254,37 @@ The table is in [19-names.md](https://github.com/stefanionescu/gspot/blob/main/a
 folder ends in `_directory`, and a list of file globs ends in `_files`. A rule of a tool is
 turned off through `[[ignore]]` and nowhere else, so `prose.disabled` goes. The option of a tool
 keeps the word of the tool. A test over the manifests holds the table.
+
+## D-145 The lint tools of gspot are tools, not dependencies of the repository
+
+Proposed on 2026-09-19. The owner has not accepted it.
+
+gspot pins ESLint 9 (D-142), and today it writes that pin over the version a repository holds
+(K-217). A range is replaced, so a repository on ESLint 8 moves up a major version and one on
+ESLint 10 moves down. The plugins of the developer stay installed and lint nothing.
+
+The rule: gspot never writes a lint tool into the `package.json` of the developer. The npm tools
+and libraries a preset pins install into `.gspot/node_modules`, from a generated
+`.gspot/package.json` and its lockfile. The generated ESLint config sits in `.gspot/`, so its
+imports resolve there with no setting. Every check runs the binary under `.gspot/`. The mise
+runner already works this way for the tools that have a mise installer, and this makes ESLint,
+Prettier, knip, and stylelint the same.
+
+What follows from it:
+
+- The ESLint of the developer, its config and its plugins stay as they are. Takeover still
+  lists them, and the person removes them when ready (D-109).
+- The pin of ESLint is a fact about gspot. D-142 stays true, and no repository is asked to
+  match it.
+- `integrity/manifest-policy` has no lint package to call pinned twice, and knip has no lint
+  package to ignore (K-220).
+- The editor reads the stub at the root, which imports the config under `.gspot/`. The plugins
+  resolve under `.gspot/`, and the guide on editors says to point the ESLint extension at that
+  folder.
+- The type check keeps the TypeScript of the repository, because `tsc` answers for the build
+  the developer ships.
+
+Rejected: writing the pin only where the repository holds no ESLint, and refusing the install
+where the major version differs. That asks a repository on the newest ESLint to move down
+before it can try gspot. Also rejected: leaving a newer exact version in place, which is what
+the code does today, and which runs plugins on an ESLint they do not support.
