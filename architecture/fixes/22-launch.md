@@ -30,8 +30,8 @@ Closes K-164, K-145, K-121, K-244, and K-245.
 
 **What is wrong.** `publish.ts` prints a line and goes on when the binary of one platform is
 missing, and the launcher still names that package. `build.ts` does the same for a missing
-grammar. No published package ships `LICENSE.md`. Nobody has confirmed that this project owns the
-npm name `gspot`.
+grammar. No published package ships `LICENSE.md`. `upgrade --dry-run` asks the npm registry for the newest `gspot`, and nobody has confirmed that
+this project owns the name.
 
 An install hint names Homebrew for a pinned tool, and Homebrew cannot install a
 pin. The binary embeds 34 dependencies and nine grammars with no notice file, and `swift.wasm` is

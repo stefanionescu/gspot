@@ -107,6 +107,7 @@ src/
 ├── checks/                     every other built-in check, one file for each check id
 ├── readers/                    parsers the checks share
 ├── rules/                      the rule file assembler and the rules lint
+├── profile/                    read, save, and the schema of a profile
 ├── doctor/                     what doctor prints
 ├── output/                     everything that reaches a terminal or a file
 └── platform/                   what differs for each operating system
@@ -114,9 +115,9 @@ src/
 
 #### `commands/`
 
-Fourteen commands, one file each: `init.ts`, `check.ts`, `apply.ts`, `list.ts`, `explain.ts`,
-`add.ts`, `remove.ts`, `set.ts`, `ignore.ts`, `allow.ts`, `baseline.ts`, `doctor.ts`,
-`upgrade.ts`, `uninstall.ts`. `print-result.ts` prints a result as text or JSON. A command file
+Fifteen command files: `init.ts`, `check.ts`, `apply.ts`, `baseline.ts`, `list.ts`, `explain.ts`,
+`doctor.ts`, `ignore.ts`, `set.ts`, `add.ts`, `remove.ts`, `allow.ts`, `upgrade.ts`,
+`uninstall.ts`, and `profile.ts`. `completion` registers itself from `output/completion.ts`. `print-result.ts` prints a result as text or JSON. A command file
 registers its flags, calls one function from another folder, and prints. Global flags are read
 once in `program.ts` (K-98).
 
@@ -344,10 +345,10 @@ Each path of today, and where it ends. A path not listed stays.
 | `src/web/`                                                                                          | `src/checks/nextjs/`, `static-site/`, `html/`, `css/`, `i18n/`, `cloudflare/` | K-79, K-255         |
 | `src/integrity/dispatch.ts`                                                                         | `src/checks/registry.ts`                                                      | K-79                |
 | `src/integrity/`, the rest                                                                          | `src/checks/`, by the first part of each check id                             | K-79                |
-| `src/profile/`, `commands/profile.ts`, `types/profile.ts`                                           | `lifecycle/init/` reads a profile for `init --from`; the command is deleted   | D-131               |
+| `src/profile/command.ts`, the `check` half                                                          | deleted; `init --from <profile> --dry-run` validates a profile                | D-131               |
 | `commands/why.ts`, `commands/declare.ts`, `output/why.ts`, `policy/declare-command.ts`              | deleted                                                                       | D-131               |
 | `commands/flags.ts`                                                                                 | `program.ts`                                                                  | K-98                |
-| `doctor/settings.ts`, `doctor/newer-version.ts`                                                     | `output/list.ts`; the network call is deleted                                 | D-131               |
+| `doctor/settings.ts`, `doctor/newer-version.ts`                                                     | `output/list.ts`, `lifecycle/upgrade/newer-version.ts`                        | D-131               |
 | `emit/stubs.ts`                                                                                     | `emit/pointers.ts`                                                            | D-100, K-47         |
 | `emit/kept-pins.ts`, the devDependencies half of `emit/runner-surface.ts`                           | `emit/tool-packages.ts`                                                       | D-145, K-217        |
 | `emit/runner-surface.ts`, the rest                                                                  | `emit/runner-tasks.ts`                                                        | D-116, D-127        |

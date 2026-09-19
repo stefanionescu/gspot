@@ -182,8 +182,7 @@ and `JSON_INDENT` each stand in two or three files. The five release targets are
 **Files.** New `config/paths.ts`, new `config/targets.ts`, and each file that held a copy.
 
 **Logic.** `targets.ts` holds five rows with `os`, `arch`, the Bun target, the npm package name,
-and the `uname` pair. `PATH_KEYS` lives in `lifecycle/init/profile.ts`, the one profile file
-left after D-131.
+and the `uname` pair. `PATH_KEYS` lives in `profile/schema.ts`.
 
 **What goes.** Eleven copies, and the embedded `schema/` folder.
 

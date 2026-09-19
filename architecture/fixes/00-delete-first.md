@@ -9,8 +9,8 @@ The order inside the step: the four presets first, because they are the largest 
 command surface, then the dead keys and fields, then the plugin rules, then the repository files.
 
 The tree loses these folders in this step: `presets/go`, `presets/rust`, `presets/django`,
-`presets/ruby`, `src/golang`, `src/cargo`, `src/pyproject/django`, `src/profile`, and
-`packages/cli/rules-lint` moves to `src/rules`. [16-file-tree.md](../16-file-tree.md) holds the
+`presets/ruby`, `src/golang`, `src/cargo`, and `src/pyproject/django`. `packages/cli/rules-lint`
+moves to `src/rules`. [16-file-tree.md](../16-file-tree.md) holds the
 full table.
 
 ## D-136: the go, rust, django, and ruby presets
@@ -47,35 +47,36 @@ only [18-gaps.md](../18-gaps.md) and the decision log.
 
 Closes D-129 to D-133.
 
-**What is wrong.** Seventeen commands exist, and four of them answer a question another command
-answers. Several flags are parsed and used by no test and no guide.
+**What is wrong.** Three commands answer a question another command answers: `why`, `declare`,
+and `profile check`. Several flags are parsed and used by no test and no guide.
 
-**Target.** Fourteen commands: `init`, `check`, `apply`, `list`, `explain`, `add`, `remove`,
-`set`, `ignore`, `allow`, `baseline`, `doctor`, `upgrade`, `uninstall`. This step deletes. The
-new commands `list` and `baseline` are built in rows 16 and 6.
+**Target.** Sixteen commands: `init`, `check`, `apply`, `baseline`, `list`, `explain`, `doctor`,
+`ignore`, `set`, `add`, `remove`, `allow`, `upgrade`, `uninstall`, `profile save`, and
+`completion`. This step deletes. The new commands `list` and `baseline` are built in rows 16
+and 6.
 
-**Files.** Deleted: `commands/why.ts`, `commands/declare.ts`, `commands/profile.ts`,
-`output/why.ts`, `policy/declare-command.ts`, `src/profile/command.ts`, and their unit tests.
-`src/profile/read.ts` and `schema.ts` move to `lifecycle/init/profile.ts`, because only
-`init --from` reads a profile. `src/profile/save.ts` is deleted with `profile save`.
+**Files.** Deleted: `commands/why.ts`, `commands/declare.ts`, `output/why.ts`,
+`policy/declare-command.ts`, and their unit tests. `src/profile/` keeps `read.ts`, `save.ts`, and
+`schema.ts`, and `command.ts` loses its `check` half. `doctor/newer-version.ts` moves to
+`lifecycle/upgrade/newer-version.ts`, because `upgrade --dry-run` is the one caller left.
 
-**Logic.** `explain` takes a path and prints what `why` printed (D-131). `set` writes a
-`[[declare]]` entry when its key is `declare`. `policy/allow-command.ts` keeps the list `typos`
-and loses the other six. `doctor/newer-version.ts` is deleted, so `doctor` calls no network and
-`--offline` has no meaning.
+**Logic.** `explain` takes a path and prints what `why` printed (D-131). `gspot set generated <glob>` and
+`gspot set vendored <glob>` append the entries `declare` wrote. `policy/allow-command.ts` keeps the list `typos`
+and loses the other six. `doctor` calls no network, so `--offline` has no meaning.
 
 `apply` loses `--check` and `--lower-baselines`. The six edit
 commands lose `--dry-run`, and `upgrade --check` becomes `upgrade --dry-run` (D-129).
-`uninstall` loses `--keep-hooks`.
+`uninstall` loses `--keep-hooks`. `check --at` becomes `check --stage`, and `--keep-format` and
+`--shipped-format` become `--format keep` and `--format shipped`.
 
-**What goes.** The dependency `latest-version`. The values `"none"` of `--ci`, `--hooks`, and
+**What goes.** The values `"none"` of `--ci`, `--hooks`, and
 `--runner`, which become `--no-ci`, `--no-hooks`, and `--no-runner` (D-130). The 21 test files
 that use a removed flag change in this commit (T-35).
 
-**Tests.** The completion test reads the command list from the program and holds 14 names
+**Tests.** The completion test reads the command list from the program and holds 16 names
 (T-22). A unit test holds that `gspot why` exits 2 as an unknown command.
 
-**Done when.** `gspot --help` lists 14 commands, and none of these flags parses.
+**Done when.** `gspot --help` lists 16 commands, and none of these flags parses.
 
 ## D-100: the lint files at the root of this repository
 

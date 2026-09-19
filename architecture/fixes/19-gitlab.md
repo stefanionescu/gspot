@@ -22,7 +22,7 @@ three flags and a `--no-` flag on two.
 The global flags `--json`, `--quiet`, `--verbose`, and `--no-color` are read once in `program.ts`
 (K-98).
 
-**What goes.** `--at` stays for one stage. `--check`, `--plan`, and every `none` value go.
+**What goes.** `--at`, which becomes `--stage`. `--check`, `--plan`, and every `none` value go.
 
 **Tests.** A unit test walks the program and fails a flag name outside the table.
 
