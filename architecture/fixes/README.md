@@ -30,3 +30,4 @@ The list grows as each file is written.
 - [06-config.md](06-config.md): the text of `gspot.toml`, one word for one idea, one path for every widening, and scopes.
 - [07-levels.md](07-levels.md): the level key, templates that render by level, and what `recommended` holds in each preset.
 - [08-frameworks.md](08-frameworks.md): lint tools under `.gspot/`, the ESLint pin, shared rules in component files, every linter of a framework, and naming rules in the framework preset.
+- [09-manifests.md](09-manifests.md): one file for each check id, and every fact about a preset in its manifest.
