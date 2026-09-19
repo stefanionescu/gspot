@@ -170,6 +170,8 @@ The rows below come from the read of September 19, 2026, after the install in ya
 | K-140 | Three checks pass when their tool is missing. `structure/shell-branches`, `shell-nesting` and `shell-mutable-assignments` run ast-grep, and when no ast-grep is installed `astGrepMatches` returns nothing and the check reports `ok`. Every other check reports `missing` and fails. ast-grep also receives every shell file on one command line, with no batching (K-42).                                                                                                                                                                                                                                 | `structure/ast-grep.ts`, `structure/counts.ts`                                                                                       |
 | K-141 | In a default install of the bash preset, idiomatic shell is a finding. `${PORT:-8080}` anywhere is `default-outside-owner`, because no file is a configuration owner until somebody names one. A function no other file calls must be renamed with a leading underscore (`file-local`). Every function needs a comment that opens with its own name, with sections in the order Globals, Arguments, Outputs, Returns. `main` is the last function, and private functions sit above public ones. These are the conventions of one style guide, and they belong to `strict` with the rules of K-91 and K-123. | `structure/analyses/shell/config/defaults.ts`, `private/prefix.ts`, `private/before-public.ts`, `doc-comment.ts`                     |
 | K-142 | The checks that find real shell defects are few and sound, and they sit among the house rules: a failure discarded by an or-true at the end of a command, `cd` with no failure path, a recursive remove, a broad `pkill`, a `mktemp` with no trap, a function called with arguments it never reads, two functions with one body, a function nobody calls. `core` holds these (D-119).                                                                                                                                                                                                                       | `structure/analyses/shell/safety.ts`, `dead-parameters.ts`, `duplicate-functions.ts`, `unused-functions.ts`                          |
+| K-143 | The Swift build starts from nothing on every run. For an Xcode project the command is `xcodebuild clean build-for-testing` into a derived data folder of its own, and for a package the scratch folder is deleted first. The analyzer needs the log of a complete build, and `swift/build` pays for that too, although a compile check needs only an incremental build. This is most of the 35 minutes of A-4. The analyzer keeps the clean build and moves to `manual` (D-122), and `swift/build` builds incrementally.                                                                                    | `apple/plan.ts`, `apple/build.ts` (`ranBuild`)                                                                                       |
+| K-144 | `xcode/orphan-sources` compares file names without their folders, so two Swift files with one name in two folders hide each other. `xcode/test-plan` requires a test plan for every scheme that runs tests, which is a choice of one team and belongs to `strict`. `xctest/reference-images` expects the default folder layout of the snapshot library and has one setting for the folder name, none for the layout (K-90).                                                                                                                                                                                 | `apple/xcode/project.ts`, `apple/xctest/references.ts`                                                                               |
 
 ## Test gaps
 
@@ -296,6 +298,7 @@ Read line by line:
 - `policy/schema.ts`, `settings.ts`, `normalize.ts`, `messages.ts`, `propose.ts`, `write.ts`, `loosening.ts`, `audit.ts`, `problems.ts`, `merge.ts`, `read-policy.ts`, `set-command.ts`, `ignore-command.ts` and `add-command.ts`;
 - `repository/`, and `presets/detect.ts`;
 - `structure/`, every file;
+- `apple/build.ts`, `plan.ts`, `xcode/project.ts`, `xcode/settings-files.ts`, `xctest/references.ts` and `xctest/coverage.ts`;
 - `naming/` except `extractors/sql.ts`;
 - `config/` except `prose.ts`;
 - the plugin entry `plugin.ts` and the rule `no-prefix-collisions`;
@@ -303,7 +306,7 @@ Read line by line:
 
 Read by outline (the header comment, every constant, every exported function), not line by line:
 
-- `apple/`, `pyproject/`, `web/`, `sql/`, `postgres/`, `supabase/`, `cargo/`, `golang/`, `express/`;
+- `apple/structure/`, `apple/xcode/files.ts` and `resources.ts`, `apple/xctest/line-checks.ts` and `test-files.ts`, `pyproject/`, `web/`, `sql/`, `postgres/`, `supabase/`, `cargo/`, `golang/`, `express/`;
 - `profile/`, `prose/`, `rules/`, `presets/`, and the rest of `run/` and `emit/`;
 - the other 25 plugin rules, by their summary line.
 
