@@ -20,7 +20,7 @@ osv-scanner, knip, deptry, syncpack, eslint-plugin-package-json.
 | -------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `.gspot/osv-scanner.toml`              | `[[IgnoredVulns]]` from `[tools.osv] ignore` with id, reason, and a date to re-review                                                                                                                                           |
 | `.gspot/syncpack.json`                 | one exact version per dependency across the workspace; a version group per aligned pair from `[tools.dependencies] aligned` (defaults: `next` with `eslint-config-next`, `react` with `react-dom`, `@types/react` with `react`) |
-| the package manager's install settings | `bunfig.toml` `[install] minimumReleaseAge`, `[install.security] scanner`; `.npmrc` `min-release-age`; `pnpm-workspace.yaml` `minimumReleaseAge`; written as managed entries after a yes at init                                |
+| the package manager's install settings | `bunfig.toml` `[install] minimumReleaseAge`, `[install.security] scanner`; `.npmrc` `min-release-age`; `pnpm-workspace.yaml` `minimumReleaseAge`; gspot reads them and never writes them, and the check is at the level `all`   |
 
 ## Checks
 

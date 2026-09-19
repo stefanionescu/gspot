@@ -16,7 +16,7 @@ pytest, pytest-cov.
 ## Generated configuration
 
 `.gspot/ruff.toml` keeps the `PT` family on and adds test-file overrides: `S101` (assert) off in
-tests, `ARG` off for fixtures, `PLR2004` off in tests. `[tool.pytest.ini_options]` is written
+gspot writes nothing into `pyproject.toml`. The coverage check passes its options by flag (D-117).
 with `testpaths` from claims and `addopts = "-q --strict-markers --strict-config"`.
 
 ## Checks

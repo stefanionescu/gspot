@@ -21,9 +21,9 @@ gitleaks, trufflehog.
 
 | Id                            | Stage  | Command                                                                                                                                                      |
 | ----------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `secrets/gitleaks-staged`     | commit | `gitleaks protect --staged --config .gspot/gitleaks.toml --redact`                                                                                           |
-| `secrets/gitleaks`            | push   | `gitleaks detect --config .gspot/gitleaks.toml --baseline-path .gspot/gitleaks-baseline.json --redact` over the pushed range                                 |
-| `secrets/trufflehog`          | push   | `trufflehog git file://. --since-commit <base> --only-verified --fail`                                                                                       |
+| `secrets/gitleaks-staged`     | commit | `gitleaks git --staged --config .gspot/gitleaks.toml --redact`                                                                                               |
+| `secrets/gitleaks`            | push   | `gitleaks git --config .gspot/gitleaks.toml --baseline-path .gitleaks-baseline.json --redact` over the pushed range                                          |
+| `secrets/trufflehog`          | push   | `trufflehog git file://. --since-commit <base> --results=verified --fail`                                                                                    |
 | `integrity/env-files`         | commit | no environment file staged except templates. The shipped pattern list is `.env*` and Wrangler's `.dev.vars*`; a preset adds a pattern as data, never as code |
 | `integrity/gitleaks-baseline` | commit | every baseline fingerprint has a reason and names a path that existed                                                                                        |
 | `config-files/dotenv`         | commit | tracked `.env*` files hold keys only                                                                                                                         |

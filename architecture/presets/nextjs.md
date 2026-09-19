@@ -53,16 +53,12 @@ Every shared rule and every limit holds in a Next.js app as it does anywhere els
 
 ## Settings
 
-| Setting                                            | Default                                                                 |
-| -------------------------------------------------- | ----------------------------------------------------------------------- |
-| `architecture.route_directories`                   | `app`, `pages`                                                          |
-| `architecture.shared_directories`                  | `components`, `lib`, `hooks`, `config`, `validators`, `types`, `server` |
-| `architecture.feature_contracts`                   | `index`, `public`, `contracts`                                          |
-| `architecture.imports_allowed` (from, to, reason)  | none                                                                    |
-| `tools.next.translations` (directory, base locale) | detected from next-intl configuration                                   |
-| `tools.next.build_in_gate`                         | false                                                                   |
-| `tools.next.build_flags`                           | `[]`; `["--webpack"]` for an app that does not build with Turbopack     |
-| `tools.eslint.restricted_imports` (name, message)  | none; the reference picture-component rule is one entry                 |
+| Setting                                            | Default                                                             |
+| -------------------------------------------------- | ------------------------------------------------------------------- |
+| `tools.next.translations` (directory, base locale) | detected from next-intl configuration                               |
+| `tools.next.build_in_gate`                         | false                                                               |
+| `tools.next.build_flags`                           | `[]`; `["--webpack"]` for an app that does not build with Turbopack |
+| `tools.eslint.restricted_imports` (name, message)  | none; the reference picture-component rule is one entry             |
 
 ## Rule files
 

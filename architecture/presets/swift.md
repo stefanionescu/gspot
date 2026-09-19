@@ -16,12 +16,11 @@ swiftlint, swiftformat, periphery, xcodebuild (host), swift (host).
 
 ## Generated configuration
 
-| Target                       | Stub                                  | Holds                                                                                                                                                                                                                                                                                                                          |
-| ---------------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.gspot/swiftlint.yml`       | `.swiftlint.yml` with `parent_config` | the 87 opt-in rules, 4 analyzer rules, limits from `[limits]`, `identifier_name` and `type_name` off, `missing_docs` on open and public, `explicit_acl`, `explicit_top_level_acl`, `private_over_fileprivate`, `file_name_no_space`, `file_header`, custom rules for `///` and banned-term regexes as a second line of defense |
-| `.gspot/swiftlint.tests.yml` | none                                  | the snapshot-test config from `[tools.swiftlint.extra_configs]`                                                                                                                                                                                                                                                                |
-| `.gspot/swiftformat`         | `.swiftformat`                        | the enabled and disabled rule lists, options from `[format]`                                                                                                                                                                                                                                                                   |
-| `.gspot/periphery.yml`       | none                                  | project, schemes, retain options                                                                                                                                                                                                                                                                                               |
+| Target                 | Stub                                  | Holds                                                                                                                                                                                                                                                                                                                          |
+| ---------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `.gspot/swiftlint.yml` | `.swiftlint.yml` with `parent_config` | the 87 opt-in rules, 4 analyzer rules, limits from `[limits]`, `identifier_name` and `type_name` off, `missing_docs` on open and public, `explicit_acl`, `explicit_top_level_acl`, `private_over_fileprivate`, `file_name_no_space`, `file_header`, custom rules for `///` and banned-term regexes as a second line of defense |
+| `.gspot/swiftformat`   | `.swiftformat`                        | the enabled and disabled rule lists, options from `[format]`                                                                                                                                                                                                                                                                   |
+| `.gspot/periphery.yml` | none                                  | project, schemes, retain options                                                                                                                                                                                                                                                                                               |
 
 ## Checks
 
@@ -81,7 +80,7 @@ SwiftLint opt-in rules added beyond the reference set, on with a baseline at `in
 
 ```text
 no_magic_numbers type_contents_order one_declaration_per_file file_types_order no_empty_block
-explicit_acl explicit_top_level_acl private_over_fileprivate file_name_no_space file_header
+explicit_acl explicit_top_level_acl private_over_fileprivate file_name_no_space
 ```
 
 SwiftLint analyzer rules, 4, run by `swift/swiftlint-analyze`:
@@ -102,18 +101,17 @@ large_tuple
 
 SwiftLint options. Each number comes from `[limits]` and `[limits.swift]`, and warning equals error:
 
-| Rule                    | Setting                            | Shipped                                    | Options                                                            |
-| ----------------------- | ---------------------------------- | ------------------------------------------ | ------------------------------------------------------------------ |
-| `line_length`           | `format.print_width`               | 120                                        | `ignores_comments`, `ignores_urls`, `ignores_interpolated_strings` |
-| `file_length`           | `limits.file_lines`                | 300                                        | `ignore_comment_only_lines`                                        |
-| `type_body_length`      | `limits.swift.type_body_length`    | 300                                        |                                                                    |
-| `function_body_length`  | `limits.function_lines`            | 60                                         |                                                                    |
-| `closure_body_length`   | `limits.swift.closure_body_length` | 60                                         |                                                                    |
-| `cyclomatic_complexity` | `limits.cyclomatic_complexity`     | 8                                          | `ignores_case_statements`                                          |
-| `nesting`               | `limits.nesting`                   | type 1, function 2                         |                                                                    |
-| `missing_docs`          | none                               | error for `open` and `public`              | `excludes_extensions`, `excludes_inherited_types`                  |
-| `unused_import`         | `tools.swiftlint.keep_imports`     | `CoreGraphics`                             |                                                                    |
-| `file_header`           | none                               | `forbidden_pattern` for any header comment | agrees with SwiftFormat `--header strip`                           |
+| Rule                    | Setting                            | Shipped                       | Options                                                            |
+| ----------------------- | ---------------------------------- | ----------------------------- | ------------------------------------------------------------------ |
+| `line_length`           | `format.print_width`               | 120                           | `ignores_comments`, `ignores_urls`, `ignores_interpolated_strings` |
+| `file_length`           | `limits.file_lines`                | 300                           | `ignore_comment_only_lines`                                        |
+| `type_body_length`      | `limits.swift.type_body_length`    | 300                           |                                                                    |
+| `function_body_length`  | `limits.function_lines`            | 60                            |                                                                    |
+| `closure_body_length`   | `limits.swift.closure_body_length` | 60                            |                                                                    |
+| `cyclomatic_complexity` | `limits.cyclomatic_complexity`     | 8                             | `ignores_case_statements`                                          |
+| `nesting`               | `limits.nesting`                   | type 1, function 2            |                                                                    |
+| `missing_docs`          | none                               | error for `open` and `public` | `excludes_extensions`, `excludes_inherited_types`                  |
+| `unused_import`         | `tools.swiftlint.keep_imports`     | `CoreGraphics`                |                                                                    |
 
 `included` and `excluded` are not rendered: gspot passes the file list. The shipped exclusions
 are file natures: `Pods`, `DerivedData`, `build`, `.build` and `Generated` folders are vendored
@@ -196,7 +194,7 @@ owner, and reads in two or more files are all findings.
 
 ## Settings
 
-`tools.swiftlint.extra_configs`, `tools.swiftlint.keep_imports`, `tools.swiftformat.swift_version` (a rule turned off is `gspot ignore swift/swiftlint --rule <id>`, rendered into `disabled_rules`), `tools.swiftformat.options`,
+`tools.swiftlint.keep_imports`, `tools.swiftformat.swift_version` (a rule turned off is `gspot ignore swift/swiftlint --rule <id>`, rendered into `disabled_rules`), `tools.swiftformat.options`,
 `tools.periphery.retain`, `tools.xcodebuild.scheme`, `tools.xcodebuild.destination`.
 
 ## Rule files

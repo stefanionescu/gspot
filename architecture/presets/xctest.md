@@ -19,8 +19,8 @@ swiftlint (from swift), xcodebuild (host). No tool of its own.
 `.gspot/swiftlint.yml` gains, over the claimed files, the five test rules of the swift preset
 (`balanced_xctest_lifecycle`, `empty_xctest_method`, `final_test_case`, `test_case_accessibility`,
 `xct_specific_matcher`) and turns `force_unwrapping`, `missing_docs` and `no_magic_numbers` off
-there. A second SwiftLint configuration for a test folder comes from
-`[tools.swiftlint.extra_configs]`, as the swift preset says.
+there. The preset writes a nested SwiftLint file into each test folder it claims, with `parent_config`
+set to the file under `.gspot/` (K-256).
 
 ## Checks
 
