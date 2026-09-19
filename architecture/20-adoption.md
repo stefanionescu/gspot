@@ -44,9 +44,8 @@ Every check passes `--config` itself, so gspot needs none of these files.
   cannot be told where its configuration lives.
 - Where the tool has an include form, the root file is a pointer: `extends`, `inherit_from`,
   `parent_config`, a re-export. Eight stubs already work this way.
-- Where the tool has no include form, no root file is written. `gspot.toml` gains
-  `[editor] root_files = ["typos", ...]` for a person who wants the copy, and the default is
-  none.
+- Where the tool has no include form, no root file is written.
+- No new setting comes with this. The nine `copy = true` stubs leave their manifests.
 - The init plan lists every root file with the reason it exists.
 
 ## A-2 A stub that does not say where it came from
@@ -111,8 +110,8 @@ Two defects make it slower than it needs to be:
   other stages and baselines them (`gspot apply --baseline --at manual`).
 - A cache key holds the hash of the configuration files the check names, not of all of
   `.gspot/`. The generated hash is computed once for each run.
-- The cache moves out of the repository, to the cache folder of the platform, keyed by the
-  repository path. It has a size limit, and the oldest entries leave first.
+- The Swift build folder moves to the cache folder of the platform. The verdict cache stays in
+  `.gspot/cache/` and drops entries older than 30 days.
 
 ## A-5 The first commit fails, so a skip file hid it
 
@@ -127,16 +126,11 @@ format finding by hand.
 
 **Design (D-103).**
 
-- init ends with an offer: run the fixers and commit the result as one commit that touches
-  layout only. The plan shows the number of files. With `--yes` the fixers run, and the commit is
-  left to the person.
-- Until that commit exists, the format checks report and do not fail. The policy records this
-  as `[adoption] format_pending = true`, in the tracked file, so every machine agrees. `gspot
-doctor` reports the key, and the first clean format run removes it.
+- init ends by offering `gspot check --fix`, and says how many files it changes. The person
+  reads the diff and commits it. No new policy key comes with this.
 - `gspot.local.toml` keeps one purpose: a tool that cannot run on this machine. A skip of a
   check whose tool is present is refused.
-- A run record says how many checks a local skip removed, in the summary line, in every
-  format.
+- Every summary line counts the checks a local skip removed.
 
 ## A-6 One baseline file for each rule
 
@@ -161,10 +155,8 @@ branches that touch the same rule change the same path map and conflict at merge
 run. In the app, `last.json` holds one check, `commits/commitlint`. `apply --lower-baselines`
 reads that file, so a commit between a full check and the lowering leaves it nothing to read.
 
-**Design (D-105).** One record for each stage: `last.commit.json`, `last.push.json`,
-`last.manual.json`. The `message` stage writes none. The records live beside the cache, outside
-the repository, and `--json` still prints the record. The `.gitignore` block shrinks to one
-line for `gspot.local.toml`.
+**Design (D-105).** One condition in `run/execute.ts`: a run of the `message` stage writes no
+record. The file, its name, and its place stay as they are.
 
 ## A-8 One policy file, written badly
 
@@ -173,14 +165,10 @@ tables. 36 `[[tools.gitleaks.baseline_reasons]]` entries hold one sentence with 
 commit in it. `policy/propose.ts` says why: the TOML patcher refuses a document where one scope
 holds an inline table and another holds a sub-table, so every scope setting is written inline.
 
-**Design (D-106).** One policy file stays: a second file means a reader never knows which one
-wins.
+**Design (D-106).** One policy file stays, and nothing moves out of it.
 
 - A scope setting is written as a sub-table, `[scope.tools.trivy]` under its `[[scope]]`. The
   writer is fixed or replaced so that both forms load.
-- A list of exceptions that a tool produces, not a person, lives beside the policy:
-  `.gspot/exceptions/<tool>.toml`. The policy names it: `tools.gitleaks.baseline_file`. The
-  gitleaks fingerprints, the carried ignore paths, and the advisory ignores move there.
 - One reason can cover many entries: `[[tools.gitleaks.baseline_reasons]]` takes `commits = [...]`
   or `paths = [...]` with one `reason`.
 - init writes the policy in a fixed order: selection, scopes, settings a person chose, then
@@ -203,12 +191,10 @@ The folder is the convention of mise. The file name was a choice.
 - `CONVENTIONAL_CONFIG_PATHS.sqlfluff` holds `setup.cfg` and `tox.ini`. With the `sql` preset
   selected, `collectCarried` puts both on the removed list, and `deleteReplaced` deletes them.
   A Python project keeps its package metadata and its test environments in those files.
-- Takeover replaces every owned configuration in one step. No mode runs gspot beside the old
-  setup.
 - `uninstall` removes `.gspot/` and the stubs. It does not say which commit holds the files
   takeover deleted.
 
-**Design (D-107, D-109).**
+**Design (D-109).**
 
 - A file that more than one tool reads is never deleted: `setup.cfg`, `tox.ini`,
   `pyproject.toml`, `package.json`. Takeover reads the one section and names it in the plan as
@@ -216,9 +202,6 @@ The folder is the convention of mise. The file name was a choice.
 - Task files count as tooling: `.mise/tasks/**`, `package.json` scripts, `Makefile` and
   `justfile` targets that call a tool gspot now owns. The plan lists each one. gspot edits none
   of them.
-- `gspot init --trial` writes `gspot.toml` and `.gspot/`, and nothing else: no root file, no
-  hook, no deletion, no runner file. `gspot check` works. `gspot init --finish` does the rest,
-  and prints the same plan first.
 - `uninstall` prints the commit that init started from, which holds every deleted file.
 
 ## A-11 Scopes come from workspaces only

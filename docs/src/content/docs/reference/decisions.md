@@ -774,14 +774,13 @@ React hooks rules were never on in the nextjs preset, which is the class of defe
 ## D-100 The root holds a pointer or nothing, and every written file carries its mark
 
 Nine stubs copied the whole generated file to the root, and a JSON copy lost its mark
-([20-adoption.md](https://github.com/stefanionescu/gspot/blob/main/architecture/20-adoption.md), A-1 and A-2). A root file exists only for a tool that a person
-or an editor runs without gspot, and only as a pointer to `.gspot/`: `extends`, `inherit_from`,
-`parent_config`, or a re-export. A tool with no include form gets no root file, unless the policy
-names it under `[editor] root_files`. A file that cannot hold a comment holds the `_gspot` key, or
-takes a form of the tool that holds a comment.
+([20-adoption.md](https://github.com/stefanionescu/gspot/blob/main/architecture/20-adoption.md), A-1 and A-2). A root file exists only as a pointer to
+`.gspot/`: `extends`, `inherit_from`, `parent_config`, or a re-export. A tool with no include form
+gets no root file, because every check passes `--config` itself. A JSON file keeps the `_gspot`
+key. No new setting comes with this: the nine `copy = true` stubs leave their manifests.
 
-Rejected: copies for editor support by default,
-because the root then holds more lint files after the install than before it.
+Rejected: copies for editor support, because the root then holds more lint files after the
+install than before it.
 
 ## D-101 gspot adds to the hooks a repository has
 
@@ -808,16 +807,15 @@ Rejected: a time budget for each hook that skips what does
 not fit, because a gate that skips checks by the clock gives a different verdict on a slow
 machine.
 
-## D-103 Formatting is fixed in one commit, and no local file hides a failure
+## D-103 init offers the fix run, and no local file hides a failure
 
-Format, syntax, schema, coverage and build findings still enter no baseline. init offers the fix
-run as one commit of layout changes. Until that run is clean, the policy holds
-`[adoption] format_pending = true`, the format checks report without failing, and `gspot doctor`
-says so. The key is tracked, so every machine agrees. `gspot.local.toml` skips a check only when
-its tool cannot run on this machine. Every summary line counts the local skips.
+Format, syntax, schema, coverage, and build findings still enter no baseline. init ends by
+offering `gspot check --fix`, and says how many files it changes. The person reads the diff and
+commits it. `gspot.local.toml` skips a check only when its tool cannot run on this machine, and
+every summary line counts the local skips. No new policy key comes with this.
 
-Rejected: a
-baseline for format findings, because nobody lowers it by hand and it never reaches zero.
+Rejected: a baseline for format findings, because nobody lowers it by hand and it never reaches
+zero.
 
 ## D-104 One baseline file, and a rise prints what rose
 
@@ -826,33 +824,30 @@ run prints the findings of the files whose count rose and one line that counts t
 that keeps its own baseline names the file in its manifest. Rejected: one file for each rule,
 which put 112 files in the app and made two branches conflict on the same path map.
 
-## D-105 Run records and the cache leave the repository
+## D-105 The message run writes no record, and a build folder is no cache entry
 
-Each stage writes its own record, and the `message` stage writes none. Records and the cache live
-in the cache folder of the platform, under a key made from the repository path. The cache has a
-size limit and drops the oldest entries first. A build folder of a tool is part of that cache. The
-`.gitignore` block holds one line.
+`.gspot/last.json` stays one file in the place it has. A run of the `message` stage does not
+write it, so a commit cannot replace the record of a full check. The build folder of a tool, such
+as the 7 GB Swift build folder, moves to the cache folder of the platform. The verdict cache
+stays in `.gspot/cache/` and drops entries older than 30 days.
 
-Rejected: keeping them under `.gspot/` with better ignore
-rules, because a 7 GB folder inside a repository slows every tool that walks the tree.
+Rejected: one record for each stage, which adds files to answer a defect that one condition
+fixes.
 
-## D-106 One policy file, readable, with produced lists beside it
+## D-106 One policy file, written so a person can read it
 
-`gspot.toml` stays the one policy. A scope setting is a sub-table, never an inline table. A list
-that a tool produces, such as the gitleaks fingerprints, lives in `.gspot/exceptions/<tool>.toml`,
-and the policy names that file. One reason may cover many entries. init writes the groups of the
-policy in a fixed order with a comment above each. The mise file is
+`gspot.toml` stays the one policy, and nothing moves out of it. Two changes make it readable. A
+scope setting is a sub-table, never an inline table. One reason may cover many entries, so the 36
+gitleaks entries of the app become one entry for each reason. The mise file is
 `.config/mise/conf.d/gspot-tools.toml`, so one file in a repository is called `gspot.toml`.
 
-Rejected: a second policy file for exceptions that a person edits, because two files a person
-edits is two places to look for every answer.
+Rejected: exception files beside the policy, because a second file is a second place to look.
 
-## D-107 init has a trial form
+## D-107 init gets no trial form
 
-`gspot init --trial` writes `gspot.toml` and `.gspot/` and nothing else, so `gspot check` runs
-beside the setup a repository has. `gspot init --finish` prints the full plan and does the rest.
-Rejected: a dry run only, because a plan on a screen does not show a developer what the findings
-look like in their own code.
+`gspot init --dry-run` prints the plan, and git undoes an install. A trial form of init is a
+second install path to build and test, and the defects of [20-adoption.md](https://github.com/stefanionescu/gspot/blob/main/architecture/20-adoption.md) are in
+the first one.
 
 ## D-108 A folder with a project file is a scope, and scope files have one place
 

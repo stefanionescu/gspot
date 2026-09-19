@@ -193,8 +193,8 @@ Every failing check prints the command that runs it alone: `gspot check typescri
 ## The run record
 
 Every run writes `.gspot/last.json`, and `gspot check --json` prints the same record. D-105
-decides one record for each stage, none for `message`, kept outside the repository, because the
-`commit-msg` run overwrites the record that `apply --lower-baselines` reads. Its shape
+decides that a run of the `message` stage writes no record, because the `commit-msg` run
+overwrites the record that `apply --lower-baselines` reads. Its shape
 is published as `schema/run-record.schema.json`. The record holds:
 
 - the version, the stage, the start time and the duration;
