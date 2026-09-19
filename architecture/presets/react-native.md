@@ -1,6 +1,6 @@
 # `react-native`
 
-Kind: framework. Requires: react. Recommends: typescript, jest.
+Kind: framework. Requires: react. Recommends: typescript, vitest. Recommends: typescript, jest.
 
 ## Detects and claims
 

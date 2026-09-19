@@ -1,6 +1,6 @@
 # `typescript`
 
-Kind: language. Requires: javascript, structure, naming, formatting, spelling.
+Kind: language. Requires: javascript, structure. Recommends: naming, formatting, spelling.
 
 ## Detects and claims
 

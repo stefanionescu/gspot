@@ -1,6 +1,6 @@
 # `security`
 
-Kind: concern. Static analysis for security patterns, per language. One SAST tool.
+Kind: concern. Requires: nothing. Static analysis for security patterns, per language. One SAST tool.
 
 ## Claims
 

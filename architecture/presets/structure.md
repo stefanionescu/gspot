@@ -1,6 +1,6 @@
 # `structure`
 
-Kind: concern. Required by every language preset. Runs the structural rules no standard
+Kind: concern. Requires: nothing. Recommended by every language preset (D-80). Runs the structural rules no standard
 linter ships, over every language, from one engine and one `[limits]` table.
 
 ## Claims

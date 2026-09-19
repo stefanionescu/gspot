@@ -1,6 +1,6 @@
 # `nginx`
 
-Kind: tool. Requires: docker when the configuration runs in a container.
+Kind: tool. Requires: nothing.
 
 ## Detects and claims
 

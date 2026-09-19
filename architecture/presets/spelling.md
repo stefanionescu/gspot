@@ -1,6 +1,6 @@
 # `spelling`
 
-Kind: concern. Selected by default. Required by every language preset.
+Kind: concern. Requires: nothing. Recommended by every language preset (D-80).
 
 ## Claims
 

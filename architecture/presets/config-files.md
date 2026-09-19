@@ -1,6 +1,6 @@
 # `config-files`
 
-Kind: concern. Requires: formatting, spelling. Claims every data and configuration file no
+Kind: concern. Requires: formatting. Recommends: spelling. Claims every data and configuration file no
 language owns, so `.toml`, `.yaml` and `.json` files stop being spell-checked only.
 
 ## Detects and claims

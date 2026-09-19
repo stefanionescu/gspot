@@ -1,6 +1,6 @@
 # `drizzle`
 
-Kind: library. Requires: typescript, postgres when the dialect is Postgres.
+Kind: library. Requires: javascript.
 
 ## Detects
 

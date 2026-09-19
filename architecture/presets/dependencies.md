@@ -1,6 +1,6 @@
 # `dependencies`
 
-Kind: concern. Selected by default. Dependency health: advisories, unused, duplicated,
+Kind: concern. Requires: nothing. Dependency health: advisories, unused, duplicated,
 skewed, foreign lockfiles, ownership, install policy.
 
 ## Claims

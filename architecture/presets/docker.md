@@ -1,6 +1,6 @@
 # `docker`
 
-Kind: tool. Requires: config-files.
+Kind: tool. Requires: config-files. Recommends: spelling.
 
 ## Detects and claims
 

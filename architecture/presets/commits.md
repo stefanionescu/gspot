@@ -1,6 +1,6 @@
 # `commits`
 
-Kind: concern. Selected by default.
+Kind: concern. Requires: nothing. Offered at `init` and not selected. The security and licenses presets work the same way.
 
 ## Tools
 

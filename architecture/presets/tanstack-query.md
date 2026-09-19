@@ -1,6 +1,6 @@
 # `tanstack-query`
 
-Kind: library. Requires: typescript.
+Kind: library. Requires: javascript.
 
 ## Detects
 

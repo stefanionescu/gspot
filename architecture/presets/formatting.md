@@ -1,6 +1,6 @@
 # `formatting`
 
-Kind: concern. Required by every language preset. One `[format]` block that every formatter
+Kind: concern. Requires: nothing. Recommended by every language preset (D-80). One `[format]` block that every formatter
 reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint.
 
 ## Settings

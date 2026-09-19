@@ -1,6 +1,6 @@
 # `sql`
 
-Kind: language. Requires: structure, naming, formatting, spelling.
+Kind: language. Requires: formatting. Recommends: naming, structure, spelling.
 
 ## Detects and claims
 

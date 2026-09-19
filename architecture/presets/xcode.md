@@ -1,6 +1,6 @@
 # `xcode`
 
-Kind: tool. Requires: swift, config-files. macOS only; every check here passes as a platform skip
+Kind: tool. Requires: config-files. Recommends: swift. macOS only; every check here passes as a platform skip
 elsewhere.
 
 ## Detects and claims

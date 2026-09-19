@@ -1,6 +1,6 @@
 # `fastapi`
 
-Kind: framework. Requires: python.
+Kind: framework. Requires: python. Recommends: security, pytest.
 
 ## Detects and claims
 

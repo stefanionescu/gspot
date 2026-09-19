@@ -1,6 +1,6 @@
 # `supabase`
 
-Kind: platform. Requires: postgres, sql, typescript, config-files.
+Kind: platform. Requires: postgres. Recommends: typescript, config-files, security.
 
 ## Detects and claims
 

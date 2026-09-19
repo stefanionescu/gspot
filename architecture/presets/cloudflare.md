@@ -1,6 +1,6 @@
 # `cloudflare`
 
-Kind: platform. Requires: javascript or typescript, config-files.
+Kind: platform. Requires: javascript. Recommends: security, config-files.
 
 ## Detects and claims
 

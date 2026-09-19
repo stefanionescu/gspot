@@ -1,6 +1,6 @@
 # `express`
 
-Kind: framework. Requires: typescript or javascript.
+Kind: framework. Requires: javascript. Recommends: security, vitest.
 
 ## Detects and claims
 

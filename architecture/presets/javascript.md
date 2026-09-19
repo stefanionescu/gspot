@@ -1,6 +1,6 @@
 # `javascript`
 
-Kind: language. Requires: structure, naming, formatting, spelling.
+Kind: language. Requires: structure. Recommends: naming, formatting, spelling.
 
 ## Detects and claims
 

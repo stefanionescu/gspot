@@ -1,6 +1,6 @@
 # `swift`
 
-Kind: language. Requires: structure, naming, formatting, spelling.
+Kind: language. Requires: formatting. Recommends: structure, naming, spelling.
 
 ## Detects and claims
 

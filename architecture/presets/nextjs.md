@@ -1,6 +1,6 @@
 # `nextjs`
 
-Kind: framework. Requires: typescript, react. Recommends: css, config-files.
+Kind: framework. Requires: typescript, react. Recommends: css, config-files. Recommends: css, config-files.
 
 ## Detects and claims
 

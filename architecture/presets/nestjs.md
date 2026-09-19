@@ -1,6 +1,6 @@
 # `nestjs`
 
-Kind: framework. Requires: typescript. Recommends: jest, security, dependencies.
+Kind: framework. Requires: typescript. Recommends: vitest, security, dependencies. Recommends: jest, security, dependencies.
 
 ## Detects and claims
 

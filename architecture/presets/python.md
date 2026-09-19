@@ -1,6 +1,6 @@
 # `python`
 
-Kind: language. Requires: structure, naming, formatting, spelling.
+Kind: language. Requires: formatting. Recommends: structure, naming, spelling, dependencies.
 
 ## Detects and claims
 

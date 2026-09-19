@@ -1,6 +1,6 @@
 # `markdown`
 
-Kind: language. Requires: docs, formatting, spelling.
+Kind: language. Requires: formatting. Recommends: docs, spelling.
 
 ## Detects and claims
 

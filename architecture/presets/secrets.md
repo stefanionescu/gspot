@@ -1,6 +1,6 @@
 # `secrets`
 
-Kind: concern. Selected by default in every repository.
+Kind: concern. Requires: nothing. Selected by default in every repository.
 
 ## Claims
 

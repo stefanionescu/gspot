@@ -1,6 +1,6 @@
 # `docs`
 
-Kind: concern. Selected by default. Documentation integrity: links, anchors, headings,
+Kind: concern. Requires: nothing. Documentation integrity: links, anchors, headings,
 stale paths, and the agent files.
 
 ## Claims

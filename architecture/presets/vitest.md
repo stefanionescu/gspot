@@ -1,6 +1,6 @@
 # `vitest`
 
-Kind: tool. Requires: typescript or javascript.
+Kind: tool. Requires: javascript.
 
 ## Detects and claims
 

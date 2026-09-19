@@ -1,6 +1,6 @@
 # `svelte`
 
-Kind: framework. Requires: javascript. Recommends: typescript, css, vitest.
+Kind: framework. Requires: javascript. Recommends: typescript, css, vitest. Recommends: typescript, css, vitest.
 
 ## Detects and claims
 

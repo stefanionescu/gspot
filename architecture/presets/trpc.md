@@ -1,6 +1,6 @@
 # `trpc`
 
-Kind: library. Requires: typescript.
+Kind: library. Requires: javascript.
 
 ## Detects
 

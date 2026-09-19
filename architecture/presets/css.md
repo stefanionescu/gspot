@@ -1,6 +1,6 @@
 # `css`
 
-Kind: language. Requires: formatting, spelling.
+Kind: language. Requires: formatting. Recommends: spelling.
 
 ## Detects and claims
 

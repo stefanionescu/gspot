@@ -1,6 +1,6 @@
 # `licenses`
 
-Kind: concern. Selected by default when a manifest exists.
+Kind: concern. Requires: nothing. Selected by default when a manifest exists.
 
 ## Claims
 
