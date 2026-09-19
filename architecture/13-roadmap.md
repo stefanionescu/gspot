@@ -164,11 +164,11 @@ when every gap it names has left 18-gaps.md.
 | The `core` level holds defects, and `strict` holds taste   | K-63, K-93, K-101, K-112, K-123, K-135, K-141, K-142, K-151, K-152, K-161 | 11 and 22     |
 | Framework naming                                           | K-133, K-136, K-137                                                       | 12            |
 | The core names no preset and no tool                       | K-13, K-17, K-24, K-79, K-80, K-85, K-107, K-113, K-139                   | 13            |
-| One owner for each idea                                    | G-13, K-55, K-77, K-94, K-98, K-105, K-106, K-110, K-124, K-131           | 13            |
+| One owner for each idea                                    | G-13, K-55, K-77, K-94, K-98, K-105, K-106, K-110, K-124, K-131, K-165    | 13            |
 | The config and its words                                   | K-88, K-89, K-116                                                         | 8 and 18      |
 | Checks that assume one layout                              | K-90, K-144, K-149, K-150, K-153, K-154, K-155, K-160, K-163              | 15            |
 | What a repository gets from init                           | K-72, K-118                                                               | 5             |
-| Release                                                    | K-121, K-145                                                              | before launch |
+| Release                                                    | K-121, K-145, K-164                                                       | before launch |
 | Tests                                                      | T-2 to T-12, T-14 to T-18                                                 | 14            |
 
 The Adoption phase is measured against yap-swift-app alone (D-121). yap-text-inference,
