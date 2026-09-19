@@ -203,6 +203,7 @@ with no line here fails the placement check.
 - [ ] K-229: The items are restored from the reference repositories. The lint of the rule files reports a list item that stops with no sentence end.
 - [ ] K-234: Let each manifest declare the suppression comment of its tool, and read that list for every comment style. Delete the table in `config/integrity.ts` (K-110).
 - [ ] K-238: Refuse a line break in a `reason`, a `description`, a rule id, and a word, once, in the config schema; then no template has to escape.
+- [ ] K-241: Settle each of the nine contradictions in the rule file, on the side of the decision or the check. Test the rule ids a rule file names against the templates.
 
 ### Row 1: Takeover deletes nothing it does not own
 
@@ -358,6 +359,7 @@ with no line here fails the placement check.
 - [ ] K-223: D-139 covers them, and its test reads every template for a call of `has(`.
 - [ ] K-231: With K-203, a language or framework file says what holds for every project of that kind. The rest moves into the repository it came from, during its migration.
 - [ ] K-232: The nextjs preset lists its second file. The swift preset lists the two framework files where the project imports that framework. A file with no preset to carry it is deleted (D-134) until a preset asks for it.
+- [ ] K-242: Move the working habits of the owner out of the general rule files into a profile, and add `quality/` to the words the rules lint refuses.
 
 ### Row 14: Tests
 
@@ -507,7 +509,7 @@ By the order of the owner, nothing below is touched before its step.
 
 Not done in this read, and owed before the fixes start:
 
-- 96 of the 107 rule files were read by script and not by a person.
+- 75 of the 107 rule files were read by script and not by a person.
 - `01` to `12` of this folder were compared with the decisions by a word search, not claim by
   claim.
 - The pins of the mise, brew and GitHub installers were not asked from their registries. The
