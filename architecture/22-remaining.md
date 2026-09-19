@@ -120,6 +120,13 @@ D-142 pins ESLint 9. What the code does today with the version a repository alre
 answer. No decision covers any of them. The runner `mise` changes nothing here: ESLint and
 every plugin have no mise installer, so they go into `package.json` under every runner but `none`.
 
+The registry was asked on September 19, 2026 for the 28 ESLint packages the manifests pin. All
+exist except `@gspot/eslint-plugin`, which is not published. Two need ESLint 10 and move down
+with D-142: `@eslint/js` 10.0.1 and `eslint-plugin-unicorn` 74.0.0. Four refuse ESLint 8:
+`eslint-plugin-regexp`, `eslint-plugin-package-json`, `eslint-plugin-zod`, and
+`eslint-plugin-unicorn`. The shipped rule set cannot run on the ESLint 8 of a developer, so
+using the version the repository holds is no way out.
+
 D-145 in [14-decisions.md](14-decisions.md) proposes the answer: the lint tools of gspot are
 tools and not dependencies of the repository. They install under `.gspot/`, and the
 `package.json` of the developer keeps the ESLint it has. The owner has not accepted it.
@@ -453,6 +460,7 @@ with no line here fails the placement check.
 - [ ] K-132: Say so when the preset question takes its default list without a terminal.
 - [ ] K-185: Explain looks in every scope, and prints the value of each scope that holds the key.
 - [ ] K-194: Findings of the `security`, `dependencies`, and `secrets` inspections are still held, so adoption is not blocked, and every full `gspot check` prints one line for each of them.
+- [ ] K-243: Report a config that does not load with its file, its line, and a plain sentence. Print the hooks line of the uninstall plan only when the path will be unset.
 
 ### Row 22: The recommended level
 
@@ -509,7 +517,7 @@ By the order of the owner, nothing below is touched before its step.
 
 Not done in this read, and owed before the fixes start:
 
-- 75 of the 107 rule files were read by script and not by a person.
+- 68 of the 107 rule files were read by script and not by a person.
 - `01` to `12` of this folder were compared with the decisions by a word search, not claim by
   claim.
 - The pins of the mise, brew and GitHub installers were not asked from their registries. The
