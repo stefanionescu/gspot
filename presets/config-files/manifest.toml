@@ -265,4 +265,4 @@ summary = "The name of the function the code reads environment variables through
 [rule_files]
 general = ["general/code/CONFIGURATION.md"]
 language = ["language/YAML.md"]
-tool = ["tool/tasks/TASKS.md"]
+tool = ["tool/tasks/TASKS.md", "tool/github-actions/GITHUB-ACTIONS.md"]

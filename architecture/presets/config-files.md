@@ -13,7 +13,7 @@ language owns, so `.toml`, `.yaml` and `.json` files stop being spell-checked on
 
 ## Tools
 
-taplo, yamllint, v8r, actionlint, zizmor, dotenv-linter, ansible-lint, plutil (host, macOS),
+taplo, yamllint, v8r, actionlint, zizmor, dotenv-linter, plutil (host, macOS),
 xmllint (host).
 Prettier comes from the formatting preset.
 
@@ -42,7 +42,6 @@ and bare tool runs find it.
 | `config-files/dotenv`           | commit        | `dotenv-linter check {files}` over tracked environment files (`.env*`, `.dev.vars*`); fix, order format                                          |
 | `config-files/env-example`      | push          | engine: every key the code reads through `process.env`, `os.environ` or the declared accessor appears in a template                              |
 | `config-files/plist`            | commit, macOS | `plutil -lint {files}` over `.plist` and `.entitlements`                                                                                         |
-| `config-files/ansible-lint`     | commit        | `ansible-lint {files}` over playbooks and roles, when `ansible.cfg` or a file with a top-level `hosts:` key exists; a platform skip on Windows   |
 | `config-files/xml`              | commit        | `xmllint --noout {files}` over `.xml`, `.storyboard` and `.xib`                                                                                  |
 
 `config-files/env-example` searches the whole scope for reads and compares them with the
@@ -60,3 +59,6 @@ variables, on top of `process.env` and `os.environ`).
 
 `general/code/CONFIGURATION.md`, `language/YAML.md`, `tool/tasks/TASKS.md`;
 `tool/github-actions/GITHUB-ACTIONS.md` when `.github/workflows/` holds a workflow.
+
+Ansible playbooks have their own preset, `ansible`, so a repository with no playbook installs no
+ansible-lint. It detects `ansible.cfg` and runs `ansible/lint` in every folder that holds one.

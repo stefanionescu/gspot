@@ -14,6 +14,7 @@ import { largeFiles } from '#cli/integrity/large-files.ts';
 import { stalePaths } from '#cli/integrity/stale-paths.ts';
 import { taskPolicy } from '#cli/integrity/task-policy.ts';
 import { denoCheck, denoLint } from '#cli/supabase/deno.ts';
+import { ansibleLint } from '#cli/integrity/ansible-lint.ts';
 import { readmeShape } from '#cli/integrity/readme/shape.ts';
 import { suppressions } from '#cli/integrity/suppressions.ts';
 import { docsHeadings } from '#cli/integrity/docs-headings.ts';
@@ -59,6 +60,7 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'ansible-lint': ansibleLint,
     'openapi-lint': openapiLint,
     'openapi-fresh': openapiFresh,
     'routes-tested': routesTested,

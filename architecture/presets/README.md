@@ -29,14 +29,15 @@ One page per preset. Each page states what the preset detects and claims, the to
 
 ## Tools
 
-| Preset | Detects                           | Adds                                                                                     | Page                   |
-| ------ | --------------------------------- | ---------------------------------------------------------------------------------------- | ---------------------- |
-| docker | `Dockerfile`, compose             | hadolint, compose config, trivy                                                          | [docker.md](docker.md) |
-| nginx  | `nginx.conf`                      | gixy, `nginx -t` through compose                                                         | [nginx.md](nginx.md)   |
-| xcode  | `*.xcodeproj`                     | plist, xcconfig, xcstrings, asset catalogues, test plans, orphan sources, entitlements   | [xcode.md](xcode.md)   |
-| vitest | `vitest`                          | the vitest ESLint rules, coverage threshold, test support placement                      | [vitest.md](vitest.md) |
-| pytest | `pytest`                          | Ruff PT, coverage threshold                                                              | [pytest.md](pytest.md) |
-| xctest | `import XCTest`, `import Testing` | disabled tests with reasons, no sleeps, no recording mode, snapshot references, coverage | [xctest.md](xctest.md) |
+| Preset  | Detects                           | Adds                                                                                     | Page                     |
+| ------- | --------------------------------- | ---------------------------------------------------------------------------------------- | ------------------------ |
+| docker  | `Dockerfile`, compose             | hadolint, compose config, trivy                                                          | [docker.md](docker.md)   |
+| nginx   | `nginx.conf`                      | gixy, `nginx -t` in the nginx image                                                      | [nginx.md](nginx.md)     |
+| ansible | `ansible.cfg`                     | ansible-lint                                                                             | [ansible.md](ansible.md) |
+| xcode   | `*.xcodeproj`                     | plist, xcconfig, xcstrings, asset catalogues, test plans, orphan sources, entitlements   | [xcode.md](xcode.md)     |
+| vitest  | `vitest`                          | the vitest ESLint rules, coverage threshold, test support placement                      | [vitest.md](vitest.md)   |
+| pytest  | `pytest`                          | Ruff PT, coverage threshold                                                              | [pytest.md](pytest.md)   |
+| xctest  | `import XCTest`, `import Testing` | disabled tests with reasons, no sleeps, no recording mode, snapshot references, coverage | [xctest.md](xctest.md)   |
 
 ## Libraries
 

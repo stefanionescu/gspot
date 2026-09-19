@@ -53,3 +53,4 @@ Kind: concern. Requires: `formatting`. Selected by default.
 - `general/code/CONFIGURATION.md`
 - `language/YAML.md`
 - `tool/tasks/TASKS.md`
+- `tool/github-actions/GITHUB-ACTIONS.md`

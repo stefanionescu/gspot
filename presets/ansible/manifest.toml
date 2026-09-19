@@ -1,0 +1,36 @@
+[preset]
+id = "ansible"
+kind = "tool"
+title = "Ansible"
+requires = ["config-files"]
+description = "Ansible playbooks: ansible-lint in every folder that holds an ansible.cfg."
+
+[detect]
+paths = ["ansible.cfg", "**/ansible.cfg"]
+
+[claims]
+paths = ["ansible.cfg", "**/ansible.cfg"]
+natures = ["source"]
+
+[[tools]]
+name = "ansible-lint"
+version = "26.8.0"
+floor = "24.0.0"
+pypi = "ansible-lint"
+mise = "pipx:ansible-lint"
+brew = "ansible-lint"
+windows = false
+
+[[checks]]
+id = "ansible/lint"
+stage = "commit"
+runs = "once"
+platform = ["macos", "linux"]
+engine = "integrity"
+analysis = "ansible-lint"
+tool = "ansible-lint"
+claims = {extensions = [".yml", ".yaml", ".cfg", ".j2"]}
+inspection = ["style"]
+summary = "Runs ansible-lint in every folder that holds an ansible.cfg."
+why = "A playbook runs as root on production hosts, and a task that is not idempotent changes them on every run."
+fix = "Change the task the way the rule says. Turn one rule off with gspot ignore ansible/lint --rule <id> --reason."

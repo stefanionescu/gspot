@@ -44,14 +44,14 @@ Each row was reproduced by running the command in the second column.
 
 ## Code gaps
 
-| Id   | Gap                                                                                                                                                                                                                                                         | Owner                                                   |
-| ---- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
-| K-13 | `gspot allow gitleaks`, `osv` and `licenses` write keys of presets that do not ship, and the settings surface then refuses them.                                                                                                                            | `policy/allow-command.ts`                               |
-| K-14 | 20 of 29 owner rows and 9 of 13 check rows in takeover name presets that do not ship. The code cannot run today.                                                                                                                                            | `emit/takeover.ts`, `emit/carry.ts`                     |
-| K-17 | The core names preset ids: `swift`, `prose`, `typescript` and `commits`.                                                                                                                                                                                    | `emit/targets.ts`, `emit/apply.ts`, `emit/init-plan.ts` |
-| K-24 | The shared structure context carries `bashText`, `bashList` and `bashSetting`. Every code analysis is for shell.                                                                                                                                            | `structure/engine.ts`                                   |
-| K-28 | The ESLint template holds 411 lines of JavaScript, and its test holds 21.                                                                                                                                                                                   | `presets/javascript/eslint.config.js.tmpl`              |
-| K-35 | The enforcement ledger lands `ansible-lint` on `config-files/ansible-lint`, and no preset ships the check. The GitHub Actions rule file installs with the cloudflare preset only. Swift tests have no preset (D-93). The specification now holds all three. | `presets/config-files`, `presets/xctest`                |
+| Id   | Gap                                                                                                                                           | Owner                                                   |
+| ---- | --------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------- |
+| K-13 | `gspot allow gitleaks`, `osv` and `licenses` write keys of presets that do not ship, and the settings surface then refuses them.              | `policy/allow-command.ts`                               |
+| K-14 | 20 of 29 owner rows and 9 of 13 check rows in takeover name presets that do not ship. The code cannot run today.                              | `emit/takeover.ts`, `emit/carry.ts`                     |
+| K-17 | The core names preset ids: `swift`, `prose`, `typescript` and `commits`.                                                                      | `emit/targets.ts`, `emit/apply.ts`, `emit/init-plan.ts` |
+| K-24 | The shared structure context carries `bashText`, `bashList` and `bashSetting`. Every code analysis is for shell.                              | `structure/engine.ts`                                   |
+| K-28 | The ESLint template holds 411 lines of JavaScript, and its test holds 21.                                                                     | `presets/javascript/eslint.config.js.tmpl`              |
+| K-35 | Swift tests have no preset (D-93). ansible-lint ships as the `ansible` preset, and the GitHub Actions rule file installs with `config-files`. | `presets/xctest`                                        |
 
 A person can turn the naming check off today with `gspot ignore naming/identifiers` and a reason,
 and can turn one tool off with `tools.<name>.enabled = false` and a reason. G-5 is about the
