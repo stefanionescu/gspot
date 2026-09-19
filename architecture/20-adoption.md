@@ -157,7 +157,8 @@ run. In the app, `last.json` holds one check, `commits/commitlint`. `apply --low
 reads that file, so a commit between a full check and the lowering leaves it nothing to read.
 
 **Design (D-105).** One condition in `run/execute.ts`: a run of the `message` stage writes no
-record. The file, its name, and its place stay as they are.
+report. The file stays one file in one place, under the name [19-names.md](19-names.md) gives it,
+`.gspot/report.json`. `gspot baseline` reads it and refuses a report that is no full run.
 
 ## A-8 One policy file, written badly
 
@@ -237,9 +238,11 @@ does not. The stub goes into the scope folder in both cases.
 `"@gspot/eslint-plugin": "file:../gspot/packages/eslint-plugin"`. The hooks fall back to
 `mise exec -- gspot`, and no gspot release exists for mise to install.
 
-**Design.** No decision is needed. The branch cannot merge before the first release of the
-binary and the plugin ([11-toolchain.md](11-toolchain.md)). [17-migration.md](17-migration.md)
-lists it as a blocker.
+**Design (D-145, D-158).** The plugin is a tool of gspot and installs under `.gspot/`, so the
+`package.json` of the app holds no such line. Before the first release, `gspot install` takes the
+plugin and the launcher from the local registry of the test harness, which `GSPOT_REGISTRY`
+names. No tracked file holds a path of one machine. The branch still cannot merge before the
+first release.
 
 ## A-13 Default strictness, outside the banned terms
 
@@ -352,8 +355,9 @@ sets it in its setup task. A person who clones a gspot repository has no hooks u
 **Design (D-115).**
 
 - gspot never sets `core.hooksPath` in a repository where a tracked file sets it.
-- Where gspot owns the hooks, init adds `gspot apply` to the setup entry the repository has: the
-  setup task, or the `prepare` script. The plan shows the line.
+- `gspot install` sets up one clone: the tools and the hooks (D-156). With a yes, init adds that
+  one line to the setup entry the repository has: the setup task, the `prepare` script, or a
+  Makefile target. The plan shows the line.
 - `gspot doctor` and `gspot check` say when the policy names hooks and this clone runs none, with
   the command that fixes it.
 
@@ -409,34 +413,43 @@ exists, and none of it is shown.
 | Add a check of their own              | a `[[check]]` entry in `gspot.toml` that runs any command                                  |
 | Carry the setup to another repository | `gspot profile save team.toml`, then `gspot init --from team.toml`, a URL, or `github:o/r` |
 | Commit or push past a failing hook    | `git commit --no-verify`, `git push --no-verify`                                           |
-| See what exists before choosing       | nothing                                                                                    |
-| Take the basics only                  | nothing                                                                                    |
+| See what exists before choosing       | `gspot list` (D-118)                                                                       |
+| Take the basics only                  | the default: `level = "recommended"` (D-119)                                               |
 
 ## Every path a developer takes
 
 Each row names the decision that answers it. A row marked open has a gap row in
 [18-gaps.md](18-gaps.md).
 
-| The developer                               | What happens                                                                                                             | Decided by                          |
-| ------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- |
-| has an empty repository                     | init installs what reads no language; `gspot check` names a language that arrives later, with the `gspot add` line       | D-125                               |
-| has a folder that is no git repository      | open: init says nothing about it, writes no hooks, and still selects `commits`                                           | K-214                               |
-| has a repository with no linting            | init proposes presets in three groups, installs `recommended`, holds old findings in one baseline                        | D-104, D-119, D-120                 |
-| has linting, hooks, and tasks of their own  | hooks and tasks are added to, never replaced; old config is carried in both directions; every file not carried is listed | D-101, D-109, D-114 to D-117, K-193 |
-| has a monorepo                              | one scope for each project file; one `gspot.toml`; a check reads the files of its scope                                  | D-108, K-149                        |
-| wants some presets only                     | the three questions, or `--presets` and `--without`                                                                      | D-120                               |
-| wants everything later                      | `gspot list`, `gspot add`, `gspot set level all`; new findings are held                                                  | D-118, D-143                        |
-| wants one rule off, or back on              | `gspot ignore` with a reason, and `--remove`                                                                             | D-131                               |
-| wants to change a limit                     | `gspot set limits.<name>`, with a reason when it loosens; the number holds in every framework                            | D-138                               |
-| wants a check of their own                  | a `[[check]]` entry that runs any command                                                                                | 03-configuration.md                 |
-| wants the same setup in the next repository | `gspot profile save`, then `gspot init --from` a file, a URL, or `github:owner/repo`                                     | D-131                               |
-| adds a language or a framework later        | `gspot check` names it; `gspot add` selects it; its findings are held                                                    | D-125, D-143                        |
-| meets a finding                             | `gspot explain`, `gspot check --fix`, or `gspot ignore`                                                                  | D-131                               |
-| must commit past a failing hook             | `--no-verify`; the failure text names it, and the push and CI still check                                                | D-117, D-123                        |
-| clones the repository on a new machine      | the setup entry of the repository installs the hooks and the tools; the pinned version refuses another                   | D-115                               |
-| upgrades gspot                              | `gspot upgrade` prints what changes; new rules are held like any widening                                                | D-143                               |
-| works on GitLab                             | `--ci gitlab` writes `.gitlab/ci/gspot.yml`                                                                              | D-133                               |
-| leaves                                      | `gspot uninstall` removes what gspot wrote; git holds the old files                                                      | D-109                               |
+| The developer                                                             | What happens                                                                                                             | Decided by                          |
+| ------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------ | ----------------------------------- |
+| has an empty repository                                                   | init installs what reads no language; `gspot check` names a language that arrives later, with the `gspot add` line       | D-125                               |
+| has a folder that is no git repository, or another version control system | init says so, proposes no preset that needs git, and scans secrets by files; the git flags exit 2 with one sentence      | K-214, K-271                        |
+| has a repository with no linting                                          | init proposes presets in three groups, installs `recommended`, holds old findings in one baseline                        | D-104, D-119, D-120                 |
+| has linting, hooks, and tasks of their own                                | hooks and tasks are added to, never replaced; old config is carried in both directions; every file not carried is listed | D-101, D-109, D-114 to D-117, K-193 |
+| has a monorepo                                                            | one scope for each project file; one `gspot.toml`; a check reads the files of its scope                                  | D-108, K-149                        |
+| wants some presets only                                                   | the three questions, or `--presets` and `--without`                                                                      | D-120                               |
+| wants everything later                                                    | `gspot list`, `gspot add`, `gspot set level all`; new findings are held                                                  | D-118, D-143                        |
+| wants one rule off, or back on                                            | `gspot ignore` with a reason, and `--remove`                                                                             | D-131                               |
+| wants to change a limit                                                   | `gspot set limits.<name>`, with a reason when it loosens; the number holds in every framework                            | D-138                               |
+| wants a check of their own                                                | a `[[check]]` entry that runs any command                                                                                | 03-configuration.md                 |
+| wants the same setup in the next repository                               | `gspot profile save`, then `gspot init --from` a file, a URL, or `github:owner/repo`                                     | D-131                               |
+| adds a language or a framework later                                      | `gspot check` names it; `gspot add` selects it; its findings are held                                                    | D-125, D-143                        |
+| meets a finding                                                           | `gspot explain`, `gspot check --fix`, or `gspot ignore`                                                                  | D-131                               |
+| must commit past a failing hook                                           | `--no-verify`; the failure text names it, and the push and CI still check                                                | D-117, D-123                        |
+| clones the repository on a new machine                                    | `gspot install`, alone or through the setup entry; a clone that is not set up says so on every run                       | D-156                               |
+| upgrades gspot                                                            | `gspot upgrade` prints what changes; new rules are held like any widening                                                | D-143                               |
+| works on GitLab, also self-hosted                                         | `--ci gitlab` writes `.gitlab/ci/gspot.yml` with a code quality report; the system is found by its file                  | D-133, K-277                        |
+| works on another CI system                                                | no file; the plan prints the three lines to paste, and one guide shows them                                              | K-278                               |
+| uses the pre-commit framework, lint-staged, or simple-git-hooks           | the gspot line goes into the hook tool the repository has                                                                | K-275                               |
+| uses Cursor, Copilot, or Gemini                                           | the index of rule files goes into each agent file the repository holds                                                   | K-279                               |
+| keeps their own ESLint and Prettier for now                               | both run; the plan prints the ignore line each of their tools needs                                                      | D-145, K-268                        |
+| sits behind a private registry or a proxy                                 | the install under `.gspot/` takes the registry settings of the repository                                                | K-267                               |
+| has the config below the git root                                         | checks run from the config root, and the hook changes folder first                                                       | K-272                               |
+| has no commit, no remote, or a shallow clone                              | each has one stated behavior and one planted case                                                                        | K-272                               |
+| works on Windows, or in an Alpine image                                   | LF line ends for `.gspot/`, the Windows job of CI, and two musl targets                                                  | K-263, K-273, K-280                 |
+| merges two branches that changed the config                               | `gspot apply` and `gspot install` write the generated files again                                                        | K-274                               |
+| leaves                                                                    | `gspot uninstall` removes what gspot wrote; git holds the old files                                                      | D-109                               |
 
 ## A-21 Nobody can see the menu
 
