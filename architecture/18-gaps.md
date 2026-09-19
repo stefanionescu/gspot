@@ -425,6 +425,29 @@ The other rows need no decision. Each one is a defect against text this folder a
 
 K-35 is decided in D-93.
 
+## What is still to check
+
+These were named on 2026-09-19 and are not done. Each ends as gap rows above, or as a line here
+that says it was checked and found sound.
+
+| What                                                                                                                        | When                                            |
+| --------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
+| The 107 rule files: a rule that contradicts another rule or a linter, and a rule nothing enforces                           | before the fixes, by reading                    |
+| The `summary`, `why` and `fix` text of all 222 checks: a `fix` that names a command the trim removed, or that is wrong      | before the fixes, by reading                    |
+| The 36 repository tests that were measured and not read, and the 49 templates read by rule id alone                         | before the fixes, by reading                    |
+| `architecture/01` to `12` against the code, claim by claim                                                                  | before the fixes, by reading                    |
+| Pins of the mise, brew and GitHub installers, and the flags each manifest passes to its pinned tool                         | with K-206, by asking each registry             |
+| Two tools that set one rule in opposite ways, in the final config of each language                                          | with row 12 of the roadmap                      |
+| What a developer sees when a tool crashes, the config is half written, two runs overlap, or a run is stopped inside `apply` | during the fixes, by trying each                |
+| Input gspot did not write: a profile from a URL, a `[[check]]` command, and config values rendered into a JavaScript file   | during the fixes                                |
+| `upgrade` and `uninstall` where a developer edited generated files or deleted half of `.gspot/`                             | during the fixes, as planted tests              |
+| The time of every check on a repository the size of yap-swift-app                                                           | step 3 of D-121                                 |
+| A real install, with every written file read                                                                                | step 3 of D-121, and nowhere else before step 4 |
+| Windows: Bash hooks, path separators, the CI job                                                                            | after CI is green                               |
+| The licenses of the bundled dependencies, a NOTICE file, and the right to ship the grammars and the Vale packages           | before launch                                   |
+| The build of the docs site                                                                                                  | before launch                                   |
+| Stale branches, the parked stash `hooks-existing`, the second `vale.ini` under `prose/`                                     | with the delete pass                            |
+
 ## What has been read
 
 Read line by line:

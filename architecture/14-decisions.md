@@ -943,15 +943,24 @@ Rejected: a level for each preset, because a person then answers 52 questions in
 The selection question becomes three: languages, frameworks, concerns. Each item shows one line
 of description and its number of checks, and found items start ticked.
 
-## D-121 yap-swift-app first, and one repository at a time after it
+## D-121 yap-swift-app first, and the owner is asked before any other repository
 
-The Adoption phase is measured against yap-swift-app alone. When its rows pass, the branch
-`chore/gspot` is deleted and the install is redone from the source tree. The table that opens
-[20-adoption.md](20-adoption.md) is then measured again beside the first numbers. The other five reference repositories follow one at a time. Each one is measured against its
-sheet in [17-migration.md](17-migration.md).
+The owner set this order on 2026-09-19, and amended the first form of this decision.
 
-Rejected: waiting for a release before the redo, because the
-redo is how the fixes are judged.
+1. The branch `chore/gspot` of yap-swift-app is deleted, on that machine only. Nothing is pushed
+   to the app, and no other branch is touched.
+2. Every gap of [18-gaps.md](18-gaps.md) is fixed in this repository. This step ends when gspot
+   checks itself with no ignore entry (D-135), and its run on GitHub is green (K-204, S-12).
+3. gspot is installed in yap-swift-app from the source tree, on a new branch. The table that
+   opens [20-adoption.md](20-adoption.md) is measured again beside the first numbers, and every
+   file the install writes is read.
+4. The owner is asked. No install starts in yap-text-inference, slopshop, yap-landing, or any
+   other repository before the owner says so, and each one after that is asked for again. Each
+   is measured against its sheet in [17-migration.md](17-migration.md).
+
+Rejected: waiting for a release before the redo, because the redo is how the fixes are judged.
+Rejected: a trial install in a throwaway worktree of the other repositories before step 4,
+which is an install the owner did not ask for.
 
 ## D-122 gspot check is the truth, and the hooks are the fast path
 

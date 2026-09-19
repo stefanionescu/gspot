@@ -176,9 +176,12 @@ when every gap it names has left 18-gaps.md.
 | Release                                                     | K-121, K-145, K-164                                                                                                            | before launch |
 | Tests                                                       | T-2 to T-12, T-14 to T-18, T-19 to T-23, T-24 to T-26                                                                          | 14            |
 
-The Adoption phase is measured against yap-swift-app alone (D-121). yap-text-inference,
-yap-landing, slopshop, and the two ComfyUI nodes follow it, one at a time, each against its sheet
-in [17-migration.md](17-migration.md). The README, the manual, and the site come after the redo
+The order is fixed by D-121. The branch `chore/gspot` of yap-swift-app is deleted first, on
+that machine and with no push. Then every gap is fixed here. That step ends when gspot checks itself
+and its run on GitHub is green.
+
+Then gspot is installed in yap-swift-app and measured. Then the owner is
+asked, and no other repository is touched before the answer. The README, the manual, and the site come after the redo
 of the app, because they show real output ([21-documentation.md](21-documentation.md)).
 
 ## Phase 2: Python, SQL, containers
