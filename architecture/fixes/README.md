@@ -28,7 +28,7 @@ the commit that closes its row.
 - [06-config.md](06-config.md): the text of `gspot.toml`, one word for one idea, one path for every widening, and scopes.
 - [07-levels.md](07-levels.md): the level key, templates that render by level, and what `recommended` holds in each preset.
 - [08-frameworks.md](08-frameworks.md): lint tools under `.gspot/`, the ESLint pin, shared rules in component files, every linter of a framework, and naming rules in the framework preset.
-- [09-manifests.md](09-manifests.md): one file for each check id, and every fact about a preset in its manifest.
+- [09-manifests.md](09-manifests.md): one file for each check name, and every fact about a preset in its manifest.
 - [10-tests.md](10-tests.md): a harness that fails early, installs as a developer runs them, one failing case for each check, snapshots, and time.
 - [11-layouts.md](11-layouts.md): checks that read their scope, and settings detected from the repository.
 - [12-menu.md](12-menu.md): `gspot list`, the three questions of `init`, and the managed block as a list.

@@ -75,7 +75,7 @@ refuses. The `fix` text of several checks names a command that D-129 to D-133 re
 The preset pages, the ledger, and the file tree disagreed with the code in about 200
 places.
 
-**Target.** Every path, command, flag, key, and check id that a document names exists, held by a
+**Target.** Every path, command, flag, key, and check name that a document names exists, held by a
 check. The pages that repeat a manifest are written from it.
 
 **Files.** `gspot.toml`, `checks/docs/stale-paths.ts`, new `checks/docs/samples.ts`,
@@ -84,7 +84,7 @@ check. The pages that repeat a manifest are written from it.
 **Logic.** The three folder exemptions go. One setting, `tools.docs.foreign_repositories`, names
 the other repositories this folder writes about, and a path under one of those names is skipped.
 `docs/samples` loads every `toml` block that holds `version = 1` through the config reader, and
-parses every `gspot` line of a `bash` block with the program. It also reads each check id and
+parses every `gspot` line of a `bash` block with the program. It also reads each check name and
 setting name in code ticks against the manifests, and every `gspot` command inside a `summary`,
 a `why`, and a `fix` of a manifest.
 

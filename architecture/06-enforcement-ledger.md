@@ -2,7 +2,7 @@
 
 This document decides where every rule and check from the four reference repositories lands in
 gspot. Nothing in the source column is dropped. Where a maintained tool expresses a rule, the row
-names the tool. A unit test reads every check id of this document and fails one that no manifest
+names the tool. A unit test reads every check name of this document and fails one that no manifest
 holds (K-248).
 
 Every landing has a level (D-119). A rule that finds a defect, a security problem, dead code, or

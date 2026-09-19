@@ -17,7 +17,7 @@ where each draws its line against writing original analysis.
                too)       ast-grep CLI             selectors) lockfiles
 ```
 
-Every engine returns the same record: check id, file, line, column, rule, message, and whether
+Every engine returns the same record: check name, file, line, column, rule, message, and whether
 a fixer exists. The reporter, the baseline and the ignore filter never know which engine spoke.
 
 ## 1. Tool runner

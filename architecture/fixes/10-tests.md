@@ -103,7 +103,7 @@ its own rule.
 **Files.** `packages/cli/tests/unit/presets/every-check-tested.test.ts`, the test of each preset,
 `tests/repositories/libraries.test.ts`, `react.test.ts`, `handheld.test.ts`.
 
-**Logic.** The guard test passes for a check id only inside a planted case that expects exit 1
+**Logic.** The guard test passes for a check name only inside a planted case that expects exit 1
 and a finding of that check. A case is data: `{ check, plant, expects }` in the test file, and
 the guard reads that data, not the text of the file. A check that needs the network or Docker
 runs in the `manual` job of CI.
@@ -120,9 +120,9 @@ Closes T-29, T-26, T-5, and T-18.
 
 **What is wrong.** Twenty cases expect a text that the planted path or the name already holds:
 `The` for the typos check, and the folder names `turn` and `helpers` for two structure checks.
-Two expectations look for the check id, which every run prints.
+Two expectations look for the check name, which every run prints.
 
-**Target.** A case expects the rule id or the sentence of its finding, and the exit code.
+**Target.** A case expects the rule name or the sentence of its finding, and the exit code.
 
 **Files.** `config-files.test.ts`, `documents.test.ts`, `structure.test.ts`, `spelling` cases,
 and the others the two rows list.
@@ -290,7 +290,7 @@ to `docs` and `markdown`, `repository-check` to `declared-check`, `scope-languag
 
 **Tests.** The xcode tests run on the fixture.
 
-**Done when.** Every file under `tests/repositories/` is named after a preset id or after what
+**Done when.** Every file under `tests/repositories/` is named after a preset name or after what
 it installs.
 
 ## T-20: tests that change with their subject

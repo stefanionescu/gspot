@@ -1,31 +1,31 @@
 # The Manifest Owns What the Preset Knows
 
 Row 13 of the build order, and the largest change to the shape of the code. The CLI names
-presets, tools, check ids, flags, and file names in its own tables, so a new preset means edits
+presets, tools, check names, flags, and file names in its own tables, so a new preset means edits
 in five files of `src/`. After this step a manifest holds everything the CLI knows about its
 preset, and `src/` names none. The folders of `src/` change with it, and the last table of
 [16-file-tree.md](../16-file-tree.md) lists every move.
 
 One unit test closes the step. It reads every file of `packages/cli/src` and
-`packages/cli/config` outside `checks/`, and fails on a preset id, a tool name, or a check id.
+`packages/cli/config` outside `checks/`, and fails on a preset name, a tool name, or a check name.
 
 ## K-79: one file registers 130 analyses under names of their own
 
 **What is wrong.** `integrity/dispatch.ts` imports every language folder and maps 130 analysis
 names to functions. The folders are named after presets and package managers: `apple`, `cargo`,
 `golang`, `pyproject`, `web`. The name `integrity` holds the Swift build, the npm license scan,
-and the README shape. An analysis name repeats its check id in another spelling, such as
+and the README shape. An analysis name repeats its check name in another spelling, such as
 `xctest-sleep` for `xctest/no-sleep`.
 
 **Target.** D-146. A built-in check that is not structure, naming, or prose is one file under
-`src/checks/`. The folder is the first part of its check id, and the file is the second. A
+`src/checks/`. The folder is the first part of its check name, and the file is the second. A
 parser that several checks share sits in `src/readers/`.
 
 **Files.** Every file under `src/apple`, `src/pyproject`, `src/web`, `src/sql`, `src/postgres`,
 `src/supabase`, `src/express`, and `src/integrity` moves, as the table of the file tree says.
 New: `src/checks/registry.ts`. The same move happens under `tests/unit/` and `types/`.
 
-**Logic.** `registry.ts` is one map from a check id to a function with the signature
+**Logic.** `registry.ts` is one map from a check name to a function with the signature
 `(input: EngineInput) => Promise<Finding[]>`. `run/engines.ts` looks the id of the planned check
 up in it. The manifest key `analysis` goes.
 
@@ -49,7 +49,7 @@ with `engine = "builtin"`, the one engine name for every check under `src/checks
 Closes K-39, K-14, K-107, and K-13.
 
 **What is wrong.** `OWNER_PRESET` in `lifecycle/takeover.ts:18` maps 29 tools to presets.
-`CHECK_BY_TOOL` in `config/carry.ts:4` maps 13 tools to check ids, and `policy/propose.ts` holds
+`CHECK_BY_TOOL` in `config/carry.ts:4` maps 13 tools to check names, and `policy/propose.ts` holds
 nine tool tables. Twenty of the owner rows name presets that do not ship. `CarriedLists` has one
 hand-written field for each of seven tools, so a new tool means edits in five files.
 `gspot allow gitleaks`, `osv`, and `licenses` write keys of presets that may not be selected.
@@ -81,7 +81,7 @@ Closes K-38, K-17, K-85, K-113, K-177, and K-203.
 **What is wrong.** The core names `swift`, `prose`, `typescript`, `commits`, `nestjs`, and
 `xcode`. It holds seven tool file prefixes, the baseline file names of ESLint and basedpyright,
 the ESLint flags behind `{suppressions}`, and the ESLint crash banner. `NEVER_CACHED` in
-`run/execute.ts:21` holds three check ids.
+`run/execute.ts:21` holds three check names.
 
 `VERSION_FLAGS` in `platform/tool-probe.ts:14` holds
 four tools, and `TOOL_RULE_SOURCES` in `output/explain.ts:26` holds five. A missing Vale says
@@ -104,7 +104,7 @@ list of the rules lint is the set of tool and library names of every manifest, l
 of the file's own preset.
 
 **What goes.** `NEVER_CACHED`, `VERSION_FLAGS`, `TOOL_RULE_SOURCES`, the fourteen words, and every
-comparison of a preset id under `src/`.
+comparison of a preset name under `src/`.
 
 **Tests.** The unit test named at the top of this file.
 
@@ -297,7 +297,7 @@ reference repositories.
 
 **Done when.** It passes, and no rule file names a helper function of a reference repository.
 
-## K-255: one check id shipped by two presets
+## K-255: one check name shipped by two presets
 
 **What is wrong.** `integrity/locales` ships from the i18n preset with
 `tools.i18n.translations` and from the nextjs preset with `tools.next.translations`.
@@ -310,7 +310,7 @@ recommends i18n where `next-intl` is a dependency.
 **Files.** `presets/i18n/manifest.toml`, `presets/nextjs/manifest.toml`, `checks/i18n/locales.ts`,
 `readers/locale-files.ts`.
 
-**Logic.** A manifest that repeats the check id of another manifest fails to load.
+**Logic.** A manifest that repeats the check name of another manifest fails to load.
 
 **What goes.** `tools.next.translations`.
 

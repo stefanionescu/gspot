@@ -8,28 +8,28 @@ command exists when nothing else answers its question (D-131).
 ## Commands
 
 ```text
-gspot init       [--yes] [--dry-run] [--from <profile>] [--presets <ids>] [--without <ids>] [--scope <path=ids>]
+gspot init       [--yes] [--dry-run] [--from <profile>] [--presets <names>] [--without <names>] [--scope <path=names>]
                  [--hooks gspot|husky|lefthook|pre-commit|simple-git-hooks|existing] [--no-hooks] [--ci github|gitlab] [--no-ci]
                  [--runner mise|npm|pnpm|yarn|bun] [--no-runner] [--format keep|shipped]
                  [--no-rules] [--no-checks] [--no-install] [--allow-dirty]
-gspot check      [<check-id>] [--staged] [--changed] [--since <ref>] [--fix] [--dry-run]
-                 [--stage commit|push|manual] [--scope <path>] [--skip <check-id>] [--no-cache]
-gspot install
-gspot apply
-gspot baseline   [<check-id>]
-gspot list       [settings]
-gspot explain    <check-id> | <tool>/<rule> | <preset> | <setting-key> | <path> [--held]
+gspot check      [<check>] [--staged] [--changed] [--since <ref>] [--fix] [--dry-run]
+                 [--stage commit|push|manual] [--scope <path>] [--skip <check>] [--no-cache]
+gspot install    [--dry-run]
+gspot apply      [--dry-run]
+gspot baseline   [<check>] [--dry-run]
+gspot list       [settings | baseline [<check>]]
+gspot explain    <check> | <tool>/<rule> | <preset> | <setting> | <path>
 gspot doctor
-gspot ignore     <check-id> [--paths <glob>...] [--rule <rule>] --reason <text> [--remove]
+gspot ignore     <check> [--paths <glob>...] [--rule <rule>] [--reason <text>] [--remove]
 gspot set        <key> [<value>...] [--reason <text>] [--scope <path>] [--replace | --remove | --default]
-gspot add        <preset>... [--scope <path>]
-gspot remove     <preset> [--scope <path>]
+gspot add        <preset>... [--scope <path>] [--dry-run]
+gspot remove     <preset> [--scope <path>] [--dry-run]
 gspot upgrade    [--dry-run] [--to <version>] [--yes] [--no-install]
 gspot uninstall  [--dry-run] [--yes]
 gspot export     <file>
 gspot completion <bash|zsh|fish|powershell>
 
-global: --help  --version  --licenses  --json  --quiet  --verbose  --no-color  -C <dir>
+global: --help  --version  --json  --quiet  --verbose  --no-color  -C <dir>
 env:    NO_COLOR  CI  GSPOT_JOBS  GSPOT_HOOK (set by the hooks gspot writes)
         GSPOT_BIN  GSPOT_REGISTRY (both only until the first release)
 exit:   0 passed   1 findings   2 gspot did not run
@@ -54,8 +54,12 @@ The checklist is [clig.dev](https://clig.dev/). What it means here:
 - No color, no spinner, and no question without a terminal. A question that has no flag and no
   terminal is exit 2, and the message names the flag.
 - A mistyped command or flag prints the closest match.
-- `--dry-run` shows what happens and writes nothing. It exists on `init`, `upgrade`,
-  `uninstall`, and `check --fix`, and on no other command (D-129).
+- `--dry-run` shows what happens and writes nothing. Every command that changes more than one
+  line has it: `init`, `install`, `apply`, `baseline`, `add`, `remove`, `upgrade`, `uninstall`,
+  and `check --fix`. `ignore` and `set` change one line of a tracked file, and `git diff` shows
+  it (D-163).
+- One word names a thing: its name. A check, a preset, a rule, and a setting each have a name,
+  and no document says id or key (D-163).
 - A refusal is a `--no-` flag: `--no-ci`, `--no-hooks`, `--no-runner`, `--no-rules`,
   `--no-checks`, and `--no-install`. `--no-checks` installs the rule files and no check, and
   `--no-rules` installs the checks and no rule file (D-81). No flag takes the value `none` (D-130).
@@ -272,15 +276,15 @@ api        typescript/eslint         fail      512 files  21.4s
 supabase   sql/sqlfluff              unchanged  83 files
 ios        swift/swiftlint           missing   swiftlint 0.63.2 is not installed. Run: mise install
 
-held       security/semgrep 3   dependencies/osv 1      gspot explain <check-id> --held
-rose       typescript/eslint:vitest/expect-expect  2 new in src/routes/turn.test.ts; 97 held elsewhere
+baseline   security/semgrep 3   dependencies/osv 1      gspot list baseline <check>
+rose       typescript/eslint:vitest/expect-expect  2 new in src/routes/turn.test.ts; 97 in the baseline elsewhere
 
 failed: typescript/eslint, swift/swiftlint
-12 checks passed, 2 failed, 101 findings held, 3 new, 26 s
+12 checks passed, 2 failed, 101 findings in the baseline, 3 new, 26 s
 ```
 
 When a held count rises, the run prints the findings of the files whose count rose, and one line
-that counts the rest (D-104). Every full run prints one `held` line for the security,
+that counts the rest (D-104). Every full run prints one `baseline` line for the security,
 dependency, and secret checks that hold findings. A failing run from a hook ends with the
 command that reproduces it and with `git commit --no-verify` as the way past it.
 
@@ -291,10 +295,8 @@ artifacts, so no flag and no redirect is needed.
 The commit message hook calls `gspot check --stage message --message-file <path>`. That stage
 and that flag serve the hook alone, and `--help` leaves both out.
 
-`--licenses` prints the notice of every dependency and grammar the binary embeds.
-
 `--quiet` prints failures only. `--verbose` prints every command and every ignore with its
-reason. `--json` prints the report as JSON (D-105). Columns are computed from the longest check id.
+reason. `--json` prints the report as JSON (D-105). Columns are computed from the longest check name.
 
 ## `apply`
 
@@ -312,8 +314,15 @@ policy writes (D-152).
 
 ## `baseline`
 
-`gspot baseline` lowers every held count to the last full run. A count that rose fails.
-`gspot baseline <check-id>` runs one check and writes its first counts, for a check that starts
+The baseline is the list of findings that were already in the repository when gspot arrived. gspot
+writes them down, one count for each rule and file, in `.gspot/baseline.json`. A run passes as
+long as no count goes up, so old problems do not block anybody and new ones fail at once. When
+somebody fixes old findings, the counts in the file are too high, and `gspot baseline` lowers
+them to what the last full run found. A count never goes up by a command.
+
+`gspot list baseline` prints what the baseline holds, and `gspot list baseline <check>` prints the
+findings of one check.
+`gspot baseline <check>` runs one check and writes its first counts, for a check that starts
 to work after `init` (D-132). It never raises a count, and it refuses a report that is not a
 full run. Baselines live in one file, `.gspot/baseline.json`, sorted, one path on a line.
 
@@ -331,14 +340,13 @@ value comes from.
 
 One verb that says what a thing is. It takes:
 
-| Argument                                | Prints                                                                                               |
-| --------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| a check id (`structure/call-through`)   | `summary`, `why`, and `fix`; its preset and level; its settings; the `ignore` line that turns it off |
-| a check id with `--held`                | the held findings of that check, from the last full report                                           |
-| a tool rule (`markdownlint/MD024`)      | the summary of the tool where it has one, the page of the rule, and the check that runs it           |
-| a preset id (`python`)                  | what it detects and claims, its tools, its checks by stage and level, its settings, its rule files   |
-| a setting key (`limits.function_lines`) | meaning, default, the value in every scope that holds it, and the `set` line that changes it         |
-| a path (`api/src/routes/turn.ts`)       | the presets that claim the file, and the checks that read it at each stage                           |
+| Argument                                 | Prints                                                                                               |
+| ---------------------------------------- | ---------------------------------------------------------------------------------------------------- |
+| a check name (`structure/call-through`)  | `summary`, `why`, and `fix`; its preset and level; its settings; the `ignore` line that turns it off |
+| a tool rule (`markdownlint/MD024`)       | the summary of the tool where it has one, the page of the rule, and the check that runs it           |
+| a preset name (`python`)                 | what it detects and claims, its tools, its checks by stage and level, its settings, its rule files   |
+| a setting name (`limits.function_lines`) | meaning, default, the value in every scope that holds it, and the `set` line that changes it         |
+| a path (`api/src/routes/turn.ts`)        | the presets that claim the file, and the checks that read it at each stage                           |
 
 Every text `explain` prints is written for a person who does not code. The same text is the
 page of the manual.
@@ -382,9 +390,12 @@ the setup command of the repository (D-115). Exit 0 unless a tool is missing or 
 
 ## `ignore`
 
-`gspot ignore <check-id> --paths "scripts/**" --reason "One launcher script for each environment."`
-appends an `[[ignore]]` entry, validates the file, and prints the entry. The reason is required,
-and one that says nothing is refused. `--rule` narrows to one rule inside the check. Without
+`gspot ignore <check> --paths "scripts/**" --reason "One launcher script for each environment."`
+appends an `[[ignore]]` entry, validates the file, and prints the entry.
+
+The reason is optional. When it is there, it is stored with the entry and printed with
+`--verbose`. A repository that wants a reason on every ignore and every loosened limit sets
+`require_reasons = true` (D-164). `--rule` narrows to one rule inside the check. Without
 `--paths` the entry holds for the whole scope, which is how a rule of a tool is turned off. This
 is the one way to turn a rule off, for every tool.
 
@@ -413,8 +424,8 @@ does the reverse, files included.
 ## `set`
 
 `gspot set limits.function_lines 80 --reason "Route tables are one ordered list each."` writes one
-setting, by the dotted key `gspot list settings` prints. A loosening needs the reason, and a
-tightening does not. `--scope` targets a scope. An unknown key fails with the keys that exist
+setting, by the dotted key `gspot list settings` prints. A reason is optional, unless the
+repository sets `require_reasons`. `--scope` targets a scope. An unknown key fails with the keys that exist
 under that table.
 
 `gspot set extra_checks structure/single-file-folder` turns on one check above the level of the

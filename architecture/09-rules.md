@@ -175,7 +175,7 @@ reads the rule files like every other text.
   runs those examples at the push stage.
 - No file names a tool or a library of another preset. The word list is built from the
   manifests. The words `quality/` and the names of the reference repositories are refused.
-- A rule id that a file names is on in the template of its preset, or the file says it is off.
+- A rule name that a file names is on in the template of its preset, or the file says it is off.
 
 ## Completeness
 

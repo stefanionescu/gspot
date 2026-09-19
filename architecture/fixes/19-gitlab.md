@@ -89,3 +89,32 @@ second repository with that rule off. A tool with every check ignored is absent 
 `.gspot/package.json`.
 
 **Done when.** The three cases pass, and `gspot --help` lists sixteen commands.
+
+## K-287: one word for the name of a thing
+
+Closes K-287, K-288, and K-289.
+
+**What is wrong.** The help text and the messages say check id, preset id, rule id, and setting
+key for one idea. A manifest names a preset and a check by `id`, and a tool by `name`. Five
+commands rewrite many lines with no `--dry-run`. Nothing lists what the baseline holds. A reason
+is required on every ignore, so turning one rule off takes a sentence.
+
+**Target.** D-163 and D-164.
+
+**Files.** `presets/manifest-schema.ts` and all 49 manifests (`id` becomes `name`),
+`commands/*.ts`, `output/messages.ts`, `output/list.ts`, `run/baselines.ts`, `policy/schema.ts`,
+`policy/loosening.ts`, `config/reasons.ts`.
+
+**Logic.** Usage lines show `<check>`, `<preset>`, `<rule>`, and `<setting>`. `install`, `apply`,
+`baseline`, `add`, and `remove` take `--dry-run`, and each prints its plan and writes nothing,
+through the plan text `init` already has. `gspot list baseline [<check>]` reads the last full
+report and `.gspot/baseline.json`. `reason` is optional in the schema. `loosening.ts` and the
+refused reasons of `reasons.ts` apply only where `require_reasons = true`.
+
+**What goes.** The words id and key in everything a person reads, and the required reason.
+
+**Tests.** A unit test walks the help text and the messages and fails on `id` and `key`. A
+planted `gspot ignore` with no reason writes the entry. The same command with `require_reasons`
+on exits 2.
+
+**Done when.** The three pass.

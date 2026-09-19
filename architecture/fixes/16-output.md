@@ -120,7 +120,7 @@ findings: the check, the count, and the command that lists them.
 **Files.** `run/baselines.ts`, `output/reporter.ts`, `lifecycle/first-check.ts`.
 
 **Logic.** `first-check.ts` prints those counts at the end of `init`, apart from the others.
-`explain <check-id> --held` lists the held findings of a check from the last full report.
+`gspot list baseline <check>` lists the findings the baseline holds for a check (D-163).
 
 **What goes.** Nothing.
 

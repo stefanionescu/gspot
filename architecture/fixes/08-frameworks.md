@@ -268,7 +268,7 @@ pack rule that names a function of one repository goes to that repository (K-218
 
 **What goes.** Three ledger rows of `generated-fresh`.
 
-**Tests.** A unit test reads every check id of the ledger and fails one that no manifest holds.
+**Tests.** A unit test reads every check name of the ledger and fails one that no manifest holds.
 
 **Done when.** That test passes.
 

@@ -72,7 +72,7 @@ packages/cli/
 ### `config/`
 
 Literal tables only: no function, no control flow, no import but types. No table names a preset,
-a tool, or a check id, because a manifest holds those (K-38, K-39).
+a tool, or a check name, because a manifest holds those (K-38, K-39).
 
 | File              | Holds                                                                        |
 | ----------------- | ---------------------------------------------------------------------------- |
@@ -104,7 +104,7 @@ src/
 ├── structure/                  the structure engine
 ├── naming/                     the naming engine
 ├── prose/                      the prose engine
-├── checks/                     every other built-in check, one file for each check id
+├── checks/                     every other built-in check, one file for each check name
 ├── readers/                    parsers the checks share
 ├── rules/                      the rule file assembler and the rules lint
 ├── profile/                    read, export, and the schema of a profile
@@ -124,9 +124,9 @@ once in `program.ts` (K-98).
 #### `checks/` and `readers/`
 
 A built-in check that is not structure, naming, or prose is one file under `checks/`. The folder
-is the first part of its check id, and the file is the second part. `xctest/no-sleep` is
+is the first part of its check name, and the file is the second part. `xctest/no-sleep` is
 `checks/xctest/no-sleep.ts`. Each file exports one function that takes the engine input and
-returns findings. `checks/registry.ts` maps a check id to its function, and a unit test holds
+returns findings. `checks/registry.ts` maps a check name to its function, and a unit test holds
 that map equal to the manifests. No manifest carries an `analysis` key (D-146).
 
 ```text
@@ -160,7 +160,7 @@ files of its scope, and only a check with `runs = "once"` sees the whole reposit
 | `run/`        | `session.ts`, `plan.ts`, `execute.ts`, `check-command.ts`, `tool-runner.ts`, `command-parts.ts`, `parse-output.ts`, `broken-tool.ts`, `engines.ts`, `concurrency.ts`, `file-batches.ts`, `cache.ts`, `baselines.ts`, `baseline-command.ts`, `ignores.ts`, `fixers.ts`, `reproduce.ts`, `version-pin.ts`, `progress.ts`, `scratch-copy.ts`, `pushed-tree.ts`, `report/` |
 | `emit/`       | `templates.ts`, `apply-command.ts`, `targets.ts`, `pointers.ts`, `managed-blocks.ts`, `hooks.ts`, `hook-managers.ts`, `runner-tasks.ts`, `tool-packages.ts`, `tool-environment.ts`, `workflow.ts`, `gitlab.ts`, `atomic-write.ts`, `json-format.ts`                                                                                                                    |
 | `lifecycle/`  | `init/command.ts`, `init/plan.ts`, `init/questions.ts`, `selection.ts`, `install-tools.ts`, `first-check.ts`, `takeover.ts`, `carry.ts`, `ignore-files.ts`, `upgrade/command.ts`, `upgrade/report.ts`, `uninstall-command.ts`                                                                                                                                          |
-| `structure/`  | `engine.ts`, `parser.ts`, `ast-grep.ts`, `cross-file-index.ts`, `code-lines.ts`, `counts.ts`, `directories.ts`, and `analyses/`, one file for each check id, for every language the engine reads                                                                                                                                                                       |
+| `structure/`  | `engine.ts`, `parser.ts`, `ast-grep.ts`, `cross-file-index.ts`, `code-lines.ts`, `counts.ts`, `directories.ts`, and `analyses/`, one file for each check name, for every language the engine reads                                                                                                                                                                     |
 | `naming/`     | `engine.ts`, `policy.ts`, `split.ts`, `cases.ts`, `match.ts`, `validate-name.ts`, `paths.ts`, `name-finding.ts`, `extract.ts`, `parsers.ts`, and `extractors/` with one file for each language                                                                                                                                                                         |
 | `prose/`      | `engine.ts`, `vale.ts`, `grammars.ts`, `source-bans.ts`, `vocabulary.ts`                                                                                                                                                                                                                                                                                               |
 | `rules/`      | `assemble.ts`, `managed-block.ts`, `front-matter.ts`, `lint.ts`, `examples.ts`, `terms.ts`, `lint-command.ts`                                                                                                                                                                                                                                                          |
@@ -337,19 +337,19 @@ Each path of today, and where it ends. A path not listed stays.
 | --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------- |
 | `presets/go`, `presets/rust`, `presets/django`, `presets/ruby`                                      | deleted, with their rule files and preset pages                               | D-136               |
 | `src/golang/`, `src/cargo/`, `src/pyproject/django/`, `types/cargo.ts`, `types/bundler.ts`          | deleted                                                                       | D-136               |
-| `src/apple/structure/`, `src/pyproject/structure/`                                                  | `src/structure/analyses/`, one file for each check id                         | K-79, K-235         |
+| `src/apple/structure/`, `src/pyproject/structure/`                                                  | `src/structure/analyses/`, one file for each check name                       | K-79, K-235         |
 | `src/apple/build.ts`, `plan.ts`                                                                     | `src/checks/swift/`                                                           | K-79                |
 | `src/apple/xcode/project.ts`, `files.ts`                                                            | `src/readers/xcode-project.ts`                                                | K-148, K-149        |
 | `src/apple/xcode/`, `src/apple/xctest/`, the rest                                                   | `src/checks/xcode/`, `src/checks/xctest/`                                     | K-79                |
 | `src/pyproject/project.ts`                                                                          | `src/readers/python-project.ts`                                               | K-79                |
 | `src/pyproject/blocking-calls.ts`                                                                   | `src/checks/fastapi/no-blocking-io-in-async.ts`                               | K-79                |
 | `src/sql/parser.ts`, `statements.ts`, `tree.ts`                                                     | `src/readers/sql/`                                                            | K-79                |
-| `src/sql/checks.ts`                                                                                 | `src/checks/sql/`, one file for each check id                                 | K-79                |
+| `src/sql/checks.ts`                                                                                 | `src/checks/sql/`, one file for each check name                               | K-79                |
 | `src/postgres/schema/facts.ts`, `history.ts`                                                        | `src/readers/postgres-schema.ts`                                              | K-79                |
 | `src/postgres/`, `src/supabase/`, `src/express/`, the rest                                          | `src/checks/postgres/`, `src/checks/supabase/`, `src/checks/express/`         | K-79                |
 | `src/web/`                                                                                          | `src/checks/nextjs/`, `static-site/`, `html/`, `css/`, `i18n/`, `cloudflare/` | K-79, K-255         |
 | `src/integrity/dispatch.ts`                                                                         | `src/checks/registry.ts`                                                      | K-79                |
-| `src/integrity/`, the rest                                                                          | `src/checks/`, by the first part of each check id                             | K-79                |
+| `src/integrity/`, the rest                                                                          | `src/checks/`, by the first part of each check name                           | K-79                |
 | `src/profile/command.ts`, the `check` half                                                          | deleted; `init --from <profile> --dry-run` validates a profile                | D-131               |
 | `commands/why.ts`, `commands/declare.ts`, `output/why.ts`, `policy/declare-command.ts`              | deleted                                                                       | D-131               |
 | `commands/flags.ts`                                                                                 | `program.ts`                                                                  | K-98                |

@@ -24,7 +24,7 @@ runs, settings it exposes, and rule files it installs. It contributes nothing it
 ## Kinds
 
 Seven kinds. The kind names the folder under `presets/` in this documentation and a `kind` field in
-the manifest. Preset ids are bare names; the kind is not part of the id.
+the manifest. Preset names are bare names; the kind is not part of the id.
 
 | Kind      | Selected by                                    | Claims files by                           | Examples                                                                                                                               |
 | --------- | ---------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -128,7 +128,7 @@ language = ["language/TYPESCRIPT.md", "language/naming/TYPESCRIPT.md"]
 ```
 
 A manifest holds every fact the CLI knows about its preset (D-150). The code names no preset, no
-tool, and no check id outside `src/checks/`, and a unit test holds that.
+tool, and no check name outside `src/checks/`, and a unit test holds that.
 
 ### Field rules
 
@@ -158,9 +158,9 @@ tool, and no check id outside `src/checks/`, and a unit test holds that.
 - `[rule_files]` lists the corpus files the preset installs, by layer.
 - `[required_rules]` lists, for a file ending, the ESLint rules that must be on for a file with
   that ending. `javascript/required-rules` reads it (D-99).
-- A check id is `<family>/<name>`. The family is the engine or the tool family that produces the
+- A check name is `<family>/<name>`. The family is the engine or the tool family that produces the
   finding (`structure`, `naming`, `integrity`, `prose`, `security`, or the preset's own id), not
-  always the preset. `gspot explain <check-id>` prints the preset that ships it.
+  always the preset. `gspot explain <check>` prints the preset that ships it.
 - `detect` proposes the preset at `init` and in `doctor`. Detection never selects.
 - `claims` decides which files the preset's checks receive. A `filenames` claim matches at any
   depth (`_headers` under `public/` is `_headers`); an `extensions` claim likewise. A file claimed by no selected preset is unchecked.
@@ -193,7 +193,7 @@ tool, and no check id outside `src/checks/`, and a unit test holds that.
 - `[[rules_off]]` lists the shared rules a framework turns off, each with a reason (D-138).
 - A `[rule_files]` entry may carry `when`, a detection table, so a file installs where its
   subject is found (D-154).
-- A manifest that repeats the check id of another manifest fails to load.
+- A manifest that repeats the check name of another manifest fails to load.
 - A check with `fix_command` names its `fix_order`. `fix` is the prose that tells a person what to do; `fix_command` is what `check --fix` runs.
 - A check whose exit code does not reflect findings declares `count_regex`.
 - `[inspections]` names, per extension, the inspection kinds a file needs to count as fully

@@ -49,7 +49,7 @@ reads the same limits from the same settings. A call-through replaces the trivia
 in every language, as K-102 found for TypeScript. A language gains an idea by adding its table
 row and one manifest entry.
 
-**What goes.** The three constant sets, the per-language copies, and the check ids
+**What goes.** The three constant sets, the per-language copies, and the check names
 `structure/trivial-function`, `python/trivial-function`, and `swift/trivial-function`. The key
 `limits.sql.function_lines` gains its reader here.
 

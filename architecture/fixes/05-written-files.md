@@ -95,7 +95,7 @@ ESLint and basedpyright, which name the baseline file their tool keeps.
 
 **Logic.** The file maps `check`, then `rule`, then `path`, to a count. `verdictFor` compares by
 path, so a rise names its files. `gspot baseline` lowers every count to the last full record, and
-`gspot baseline <check-id>` writes the first counts of one check (D-132). A lowered count is
+`gspot baseline <check>` writes the first counts of one check (D-132). A lowered count is
 written in place, so a merge of two branches conflicts on one line or none.
 
 **What goes.** `.gspot/baselines/`, `emit/first-baseline.ts`, `emit/lower-baselines.ts`,

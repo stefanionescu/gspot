@@ -16,7 +16,12 @@ real output of the redo of the app and of the three examples.
 **Files.** `README.md`, `docs/src/content/docs/index.md`, `docs/src/content/docs/guides/*.md`,
 `packages/eslint-plugin/README.md`, `packages/npm/gspot/README.md`.
 
-**Logic.** Each guide is a task in under two pages, and every step is one command. Every output
+**Logic.** The manual documents each of the five things `gspot explain` takes. It has one
+generated page for each check, each preset, and each setting, and the command reference. A rule
+of a tool links to the page of that tool through `rule_page` of its manifest. One guide shows
+`explain` on a finding, on a setting, and on a path.
+
+Each guide is a task in under two pages, and every step is one command. Every output
 block is pasted from a run in `examples/`, and `docs/samples` keeps each command and each config
 block true (S-11). The guide on editors says to point the ESLint extension at `.gspot/` (D-145).
 

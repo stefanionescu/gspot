@@ -1,7 +1,7 @@
 # Names
 
 This document decides how gspot names things (D-92). One word carries one meaning in the code,
-the setting keys, the manifest keys, the flags, and the folders. The glossary in
+the setting names, the manifest keys, the flags, and the folders. The glossary in
 [README.md](README.md) holds the words and their one meaning. A row below leaves this document
 in the commit that applies it.
 
@@ -29,11 +29,11 @@ in the commit that applies it.
     | a list of file globs                 | ends in `_files`     | `tools.express.route_glob`, `tools.express.test_glob`, `tools.trpc.server_paths`, `tools.supabase.admin_key_paths` | `route_files`, `test_files`, `server_files`, `admin_key_files`                                     |
     | the option of a tool, under its name | the tool's word      | `tools.knip.ignore`, `tools.typos.exclude`, `tools.linkinator.skip`, `tools.lychee.exclude_paths`                  | stays                                                                                              |
 
-    A preset id, a check id, and a command flag are kebab-case. A field of the JSON output is
+    A preset name, a check name, and a command flag are kebab-case. A field of the JSON output is
     camelCase, as JSON from a JavaScript tool is. A test reads every manifest and refuses a
     setting whose last word is outside this table.
 
-- A check id is `<family>/<name>`, and [04-presets.md](04-presets.md) says what the family is.
+- A check name is `<family>/<name>`, and [04-presets.md](04-presets.md) says what the family is.
 
 - A word a person reads in `gspot.toml`, in help text, in output, or in a guide is a word a
   developer already knows, or a plain phrase. A word this project made up stays inside the code.
@@ -62,7 +62,7 @@ in the commit that applies it.
 preset, check, finding, baseline, ignore, scope, stage and profile stay: other tools use them
 the same way.
 
-## Check ids that change family
+## Check names that change family
 
 A built-in check carries the family of the preset that ships it (D-146). The family `integrity`
 keeps the checks over the config and the files gspot writes: `policy`, `generated-drift`,
@@ -128,6 +128,6 @@ banned `catalog`. A library that fixes a word keeps it: `createFixture` of `fs-f
 ## Names that stay
 
 Long constants such as `COMMENT_STYLE_BY_EXTENSION` say what they hold and pass the naming
-policy. The plugin rule ids, such as `header-comments-before-imports`, follow the ESLint
+policy. The plugin rule names, such as `header-comments-before-imports`, follow the ESLint
 convention of a full phrase. `engine.ts` exists once in each engine folder, because the folder
 names the engine.

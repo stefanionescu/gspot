@@ -48,6 +48,7 @@ file is written through a temporary file and a rename (D-152).
 ```toml
 version = 1
 level   = "recommended"           # or "all" (D-119)
+require_reasons = false           # true: every ignore and every loosened setting needs a reason (D-164)
 extra_checks = ["structure/single-file-folder"]   # checks of the level all, turned on one by one (D-160)
 
 # The selection. Presets are bare names.
@@ -65,7 +66,7 @@ function_lines = { value = 80, reason = "Route tables are one ordered list each.
 path    = "ios"
 presets = ["swift", "xcode", "xctest"]
 
-# Limits. Only keys a check reads exist. A value above the shipped default carries a reason.
+# Limits. Only settings a check reads exist. A value may carry a reason.
 [limits]
 file_lines            = 300
 cyclomatic_complexity = 8
@@ -115,7 +116,7 @@ package = "certifi@2025.8.3"
 license = "MPL-2.0"
 reason  = "The Mozilla Public License covers the certificate bundle, not repository source."
 
-# A check does not apply to these paths. One reason, any number of paths. Printed every run.
+# A check does not apply to these paths. One entry, any number of paths, and a reason if you want one.
 [[ignore]]
 check  = "structure/single-file-folder"
 paths  = ["scripts", "tools/one-off"]
@@ -184,11 +185,10 @@ strict = false                    # true: a source file no check reads fails the
   scope that holds it.
 - A selector that names a folder means everything under it: `src`, `src/`, and `src/**` are one
   selector.
-- Every `[[ignore]]` carries a `reason` that is a sentence. `N/A`, `TBD`, `-`, and an empty
-  string are refused. A value that reaches a generated file is one line of printable text.
-- A loosening carries a reason: a limit above the shipped default, a rule or a tool turned off,
-  an allowed name. A tightening does not.
-- `[limits.<language>]` and `[naming.<language>]` take the language preset ids. A key there
+- A `reason` is optional on an `[[ignore]]` and on a loosened setting (D-164). With
+  `require_reasons = true` it is required, and `N/A`, `TBD`, `-`, and an empty string are refused.
+  A value that reaches a generated file is one line of printable text.
+- `[limits.<language>]` and `[naming.<language>]` take the language preset names. A key there
   wins over the root key for the checks of that language.
 - A rule of any tool is turned off by an `[[ignore]]` with `rule`, and nowhere else (D-144).
   `[tools.<name>.rules]` holds rule options and rules turned on.
@@ -289,7 +289,7 @@ conflict on one line or none (D-104).
   line that counts the rest.
 - `gspot baseline` lowers every count to the last full run, and never raises one. A run of one
   check, of one scope, or of staged files is refused, because its counts are partial.
-- `gspot baseline <check-id>` writes the first counts of one check.
+- `gspot baseline <check>` writes the first counts of one check.
 - Every widening takes one path (D-143): `gspot add`, `level = "all"`, a rule turned back on,
   and an upgrade. The new checks run once, their findings are held, and the output says how many.
 - Format, syntax, and schema findings are never held. `init` offers the fix run for them (D-103).

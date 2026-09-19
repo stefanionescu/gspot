@@ -94,8 +94,8 @@ exactly one fix file fails it.
 - [ ] K-229: The items are restored from the reference repositories. The lint of the rule files reports a list item that stops with no sentence end.
 - [ ] K-234: Let each manifest declare the suppression comment of its tool, and read that list for every comment style. Delete the table in `config/integrity.ts` (K-110).
 - [ ] K-110: Keep one list of suppression forms (K-234).
-- [ ] K-238: Refuse a line break in a `reason`, a `description`, a rule id, and a word, once, in the config schema; then no template has to escape.
-- [ ] K-241: Settle each of the nine contradictions in the rule file, on the side of the decision or the check. Test the rule ids a rule file names against the templates.
+- [ ] K-238: Refuse a line break in a `reason`, a `description`, a rule name, and a word, once, in the config schema; then no template has to escape.
+- [ ] K-241: Settle each of the nine contradictions in the rule file, on the side of the decision or the check. Test the rule names a rule file names against the templates.
 - [ ] K-246: Ship `integrity/generated-drift` in the structure preset. Build `integrity/generated-fresh` with `[[generated]]`, or take its name out of every document.
 - [ ] K-250: Make the two SPDX packages and the Markdown parser dependencies that do their job. Use or drop each other library the two documents name.
 - [ ] K-251: Drop `--skip-updates` from the dotenv fixer, give v8r its config through `V8R_CONFIG_FILE`, and fail the contract test on a flag the pinned tool lacks.
@@ -233,13 +233,13 @@ exactly one fix file fails it.
 
 [09-manifests.md](fixes/09-manifests.md)
 
-- [ ] K-79: Register each analysis from the manifest of its preset, name it after its check id, and split `integrity/` by what it holds.
+- [ ] K-79: Register each analysis from the manifest of its preset, name it after its check name, and split `integrity/` by what it holds.
 - [ ] K-39: Replace `OWNER_PRESET`, `CHECK_BY_TOOL` and the nine tool tables of `propose.ts` with keys the manifests hold.
 - [ ] K-14: Move every owner row and check row of takeover into the manifest of its preset (K-39).
 - [ ] K-107: Replace the hand-written fields of `CarriedLists` with a map keyed by tool, filled from the manifests (K-39).
 - [ ] K-13: Delete `gspot allow gitleaks`, `osv` and `licenses` with the trim of D-131.
-- [ ] K-38: Move each tool name, baseline file name, flag, banner and check id the core holds into the manifest of its preset.
-- [ ] K-17: Take the preset ids `swift`, `prose`, `typescript` and `commits` out of the core; a manifest key says what the core asked the id for.
+- [ ] K-38: Move each tool name, baseline file name, flag, banner and check name the core holds into the manifest of its preset.
+- [ ] K-17: Take the preset names `swift`, `prose`, `typescript` and `commits` out of the core; a manifest key says what the core asked the id for.
 - [ ] K-85: Move the four version flags into `version_command` of their manifests, and hint the install of the runner the repository uses.
 - [ ] K-113: Give a manifest a key for the page of a rule, and delete `TOOL_RULE_SOURCES`.
 - [ ] K-177: The message comes from the install hint.
@@ -291,13 +291,13 @@ exactly one fix file fails it.
 - [ ] T-13: Plant a hook that calls a task, a setup task that sets the hooks path, a fresh clone, a `[tool.ruff]` table, and a `lint` script.
 - [ ] T-28: One planted defect for each, and the ones that need the network or Docker run in the `manual` job of CI.
 - [ ] T-17: Closes with T-28.
-- [ ] T-14: Make the guard test pass only for a check id inside a planted case that expects exit 1.
+- [ ] T-14: Make the guard test pass only for a check name inside a planted case that expects exit 1.
 - [ ] T-30: One case for each preset, which expects the message of its own selector and exit 1.
 - [ ] G-2: Give every check a planted defect and every engine folder a unit test, and delete the empty test folders.
-- [ ] T-29: Each expects the rule id or the sentence of its finding.
+- [ ] T-29: Each expects the rule name or the sentence of its finding.
 - [ ] T-26: Each expects the rule or the sentence of its finding, as the other cases do.
 - [ ] T-5: Closes with T-29.
-- [ ] T-18: Expect a status or a finding, not the check id, in the two expectations.
+- [ ] T-18: Expect a status or a finding, not the check name, in the two expectations.
 - [ ] T-23: Give each analysis that reads text a unit test on a text, with no tool, and no repository.
 - [ ] T-10: Closes with T-23.
 - [ ] T-15: Add cases to `require-server-only` and `tests-directory-contents`.
@@ -406,6 +406,9 @@ exactly one fix file fails it.
 - [ ] K-284: Delete `tools.<name>.enabled` and `gspot allow`, add `extra_checks`, and install no tool whose every check is ignored (D-160).
 - [ ] K-285: Rename `profile save` to `gspot export`, and carry an `[[ignore]]` with no path in a profile (D-161).
 - [ ] K-286: Name the baseline a tool keeps `.gspot/baseline.<tool>.json` (D-162).
+- [ ] K-287: Say name for a check, a preset, a rule, and a setting, and rename the manifest key `id` to `name` (D-163).
+- [ ] K-288: Add `--dry-run` to `install`, `apply`, `baseline`, `add`, and `remove`, and build `gspot list baseline` (D-163).
+- [ ] K-289: Make a reason optional, with `require_reasons` for a repository that wants it (D-164).
 
 ### gspot Checks Itself
 
@@ -480,7 +483,7 @@ Counted in `packages/` on September 19, 2026. Each line names the row that owns 
       no linters (K-237).
 - [ ] Test files are named around the banned folder words: `handheld`, `components`, `libraries`
       and `pyproject/` (T-31). The source folders `apple/` and `pyproject/` wait for D-128.
-- [ ] One check id uses the British spelling: `xcode/asset-catalogues` (K-228).
+- [ ] One check name uses the British spelling: `xcode/asset-catalogues` (K-228).
 - [ ] Seven tests skip themselves (S-7, T-8).
 - [ ] Three branches of work are parked: the stash `hooks-existing`, the second `vale.ini` under
       `prose/`, and the twelve lint stubs at the root of this repository.
@@ -507,7 +510,7 @@ Checked on September 19, 2026, with the row that holds what was found:
 - A tool that crashes, a config cut in half, two runs at once, and `apply` killed midway (K-243).
 - The licenses of the 34 bundled dependencies and the nine grammars (K-245).
 - The build of the docs site: 301 pages, every internal link valid.
-- Every check id, flag, config key, manifest key, and path the documents name (S-14, K-246).
+- Every check name, flag, config key, manifest key, and path the documents name (S-14, K-246).
 - The 48 preset pages and `16-file-tree.md`, by eye (S-18, K-254 to K-256, T-36).
 - The flags each manifest passes, against the help text of the pinned tool (K-251).
 - A full disk, on a 12 MB disk image: the policy file is cut in half (K-257).

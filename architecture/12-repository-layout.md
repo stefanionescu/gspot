@@ -57,12 +57,12 @@ top, and little else.
 - A folder has more than one file or does not exist.
 - `commands/` holds no logic. Each command is a function elsewhere that a test calls with no
   terminal.
-- `checks/` has one file for each check id. The folder is the first part of the id, and the file
+- `checks/` has one file for each check name. The folder is the first part of the id, and the file
   is the second.
 - `checks/registry.ts` maps the id to the function. No other file of `src/` names a preset, a
-  tool, or a check id (D-146, K-17, K-38).
+  tool, or a check name (D-146, K-17, K-38).
 - `readers/` holds a parser that more than one check uses, and a reader parses a scope once.
-- `structure/analyses/` has one file for each check id, for every language the engine reads.
+- `structure/analyses/` has one file for each check name, for every language the engine reads.
 - No folder is named `util`, `helper`, `common`, `shared`, `core`, `lib` or `misc`. The naming
   policy gspot ships refuses them, and gspot lints itself.
 - `packages/cli/config/` holds the literal tables gspot ships in code. Those are the regexes and pattern lists (shebangs, generated-file banners, environment-file names), the marker strings and header templates, the refused reasons, and the file-tag table.
@@ -182,7 +182,7 @@ Tests never call the network. Tools run in CI through mise pins, and a missing t
 run. A `--json` test holds the documented shape of the JSON output of every command, because
 agents drive gspot through it.
 
-`bun test --coverage` runs in CI and the summary is part of the run. A check id that no test
+`bun test --coverage` runs in CI and the summary is part of the run. A check name that no test
 names fails the unit test `every shipped check has a test`, which walks `presets/*/manifest.toml`.
 
 ## Self-lint

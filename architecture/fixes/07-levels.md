@@ -90,7 +90,7 @@ order, underscore, owner, and doc-section rules are `all`.
 **Files.** `structure/analyses/shell/`: `interpreter.ts` splits into `strict-mode.ts`,
 `temp-trap.ts`, and `script-header.ts`. `config/shell.ts`, `presets/bash/manifest.toml`.
 
-**Logic.** Three check ids replace one: `structure/shell-strict-mode`, `structure/shell-temp-trap`
+**Logic.** Three check names replace one: `structure/shell-strict-mode`, `structure/shell-temp-trap`
 (both `recommended`), and `structure/shell-script-header` (`all`).
 
 **What goes.** `shell/ssh-blocks.ts`, `shell/config/guards.ts`, the `nvidia-smi` and
@@ -284,7 +284,7 @@ assembler leaves out a section above the level of the repository.
 files of every language and framework.
 
 **Logic.** A heading line is followed by `<!-- level: all -->` where its rules are taste. The
-assembler drops such a section at `recommended`. The lint fails a section that names a rule id of
+assembler drops such a section at `recommended`. The lint fails a section that names a rule name of
 the `all` level and carries no mark. `REACT.md` names the file after its component.
 
 **What goes.** Nothing from the files. The text moves under marked headings.

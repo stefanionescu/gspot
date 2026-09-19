@@ -120,7 +120,7 @@ expresses the rule. Rejected: the reference pattern of writing a careful analyze
 
 Replaced by D-119 and D-126.
 
-## D-21 preset ids are bare names
+## D-21 preset names are bare names
 
 `typescript`, not `language:typescript`. The kind is a field. Rejected: kind prefixes in every
 id, which nobody typed correctly and which the folder name already says.
@@ -197,7 +197,7 @@ manager supports them, are checked like any other setting. Rejected: leaving sup
 
 ## D-34 Every finding links to its documentation
 
-A finding carries the check id and a URL under `docs/rules/`; `explain` prints the same page.
+A finding carries the check name and a URL under `docs/rules/`; `explain` prints the same page.
 Rejected: messages alone, which leave a person searching the source of the rule.
 
 ## D-35 Cyclomatic and cognitive complexity are two limits
@@ -230,7 +230,7 @@ skip without saying what was accepted and so cannot notice a license change at t
 
 `gspot explain <tool>/<rule>` prints the rule's summary, the check that runs it, the `gspot
 ignore` line that turns it off and the `gspot set` line that changes its options. The finding
-line prints the command. `explain` also takes a check id, a preset id and a setting key, so one
+line prints the command. `explain` also takes a check name, a preset name and a setting name, so one
 verb answers "what is this" for everything gspot has a name for. Rejected: a link to the tool's
 documentation alone, which answers "what is it" and not the question of changing it here.
 
@@ -414,7 +414,7 @@ environment entry goes. Rejected: a special case in `init` for this repository.
 
 ## D-66 One naming scheme for the packages
 
-The launcher on npm is `gspot`. Every other package is scoped. `@gspot/cli` is the private workspace package that builds the binary. `@gspot/eslint-plugin` is published, and the flat config registers it under the plugin key `gspot`, so rule ids stay `gspot/<rule>`. `@gspot/cli-<os>-<arch>` are the platform packages. Rejected: the mixed set the first draft had
+The launcher on npm is `gspot`. Every other package is scoped. `@gspot/cli` is the private workspace package that builds the binary. `@gspot/eslint-plugin` is published, and the flat config registers it under the plugin key `gspot`, so rule names stay `gspot/<rule>`. `@gspot/cli-<os>-<arch>` are the platform packages. Rejected: the mixed set the first draft had
 (`gspot-cli`, `eslint-plugin-gspot`, `@gspot/cli-*`), three conventions for one project.
 
 ## D-67 `security/detect-non-literal-regexp` is off
@@ -427,7 +427,7 @@ manifest pattern is compiled once at load. Rejected: an `[[ignore]]` in this rep
 
 ## D-68 The names inside gspot follow the naming policy, so `sync` is `apply` and `render/` is `emit/`
 
-The naming groups in `presets/naming/policy.json` bind the identifiers, files, directories, setting keys and architecture documents of gspot, with no group removed, and no allowance. The first draft of the file tree and the CLI carried banned parts; they were renamed rather than allowed:
+The naming groups in `presets/naming/policy.json` bind the identifiers, files, directories, setting names and architecture documents of gspot, with no group removed, and no allowance. The first draft of the file tree and the CLI carried banned parts; they were renamed rather than allowed:
 
 - the `sync` command and everything named after it became `apply` (`gspot apply`, `apply --check`, `apply --baseline`, the `gspot:apply` task and script);
 - `src/render/` became `src/emit/`, and the `render*` functions and `*Render` types took names that say what they produce;
@@ -568,7 +568,7 @@ and the configuration written, with one ignore entry for each check.
 `init --no-checks` installs the rule files and no check (the flag form of D-130). `init --no-rules` installs the checks
 and no rule file.
 
-The rule files do not name gspot, its engines or its setting keys, and claim no
+The rule files do not name gspot, its engines or its setting names, and claim no
 enforcement. A tool may appear as a standard or as the subject of a rule. The managed block
 mentions `gspot check` only when a check is selected, and `[rules] exclude` leaves files or
 layers out. Amends D-73.
@@ -636,12 +636,12 @@ covered by the version pin, and the pin is what makes two repositories run the s
 
 A table row, a carry reader, an allow list or a workflow job that serves a preset ships in the
 commit that ships the preset. `gspot allow` lists only the lists of selected presets. The core
-names no preset id: what a preset adds to the workflow, the hooks or `apply` is a key in its
+names no preset name: what a preset adds to the workflow, the hooks or `apply` is a key in its
 manifest. Rejected: rows kept ready for later phases, which read as working features and are not.
 
 ## D-92 One word, one meaning
 
-A word carries one meaning in the code, the setting keys, the manifest keys, the flags, and the
+A word carries one meaning in the code, the setting names, the manifest keys, the flags, and the
 folders. [19-names.md](https://github.com/stefanionescu/gspot/blob/main/architecture/19-names.md) holds the rules a name follows and the renames still to apply. The glossary in the
 README of this folder holds the words that stay. Rejected: keeping a name because it passes the
 naming policy. The policy measures length, case and banned terms, and none of those sees a word
@@ -692,7 +692,7 @@ old setup in place.
 
 ## D-98 A structure check carries the name of its language
 
-`structure/trivial-function` reads shell scripts, and one check id maps to one analysis. The
+`structure/trivial-function` reads shell scripts, and one check name maps to one analysis. The
 same idea over Python is `python/trivial-function`, and over Swift `swift/trivial-function`. A
 repository that selects both presets runs both. Each has its own baseline and its own ignore
 entries. Rejected: one id with an analysis for each language behind it, which makes one baseline
@@ -705,7 +705,7 @@ is the import contracts of `python/import-linter`, so neither has an analysis of
 
 `nextjs/typecheck` has Next.js write `next-env.d.ts` and the route types, then runs `tsc`. A fresh
 clone holds neither file, so `typescript/tsc` alone fails there. Two type checks in one scope print
-every error twice. A check may therefore carry `takes_over = "<check id>"`: in a scope that
+every error twice. A check may therefore carry `takes_over = "<check name>"`: in a scope that
 plans both, the named check is skipped with the note `<taker> runs it here`. A taker that is
 itself skipped takes nothing.
 
@@ -995,7 +995,7 @@ list people type daily, `typos`. `profile check` folds into `init --from --dry-r
 
 ## D-132 Baselines have a command
 
-`gspot baseline` lowers every count to the last full run, and `gspot baseline <check-id>` writes
+`gspot baseline` lowers every count to the last full run, and `gspot baseline <check>` writes
 the first count of one check. `apply` writes generated files and does nothing else.
 
 ## D-133 GitLab beside GitHub, and gspot owns no CI file it did not create
@@ -1226,11 +1226,11 @@ where the major version differs. That asks a repository on the newest ESLint to 
 before it can try gspot. Also rejected: leaving a newer exact version in place, which is what
 the code does today, and which runs plugins on an ESLint they do not support.
 
-## D-146 A built-in check is one file named after its check id
+## D-146 A built-in check is one file named after its check name
 
 One file registered 130 analyses under names of their own, and the folders of `src/` were named
 after presets and package managers (K-79). A built-in check that is not structure, naming, or
-prose is now one file under `src/checks/`. The folder is the first part of the check id, and the
+prose is now one file under `src/checks/`. The folder is the first part of the check name, and the
 file is the second part. `checks/registry.ts` maps the id to the function, and a unit test holds
 that map equal to the manifests. The manifest key `analysis` goes, because the id is the name.
 
@@ -1278,10 +1278,10 @@ the TypeScript rules into the structure engine, which loses what an editor shows
 
 ## D-150 A manifest holds every fact about its preset, and takeover carries both ways
 
-The CLI named presets, tools, and check ids in tables of its own (K-38, K-39). Every such fact is
+The CLI named presets, tools, and check names in tables of its own (K-38, K-39). Every such fact is
 a key of a manifest. The keys hold takeover rows, what is carried from an old file, the version
 command, the baseline file, and the suppression comment. They also hold the page of a rule, what
-a check waits for, and what detects a setting. One unit test fails a preset id, a tool name, or a check id under `src/`
+a check waits for, and what detects a setting. One unit test fails a preset name, a tool name, or a check name under `src/`
 outside `src/checks/`.
 
 Takeover carries a rule in both directions (K-193): off as an
@@ -1374,18 +1374,18 @@ Two keys turned the same thing off: `tools.<name>.enabled = false`, and an `[[ig
 rule. One command, `gspot allow`, was a second way to write a list that `gspot set` writes. And
 nothing turned one check of the level `all` on in a repository that stays at `recommended`.
 
-| A developer wants to                        | The one way                                            |
-| ------------------------------------------- | ------------------------------------------------------ |
-| turn a check off, everywhere or for paths   | `gspot ignore <check-id> [--paths ...] --reason "..."` |
-| turn one rule of a tool off                 | `gspot ignore <check-id> --rule <rule> --reason "..."` |
-| turn either back on                         | the same line with `--remove`                          |
-| turn on one check above the level           | `gspot set extra_checks <check-id>`                    |
-| turn on, or set the options of, a tool rule | `gspot set tools.<tool>.rules.<rule> error`            |
-| turn everything on                          | `gspot set level all`                                  |
+| A developer wants to                        | The one way                                         |
+| ------------------------------------------- | --------------------------------------------------- |
+| turn a check off, everywhere or for paths   | `gspot ignore <check> [--paths ...] --reason "..."` |
+| turn one rule of a tool off                 | `gspot ignore <check> --rule <rule> --reason "..."` |
+| turn either back on                         | the same line with `--remove`                       |
+| turn on one check above the level           | `gspot set extra_checks <check>`                    |
+| turn on, or set the options of, a tool rule | `gspot set tools.<tool>.rules.<rule> error`         |
+| turn everything on                          | `gspot set level all`                               |
 
 `tools.<name>.enabled` goes. A tool whose every check is ignored whole is not installed.
 `gspot allow` goes, and the help line of a spelling finding prints the `gspot set` line that adds
-the word. `extra_checks` is a list of check ids at the top of `gspot.toml`, and a check it turns
+the word. `extra_checks` is a list of check names at the top of `gspot.toml`, and a check it turns
 on takes the widening step (D-143). Four commands write the config: `ignore`, `set`, `add`, and
 `remove`. Rejected: a pair of commands `on` and `off`, which names a third way beside `ignore`
 and `set` for what those two already do.
@@ -1408,3 +1408,26 @@ no link: the repository does not point back at it (D-79).
 The files are `.gspot/baseline.<tool>.json`, beside `.gspot/baseline.json`: `baseline.eslint.json`
 for the bulk suppressions of ESLint, and `baseline.basedpyright.json`. A file of a scope sits
 under `.gspot/<scope>/`. The manifest of the tool names the file in `baseline_file`.
+
+## D-163 One word for the name of a thing, and `--dry-run` wherever many lines change
+
+The documents said check id, preset id, rule id, and setting key for one idea. Each is a name: a
+check name, a preset name, a rule name, a setting name. Usage lines show the thing alone, as git
+shows `<branch>`: `gspot ignore <check>`, `gspot add <preset>`, `gspot set <setting> <value>`.
+The manifest key `id` of a preset and of a check becomes `name`, as a tool already has.
+
+`--dry-run` exists on every command that changes more than one line: `init`, `install`, `apply`,
+`baseline`, `add`, `remove`, `upgrade`, `uninstall`, and `check --fix`. This amends D-129. `ignore`
+and `set` change one line of a tracked file, and `git diff` shows it.
+
+The findings of the baseline are listed by `gspot list baseline [<check>]`, beside
+`gspot list settings`. No command has a `--held` flag, and no global flag prints licenses: the
+notice ships as a file beside the binary and in each package.
+
+## D-164 A reason is optional, and a repository may require it
+
+This amends D-12. An `[[ignore]]` and a loosened setting may carry a `reason`. A reason prints with
+`--verbose` and travels in a profile. By default gspot requires no reason, so turning a rule off
+is one short command. `require_reasons = true` at the top of `gspot.toml`
+brings the old rule back for a team that wants it, and this repository sets it. With that key, a
+reason that says nothing, such as `N/A` or `TBD`, is refused.

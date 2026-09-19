@@ -267,7 +267,7 @@ that check prints the held counts (D-143).
 **Files.** `lifecycle/init/plan.ts`, `output/plan-text.ts`, `types/lifecycle.ts`.
 
 **Logic.** `TakeoverPlan` loses `baselines`. `first-check.ts` prints one line for each check that
-holds findings: the check id and the count.
+holds findings: the check name and the count.
 
 **What goes.** `baselineLine`.
 
@@ -319,7 +319,7 @@ launcher.
 
 ## K-114: `gspot-ignore` works for four id prefixes only
 
-**What is wrong.** `ENGINE_PREFIXES` in `run/ignores.ts:11` tests the check id. Checks named
+**What is wrong.** `ENGINE_PREFIXES` in `run/ignores.ts:11` tests the check name. Checks named
 `swift/...`, `python/...`, `xctest/...`, `postgres/...`, and `docs/...` run on the same engines,
 and the comment does nothing there.
 
@@ -582,7 +582,7 @@ comment styles from `config/markers.ts` and the markers from the selected manife
 
 **Files.** `policy/schema.ts`, `policy/messages.ts`.
 
-**Logic.** `text` refuses control characters, once, for `reason`, `description`, a rule id, and a
+**Logic.** `text` refuses control characters, once, for `reason`, `description`, a rule name, and a
 vocabulary word. No template escapes anything.
 
 **What goes.** Nothing.
@@ -608,7 +608,7 @@ file changes. `explicit_acl` moves to the level `all` (row 11), and the rule fil
 
 **What goes.** Nine sentences.
 
-**Tests.** `src/rules/lint.ts` reads every rule id a rule file names, and fails where the template
+**Tests.** `src/rules/lint.ts` reads every rule name a rule file names, and fails where the template
 of its preset turns that rule the other way.
 
 **Done when.** That lint passes.

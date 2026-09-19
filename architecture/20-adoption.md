@@ -277,7 +277,7 @@ returns the whole stem when the stem has no separator, so `analysis.ts` beside
 - Peers come from every tracked file of the folder. `icon.ts` beside `icon-small.png` and
   `icon-large.png` is a finding that asks the person to move images.
 - `TOOL_PREFIXES` and the NestJS names are constants in the analysis, and
-  `frameworkNames` tests for the preset id `nestjs`.
+  `frameworkNames` tests for the preset name `nestjs`.
 - `packages/eslint-plugin/src/files.ts` holds a second copy of `prefixOf`.
 - The planted test covers dash names only.
 
@@ -408,7 +408,7 @@ exists, and none of it is shown.
 | Install only some presets             | `init --presets a,b`, `--without c`, `--scope path=a,b`, `--no-checks`               |
 | Turn one check or one rule off        | `gspot ignore <check> --rule <rule> --reason "..."`, for some paths with `--paths`   |
 | Turn it back on                       | `gspot ignore <check> --rule <rule> --remove`                                        |
-| Drop one tool                         | `gspot ignore <check-id> --reason "..."` for each check of the tool (D-160)          |
+| Drop one tool                         | `gspot ignore <check> --reason "..."` for each check of the tool (D-160)             |
 | Add or drop a preset later            | `gspot add <preset>`, `gspot remove <preset>`                                        |
 | Add a check of their own              | a `[[check]]` entry in `gspot.toml` that runs any command                            |
 | Carry the setup to another repository | `gspot export team.toml`, then `gspot init --from team.toml`, a URL, or `github:o/r` |

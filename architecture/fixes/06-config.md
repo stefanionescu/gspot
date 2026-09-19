@@ -109,7 +109,7 @@ list of globs in `_files`. A rule of any tool is turned off through `[[ignore]]`
 `presets/spelling/typos.toml.tmpl`, and the Semgrep pack of the bash preset.
 
 **Logic.** Renames only, each in one commit with its readers, its tests, and its row of
-[19-names.md](../19-names.md). The check becomes `xcode/asset-catalogs`. The Semgrep rule ids of
+[19-names.md](../19-names.md). The check becomes `xcode/asset-catalogs`. The Semgrep rule names of
 the bash pack start with `gspot.bash.`. `docs/readme-present` asks for a license file at the
 level `all` alone.
 
