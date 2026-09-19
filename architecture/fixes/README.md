@@ -32,3 +32,8 @@ The list grows as each file is written.
 - [08-frameworks.md](08-frameworks.md): lint tools under `.gspot/`, the ESLint pin, shared rules in component files, every linter of a framework, and naming rules in the framework preset.
 - [09-manifests.md](09-manifests.md): one file for each check id, and every fact about a preset in its manifest.
 - [10-tests.md](10-tests.md): a harness that fails early, installs as a developer runs them, one failing case for each check, snapshots, and time.
+- [11-layouts.md](11-layouts.md): checks that read their scope, and settings detected from the repository.
+- [12-menu.md](12-menu.md): `gspot list`, the three questions of `init`, and the managed block as a list.
+- [13-words.md](13-words.md): the renames of the source, the words a person reads, and the `layer:` key.
+- [14-push.md](14-push.md): cache keys of a repository check, and a push hook that checks what is pushed.
+- [15-top-level.md](15-top-level.md): the root of this repository.
