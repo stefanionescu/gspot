@@ -185,9 +185,7 @@ source files hold that path.
 tasks without editing the `mise.toml` of the developer. The folder `.config/` and the file name
 were choices.
 
-**Design (D-127).** The file is `gspot-tools.toml`. It sits in `.mise/conf.d/` where the
-repository has `.mise/`, as all five reference repositories with mise do, and in
-`.config/mise/conf.d/` otherwise.
+**Design (D-127).** The file is `.mise/conf.d/gspot-tools.toml`, in every repository.
 
 ## A-10 Takeover misses tasks, and deletes files it does not own
 

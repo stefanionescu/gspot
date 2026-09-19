@@ -115,6 +115,8 @@ The runner is a surface for humans and editors. Every task calls gspot; the grap
 | uv             | `[tool.gspot]` is not used; `uv run gspot` works when gspot is a dev dependency through the npm wrapper, else the binary on `PATH` | none                                                                     |
 | none           | nothing                                                                                                                            | none                                                                     |
 
+D-127 moves this file to `.mise/conf.d/gspot-tools.toml`, in every repository.
+
 gspot never edits `mise.toml`. mise merges every file under `.config/mise/conf.d/` (the one
 `conf.d` directory mise reads), so gspot owns one file there and the repository's own pins and
 tasks stay untouched. `init` runs `mise trust` on that file before the install step, because mise

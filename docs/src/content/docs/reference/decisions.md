@@ -840,7 +840,7 @@ fixes.
 `gspot.toml` stays the one policy, and nothing moves out of it. Two changes make it readable. A
 scope setting is a sub-table, never an inline table. One reason may cover many entries, so the 36
 gitleaks entries of the app become one entry for each reason. The mise file is
-`.config/mise/conf.d/gspot-tools.toml`, so one file in a repository is called `gspot.toml`.
+`.mise/conf.d/gspot-tools.toml` (D-127), so one file in a repository is called `gspot.toml`.
 
 Rejected: exception files beside the policy, because a second file is a second place to look.
 
@@ -967,8 +967,7 @@ redo is how the fixes are judged.
 Checking only what changed keeps the whole repository clean, because init holds every old finding
 in the baseline. After that a new finding comes from a changed file, or from a whole-project
 check, and those run in full when a file of their project changes. A full run alone sees the
-world change, such as a new advisory, so `gspot check` records when the last full run was, and a
-hook run says so after seven days. This folds D-102 in. Rejected: a full run on every push, which
+world change, such as a new advisory. `gspot doctor` prints the date of the last full run. This folds D-102 in. Rejected: a full run on every push, which
 took 45 minutes in the app.
 
 ## D-123 Three commands and one setting
@@ -979,13 +978,15 @@ is `--since` with the upstream branch as its ref, and `--since <ref>` stays for 
 push. Finer switches stay in `--help`. Rejected: a setting for each hook and each stage, which
 gives power nobody asked for and a page of options to read first.
 
-## D-124 A long run says how long, and shows that it moves
+## D-124 A long run shows that it moves
 
-init counts the files and the slow tools, prints an estimate, and asks whether the full first
-check runs now or at another time. `--yes` runs the commit stage and prints the command for the rest. A run
-prints each check as it ends. A passing check prints no line unless `--verbose` asks. The summary
-holds the findings, the checks, and the time of each stage. A run that is stopped keeps the
-verdicts of the checks that ended.
+init runs the commit stage, which is fast, and prints the command that runs the rest. It
+estimates nothing. A run prints each check as it ends. A passing check prints no line unless
+`--verbose` asks. The summary holds the findings, the checks, and the time of each stage. A run
+that is stopped keeps the verdicts of the checks that ended.
+
+Rejected: a time estimate before the
+first run, because a guess that is wrong is worse than a command the person can time.
 
 ## D-125 An empty repository installs what needs no code
 
@@ -1007,12 +1008,13 @@ The typescript preset writes no `extends` into a `tsconfig.json` at that level, 
   `recommended`. The sentence about subagents leaves the managed block: a repository says that in its own
   part of `CLAUDE.md`.
 
-## D-127 The mise file sits where the repository keeps mise
+## D-127 The mise file has one place
 
 mise loads a second file only from a `conf.d` folder, so a file of its own is how gspot adds pins
-and tasks and never edits `mise.toml`. The file is `gspot-tools.toml`. It goes into
-`.mise/conf.d/` where `.mise/` exists, and into `.config/mise/conf.d/` otherwise. One constant
-holds the path. This amends D-106.
+and tasks and never edits `mise.toml`. The file is `.mise/conf.d/gspot-tools.toml` in every
+repository: mise reads that folder whether or not the repository had a `.mise` folder before. One
+constant holds the path. This amends D-106. Rejected: one place where `.mise/` exists and another
+where it does not, which is two paths to test for no gain.
 
 ## D-128 This repository names its folders after languages, by an exception of its own
 
