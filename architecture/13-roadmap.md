@@ -174,7 +174,7 @@ when every gap it names has left 18-gaps.md.
 | Checks that assume one layout                               | K-90, K-144, K-149, K-150, K-153, K-154, K-155, K-160, K-163, K-184, K-191                                                     | 15            |
 | What a repository gets from init                            | K-72, K-118                                                                                                                    | 5             |
 | Release                                                     | K-121, K-145, K-164                                                                                                            | before launch |
-| Tests                                                       | T-2 to T-12, T-14 to T-18, T-19 to T-23, T-24 to T-26                                                                          | 14            |
+| Tests                                                       | T-2 to T-12, T-14 to T-18, T-19 to T-23, T-24 to T-26, T-27 to T-35                                                            | 14            |
 
 The order is fixed by D-121. The branch `chore/gspot` of yap-swift-app is deleted first, on
 that machine and with no push. Then every gap is fixed here. That step ends when gspot checks itself
