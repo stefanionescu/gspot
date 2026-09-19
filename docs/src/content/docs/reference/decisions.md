@@ -886,3 +886,32 @@ each language preset, whether names are checked.
 the timeouts. One planted test installs with defaults and the mise runner in a repository of two
 scopes. `toolsPath` fails with the name of the tool it cannot find. `repository-check.test.ts`
 becomes `declared-check.test.ts`, and `scope-languages.test.ts` becomes `scope-presets.test.ts`.
+
+## D-114 gspot goes where the hook already points
+
+In five of the six reference repositories the hook is one line that calls a task. init reads what
+the hook calls and proposes the gspot line there: the task first, then the hook file, then the
+hooks of gspot where none exist. This amends D-101, which named the hook file only. Lines of the
+task that are not lint stay. Rejected: a block in the hook file in every case, because the task it
+calls still runs the old lint.
+
+## D-115 The setup entry of the repository installs the hooks
+
+`core.hooksPath` belongs to one clone. gspot never sets it where a tracked file sets it. Where
+gspot owns the hooks, init adds `gspot apply` to the setup task or the `prepare` script the
+repository has. `gspot doctor` and `gspot check` report a clone whose policy names hooks and that
+runs none.
+
+## D-116 Existing command names keep working
+
+Where a `lint`, `format`, or `format:check` task or script exists, init proposes a new body that
+calls gspot, and writes a `gspot:*` task only where no such name exists. The plan ends with what
+changes for the team. Rejected: new names beside the old ones, because the README and the habits
+of a team then point at dead commands.
+
+## D-117 A table in a shared manifest is read, carried, and left in place
+
+Takeover reads the lint tables of `pyproject.toml` and the lint keys of `package.json`, carries
+what they hold, and never edits the file. The plan lists the table, the lint-only dependencies,
+the workspace entry, and the duplicate pins under `remove by hand`, each with its command.
+`gspot doctor` reports a tool with two configurations.

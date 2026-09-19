@@ -310,6 +310,85 @@ No framework layer exists:
   not checked".
 - Extractors for Go, Rust, and Ruby are not part of the Adoption phase.
 
+## What a repository already has
+
+Five of the six reference repositories share one setup. ComfyUI-Pixaroma has no hooks and no
+tasks, so gspot owns everything there. The sections A-16 to A-20 are what the other five show.
+Each design below changes how init plugs in. None adds a file or a setting.
+
+| What the developer has                                   | Where                                                                   | What gspot does today                                              |
+| -------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
+| A hook of one line that calls a task                     | `.githooks/pre-commit`: `exec mise run hook:pre-commit`, in all five    | takes the hooks path, or adds a block beside the old lint call     |
+| A setup task that sets the hooks path                    | `.mise/tasks/setup`: `git config core.hooksPath .githooks`, in all five | sets the path to `.gspot/hooks`, and the next setup run reverts it |
+| Commands in the README and in muscle memory              | yap-landing: `bun run lint`, `bun run format`, `mise run lint:shell`    | adds `gspot:check` beside them and leaves the old names dead       |
+| Tool tables in `pyproject.toml`                          | `[tool.ruff]`, `[tool.deptry]`, `[tool.vulture]` in three repositories  | reads `ruff.toml` only, so the editor and the gate disagree        |
+| Lint dependencies, a `quality` workspace, duplicate pins | 31 devDependencies in yap-landing, `"workspaces": ["quality"]`          | lists the folder, and names neither the packages nor the workspace |
+| Variables that skip a hook                               | `SKIP_HOOKS=1`, `SKIP_COMMITLINT=1`                                     | nothing, and the failure text names no way out                     |
+| No CI                                                    | none of the six has a workflow                                          | the hooks are the whole gate, so A-4 decides the experience        |
+
+## A-16 The hook calls a task, so the task is where gspot goes
+
+**Evidence.** In all five repositories the hook file holds one `exec mise run ...` line, and the
+work is in `.mise/tasks/hook/pre-commit`, which sources `quality/repository/hooks/lib.sh`. A
+gspot block in the hook file (D-101) runs beside a task that still calls the deleted lint
+folder.
+
+**Design (D-114).** init reads what the hook calls. Where the hook calls a task or a script,
+that file is where the gspot line goes. The plan shows the file, the lines that leave, and the
+line that arrives. The order is: the task the hook calls, then the hook file, then the
+hooks of gspot where a repository has none. Lines in the task that are not lint, such as the
+LFS call and the guard for production environment files, stay.
+
+## A-17 The hooks path is local, and the setup task owns it
+
+**Evidence.** `core.hooksPath` is git configuration of one clone. Every reference repository
+sets it in its setup task. A person who clones a gspot repository has no hooks until they run
+`gspot apply`, and nothing says so. Where gspot takes the path, `mise run setup` takes it back.
+
+**Design (D-115).**
+
+- gspot never sets `core.hooksPath` in a repository where a tracked file sets it.
+- Where gspot owns the hooks, init adds `gspot apply` to the setup entry the repository has: the
+  setup task, or the `prepare` script. The plan shows the line.
+- `gspot doctor` and `gspot check` say when the policy names hooks and this clone runs none, with
+  the command that fixes it.
+
+## A-18 The commands people type keep working
+
+**Evidence.** The README of yap-landing lists `bun run lint`, `bun run format`,
+`bun run format:check`, and `mise run lint:shell`. `runner-surface.ts` writes five `gspot:*`
+tasks and knows nothing about the names a repository has.
+
+**Design (D-116).** Where a `lint`, `format`, or `format:check` task or script exists, init
+proposes its new body: `gspot check`, `gspot check --fix`, and `gspot check formatting/prettier`.
+The plan shows each one before and after. gspot writes a `gspot:*` task only where no such name
+exists. Narrow names that lose their meaning, such as `lint:shell`, are listed for the person to
+delete. The plan ends with what changes for the team: the commands that stay, the commands that
+go, and what a teammate runs after pulling.
+
+## A-19 Configuration inside a shared manifest
+
+**Evidence.** Three repositories keep about 100 lines of `[tool.ruff]` in `pyproject.toml`,
+beside `[tool.deptry]`, `[tool.vulture]`, `[tool.importlinter]`, and tables that are no lint at
+all, such as `[tool.comfy]`. `carry.ts` reads `ruff.toml` only. After init the gate reads
+`.gspot/ruff.toml` and the editor reads `pyproject.toml`. The same holds for the `prettier`,
+`eslintConfig`, `commitlint`, and `lint-staged` keys of `package.json`.
+
+**Design (D-117).** Takeover reads these tables the way it reads a configuration file, and
+carries the disabled rules and the exception lists. gspot never edits the manifest. The plan
+names the table and its lines under `remove by hand`, and `gspot doctor` reports a tool that has
+two configurations until the table is gone. Lint-only dependencies, a workspace entry for a lint
+folder, and duplicate pins are listed the same way, each with the command that removes it.
+
+## A-20 The way out of a failing hook
+
+**Evidence.** The hooks of the reference repositories honor `SKIP_HOOKS=1`. A gspot hook that
+fails prints the findings and nothing else.
+
+**Design.** No new variable. The last line of a failing hook run names
+`git commit --no-verify` and `gspot check --staged`, which reproduces the failure. Where the hook
+of the repository keeps running (A-16), its own variables keep working.
+
 ## Whether a developer keeps it
 
 Not today. The reasons, in the order a developer meets them:
