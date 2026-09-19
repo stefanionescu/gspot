@@ -553,9 +553,9 @@ What changes:
 | `--ci none`, `--hooks none`, `--runner none`                        | yes                       | `--no-ci`, `--no-hooks`, `--no-runner`, the form `--no-rules` and `--no-install` have       |
 | `--ci github`                                                       | yes                       | `--ci github` or `--ci gitlab`                                                              |
 | `--keep-format`, `--shipped-format`                                 | no                        | `--format keep` or `--format shipped`                                                       |
-| `--project-templates` on `init` and on `apply`                      | no                        | `apply --starter-rules` only                                                                |
 | `uninstall --keep-hooks`                                            | no                        | gone with D-101: gspot takes no hooks path in a repository that has hooks                   |
-| `init --own`, `set --replace`, `set --default`                      | no                        | stay, and each gets a test and a line in a guide                                            |
+| `init --own`, `--project-templates` on `init` and `apply`           | no                        | gone. Both are parsed and no code reads them: they are in `--help` and do nothing (K-97)    |
+| `set --replace`, `set --default`                                    | no                        | stay, and each gets a test and a line in a guide                                            |
 | `apply --lower-baselines`, `apply --baseline <id>`                  | yes                       | `gspot baseline`, `gspot baseline <id>`                                                     |
 | `gspot allow` with seven lists                                      | yes                       | `gspot allow typos <word>` stays as the daily shortcut. Every other list goes through `set` |
 | `gspot declare`                                                     | yes                       | gone. `gspot set generated ...` and `gspot set vendored ...` append the same entries        |
