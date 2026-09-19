@@ -118,8 +118,9 @@ Two defects make it slower than it needs to be:
 **Evidence.** `NEVER_BASELINED` in `run/baselines.ts` holds `format`, `syntax`, `schema`,
 `coverage` and `build`. A repository with one unformatted file fails its gate from the first
 commit after init. In the app an untracked `gspot.local.toml` skips eight checks, so the gate
-passes on one machine and fails on every other. `GSPOT-MIGRATION.md` reports "0 fail" for a run
-that skipped them.
+passes on one machine and fails on every other. `GSPOT-MIGRATION.md` says so, and
+still opens its results with the words `0 fail`. The debt it lists is small: 87 findings in 69 files, which
+one fix run clears.
 
 **Why the rule stays.** A baseline of format findings never shrinks, because nobody fixes a
 format finding by hand.
@@ -459,6 +460,15 @@ characters. Most of the file is spaces.
 **Design.** The managed block lists each area with its files as a plain list, one path on each
 line, with no table. It names the rule files of the presets that are selected for the files an
 agent is likely to touch, and points at `.gspot/rules/` for the rest.
+
+## A-26 A pull request shows the generated files as code
+
+**Evidence.** `.gitattributes` in the app holds no line for `.gspot/`. A pull request that
+lowers a baseline or upgrades gspot shows every generated file in its diff, with 928 KB of
+baseline JSON. GitHub also counts them in the language bar.
+
+**Design.** init adds one managed block to `.gitattributes`: `.gspot/** linguist-generated`.
+The natures code of gspot already reads that attribute.
 
 ## Whether a developer keeps it
 

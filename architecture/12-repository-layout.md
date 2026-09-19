@@ -30,6 +30,34 @@ Two published artifacts: the binary (GitHub Releases, one asset per platform) an
 `@gspot/eslint-plugin` (npm). Presets, rules, and prose ship inside the binary. On npm the binary ships the way Biome and ast-grep ship theirs. One package per platform (`@gspot/cli-darwin-arm64`, `@gspot/cli-linux-x64` and the rest) holds the executable, gated by the `os` and `cpu` fields. A thin `gspot` package lists them as `optionalDependencies`, and its `bin` launcher runs the one that installed. Nothing downloads at install time and no
 install script runs, so `npx`, `--ignore-scripts`, proxies, and offline mirrors all work.
 
+## What the top level holds, and what changes
+
+The projects a developer compares gspot with keep source, documents, tests, and examples at the
+top, and little else.
+
+| Project  | Top-level folders                                                                  | The schema                     |
+| -------- | ---------------------------------------------------------------------------------- | ------------------------------ |
+| Ruff     | `crates`, `docs`, `python`, `scripts`, `playground`, `assets`                      | `ruff.schema.json` at the root |
+| lefthook | `cmd`, `internal`, `docs`, `examples`, `packaging`, `tests`                        | `schema.json` at the root      |
+| Biome    | `crates`, `packages`, `e2e-tests`, `scripts`, `plugins`                            | published with the npm package |
+| gspot    | `packages`, `presets`, `rules`, `prose`, `schema`, `architecture`, `docs`, `tests` | four files in two folders      |
+
+Still to apply:
+
+- `prose/` moves to `presets/prose/`, because it is the source of one preset.
+- `prose/styles/gspot/` and `prose/vocabularies/gspot/` keep their form. Vale loads a style from
+  `<StylesPath>/<StyleName>/`, and the folder name is what a finding prints:
+  `gspot.sentence-length`. A vocabulary works the same way.
+- The JSON Schema stays, because it lets an editor complete and check `gspot.toml`. It becomes
+  one file, `gspot.schema.json` at the root, and the site copies it at build.
+- `schema/` and `docs/public/schema/` track the same two files today, 170 KB. The schema of the
+  report lives beside the code that writes it.
+- `examples/` holds two small repositories that the README and the site show: one package, and
+  one with two scopes. The planted tests install into them, so they cannot go stale.
+- `CONTRIBUTING.md`, `CHANGELOG.md` written from the changesets, and `SECURITY.md` arrive at the
+  root. Every project in the table has the first two.
+- The 12 lint stubs at the root of this repository leave with D-100.
+
 ## Folder rules
 
 - A folder has more than one file or does not exist.

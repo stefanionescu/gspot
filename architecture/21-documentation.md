@@ -89,10 +89,28 @@ The page, in order:
 8. **For agents**: the rule files, and the `llms.txt` the manual already builds.
 9. The manual, GitHub, the license.
 
-The look is plain. Headings and commands use a monospace face, with one accent color. A dark
-theme and a light theme follow the system. Margins are wide, and nothing moves except the
-terminal. The
-page works with scripts off, and the recording has a text form beside it for a screen reader.
+### The theme
+
+What the sites a developer already likes do:
+
+| Site                            | What it does                                                                               |
+| ------------------------------- | ------------------------------------------------------------------------------------------ |
+| [Oxc](https://oxc.rs)           | dark, one heading, two buttons, then each tool with a measured number beside a named rival |
+| [Starship](https://starship.rs) | one sentence, three features, an install block for each shell                              |
+| [Charm](https://charm.land)     | mascots and jokes, down to the footer line about `/dev/null`                               |
+| [mise](https://mise.jdx.dev)    | sections numbered 01 to 04, and the config file beside the output it produces              |
+
+gspot takes the plain end of that range:
+
+- Dark by default, with a light theme that follows the system. A near-black background,
+  off-white text, and one accent color for the prompt character, links, and the copy button.
+- One monospace face for headings, body, and commands.
+- The page reads as a terminal session. Sections carry the numbers `01` to `06`. Each one opens
+  with a command and shows its real output under it.
+- Numbers are measured, and each names the command that reproduces it.
+- One joke at most, in the footer. No mascot, no illustration, no gradient, and nothing moves
+  except the terminal.
+- The page works with scripts off, and the recording has a text form for a screen reader.
 
 ## Before launch
 
