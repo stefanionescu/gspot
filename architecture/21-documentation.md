@@ -33,7 +33,7 @@ A reader decides in the first screen. The order:
 5. **What a finding looks like**, and the three things to do with one: fix it, `gspot explain`
    it, or `gspot ignore` it with a reason.
 6. **Make it yours.** The table of [20-adoption.md](20-adoption.md): choose presets, take the
-   `core` level, turn a rule off and on, add a check of your own, carry a profile to the next
+   `recommended` level, turn a rule off and on, add a check of your own, carry a profile to the next
    repository.
 7. **Getting out.** `git commit --no-verify` for one commit, and `gspot uninstall` for good.
 8. **What it supports**, as one table of languages and frameworks with the number of checks.

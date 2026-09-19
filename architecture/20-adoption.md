@@ -256,8 +256,8 @@ The shipped banned terms stay as they are. The count that does not come from the
 
 `presets/swift/swiftlint.yml.tmpl` turns on 95 opt-in rules for every repository.
 
-**Design (D-110).** A preset marks each opt-in rule `core` or `strict`. `core` holds rules that
-find defects. `strict` holds rules of taste, such as explicit access control on every
+**Design (D-110).** A preset marks each opt-in rule `recommended` or `all`. `recommended` holds rules that
+find defects. `all` adds rules of taste, such as explicit access control on every
 declaration. `[inspection] strict = false`, which init already writes, leaves the strict group
 off. Today that key changes nothing in the Swift preset.
 
@@ -432,14 +432,16 @@ same for an agent. The data is what `explain` and the manual already read.
 
 **Evidence.** A preset is selected whole. `[inspection] strict = false` is written by init and
 read by almost nothing (K-52). Ruff ships a small default set, and Biome and ESLint ship
-`recommended` beside `strict`, because a first run that prints 23,000 findings ends the trial.
+`recommended` beside a fuller set, because a first run that prints 23,000 findings ends the trial.
 
-**Design (D-119).** Two levels, the words of D-110: `core` and `strict`. Every check and every
-opt-in tool rule carries one. `core` finds defects. `strict` holds taste, style beyond the
-formatter, and documentation rules. `gspot init --level core` is the default, and
-`[inspection] strict = true` turns the rest on.
+**Design (D-119).** Two levels, the words ESLint and Biome use: `recommended` and `all`. Every check and every
+opt-in tool rule carries one. `recommended` finds defects. `all` adds taste, style beyond the
+formatter, and documentation rules.
 
-The banned terms of the naming policy are `core`
+init writes `level = "recommended"`, and `level = "all"` turns the rest on. The second level
+is not called `strict`: TypeScript and JavaScript already own that word.
+
+The banned terms of the naming policy are `recommended`
 and stay on.
 
 ## A-23 The init question is one list of 52

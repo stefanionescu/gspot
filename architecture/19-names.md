@@ -27,24 +27,52 @@ in the commit that applies it.
 
 ## Still to apply
 
-| Today                                                                          | Where a person meets it                           | Becomes                                                                                                            |
-| ------------------------------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
-| `[runner] surface`, `--runner <surface>`, "runner surface"                     | `gspot.toml`, `init --help`, the guide on mise    | `[runner] tool`, the shape of `[hooks] tool`. The word leaves the code too, where it also means exposed settings   |
-| run record, `.gspot/last.json`, `run-record.schema.json`                       | `.gspot/`, the manual, `check --json`             | report: `.gspot/report.json`, `report.schema.json`                                                                 |
-| `layer:` in rule files, "the project rule layer"                               | every installed rule file, `--help` of 3 commands | the key is deleted, because the folder says it, and the value differs from the folder today. "your own rule files" |
-| `[inspection] strict`, "inspection"                                            | every `gspot.toml`                                | `[coverage] strict`                                                                                                |
-| `[[declare]]`, `produced_by`, `gspot declare`                                  | `gspot.toml`, the command list                    | `[[generated]]` with `by`, `[[vendored]]`, and `gspot mark`                                                        |
-| policy                                                                         | 40 places in help, output and guides              | config, in text a person reads. The file stays `gspot.toml`                                                        |
-| nature, concern, engine, takeover, exposed settings                            | `doctor` output, `why` output, two guides         | a plain phrase each: "kind of file", "applies to every language", "built-in check", "replacing your old setup"     |
-| "Re-render", "idempotent"                                                      | `apply --help`, `upgrade --help`, the mise task   | "Write the generated files again. Safe to run twice."                                                              |
-| `render`, `RenderedSet`, `isRenderedHere`, `synced`                            | the code, more than 100 places (K-54)             | `emit`, `EmittedSet`, `isEmittedHere`, `applied`                                                                   |
-| `packages/cli/rules-lint`, `#rules-lint/*`                                     | the code (K-61)                                   | `packages/cli/rules`, `#rules/*`                                                                                   |
-| `--at`, `upgrade --check`, `--ci none`, `--keep-format`, `--project-templates` | `--help` of four commands                         | `--stage`, `--dry-run`, `--no-ci`, `--format keep` ([02-cli.md](02-cli.md))                                        |
-| `hooks.tool = "shared"`                                                        | the uncommitted hooks work                        | `existing` (D-101)                                                                                                 |
-| `repository-check.test.ts`, `scope-languages.test.ts`                          | `tests/repositories/`                             | `declared-check.test.ts`, `scope-presets.test.ts` (D-113)                                                          |
+| Today                                                                                        | Where a person meets it                           | Becomes                                                                                                            |
+| -------------------------------------------------------------------------------------------- | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
+| `[runner] surface`, `--runner <surface>`, "runner surface"                                   | `gspot.toml`, `init --help`, the guide on mise    | `[runner] tool`, the shape of `[hooks] tool`. The word leaves the code too, where it also means exposed settings   |
+| run record, `.gspot/last.json`, `run-record.schema.json`                                     | `.gspot/`, the manual, `check --json`             | report: `.gspot/report.json`, `report.schema.json`                                                                 |
+| `layer:` in rule files, "the project rule layer"                                             | every installed rule file, `--help` of 3 commands | the key is deleted, because the folder says it, and the value differs from the folder today. "your own rule files" |
+| `[inspection] strict`, "inspection"                                                          | every `gspot.toml`                                | `[coverage] strict`                                                                                                |
+| `[[declare]]`, `produced_by`, `gspot declare`                                                | `gspot.toml`, the command list                    | `[[generated]]` with `by`, `[[vendored]]`, and `gspot mark`                                                        |
+| policy                                                                                       | 40 places in help, output and guides              | config, in text a person reads. The file stays `gspot.toml`                                                        |
+| nature, concern, engine, takeover, exposed settings                                          | `doctor` output, `why` output, two guides         | a plain phrase each: "kind of file", "applies to every language", "built-in check", "replacing your old setup"     |
+| "Re-render", "idempotent"                                                                    | `apply --help`, `upgrade --help`, the mise task   | "Write the generated files again. Safe to run twice."                                                              |
+| `render`, `RenderedSet`, `isRenderedHere`, `synced`                                          | the code, more than 100 places (K-54)             | `emit`, `EmittedSet`, `isEmittedHere`, `applied`                                                                   |
+| `src/apple/`, `src/pyproject/`, `src/golang/`, `src/cargo/`, `tests/repositories/pyproject/` | the code                                          | `swift/`, `python/`, `go/`, `rust/`, `tests/repositories/python/` (D-128)                                          |
+| `packages/cli/rules-lint`, `#rules-lint/*`                                                   | the code (K-61)                                   | `packages/cli/rules`, `#rules/*`                                                                                   |
+| `--at`, `upgrade --check`, `--ci none`, `--keep-format`, `--project-templates`               | `--help` of four commands                         | `--stage`, `--dry-run`, `--no-ci`, `--format keep` ([02-cli.md](02-cli.md))                                        |
+| `hooks.tool = "shared"`                                                                      | the uncommitted hooks work                        | `existing` (D-101)                                                                                                 |
+| `repository-check.test.ts`, `scope-languages.test.ts`                                        | `tests/repositories/`                             | `declared-check.test.ts`, `scope-presets.test.ts` (D-113)                                                          |
 
 preset, check, finding, baseline, ignore, scope, stage and profile stay: other tools use them
 the same way.
+
+## Names this repository allows itself
+
+Every name of the rename table above was checked against the shipped banned terms, the reserved
+terms, and the banned folder names. Three clash, and D-135 decides each one:
+
+| Name                                                                   | Clash                                           | Decision                                                                        |
+| ---------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- |
+| `packages/cli/src/swift/`, `.../python/`, `tests/repositories/python/` | `swift` and `python` are banned folder names    | allowed in `gspot.toml`, as below. `go/` and `rust/` clash with nothing         |
+| the level `core`                                                       | `core` is a banned term of the containers group | the level is `recommended`, so no exception is needed                           |
+| `tests/config/`                                                        | `config` is a reserved term                     | none needed: a configuration folder is one of the uses the reserved term allows |
+
+```toml
+[[structure.folder_name_allowed]]
+paths = ["packages/cli/src/swift/**", "packages/cli/src/python/**", "tests/repositories/python/**"]
+reason = "Each folder holds the checks of one language, and the language is its name."
+```
+
+The exceptions the repository already holds are four `[[naming.rules]]` entries with
+`exclude = true`. Each one keeps a spelling that another party fixes: the keys of a gitleaks
+report, `packageManager` of `package.json`, the members Emscripten and libpg-query export, and
+`shouldTranslate` of an Xcode string file. They stay.
+
+Where the banned terms changed a name for the better, the name stays changed: `emit` for the
+banned `render` and `generate`, `readPolicy` for the banned `load`, `ExposedSettings` for the
+banned `catalog`. A library that fixes a word keeps it: `createFixture` of `fs-fixture`,
+`__Snapshots__` of the snapshot library, `tmpdir` of Node.
 
 ## Names that stay
 

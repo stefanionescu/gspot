@@ -21,8 +21,9 @@ ast-grep engine for every language, which loses editor feedback and rewrites tes
 ## D-03 Everything is an error; a baseline is the adoption device
 
 No warning level. `init` records the current count per rule; `check` fails when a count rises.
-Rejected: a `recommended` and a `strict` level, which makes strangers pick a level and puts the
-useful rules behind a switch. Rejected: no baseline, which makes a new rule an upgrade nobody
+D-119 replaces the rejection this decision first held, of a `recommended` level beside a fuller
+one. The install in yap-swift-app showed what a baseline alone gives a stranger: about 23,000
+findings on the first run. Everything is still an error, and there is still no warning level. Rejected: no baseline, which makes a new rule an upgrade nobody
 takes.
 
 ## D-04 Coverage is a report
@@ -864,7 +865,7 @@ and never edited. `uninstall` prints the commit init started from.
 
 ## D-110 Opt-in rules of taste are off unless the policy asks
 
-A preset marks each opt-in rule `core` or `strict`. `[inspection] strict = false` leaves the
+A preset marks each opt-in rule `recommended` or `all`. `[inspection] strict = false` leaves the
 strict group off. The banned terms of the naming policy are not part of this: they stay on.
 
 ## D-111 The prefix of a file name is its first word
@@ -922,12 +923,22 @@ the workspace entry, and the duplicate pins under `remove by hand`, each with it
 their state. It reads the data `explain` reads. Rejected: a longer `doctor`, because `doctor`
 answers what is wrong, and this answers what is there.
 
-## D-119 Two levels, and the first install takes the lower one
+## D-119 Two levels, and the first install takes the smaller one
 
-Every check and every opt-in tool rule is `core` or `strict`. init installs `core` unless
-`--level strict` or a profile says otherwise, and `[inspection] strict` is the one key that holds
-the choice. The banned terms are `core`. Rejected: a level for each preset, because a person
-then answers 52 questions in place of one.
+Every check and every opt-in tool rule is in the level `recommended` or in the level `all`. init
+installs `recommended` and asks nothing about it. One key at the top of `gspot.toml` holds the
+choice: `level = "recommended"` or `level = "all"`. A profile may name it. The banned terms are
+`recommended`.
+
+This reverses the rejection in D-03, and answers its two worries. A stranger picks nothing,
+because `recommended` is what init writes. No useful rule sits behind the switch, because the
+rule for sorting is fixed. A check is `recommended` when it finds a defect, a security problem,
+dead code, or a name from the banned terms. A check that enforces a layout, an order, a header, or
+one way to write a thing that works is `all`.
+
+The second level is not called `strict`, because TypeScript (`"strict": true`) and JavaScript
+(`"use strict"`) already own that word. It is not called `core`, which is a banned term.
+Rejected: a level for each preset, because a person then answers 52 questions in place of one.
 
 ## D-120 init asks in three groups
 
@@ -984,16 +995,16 @@ and no preset, with the `gspot add` command. `preset-arrival.test.ts` covers the
 
 ## D-126 The first install never changes a build, and house style is strict
 
-The `core` level of D-119 holds no check that changes what the tools of the developer accept.
+The `recommended` level of D-119 holds no check that changes what the tools of the developer accept.
 The typescript preset writes no `extends` into a `tsconfig.json` at that level, and
-`integrity/tsconfig-options` is `strict`. The checks of K-75 and K-91 are `strict` too:
+`integrity/tsconfig-options` is in the `all` level. The checks of K-75 and K-91 are in the `all` level too:
 
 - exact dependency versions and the release age;
 - a README in each scope and the banned headings;
 - the shell script header and the migration header;
 - the types folder and the folder with one file.
   The banned terms stay
-  `core`. The sentence about subagents leaves the managed block: a repository says that in its own
+  `recommended`. The sentence about subagents leaves the managed block: a repository says that in its own
   part of `CLAUDE.md`.
 
 ## D-127 The mise file sits where the repository keeps mise
@@ -1003,11 +1014,15 @@ and tasks and never edits `mise.toml`. The file is `gspot-tools.toml`. It goes i
 `.mise/conf.d/` where `.mise/` exists, and into `.config/mise/conf.d/` otherwise. One constant
 holds the path. This amends D-106.
 
-## D-128 Folder names of languages are allowed, and this repository uses them
+## D-128 This repository names its folders after languages, by an exception of its own
 
-`python`, `swift`, `typescript`, `javascript` and `bash` leave the banned folder names. The
-container words stay banned. The folders `pyproject/`, `apple/`, `golang/` and `cargo/` of this
-repository become `python/`, `swift/`, `go/` and `rust/`.
+The shipped folder rule keeps its list, the language names included: it is part of the banned
+terms, which stay. This repository needs two of those names, because a folder that holds the
+Swift checks is called `swift`. Its own `gspot.toml` allows them under
+`structure.folder_name_allowed`, with a reason. `apple/` becomes `swift/`, `pyproject/` becomes
+`python/`, and the two test folders follow. `golang/` becomes `go/` and `cargo/` becomes
+`rust/`, which no list bans. Rejected: the names `apple`, `pyproject`, `golang` and `cargo`, which
+passed the check and told a reader nothing.
 
 ## D-129 One word for a run that writes nothing
 
@@ -1059,3 +1074,18 @@ mention go in one change. Three kinds of thing sit in the second column until so
 - a page of this folder that describes what nobody built.
 
 The Adoption phase of the build order opens with the delete table.
+
+## D-135 What this repository overrides for itself
+
+gspot checks itself with every preset it selects and with no `[[ignore]]` entry (D-27). One kind
+of exception is allowed: a name. The right name for a folder, a file, or an identifier sometimes clashes with the naming policy.
+`gspot.toml` of this repository then allows that one name, in that one place. The reason says why
+the name is right.
+
+The forms are
+`structure.folder_name_allowed` for a folder and `[[naming.rules]]` with `exclude = true` for an
+identifier or a file. No other check is loosened for this repository, and no banned term group is
+removed. [19-names.md](https://github.com/stefanionescu/gspot/blob/main/architecture/19-names.md) lists every exception the repository holds.
+
+The default level of D-119 is called `recommended`. The first name, `core`, is a banned term of
+the containers group, and `recommended` is the word ESLint and Biome already taught developers.
