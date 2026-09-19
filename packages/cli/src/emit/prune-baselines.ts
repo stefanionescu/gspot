@@ -4,11 +4,12 @@ import { planRun } from '#cli/run/plan.ts';
 import { runSideCommand } from '#cli/run/tool-runner.ts';
 import type { PlannedCheck, Session } from '#types/run.ts';
 import { existsSync, readFileSync, rmSync } from 'node:fs';
+import { toolBaselineFile } from '#cli/run/scope-paths.ts';
 
 async function pruneOne(session: Session, check: PlannedCheck): Promise<string | undefined> {
     const { spec, scope } = check;
     if (spec.prune_command === undefined || spec.baseline_file === undefined) return undefined;
-    const file = join(session.root, spec.baseline_file);
+    const file = join(session.root, toolBaselineFile(spec.baseline_file, scope.scope.path));
     if (!existsSync(file)) return undefined;
     await runSideCommand(session, check, spec.prune_command);
     if (Object.keys(JSON.parse(readFileSync(file, 'utf8')) as object).length === 0) rmSync(file, { force: true });

@@ -6,6 +6,7 @@ import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import type { DenoLintReport } from '#types/supabase.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { functionFolders, supabaseFinding } from '#cli/supabase/project.ts';
 
 const DENO_TIMEOUT_MS = 300_000;
@@ -24,7 +25,7 @@ function relative(root: string, locator: string): string {
 async function linted(input: EngineInput, folder: string): Promise<Finding[]> {
     const argv = ['deno', 'lint', '--json', ...denoFileArguments(input.root, folder), join(input.root, folder)];
     const result = await run(argv, { cwd: input.root, timeoutMs: DENO_TIMEOUT_MS });
-    if (result.missing) throw new Error('Deno is not installed.');
+    if (result.missing) throw new MissingToolError('Deno is not installed.');
     const report = JSON.parse(result.stdout === '' ? '{}' : result.stdout) as DenoLintReport;
     const broken = (report.errors ?? []).map((entry) =>
         supabaseFinding(input, { file: relative(input.root, entry.file_path), line: 1 }, 'parse', entry.message),
@@ -56,7 +57,7 @@ async function typed(input: EngineInput, folder: string): Promise<Finding[]> {
     if (entry === undefined) return [];
     const argv = ['deno', 'check', '--quiet', ...denoFileArguments(input.root, folder), entry];
     const result = await run(argv, { cwd: input.root, timeoutMs: DENO_TIMEOUT_MS });
-    if (result.missing) throw new Error('Deno is not installed.');
+    if (result.missing) throw new MissingToolError('Deno is not installed.');
     return result.code === 0 ? [] : [firstError(input, folder, result.stderr)];
 }
 

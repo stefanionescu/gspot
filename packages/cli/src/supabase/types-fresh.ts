@@ -5,6 +5,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { supabaseFinding } from '#cli/supabase/project.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 const TYPES_TIMEOUT_MS = 300_000;
 
@@ -23,7 +24,7 @@ export async function typesFresh(input: EngineInput): Promise<Finding[]> {
         cwd: input.root,
         timeoutMs: TYPES_TIMEOUT_MS,
     });
-    if (result.missing) throw new Error('The supabase CLI is not installed.');
+    if (result.missing) throw new MissingToolError('The supabase CLI is not installed.');
     if (result.code !== 0)
         throw new Error(`The supabase CLI wrote no types: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
     const committed = readFileSync(join(input.root, named), 'utf8');

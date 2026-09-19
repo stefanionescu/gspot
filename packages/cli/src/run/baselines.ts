@@ -8,7 +8,8 @@ import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync
 // A build that fails, a test run that fails, or coverage under its floor, is fixed or decided in the policy; a count of failures is no baseline.
 const NEVER_BASELINED = new Set(['format', 'syntax', 'schema', 'coverage', 'build']);
 
-const FOREIGN_FILES = new Set(['eslint.json', 'basedpyright.json']);
+// ESLint and basedpyright keep baseline files of their own, in their own shapes. basedpyright keeps one for each scope.
+const FOREIGN_FILES = /^(?:eslint|basedpyright\.[\w.-]+)\.json$/u;
 
 const DATE_LENGTH = 10;
 
@@ -107,7 +108,7 @@ export function readBaselines(root: string): BaselineFile[] {
     if (!existsSync(folder)) return [];
     return readdirSync(folder)
         .toSorted((a, b) => a.localeCompare(b))
-        .filter((name) => name.endsWith('.json') && !FOREIGN_FILES.has(name))
+        .filter((name) => name.endsWith('.json') && !FOREIGN_FILES.test(name))
         .map((name) => readBaseline(join(folder, name)))
         .filter((file) => file !== undefined);
 }

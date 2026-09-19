@@ -6,6 +6,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { AcceptedResult, SarifLog, SarifResult } from '#types/integrity.ts';
 
 const TOOL = 'codeql';
@@ -18,7 +19,7 @@ function isAccepted(accepted: AcceptedResult[], rule: string, file: string): boo
 
 async function spawned(argv: string[], cwd: string): Promise<void> {
     const result = await run([TOOL, ...argv], { cwd, timeoutMs: SCAN_TIMEOUT_MS });
-    if (result.missing) throw new Error(`${TOOL} is not installed.`);
+    if (result.missing) throw new MissingToolError(`${TOOL} is not installed.`);
     if (result.code !== 0)
         throw new Error(
             `${TOOL} ${argv[0] ?? ''} ${argv[1] ?? ''} failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,

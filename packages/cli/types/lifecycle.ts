@@ -48,6 +48,8 @@ export type CarriedIgnore = { check: string; rule: string; reason: string; paths
 export type CarriedLists = {
     typosWords: { word: string; reason: string }[];
     typosExcludes: { paths: string[]; reason: string }[];
+    /** The paths an old pyrightconfig.json at the root left out of the type check. */
+    pyrightExcludes: { paths: string[]; reason: string }[];
     /** The locale the old typos file checked against; a file that names none accepts every English dialect. */
     typosLocale?: string;
     sqlfluffExcludes: { paths: string[]; reason: string }[];

@@ -5,6 +5,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { locateTool } from '#cli/platform/tool-probe.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 
 const TYPES_TIMEOUT_MS = 300_000;
@@ -16,7 +17,7 @@ const NO_TYPEGEN = ['Invalid project directory', 'unknown command'];
 
 function located(input: EngineInput, name: string): string {
     const binary = locateTool(join(input.root, input.scope), name) ?? locateTool(input.root, name);
-    if (binary === undefined) throw new Error(`The ${name} command is not installed.`);
+    if (binary === undefined) throw new MissingToolError(`The ${name} command is not installed.`);
     return binary;
 }
 

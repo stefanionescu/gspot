@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 const PROJECT_FILE = 'ansible.cfg';
 const LINT_TIMEOUT_MS = 600_000;
@@ -14,7 +15,7 @@ async function linted(input: EngineInput, folder: string, skipped: string[]): Pr
         cwd: join(input.root, folder),
         timeoutMs: LINT_TIMEOUT_MS,
     });
-    if (result.missing) throw new Error('The ansible-lint command is not installed.');
+    if (result.missing) throw new MissingToolError('The ansible-lint command is not installed.');
     const found = result.stdout.split('\n').flatMap((line): Finding[] => {
         const groups = LINT_LINE.exec(line)?.groups;
         if (groups === undefined) return [];

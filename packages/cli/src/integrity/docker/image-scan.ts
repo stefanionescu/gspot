@@ -5,6 +5,7 @@ import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { capturedLines } from '#cli/integrity/captured-lines.ts';
 import { COMPOSE_FILES, COMPOSE_IMAGE } from '#config/integrity.ts';
 
@@ -23,7 +24,7 @@ async function scanned(input: EngineInput, file: string, image: string): Promise
         image,
     ];
     const result = await run(argv, { cwd: input.root, timeoutMs: SCAN_TIMEOUT_MS });
-    if (result.missing) throw new Error('Trivy is not installed.');
+    if (result.missing) throw new MissingToolError('Trivy is not installed.');
     if (result.code === 0) return [];
     const said = `${result.stdout}\n${result.stderr}`.split('\n').filter((line) => line.trim() !== '');
     return [

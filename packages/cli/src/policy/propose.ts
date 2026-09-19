@@ -38,6 +38,7 @@ function toolTables(carried: CarriedLists, commitScopes: string[] | undefined, x
     const tables: Record<string, TomlTable | undefined> = {
         typos: typosTable(carried),
         gitleaks: nonEmpty({ allow: carried.gitleaksAllow }),
+        basedpyright: nonEmpty({ exclude: carried.pyrightExcludes }),
         sqlfluff: nonEmpty({ exclude: carried.sqlfluffExcludes }),
         semgrep: nonEmpty({ ignore: carried.semgrepIgnores }),
         osv: nonEmpty({ ignore: carried.osvIgnores }),

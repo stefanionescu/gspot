@@ -5,6 +5,7 @@ import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { ClonePlace, CloneReport } from '#types/integrity.ts';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
@@ -56,7 +57,7 @@ export function cloneFindings(
  */
 export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
     const binary = locateTool(input.root, TOOL);
-    if (binary === undefined) throw new Error('The jscpd command is not installed.');
+    if (binary === undefined) throw new MissingToolError('The jscpd command is not installed.');
     const work = mkdtempSync(join(tmpdir(), 'gspot-jscpd-'));
     try {
         const claimed = input.files.filter((file) => file.nature === 'source').map((file) => file.path);

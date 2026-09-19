@@ -11,6 +11,7 @@ import { locateTool } from '#cli/platform/tool-probe.ts';
 import type { MergedView, Policy } from '#types/config.ts';
 import type { ProseRoute, ValeAlert } from '#types/prose.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { vocabularyFor, vocabularyText } from '#cli/prose/vocabulary.ts';
 import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY, VALE_LINE, VALE_PACKAGES, VALE_STDIN } from '#config/prose.ts';
 
@@ -142,7 +143,7 @@ export function parseAlerts(stdout: string): ValeAlert[] {
  */
 export async function valeFindings(input: EngineInput): Promise<Finding[]> {
     const binary = locateTool(input.root, 'vale');
-    if (binary === undefined) throw new Error('Vale is not installed; run mise install.');
+    if (binary === undefined) throw new MissingToolError('Vale is not installed; run mise install.');
     if (!hasPackages(input.root))
         throw new Error('The Vale packages are not synced; run gspot apply with the network on.');
     const groups = routeGroups(input.files.filter((file) => file.nature === 'source'));

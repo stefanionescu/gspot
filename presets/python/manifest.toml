@@ -79,6 +79,7 @@ target = ".gspot/ruff.toml"
 [[configs]]
 template = "basedpyrightconfig.json.tmpl"
 target = ".gspot/basedpyrightconfig.json"
+stub = {path = "pyrightconfig.json", body = "{\n    \"extends\": \"{target}\"\n}"}
 per_scope = true
 header = false
 
@@ -113,9 +114,9 @@ id = "python/basedpyright"
 stage = "commit"
 runs = "per-scope"
 cwd = "scope"
-command = ["basedpyright", "-p", "{config:basedpyrightconfig}", "--baselinefile", "{baseline}", "--outputjson"]
-baseline_file = ".gspot/baselines/basedpyright.json"
-baseline_command = ["basedpyright", "-p", "{config:basedpyrightconfig}", "--baselinefile", "{baseline}", "--writebaseline"]
+command = ["basedpyright", "--baselinefile", "{baseline}", "--outputjson"]
+baseline_file = ".gspot/baselines/basedpyright.{scope}.json"
+baseline_command = ["basedpyright", "--baselinefile", "{baseline}", "--writebaseline"]
 claims = {extensions = [".py", ".pyi"]}
 inspection = ["types"]
 output = {format = "json", items = "generalDiagnostics", line_base = 0, fields = {file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message"}}

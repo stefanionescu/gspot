@@ -5,6 +5,7 @@ import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { swiftBuildPlan } from '#cli/apple/plan.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { CoverageFloor, CoverageReport } from '#types/apple.ts';
 
 const TEST_TIMEOUT_MS = 3_600_000;
@@ -48,7 +49,7 @@ export async function testCoverage(input: EngineInput): Promise<Finding[]> {
         cwd: plan.cwd,
         timeoutMs: TEST_TIMEOUT_MS,
     });
-    if (tested.missing) throw new Error('The xcodebuild command is not installed.');
+    if (tested.missing) throw new MissingToolError('The xcodebuild command is not installed.');
     const viewed = await run(['xcrun', 'xccov', 'view', '--report', '--json', bundle], {
         cwd: plan.cwd,
         timeoutMs: TEST_TIMEOUT_MS,

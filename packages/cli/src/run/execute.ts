@@ -11,6 +11,7 @@ import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { stageLimiter } from '#cli/run/concurrency.ts';
 import { writeRecord } from '#cli/run/record/write.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
+import { toolBaselineFile } from '#cli/run/scope-paths.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
 import { applyBaselines, readBaselines } from '#cli/run/baselines.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
@@ -43,7 +44,7 @@ function generatedHash(session: Session): string {
 // The tool's own baseline is an input too: a suppression added or pruned changes the verdict.
 function baselineHash(session: Session, planned: PlannedCheck): string {
     const file = planned.spec.baseline_file;
-    return file === undefined ? '' : fileHash(session.root, file);
+    return file === undefined ? '' : fileHash(session.root, toolBaselineFile(file, planned.scope.scope.path));
 }
 
 function keyFor(session: Session, planned: PlannedCheck, config: string): string | undefined {

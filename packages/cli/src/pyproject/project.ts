@@ -5,6 +5,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { pathMatcher } from '#cli/presets/claims.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 const MANIFEST = 'pyproject.toml';
 const LINT_TIMEOUT_MS = 600_000;
@@ -33,7 +34,7 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
         cwd: join(input.root, input.scope),
         timeoutMs: LINT_TIMEOUT_MS,
     });
-    if (result.missing) throw new Error('The lint-imports command is not installed.');
+    if (result.missing) throw new MissingToolError('The lint-imports command is not installed.');
     const broken = result.stdout.split('\n').flatMap((line) => {
         const name = BROKEN_CONTRACT.exec(line.trim())?.groups?.['name'];
         return name === undefined ? [] : [name];

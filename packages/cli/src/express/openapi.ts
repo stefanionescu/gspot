@@ -5,6 +5,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { git, run } from '#cli/platform/spawn.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 const TOOL_TIMEOUT_MS = 300_000;
 const SPECTRAL_LINE = /^(?<file>[^:]+):(?<line>\d+):\d+ (?:error|warning) (?<rule>\S+) "(?<text>.*)"/u;
@@ -27,7 +28,7 @@ export async function openapiLint(input: EngineInput): Promise<Finding[]> {
     const document = setting(input, 'openapi', 'document');
     if (document === '') return [];
     const binary = locateTool(input.root, 'spectral');
-    if (binary === undefined) throw new Error('Spectral is not installed.');
+    if (binary === undefined) throw new MissingToolError('Spectral is not installed.');
     const ruleset = join(input.root, '.gspot/spectral.yaml');
     const result = await run([binary, 'lint', '--ruleset', ruleset, '--format', 'text', document], {
         cwd: input.root,

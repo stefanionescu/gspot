@@ -32,7 +32,7 @@ pyproject-fmt, uv. Installed through mise `pipx:` or a `gspot` dependency group 
 | -------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `python/ruff`                                                                                                                                                  | commit | `ruff check --config .gspot/ruff.toml {files}`; fix order codemod                                                                                                                  |
 | `python/ruff-format`                                                                                                                                           | commit | `ruff format --check`; fix order format                                                                                                                                            |
-| `python/basedpyright`                                                                                                                                          | commit | `basedpyright -p .gspot/basedpyrightconfig.json`; the baseline is basedpyright's own file under `.gspot/baselines/`, written with `--writebaseline` at `init`                      |
+| `python/basedpyright`                                                                                                                                          | commit | `basedpyright --baselinefile .gspot/baselines/basedpyright.<scope>.json --outputjson`, run in the scope, which holds the `pyrightconfig.json` stub                                 |
 | `python/import-linter`                                                                                                                                         | commit | `lint-imports`                                                                                                                                                                     |
 | `python/pydoclint`                                                                                                                                             | commit | `pydoclint --allow-init-docstring true {files}` until Ruff `DOC` leaves preview                                                                                                    |
 | `python/deptry`                                                                                                                                                | push   | `deptry <source roots>`                                                                                                                                                            |
@@ -46,6 +46,14 @@ pyproject-fmt, uv. Installed through mise `pipx:` or a `gspot` dependency group 
 | `python/exports-at-bottom`, `python/no-singletons`, `python/no-lazy-exports`, `python/package-exports`, `python/import-cycles`, `python/placeholder-docstring` | commit | engine, on the embedded Python grammar (D-98); `import-layout` is Ruff `E402` and `PLC0415`, and `import-boundary` is `python/import-linter`                                       |
 | `integrity/typecheck-membership`, `dependency-ownership`, `lockfile-fresh` (`uv lock --check`)                                                                 | commit | engine                                                                                                                                                                             |
 | `dependencies/osv` over `uv.lock`                                                                                                                              | push   | through dependencies                                                                                                                                                               |
+
+basedpyright takes the folder of its configuration as the project root, and it baselines no file
+outside that root. The generated configuration sits under `.gspot/`, so the scope holds a stub,
+`pyrightconfig.json`, with one key: `extends`. It is generated and read-only, unlike the
+`tsconfig.json` stub, because a repository has nothing of its own to keep in it. Takeover replaces
+an old `pyrightconfig.json` and carries its `exclude` paths into `tools.basedpyright.exclude`, without
+dot folders and the folders the preset leaves out by itself. `--writebaseline` rewrites its whole
+file, so each scope keeps its own: `basedpyright.root.json`, `basedpyright.<scope>.json`.
 
 ## Settings
 

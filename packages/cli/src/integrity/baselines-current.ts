@@ -4,6 +4,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import type { SuppressionFile } from '#types/integrity.ts';
+import { toolBaselineFile } from '#cli/run/scope-paths.ts';
 import { fileName, readBaselines } from '#cli/run/baselines.ts';
 
 function checkIds(input: EngineInput): Set<string> {
@@ -29,20 +30,40 @@ function countFindings(input: EngineInput): Finding[] {
 }
 
 function suppressionFiles(input: EngineInput): SuppressionFile[] {
-    const named = input.session.scopes.flatMap((scope) =>
-        scope.selected.flatMap((manifest) =>
-            manifest.checks.flatMap((check) => (check.baseline_file === undefined ? [] : [check.baseline_file])),
+    const named = input.session.scopes.flatMap((selection) =>
+        selection.selected.flatMap((manifest) =>
+            manifest.checks.flatMap((check) =>
+                check.baseline_file === undefined
+                    ? []
+                    : [
+                          {
+                              path: toolBaselineFile(check.baseline_file, selection.scope.path),
+                              scope: selection.scope.path,
+                          },
+                      ],
+            ),
         ),
     );
-    return [...new Set(named)]
-        .filter((path) => existsSync(join(input.root, path)))
-        .map((path) => ({ path, scope: '' }));
+    const byPath = new Map(named.map((file) => [file.path, file]));
+    return byPath
+        .values()
+        .filter((file) => existsSync(join(input.root, file.path)))
+        .toArray();
+}
+
+// ESLint keys its file by paths from the root. basedpyright keeps the paths of one scope under files, from that scope.
+function suppressedPaths(parsed: Record<string, unknown>, scope: string): string[] {
+    const held = parsed['files'];
+    if (typeof held !== 'object' || held === null) return Object.keys(parsed);
+    return Object.keys(held)
+        .map((path) => path.replace(/^\.\//u, ''))
+        .map((path) => (scope === '' ? path : `${scope}/${path}`));
 }
 
 function stalePaths(input: EngineInput, file: SuppressionFile): Finding[] {
     const tracked = new Set(input.session.repository.files.map((entry) => entry.path));
     const parsed = JSON.parse(readFileSync(join(input.root, file.path), 'utf8')) as Record<string, unknown>;
-    return Object.keys(parsed)
+    return suppressedPaths(parsed, file.scope)
         .filter((entry) => !tracked.has(entry.replaceAll('\\', '/')))
         .map((entry) => ({
             check: input.spec.id,

@@ -11,8 +11,8 @@ import { parseOutput } from '#cli/run/parse-output.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
 import { configurationName } from '#cli/presets/read-manifests.ts';
-import { isWorkspace, targetInScope } from '#cli/run/scope-paths.ts';
 import type { ToolPin, CheckSpec, ConfigurationTarget } from '#types/manifest.ts';
+import { isWorkspace, targetInScope, toolBaselineFile } from '#cli/run/scope-paths.ts';
 import { existingFileArguments, listArguments, settingsFilled } from '#cli/run/list-arguments.ts';
 import type { ToolRunState, PreparedCommand, Substitutions, Session, PlannedCheck } from '#types/run.ts';
 
@@ -64,7 +64,8 @@ function stubPath(session: Session, planned: PlannedCheck, name: string, scope: 
 
 // The tool's own baseline file, absolute, whether or not it exists yet. One file per repository: the tool runs from the root, so its paths are root-relative in every scope.
 function baselinePath(session: Session, planned: PlannedCheck): string | undefined {
-    return planned.spec.baseline_file === undefined ? undefined : join(session.root, planned.spec.baseline_file);
+    const file = planned.spec.baseline_file;
+    return file === undefined ? undefined : join(session.root, toolBaselineFile(file, planned.scope.scope.path));
 }
 
 // `--suppressions-location` only when the file exists: ESLint refuses a missing one, and a repository with no findings has none.

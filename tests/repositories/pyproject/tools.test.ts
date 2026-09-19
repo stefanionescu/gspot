@@ -101,4 +101,36 @@ describe('the python preset', () => {
         },
         PLANTED_TIMEOUT_MS * 6,
     );
+
+    test(
+        'a type error that init finds is held in a baseline of the scope, and the old excludes are carried',
+        async () => {
+            const typed = `${CLEAN}\n\nTOTAL: int = "three"\n`;
+            await using fixture = await createFixture({
+                'pyproject.toml': PROJECT,
+                'pyrightconfig.json':
+                    '{\n    "typeCheckingMode": "basic",\n    "exclude": [".venv", "planted/skipped.py"]\n}\n',
+                'planted/__init__.py': '"""The planted package."""\n',
+                'planted/skipped.py': '"""A file the old setup left out."""\n',
+                [MODULE]: typed,
+            });
+            commitAll(fixture.path);
+            const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
+            // The structure preset ships the check that reads a tool's own baseline file, so this install keeps it.
+            const kept = INIT.map((part) => (part.startsWith('naming,') ? 'naming,spelling,dependencies' : part));
+            await install(fixture.path, kept, environment);
+            const stub = await Bun.file(`${fixture.path}/pyrightconfig.json`).text();
+            expect(stub).toContain('"extends": "./.gspot/basedpyrightconfig.json"');
+            expect(stub).not.toContain('basic');
+            const policy = await Bun.file(`${fixture.path}/gspot.toml`).text();
+            expect(policy).toContain('planted/skipped.py');
+            expect(policy).not.toContain('.venv');
+            expect(await Bun.file(`${fixture.path}/.gspot/baselines/basedpyright.root.json`).exists()).toBe(true);
+            const held = run(fixture.path, ['check', 'python/basedpyright', '--no-cache'], environment);
+            expect(held.code, held.stdout + held.stderr).toBe(0);
+            const current = run(fixture.path, ['check', 'integrity/baselines-current', '--no-cache'], environment);
+            expect(current.code, current.stdout + current.stderr).toBe(0);
+        },
+        PLANTED_TIMEOUT_MS * 4,
+    );
 });

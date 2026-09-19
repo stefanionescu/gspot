@@ -5,6 +5,7 @@ import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { LicenseException, LicenseReport } from '#types/integrity.ts';
 
 const TOOL = 'license-checker-rseidelsohn';
@@ -36,7 +37,8 @@ export async function licensesNpm(input: EngineInput): Promise<Finding[]> {
     const start = join(input.root, input.scope);
     if (!existsSync(join(start, 'node_modules'))) return [];
     const binary = locateTool(input.root, TOOL);
-    if (binary === undefined) throw new Error(`${TOOL} is not installed; run the install of the runner surface.`);
+    if (binary === undefined)
+        throw new MissingToolError(`${TOOL} is not installed; run the install of the runner surface.`);
     const result = await run([binary, '--json', '--excludePrivatePackages', '--start', start], {
         cwd: start,
         timeoutMs: SCAN_TIMEOUT_MS,

@@ -18,6 +18,8 @@ const VERSION_FLAGS: Record<string, string[]> = {
     xcodebuild: ['-version'],
 };
 
+// What a mise shim prints when no configuration in reach names a version of the tool.
+const NO_VERSION = 'No version is set for shim';
 const probeCache = new Map<string, ToolProbe>();
 
 function candidates(root: string, name: string): string[] {
@@ -54,31 +56,34 @@ function miseVersion(path: string, name: string, want: string): string | undefin
     return existsSync(installed) ? want : undefined;
 }
 
-// An npm tool is the version its package says. Some print another one: license-checker-rseidelsohn 5.0.1 prints 4.4.2.
-function installedVersion(path: string, tool: ToolPin): string | undefined {
-    const name = tool.installers['npm'];
-    if (name === undefined || tool.version === undefined) return undefined;
-    return packageVersion(path, name) ?? miseVersion(path, name, tool.version);
-}
-
 // What the tool prints about its version, with no color codes: their numbers read as a version.
-function printedVersion(path: string, tool: ToolPin): string {
+// A mise shim answers for the folder it runs in, so the command runs in the repository.
+function printedVersion(root: string, path: string, tool: ToolPin): string {
     const command = tool.version_command ?? VERSION_FLAGS[tool.name] ?? ['--version'];
     const result = runBlocking([path, ...command], {
-        cwd: process.cwd(),
+        cwd: root,
         timeoutMs: VERSION_TIMEOUT_MS,
         env: { NO_COLOR: '1' },
     });
     return stripVTControlCharacters(`${result.stdout}\n${result.stderr}`);
 }
 
-function readVersion(path: string, tool: ToolPin): string | undefined {
-    const installed = installedVersion(path, tool);
-    if (installed !== undefined) return installed;
-    const text = printedVersion(path, tool);
+function parsedVersion(text: string, tool: ToolPin): string | undefined {
     if (tool.version_regex === undefined) return semver.coerce(text)?.version;
     const match = new RegExp(tool.version_regex, 'u').exec(text);
     return match?.[1] ?? match?.[0];
+}
+
+// An npm tool is the version its package says. Some print another one: license-checker-rseidelsohn 5.0.1 prints 4.4.2.
+// A shim that no configuration gives a version starts nothing, whatever mise keeps installed for other repositories.
+function readVersion(root: string, path: string, tool: ToolPin): string | undefined {
+    const name = tool.installers['npm'];
+    const held = name === undefined ? undefined : packageVersion(path, name);
+    if (held !== undefined) return held;
+    const text = printedVersion(root, path, tool);
+    if (text.includes(NO_VERSION)) return NO_VERSION;
+    const kept = name === undefined || tool.version === undefined ? undefined : miseVersion(path, name, tool.version);
+    return kept ?? parsedVersion(text, tool);
 }
 
 function stateFor(found: string, want: string, floor: string): ToolProbe['state'] {
@@ -123,7 +128,8 @@ function probeUncached(root: string, tool: ToolPin): ToolProbe {
             ...(tool.version === undefined ? {} : { want: tool.version }),
         };
     if (tool.provider === 'host' || tool.version === undefined) return { name: tool.name, state: 'host', path, hint };
-    const found = readVersion(path, tool);
+    const found = readVersion(root, path, tool);
+    if (found === NO_VERSION) return { name: tool.name, state: 'missing', hint, want: tool.version };
     if (found === undefined) return { name: tool.name, state: 'ok', path, want: tool.version, found: 'unknown', hint };
     const floor = tool.floor ?? tool.version;
     return {

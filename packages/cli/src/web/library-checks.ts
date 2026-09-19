@@ -6,6 +6,7 @@ import type { Finding } from '#types/finding.ts';
 import { git, run } from '#cli/platform/spawn.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 // The source of an import statement that is no type import, read from a line that starts with import and holds its from.
 const IMPORT_SOURCE = /from ['"](?<source>[^'"]+)['"]/u;
@@ -128,7 +129,7 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
     if (!hasDrizzleFile(input)) return [];
     const cwd = join(input.root, input.scope);
     const binary = locateTool(cwd, 'drizzle-kit') ?? locateTool(input.root, 'drizzle-kit');
-    if (binary === undefined) throw new Error('The drizzle-kit command is not installed.');
+    if (binary === undefined) throw new MissingToolError('The drizzle-kit command is not installed.');
     const result = await run([binary, 'generate'], { cwd, timeoutMs: KIT_TIMEOUT_MS });
     if (result.code !== 0)
         throw new Error(`The drizzle-kit generate command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);

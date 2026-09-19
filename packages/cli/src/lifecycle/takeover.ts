@@ -75,6 +75,7 @@ export function collectCarried(root: string, tooling: ExistingTooling, selected:
     const lists: CarriedLists = {
         typosWords: [],
         typosExcludes: [],
+        pyrightExcludes: [],
         sqlfluffExcludes: [],
         semgrepIgnores: [],
         gitleaksAllow: [],

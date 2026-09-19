@@ -4,6 +4,7 @@ import { runNaming } from '#cli/naming/engine.ts';
 import type { CheckResult } from '#types/finding.ts';
 import { runStructure } from '#cli/structure/engine.ts';
 import { runIntegrity } from '#cli/integrity/dispatch.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { EngineInput, Engine, Session, PlannedCheck } from '#types/run.ts';
 
 const engines = new Map<string, Engine>([
@@ -12,6 +13,12 @@ const engines = new Map<string, Engine>([
     ['structure', runStructure],
     ['prose', runProse],
 ]);
+
+// A command nobody installed is missing, which the person fixes with an install; anything else the engine threw is an error.
+function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
+    if (error instanceof MissingToolError) return { status: 'missing', note: error.message };
+    return { status: 'error', note: `the ${name} engine failed: ${(error as Error).message}` };
+}
 
 /**
  * True when an engine of this name exists in this build.
@@ -67,11 +74,6 @@ export async function runEngineCheck(
             findings,
         };
     } catch (error) {
-        return {
-            ...base,
-            status: 'error',
-            duration: performance.now() - started,
-            note: `the ${name} engine failed: ${(error as Error).message}`,
-        };
+        return { ...base, duration: performance.now() - started, ...failureOf(name, error) };
     }
 }

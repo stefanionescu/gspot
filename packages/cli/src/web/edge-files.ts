@@ -5,6 +5,7 @@ import { parse as parseToml } from 'smol-toml';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
@@ -70,7 +71,7 @@ function wranglerTable(
 async function isTypesFileStale(input: EngineInput, path: string): Promise<boolean> {
     const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
     const binary = locateTool(join(input.root, folder), 'wrangler') ?? locateTool(input.root, 'wrangler');
-    if (binary === undefined) throw new Error('The wrangler command is not installed.');
+    if (binary === undefined) throw new MissingToolError('The wrangler command is not installed.');
     const full = join(input.root, path);
     const before = readFileSync(full, 'utf8');
     const result = await run([binary, 'types', TYPES_FILE], {

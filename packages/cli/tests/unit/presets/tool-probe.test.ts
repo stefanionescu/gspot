@@ -29,6 +29,17 @@ describe('the tool probe', () => {
         expect(probe.state).toBe('ok');
     });
 
+    test('a shim that no configuration gives a version is missing, not broken', async () => {
+        await using fixture = await createFixture({
+            'node_modules/.bin/shimmed':
+                "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
+        });
+        chmodSync(join(fixture.path, 'node_modules/.bin/shimmed'), RUNS);
+        const probe = probeTool(fixture.path, command('shimmed', '3.8.1'));
+        expect(probe.state).toBe('missing');
+        expect(probe.want).toBe('3.8.1');
+    });
+
     test('color codes around a version are no part of it', async () => {
         await using fixture = await createFixture({
             'node_modules/.bin/painter': "#!/bin/sh\nprintf 'painter \\033[1;36m26.8.0\\033[0m using more\\n'\n",

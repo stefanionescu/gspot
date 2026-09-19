@@ -9,6 +9,7 @@ import type { Finding } from '#types/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import { filesUnder, siteBuild } from '#cli/web/site/build.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 const TOOL_TIMEOUT_MS = 900_000;
 const BYTES_PER_KB = 1024;
@@ -20,7 +21,7 @@ function finding(input: EngineInput, file: string, rule: string, text: string, l
 
 function tool(input: EngineInput, name: string): string {
     const found = locateTool(input.root, name);
-    if (found === undefined) throw new Error(`The ${name} command is not installed.`);
+    if (found === undefined) throw new MissingToolError(`The ${name} command is not installed.`);
     return found;
 }
 

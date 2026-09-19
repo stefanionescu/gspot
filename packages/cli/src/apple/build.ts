@@ -5,6 +5,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { swiftBuildPlan } from '#cli/apple/plan.ts';
 import type { SwiftBuildPlan } from '#types/swift.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const BUILD_TIMEOUT_MS = 3_600_000;
@@ -74,7 +75,7 @@ function expanded(log: string): string {
 async function ranBuild(plan: SwiftBuildPlan): Promise<string> {
     if (plan.scratch !== undefined) rmSync(plan.scratch, { recursive: true, force: true });
     const result = await run(plan.argv, { cwd: plan.cwd, timeoutMs: BUILD_TIMEOUT_MS });
-    if (result.missing) throw new Error(`The ${plan.argv[0] ?? 'build'} command is not installed.`);
+    if (result.missing) throw new MissingToolError(`The ${plan.argv[0] ?? 'build'} command is not installed.`);
     mkdirSync(plan.folder, { recursive: true });
     const output = expanded(`${result.stdout}\n${result.stderr}`);
     writeFileSync(plan.log, output);
@@ -115,7 +116,7 @@ export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
     const config = join(input.root, '.gspot', input.scope, 'swiftlint.yml');
     const argv = ['swiftlint', 'analyze', '--strict', '--quiet', '--config', config, '--compiler-log-path', plan.log];
     const result = await run(argv, { cwd: plan.cwd, timeoutMs: BUILD_TIMEOUT_MS });
-    if (result.missing) throw new Error('SwiftLint is not installed.');
+    if (result.missing) throw new MissingToolError('SwiftLint is not installed.');
     return diagnostics(input, `${result.stdout}\n${result.stderr}`, new Set(['error', 'warning']), 'analyzer');
 }
 
@@ -139,7 +140,7 @@ export async function swiftPeriphery(input: EngineInput): Promise<Finding[]> {
         '--disable-update-check',
     ];
     const result = await run(argv, { cwd: plan.cwd, timeoutMs: BUILD_TIMEOUT_MS });
-    if (result.missing) throw new Error('Periphery is not installed.');
+    if (result.missing) throw new MissingToolError('Periphery is not installed.');
     const found = diagnostics(input, `${result.stdout}\n${result.stderr}`, new Set(['error', 'warning']), 'unused');
     if (found.length === 0 && result.code !== 0)
         throw new Error(`Periphery failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);

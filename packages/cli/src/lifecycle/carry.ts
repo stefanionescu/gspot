@@ -12,6 +12,7 @@ import { CHECK_BY_TOOL, TYPOS_DEFAULT_EXCLUDES } from '#config/carry.ts';
 
 const DATE_LENGTH = 10;
 const COMMENT_MARK = /^(?:#|\/\/)\s?/u;
+const PYRIGHT_DEFAULT_EXCLUDES = new Set(['__pycache__', 'node_modules', 'build', 'dist']);
 const OFF_WORDS = ["'off'", '"off"', "['off'", '["off"', "[ 'off'", '[ "off"'];
 
 function reasonFor(file: string): string {
@@ -296,10 +297,25 @@ function carryDisabled(root: string, tool: string, path: string, lists: CarriedL
     reader(readText(root, path), path, push);
 }
 
+// The folders the preset leaves out on its own, and dot folders, which hold caches and environments git does not track.
+function isShippedExclude(entry: string): boolean {
+    const last = entry.split('/').at(-1) ?? entry;
+    return last.startsWith('.') || PYRIGHT_DEFAULT_EXCLUDES.has(last);
+}
+
+// Only a file at the root is carried: its paths start at the root, which is where tools.basedpyright.exclude starts.
+function carryPyright(root: string, path: string, lists: CarriedLists): void {
+    if (path.includes('/')) return;
+    const parsed = asRaw(parseJsonc(readText(root, path)));
+    const kept = asStrings(parsed?.['exclude']).filter((entry) => !isShippedExclude(entry));
+    if (kept.length > 0) lists.pyrightExcludes.push({ paths: kept, reason: reasonFor(path) });
+}
+
 const CARRIERS: Record<string, (root: string, path: string, lists: CarriedLists) => void> = {
     typos: carryTypos,
     gitleaks: carryGitleaks,
     osv: carryOsv,
+    pyright: carryPyright,
     licenses: carryLicenses,
     sqlfluffignore: (root, path, lists) => {
         lists.sqlfluffExcludes.push(...ignoreFileEntries(root, path));

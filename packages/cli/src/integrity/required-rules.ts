@@ -4,6 +4,7 @@ import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 const ESLINT_FILE = '.gspot/eslint.config.mjs';
 const PRINT_TIMEOUT_MS = 120_000;
@@ -47,7 +48,7 @@ async function offRules(input: EngineInput, binary: string, sample: string, rule
  */
 export async function requiredRules(input: EngineInput): Promise<Finding[]> {
     const binary = locateTool(input.root, 'eslint');
-    if (binary === undefined) throw new Error('The eslint command is not installed.');
+    if (binary === undefined) throw new MissingToolError('The eslint command is not installed.');
     const findings: Finding[] = [];
     for (const [ending, rules] of requiredByEnding(input)) {
         const sample = input.files.find((file) => file.nature === 'source' && file.path.endsWith(`.${ending}`))?.path;

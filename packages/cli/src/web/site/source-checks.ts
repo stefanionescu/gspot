@@ -5,6 +5,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { locateTool } from '#cli/platform/tool-probe.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 const TEXT_SUFFIX = /\.(?:html?|css|scss|m?js|ts|json|webmanifest|xml|txt|md|toml|ya?ml)$/u;
 const ASSET_FOLDER = /(?:^|\/)assets\//u;
@@ -67,7 +68,7 @@ export function deadAssets(input: EngineInput): Promise<Finding[]> {
  */
 export async function svgCompressed(input: EngineInput): Promise<Finding[]> {
     const binary = locateTool(input.root, 'svgo');
-    if (binary === undefined) throw new Error('The svgo command is not installed.');
+    if (binary === undefined) throw new MissingToolError('The svgo command is not installed.');
     const paths = input.files
         .filter((file) => file.nature === 'source' && file.path.endsWith('.svg'))
         .map((file) => file.path);
