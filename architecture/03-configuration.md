@@ -7,7 +7,7 @@ merge.
 
 | Path                                                    | Owner                         | Tracked | Purpose                                                                                       |
 | ------------------------------------------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------------------------- |
-| `gspot.toml`                                            | the repository                | yes     | the config, written by `init` and changed by the five writing commands or by hand             |
+| `gspot.toml`                                            | the repository                | yes     | the config, written by `init` and changed by the four writing commands or by hand             |
 | `gspot.local.toml`                                      | one machine                   | no      | a skip for a tool that cannot run on this machine, and nothing else                           |
 | `.gspot/<tool-file>`                                    | gspot                         | yes     | the generated configuration of each tool, with the mark of gspot                              |
 | `.gspot/package.json`, its lockfile                     | gspot                         | yes     | the npm lint tools gspot pins (D-145)                                                         |
@@ -48,6 +48,7 @@ file is written through a temporary file and a rename (D-152).
 ```toml
 version = 1
 level   = "recommended"           # or "all" (D-119)
+extra_checks = ["structure/single-file-folder"]   # checks of the level all, turned on one by one (D-160)
 
 # The selection. Presets are bare names.
 presets = ["typescript", "bash", "sql", "supabase", "docker", "markdown"]
@@ -220,8 +221,8 @@ configured reports nothing.
 person who knows ESLint writes `rules = { ... }`, and a person who knows Prettier writes
 `printWidth`. An option the preset does not have fails to load and names the ones that exist.
 
-Every tool has `enabled`. Setting it false, with a reason, removes every check that tool runs.
-Every tool also has `[tools.<name>.extra]`: a table written as it stands into the config of the
+A tool is turned off by ignoring its checks, and a tool whose every check is ignored whole is
+not installed (D-160). Every tool has `[tools.<name>.extra]`: a table written as it stands into the config of the
 tool, with a required `reason`, for an option the preset does not have yet. Every `extra` table
 prints on every run. A key in `extra` that the preset has fails to load and names it.
 
@@ -232,11 +233,11 @@ output folder, the SQL dialect, or the Swift destination, and asks where it find
 
 A profile is a TOML file with the schema of `gspot.toml` and three differences (D-79):
 
-| Difference | Rule                                                                                                            |
-| ---------- | --------------------------------------------------------------------------------------------------------------- |
-| Head       | `profile = "<name>"` and `selection = "exact"` or `"detect"` stand beside `version`, `level`, and `presets`     |
-| Left out   | `[[scope]]`, `[[ignore]]`, `[[generated]]`, `[[vendored]]`, `[[check]]`, and any entry with `paths` are refused |
-| Reasons    | a loosened setting keeps its reason, and the reason travels with the profile                                    |
+| Difference | Rule                                                                                                                                               |
+| ---------- | -------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Head       | `profile = "<name>"` and `selection = "exact"` or `"detect"` stand beside `version`, `level`, and `presets`                                        |
+| Left out   | `[[scope]]`, `[[generated]]`, `[[vendored]]`, `[[check]]`, and any entry with `paths` are refused. An `[[ignore]]` with no `paths` travels (D-161) |
+| Reasons    | a loosened setting keeps its reason, and the reason travels with the profile                                                                       |
 
 `selection = "exact"` installs the named presets and what they require. Detection still runs,
 and the plan lists what it found and did not install. `selection = "detect"` adds the detected
@@ -282,8 +283,8 @@ each path stands on a line of its own. Two branches that each change a count the
 conflict on one line or none (D-104).
 
 - `init` runs the commit stage once and holds what it finds. The gate passes that day.
-- A tool with a baseline of its own, such as the bulk suppressions of ESLint or the baseline of
-  basedpyright, keeps its file. The manifest of the tool names it, and the editor honors it.
+- A tool with a baseline of its own keeps its file: `.gspot/baseline.eslint.json` for the bulk
+  suppressions of ESLint, and `.gspot/baseline.basedpyright.json` (D-162). The editor honors it.
 - `check` fails when a count rises. It prints the findings of the files whose count rose, and one
   line that counts the rest.
 - `gspot baseline` lowers every count to the last full run, and never raises one. A run of one

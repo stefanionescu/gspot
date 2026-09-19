@@ -25,7 +25,7 @@ reason as a comment.
 ## Settings
 
 `tools.typos.words` (word; reason optional, the word is the reason), `tools.typos.exclude`
-(paths, reason), `tools.typos.locale` (default `en-us`, matching the American English rule of the prose engine). `gspot allow typos <word>` and `gspot allow typos-exclude <glob> --reason` write the first
+(paths, reason), `tools.typos.locale` (default `en-us`, matching the American English rule of the prose engine). `gspot set tools.typos.words <word>` and `gspot set tools.typos.exclude <glob> --reason` write the first
 two.
 
 ## Rule files

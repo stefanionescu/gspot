@@ -24,10 +24,9 @@ gspot ignore     <check-id> [--paths <glob>...] [--rule <rule>] --reason <text> 
 gspot set        <key> [<value>...] [--reason <text>] [--scope <path>] [--replace | --remove | --default]
 gspot add        <preset>... [--scope <path>]
 gspot remove     <preset> [--scope <path>]
-gspot allow      typos <word>... [--remove]
 gspot upgrade    [--dry-run] [--to <version>] [--yes] [--no-install]
 gspot uninstall  [--dry-run] [--yes]
-gspot profile    save <file>
+gspot export     <file>
 gspot completion <bash|zsh|fish|powershell>
 
 global: --help  --version  --licenses  --json  --quiet  --verbose  --no-color  -C <dir>
@@ -36,10 +35,10 @@ env:    NO_COLOR  CI  GSPOT_JOBS  GSPOT_HOOK (set by the hooks gspot writes)
 exit:   0 passed   1 findings   2 gspot did not run
 ```
 
-Seventeen commands. A teammate who clones a repository runs one, `gspot install`. A developer
+Sixteen commands. A teammate who clones a repository runs one, `gspot install`. A developer
 learns three more first: `gspot check`, `gspot check --changed`,
-and `gspot check --staged` (D-123). Five commands write one entry of `gspot.toml`: `ignore`,
-`set`, `add`, `remove`, and `allow`. Together they cover every setting the file has, so nobody
+and `gspot check --staged` (D-123). Four commands write one entry of `gspot.toml`: `ignore`,
+`set`, `add`, and `remove`. Together they cover every setting the file has, so nobody
 types TOML to change policy. A hand edit stays valid and is checked on load.
 
 ## Conventions
@@ -387,7 +386,8 @@ is the one way to turn a rule off, for every tool.
 
 An entry with the same check, rule, and
 reason gains the path, so one reason is one entry. `--remove` deletes a matching entry, and the
-check then runs through the widening step below.
+check then runs through the widening step below. A spelling finding prints the
+`gspot set tools.typos.words <word>` line that accepts its word.
 
 One comment form silences a finding of a gspot engine, for every check that engine runs:
 
@@ -406,11 +406,6 @@ held, and the output says how many were held for each check. `gspot set level al
 turned back on, and an upgrade that brings new rules take the same step. `gspot remove vitest`
 does the reverse, files included.
 
-## `allow`
-
-`gspot allow typos udid` adds a word to the spelling list, the one list people type daily.
-Every other list is a setting, and `gspot set` appends to it.
-
 ## `set`
 
 `gspot set limits.function_lines 80 --reason "Route tables are one ordered list each."` writes one
@@ -418,7 +413,9 @@ setting, by the dotted key `gspot list settings` prints. A loosening needs the r
 tightening does not. `--scope` targets a scope. An unknown key fails with the keys that exist
 under that table.
 
-For a list the values are appended. `--replace` replaces the list, `--remove` removes the named
+`gspot set extra_checks structure/single-file-folder` turns on one check above the level of the
+repository, and `gspot set level all` turns on all of them (D-160). For a list the values are
+appended. `--replace` replaces the list, `--remove` removes the named
 values, and `--default` deletes the key. `gspot set generated "api/types/supabase.ts"` and
 `gspot set vendored "vendor/**" --reason "..."` say what a file is. A rule of a tool takes its
 options or `error` under `tools.<tool>.rules.<rule>`, and `off` is refused with the
@@ -426,7 +423,7 @@ options or `error` under `tools.<tool>.rules.<rule>`, and `off` is refused with 
 
 ## Writing `gspot.toml`
 
-The five writing commands share one writer. It parses the file with its comments and order
+The four writing commands share one writer. It parses the file with its comments and order
 intact, changes one entry, validates the whole file as load does, and writes it through a
 temporary file and a rename. Then it runs `apply` and prints the lines it wrote. The file is
 tracked, so `git diff` shows the edit.
@@ -449,14 +446,15 @@ launcher line. It removes the hook line, or the hooks where gspot wrote them. A 
 replaced gets its old body back.
 It leaves `gspot.toml`. It unsets `core.hooksPath` only where gspot had set it.
 
-## `profile`
+## `export`
 
-A profile carries a policy between repositories (D-79).
+A profile carries a setup between repositories (D-79, D-161).
 [03-configuration.md](03-configuration.md) holds the format.
 
-`gspot profile save <file>` writes a profile from this repository. It keeps the level, the
-presets, `[limits]`, `[naming]` lists, `[format]`, `[prose]`, tool settings, and the choices for
-hooks, CI, rules, and runner. It leaves out every entry that names a path, and prints each one.
+`gspot export <file>` writes a profile from this repository. It keeps the level, the presets,
+`extra_checks`, `[limits]`, `[naming]` lists, `[format]`, and `[prose]`. It keeps the options and
+the rules of each tool, and the choices for hooks, CI, rules, and runner. It keeps every `[[ignore]]` that names no
+path. It leaves out every entry that names a path, and prints each one.
 
 `gspot init --from <profile>` takes a path, an `https` address, or
 `github:owner/repo[/path][@ref]`. A remote profile is fetched once, and the plan prints its

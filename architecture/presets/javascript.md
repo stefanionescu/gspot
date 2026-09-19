@@ -35,7 +35,7 @@ files under `[architecture] types_directory`.
 
 ## Settings
 
-The ESLint check reads the suppressions file of ESLint under `.gspot/` the way the typescript preset describes. `tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform preset claims it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
+The ESLint check reads `.gspot/baseline.eslint.json` the way the typescript preset describes. `tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform preset claims it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
 
 `sourceType`
 follows the Node resolution: the nearest `package.json` `type`, then `.mjs` and `.cjs`.

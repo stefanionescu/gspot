@@ -107,7 +107,7 @@ src/
 ├── checks/                     every other built-in check, one file for each check id
 ├── readers/                    parsers the checks share
 ├── rules/                      the rule file assembler and the rules lint
-├── profile/                    read, save, and the schema of a profile
+├── profile/                    read, export, and the schema of a profile
 ├── doctor/                     what doctor prints
 ├── output/                     everything that reaches a terminal or a file
 └── platform/                   what differs for each operating system
@@ -115,9 +115,9 @@ src/
 
 #### `commands/`
 
-Sixteen command files: `init.ts`, `install.ts`, `check.ts`, `apply.ts`, `baseline.ts`, `list.ts`, `explain.ts`,
-`doctor.ts`, `ignore.ts`, `set.ts`, `add.ts`, `remove.ts`, `allow.ts`, `upgrade.ts`,
-`uninstall.ts`, and `profile.ts`. `completion` registers itself from `output/completion.ts`. `print-result.ts` prints a result as text or JSON. A command file
+Fifteen command files: `init.ts`, `install.ts`, `check.ts`, `apply.ts`, `baseline.ts`, `list.ts`,
+`explain.ts`, `doctor.ts`, `ignore.ts`, `set.ts`, `add.ts`, `remove.ts`, `upgrade.ts`,
+`uninstall.ts`, and `export.ts`. `completion` registers itself from `output/completion.ts`. `print-result.ts` prints a result as text or JSON. A command file
 registers its flags, calls one function from another folder, and prints. Global flags are read
 once in `program.ts` (K-98).
 
@@ -154,7 +154,7 @@ files of its scope, and only a check with `runs = "once"` sees the whole reposit
 
 | Folder        | Files                                                                                                                                                                                                                                                                                                                                                                  |
 | ------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `policy/`     | `schema.ts`, `local-schema.ts`, `read-policy.ts`, `normalize.ts`, `problems.ts`, `validate-policy.ts`, `merge.ts`, `settings.ts`, `audit.ts`, `loosening.ts`, `near.ts`, `propose.ts`, `write.ts`, `commit-policy.ts`, `messages.ts`, `json-schema.ts`, and one file for each edit command: `add`, `remove`, `set`, `ignore`, `allow`                                  |
+| `policy/`     | `schema.ts`, `local-schema.ts`, `read-policy.ts`, `normalize.ts`, `problems.ts`, `validate-policy.ts`, `merge.ts`, `settings.ts`, `audit.ts`, `loosening.ts`, `near.ts`, `propose.ts`, `write.ts`, `commit-policy.ts`, `messages.ts`, `json-schema.ts`, and one file for each edit command: `add`, `remove`, `set`, `ignore`                                           |
 | `presets/`    | `manifest-schema.ts`, `read-manifests.ts`, `select.ts`, `detect.ts`, `claims.ts`, `listing.ts`, `levels.ts`                                                                                                                                                                                                                                                            |
 | `repository/` | `tracked.ts`, `tree.ts`, `natures.ts`, `tags.ts`, `scopes.ts`, `staged.ts`, `manifests.ts`, `existing-tooling.ts`                                                                                                                                                                                                                                                      |
 | `run/`        | `session.ts`, `plan.ts`, `execute.ts`, `check-command.ts`, `tool-runner.ts`, `command-parts.ts`, `parse-output.ts`, `broken-tool.ts`, `engines.ts`, `concurrency.ts`, `file-batches.ts`, `cache.ts`, `baselines.ts`, `baseline-command.ts`, `ignores.ts`, `fixers.ts`, `reproduce.ts`, `version-pin.ts`, `progress.ts`, `scratch-copy.ts`, `pushed-tree.ts`, `report/` |
@@ -291,6 +291,7 @@ The site copies `gspot.schema.json` from the root at build (K-68).
 ├── pyproject.toml, uv.lock     the Python lint tools gspot pins (D-157)
 ├── .venv/                      untracked
 ├── baseline.json               every held count, sorted, one path on a line (D-104)
+├── baseline.<tool>.json        the baseline a tool keeps itself, such as ESLint (D-162)
 ├── hooks/                      pre-commit, pre-push, commit-msg, where no hook manager exists (D-101, D-114)
 ├── rules/                      the installed rule files
 ├── semgrep/                    the selected packs

@@ -1367,3 +1367,44 @@ D-134 rests on two facts: gspot has no release, and it has one install. From the
 on, `gspot upgrade` rewrites a renamed key of `gspot.toml`, and its plan lists each rewrite.
 The `version` key of the file moves only for a change `upgrade` cannot rewrite. A removed flag
 stays an unknown flag, and its message names what took its place for one major version.
+
+## D-160 Every check and every rule turns off and on from the command line, one way each
+
+Two keys turned the same thing off: `tools.<name>.enabled = false`, and an `[[ignore]]` with no
+rule. One command, `gspot allow`, was a second way to write a list that `gspot set` writes. And
+nothing turned one check of the level `all` on in a repository that stays at `recommended`.
+
+| A developer wants to                        | The one way                                            |
+| ------------------------------------------- | ------------------------------------------------------ |
+| turn a check off, everywhere or for paths   | `gspot ignore <check-id> [--paths ...] --reason "..."` |
+| turn one rule of a tool off                 | `gspot ignore <check-id> --rule <rule> --reason "..."` |
+| turn either back on                         | the same line with `--remove`                          |
+| turn on one check above the level           | `gspot set extra_checks <check-id>`                    |
+| turn on, or set the options of, a tool rule | `gspot set tools.<tool>.rules.<rule> error`            |
+| turn everything on                          | `gspot set level all`                                  |
+
+`tools.<name>.enabled` goes. A tool whose every check is ignored whole is not installed.
+`gspot allow` goes, and the help line of a spelling finding prints the `gspot set` line that adds
+the word. `extra_checks` is a list of check ids at the top of `gspot.toml`, and a check it turns
+on takes the widening step (D-143). Four commands write the config: `ignore`, `set`, `add`, and
+`remove`. Rejected: a pair of commands `on` and `off`, which names a third way beside `ignore`
+and `set` for what those two already do.
+
+## D-161 A setup travels as an exported profile, and the profile carries what names no path
+
+`gspot export <file>` writes a profile from the repository, and `gspot init --from` starts a
+repository from one: a file, an `https` address, or `github:owner/repo`. The noun command
+`gspot profile` with its one verb goes. A profile carries the level, the presets,
+`extra_checks`, the limits, the naming lists, and the format. It carries the options and the
+rules of each tool, and the choices for hooks, CI, runner, and rule files.
+
+It also carries every `[[ignore]]` that names
+no path, because a rule a team turned off everywhere is part of its setup. An entry that names a
+path stays behind, and `export` prints each one it left out. A profile is a starting point and
+no link: the repository does not point back at it (D-79).
+
+## D-162 A tool that keeps its own baseline keeps it under one name form
+
+The files are `.gspot/baseline.<tool>.json`, beside `.gspot/baseline.json`: `baseline.eslint.json`
+for the bulk suppressions of ESLint, and `baseline.basedpyright.json`. A file of a scope sits
+under `.gspot/<scope>/`. The manifest of the tool names the file in `baseline_file`.

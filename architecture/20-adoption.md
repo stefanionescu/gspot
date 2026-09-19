@@ -403,18 +403,18 @@ A developer who meets 49 presets and 250 checks asks three things. What exists? 
 person take only some of it? How does a choice travel to the next repository? Most of the answer
 exists, and none of it is shown.
 
-| A developer wants to                  | Today                                                                                      |
-| ------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Install only some presets             | `init --presets a,b`, `--without c`, `--scope path=a,b`, `--no-checks`                     |
-| Turn one check or one rule off        | `gspot ignore <check> --rule <rule> --reason "..."`, for some paths with `--paths`         |
-| Turn it back on                       | `gspot ignore <check> --rule <rule> --remove`                                              |
-| Drop one tool                         | `gspot set tools.<name>.enabled false --reason "..."`                                      |
-| Add or drop a preset later            | `gspot add <preset>`, `gspot remove <preset>`                                              |
-| Add a check of their own              | a `[[check]]` entry in `gspot.toml` that runs any command                                  |
-| Carry the setup to another repository | `gspot profile save team.toml`, then `gspot init --from team.toml`, a URL, or `github:o/r` |
-| Commit or push past a failing hook    | `git commit --no-verify`, `git push --no-verify`                                           |
-| See what exists before choosing       | `gspot list` (D-118)                                                                       |
-| Take the basics only                  | the default: `level = "recommended"` (D-119)                                               |
+| A developer wants to                  | Today                                                                                |
+| ------------------------------------- | ------------------------------------------------------------------------------------ |
+| Install only some presets             | `init --presets a,b`, `--without c`, `--scope path=a,b`, `--no-checks`               |
+| Turn one check or one rule off        | `gspot ignore <check> --rule <rule> --reason "..."`, for some paths with `--paths`   |
+| Turn it back on                       | `gspot ignore <check> --rule <rule> --remove`                                        |
+| Drop one tool                         | `gspot ignore <check-id> --reason "..."` for each check of the tool (D-160)          |
+| Add or drop a preset later            | `gspot add <preset>`, `gspot remove <preset>`                                        |
+| Add a check of their own              | a `[[check]]` entry in `gspot.toml` that runs any command                            |
+| Carry the setup to another repository | `gspot export team.toml`, then `gspot init --from team.toml`, a URL, or `github:o/r` |
+| Commit or push past a failing hook    | `git commit --no-verify`, `git push --no-verify`                                     |
+| See what exists before choosing       | `gspot list` (D-118)                                                                 |
+| Take the basics only                  | the default: `level = "recommended"` (D-119)                                         |
 
 ## Every path a developer takes
 
@@ -430,10 +430,10 @@ Each row names the decision that answers it. A row marked open has a gap row in
 | has a monorepo                                                            | one scope for each project file; one `gspot.toml`; a check reads the files of its scope                                  | D-108, K-149                        |
 | wants some presets only                                                   | the three questions, or `--presets` and `--without`                                                                      | D-120                               |
 | wants everything later                                                    | `gspot list`, `gspot add`, `gspot set level all`; new findings are held                                                  | D-118, D-143                        |
-| wants one rule off, or back on                                            | `gspot ignore` with a reason, and `--remove`                                                                             | D-131                               |
+| wants one rule off, back on, or one check above the level on              | `gspot ignore` with a reason, `--remove`, and `gspot set extra_checks`                                                   | D-160                               |
 | wants to change a limit                                                   | `gspot set limits.<name>`, with a reason when it loosens; the number holds in every framework                            | D-138                               |
 | wants a check of their own                                                | a `[[check]]` entry that runs any command                                                                                | 03-configuration.md                 |
-| wants the same setup in the next repository                               | `gspot profile save`, then `gspot init --from` a file, a URL, or `github:owner/repo`                                     | D-131                               |
+| wants the same setup in the next repository                               | `gspot export`, then `gspot init --from` a file, a URL, or `github:owner/repo`                                           | D-161                               |
 | adds a language or a framework later                                      | `gspot check` names it; `gspot add` selects it; its findings are held                                                    | D-125, D-143                        |
 | meets a finding                                                           | `gspot explain`, `gspot check --fix`, or `gspot ignore`                                                                  | D-131                               |
 | must commit past a failing hook                                           | `--no-verify`; the failure text names it, and the push and CI still check                                                | D-117, D-123                        |

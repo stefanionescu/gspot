@@ -140,7 +140,7 @@ the guides for the files you change. A more specific layer wins over a general o
 | Next.js | `.gspot/rules/framework/nextjs/NEXTJS.md`, `.gspot/rules/framework/react/REACT.md` |
 | Zod | `.gspot/rules/library/zod/ZOD.md` |
 
-Run `gspot check --staged` before committing. Change policy with `gspot set`, `gspot allow` or
+Run `gspot check --staged` before committing. Change policy with `gspot set` or
 `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`. Do not use subagents or parallel agents unless asked in the conversation.
 <!-- <<< gspot managed <<< -->
 ```

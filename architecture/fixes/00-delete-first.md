@@ -57,8 +57,9 @@ and `profile check`. Several flags are parsed and used by no test and no guide.
 
 **Target.** Sixteen commands: `init`, `check`, `apply`, `baseline`, `list`, `explain`, `doctor`,
 `ignore`, `set`, `add`, `remove`, `allow`, `upgrade`, `uninstall`, `profile save`, and
-`completion`. This step deletes. The new commands `list` and `baseline` are built in rows 16
-and 6, and `install` in row 12, which makes seventeen.
+`completion`. Later steps remove `allow`, rename `profile save` to `export`, and add `install`
+(D-156, D-160, D-161), which leaves sixteen. This step deletes. The new commands `list` and `baseline` are built in rows 16
+and 6, and `install` in row 12.
 
 **Files.** Deleted: `commands/why.ts`, `commands/declare.ts`, `output/why.ts`,
 `policy/declare-command.ts`, and their unit tests. `src/profile/` keeps `read.ts`, `save.ts`, and

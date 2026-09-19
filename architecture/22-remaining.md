@@ -403,6 +403,9 @@ exactly one fix file fails it.
 - [ ] K-95: Build the command surface of 02-cli.md: delete the unused flags, and keep one name for one idea (D-129 to D-133).
 - [ ] K-98: Read the global flags in one function that every command calls.
 - [ ] K-96: Add `--ci gitlab`, and look for `.gitlab-ci.yml` beside `.github` (D-133).
+- [ ] K-284: Delete `tools.<name>.enabled` and `gspot allow`, add `extra_checks`, and install no tool whose every check is ignored (D-160).
+- [ ] K-285: Rename `profile save` to `gspot export`, and carry an `[[ignore]]` with no path in a profile (D-161).
+- [ ] K-286: Name the baseline a tool keeps `.gspot/baseline.<tool>.json` (D-162).
 
 ### gspot Checks Itself
 

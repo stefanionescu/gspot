@@ -65,7 +65,7 @@ Each promise names the test that holds it. A promise with no test is a row of
 - See a finding. The output names the file, line, rule and message, and prints the command that
   reproduces that one check alone.
 - Disagree with a finding. `gspot ignore <check> --paths <glob> --reason "..."`, or
-  `gspot set limits.function_lines 80 --reason "..."`, or `gspot allow typos <word>`. Each writes
+  `gspot set limits.function_lines 80 --reason "..."`, or `gspot set tools.typos.words <word>`. Each writes
   one entry to `gspot.toml`, and each prints on every run.
 - Add a language. `gspot add python`, or `gspot doctor` to see what appeared after the install
   and the command that adds it. The new checks run once, and what they find is held.
