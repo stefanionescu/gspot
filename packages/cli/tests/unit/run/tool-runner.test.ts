@@ -1,7 +1,7 @@
 import { createFixture } from 'fs-fixture';
 import { run } from '#cli/platform/spawn.ts';
 import { describe, expect, test } from 'bun:test';
-import { fileBatches } from '#cli/run/tool-runner.ts';
+import { fileBatches } from '#cli/run/file-batches.ts';
 
 describe('spawning a tool', () => {
     test('a run past its timeout is stopped and says so', async () => {

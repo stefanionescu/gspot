@@ -7,6 +7,7 @@ import { everyManifest } from '#cli/run/session.ts';
 import { hasEveryPin } from '#cli/emit/kept-pins.ts';
 import { workflowFile } from '#cli/emit/workflow.ts';
 import { assembleRules } from '#cli/rules/assemble.ts';
+import { targetInScope } from '#cli/run/scope-paths.ts';
 import { bodyStub, mergeStub } from '#cli/emit/stubs.ts';
 import { managedBlock } from '#cli/rules/managed-block.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
@@ -20,7 +21,6 @@ import { emitTarget, templateText, templateInputs } from '#cli/emit/templates.ts
 import type { EmitContext, GeneratedFile, PackageContent, PackageOutput, RenderedSet } from '#types/emit.ts';
 
 const JSON_INDENT = 4;
-const GSPOT_DIRECTORY = '.gspot/';
 const NPM_RUNNERS = new Set(['bun', 'npm', 'pnpm']);
 
 function copyStubContent(content: string, stubPath: string): string {
@@ -32,13 +32,6 @@ function copyStubContent(content: string, stubPath: string): string {
 
 function pathInScope(scope: string, path: string): string {
     return scope === '' ? path : `${scope}/${path}`;
-}
-
-function targetPath(scope: string, config: ConfigurationTarget): string {
-    if (scope === '' || config.per_scope !== true) return config.target;
-    if (config.target.startsWith(GSPOT_DIRECTORY))
-        return `${GSPOT_DIRECTORY}${scope}/${config.target.slice(GSPOT_DIRECTORY.length)}`;
-    return pathInScope(scope, config.target);
 }
 
 function fragmentsFor(session: Session, selection: ScopeSelection, owner: ConfigurationTarget): string {
@@ -92,7 +85,7 @@ function configurationFiles(
 ): void {
     for (const config of manifest.configs) {
         if (!isRenderedHere(config) || !isWanted(config, session)) continue;
-        const target = targetPath(selection.scope.path, config);
+        const target = targetInScope(selection.scope.path, config);
         if (seen.has(target)) continue;
         seen.add(target);
         const inputs = templateInputs(session, selection, fragmentsFor(session, selection, config));

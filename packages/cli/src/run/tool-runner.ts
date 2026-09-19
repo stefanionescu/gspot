@@ -6,12 +6,14 @@ import { isCrash } from '#cli/run/broken-tool.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { pushBase } from '#cli/repository/staged.ts';
 import type { SpawnResult } from '#types/platform.ts';
+import { fileBatches } from '#cli/run/file-batches.ts';
 import { parseOutput } from '#cli/run/parse-output.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
 import { configurationName } from '#cli/presets/read-manifests.ts';
-import { listArguments, settingsFilled } from '#cli/run/list-arguments.ts';
+import { isWorkspace, targetInScope } from '#cli/run/scope-paths.ts';
 import type { ToolPin, CheckSpec, ConfigurationTarget } from '#types/manifest.ts';
+import { existingFileArguments, listArguments, settingsFilled } from '#cli/run/list-arguments.ts';
 import type { ToolRunState, PreparedCommand, Substitutions, Session, PlannedCheck } from '#types/run.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
@@ -51,7 +53,7 @@ function configurationPath(session: Session, planned: PlannedCheck, name: string
         (config) => config.fragment !== true && configurationName(config.target) === name,
     );
     if (!target) throw new Error(`Check ${planned.id} names {config:${name}} and no preset renders it.`);
-    return target.target;
+    return targetInScope(planned.scope.scope.path, target);
 }
 
 function stubPath(session: Session, planned: PlannedCheck, name: string, scope: string): string {
@@ -73,13 +75,16 @@ function suppressionsArguments(session: Session, planned: PlannedCheck): string[
 }
 
 function expandPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string[] {
-    const each = listArguments(planned, part);
-    if (each !== undefined) return each;
+    const policyPart = listArguments(planned, part) ?? existingFileArguments(session.root, part);
+    return policyPart ?? plainPart(session, planned, part, sub);
+}
+
+function plainPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string[] {
     if (part === '{files}') return sub.files.map((file) => toPlatform(file));
     if (part === '{suppressions}') return suppressionsArguments(session, planned);
     if (part === '{file}') return [];
     if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}'))
-        return sub.scope === '' ? [] : [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope];
+        return isWorkspace(session.root, sub.scope) ? [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope] : [];
     return [substituteOne(session, planned, part, sub)];
 }
 
@@ -283,29 +288,6 @@ async function runCommands(
         collect(planned, tool, command, result, state);
     }
     return finished(base, spec, state, argv, started);
-}
-
-/**
- * Splits a file list so that no command line passes the byte budget; one batch when the list fits.
- * @param files the file paths
- * @param budget the bytes the file arguments may take
- * @returns the batches, in order
- */
-export function fileBatches(files: string[], budget: number): string[][] {
-    const batches: string[][] = [[]];
-    let used = 0;
-    for (const file of files) {
-        const size = file.length + 1;
-        const current = batches.at(-1) ?? [];
-        if (used + size > budget && current.length > 0) {
-            batches.push([file]);
-            used = size;
-        } else {
-            current.push(file);
-            used += size;
-        }
-    }
-    return batches;
 }
 
 /**

@@ -66,3 +66,46 @@ describe('the swift preset', () => {
         PLANTED_TIMEOUT_MS * 5,
     );
 });
+
+describe('the swift preset inside a scope', () => {
+    test(
+        'SwiftLint and SwiftFormat read the configuration of their scope, and the findings carry the scope path',
+        async () => {
+            await using fixture = await createFixture({
+                'ios/Sources/App/Greeting.swift': CLEAN,
+                'README.md': '# planted\n',
+            });
+            commitAll(fixture.path);
+            const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
+            const argv = [
+                'init',
+                '--yes',
+                '--scope',
+                'ios=swift',
+                '--without',
+                'structure,spelling,naming,markdown,docs',
+                '--runner',
+                'none',
+                '--ci',
+                'none',
+                '--hooks',
+                'none',
+                '--no-rules',
+                '--no-install',
+            ];
+            await install(fixture.path, argv, environment);
+            for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
+                const clean = run(fixture.path, ['check', id, '--no-cache'], environment);
+                expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+            }
+            const outcome = await runPlanted(
+                fixture.path,
+                { id: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST }, expected: 'force_cast' },
+                environment,
+            );
+            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+            expect(outcome.stdout).toContain('ios/Sources/App/Cast.swift');
+        },
+        PLANTED_TIMEOUT_MS * 4,
+    );
+});

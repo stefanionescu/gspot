@@ -1,8 +1,11 @@
 // Command parts that read the policy: {each:<flag>:<setting>} is the flag and one item for every item of a list, and {setting:<name>} is one value.
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import type { PlannedCheck } from '#types/run.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 
 const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
+const EXISTING_PLACEHOLDER = /^\{existing:(?<flag>[^:]+):(?<path>[^}]+)\}$/u;
 const EACH_PLACEHOLDER = /^\{each:(?<flag>[^:]+):(?<setting>[a-z0-9_.-]+)\}$/u;
 
 /**
@@ -31,4 +34,17 @@ export function settingsFilled(planned: PlannedCheck, part: string): string {
             ? String(found)
             : '';
     });
+}
+
+/**
+ * Expands {existing:<flag>:<path>}: the flag and the absolute path when the file exists, and nothing when it does not.
+ * @param root the repository root
+ * @param part one part of the manifest command
+ * @returns the arguments, or undefined when the part is something else
+ */
+export function existingFileArguments(root: string, part: string): string[] | undefined {
+    const groups = EXISTING_PLACEHOLDER.exec(part)?.groups;
+    if (groups === undefined) return undefined;
+    const path = join(root, groups['path'] ?? '');
+    return existsSync(path) ? [groups['flag'] ?? '', toPlatform(path)] : [];
 }
