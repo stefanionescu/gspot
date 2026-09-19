@@ -157,7 +157,7 @@ tool, and no check id outside `src/checks/`, and a unit test holds that.
   receive. `doctor` reports a file that misses one as partly checked.
 - `[rule_files]` lists the corpus files the preset installs, by layer.
 - `[required_rules]` lists, for a file ending, the ESLint rules that must be on for a file with
-  that ending. `integrity/required-rules` reads it (D-99).
+  that ending. `javascript/required-rules` reads it (D-99).
 - A check id is `<family>/<name>`. The family is the engine or the tool family that produces the
   finding (`structure`, `naming`, `integrity`, `prose`, `security`, or the preset's own id), not
   always the preset. `gspot explain <check-id>` prints the preset that ships it.

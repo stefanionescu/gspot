@@ -109,7 +109,7 @@ words = [{ word = "udid", reason = "Apple API name" }]
 [tools.commitlint]
 scopes = ["api", "ios", "supabase"]
 
-[[tools.licenses.allowed]]
+[[tools.licenses.packages_allowed]]
 package = "certifi@2025.8.3"
 license = "MPL-2.0"
 reason  = "The Mozilla Public License covers the certificate bundle, not repository source."
@@ -206,9 +206,13 @@ tool. [19-names.md](19-names.md) holds the table, and a test over the manifests 
 ### Architecture
 
 `[architecture]` is read by the boundaries rules and the types rules, at the level `all`. It has
-three keys: `types_directory`, `elements`, and `edges_allowed`. An element imports only itself
+five keys: `types_directory`, `elements`, `edges_allowed`, `roles`, and `contracts`. `roles`
+names the files that own the config, the environment, and the test support. `contracts` holds
+the import contracts of a Python project. An element imports only itself
 unless a row of `edges_allowed` adds a target. No default names a folder: a rule with nothing
-configured reports nothing. `init` proposes `types_directory` from what exists.
+configured reports nothing.
+
+`init` proposes `types_directory` from what exists.
 
 ### Options of a tool
 

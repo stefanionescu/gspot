@@ -16,12 +16,12 @@ changes what their own `tsc` and their build accept.
 errors.
 
 **Files.** New `presets/typescript/tsconfig.check.json.tmpl`. Deleted: `tsconfig.base.json.tmpl`
-and the merge stub of the manifest. `checks/typescript/tsc.ts`, `checks/integrity/tsconfig-options.ts`.
+and the merge stub of the manifest. `checks/typescript/tsc.ts`, `checks/typescript/tsconfig-options.ts`.
 
 **Logic.** At `recommended` the generated file adds `strict` and `noFallthroughCasesInSwitch`. At
 `all` it adds `noUncheckedIndexedAccess`, `noImplicitOverride`, and `exactOptionalPropertyTypes`.
 Where the file of the repository holds `references`, the check builds them as they are (K-226).
-`integrity/tsconfig-options` moves to `all`, and reads the options of the repository without
+`typescript/tsconfig-options` moves to `all`, and reads the options of the repository without
 asking for an `extends`.
 
 **What goes.** The `extends` pointer, `jsonc-parser` edits of a file of the developer, and six

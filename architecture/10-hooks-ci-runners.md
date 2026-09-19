@@ -105,7 +105,8 @@ main "$@"
 `init` writes how the binary is found into the line: `mise exec -- gspot` under mise, `bunx gspot`
 or `npx gspot` under an npm runner, and the absolute path otherwise. Each finds the version the
 repository pins. A hook that cannot find gspot prints the install command and fails. The line
-needs no environment variable. `GSPOT_HOOK` tells the reporter to end a failing run with two
+asks the developer for no environment variable. The line itself sets `GSPOT_HOOK`, which tells
+the reporter to end a failing run with two
 lines: the command that reproduces it, and `git commit --no-verify` as the way past it.
 
 The pre-push hook calls `git lfs pre-push` first where git-lfs is installed. On Windows, git runs
@@ -172,7 +173,10 @@ jobs:
                       .gspot/.venv
                   key: gspot-${{ runner.os }}-${{ hashFiles('.gspot/*.lock', '.mise/conf.d/gspot-tools.toml') }}
             - run: gspot install
-            - run: gspot check --report gspot.json
+            - run: gspot check
+            - uses: actions/upload-artifact@<pinned sha>
+              if: always()
+              with: { name: gspot-report, path: .gspot/report.* }
             - run: gspot check --stage manual
               if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
     code-scanning:
@@ -197,12 +201,13 @@ files is the check `integrity/generated-drift` inside `gspot check`, so the job 
 For GitLab, gspot writes `.gitlab/ci/gspot.yml` with one job, and the plan shows the line that
 includes it. gspot never edits `.gitlab-ci.yml`. The job sets `GIT_DEPTH: 0`, runs for merge
 requests and the default branch, and declares `gl-code-quality-report.json`. GitLab reads the
-CodeClimate format there, so `check --report` writes that file beside the JSON and the SARIF.
+CodeClimate format there, and every run writes `.gspot/report.codequality.json` beside the JSON and the SARIF.
 
 The CI system is found by its files, `.github/workflows/` or `.gitlab-ci.yml`, and never by a
 host name, so a self-hosted host works. For every other system, such as Bitbucket, Jenkins,
 CircleCI, or Azure, gspot writes no file. The plan prints the lines to paste: install gspot at
-the pinned version, `gspot install`, and `gspot check --report gspot.json`.
+the pinned version, `gspot install`, and `gspot check`. The reports are the files under
+`.gspot/report.*`.
 
 ```yaml
 include:
@@ -211,7 +216,7 @@ include:
 
 Without mise, the job installs gspot from the release asset by version and runs `gspot doctor`
 first. It downloads `checksums.txt` from the same release and stops when the SHA-256 differs. One
-table in the code holds the five targets, with the `uname` pair of each:
+table in the code holds the seven targets, with the `uname` pair of each. The job uses these:
 
 | Runner          | Asset                   |
 | --------------- | ----------------------- |

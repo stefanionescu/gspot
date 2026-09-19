@@ -45,11 +45,11 @@ Every shared rule and every limit holds in a Next.js app as it does anywhere els
 | `nextjs/build`                   | push, build | `next build` when `[tools.next] build_in_gate = true`                                                                                   |
 | `integrity/route-segments`       | commit      | no segment holds both `page` and `route`                                                                                                |
 | `integrity/next-config`          | commit      | `next.config.*` parsed as syntax: no secret in `env`, no `eslint.ignoreDuringBuilds`, no `typescript.ignoreBuildErrors`                 |
-| `integrity/css-usage`            | push        | every CSS module class used and defined                                                                                                 |
-| `integrity/locales`              | push        | ICU parse, no empty message, keys without dots, every locale complete against the base, every message key used through the type checker |
-| `integrity/required-rules`       | push        | the required rule list still resolves per file class                                                                                    |
+| `css/usage`                      | push        | every CSS module class used and defined                                                                                                 |
+| `i18n/locales`                   | push        | ICU parse, no empty message, keys without dots, every locale complete against the base, every message key used through the type checker |
+| `javascript/required-rules`      | push        | the required rule list still resolves per file class                                                                                    |
 | `integrity/dependency-alignment` | commit      | `next` and `eslint-config-next` on one version; `react` and `react-dom` on one version                                                  |
-| `integrity/manifest-policy`      | commit      | pinned `packageManager`, one lockfile, sorted manifests                                                                                 |
+| `dependencies/manifest-policy`   | commit      | pinned `packageManager`, one lockfile, sorted manifests                                                                                 |
 
 ## Settings
 

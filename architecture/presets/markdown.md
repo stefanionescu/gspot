@@ -23,14 +23,14 @@ markdownlint-cli2, prettier, lychee.
 
 ## Checks
 
-| Id                        | Stage  | Command                                                                                                                                                              |
-| ------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `markdown/markdownlint`   | commit | `markdownlint-cli2 --no-globs --config .gspot/markdownlint.jsonc {files}` (the stub's globs are for editors; the check lints the file list alone); fix, order format |
-| `markdown/prettier`       | commit | through formatting                                                                                                                                                   |
-| `docs/links`              | commit | lychee offline with fragments, through docs                                                                                                                          |
-| `integrity/docs-headings` | commit | banned headings absent                                                                                                                                               |
-| `markdown/fences`         | commit | every fenced block with a language tag parses; TypeScript, Python, Bash, SQL, TOML, JSON and YAML fences are extracted and handed to their language's syntax check   |
-| `prose/vale`              | commit | through prose                                                                                                                                                        |
+| Id                      | Stage  | Command                                                                                                                                                              |
+| ----------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `markdown/markdownlint` | commit | `markdownlint-cli2 --no-globs --config .gspot/markdownlint.jsonc {files}` (the stub's globs are for editors; the check lints the file list alone); fix, order format |
+| `markdown/prettier`     | commit | through formatting                                                                                                                                                   |
+| `docs/links`            | commit | lychee offline with fragments, through docs                                                                                                                          |
+| `docs/headings`         | commit | banned headings absent                                                                                                                                               |
+| `markdown/fences`       | commit | every fenced block with a language tag parses; TypeScript, Python, Bash, SQL, TOML, JSON and YAML fences are extracted and handed to their language's syntax check   |
+| `prose/vale`            | commit | through prose                                                                                                                                                        |
 
 ## Settings
 

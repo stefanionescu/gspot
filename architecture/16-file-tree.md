@@ -16,7 +16,7 @@ gspot/
 ├── .github/
 │   ├── workflows/
 │   │   ├── ci.yml              unit tests, planted repositories, and gspot check on Linux, macOS, and Windows
-│   │   ├── release.yml         five binaries, attestation, the GitHub release, npm publish, the site
+│   │   ├── release.yml         seven binaries, attestation, the GitHub release, npm publish, the site
 │   │   └── gspot.yml           the gate of this repository, written by gspot
 │   └── CODEOWNERS
 ├── .gspot/                     what gspot writes here, as in every repository (see below)

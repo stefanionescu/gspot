@@ -64,7 +64,7 @@ The fragment exports four selectors, which the template joins into `no-restricte
 | -------------------------- | ----- | --------------------------------------------------------------- |
 | `react-native/expo-doctor` | push  | `expo-doctor`, in a scope that depends on `expo`; needs network |
 
-The ESLint rules run in `typescript/eslint` or `javascript/eslint`. `integrity/required-rules`
+The ESLint rules run in `typescript/eslint` or `javascript/eslint`. `javascript/required-rules`
 holds the two environment rules for `jsx` and `tsx` files.
 
 ## Settings

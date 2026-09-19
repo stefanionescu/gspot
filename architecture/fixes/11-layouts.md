@@ -104,7 +104,7 @@ command from a setting is parsed with shell quoting rules, by one function in
 **What goes.** The split at spaces, and the default `npm run build`.
 
 **Tests.** A planted site that tracks `dist` holds a clean `git status` after
-`gspot check --at push`.
+`gspot check --stage push`.
 
 **Done when.** That case passes.
 

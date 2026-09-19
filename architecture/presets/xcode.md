@@ -26,14 +26,13 @@ xcodebuild, plutil, xcstringstool (host); xcodegen optional.
 | `xcode/test-plan`           | commit | every scheme has a test plan; every test target is in a plan                                                                                             |
 | `xcode/orphan-sources`      | commit | the symmetric difference between Swift files in the tree and files in any target: in the tree and no target fails; in a target and not the tree fails    |
 | `xcode/symlinks`            | commit | a tracked symlink inside the project is reported with its target                                                                                         |
-| `xcode/entitlements-policy` | commit | entitlements limited to `[tools.xcode] allowed_entitlements`                                                                                             |
+| `xcode/entitlements-policy` | commit | entitlements limited to `[tools.xcode] entitlements_allowed`                                                                                             |
 | `xcode/ats`                 | commit | no `NSAllowsArbitraryLoads` without an `[[ignore]]` reason                                                                                               |
 
 ## Settings
 
-`tools.xcode.project`, `tools.xcode.scheme`, `tools.xcode.destination`, `tools.xcode.allowed_entitlements`,
-`tools.xcode.orphan_assets` (default `true`: a source names each asset as a string literal or as
-the symbol Xcode writes for it).
+`tools.xcode.project`, `tools.xcode.scheme`, `tools.xcode.destination`, `tools.xcode.entitlements_allowed`. The orphan asset rule has no switch of its own: it is part of
+the level `all`, and `gspot ignore` turns it off (D-144).
 
 ## Rule files
 

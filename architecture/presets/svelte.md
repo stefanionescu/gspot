@@ -52,7 +52,7 @@ SvelteKit keep their names (`+page.svelte`, `+layout.ts`, `+server.ts`, `+error.
 | -------------- | ------ | --------------------------------------------------------------------------------------------------------------------------------------- |
 | `svelte/check` | commit | `svelte-check --fail-on-warnings`; takes over `typescript/tsc` in the scope, and reports the accessibility warnings of the compiler too |
 
-The ESLint rules run in the one ESLint check (D-137). `integrity/required-rules` holds
+The ESLint rules run in the one ESLint check (D-137). `javascript/required-rules` holds
 `svelte/no-at-html-tags`, `svelte/require-each-key`, and `svelte/no-target-blank`.
 
 ## Settings

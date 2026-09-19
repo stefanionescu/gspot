@@ -58,7 +58,7 @@ and `profile check`. Several flags are parsed and used by no test and no guide.
 **Target.** Sixteen commands: `init`, `check`, `apply`, `baseline`, `list`, `explain`, `doctor`,
 `ignore`, `set`, `add`, `remove`, `allow`, `upgrade`, `uninstall`, `profile save`, and
 `completion`. This step deletes. The new commands `list` and `baseline` are built in rows 16
-and 6.
+and 6, and `install` in row 12, which makes seventeen.
 
 **Files.** Deleted: `commands/why.ts`, `commands/declare.ts`, `output/why.ts`,
 `policy/declare-command.ts`, and their unit tests. `src/profile/` keeps `read.ts`, `save.ts`, and
@@ -139,7 +139,8 @@ and how policy changes.
 `rules/templates/docs/` stays, because the docs preset installs it.
 
 **Files.** `commands/init.ts`, `commands/apply.ts`, `types/lifecycle.ts`, `types/emit.ts`.
-Deleted: `rules/templates/project/`.
+Deleted: `rules/templates/project/`. Git keeps the five files, and each moves into the repository
+it describes during the migration of that repository ([09-rules.md](../09-rules.md)).
 
 **Logic.** Two option lines and two fields go. No function changes.
 

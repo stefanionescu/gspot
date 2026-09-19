@@ -209,8 +209,8 @@ name.
 
 **Files.** `emit/gitlab.ts`, `run/report/write.ts`, `repository/existing-tooling.ts`.
 
-**Logic.** `check --report` writes three files: JSON, SARIF, and `gl-code-quality-report.json`
-in the CodeClimate form. The job sets `GIT_DEPTH: 0` and runs `gspot install`. Its `rules` select merge request
+**Logic.** Every run but the message run writes three files under `.gspot/`: `report.json`,
+`report.sarif`, and `report.codequality.json` in the CodeClimate form. The job sets `GIT_DEPTH: 0` and runs `gspot install`. Its `rules` select merge request
 pipelines and the default branch, and it declares the code quality artifact. The CI
 system is found by `.gitlab-ci.yml` or `.github/workflows/`, never by the host name.
 
@@ -232,7 +232,7 @@ lines.
 
 **Logic.** With `--no-ci`, or where the CI files of another system are found, the plan ends with
 the lines to paste: install gspot at the pinned version, `gspot install`, and
-`gspot check --report gspot.json`. The guide shows them in the syntax of the four systems, and
+`gspot check`, with `.gspot/report.*` kept as artifacts. The guide shows them in the syntax of the four systems, and
 `docs/samples` parses each command.
 
 **What goes.** Nothing.

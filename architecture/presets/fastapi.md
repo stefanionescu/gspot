@@ -21,17 +21,17 @@ gain `[architecture.contracts]` entries the repository declares.
 
 ## Checks
 
-| Id                                  | Stage  | Command                                                                       |
-| ----------------------------------- | ------ | ----------------------------------------------------------------------------- |
-| `python/ruff`                       | commit | with `FAST001`, `FAST002`, `FAST003`                                          |
-| `fastapi/openapi-fresh`             | push   | the exported OpenAPI document matches the app (`[tools.openapi] produced_by`) |
-| `fastapi/openapi-lint`              | commit | `spectral lint`                                                               |
-| `security/semgrep`                  | push   | the Python pack plus the API pack                                             |
-| `structure/no-blocking-io-in-async` | commit | ast-grep: `time.sleep`, `requests.*`, `open()` inside `async def`             |
+| Id                                  | Stage  | Command                                                                   |
+| ----------------------------------- | ------ | ------------------------------------------------------------------------- |
+| `python/ruff`                       | commit | with `FAST001`, `FAST002`, `FAST003`                                      |
+| `fastapi/openapi-fresh`             | push   | the exported OpenAPI document matches the app (`[tools.openapi] command`) |
+| `fastapi/openapi-lint`              | commit | `spectral lint`                                                           |
+| `security/semgrep`                  | push   | the Python pack plus the API pack                                         |
+| `structure/no-blocking-io-in-async` | commit | ast-grep: `time.sleep`, `requests.*`, `open()` inside `async def`         |
 
 ## Settings
 
-`tools.openapi.document`, `tools.openapi.produced_by`, `architecture.contracts`.
+`tools.openapi.document`, `tools.openapi.command`, `architecture.contracts`.
 
 ## Rule files
 

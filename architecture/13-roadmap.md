@@ -7,6 +7,9 @@ the Swift presets can close its acceptance run.
 
 ## Status
 
+This table states what the code holds today: 52 presets and 26 plugin rules. The target is 49
+presets and 19 rules, and [22-remaining.md](22-remaining.md) holds the way there.
+
 Updated with every commit, so this table says what is built. Done means the code exists, has
 tests, and runs in the gate of this repository. [18-gaps.md](18-gaps.md) lists what falls short of that. Last update: 2026-09-19.
 
@@ -29,13 +32,13 @@ tests, and runs in the gate of this repository. [18-gaps.md](18-gaps.md) lists w
 
 | Deliverable                                                                      | Done when                                                                                                                                                                               |
 | -------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| The binary builds for five targets with embedded assets                          | `gspot --version` runs from a release asset on macOS, Linux, and Windows                                                                                                                |
+| The binary builds for seven targets with embedded assets                         | `gspot --version` runs from a release asset on macOS, Linux, and Windows                                                                                                                |
 | Result cache                                                                     | a second `check --staged` with no changes runs no check; each tool still answers `--version` for the cache key                                                                          |
 | `gspot.toml` schema, load, merge, error messages                                 | every message in [03-configuration.md](03-configuration.md) has a test                                                                                                                  |
 | Tracked files, natures, scopes, staged files                                     | the four reference repositories list correctly                                                                                                                                          |
 | Tool runner with file lists, concurrency, missing-tool handling                  | a planted repository with one missing tool fails with the hint                                                                                                                          |
 | Reporter, the report, exit codes                                                 | output matches the shape in [02-cli.md](02-cli.md)                                                                                                                                      |
-| the sixteen commands of [02-cli.md](02-cli.md)                                   | every command parses and works; `explain` renders `summary`, `why` and `fix` for every check in the bash preset; `completion` output from `tab` completes every command in bash and zsh |
+| the seventeen commands of [02-cli.md](02-cli.md)                                 | every command parses and works; `explain` renders `summary`, `why` and `fix` for every check in the bash preset; `completion` output from `tab` completes every command in bash and zsh |
 | The npm launcher and one platform package per target                             | `bunx gspot --version` works from a local registry on the three platforms with no network and `--ignore-scripts`                                                                        |
 | Version pin: `.gspot/version`, the runner pin, the mismatch refusal, `--version` | a binary of another version exits 2 on `check` with the two remedies                                                                                                                    |
 | Hooks, staged mode, `.mise/conf.d/gspot-tools.toml` (D-127)                      | a planted repository commits through the hook                                                                                                                                           |
@@ -64,22 +67,22 @@ checks report under a gspot check, plus the additions; the repository itself is 
 Every row closes rows of [18-gaps.md](18-gaps.md). No preset of a later phase starts before this
 table is done, because each new preset inherits the same defects and the same missing tests.
 
-| Deliverable                                                                                                  | Done when                                                                                                                                   |
-| ------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------- |
-| Repository hygiene (G-1, G-11, G-12)                                                                         | `git ls-files` lists no `node_modules` path; one vale pin                                                                                   |
-| Release safety (B-6, B-7, D-84)                                                                              | a tag that differs from the version fails the workflow; `tests/release` and the compiled-binary test run in it                              |
-| The schema files (G-3)                                                                                       | both files are tracked, a check fails on drift, the manual serves them                                                                      |
-| One owner for each concept (K-1 to K-4, K-8, K-14, D-91)                                                     | one install step, one first-baseline step, one copy of each helper and default; no row names a preset that does not ship                    |
-| Scale (B-8, K-5 to K-7, D-89)                                                                                | a planted scope of 5,000 files checks; a tool that hangs ends as an `error` result                                                          |
-| The binary carries nothing of this repository (K-18, D-86)                                                   | `gspot check` in a planted repository runs no rules lint                                                                                    |
-| Selection: `recommends`, `--presets none`, the selection question, the plan names presets (G-5 to G-7, D-80) | `init --without naming` installs no naming check; `init --presets none` writes rule files only                                              |
-| Profiles (G-8, D-79)                                                                                         | `profile save` in one planted repository and `init --from` in another give the same `gspot.toml` tables; a bad key exits 2 before any write |
-| Rule files stand alone (G-4, K-19, K-20, D-81)                                                               | the corpus lint finds no `gspot` and no tool name; `[rules] exclude` leaves a file out                                                      |
-| `doctor` (G-9, K-9, D-87)                                                                                    | no installed library reads `missing`; a version off the pin fails                                                                           |
-| The plugin stands alone (K-27, D-88)                                                                         | a planted repository with the plugin and one line of configuration reports a finding                                                        |
-| `[[check]]` takes `output` (K-21, D-90)                                                                      | a planted `[[check]]` with a `regex` format reports file and line                                                                           |
-| Tests (G-2, K-23, K-28, K-29)                                                                                | every shipped check id is named in a test that plants its defect; coverage prints in CI                                                     |
-| Documentation (G-10, K-30)                                                                                   | the root README follows its template; every command page has a worked example; guides for customization and profiles exist                  |
+| Deliverable                                                                                               | Done when                                                                                                                                   |
+| --------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------- |
+| Repository hygiene (G-1, G-11, G-12)                                                                      | `git ls-files` lists no `node_modules` path; one vale pin                                                                                   |
+| Release safety (B-6, B-7, D-84)                                                                           | a tag that differs from the version fails the workflow; `tests/release` and the compiled-binary test run in it                              |
+| The schema files (G-3)                                                                                    | both files are tracked, a check fails on drift, the manual serves them                                                                      |
+| One owner for each concept (K-1 to K-4, K-8, K-14, D-91)                                                  | one install step, one first-baseline step, one copy of each helper and default; no row names a preset that does not ship                    |
+| Scale (B-8, K-5 to K-7, D-89)                                                                             | a planted scope of 5,000 files checks; a tool that hangs ends as an `error` result                                                          |
+| The binary carries nothing of this repository (K-18, D-86)                                                | `gspot check` in a planted repository runs no rules lint                                                                                    |
+| Selection: `recommends`, `--no-checks`, the selection question, the plan names presets (G-5 to G-7, D-80) | `init --without naming` installs no naming check; `init --presets none` writes rule files only                                              |
+| Profiles (G-8, D-79)                                                                                      | `profile save` in one planted repository and `init --from` in another give the same `gspot.toml` tables; a bad key exits 2 before any write |
+| Rule files stand alone (G-4, K-19, K-20, D-81)                                                            | the corpus lint finds no `gspot` and no tool name; `[rules] exclude` leaves a file out                                                      |
+| `doctor` (G-9, K-9, D-87)                                                                                 | no installed library reads `missing`; a version off the pin fails                                                                           |
+| The plugin stands alone (K-27, D-88)                                                                      | a planted repository with the plugin and one line of configuration reports a finding                                                        |
+| `[[check]]` takes `output` (K-21, D-90)                                                                   | a planted `[[check]]` with a `regex` format reports file and line                                                                           |
+| Tests (G-2, K-23, K-28, K-29)                                                                             | every shipped check id is named in a test that plants its defect; coverage prints in CI                                                     |
+| Documentation (G-10, K-30)                                                                                | the root README follows its template; every command page has a worked example; guides for customization and profiles exist                  |
 
 Acceptance: the worktree harness runs `init --yes` and `check` on yap-landing and on the
 TypeScript, shell and Markdown files of yap-swift-app, and both repositories stay untouched.
@@ -245,7 +248,6 @@ Acceptance: the worktree harness on yap-swift-app across its three scopes, with 
 | -------------------------------------------------------------------------------------------------- | ----------------------------------------- |
 | prose preset: Vale driver, `gspot` style, packages, vocabulary, stdin grammars, adjacent selectors | the 30 rules fire on planted defects      |
 | secrets, security, dependencies, licenses, duplication presets wired (Semgrep runs)                | each at its stage on a planted repository |
-| `check --watch`                                                                                    | v1.1                                      |
 
 ## Phase 6: the corpus
 
@@ -279,7 +281,7 @@ Phases 0 through 6 and the hardening phase, whole (D-61, D-82). v1 ships when ev
 assembler, CodeQL at its `manual` stage and the upgrade path pass on the planted repositories and
 the six acceptance shapes. That is a gspot that installs in a Python API, a Swift app, an
 Express and Supabase monorepo, a static site, a Next.js app and a ComfyUI custom node. It replaces six quality folders, installs the agent rule files, upgrades itself, explains every finding, and
-passes on day one through baselines. Only `check --watch`, the Homebrew tap, and Phase 7 follow
+passes on day one through baselines. Only the Homebrew tap and Phase 7 follow
 v1.
 
 The reference repositories are never modified by an acceptance run. Every acceptance run happens

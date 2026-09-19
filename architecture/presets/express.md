@@ -26,13 +26,13 @@ The scope's ESLint config gains `n/no-process-exit`, `security/*`, and three `no
 | ------------------------------- | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `security/semgrep` express pack | push   | raw query interpolation, `res.send` of raw input, unvalidated redirect, and auth routes with no rate limit; the Node rules ship in `security` (D-94) |
 | `express/openapi-lint`          | commit | `spectral lint --ruleset .gspot/spectral.yaml <document>` when `[tools.openapi] document` is set                                                     |
-| `express/openapi-fresh`         | push   | the generator in `[tools.openapi] produced_by` leaves the document unchanged                                                                         |
-| `express/routes-tested`         | push   | every route file has a test file that names it (through `[tools.express] route_glob` and `test_glob`)                                                |
+| `express/openapi-fresh`         | push   | the generator in `[tools.openapi] command` leaves the document unchanged                                                                             |
+| `express/routes-tested`         | push   | every route file has a test file that names it (through `[tools.express] route_files` and `test_files`)                                              |
 
 ## Settings
 
-`tools.openapi.document`, `tools.openapi.produced_by`, `tools.express.route_glob`,
-`tools.express.test_glob`, `architecture.*` as nextjs.
+`tools.openapi.document`, `tools.openapi.command`, `tools.express.route_files`,
+`tools.express.test_files`, `architecture.*` as nextjs.
 
 ## Rule files
 

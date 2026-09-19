@@ -17,10 +17,10 @@ knip.
 
 ## Generated configuration
 
-| Target                     | Stub            | Holds                                                                                                                                                                                                                                                    |
-| -------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/eslint.config.mjs` | none            | shared with typescript when both are selected; globals per runtime (node, browser, worker, commonjs) chosen by file class; `sourceType` per extension; the same structural, direction and placement rules; `no-unused-vars` with `args: all` for scripts |
-| `.gspot/jsconfig.json`     | `jsconfig.json` | `checkJs`, `strict`, `noEmit`; type checking of plain JavaScript through JSDoc                                                                                                                                                                           |
+| Target                     | Stub                                                                           | Holds                                                                                                                                                                                                                                                    |
+| -------------------------- | ------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.gspot/eslint.config.mjs` | `eslint.config.mjs` re-export, only where the developer keeps no ESLint config | shared with typescript when both are selected; globals per runtime (node, browser, worker, commonjs) chosen by file class; `sourceType` per extension; the same structural, direction and placement rules; `no-unused-vars` with `args: all` for scripts |
+| `.gspot/jsconfig.json`     | `jsconfig.json`                                                                | `checkJs`, `strict`, `noEmit`; type checking of plain JavaScript through JSDoc                                                                                                                                                                           |
 
 The types directory rule applies to JavaScript as JSDoc: `@typedef` and `@callback` only in
 files under `[architecture] types_directory`.

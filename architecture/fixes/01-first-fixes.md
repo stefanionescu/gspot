@@ -52,8 +52,8 @@ the tool file table in row 13. `lifecycle/takeover.ts`.
 that the file is there after `init --yes`.
 
 **Done when.** No shared file name appears in a takeover row without `shared = true`, by a unit
-test over the manifests. The list of shared names is `setup.cfg`, `tox.ini`, `pyproject.toml`,
-`package.json`, and `.editorconfig`.
+test over the manifests. The list of shared names is `setup.cfg`, `tox.ini`, `pyproject.toml`, and
+`package.json`. `.editorconfig` is taken over like a Prettier file (K-270).
 
 ## K-156: a check deletes untracked SQL files
 
@@ -80,7 +80,7 @@ with the output path inside the scratch folder, and compares the text.
 Cloudflare and Next.js types checks move to `scratchCopy` too, so one form exists.
 
 **Tests.** A planted drizzle repository with an untracked `0009_manual.sql` holds that the file
-exists after `gspot check --at push`. The same for an edited, uncommitted `openapi.json`.
+exists after `gspot check --stage push`. The same for an edited, uncommitted `openapi.json`.
 
 **Done when.** A search of `src/` for `'clean'` and `'checkout'` as git arguments finds nothing.
 

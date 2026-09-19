@@ -16,7 +16,7 @@ metadata and parameter properties, and the strict base of the typescript preset 
 A scope that selects nestjs gets a `tsconfig` file of this preset, which extends the shared base
 and sets `experimentalDecorators` and `emitDecoratorMetadata` (D-139). The shared base names no
 framework.
-`integrity/tsconfig-options` requires the first pair and drops the second pair in that scope.
+`typescript/tsconfig-options` requires the first pair and drops the second pair in that scope.
 `@typescript-eslint/consistent-type-imports` stays on: it leaves a file with decorators alone when
 both decorator options are on.
 
@@ -54,7 +54,7 @@ reason (D-138), and the page lists each one.
 
 ## Checks
 
-`typescript/eslint` with the rules above, and `integrity/tsconfig-options` with the decorator
+`typescript/eslint` with the rules above, and `typescript/tsconfig-options` with the decorator
 options. No separate check.
 
 ## Settings

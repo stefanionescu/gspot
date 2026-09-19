@@ -41,8 +41,9 @@ run time and broke on tool upgrades.
 
 ## D-06 gspot downloads nothing
 
-Presets pin versions; mise, npm, uv, Homebrew install; `doctor` verifies. Rejected: a
-checksummed downloader and lockfile, which re-implemented mise.
+Amended by D-145, D-156, and D-157. gspot still ships no downloader of its own: `gspot install`
+runs mise, the package manager of the repository, and uv, and `doctor` verifies the result.
+Rejected: a checksummed downloader and lockfile, which re-implemented mise.
 
 ## D-07 mise is recommended, never required
 
@@ -564,7 +565,7 @@ and the configuration written, with one ignore entry for each check.
 
 ## D-81 The rule files and the checks install apart
 
-`init --presets none` installs the rule files and no check. `init --no-rules` installs the checks
+`init --no-checks` installs the rule files and no check (the flag form of D-130). `init --no-rules` installs the checks
 and no rule file.
 
 The rule files do not name gspot, its engines or its setting keys, and claim no
@@ -734,7 +735,7 @@ install than before it.
 A repository with hooks keeps them: gspot writes one managed block into each hook file it needs,
 in the folder git already runs, and leaves `core.hooksPath` alone. gspot owns the hooks path only
 where no hooks exist. `hooks.tool` takes the value `existing` for this form. The bare folder name
-`hooks` is no hooks folder. The generated line needs no environment variable.
+`hooks` is no hooks folder. The generated line asks the developer for no environment variable.
 
 Rejected: the
 takeover of the hooks path with a warning line in the plan, because `--yes` accepts it
@@ -1213,9 +1214,10 @@ What follows from it:
   match it.
 - `integrity/manifest-policy` has no lint package to call pinned twice, and knip has no lint
   package to ignore (K-220).
-- The editor reads the stub at the root, which imports the config under `.gspot/`. The plugins
-  resolve under `.gspot/`, and the guide on editors says to point the ESLint extension at that
-  folder.
+- The editor reads a root pointer, `eslint.config.mjs`, which re-exports the config under
+  `.gspot/`, and the plugins resolve under `.gspot/`. gspot writes that pointer only where the
+  developer keeps no ESLint config. Where they keep one, the guide on editors says how to point
+  the ESLint extension at `.gspot/`.
 - The type check keeps the TypeScript of the repository, because `tsc` answers for the build
   the developer ships.
 

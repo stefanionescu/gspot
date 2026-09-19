@@ -24,8 +24,8 @@ the log, and the JSON report is written beside them.
 **Logic.** `execute.ts` takes an `onResult` callback, and `progress.ts` prints one line for each
 result on a terminal, and one line for each failed result elsewhere. A cached pass prints
 `unchanged`. The summary is one line: checks passed, failed, held findings, new findings, and
-seconds. `check` takes `--report <path>`, which writes the JSON report and leaves stdout as text,
-and the workflow uses it.
+seconds. The workflow runs plain `gspot check`, so the findings are in the log, and it keeps
+`.gspot/report.*` as artifacts. No flag is needed, because every run writes those files.
 
 **What goes.** The end list of passed checks, the word `cache` in output, and the shell redirect
 of the workflow.

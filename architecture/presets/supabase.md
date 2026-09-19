@@ -42,8 +42,8 @@ has no way to extend another file.
 
 ## Settings
 
-`tools.supabase.types_file`, `tools.supabase.functions_dir` (default `supabase/functions`),
-`tools.supabase.admin_key_paths`.
+`tools.supabase.types_file`, `tools.supabase.functions_directory` (default `supabase/functions`),
+`tools.supabase.admin_key_files`.
 
 ## Rule files
 

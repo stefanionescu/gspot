@@ -405,7 +405,7 @@ exists, and none of it is shown.
 
 | A developer wants to                  | Today                                                                                      |
 | ------------------------------------- | ------------------------------------------------------------------------------------------ |
-| Install only some presets             | `init --presets a,b`, `--without c`, `--scope path=a,b`, `--presets none`                  |
+| Install only some presets             | `init --presets a,b`, `--without c`, `--scope path=a,b`, `--no-checks`                     |
 | Turn one check or one rule off        | `gspot ignore <check> --rule <rule> --reason "..."`, for some paths with `--paths`         |
 | Turn it back on                       | `gspot ignore <check> --rule <rule> --remove`                                              |
 | Drop one tool                         | `gspot set tools.<name>.enabled false --reason "..."`                                      |

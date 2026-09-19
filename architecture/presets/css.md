@@ -23,12 +23,12 @@ postcss-modules (inside gspot, for CSS module usage).
 
 ## Checks
 
-| Id                    | Stage  | Command                                                                        |
-| --------------------- | ------ | ------------------------------------------------------------------------------ |
-| `css/stylelint`       | commit | `stylelint --config .gspot/stylelint.json {files}`; fix, order codemod         |
-| `css/prettier`        | commit | through formatting                                                             |
-| `integrity/css-usage` | push   | CSS modules: every class defined is used, every class used is defined (nextjs) |
-| `css/dead-selectors`  | push   | PurgeCSS over the built output with a safelist (static-site)                   |
+| Id                   | Stage  | Command                                                                        |
+| -------------------- | ------ | ------------------------------------------------------------------------------ |
+| `css/stylelint`      | commit | `stylelint --config .gspot/stylelint.json {files}`; fix, order codemod         |
+| `css/prettier`       | commit | through formatting                                                             |
+| `css/usage`          | push   | CSS modules: every class defined is used, every class used is defined (nextjs) |
+| `css/dead-selectors` | push   | PurgeCSS over the built output with a safelist (static-site)                   |
 
 ## Settings
 

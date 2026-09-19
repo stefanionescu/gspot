@@ -53,7 +53,7 @@ in the commit that applies it.
 | nature, concern, engine, takeover, exposed settings                            | `doctor` output, `why` output, two guides         | a plain phrase each: "kind of file", "applies to every language", "built-in check", "replacing your old setup"     |
 | "Re-render", "idempotent"                                                      | `apply --help`, `upgrade --help`, the mise task   | "Write the generated files again. Safe to run twice."                                                              |
 | `render`, `RenderedSet`, `isRenderedHere`, `synced`                            | the code, more than 100 places (K-54)             | `emit`, `EmittedSet`, `isEmittedHere`, `applied`                                                                   |
-| `src/apple/`, `src/pyproject/`, `tests/repositories/pyproject/`                | the code                                          | `swift/`, `python/`, `tests/repositories/python/` (D-128)                                                          |
+| `src/apple/`, `src/pyproject/`, `tests/repositories/pyproject/`                | the code                                          | `checks/swift/`, `checks/python/`, `tests/repositories/python/` (D-128, D-146)                                     |
 | `packages/cli/rules-lint`, `#rules-lint/*`                                     | the code (K-61)                                   | `packages/cli/src/rules/`, `#cli/rules/*`                                                                          |
 | `--at`, `upgrade --check`, `--ci none`, `--keep-format`, `--project-templates` | `--help` of four commands                         | `--stage`, `--dry-run`, `--no-ci`, `--format keep` ([02-cli.md](02-cli.md))                                        |
 | `hooks.tool = "shared"`                                                        | the stash `hooks-existing`                        | `existing` (D-101)                                                                                                 |
@@ -62,20 +62,56 @@ in the commit that applies it.
 preset, check, finding, baseline, ignore, scope, stage and profile stay: other tools use them
 the same way.
 
+## Check ids that change family
+
+A built-in check carries the family of the preset that ships it (D-146). The family `integrity`
+keeps the checks over the config and the files gspot writes: `policy`, `generated-drift`,
+`baselines-current`, `config-purity`, `suppressions`, `allowlists-match`, `task-policy`, and
+`large-files`. Every other id moves, and the old id is an unknown id (D-134):
+
+| Today                                                                             | Becomes                                                                                     |
+| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `integrity/docs-headings`                                                         | `docs/headings`                                                                             |
+| `integrity/stale-paths`                                                           | `docs/stale-paths`                                                                          |
+| `integrity/lockfile-fresh`                                                        | `dependencies/lockfile-fresh`                                                               |
+| `integrity/lockfile-hosts`                                                        | `dependencies/lockfile-hosts`                                                               |
+| `integrity/manifest-policy`                                                       | `dependencies/manifest-policy`                                                              |
+| `integrity/install-policy`                                                        | `dependencies/install-policy`                                                               |
+| `integrity/tracked-dependencies`                                                  | `dependencies/tracked`                                                                      |
+| `integrity/dependency-ownership`                                                  | `dependencies/ownership`                                                                    |
+| `integrity/env-files`                                                             | `secrets/env-files`                                                                         |
+| `integrity/gitleaks-baseline`                                                     | `secrets/gitleaks-baseline`                                                                 |
+| `integrity/locales`                                                               | `i18n/locales`                                                                              |
+| `integrity/css-usage`                                                             | `css/usage`                                                                                 |
+| `integrity/typecheck-membership`                                                  | `typescript/typecheck-membership`                                                           |
+| `integrity/tsconfig-options`                                                      | `typescript/tsconfig-options`                                                               |
+| `integrity/required-rules`                                                        | `javascript/required-rules`                                                                 |
+| `licenses/npm`                                                                    | `licenses/packages`                                                                         |
+| `xcode/asset-catalogues`                                                          | `xcode/asset-catalogs`                                                                      |
+| `structure/shell-interpreter`                                                     | `structure/shell-strict-mode`, `structure/shell-temp-trap`, `structure/shell-script-header` |
+| `structure/trivial-function`, `python/trivial-function`, `swift/trivial-function` | the call-through check of each language                                                     |
+| `vue/eslint`, `svelte/eslint`                                                     | `javascript/eslint`                                                                         |
+
+Three more settings change with the same table: `tools.xcode.allowed_entitlements` becomes
+`tools.xcode.entitlements_allowed`, `tools.licenses.allow` becomes `tools.licenses.licenses_allowed`,
+and `tools.openapi.produced_by` becomes `tools.openapi.command`. The switches
+`tools.docs.readme_shape` and `tools.xcode.orphan_assets` go, because `[[ignore]]` is the one way
+to turn a check off (D-144).
+
 ## Names this repository allows itself
 
 Every name of the rename table above was checked against the shipped banned terms, the reserved
 terms, and the banned folder names. Three clash, and D-135 decides each one:
 
-| Name                                                                   | Clash                                           | Decision                                                                        |
-| ---------------------------------------------------------------------- | ----------------------------------------------- | ------------------------------------------------------------------------------- |
-| `packages/cli/src/swift/`, `.../python/`, `tests/repositories/python/` | `swift` and `python` are banned folder names    | allowed in `gspot.toml`, as below.                                              |
-| the level `core`                                                       | `core` is a banned term of the containers group | the level is `recommended`, so no exception is needed                           |
-| `tests/config/`                                                        | `config` is a reserved term                     | none needed: a configuration folder is one of the uses the reserved term allows |
+| Name                                                                                 | Clash                                           | Decision                                                                        |
+| ------------------------------------------------------------------------------------ | ----------------------------------------------- | ------------------------------------------------------------------------------- |
+| `packages/cli/src/checks/swift/`, `.../checks/python/`, `tests/repositories/python/` | `swift` and `python` are banned folder names    | allowed in `gspot.toml`, as below.                                              |
+| the level `core`                                                                     | `core` is a banned term of the containers group | the level is `recommended`, so no exception is needed                           |
+| `tests/config/`                                                                      | `config` is a reserved term                     | none needed: a configuration folder is one of the uses the reserved term allows |
 
 ```toml
 [[structure.folder_name_allowed]]
-paths = ["packages/cli/src/swift/**", "packages/cli/src/python/**", "tests/repositories/python/**"]
+paths = ["packages/cli/src/checks/swift/**", "packages/cli/src/checks/python/**", "tests/repositories/python/**"]
 reason = "Each folder holds the checks of one language, and the language is its name."
 ```
 

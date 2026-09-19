@@ -50,7 +50,7 @@ Nothing.
 | --------------- | ------ | --------------------------------------------------------------------------- |
 | `vue/typecheck` | commit | `vue-tsc --noEmit`; takes over `typescript/tsc` in the scope (`takes_over`) |
 
-The ESLint rules run in the one ESLint check (D-137). `integrity/required-rules` holds
+The ESLint rules run in the one ESLint check (D-137). `javascript/required-rules` holds
 `vue/no-v-html`, `vue/require-v-for-key`, `vue/no-mutating-props`, and
 `vue/no-use-v-if-with-v-for` for `.vue` files.
 

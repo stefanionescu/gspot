@@ -4,11 +4,11 @@ Kind: database. Requires: sql.
 
 ## Detects and claims
 
-|                         |                                                                                                                                                           |
-| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Detect                  | Postgres syntax in any `.sql` file; a Postgres connection string in configuration; supabase                                                               |
-| Claims                  | `.sql` files under a migrations directory (`[tools.postgres] migrations_dir`, default detected from `supabase/migrations`, `migrations`, `db/migrations`) |
-| Architecture it assumes | none. Postgres, not any product on it.                                                                                                                    |
+|                         |                                                                                                                                                                 |
+| ----------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Detect                  | Postgres syntax in any `.sql` file; a Postgres connection string in configuration; supabase                                                                     |
+| Claims                  | `.sql` files under a migrations directory (`[tools.postgres] migrations_directory`, default detected from `supabase/migrations`, `migrations`, `db/migrations`) |
+| Architecture it assumes | none. Postgres, not any product on it.                                                                                                                          |
 
 ## Tools
 
@@ -37,7 +37,7 @@ squawk, sqlfluff with dialect `postgres`, `libpg-query` inside gspot.
 
 ## Settings
 
-`tools.squawk.assume_in_transaction` (default `true` under supabase), `tools.squawk.frozen_through` (`none`, `all`, or a version), `tools.postgres.migrations_dir`,
+`tools.squawk.assume_in_transaction` (default `true` under supabase), `tools.squawk.frozen_through` (`none`, `all`, or a version), `tools.postgres.migrations_directory`,
 `tools.postgres.client_schemas` (default `public`), `tools.postgres.migration_docs` (default
 `false`; the documented layout is a house style a repository opts into), and
 `tools.postgres.doc_sections` (the section name list).

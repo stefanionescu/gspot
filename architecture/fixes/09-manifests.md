@@ -40,7 +40,7 @@ a file.
 folder names that told a reader nothing.
 
 **Tests.** A unit test holds the keys of the registry equal to the ids of every manifest check
-with `engine = "integrity"`. The planted tests change their expected ids in the same commit.
+with `engine = "builtin"`, the one engine name for every check under `src/checks/`. The planted tests change their expected ids in the same commit.
 
 **Done when.** `ls packages/cli/src` prints the 17 folders of the file tree.
 
@@ -173,7 +173,7 @@ type-only import, which keeps the rule that types live under `types/`. The three
 Closes K-55, K-77, K-124, K-131, K-165, K-94, and K-169.
 
 **What is wrong.** The hooks folder name, the mise file path, `.gspot/hooks`, `HOOK_DIRECTORIES`,
-and `JSON_INDENT` each stand in two or three files. The five release targets are written in
+and `JSON_INDENT` each stand in two or three files. The release targets are written in
 `build.ts`, `publish.ts`, and the `uname` cases of `emit/workflow.ts`, in three spellings.
 `PATH_KEYS` is written in both profile files. The binary embeds `schema/`, and no code reads it.
 
@@ -181,7 +181,7 @@ and `JSON_INDENT` each stand in two or three files. The five release targets are
 
 **Files.** New `config/paths.ts`, new `config/targets.ts`, and each file that held a copy.
 
-**Logic.** `targets.ts` holds five rows with `os`, `arch`, the Bun target, the npm package name,
+**Logic.** `targets.ts` holds seven rows (K-280) with `os`, `arch`, the Bun target, the npm package name,
 and the `uname` pair. `PATH_KEYS` lives in `profile/schema.ts`.
 
 **What goes.** Eleven copies, and the embedded `schema/` folder.

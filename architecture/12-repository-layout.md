@@ -110,7 +110,7 @@ ask.
 | Path selectors                                        | picomatch                                                            | one syntax everywhere                                                                                                                |
 | Versions                                              | semver                                                               | pins, floors, the version-pin comparison                                                                                             |
 | Parsing for the structure and naming engines          | `web-tree-sitter` with embedded grammars; `libpg-query` WASM for SQL | no native modules                                                                                                                    |
-| ICU messages                                          | `@formatjs/icu-messageformat-parser`                                 | `integrity/locales`                                                                                                                  |
+| ICU messages                                          | `@formatjs/icu-messageformat-parser`                                 | `i18n/locales`                                                                                                                       |
 | CSS selectors and class names                         | postcss                                                              | `css/usage`; no regex over CSS                                                                                                       |
 | Spawning tools                                        | `Bun.spawn`                                                          | no shell; explicit argument arrays                                                                                                   |
 
@@ -201,7 +201,7 @@ cannot follow fails the gate the same way a long function does.
 
 `docs/` is the user manual. Two kinds of page:
 
-- **Generated**, from the same data the binary uses, so they cannot drift. `docs/reference-pages.ts` writes them and, with `--check`, the repository check `docs/generated` fails when they differ (D-78).
+- **Generated**, from the same data the binary uses, so they cannot drift. The docs build runs `docs/reference-pages.ts` first, and git ignores the pages it writes (D-153).
     - the command reference, from commander;
     - the settings reference, from the schema (`gspot list settings` prints the same keys);
     - one page per preset, from its manifest;

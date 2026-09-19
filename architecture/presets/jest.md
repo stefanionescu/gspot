@@ -38,7 +38,7 @@ The plugin reads another runner through its `globalPackage` setting. This reposi
 ## Settings
 
 `tools.jest.coverage_lines`, `coverage_branches`, `coverage_functions`, and `coverage_statements`
-(default 80 each), and `tools.jest.harness_dir` (default `tests/support`).
+(default 80 each), and `tools.jest.harness_directory` (default `tests/support`).
 
 ## Rule files
 

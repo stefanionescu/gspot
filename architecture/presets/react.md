@@ -51,7 +51,7 @@ Nothing.
 ## Checks
 
 `typescript/eslint` or `javascript/eslint` with the rules above. No separate check.
-`integrity/required-rules` holds `react-hooks/rules-of-hooks`, `react-hooks/exhaustive-deps`,
+`javascript/required-rules` holds `react-hooks/rules-of-hooks`, `react-hooks/exhaustive-deps`,
 `react/jsx-key`, and `react/no-danger` for `jsx` and `tsx` files.
 
 ## Settings

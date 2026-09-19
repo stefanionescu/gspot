@@ -11,9 +11,9 @@ command exists when nothing else answers its question (D-131).
 gspot init       [--yes] [--dry-run] [--from <profile>] [--presets <ids>] [--without <ids>] [--scope <path=ids>]
                  [--hooks gspot|husky|lefthook|pre-commit|simple-git-hooks|existing] [--no-hooks] [--ci github|gitlab] [--no-ci]
                  [--runner mise|npm|pnpm|yarn|bun] [--no-runner] [--format keep|shipped]
-                 [--no-rules] [--no-install] [--allow-dirty]
+                 [--no-rules] [--no-checks] [--no-install] [--allow-dirty]
 gspot check      [<check-id>] [--staged] [--changed] [--since <ref>] [--fix] [--dry-run]
-                 [--stage commit|push|manual] [--scope <path>] [--skip <check-id>] [--report <path>] [--no-cache]
+                 [--stage commit|push|manual] [--scope <path>] [--skip <check-id>] [--no-cache]
 gspot install
 gspot apply
 gspot baseline   [<check-id>]
@@ -30,8 +30,9 @@ gspot uninstall  [--dry-run] [--yes]
 gspot profile    save <file>
 gspot completion <bash|zsh|fish|powershell>
 
-global: --help  --version  --json  --quiet  --verbose  --no-color  -C <dir>
-env:    NO_COLOR  CI  GSPOT_JOBS  (GSPOT_BIN and GSPOT_REGISTRY until the first release)
+global: --help  --version  --licenses  --json  --quiet  --verbose  --no-color  -C <dir>
+env:    NO_COLOR  CI  GSPOT_JOBS  GSPOT_HOOK (set by the hooks gspot writes)
+        GSPOT_BIN  GSPOT_REGISTRY (both only until the first release)
 exit:   0 passed   1 findings   2 gspot did not run
 ```
 
@@ -52,8 +53,9 @@ The checklist is [clig.dev](https://clig.dev/). What it means here:
 - A mistyped command or flag prints the closest match.
 - `--dry-run` shows what happens and writes nothing. It exists on `init`, `upgrade`,
   `uninstall`, and `check --fix`, and on no other command (D-129).
-- A refusal is a `--no-` flag: `--no-ci`, `--no-hooks`, `--no-runner`, `--no-rules`, and
-  `--no-install`. No flag takes the value `none` (D-130).
+- A refusal is a `--no-` flag: `--no-ci`, `--no-hooks`, `--no-runner`, `--no-rules`,
+  `--no-checks`, and `--no-install`. `--no-checks` installs the rule files and no check, and
+  `--no-rules` installs the checks and no rule file (D-81). No flag takes the value `none` (D-130).
 - A command that deletes prints its plan and asks, and `--yes` answers.
 - Every finding ends with a `help:` line, taken from the `fix` text of its check.
 - A flag means one thing everywhere: `--scope`, `--reason`, `--json`, `--yes`, `--remove`.
@@ -148,7 +150,7 @@ not carried
 
 not written
   CI                               Bitbucket found; paste these lines into your pipeline:
-                                   gspot install  ·  gspot check --report gspot.json
+                                   gspot install  ·  gspot check  ·  keep .gspot/report.json as an artifact
 
 remove by hand, when ready
   .prettierignore, renovate.json   add .gspot/ so your own tools skip the files gspot writes
@@ -222,19 +224,18 @@ tool each print `Run: gspot install`. `check` never installs by itself.
 Runs checks and prints findings. `gspot check` is the truth, and the hooks are the fast path
 (D-122).
 
-| Form                            | Runs                                                                                |
-| ------------------------------- | ----------------------------------------------------------------------------------- |
-| `gspot check`                   | every check of the commit and push stages, over the whole repository                |
-| `gspot check --staged`          | the commit stage over staged files, which is what the commit hook runs              |
-| `gspot check --changed`         | the commit and push stages over files that differ from the upstream branch          |
-| `gspot check --since <ref>`     | the same, from another ref                                                          |
-| `gspot check --stage manual`    | the checks that build, test, or scan a whole project, or that need the network      |
-| `gspot check typescript/eslint` | one check                                                                           |
-| `gspot check --scope api`       | one scope                                                                           |
-| `gspot check --fix`             | every fixer in order, then the checks again                                         |
-| `gspot check --fix --dry-run`   | the diff of every fix, and no write                                                 |
-| `gspot check --skip <id>`       | skips one check this run, printed and recorded                                      |
-| `gspot check --report <path>`   | writes the JSON report to a file and keeps the text on stdout, which is how CI runs |
+| Form                            | Runs                                                                           |
+| ------------------------------- | ------------------------------------------------------------------------------ |
+| `gspot check`                   | every check of the commit and push stages, over the whole repository           |
+| `gspot check --staged`          | the commit stage over staged files, which is what the commit hook runs         |
+| `gspot check --changed`         | the commit and push stages over files that differ from the upstream branch     |
+| `gspot check --since <ref>`     | the same, from another ref                                                     |
+| `gspot check --stage manual`    | the checks that build, test, or scan a whole project, or that need the network |
+| `gspot check typescript/eslint` | one check                                                                      |
+| `gspot check --scope api`       | one scope                                                                      |
+| `gspot check --fix`             | every fixer in order, then the checks again                                    |
+| `gspot check --fix --dry-run`   | the diff of every fix, and no write                                            |
+| `gspot check --skip <id>`       | skips one check this run, printed and recorded                                 |
 
 A check above the level of the repository is not planned. A check that waits for a setting
 prints `skipped` and names the setting. A check whose tool is absent prints `missing` and fails
@@ -280,9 +281,17 @@ that counts the rest (D-104). Every full run prints one `held` line for the secu
 dependency, and secret checks that hold findings. A failing run from a hook ends with the
 command that reproduces it and with `git commit --no-verify` as the way past it.
 
+Every run but the message run writes three files under `.gspot/`: `report.json`,
+`report.sarif`, and `report.codequality.json`, the form GitLab reads. A CI job keeps them as
+artifacts, so no flag and no redirect is needed.
+
+The commit message hook calls `gspot check --stage message --message-file <path>`. That stage
+and that flag serve the hook alone, and `--help` leaves both out.
+
+`--licenses` prints the notice of every dependency and grammar the binary embeds.
+
 `--quiet` prints failures only. `--verbose` prints every command and every ignore with its
-reason. `--json` prints the report as JSON. `.gspot/report.json` is written after every run but
-the message run of the commit hook (D-105). Columns are computed from the longest check id.
+reason. `--json` prints the report as JSON (D-105). Columns are computed from the longest check id.
 
 ## `apply`
 
