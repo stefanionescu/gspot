@@ -162,7 +162,7 @@ when every gap it names has left 18-gaps.md.
 | Work                                                        | Gaps it closes                                                                                                                 | Goes with row |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------- |
 | Delete what nothing uses                                    | K-104, K-111, K-115, K-119, K-129, K-146, K-180, K-195, K-205                                                                  | Delete first  |
-| Defects that give a wrong answer, fixed first               | K-103, K-108, K-114, K-134, K-140, K-147, K-157, K-172, K-178, K-181, K-186, K-189, K-192                                      | first fixes   |
+| Defects that give a wrong answer, fixed first               | K-103, K-108, K-114, K-134, K-140, K-147, K-157, K-172, K-178, K-181, K-186, K-189, K-192, K-206                               | first fixes   |
 | Takeover and detection read what a repository really holds  | K-42, K-57, K-76, K-78, K-120, K-126, K-128, K-158, K-182, K-193                                                               | 1 and 2       |
 | Speed                                                       | K-71, K-125, K-127, K-138, K-143, K-148, K-162, K-176, K-196                                                                   | 3 and 21      |
 | What `check` and `doctor` print                             | K-82, K-83, K-84, K-117, K-122, K-130, K-132, K-185, K-194                                                                     | 21            |
