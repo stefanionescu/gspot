@@ -10,9 +10,8 @@ A preset is a folder in the gspot distribution:
 ```text
 presets/typescript/
   manifest.toml            everything the preset contributes
-  eslint.config.js.tmpl    configuration templates
-  tsconfig.base.json.tmpl
-  knip.json.tmpl
+  eslint.fragment.js.tmpl  configuration templates
+  tsconfig.check.json.tmpl
   rules/                   ast-grep rule files, one directory per rule, one file per grammar
 ```
 

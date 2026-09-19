@@ -45,7 +45,7 @@ top, and little else.
   from `<StylesPath>/<StyleName>/`, and the folder name is what a finding prints:
   `gspot.sentence-length`. A vocabulary works the same way.
 - The JSON Schema lets an editor complete and check `gspot.toml`. It is one tracked file at the
-  root, and the site copies it at build. The schema of the run record is embedded in the binary.
+  root, and the site copies it at build. The schema of the report is part of it.
 - `examples/` holds three small repositories: one package, one with two scopes, and one Swift
   package. The planted tests install into them, so they cannot go stale.
 - `CHANGELOG.md` is written from the changesets. `NOTICE.md` lists the license of every
@@ -85,7 +85,7 @@ ask.
 | Command parsing, `--help`, unknown-command suggestion | commander                                                            | the help text is the command reference; `docs/` is generated from it                                                                 |
 | The questions in `init` and `upgrade`                 | `@clack/prompts`                                                     | imported by those two commands only; never under `--yes`, `CI` or no terminal                                                        |
 | Color                                                 | picocolors                                                           | off under `NO_COLOR`, `CI`, `--no-color` or no terminal                                                                              |
-| Schemas for `gspot.toml`, manifests, run record       | zod                                                                  | error messages rewritten into plain English before printing                                                                          |
+| Schemas for `gspot.toml`, manifests, the report       | zod                                                                  | error messages rewritten into plain English before printing                                                                          |
 | Read TOML                                             | smol-toml                                                            |                                                                                                                                      |
 | Write `gspot.toml` keeping comments and order         | `@decimalturn/toml-patch`                                            | TOML 1.1; `patch()` and `TomlDocument`; a comment travels with the entry it belongs to when the entry moves or goes                  |
 | Detect and drive the package manager                  | `nypm`                                                               | lockfile and `packageManager` detection, and the install of `.gspot/package.json` for npm, pnpm, yarn, and bun (D-145)               |
@@ -150,7 +150,7 @@ Nothing in the release path is code gspot wrote:
 | Step                   | Tool                                                                                                                                                     |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Version and changelog  | `changesets`: every change lands with a changeset file; the release PR bumps the version and writes the changelog                                        |
-| Build                  | a GitHub Actions matrix runs `bun build --compile` per target; the run record of the build is the release note's tool table                              |
+| Build                  | a GitHub Actions matrix runs `bun build --compile` per target; the report of the build is the tool table of the release note                             |
 | Provenance             | `actions/attest` signs every binary and the npm packages carry `--provenance` from trusted publishing, so `doctor` and a person can verify what they run |
 | GitHub release         | `softprops/action-gh-release` uploads the binaries and checksums                                                                                         |
 | npm                    | the launcher and one platform package per target, published in one job at one version                                                                    |

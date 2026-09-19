@@ -112,7 +112,7 @@ folders (`SA eslint/local/`, `LA shared/eslint/plugin/rules/`, `SS shared/eslint
 
 ## 3. ESLint rule sets
 
-Rendered into `.gspot/eslint.config.js` by the typescript and javascript presets. Source:
+Rendered into `.gspot/eslint.config.mjs` by the typescript and javascript presets. Source:
 `SA eslint/rulesets/*.js`, `LA site/eslint/index.js`, `SS shared/eslint/*.mjs`,
 `SS config/lint/ecosystem.mjs`.
 
@@ -143,13 +143,13 @@ Test-file overrides: `no-non-null-assertion` off in tests; jsdoc off in tests an
 
 ## 4. TypeScript compiler
 
-| Option                                                                                                                                | Sources                       | gspot                                                                  |
-| ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | ---------------------------------------------------------------------- |
-| `strict`                                                                                                                              | all                           | rendered `tsconfig.base.json`; `integrity/tsconfig-options` asserts it |
-| `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `forceConsistentCasingInFileNames`                    | SS `integrity/typescript.mjs` | same                                                                   |
-| `noImplicitReturns`, `noFallthroughCasesInSwitch`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, `noPropertyAccessFromIndexSignature` | SA                            | same                                                                   |
-| every file in a type-check project                                                                                                    | TI `integrity/typecheck.py`   | `integrity/typecheck-membership`                                       |
-| `tsc --noEmit` at commit                                                                                                              | SA, SS                        | `typescript/tsc`                                                       |
+| Option                                                                                                                                | Sources                       | gspot                                                                 |
+| ------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------------------- |
+| `strict`                                                                                                                              | all                           | `.gspot/tsconfig.check.json`; `integrity/tsconfig-options` asserts it |
+| `noUncheckedIndexedAccess`, `exactOptionalPropertyTypes`, `noImplicitOverride`, `forceConsistentCasingInFileNames`                    | SS `integrity/typescript.mjs` | same                                                                  |
+| `noImplicitReturns`, `noFallthroughCasesInSwitch`, `verbatimModuleSyntax`, `erasableSyntaxOnly`, `noPropertyAccessFromIndexSignature` | SA                            | same                                                                  |
+| every file in a type-check project                                                                                                    | TI `integrity/typecheck.py`   | `integrity/typecheck-membership`                                      |
+| `tsc --noEmit` at commit                                                                                                              | SA, SS                        | `typescript/tsc`                                                      |
 
 ## 5. Python
 
@@ -335,7 +335,7 @@ Source: `SS quality/`.
 | ansible-lint over playbooks                                                                                                                                                                                                                                             | SA pinned `ansible-core`, ran nothing                | `ansible/lint` when a playbook or `ansible.cfg` exists                                                                   |
 | nginx `-t` through the compose service                                                                                                                                                                                                                                  | SA `nginx/lint.js`                                   | `nginx/config-test` (push, docker)                                                                                       |
 | dotenv-linter                                                                                                                                                                                                                                                           | SA qlty (never ran)                                  | `config-files/dotenv-linter`                                                                                             |
-| license allowlist with exact-version exceptions; npm through `license-checker-rseidelsohn`, Python through `pip-licenses`; TI exceptions record the accepted license and a reason                                                                                       | all                                                  | `licenses/npm`, `licenses/pip` (push); every exception carries `license` and fails when the reported license differs     |
+| license allowlist with exact-version exceptions; every lockfile through `osv-scanner`; TI exceptions record the accepted license and a reason                                                                                                                           | all                                                  | `licenses/npm`, `licenses/pip` (push); every exception carries `license` and fails when the reported license differs     |
 | syncpack one version per dependency across the workspace                                                                                                                                                                                                                | SA                                                   | `dependencies/syncpack` with a rendered config that also holds the paired-package groups                                 |
 | lychee offline over Markdown                                                                                                                                                                                                                                            | SA                                                   | `docs/links` (lychee, `--include-fragments`)                                                                             |
 | package.json: exact versions no ranges, sorted, no scripts under mise, engines match runtime pin, bun version matches mise pin; root scripts limited to approved wrappers, `bun run` references exist, no section-marker scripts, package scripts never wrap `mise run` | SA `packages/*.js`, LA `package-json/scripts.js`, SS | `integrity/manifest-policy` with `[tools.package-json] scripts` and `allowed_scripts`                                    |

@@ -17,10 +17,10 @@ knip.
 
 ## Generated configuration
 
-| Target                    | Stub               | Holds                                                                                                                                                                                                                                                    |
-| ------------------------- | ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/eslint.config.js` | `eslint.config.js` | shared with typescript when both are selected; globals per runtime (node, browser, worker, commonjs) chosen by file class; `sourceType` per extension; the same structural, direction and placement rules; `no-unused-vars` with `args: all` for scripts |
-| `.gspot/jsconfig.json`    | `jsconfig.json`    | `checkJs`, `strict`, `noEmit`; type checking of plain JavaScript through JSDoc                                                                                                                                                                           |
+| Target                     | Stub            | Holds                                                                                                                                                                                                                                                    |
+| -------------------------- | --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.gspot/eslint.config.mjs` | none            | shared with typescript when both are selected; globals per runtime (node, browser, worker, commonjs) chosen by file class; `sourceType` per extension; the same structural, direction and placement rules; `no-unused-vars` with `args: all` for scripts |
+| `.gspot/jsconfig.json`     | `jsconfig.json` | `checkJs`, `strict`, `noEmit`; type checking of plain JavaScript through JSDoc                                                                                                                                                                           |
 
 The types directory rule applies to JavaScript as JSDoc: `@typedef` and `@callback` only in
 files under `[architecture] types_directory`.
@@ -35,12 +35,12 @@ files under `[architecture] types_directory`.
 
 ## Settings
 
-The ESLint check reads `.gspot/baselines/eslint.json` the way the typescript preset describes. `tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform preset claims it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
+The ESLint check reads the suppressions file of ESLint under `.gspot/` the way the typescript preset describes. `tools.eslint.*` as typescript; `tools.eslint.globals` per file class. A file's runtime comes from what references it, never from a folder name. It is `worker` when a platform preset claims it, and `browser` when a tracked HTML file references it through `<script src>` (URL paths resolved against the repository root and the declared output directory). Otherwise, it is `node`.
 
 `sourceType`
 follows the Node resolution: the nearest `package.json` `type`, then `.mjs` and `.cjs`.
 The rendered knip ignore list carries `.gspot/commitlint.config.cjs` when the commits preset is selected, because commitlint loads that file by path and knip cannot see it. Import aliases are what the runtime resolves: `package.json` `imports` and tsconfig `paths`.
-`gspot set tools.eslint.globals "<glob>" browser` overrides one file class, and `gspot why
+`gspot set tools.eslint.globals "<glob>" browser` overrides one file class, and `gspot explain
 <file>` prints the runtime a file got and why.
 
 ## Rule files

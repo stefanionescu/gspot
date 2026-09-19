@@ -33,7 +33,7 @@ unconditionally and the code files per preset.
 ## Project templates
 
 The merge left out one team's architecture on purpose. That material still has value to the
-team that wrote it, so it ships as templates under `templates/project/`. `gspot init --project-templates` or `gspot apply --project-templates` copies the ones that match
+A rule file about one product belongs to that product. It lives in the repository it describes, under its own rule folder, and gspot ships none.
 the selection into the repository's project layer once. gspot never upgrades a project file. The
 copy opens with `<!-- gspot-template: IOS-ARCHITECTURE 0.4.0 -->`, so `upgrade --check` can report
 that the template changed upstream; merging is the person's choice.

@@ -16,9 +16,9 @@ sqlfluff; `libpg-query` (WASM, inside gspot) for parsing and naming extraction.
 
 ## Generated configuration
 
-| Target                | Stub                                                                                                                                 | Holds                                                                                                                                                                                                          |
-| --------------------- | ------------------------------------------------------------------------------------------------------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `.gspot/sqlfluff.cfg` | `.sqlfluff` with `[sqlfluff] config_path` is not supported by sqlfluff; the stub is a copy with a header, guarded by `apply --check` | `sql_file_exts` covering all three extensions, dialect from the database preset (`ansi` alone), line length and indent from `[format]`, `capitalization` and `references` rules aligned with the naming policy |
+| Target                | Stub                                                                        | Holds                                                                                                                                                                                                          |
+| --------------------- | --------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.gspot/sqlfluff.cfg` | no root file: sqlfluff has no include form, and the check passes `--config` | `sql_file_exts` covering all three extensions, dialect from the database preset (`ansi` alone), line length and indent from `[format]`, `capitalization` and `references` rules aligned with the naming policy |
 
 sqlfluff never reads a `.sqlfluffignore`; gspot passes the file list.
 

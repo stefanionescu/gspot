@@ -59,7 +59,7 @@ packages/cli/
 ├── tsconfig.json
 ├── build.ts                    compiles each target and embeds grammars, presets, rules, and the schema
 ├── publish.ts                  stamps the platform packages and publishes them at one version
-├── schemas.ts                  writes gspot.schema.json and the run record schema
+├── schemas.ts                  writes gspot.schema.json, the schema of the report included
 ├── grammars/                   tree-sitter WASM, copied at build; swift.wasm is tracked with its source named in NOTICE.md
 ├── config/                     literal tables only
 ├── src/
@@ -364,7 +364,7 @@ Each path of today, and where it ends. A path not listed stays.
 | `packages/cli/rules-lint/`                                                                          | `src/rules/`; the Vale half is deleted                                        | S-10                |
 | `packages/cli/build/entry.ts`                                                                       | `packages/cli/build.ts`                                                       | K-73                |
 | `prose/styles/`, `prose/vocabularies/`                                                              | `presets/prose/`; `prose/vale.ini` is deleted                                 | K-73, S-10          |
-| `schema/`, `docs/public/schema/`                                                                    | `gspot.schema.json` at the root; the run record schema is embedded            | K-68                |
+| `schema/`, `docs/public/schema/`                                                                    | `gspot.schema.json` at the root; the schema of the report is part of it       | K-68                |
 | the twelve lint files at the root, `eslint.config.mjs` included                                     | deleted; each tool reads `.gspot/`                                            | D-100               |
 | `.config/mise/conf.d/gspot.toml`                                                                    | `.mise/conf.d/gspot-tools.toml`                                               | D-127               |
 | `.gspot/baseline/`, one file for each rule                                                          | `.gspot/baseline.json`                                                        | D-104               |
