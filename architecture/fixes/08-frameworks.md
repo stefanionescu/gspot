@@ -315,3 +315,74 @@ writes one pointer file into each claimed test folder, with `parent_config` set 
 **Tests.** A planted test file with a force unwrap holds no finding, and a source file holds one.
 
 **Done when.** That case passes.
+
+## What each language and framework holds
+
+The presets `go`, `rust`, `django` and `ruby` leave (D-136). The table lists what stays. A cell
+names the tool a manifest pins today. `D-141` marks a tool the decision adds and no manifest holds
+yet. `nothing` marks a job no tool does.
+
+| Language or framework  | Format                                          | Lint and types                                                                                     | Dead code and copies   | Security                   | Tests                | Open                                                                 |
+| ---------------------- | ----------------------------------------------- | -------------------------------------------------------------------------------------------------- | ---------------------- | -------------------------- | -------------------- | -------------------------------------------------------------------- |
+| TypeScript, JavaScript | Prettier                                        | ESLint with ten plugins, `tsc`, `tsc` over JSDoc                                                   | knip, jscpd            | Semgrep, CodeQL, osv       | vitest, jest (D-141) | `tsc` reads nothing in a project with references (K-226)             |
+| React                  | Prettier                                        | react-hooks, eight react rules; recommended sets, jsx-a11y, react-refresh, testing-library (D-141) | knip                   | Semgrep                    | vitest               | every component is a naming finding (K-136)                          |
+| Next.js                | Prettier                                        | `@next/eslint-plugin-next`, its own type check and build                                           | knip                   | Semgrep, config check      | vitest               | its security guide is never installed (K-232)                        |
+| React Native           | Prettier                                        | four Expo rules; three more plugins and `expo-doctor` (D-141)                                      | knip                   | Semgrep                    | jest (D-141)         | no accessibility plugin runs on the pinned ESLint                    |
+| NestJS                 | Prettier                                        | two selectors; `nestjs-typed` (D-141)                                                              | knip                   | Semgrep                    | jest (D-141)         | none                                                                 |
+| Vue                    | Prettier                                        | `eslint-plugin-vue`; accessibility plugin and `vue-tsc` (D-140, D-141)                             | knip                   | Semgrep                    | vitest               | shared rules do not reach a component today (K-208)                  |
+| Svelte                 | nothing today; `prettier-plugin-svelte` (D-140) | `eslint-plugin-svelte`; `svelte-check` (D-140)                                                     | knip                   | Semgrep                    | vitest               | the same as Vue                                                      |
+| Express                | Prettier                                        | Spectral over the OpenAPI document                                                                 | knip                   | Semgrep pack               | vitest               | the pack names functions of one repository (K-218)                   |
+| CSS                    | Prettier                                        | stylelint standard, CSS module usage, dead selectors                                               | purgecss               | nothing needed             | nothing needed       | `.scss` and `.pcss` are claimed and no SCSS syntax is loaded (K-233) |
+| HTML                   | Prettier                                        | html-validate, inline script check, copy check                                                     | nothing                | the script check           | nothing needed       | none                                                                 |
+| Python                 | Ruff format                                     | Ruff, basedpyright, pydoclint, import-linter, validate-pyproject                                   | vulture, deptry, jscpd | Ruff `S`, Semgrep, osv     | pytest with coverage | one docstring style is forced (K-227)                                |
+| FastAPI                | Ruff format                                     | Spectral, one blocking call check                                                                  | vulture                | Semgrep pack               | pytest               | none                                                                 |
+| Swift                  | SwiftFormat                                     | SwiftLint, the analyzer, the build                                                                 | Periphery, jscpd       | Semgrep, CodeQL            | coverage by target   | no license check of Swift packages (K-80)                            |
+| Xcode and XCTest       | nothing needed                                  | plutil, nine project checks, four test checks                                                      | orphan sources         | entitlements, transport    | coverage by target   | the SwiftUI and UIKit guides are never installed (K-232)             |
+| SQL and Postgres       | sqlfluff                                        | sqlfluff, squawk, the Postgres parser, seven schema checks                                         | nothing                | row level security, grants | nothing              | nothing reads SQL of another dialect (K-160)                         |
+| Supabase               | Prettier                                        | `deno lint`, `deno check`, five project checks                                                     | knip                   | Semgrep pack, key check    | vitest               | `supabase db lint` exists and no check runs it (K-236)               |
+| Bash                   | shfmt                                           | ShellCheck, `bash -n`, 22 structure checks                                                         | two structure checks   | one Semgrep pack           | nothing              | none                                                                 |
+| Docker, nginx, Ansible | nothing needed                                  | hadolint, Compose, gixy, `nginx -t`, ansible-lint                                                  | nothing                | Trivy                      | nothing              | none                                                                 |
+| YAML, TOML, JSON, env  | Prettier, taplo                                 | yamllint, taplo, v8r schemas, dotenv-linter                                                        | nothing                | nothing needed             | nothing              | YAML indent is set twice (K-222)                                     |
+| GitHub Actions         | Prettier                                        | actionlint, zizmor; pinact (K-204)                                                                 | nothing                | zizmor                     | nothing              | the GitLab file of D-133 has no linter                               |
+| Markdown and prose     | Prettier                                        | markdownlint, Vale, lychee, fences, stale paths                                                    | nothing                | nothing needed             | nothing              | Vale starts once for each file (K-176)                               |
+| Every repository       | EditorConfig                                    | typos, commitlint, structure, naming                                                               | jscpd                  | gitleaks, trufflehog, osv  | nothing              | licenses are read for npm alone (K-80, K-236)                        |
+
+The answer is yes for the languages, and not yet for the frameworks. Every language that stays
+has a formatter, a linter, a type or syntax check, a dead code check, and a security check. The
+five framework presets are thin until D-141 is built, and D-137 to D-140 must land before a
+Vue or Svelte component gets the shared rules. Three rule files have no linter behind them: Tailwind, Playwright, and Bun. A preset lists each
+where its tool is found ([09-manifests.md](09-manifests.md), K-179).
+
+## What the code does today with the ESLint of a repository
+
+D-142 pins ESLint 9. What the code does today with the version a repository already holds:
+
+| The repository holds                     | What gspot does today                                                             | What the developer sees                                                                               |
+| ---------------------------------------- | --------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `"eslint": "^8.57.0"`, a range           | replaces it with the exact pin in `devDependencies`                               | a major upgrade nobody asked for; an `.eslintrc` file and every plugin made for ESLint 8 stop working |
+| `"eslint": "^10.1.0"`, a range           | replaces it with the exact pin, which is lower                                    | a downgrade; a plugin that needs ESLint 10 fails, and npm refuses the install on the peer conflict    |
+| `"eslint": "8.57.1"`, exact and older    | raises it to the pin                                                              | the same as the first row                                                                             |
+| `"eslint": "10.2.0"`, exact and newer    | keeps it                                                                          | gspot installs React plugins that end at ESLint 9 beside it (K-207)                                   |
+| a `file:`, `link:` or `workspace:` entry | keeps it                                                                          | nothing                                                                                               |
+| the runner `none`                        | writes nothing, and `doctor` compares the version found with a floor of 9.38      | ESLint 8 reads `outdated`, and the check refuses to run                                               |
+| its own config and its own plugins       | replaces the config with a stub, and carries the rules set to `off` alone (K-193) | its plugins stay installed and lint nothing; knip then reports them as unused                         |
+| two scopes with two ESLint versions      | looks for the binary in the `node_modules/.bin` of the root alone                 | one version runs for both scopes                                                                      |
+
+`emit/kept-pins.ts` decides the first five rows, and its unit test holds them as the right
+answer. No decision covers any of them. The runner `mise` changes nothing here: ESLint and
+every plugin have no mise installer, so they go into `package.json` under every runner but `none`.
+
+The nine new versions the framework pages name (D-141) were asked from npm too: all exist, and
+all accept ESLint 9. `eslint-plugin-react`, `eslint-plugin-jsx-a11y`, and
+`eslint-plugin-react-native` stop at ESLint 9, which is what holds D-142 in place.
+
+The registry was asked on September 19, 2026 for the 28 ESLint packages the manifests pin. All
+exist except `@gspot/eslint-plugin`, which is not published. Two need ESLint 10 and move down
+with D-142: `@eslint/js` 10.0.1 and `eslint-plugin-unicorn` 74.0.0. Four refuse ESLint 8:
+`eslint-plugin-regexp`, `eslint-plugin-package-json`, `eslint-plugin-zod`, and
+`eslint-plugin-unicorn`. The shipped rule set cannot run on the ESLint 8 of a developer, so
+using the version the repository holds is no way out.
+
+D-145 in [14-decisions.md](../14-decisions.md) is the answer, and the owner accepted it on
+September 19, 2026. The lint tools of gspot are tools and not dependencies of the repository.
+They install under `.gspot/`, and the `package.json` of the developer keeps the ESLint it has.
