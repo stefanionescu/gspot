@@ -19,13 +19,11 @@ that closes it.
 
 ## What is not built
 
-gspot has never run on yap-swift-app. No `swift` preset and no `xcode` preset exist under
-`presets/`. No Swift naming extractor exists. No acceptance harness exists. The 29 configuration
-files and the `quality/` folder of that repository are untouched.
+The Swift structure analyses, the Phase 7 presets, the deeper unit tests, and the manual rewrite
+(G-10). The acceptance runs over yap-text-inference, yap-landing, and slopshop are owed.
 
-The working tree holds the first pieces only: `packages/cli/grammars/swift.wasm` and three tool pins in `mise.toml`. Those
-two files fail `integrity/large-files` and `config-files/toml-format` until they are declared
-and formatted.
+gspot runs on yap-swift-app: branch `chore/gspot` of that repository holds the migration (D-97),
+and [17-migration.md](17-migration.md) lists the defects it exposed. Each one is fixed with a test.
 
 ## Gaps
 
@@ -59,13 +57,9 @@ repository.
 
 ## Presets that do not ship
 
-[presets/README.md](presets/README.md) lists 42 presets, and 17 ship. The five Phase 5
-presets ship: `secrets`, `security`, `dependencies`, `licenses` and `duplication`.
-
-A full replacement of the yap-swift-app gate needs 7 presets that do not ship: `swift`, `xcode`,
-`sql`, `postgres`, `supabase`, `docker` and `nginx`. That repository holds 159 files under `quality/` and 102 mise task files. Its
-TypeScript, shell and Markdown files can run under gspot in a detached worktree once the
-acceptance harness exists.
+Every preset with a file under [presets/](presets/README.md) ships: 43 of them. The nine Phase 7
+presets have no file there yet: `go`, `rust`, `react`, `react-native`, `django`, `nestjs`, `ruby`,
+`vue`, and `svelte`.
 
 ## Order of work
 

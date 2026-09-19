@@ -379,7 +379,10 @@ What the migration does:
 - Commits in the six steps above, so each step is one diff.
 
 What the migration does not do: it fixes no finding in the application code. The app is not the
-subject of this work. Every finding that arrives enters a baseline, and the count is written down.
+subject of this work. Every finding that may enter a baseline does, and the count is written down.
+Layout, syntax, schema, coverage, and build findings never enter one. The report lists them with
+their counts and the command that clears them, and an untracked `gspot.local.toml` skips those
+checks on the machine that makes the migration commits.
 
 What the migration delivers:
 
@@ -394,3 +397,18 @@ What the migration delivers:
 The run is also the hardest test gspot has. Four things count as a gspot defect: a check that
 crashes, a wrong claim, a tool that cannot be found, and a finding on the wrong line. Each one is
 fixed here before the migration continues.
+
+### Defects found after the install
+
+The install went through, and the first days of use exposed these. Each has a test.
+
+| Defect                                                                                                         | Fix                                                                                         |
+| -------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
+| `apply --lower-baselines` after a run of one check removed 107 baseline files                                  | Lowering reads the recorded verdicts, and leaves a check the run did not read in full alone |
+| A baseline was compared scope by scope against a count taken over the whole repository                         | The findings of every scope are added up before the comparison                              |
+| `add zod` ran the whole gate, the Swift analyzer included, and then held nothing                               | `add` runs the checks the preset brings or changes, and installs what it pins               |
+| `doctor` called ansible-lint outdated, because color codes in its version read as a version                    | The probe asks for no color and strips the codes                                            |
+| `doctor` called license-checker-rseidelsohn 5.0.1 outdated, because it prints 4.4.2 about itself               | An npm tool is the version its package holds                                                |
+| `doctor` called `@vitest/coverage-v8` missing in an app that uses istanbul                                     | The repository owns its coverage provider, and names its configuration in a setting         |
+| Spelling held 4,404 findings: the old typos file named no locale, which accepts British and American spellings | Takeover carries the locale, and `en` for a file that names none                            |
+| typos read the Xcode project file, because it forgets its exclude list for a file named on the command line    | Both typos commands pass `--force-exclude`                                                  |
