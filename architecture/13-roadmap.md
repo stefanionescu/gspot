@@ -90,6 +90,26 @@ Every row closes a section of [20-adoption.md](20-adoption.md) and rows of
 [18-gaps.md](18-gaps.md). The order is the order in which a developer meets the defects, with the
 two defects that destroy files first.
 
+### Delete first
+
+D-134 decides that a thing is built properly or deleted, with no step between. Everything below
+is deleted in one early pass, before a fix builds on it. Each deletion takes the code, the flag or
+key, its test, and every mention in this folder and in the manual.
+
+| Delete                                                                                                                 | Where it lives                                            |
+| ---------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------- |
+| `init --own`, which no code reads (K-97)                                                                               | `commands/init.ts`, `types/lifecycle.ts`                  |
+| `--project-templates` on `init` and `apply`, and the project templates of the specification                            | `commands/`, `types/emit.ts`, `09-rules.md`, `02-cli.md`  |
+| `[editor] vscode`, accepted and never built (K-99)                                                                     | `policy/schema.ts`, `normalize.ts`, `03-configuration.md` |
+| `architecture.package_roots`, `route_directories`, `shared_directories`, `feature_contracts`, `imports_allowed` (K-99) | `policy/schema.ts`, `normalize.ts`                        |
+| `limits.line_length`, `limits.trivial_ast_nodes`, `tools.trufflehog.verified_only` (K-100)                             | three manifests                                           |
+| `gspot why`, `gspot declare`, `gspot profile check`, and six of the seven lists of `gspot allow`                       | `commands/`, `policy/`, `output/why.ts`                   |
+| `doctor --offline`, `uninstall --keep-hooks`, `--dry-run` on the six edit commands, `apply --check`                    | `commands/`                                               |
+| one of `no-call-through` and `no-trivial-functions` (K-102)                                                            | `packages/eslint-plugin/src/rules/`                       |
+| the sentence about subagents in the managed block (K-92)                                                               | `rules/managed-block.ts`                                  |
+| the nine `copy = true` stubs (K-47)                                                                                    | seven manifests, `emit/targets.ts`                        |
+| the language names in the banned folder names (K-86)                                                                   | `config/shell.ts`                                         |
+
 The first five fixes are a few lines each, and each gets a planted test:
 
 1. Takeover keeps `setup.cfg` and `tox.ini` (K-36).
@@ -117,7 +137,7 @@ The first five fixes are a few lines each, and each gets a planted test:
 | 15    | The app branch is deleted and the install is redone from the source tree (D-121)                                                                                       | the table that opens 20-adoption.md is measured again beside the first numbers; the branch holds no `gspot.local.toml`, and its report comes from a run with no local skip                                                      |
 | 16    | Seeing the menu, levels, and the three init questions (A-21 to A-23, K-62 to K-64, D-118 to D-120)                                                                     | `gspot list` prints every check of the app with its state; `init` on the app at the `core` level holds under 2,000 findings                                                                                                     |
 | 17    | The agent block as a plain list (A-25, K-65)                                                                                                                           | `CLAUDE.md` in the app holds under 3 KB                                                                                                                                                                                         |
-| 18    | Plain words where a person reads them, and the renames of 19-names.md (K-66, K-67, K-54, K-61)                                                                         | a fresh `gspot.toml` holds no `surface` and no `inspection`; `grep -ri surface` over help text, output and guides finds nothing; an old key still loads with a message that names the new one for one release                   |
+| 18    | Plain words where a person reads them, and the renames of 19-names.md (K-66, K-67, K-54, K-61)                                                                         | a fresh `gspot.toml` holds no `surface` and no `inspection`; `grep -ri surface` over help text, output and guides finds nothing; an old key is an unknown key, with no alias and no message of its own                          |
 | 19    | The cache key of a declared check, and a push that checks what is pushed (K-69, K-70)                                                                                  | a `[[check]]` names the inputs it reads, or is never cached; a push of clean commits passes with unrelated uncommitted work in the tree                                                                                         |
 | 20    | The top level of this repository (K-68, K-73)                                                                                                                          | one schema file at the root, `prose/` inside its preset, `examples/` installed by a planted test, the community files present                                                                                                   |
 | 21    | What runs where, `--changed`, the estimate and the progress lines (K-81, D-122 to D-125)                                                                               | a push in the app that touches `api/` ends in under a minute; a full run prints a line as each check ends and a summary with times                                                                                              |

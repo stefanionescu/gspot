@@ -1042,3 +1042,20 @@ GitLab remote, a `.github/` folder or a GitHub remote, and no CI otherwise. For 
 writes `.gitlab/ci/gspot.yml`, and the plan shows the one `include:` line for the developer to
 add to `.gitlab-ci.yml`. gspot never edits that file. A repository whose CI already runs a lint
 job is told so and gets no second job.
+
+## D-134 A thing is built or deleted, and nothing is kept for compatibility
+
+gspot has no release and one install, the branch in yap-swift-app, which is deleted and redone
+(D-121). A rename therefore replaces the old name everywhere, and the old name is an unknown key or an
+unknown flag like any other. No alias, no flag kept and marked as old, no reader for an earlier
+`gspot.toml`, and no message written for one old name.
+
+Every finding of [18-gaps.md](https://github.com/stefanionescu/gspot/blob/main/architecture/18-gaps.md) lands in one of two columns. Implement: the thing is
+built, tested, and shown in a guide. Delete: the code, the flag or key, its test, and every
+mention go in one change. Three kinds of thing sit in the second column until somebody asks for the first:
+
+- a flag that parses and does nothing;
+- a key that loads and changes nothing;
+- a page of this folder that describes what nobody built.
+
+The Adoption phase of the build order opens with the delete table.
