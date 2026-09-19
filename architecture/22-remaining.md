@@ -15,8 +15,9 @@ read found.
    flags and keys, `why`, `declare`, nine plugin rules, the nine copy stubs. Add to it the six
    rule files that no preset installs (K-232) and the two off switches of K-228.
 3. Make CI run for the first time (K-204). Nothing counts as done before that run is green.
-4. Do the first fixes 1 to 7 of that document. Add the checks that give a wrong answer: a
-   TypeScript check that reads no file (K-226), and suppressions that nobody counts (K-234).
+4. Do the first fixes 1 to 7 of that document. Add three wrong answers. A TypeScript check
+   reads no file (K-226). Nobody counts most suppressions (K-234). A reason writes a line of
+   config (K-238).
 5. Take one owner out of what ships: the Semgrep packs, the Swift header rules, and the knip
    template (K-218 to K-220). Do the same for the Express and JavaScript guides (K-231), and
    restore the cut list items (K-229).
