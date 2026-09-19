@@ -1,9 +1,9 @@
 ---
 title: "duplication/jscpd"
-description: "Finds blocks of code copied between files, and fails when their share passes the ceiling."
+description: "Finds blocks of code copied between files. While the duplicated share stays at or under the ceiling it passes, and over it every copy is a finding that names both places."
 ---
 
-Finds blocks of code copied between files, and fails when their share passes the ceiling.
+Finds blocks of code copied between files. While the duplicated share stays at or under the ceiling it passes, and over it every copy is a finding that names both places.
 
 ## Why
 
@@ -18,5 +18,6 @@ Move the shared block into one function both callers use, or raise limits.duplic
 - Preset: [the duplication preset](/reference/presets/duplication/)
 - Stage: push
 - Tool: jscpd
+- Engine: integrity
 
 Turn it off for a path with a reason: `gspot ignore duplication/jscpd --paths <glob> --reason "<why>"`.

@@ -19,6 +19,13 @@ function listAt(value: unknown, path: string | undefined): unknown[] {
     return Array.isArray(found) ? found : [];
 }
 
+// Every chain of nodes under one node, nearest first: each key of the path names a list one level further down.
+function chainsUnder(chain: unknown[], keys: string[]): unknown[][] {
+    const [key, ...rest] = keys;
+    if (key === undefined) return [chain];
+    return listAt(chain[0], key).flatMap((child) => chainsUnder([child, ...chain], rest));
+}
+
 function text(value: unknown): string | undefined {
     return typeof value === 'string' || typeof value === 'number' ? String(value) : undefined;
 }
@@ -32,10 +39,13 @@ function firstLinePosition(finding: Finding, base: number, line: string | undefi
 function jsonFinding(shape: { check: string; help: string; output: OutputFormat }, sources: unknown[]): Finding {
     const { check, help, output } = shape;
     const fields: Record<string, string | undefined> = output.fields ?? {};
+    const one = (path: string): string | undefined =>
+        sources.map((source) => text(at(source, path))).find((found) => found !== undefined);
+    // A field may name several paths with spaces between them; the values join in that order.
     const read = (name: string): string | undefined => {
-        const path = fields[name];
-        if (path === undefined) return undefined;
-        return sources.map((source) => text(at(source, path))).find((found) => found !== undefined);
+        const found = (fields[name] ?? '').split(' ').flatMap((path) => (path === '' ? [] : [one(path) ?? '']));
+        const joined = found.filter((part) => part !== '').join(' ');
+        return joined === '' ? undefined : joined;
     };
     const finding: Finding = { check, file: read('file') ?? '', message: read('message') ?? '', help, fixable: false };
     firstLinePosition(finding, output.line_base ?? 1, read('line'), read('column'));
@@ -45,7 +55,7 @@ function jsonFinding(shape: { check: string; help: string; output: OutputFormat 
 }
 
 /**
- * Findings from JSON output. items is the dotted path to the list; children, when set, is the list inside each item, and a field missing there is read from the item.
+ * Findings from JSON output. items is the dotted path to the list. children, when set, names the list inside each item, and each further key a list one level down; a field missing at the deepest node is read from the nodes above it.
  * @param check the check id
  * @param output the output table of the manifest
  * @param stdout what the tool printed
@@ -62,9 +72,8 @@ export function parseJson(check: string, output: OutputFormat, stdout: string, h
         return [{ check, file: '', message: stdout.trim().slice(0, UNPARSED_LIMIT), help, fixable: false }];
     }
     const shape = { check, help, output };
+    const keys = output.children === undefined ? [] : output.children.split('.');
     return listAt(parsed, output.items).flatMap((item) =>
-        output.children === undefined
-            ? [jsonFinding(shape, [item])]
-            : listAt(item, output.children).map((child) => jsonFinding(shape, [child, item])),
+        chainsUnder([item], keys).map((chain) => jsonFinding(shape, chain)),
     );
 }

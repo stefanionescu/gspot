@@ -73,3 +73,12 @@ export type SarifResult = {
 
 /** The part of a SARIF log the CodeQL check reads. */
 export type SarifLog = { runs?: { results?: SarifResult[] }[] };
+
+/** One side of a clone in a jscpd report. */
+export type ClonePlace = { name: string; start: number; end: number };
+
+/** The part of a jscpd report the duplication check reads. */
+export type CloneReport = {
+    statistics?: { total?: { percentage?: number } };
+    duplicates?: { lines: number; firstFile: ClonePlace; secondFile: ClonePlace }[];
+};

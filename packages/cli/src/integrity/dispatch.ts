@@ -18,6 +18,7 @@ import { ansibleLint } from '#cli/integrity/ansible-lint.ts';
 import { readmeShape } from '#cli/integrity/readme/shape.ts';
 import { testCoverage } from '#cli/apple/xctest/coverage.ts';
 import { suppressions } from '#cli/integrity/suppressions.ts';
+import { copiedBlocks } from '#cli/integrity/copied-blocks.ts';
 import { docsHeadings } from '#cli/integrity/docs-headings.ts';
 import { migrationDocs } from '#cli/postgres/migration-docs.ts';
 import { nginxTest } from '#cli/integrity/nginx/config-test.ts';
@@ -67,6 +68,7 @@ const checks: Record<string, IntegrityCheck> = {
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
     'licenses-npm': licensesNpm,
+    'copied-blocks': copiedBlocks,
     'xctest-disabled': disabledTests,
     'xctest-sleep': noSleep,
     'xctest-recording': recordingMode,

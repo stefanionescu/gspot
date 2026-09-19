@@ -43,9 +43,9 @@ id = "dependencies/osv"
 stage = "push"
 runs = "once"
 requires = "network"
-command = ["osv-scanner", "scan", "source", "--config", "{config:osv-scanner}", "--format", "gh-annotations", "--recursive", "{root}"]
+command = ["osv-scanner", "scan", "source", "--config", "{config:osv-scanner}", "--format", "json", "--recursive", "{root}"]
 inspection = ["advisories"]
-output = {format = "regex", pattern = "^::error file=(?<file>[^:]+)::(?<message>.*)$"}
+output = {format = "json", items = "results", children = "packages.vulnerabilities", fields = {file = "source.path", rule = "id", message = "package.name package.version summary"}}
 summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
 why = "A dependency with a published advisory is an attack someone already wrote down."
 fix = "Upgrade the package the finding names. When no fix exists, record the advisory with gspot allow osv <id> --reason, and a date to look again."

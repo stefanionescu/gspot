@@ -46,6 +46,34 @@ describe('parseJson', () => {
         expect([finding?.line, finding?.column]).toEqual([1, 19]);
     });
 
+    test('lists nested two levels down read the file from the top and join several message paths', () => {
+        const stdout = JSON.stringify({
+            results: [
+                {
+                    source: { path: 'bun.lock' },
+                    packages: [
+                        {
+                            package: { name: 'qs', version: '6.15.3' },
+                            vulnerabilities: [{ id: 'GHSA-1', summary: 'Denial of service.' }],
+                        },
+                    ],
+                },
+            ],
+        });
+        const output = {
+            format: 'json' as const,
+            items: 'results',
+            children: 'packages.vulnerabilities',
+            fields: { file: 'source.path', rule: 'id', message: 'package.name package.version summary' },
+        };
+        const [finding] = parseJson('dependencies/osv', output, stdout, 'help');
+        expect([finding?.file, finding?.rule, finding?.message]).toEqual([
+            'bun.lock',
+            'GHSA-1',
+            'qs 6.15.3 Denial of service.',
+        ]);
+    });
+
     test('text that is not JSON becomes one finding that shows it', () => {
         const findings = parseJson('x/y', { format: 'json' }, '{ broken', 'help');
         expect(findings[0]?.message).toBe('{ broken');

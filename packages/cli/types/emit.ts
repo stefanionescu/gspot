@@ -83,6 +83,8 @@ export type TemplateInputs = {
     files: (extension: string) => string[];
     importAliases: (scope: string) => Record<string, string>;
     tools: string[];
+    /** The npm package of every selected tool that has one. */
+    toolPackages: string[];
     header: string;
     headerLines: string[];
 };

@@ -42,7 +42,8 @@ describe('the duplication preset', () => {
             commitAll(fixture.path);
             const found = run(fixture.path, ['check', 'duplication/jscpd', '--no-cache'], environment);
             expect(found.code, found.stdout + found.stderr).toBe(1);
-            expect(found.stdout).toContain('scripts/first.sh');
+            expect(found.stdout).toContain('lines repeat scripts/');
+            expect(found.stdout).toContain('over the ceiling of 4');
         },
         PLANTED_TIMEOUT_MS * 2,
     );

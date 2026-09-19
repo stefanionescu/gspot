@@ -149,7 +149,8 @@ function parseLines(check: string, text: string, help: string): Finding[] {
  */
 function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string): Finding[] {
     const output = spec.output ?? DEFAULT_OUTPUT;
-    const text = `${stdout}\n${stderr}`;
+    // A tool that colors its output although nothing reads colors still yields clean paths and messages.
+    const text = Bun.stripANSI(`${stdout}\n${stderr}`);
     switch (output.format) {
         case 'none': {
             return [];

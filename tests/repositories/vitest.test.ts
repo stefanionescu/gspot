@@ -24,7 +24,7 @@ const INIT = [
     '--no-install',
 ];
 const PACKAGE =
-    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "devDependencies": {\n        "vitest": "3.2.4"\n    }\n}\n';
+    '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "devDependencies": {\n        "vitest": "4.1.11"\n    }\n}\n';
 const SOURCE =
     '// Arithmetic the planted tests call.\n\n/**\n * Doubles a number.\n * @param value the number\n * @returns twice the number\n */\nexport function double(value: number): number {\n    return value * 2;\n}\n';
 const UNTESTED = `${SOURCE}\n/**\n * Triples a number.\n * @param value the number\n * @returns three times the number\n */\nexport function triple(value: number): number {\n    return value * 3;\n}\n`;

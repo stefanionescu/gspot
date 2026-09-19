@@ -17,9 +17,9 @@ Kind: concern.
 
 ## Checks
 
-| Check                                                      | Stage | What it finds                                                                             |
-| ---------------------------------------------------------- | ----- | ----------------------------------------------------------------------------------------- |
-| [`duplication/jscpd`](/reference/rules/duplication/jscpd/) | push  | Finds blocks of code copied between files, and fails when their share passes the ceiling. |
+| Check                                                      | Stage | What it finds                                                                                                                                                              |
+| ---------------------------------------------------------- | ----- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| [`duplication/jscpd`](/reference/rules/duplication/jscpd/) | push  | Finds blocks of code copied between files. While the duplicated share stays at or under the ceiling it passes, and over it every copy is a finding that names both places. |
 
 ## Settings
 

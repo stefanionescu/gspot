@@ -4,7 +4,7 @@
 # gspot set, allow, ignore, declare, add, remove. Run gspot explain <anything> for what it means.
 
 version = 1
-presets = ["bash", "spelling", "typescript", "markdown", "prose", "commits", "config-files", "naming", "formatting", "docs"]
+presets = ["bash", "spelling", "typescript", "markdown", "prose", "commits", "config-files", "naming", "formatting", "docs", "secrets", "dependencies", "licenses", "duplication", "security"]
 
 [[scope]]
 path = "packages/cli"
@@ -94,7 +94,7 @@ globals = {"packages/npm/**" = "commonjs"}
 
 [tools.knip]
 entry = ["**/build.ts", "**/publish.ts", "packages/cli/schemas.ts", "packages/cli/rules-lint/command.ts", "packages/npm/gspot/gspot.js", "docs/reference-pages.ts", "docs/astro.config.ts", "docs/src/content.config.ts"]
-ignore_dependencies = [{name = "vitest", reason = "The planted vitest test runs it in a fixture, which knip cannot see."}, {name = "@vitest/coverage-v8", reason = "The planted vitest test needs the coverage provider in a fixture."}, {name = "@vitest/eslint-plugin", reason = "The ESLint configuration of a planted fixture imports it."}, {name = "@stoplight/spectral-cli", reason = "The planted express test runs it by name, which knip cannot see."}, {name = "jscpd", reason = "The planted duplication test runs it by name, which knip cannot see."}, {name = "license-checker-rseidelsohn", reason = "The planted licenses test runs it by name, which knip cannot see."}, {name = "verdaccio", reason = "The release test starts it through bunx, which knip cannot see."}, {name = "tree-sitter-bash", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-css", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-html", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-javascript", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-python", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-typescript", reason = "The grammar WASM file is read from the package, not imported."}]
+ignore_dependencies = [{name = "vitest", reason = "The planted vitest test runs it in a fixture, which knip cannot see."}, {name = "@vitest/coverage-v8", reason = "The planted vitest test needs the coverage provider in a fixture."}, {name = "@vitest/eslint-plugin", reason = "The ESLint configuration of a planted fixture imports it."}, {name = "@stoplight/spectral-cli", reason = "The planted express test runs it by name, which knip cannot see."}, {name = "verdaccio", reason = "The release test starts it through bunx, which knip cannot see."}, {name = "tree-sitter-bash", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-css", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-html", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-javascript", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-python", reason = "The grammar WASM file is read from the package, not imported."}, {name = "tree-sitter-typescript", reason = "The grammar WASM file is read from the package, not imported."}]
 
 [structure]
 single_file_folder_allowed = [{paths = ["packages/npm/gspot"], reason = "The npm launcher package is one file by design: it runs the platform package that installed."}]
@@ -132,3 +132,6 @@ command = ["bun", "packages/cli/rules-lint/command.ts"]
 paths = ["rules/**", "packages/cli/rules-lint/**"]
 stage = "commit"
 summary = "Lints every rule file: front matter, links, size, layer boundary, fences, and the prose rules."
+
+[tools.licenses]
+exceptions = [{package = "eslint-plugin-sonarjs@4.2.0", license = "LGPL-3.0-only", reason = "A lint plugin that runs at development time and is linked dynamically; nothing of it ships in the binary."}, {package = "lightningcss@1.33.0", license = "MPL-2.0", reason = "A build dependency of the manual site; the license binds changes to its own files, and none are made."}, {package = "truncate-utf8-bytes@1.0.2", license = "WTFPL", reason = "A permissive license with no conditions; it arrives through a test tool and ships in nothing."}]

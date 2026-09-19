@@ -97,6 +97,19 @@ function toolNames(session: Session): string[] {
     return [...new Set(names)].toSorted((a, b) => a.localeCompare(b));
 }
 
+// The npm packages of the selected tools: a repository installs them to run them, and imports none of them.
+function toolPackages(session: Session): string[] {
+    const names = session.scopes.flatMap((entry) =>
+        entry.selected.flatMap((manifest) =>
+            manifest.tools.flatMap((tool) => {
+                const name = tool.installers['npm'];
+                return name === undefined ? [] : [name];
+            }),
+        ),
+    );
+    return [...new Set(names)].toSorted((a, b) => a.localeCompare(b));
+}
+
 /** The layout of generated JSON when no policy says otherwise. */
 export const SHIPPED_JSON_FORMAT: JsonFormat = { width: JSON_WIDTH, indent: JSON_INDENT };
 
@@ -198,6 +211,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
         has: (preset) => view.presets.includes(preset),
         importAliases: (scope) => aliasesFor(session.root, scope),
         tools: toolNames(session),
+        toolPackages: toolPackages(session),
         files,
         header: headerFor('x.toml', session.version),
         headerLines: headerLines(session.version),
