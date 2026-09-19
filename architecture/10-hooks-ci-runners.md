@@ -66,20 +66,24 @@ gspot goes where the hook already points (D-114). `init` reads what each hook ca
 the gspot line in a fixed order. The task the hook calls comes first, then the hook file, then
 hooks of its own where none exist.
 
-| `[hooks] tool` | gspot writes                                                                  | Proposed when                  |
-| -------------- | ----------------------------------------------------------------------------- | ------------------------------ |
-| `existing`     | one managed block in the task or the hook file that git already runs          | the repository has hooks       |
-| `husky`        | one line in each `.husky/` hook                                               | `.husky/` exists               |
-| `lefthook`     | a `gspot` block in `lefthook.yml`                                             | `lefthook.yml` exists          |
-| `gspot`        | `.gspot/hooks/pre-commit`, `pre-push`, and `commit-msg`, and `core.hooksPath` | no hooks exist                 |
-| no table       | nothing                                                                       | the person passes `--no-hooks` |
+| `[hooks] tool`     | gspot writes                                                                  | Proposed when                  |
+| ------------------ | ----------------------------------------------------------------------------- | ------------------------------ |
+| `existing`         | one managed block in the task or the hook file that git already runs          | the repository has hooks       |
+| `husky`            | one line in each `.husky/` hook                                               | `.husky/` exists               |
+| `lefthook`         | a `gspot` block in `lefthook.yml`                                             | `lefthook.yml` exists          |
+| `pre-commit`       | one `repo: local` hook in `.pre-commit-config.yaml`, as a managed block       | that file exists               |
+| `simple-git-hooks` | the gspot line in its key of `package.json`, after a yes                      | that key exists                |
+| `gspot`            | `.gspot/hooks/pre-commit`, `pre-push`, and `commit-msg`, and `core.hooksPath` | no hooks exist                 |
+| no table           | nothing                                                                       | the person passes `--no-hooks` |
 
-A repository with hooks keeps them, and lines of a task that are no lint stay (D-101). gspot
+A repository with hooks keeps them, and lines of a task that are no lint stay (D-101). Where a
+husky hook calls lint-staged, the gspot line goes into the hook, and the plan lists the
+lint-staged entries that run a tool gspot runs too. gspot
 sets `core.hooksPath` only where it owns the hooks, and never where a tracked file sets it. A
 folder named `hooks` is no sign of git hooks: gspot asks `git config core.hooksPath` first.
 
-`core.hooksPath` is one setting of one clone. The setup entry of the repository installs the
-hooks (D-115), and `doctor` asks git whether the hooks run in this clone. It names one of three
+`core.hooksPath` is one setting of one clone. `gspot install` installs the hooks of a clone, and
+the setup entry of the repository calls it (D-115, D-156), and `doctor` asks git whether the hooks run in this clone. It names one of three
 states, and ends with the setup command where the hooks exist and do not run.
 
 The hook of gspot runs under the Bash 3.2 that macOS ships (D-85):
@@ -144,10 +148,15 @@ For GitHub, gspot writes `.github/workflows/gspot.yml`:
 
 ```yaml
 name: gspot
-on: [push, pull_request]
+on:
+    push:
+    pull_request:
+    merge_group:
+permissions:
+    contents: read
 concurrency:
     group: gspot-${{ github.ref }}
-    cancel-in-progress: true
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
     check:
         runs-on: ubuntu-24.04
@@ -156,23 +165,44 @@ jobs:
             - uses: actions/checkout@<pinned sha>
               with: { fetch-depth: 0, persist-credentials: false }
             - uses: jdx/mise-action@<pinned sha>
-            - run: mise install
+            - uses: actions/cache@<pinned sha>
+              with:
+                  path: |
+                      .gspot/node_modules
+                      .gspot/.venv
+                  key: gspot-${{ runner.os }}-${{ hashFiles('.gspot/*.lock', '.mise/conf.d/gspot-tools.toml') }}
+            - run: gspot install
             - run: gspot check --report gspot.json
             - run: gspot check --stage manual
               if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
-            - uses: github/codeql-action/upload-sarif@<pinned sha>
-              if: always()
-              with: { sarif_file: .gspot/report.sarif }
+    code-scanning:
+        if: github.event_name == 'push' # never on a pull request from a fork
+        needs: check
+        permissions: { contents: read, security-events: write }
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+        steps: [download the report, github/codeql-action/upload-sarif@<pinned sha>]
 ```
 
-The job follows `GITHUB-ACTIONS.md`, the rule file gspot installs: a pinned runner image, a
-timeout, and a concurrency group. The findings print to the log, and the JSON report is written
+The job follows `GITHUB-ACTIONS.md`, the rule file gspot installs. It has least permissions, a
+pinned runner image, a timeout, and a concurrency group that cancels pull request runs alone.
+The upload to code scanning is a job of its own, and `[ci] sarif = false` leaves it out for a
+repository without code scanning.
+
+The findings print to the log, and the JSON report is written
 beside them. A macOS job appears only where a Swift scope exists. Actions are pinned by commit,
 and `config-files/actions-pins` asks GitHub that each pinned commit exists. Drift of generated
 files is the check `integrity/generated-drift` inside `gspot check`, so the job runs no `apply`.
 
 For GitLab, gspot writes `.gitlab/ci/gspot.yml` with one job, and the plan shows the line that
-includes it. gspot never edits `.gitlab-ci.yml`.
+includes it. gspot never edits `.gitlab-ci.yml`. The job sets `GIT_DEPTH: 0`, runs for merge
+requests and the default branch, and declares `gl-code-quality-report.json`. GitLab reads the
+CodeClimate format there, so `check --report` writes that file beside the JSON and the SARIF.
+
+The CI system is found by its files, `.github/workflows/` or `.gitlab-ci.yml`, and never by a
+host name, so a self-hosted host works. For every other system, such as Bitbucket, Jenkins,
+CircleCI, or Azure, gspot writes no file. The plan prints the lines to paste: install gspot at
+the pinned version, `gspot install`, and `gspot check --report gspot.json`.
 
 ```yaml
 include:

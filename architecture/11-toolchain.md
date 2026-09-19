@@ -35,12 +35,17 @@ All three places carry the same version from one release run:
 
 | Place          | Holds                                                                                    | Used by                                                |
 | -------------- | ---------------------------------------------------------------------------------------- | ------------------------------------------------------ |
-| GitHub release | the five binaries and `checksums.txt`, each binary attested                              | mise, and the CI job without mise                      |
+| GitHub release | the seven binaries and `checksums.txt`, each binary attested                             | mise, and the CI job without mise                      |
 | npm            | `gspot`, one `@gspot/cli-<os>-<cpu>` package for each target, and `@gspot/eslint-plugin` | `npx gspot`, and `.gspot/package.json`                 |
 | `gspot.dev`    | the manual and `gspot.schema.json`                                                       | the `#:schema` line of every `gspot.toml`, and editors |
 
-Every published package ships `LICENSE.md` and `NOTICE.md`. The release fails before it
+The seven targets include `linux-x64-musl` and `linux-arm64-musl`, for Alpine images. Every
+published package ships `LICENSE.md` and `NOTICE.md`. The release fails before it
 publishes anything when one binary or one grammar is absent.
+
+Before the first release, a repository installs from the local `verdaccio` registry of the test
+harness, which `GSPOT_REGISTRY` names (D-158). The redo of yap-swift-app runs that way, and no
+tracked file holds the address.
 
 The first release needs these, in this order:
 
@@ -91,15 +96,20 @@ fails a pin below what a reference repository runs.
 | --------------------------------- | --------------------------------------------------------------------------------------------- |
 | a binary mise can install         | `.mise/conf.d/gspot-tools.toml`, under the mise runner                                        |
 | an npm tool or library            | `.gspot/node_modules`, from `.gspot/package.json`, with the package manager of the repository |
-| a Python tool                     | mise, through its `pipx` backend                                                              |
+| a Python tool                     | `.gspot/.venv`, from `.gspot/pyproject.toml`, with uv (D-157)                                 |
 | a host tool, such as `xcodebuild` | nowhere; `doctor` reports whether it is present                                               |
 | any tool, with no mise            | nowhere; `doctor` prints the install command of the platform                                  |
 
-The lint tools of gspot are tools, not dependencies of the repository (D-145). gspot never writes
+`gspot install` runs all of these for one clone (D-156). The lint tools of gspot are tools, not
+dependencies of the repository (D-145). gspot never writes
 one into `package.json`, and the ESLint of the developer, its config, and its plugins stay as
 they are. The generated ESLint config sits in `.gspot/`, so its imports resolve there. The type
 check keeps the TypeScript of the repository, because `tsc` answers for the build the developer
-ships. An install hint names Homebrew only for a tool with no pin, because Homebrew installs the
+ships.
+
+The install under `.gspot/` takes the registry, the proxy, and the token of the repository from
+the package manager. It stays a project of its own inside a pnpm or Yarn workspace. An install
+hint names Homebrew only for a tool with no pin, because Homebrew installs the
 current version alone.
 
 Every tool in the presets has a Windows build except `plutil`, `xcodebuild`, `xcstringstool`,
@@ -182,8 +192,8 @@ action on upgrade
 The rules section compares the rule lists of two configs as data, for every tool whose config
 lists rules. `gspot upgrade` moves the pin, runs `apply`, installs the tools, and takes the
 widening step for checks that are new or whose config changed (D-143). It never edits
-`gspot.toml` and never commits. A setting that a version removes is an unknown key, and the
-message names the keys that exist (D-134).
+`gspot.toml` and never commits. Before the first release, a removed setting is an unknown key (D-134). From the first release
+on, `upgrade` rewrites a renamed key and lists the rewrite in its plan (D-159).
 
 ## Rollback
 

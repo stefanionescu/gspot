@@ -5,26 +5,28 @@ merge.
 
 ## Files
 
-| Path                                                     | Owner                         | Tracked | Purpose                                                                            |
-| -------------------------------------------------------- | ----------------------------- | ------- | ---------------------------------------------------------------------------------- |
-| `gspot.toml`                                             | the repository                | yes     | the config, written by `init` and changed by the five writing commands or by hand  |
-| `gspot.local.toml`                                       | one machine                   | no      | a skip for a tool that cannot run on this machine, and nothing else                |
-| `.gspot/<tool-file>`                                     | gspot                         | yes     | the generated configuration of each tool, with the mark of gspot                   |
-| `.gspot/package.json`, its lockfile                      | gspot                         | yes     | the npm lint tools gspot pins (D-145)                                              |
-| `.gspot/node_modules/`                                   | gspot                         | no      | where those tools install                                                          |
-| `.gspot/version`                                         | gspot                         | yes     | the gspot version this repository runs, one line                                   |
-| `.gspot/baseline.json`                                   | gspot                         | yes     | every held count, sorted, one path on a line (D-104)                               |
-| `.gspot/hooks/*`                                         | gspot                         | yes     | git hooks, only where the repository had none (D-101)                              |
-| `.gspot/rules/**`                                        | gspot                         | yes     | the installed rule files                                                           |
-| `.gspot/cache/**`                                        | gspot                         | no      | verdicts keyed on their inputs, dropped after 30 days                              |
-| `.gspot/report.json`, `report.sarif`                     | gspot                         | no      | the last run                                                                       |
-| `.mise/conf.d/gspot-tools.toml`                          | gspot                         | yes     | tool pins under the mise runner (D-127)                                            |
-| `.editorconfig`                                          | gspot                         | yes     | written whole from `[format]`, because editors read no other place                 |
-| a root pointer                                           | gspot                         | yes     | only for a tool with an include form, such as `extends` or `parent_config` (D-100) |
-| `.gitignore`, `.gitattributes`, `CLAUDE.md`, `AGENTS.md` | gspot, one managed block each | yes     | the untracked paths, `.gspot/** linguist-generated`, and the index of rule files   |
-| the hook or task a hook calls                            | gspot, one managed block      | yes     | the gspot line, where the repository has hooks (D-114)                             |
-| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml`  | gspot                         | yes     | the CI job, when enabled (D-133)                                                   |
-| `gspot.schema.json`                                      | gspot                         | no      | the JSON Schema of `gspot.toml`, published with each release                       |
+| Path                                                    | Owner                         | Tracked | Purpose                                                                                       |
+| ------------------------------------------------------- | ----------------------------- | ------- | --------------------------------------------------------------------------------------------- |
+| `gspot.toml`                                            | the repository                | yes     | the config, written by `init` and changed by the five writing commands or by hand             |
+| `gspot.local.toml`                                      | one machine                   | no      | a skip for a tool that cannot run on this machine, and nothing else                           |
+| `.gspot/<tool-file>`                                    | gspot                         | yes     | the generated configuration of each tool, with the mark of gspot                              |
+| `.gspot/package.json`, its lockfile                     | gspot                         | yes     | the npm lint tools gspot pins (D-145)                                                         |
+| `.gspot/pyproject.toml`, `uv.lock`                      | gspot                         | yes     | the Python lint tools gspot pins (D-157)                                                      |
+| `.gspot/node_modules/`, `.gspot/.venv/`                 | gspot                         | no      | where those tools install                                                                     |
+| `.gspot/version`                                        | gspot                         | yes     | the gspot version this repository runs, one line                                              |
+| `.gspot/baseline.json`                                  | gspot                         | yes     | every held count, sorted, one path on a line (D-104)                                          |
+| `.gspot/hooks/*`                                        | gspot                         | yes     | git hooks, only where the repository had none (D-101)                                         |
+| `.gspot/rules/**`                                       | gspot                         | yes     | the installed rule files                                                                      |
+| `.gspot/cache/**`                                       | gspot                         | no      | verdicts keyed on their inputs, dropped after 30 days                                         |
+| `.gspot/report.json`, `report.sarif`                    | gspot                         | no      | the last run                                                                                  |
+| `.mise/conf.d/gspot-tools.toml`                         | gspot                         | yes     | tool pins under the mise runner (D-127)                                                       |
+| `.editorconfig`                                         | gspot                         | yes     | written whole from `[format]`, because editors read no other place                            |
+| a root pointer                                          | gspot                         | yes     | for a tool with an include form: a re-export, `extends`, `extend`, or `parent_config` (D-100) |
+| `.gitignore`, `.gitattributes`                          | gspot, one managed block each | yes     | the untracked paths; `.gspot/** linguist-generated` and `.gspot/** text eol=lf`               |
+| `AGENTS.md`, and the agent files the repository holds   | gspot, one managed block each | yes     | the index of rule files: `CLAUDE.md`, `GEMINI.md`, Copilot instructions, a Cursor rule        |
+| the hook or task a hook calls                           | gspot, one managed block      | yes     | the gspot line, where the repository has hooks (D-114)                                        |
+| `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml` | gspot                         | yes     | the CI job, when enabled (D-133)                                                              |
+| `gspot.schema.json`                                     | gspot                         | no      | the JSON Schema of `gspot.toml`, published with each release                                  |
 
 gspot writes nothing else. It never writes a lint tool, a pin, or a script into `package.json`,
 and never a table into `pyproject.toml` (D-117, D-145). Under an npm runner it adds one line, the
@@ -147,12 +149,13 @@ stage   = "commit"
 
 # Absent table: gspot does nothing there (D-130).
 [hooks]
-tool       = "existing"           # gspot | husky | lefthook | existing
+tool       = "existing"           # gspot | husky | lefthook | pre-commit | simple-git-hooks | existing
 pre_commit = "mise task lint"     # where the gspot line lives, for "existing"
 push       = "changed"            # or "all" (D-123)
 
 [ci]
 provider = "github"               # github | gitlab
+sarif    = true                   # upload findings to code scanning, where the repository has it
 
 [runner]
 tool  = "mise"                    # mise | npm | pnpm | yarn | bun
@@ -160,6 +163,7 @@ tasks = { check = "lint", fix = "lint:fix" }     # the task names that call gspo
 
 [rules]
 install   = true
+agents    = ["AGENTS.md", "CLAUDE.md"]   # detected from what the repository holds
 directory = ".gspot/rules"
 exclude   = []
 

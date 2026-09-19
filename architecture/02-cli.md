@@ -9,11 +9,12 @@ command exists when nothing else answers its question (D-131).
 
 ```text
 gspot init       [--yes] [--dry-run] [--from <profile>] [--presets <ids>] [--without <ids>] [--scope <path=ids>]
-                 [--hooks gspot|husky|lefthook|existing] [--no-hooks] [--ci github|gitlab] [--no-ci]
+                 [--hooks gspot|husky|lefthook|pre-commit|simple-git-hooks|existing] [--no-hooks] [--ci github|gitlab] [--no-ci]
                  [--runner mise|npm|pnpm|yarn|bun] [--no-runner] [--format keep|shipped]
                  [--no-rules] [--no-install] [--allow-dirty]
 gspot check      [<check-id>] [--staged] [--changed] [--since <ref>] [--fix] [--dry-run]
                  [--stage commit|push|manual] [--scope <path>] [--skip <check-id>] [--report <path>] [--no-cache]
+gspot install
 gspot apply
 gspot baseline   [<check-id>]
 gspot list       [settings]
@@ -30,11 +31,12 @@ gspot profile    save <file>
 gspot completion <bash|zsh|fish|powershell>
 
 global: --help  --version  --json  --quiet  --verbose  --no-color  -C <dir>
-env:    NO_COLOR  CI  GSPOT_JOBS
+env:    NO_COLOR  CI  GSPOT_JOBS  (GSPOT_BIN and GSPOT_REGISTRY until the first release)
 exit:   0 passed   1 findings   2 gspot did not run
 ```
 
-Sixteen commands. A developer learns three of them first: `gspot check`, `gspot check --changed`,
+Seventeen commands. A teammate who clones a repository runs one, `gspot install`. A developer
+learns three more first: `gspot check`, `gspot check --changed`,
 and `gspot check --staged` (D-123). Five commands write one entry of `gspot.toml`: `ignore`,
 `set`, `add`, `remove`, and `allow`. Together they cover every setting the file has, so nobody
 types TOML to change policy. A hand edit stays valid and is checked on load.
@@ -144,7 +146,12 @@ carried into gspot.toml
 not carried
   eslint.config.mjs                the plugin eslint-plugin-foo, which gspot does not ship
 
+not written
+  CI                               Bitbucket found; paste these lines into your pipeline:
+                                   gspot install  ·  gspot check --report gspot.json
+
 remove by hand, when ready
+  .prettierignore, renovate.json   add .gspot/ so your own tools skip the files gspot writes
   pyproject.toml [tool.ruff]       read and carried; gspot never edits this file
   package.json                     eslint and 4 plugins of yours; gspot runs its own under .gspot/
   quality/                         a folder of lint scripts that nothing calls
@@ -152,9 +159,8 @@ remove by hand, when ready
 Continue? [y/N]
 ```
 
-A no writes nothing. After the yes, `init` installs the tools: `mise install`, and the install
-of `.gspot/package.json` with the package manager the repository uses. `--no-install` skips it
-and prints the two commands. Then `init` runs the commit stage once, holds what it finds, and
+A no writes nothing. After the yes, `init` runs `gspot install`. `--no-install` skips it and
+prints that one command. Then `init` runs the commit stage once, holds what it finds, and
 prints one line for each check that holds findings. It prints the security, dependency, and
 secret counts apart from the others. It ends by offering `gspot check --fix`, with the number of
 files the fix run changes (D-103).
@@ -200,6 +206,17 @@ exit 2 and nothing written, in these cases:
 
 A failure in step 2 or 3 leaves every old file in place, and the message says so.
 
+## `install`
+
+Sets up one clone (D-156). It installs the mise tools, the npm tools under `.gspot/node_modules`,
+the Python tools under `.gspot/.venv`, and the hooks of this clone. It writes no tracked file and
+is safe to run twice.
+
+`init`, `upgrade`, and the CI job call it. With a yes, `init` adds this one
+line to the setup entry the repository already has, such as a `setup` task or a `prepare`
+script (D-115). A clone that is not set up says so: `gspot check`, `gspot doctor`, and a missing
+tool each print `Run: gspot install`. `check` never installs by itself.
+
 ## `check`
 
 Runs checks and prints findings. `gspot check` is the truth, and the hooks are the fast path
@@ -228,6 +245,11 @@ not run and does not print. Status words are lowercase: `ok`, `unchanged`, `fail
 Results are cached in `.gspot/cache/`. The key holds the tool version, the config files the
 check names, and the content of every file it read. A cached pass prints `unchanged`. Entries
 older than 30 days are dropped.
+
+In a folder with no git, `gspot check` runs every check that needs no history. `--staged`,
+`--changed`, and `--since` exit 2 there with one sentence that says why. With no upstream,
+`--changed` uses the default branch and says which ref it took. In a shallow clone it names
+`git fetch --unshallow`.
 
 A wrong line in `gspot.toml` does not stop `check`. The run uses the rest of the config and
 reports the line as a finding of `integrity/policy`. A TOML syntax error is exit 2.
@@ -408,7 +430,7 @@ with a new pin, rule files that changed, and presets now available for what the 
 command that asks the network for a newer gspot.
 
 `gspot upgrade` prints the same report as its plan, then asks. On a yes it moves the version
-pin, runs `apply`, and takes the widening step for checks that are new or whose config changed.
+pin, runs `apply` and `install`, and takes the widening step for checks that are new or whose config changed.
 It never writes `gspot.toml` and never commits. `--to` moves to an exact version.
 
 ## `uninstall`

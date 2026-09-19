@@ -115,7 +115,7 @@ src/
 
 #### `commands/`
 
-Fifteen command files: `init.ts`, `check.ts`, `apply.ts`, `baseline.ts`, `list.ts`, `explain.ts`,
+Sixteen command files: `init.ts`, `install.ts`, `check.ts`, `apply.ts`, `baseline.ts`, `list.ts`, `explain.ts`,
 `doctor.ts`, `ignore.ts`, `set.ts`, `add.ts`, `remove.ts`, `allow.ts`, `upgrade.ts`,
 `uninstall.ts`, and `profile.ts`. `completion` registers itself from `output/completion.ts`. `print-result.ts` prints a result as text or JSON. A command file
 registers its flags, calls one function from another folder, and prints. Global flags are read
@@ -158,7 +158,7 @@ files of its scope, and only a check with `runs = "once"` sees the whole reposit
 | `presets/`    | `manifest-schema.ts`, `read-manifests.ts`, `select.ts`, `detect.ts`, `claims.ts`, `listing.ts`, `levels.ts`                                                                                                                                                                                                                                                            |
 | `repository/` | `tracked.ts`, `tree.ts`, `natures.ts`, `tags.ts`, `scopes.ts`, `staged.ts`, `manifests.ts`, `existing-tooling.ts`                                                                                                                                                                                                                                                      |
 | `run/`        | `session.ts`, `plan.ts`, `execute.ts`, `check-command.ts`, `tool-runner.ts`, `command-parts.ts`, `parse-output.ts`, `broken-tool.ts`, `engines.ts`, `concurrency.ts`, `file-batches.ts`, `cache.ts`, `baselines.ts`, `baseline-command.ts`, `ignores.ts`, `fixers.ts`, `reproduce.ts`, `version-pin.ts`, `progress.ts`, `scratch-copy.ts`, `pushed-tree.ts`, `report/` |
-| `emit/`       | `templates.ts`, `apply-command.ts`, `targets.ts`, `pointers.ts`, `managed-blocks.ts`, `hooks.ts`, `hook-managers.ts`, `runner-tasks.ts`, `tool-packages.ts`, `workflow.ts`, `gitlab.ts`, `atomic-write.ts`, `json-format.ts`                                                                                                                                           |
+| `emit/`       | `templates.ts`, `apply-command.ts`, `targets.ts`, `pointers.ts`, `managed-blocks.ts`, `hooks.ts`, `hook-managers.ts`, `runner-tasks.ts`, `tool-packages.ts`, `tool-environment.ts`, `workflow.ts`, `gitlab.ts`, `atomic-write.ts`, `json-format.ts`                                                                                                                    |
 | `lifecycle/`  | `init/command.ts`, `init/plan.ts`, `init/questions.ts`, `selection.ts`, `install-tools.ts`, `first-check.ts`, `takeover.ts`, `carry.ts`, `ignore-files.ts`, `upgrade/command.ts`, `upgrade/report.ts`, `uninstall-command.ts`                                                                                                                                          |
 | `structure/`  | `engine.ts`, `parser.ts`, `ast-grep.ts`, `cross-file-index.ts`, `code-lines.ts`, `counts.ts`, `directories.ts`, and `analyses/`, one file for each check id, for every language the engine reads                                                                                                                                                                       |
 | `naming/`     | `engine.ts`, `policy.ts`, `split.ts`, `cases.ts`, `match.ts`, `validate-name.ts`, `paths.ts`, `name-finding.ts`, `extract.ts`, `parsers.ts`, and `extractors/` with one file for each language                                                                                                                                                                         |
@@ -211,7 +211,8 @@ packages/npm/
 └── platform/README.md          the README each platform package ships
 ```
 
-Targets: `darwin-arm64`, `darwin-x64`, `linux-x64`, `linux-arm64`, `win32-x64`.
+Targets: `darwin-arm64`, `darwin-x64`, `linux-x64`, `linux-arm64`, `linux-x64-musl`,
+`linux-arm64-musl`, and `win32-x64` (K-280).
 
 ## `presets/`
 
@@ -287,6 +288,8 @@ The site copies `gspot.schema.json` from the root at build (K-68).
 ├── package.json                the npm lint tools gspot pins, written by gspot (D-145)
 ├── bun.lock                    or the lockfile of the package manager the repository uses
 ├── node_modules/               untracked
+├── pyproject.toml, uv.lock     the Python lint tools gspot pins (D-157)
+├── .venv/                      untracked
 ├── baseline.json               every held count, sorted, one path on a line (D-104)
 ├── hooks/                      pre-commit, pre-push, commit-msg, where no hook manager exists (D-101, D-114)
 ├── rules/                      the installed rule files
@@ -298,7 +301,8 @@ The site copies `gspot.schema.json` from the root at build (K-68).
 ```
 
 gspot writes four things outside `.gspot/`: `gspot.toml`, the mise file, the managed blocks, and
-a root pointer for a tool with an include form. It writes nothing into `package.json` but the
+a root pointer for a tool with an include form. The managed blocks sit in `.gitignore`,
+`.gitattributes`, the hook or its task, and each agent file the repository holds. It writes nothing into `package.json` but the
 `gspot` launcher and the tasks the developer accepted (D-116, D-147).
 
 ## `tests/`
