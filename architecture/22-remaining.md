@@ -211,6 +211,7 @@ with no line here fails the placement check.
 - [ ] K-234: Let each manifest declare the suppression comment of its tool, and read that list for every comment style. Delete the table in `config/integrity.ts` (K-110).
 - [ ] K-238: Refuse a line break in a `reason`, a `description`, a rule id, and a word, once, in the config schema; then no template has to escape.
 - [ ] K-241: Settle each of the nine contradictions in the rule file, on the side of the decision or the check. Test the rule ids a rule file names against the templates.
+- [ ] K-246: Ship `integrity/generated-drift` in the structure preset. Build `integrity/generated-fresh` with `[[generated]]`, or take its name out of every document.
 
 ### Row 1: Takeover deletes nothing it does not own
 
@@ -493,7 +494,8 @@ with no line here fails the placement check.
 - [ ] S-9: Turn `[inspection] strict` on in this repository until D-119 replaces it.
 - [ ] S-11: Load every `toml` block of the manual through the config reader, and parse every `gspot` line of a `bash` block with the program.
 - [ ] S-12: The work of a change ends when its run on GitHub is green, and the steps in [12-repository-layout.md](12-repository-layout.md) say so.
-- [ ] S-13: Each document changes in the commit that builds its decision, and `17-migration.md` is written again from the redo of the app. The check of S-4 then reads this folder for a command the program does not know.
+- [ ] S-13: Change each document in the commit that builds its decision, and write `17-migration.md` again from the redo of the app.
+- [ ] S-14: Write the preset pages, the ledger ids, the file tree, and the manifest key table by script. Fail the check of S-4 on a name the code lacks.
 
 ### The README, the manual, and the site
 
@@ -521,7 +523,8 @@ Not done in this read, and owed before the fixes start:
 
 - 68 of the 107 rule files were read by script and not by a person. The owner stopped that read
   on September 19, 2026.
-- `01` to `16` of this folder and the preset pages, claim by claim against the code (S-13).
+- The prose of `01` to `12` of this folder, sentence by sentence. Every named check, flag, key,
+  and path is compared by script (S-14).
 - The flags each manifest passes, against the help text of the pinned version.
 
 Checked on September 19, 2026, with the row that holds what was found:
@@ -531,3 +534,4 @@ Checked on September 19, 2026, with the row that holds what was found:
 - A tool that crashes, a config cut in half, two runs at once, and `apply` killed midway (K-243).
 - The licenses of the 34 bundled dependencies and the nine grammars (K-245).
 - The build of the docs site: 301 pages, every internal link valid.
+- Every check id, flag, config key, manifest key, and path the documents name (S-14, K-246).
