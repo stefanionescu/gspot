@@ -82,6 +82,16 @@ function extraProblems(surface: ExposedSettings, table: Partial<Policy>): string
     return problems;
 }
 
+// The first surface wins a key two surfaces share, so the root keeps its own default.
+function mergedSurface(surfaces: ExposedSettings[]): ExposedSettings {
+    const later = surfaces.toReversed();
+    return {
+        specs: new Map(later.flatMap((surface) => surface.specs.entries().toArray())),
+        defaults: new Map(later.flatMap((surface) => surface.defaults.entries().toArray())),
+        problems: surfaces[0]?.problems ?? [],
+    };
+}
+
 function tableProblems(surface: ExposedSettings, table: Partial<Policy>, scope: string | undefined): string[] {
     const keys = writtenKeys(table).flatMap((key) => keyProblems(surface, table, scope, key));
     return [...keys, ...extraProblems(surface, table)];
@@ -100,12 +110,15 @@ export function validateAgainstSurface(
     scopeSurfaces = new Map<string, ExposedSettings>(),
 ): string[] {
     const problems = [...surface.problems];
+    // A root table feeds every scope, so it may hold a setting that only a preset of some scope exposes.
+    const everywhere = mergedSurface([surface, ...scopeSurfaces.values()]);
+    const surfaceFor = (scope: string | undefined): ExposedSettings =>
+        scope === undefined ? everywhere : (scopeSurfaces.get(scope) ?? surface);
     const tables: { table: Partial<Policy>; scope?: string }[] = [
         { table: policy },
         ...Object.entries(policy.scopeTables).map(([scope, table]) => ({ table, scope })),
     ];
-    for (const { table, scope } of tables)
-        problems.push(...tableProblems(scopeSurfaces.get(scope ?? '') ?? surface, table, scope));
+    for (const { table, scope } of tables) problems.push(...tableProblems(surfaceFor(scope), table, scope));
     for (const { group } of policy.naming.remove_groups)
         if (shippedPolicy().groups[group]?.removable === false) problems.push(messages.groupNotRemovable(group));
     return problems;

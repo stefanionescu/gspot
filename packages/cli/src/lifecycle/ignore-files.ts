@@ -1,6 +1,7 @@
 // An ignore file of a replaced tool holds paths somebody chose to leave out. They travel into the policy with the comment above them as the reason.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
+import { isReasonAccepted } from '#cli/policy/loosening.ts';
 
 const COMMENT = '#';
 
@@ -11,6 +12,13 @@ function globOf(folder: string, line: string): string {
     const isAnchored = line.startsWith('/') || name.includes('/');
     const base = folder === '' ? '' : `${folder}/`;
     return `${base}${isAnchored ? '' : '**/'}${name}${isFolder ? '/**' : ''}`;
+}
+
+// A comment of a word or two is a label, which the policy refuses as a reason; it travels with where it came from.
+function reasonFrom(path: string, comment: string): string {
+    const carried = `carried from ${path} at init`;
+    if (comment === '') return carried;
+    return isReasonAccepted(comment) ? comment : `${carried}: ${comment}`;
 }
 
 /**
@@ -33,7 +41,7 @@ export function ignoreFileEntries(root: string, path: string): { paths: string[]
         const line = raw.trim();
         if (line.startsWith(COMMENT)) {
             flush();
-            reason = line.slice(1).trim() || reason;
+            reason = reasonFrom(path, line.slice(1).trim());
         } else if (line !== '' && !line.startsWith('!')) current.push(globOf(folder, line));
     }
     flush();

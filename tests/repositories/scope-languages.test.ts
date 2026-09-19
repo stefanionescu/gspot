@@ -50,4 +50,39 @@ describe('typescript in a scope', () => {
         },
         PLANTED_TIMEOUT_MS * 4,
     );
+
+    test(
+        'an ignore file inside a scope travels into the policy, and a one-word comment stays a reason the policy accepts',
+        async () => {
+            await using fixture = await createFixture({
+                'README.md': '# planted\n',
+                'db/accounts.sql': 'SELECT 1;\n',
+                'db/.sqlfluffignore': '# Templates\ntemplates/\n',
+            });
+            commitAll(fixture.path);
+            const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
+            const argv = [
+                'init',
+                '--yes',
+                '--scope',
+                'db=sql',
+                '--without',
+                'naming,spelling,markdown,docs,structure',
+                '--runner',
+                'none',
+                '--ci',
+                'none',
+                '--hooks',
+                'none',
+                '--no-rules',
+                '--no-install',
+            ];
+            await install(fixture.path, argv, environment);
+            const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
+            expect(policy).toContain('db/**/templates/**');
+            expect(policy).toContain('carried from db/.sqlfluffignore at init: Templates');
+            expect(run(fixture.path, ['check', 'sql/syntax', '--no-cache'], environment).code).toBe(0);
+        },
+        PLANTED_TIMEOUT_MS * 3,
+    );
 });

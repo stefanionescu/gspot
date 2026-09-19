@@ -24,13 +24,14 @@ import { readManifests } from '#cli/repository/manifests.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
 import { GSPOT_VERSION, writePin } from '#cli/run/version-pin.ts';
 import { pruneToolBaselines } from '#cli/emit/prune-baselines.ts';
-import { hasPolicy, PolicyError } from '#cli/policy/read-policy.ts';
+import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { firstRun, firstRunSummary } from '#cli/lifecycle/first-check.ts';
 import { askInitQuestions, askPresets } from '#cli/lifecycle/questions.ts';
 import { buildInitPlan, buildProposal } from '#cli/lifecycle/init/plan.ts';
 import { installTools, updatePackageJson } from '#cli/lifecycle/install-tools.ts';
 import { applyBlock, gitignoreBlock, fileText } from '#cli/emit/managed-blocks.ts';
+import { hasPolicy, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
 import { collectCarried, deleteReplaced, ownedTools, unownedTools } from '#cli/lifecycle/takeover.ts';
 
 import type {
@@ -122,6 +123,8 @@ async function prepare(root: string, options: InitOptions): Promise<InitPrepared
     const proposal = buildProposal(root, selection, answers, carried);
     const profileTables = options.profile?.tables as TomlTable | undefined;
     const policyText = proposeText(profileTables ? { ...proposal, profileTables } : proposal);
+    // The proposal is read the way every later command reads it, before anything is written.
+    assertPolicyComplete(parsePolicyText(policyText, 'gspot.toml', root));
     const everySelected = [...selection.selectedIds]
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
