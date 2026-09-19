@@ -171,6 +171,7 @@ with no line here fails the placement check.
 - [ ] K-188: Delete the five plugin rules a pinned tool covers, and write the rule of that tool in the template.
 - [ ] K-195: Delete the pin of `pyproject-fmt` from the python preset.
 - [ ] K-205: The docs build runs `reference-pages.ts` first, the pages are git-ignored, and the `docs/generated` check goes.
+- [ ] K-240: Delete the runner value `uv` until a reference repository needs it.
 - [ ] S-10: The Vale half of the rules lint goes, and the rule files are read by `prose/vale` like every other text.
 
 ### The first fixes, with CI green before anything else
@@ -201,7 +202,7 @@ with no line here fails the placement check.
 - [ ] K-226: The check builds the references (`tsc -b --noEmit`) where the file holds any.
 - [ ] K-229: The items are restored from the reference repositories. The lint of the rule files reports a list item that stops with no sentence end.
 - [ ] K-234: Let each manifest declare the suppression comment of its tool, and read that list for every comment style. Delete the table in `config/integrity.ts` (K-110).
-- [ ] K-238: The config reader refuses a line break in a `reason`, a `description`, a rule id and a word, once, in the schema, so no template has to escape.
+- [ ] K-238: Refuse a line break in a `reason`, a `description`, a rule id, and a word, once, in the config schema; then no template has to escape.
 
 ### Row 1: Takeover deletes nothing it does not own
 
@@ -316,6 +317,7 @@ with no line here fails the placement check.
 - [ ] K-217: D-145.
 - [ ] K-233: The preset claims `.css` alone, and a `scss` preset that pins `stylelint-config-standard-scss` arrives when the owner or a reference repository asks for it (D-136).
 - [ ] K-236: `licenses/npm` becomes one check that runs the scanner gspot already pins, and the supabase preset gains the lint at the `manual` stage.
+- [ ] K-239: Closes with D-145: stop writing `prepare` and the pins into `package.json`.
 
 ### Row 13: The core names no preset and no tool
 
