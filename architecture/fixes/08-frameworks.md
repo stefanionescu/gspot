@@ -1,0 +1,317 @@
+# Frameworks, Naming, and Lint Tools
+
+Row 12 of the build order. Three things change here. The lint tools of gspot install under
+`.gspot/` and never into the `package.json` of the developer (D-145). A framework preset carries
+its own naming rules and every linter that exists for it (D-112, D-141). The shared rules reach a
+component file as they reach a plain one (D-137 to D-140).
+
+## K-217: gspot overwrites the ESLint of the developer
+
+Closes K-217 and K-239.
+
+**What is wrong.** gspot pins ESLint 9 and writes that pin over the version a repository holds.
+`mergedPins` in `emit/kept-pins.ts` keeps a held version only when it is an exact version newer
+than the pin, and a range is replaced. `npmScripts` writes `prepare = gspot apply`, and `apply`
+writes the pins again, so a developer who puts their ESLint back loses it at the next install.
+The pins go to the root manifest alone, so a scope that installs by itself lacks the plugins.
+Under mise with no root `package.json`, each plugin becomes an `npm:` tool that ESLint cannot
+import.
+
+**Target.** gspot never writes a lint tool into a manifest of the developer. The npm tools and
+libraries a preset pins install into `.gspot/node_modules`, from a generated `.gspot/package.json`
+and its lockfile. Every check runs the binary under `.gspot/`. The ESLint of the developer, its
+config, and its plugins stay, and takeover lists them for removal by hand (D-109).
+
+**Files.** New `emit/tool-packages.ts`. Deleted: `emit/kept-pins.ts` and its test. Changed:
+`emit/targets.ts` (`runnerOutputs`), `emit/apply-command.ts` (`writePackages`),
+`emit/runner-tasks.ts` (`miseSurface`), `platform/tool-probe.ts` (`candidates`,
+`libraryVersion`), `lifecycle/install-tools.ts`, `lifecycle/uninstall-command.ts`
+(`removePackagePins`), `presets/javascript/knip.json.tmpl`, and `checks/dependencies/manifest-policy.ts`.
+
+**Logic.** `tool-packages.ts` collects every tool with an `npm` name from the selected manifests,
+with its pinned version, and writes `.gspot/package.json` with the mark `_gspot`. `install-tools.ts`
+runs the install of the package manager the repository uses, with `.gspot/` as its folder,
+through `nypm`. The lockfile under `.gspot/` is tracked, and `.gspot/node_modules/` is in the
+managed `.gitignore` block. `tool-probe.ts` looks under `.gspot/node_modules/.bin` first and never
+under the `node_modules` of the root.
+
+The generated ESLint config sits in `.gspot/`, so its
+imports resolve there with no setting. `typescript/tsc` keeps the TypeScript of the repository,
+because it answers for the build the developer ships. `manifest-policy` and `doctor` call a lint
+package the developer still holds a thing to remove by hand, never a duplicate pin. A mise
+install never lists an npm library as an `npm:` tool.
+
+**What goes.** `mergedPins`, the `prepare` script, the scripts and pins of `writePackages`,
+`removePackagePins`, and the ignore list of the knip template (K-220). The launcher `gspot` is the
+one package gspot writes, under an npm runner (D-147). Every test that links the `node_modules`
+of this repository into a planted one installs through `.gspot/` instead (T-32).
+
+**Tests.** A planted repository on ESLint 8 with a plugin of its own holds an unchanged
+`package.json` and lockfile after `init --yes`, and `typescript/eslint` runs ESLint 9 from
+`.gspot/`. The same case with ESLint 10. A scope with its own install passes its ESLint check.
+
+**Done when.** The three cases pass, and `git diff` after `init` in a planted npm repository
+shows one added line in `package.json`.
+
+## K-207: the pinned plugins do not fit the pinned ESLint
+
+Closes K-207 and K-213.
+
+**What is wrong.** gspot pinned ESLint 10, and `eslint-plugin-react`, `eslint-plugin-react-hooks`,
+and `@tanstack/eslint-plugin-query` end at 9. The react fragment reads the React version through
+a function of its own, `installedReact`, because ESLint 10 took out what the plugin calls.
+
+**Target.** The pin is the newest ESLint that every shipped plugin supports (D-142), which is 9
+today. `@eslint/js` and unicorn are pinned at their last version for ESLint 9.
+
+**Files.** The javascript, react, and tanstack-query manifests, `presets/react/eslint.fragment.js.tmpl`,
+and the registry test of K-206.
+
+**Logic.** The registry test reads `peerDependencies.eslint` of every pinned plugin and fails a
+pin outside one of them. The react setting is `version: 'detect'`.
+
+**What goes.** `installedReact`.
+
+**Tests.** That registry test.
+
+**Done when.** It passes, and it fails when one pin is raised to 10 by hand.
+
+## K-208: the shared rules do not reach a component
+
+Closes K-208, K-209, and K-210.
+
+**What is wrong.** The ESLint template applies every shared block to eight fixed endings, and
+`.vue` and `.svelte` are not among them. A component gets no line limit, no complexity ceiling, no
+sonarjs, no security rule, and no gspot rule. A framework turns shared rules off by hand in its
+fragment, and nothing lists them. `tsc` cannot read a component, Prettier has no Svelte plugin,
+Stylelint never sees a `<style>` block, and the naming engine reads no script block.
+
+**Target.** The list of code files holds the endings a framework claims, and one ESLint check
+reads it (D-137). A framework turns a shared rule off in its manifest, with a reason (D-138).
+Type check, format, style, and names reach a component file (D-140).
+
+**Files.** `presets/javascript/eslint.config.js.tmpl`, the manifests and fragments of react,
+nextjs, react-native, nestjs, vue, and svelte, `presets/formatting/manifest.toml`,
+`presets/css/manifest.toml`, `naming/extract.ts`, `naming/extractors/typescript.ts`.
+
+**Logic.** `CODE` in the template is built from the `claims.extensions` of the selected presets.
+A manifest takes `[[rules_off]]` with `rule` and `reason`, and the template renders that list.
+
+`vue/eslint` and `svelte/eslint` go, because `javascript/eslint` reads their files. The vue preset
+runs `vue-tsc` and the svelte preset `svelte-check` through `takes_over` of `typescript/tsc`. The
+formatting manifest gains `prettier-plugin-svelte` where svelte is selected. Stylelint gains
+`postcss-html` for component files. The naming extractor reads the script block of a component
+through the offsets its parser gives.
+
+**What goes.** The fixed list of eight endings, the hand comments in six fragments, and two
+copied ESLint checks.
+
+**Tests.** A unit test builds the final ESLint config for `a.ts` and for `A.vue`, and holds that
+they differ by exactly the `rules_off` list. A planted Vue file with a long function is a
+finding.
+
+**Done when.** Both pass.
+
+## K-211: framework presets are thin beside what exists
+
+Closes K-211 and K-212.
+
+**What is wrong.** react holds eight hand-picked rules. It has no recommended set and no
+accessibility plugin. react-native holds four Expo rules, nestjs holds no plugin, and vue and
+svelte hold no accessibility rule. No framework holds the testing-library rules. NestJS and
+React Native test with Jest, and gspot knows Vitest alone.
+
+**Target.** Every framework preset holds every linter that exists for it, at the same limits
+(D-141). A `jest` preset ships with the ten test rules the vitest preset has.
+
+**Files.** The five framework presets, new `presets/jest/`, the rule files `REACT.md`,
+`REACT-NATIVE.md`, `NESTJS.md`, `VUE.md`, `SVELTE.md`, and a new `rules/tool/jest/JEST.md`.
+
+**Logic.** D-141 lists the plugins, and the npm registry confirmed each exists and accepts ESLint 9. Each takes its recommended set at `recommended` and its strict set at `all`. `testOverrides`
+of the ESLint template takes its rule prefix from the selected test preset. Each rule file grows
+to what its linters enforce, one section for each plugin.
+
+**What goes.** The eight hand-picked react rules, where the recommended set holds them.
+
+**Tests.** A planted test file with a focused test fails under jest and under vitest.
+
+**Done when.** That case passes for both, and `rules/lint` passes on the five rule files.
+
+## K-50: framework names in the shared naming policy
+
+Closes K-50, K-133, and K-136.
+
+**What is wrong.** `presets/naming/policy.json` names Next.js for every repository.
+`naming/engine.ts` (`REACT_FILE`) lets a `.tsx` file start a function with `handle`, and
+everywhere else `handleRequest` is a finding, in an Express server too. Every React component is
+a finding, because the policy asks functions for camelCase. The react planted test installs
+without naming, so nothing ran the two together.
+
+**Target.** A framework preset carries its naming rules as `[[naming.rules]]` in its manifest
+(D-112). The engine knows no framework.
+
+**Files.** `presets/naming/policy.json`, the manifests of react, nextjs, react-native, vue,
+svelte, express, and nestjs, `naming/engine.ts`, `naming/validate-name.ts` (`callbackProblem`),
+`naming/policy.ts`, `tests/repositories/react.test.ts`.
+
+**Logic.** `policy.ts` merges the rules of the selected manifests after the shared policy. The
+react rule accepts PascalCase for a function that returns JSX and for its file. The `handle`
+prefix is a rule of react, express, and nestjs. The Next.js route file names move to the nextjs
+manifest.
+
+**What goes.** `REACT_FILE`, the branch of `callbackProblem`, and the Next.js entries of the
+shared policy.
+
+**Tests.** The react planted test installs with naming and holds no finding for `UserCard.tsx`.
+An Express planted handler named `handleLogin` holds none.
+
+**Done when.** Both pass.
+
+## K-49: the prefix rule reads kebab-case alone
+
+**What is wrong.** `prefixOf` in `structure/directories.ts` splits at `-` and `.` only, so
+`structure/prefix-collisions` is blind in snake_case and PascalCase code. Files that are no
+source count as peers. `packages/eslint-plugin/src/files.ts` holds a second copy.
+
+**Target.** The prefix of a file name is its first word, in any case style (D-111).
+
+**Files.** `structure/directories.ts`, `naming/split.ts`.
+
+**Logic.** `prefixOf` calls `splitName` of `naming/split.ts` and takes the first part. Peers are
+files whose nature is `source`.
+
+**What goes.** The copy in the plugin, which leaves with its rule (K-187).
+
+**Tests.** Unit tests for `user_card.py`, `UserCard.swift`, and `user-card.ts` beside a README.
+
+**Done when.** They pass.
+
+## K-137: the extractor skips every awaited value
+
+**What is wrong.** `isImportBinding` in `naming/extractors/typescript.ts` skips a variable whose
+value is an `await` expression, because a dynamic import looks like that.
+`const userData = await fetchUser()` is never checked.
+
+**Target.** The extractor skips a binding whose value is `await import(...)`, and nothing else.
+
+**Files.** `naming/extractors/typescript.ts`.
+
+**Logic.** `isImportBinding` tests that the awaited node is a call whose function is `import`.
+
+**What goes.** Nothing.
+
+**Tests.** A unit test with both forms.
+
+**Done when.** It passes.
+
+## K-233: the css preset claims files it cannot read
+
+**What is wrong.** The manifest claims `.scss` and `.pcss`, and `stylelint.json.tmpl` extends
+`stylelint-config-standard` with no syntax for either. Every variable, nesting, and mixin of a
+Sass file is an error.
+
+**Target.** The css preset claims `.css` alone. Detection names Sass as a language gspot has no
+preset for.
+
+**Files.** `presets/css/manifest.toml`, the css preset page.
+
+**Logic.** Two endings leave the claim.
+
+**What goes.** The two endings.
+
+**Tests.** The css planted repository holds a `.scss` file with a mixin and no finding.
+
+**Done when.** That case passes.
+
+## K-236: two linters that exist and that no manifest holds
+
+Closes K-236 and K-80.
+
+**What is wrong.** `licenses/npm` reads npm licenses through code of gspot, and Python and Swift
+have no license check. `osv-scanner`, which gspot already pins, reads the license of every
+package in every lockfile it scans. `supabase db lint` checks the functions of a local database.
+
+**Target.** One check, `licenses/packages`, runs `osv-scanner` with its license flag over every
+lockfile of the scope. The supabase preset gains `supabase/db-lint` at the `manual` stage.
+
+**Files.** `presets/licenses/manifest.toml`, `presets/supabase/manifest.toml`. Deleted:
+`checks/licenses/npm.ts`.
+
+**Logic.** The allowed list stays `tools.licenses.allowed`, and the scanner takes it as
+`--licenses=<list>`. `supabase/db-lint` declares `requires = "database"`, as
+`supabase/types-fresh` does.
+
+**What goes.** The hand parser of license expressions, which K-250 had moved to a library, and
+the name `licenses/pip` in every document.
+
+**Tests.** A planted uv project with a package under `GPL-3.0-only` fails, and an npm one passes on MIT.
+
+**Done when.** Both pass.
+
+## K-248: the ledger drops rules of the reference repositories
+
+**What is wrong.** [06-enforcement-ledger.md](../06-enforcement-ledger.md) promises that nothing
+is dropped. It lands 14 iOS Semgrep rules and the Python rules of yap-text-inference in
+`security/semgrep`, and no preset ships either pack. It counts ten landing rules where the
+cloudflare pack holds four. Eleven rows name a check nobody built.
+
+**Target.** Every ledger row names a check that exists, or the fix file that builds it.
+
+**Files.** New `presets/swift/semgrep/ios.yml` and `presets/python/semgrep/python.yml`, carried
+from the two reference repositories, which are read and not changed.
+`architecture/06-enforcement-ledger.md`.
+
+**Logic.** The fix file of row 23 builds the six Python structure rows (K-235). It also builds the
+trivial function check for PL/pgSQL and the Swift doc comment rule. `licenses/pip` closes with K-236, and
+the second SwiftLint config with K-256. `integrity/generated-fresh` leaves the ledger (K-246). A
+pack rule that names a function of one repository goes to that repository (K-218).
+
+**What goes.** Three ledger rows of `generated-fresh`.
+
+**Tests.** A unit test reads every check id of the ledger and fails one that no manifest holds.
+
+**Done when.** That test passes.
+
+## K-249: eight pins older than what a reference repository runs
+
+**What is wrong.** Three pins are a major version behind. stylelint is at 16.23.1 where 17.4.0
+runs. linkinator is at 6.1.4 where 7.6.1 runs. purgecss is at 7.0.2 where 8.0.0 runs.
+
+Five more are a minor behind:
+`stylelint-config-standard`, html-validate, Trivy, CodeQL, and `@vitest/eslint-plugin`. A
+migration moves those repositories back a version.
+
+**Target.** A pin is never below the version a reference repository runs.
+
+**Files.** The manifests of css, html, static-site, docker, security, and vitest, and the ledger,
+which records the floor of each tool.
+
+**Logic.** The registry test of K-206 reads the floors from a table in `tests/release/` and fails
+a pin below one.
+
+**What goes.** Nothing.
+
+**Tests.** That test.
+
+**Done when.** It passes with the eight pins raised.
+
+## K-256: Swift test files held to production rules
+
+**What is wrong.** The swift and xctest pages promise that `force_unwrapping`, `missing_docs`, and
+`no_magic_numbers` are off over test files. `swiftlint.yml.tmpl` has no test section, and no code
+reads `tools.swiftlint.extra_configs`. The ESLint config does relax its rules over tests.
+
+**Target.** The xctest preset writes a nested SwiftLint file over the folders it claims, with the
+three rules off.
+
+**Files.** New `presets/xctest/swiftlint.tests.yml.tmpl`, `presets/xctest/manifest.toml`.
+
+**Logic.** SwiftLint reads a `.swiftlint.yml` in a subfolder as a nested config. The manifest
+writes one pointer file into each claimed test folder, with `parent_config` set to the file under
+`.gspot/`, which D-100 allows because the tool has that include form.
+
+**What goes.** The setting name `tools.swiftlint.extra_configs` in two pages.
+
+**Tests.** A planted test file with a force unwrap holds no finding, and a source file holds one.
+
+**Done when.** That case passes.
