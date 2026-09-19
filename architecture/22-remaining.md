@@ -252,6 +252,7 @@ with no line here fails the placement check.
 - [ ] K-254: Run `bash -n` over Bash files alone, `zsh -n` over `.zsh` files, and `bats --count` over `.bats` files.
 - [ ] K-257: Write every file through a temporary file and a rename, and let a failed cache write be one line on stderr.
 - [ ] K-258: Make `perFileCommands` put the file where `{file}` stands, pass `--no-env-resolution` to Compose, and test the check on a file with an `env_file`.
+- [ ] K-261: Correct every good example that fails a check, and make `rules/lint` run the linter of the preset over each fenced good example.
 
 ### Row 1: Takeover deletes nothing it does not own
 
@@ -413,6 +414,8 @@ with no line here fails the placement check.
 - [ ] K-232: The nextjs preset lists its second file. The swift preset lists the two framework files where the project imports that framework. A file with no preset to carry it is deleted (D-134) until a preset asks for it.
 - [ ] K-242: Move the working habits of the owner out of the general rule files into a profile, and add `quality/` to the words the rules lint refuses.
 - [ ] K-255: Ship `integrity/locales` and its one setting from the i18n preset alone, and make the nextjs preset recommend i18n.
+- [ ] K-260: Cut each of the nine guides down to the rules of its library, and take every passage about one product out.
+- [ ] K-262: Write the six cut items of `DOCKER.md` and the broken sentences whole, and take each habit of the owner out of the twelve guides.
 
 ### Row 14: Tests
 
@@ -559,6 +562,7 @@ with no line here fails the placement check.
 - [ ] K-164: Both scripts stop at the first missing file, and the publish step verifies every package before it publishes the first.
 - [ ] K-244: Name Homebrew in an install hint only for a tool with no pin, give a `github` installer its tag form, and ask all four registries in the release test.
 - [ ] K-245: Write one notice file at build from the license of every bundled dependency and grammar, and embed it. Give the Swift grammar a build script that names its source commit.
+- [ ] K-263: After K-204, run the unit tests, the planted repositories, and `gspot check` in the Windows job, and record each failure as a row.
 
 ## What is still unchecked
 
@@ -567,13 +571,10 @@ By the order of the owner, nothing below is touched before its step.
 - A real install in yap-swift-app, with every written file read, and the time of every check
   there. That is step 9.
 - Any other reference repository.
-- Windows: the Bash hooks, path separators, and the CI job.
 
-Not done in this read, and owed before the fixes start:
+Not read, by the choice of the owner: 33 rule files outside the framework, library, and tool layers.
 
-- 12 rule files of the framework, library, and tool layers, which the owner chose to have read:
-  `nextjs/SECURITY.md`, two fastapi files, seven library guides, `I18N.md`, and `DOCKER.md`. 33 other rule files stay
-  unread by the owner's choice.
+Windows is not checked, because no machine here can run it (K-263).
 
 Nothing else is owed. Every file of code, every test, every template, every manifest, and every
 document of this folder is read.
@@ -591,3 +592,4 @@ Checked on September 19, 2026, with the row that holds what was found:
 - A full disk, on a 12 MB disk image: the policy file is cut in half (K-257).
 - The Compose check, run with Docker Compose 5.5.1: it fails on every file (K-258).
 - The `.gitignore` of this repository against what git tracks and what sits on disk (K-259).
+- The 12 rule files the owner chose, read whole (K-260 to K-262).
