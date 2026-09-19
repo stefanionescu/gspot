@@ -27,6 +27,7 @@ Kind: language. Requires: `formatting`.
 ## Settings
 
 - `tools.sqlfluff.dialect`: The sqlfluff dialect; a database preset sets it.
+- `tools.sqlfluff.exclude`: SQL paths the lint and the parse leave out, such as templates with placeholders and scripts for psql, each with a reason.
 - `limits.sql.file_lines`: The most code lines a SQL file may have.
 
 ## Rule files

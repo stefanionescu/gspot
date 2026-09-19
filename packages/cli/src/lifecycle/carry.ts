@@ -7,6 +7,7 @@ import type { TomlTable } from '#types/config.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { CARRIED_REASON } from '#config/reasons.ts';
 import type { CarryPush, CarriedLists } from '#types/lifecycle.ts';
+import { ignoreFileEntries } from '#cli/lifecycle/ignore-files.ts';
 import { CHECK_BY_TOOL, TYPOS_DEFAULT_EXCLUDES } from '#config/carry.ts';
 
 const DATE_LENGTH = 10;
@@ -297,6 +298,12 @@ const CARRIERS: Record<string, (root: string, path: string, lists: CarriedLists)
     gitleaks: carryGitleaks,
     osv: carryOsv,
     licenses: carryLicenses,
+    sqlfluffignore: (root, path, lists) => {
+        lists.sqlfluffExcludes.push(...ignoreFileEntries(root, path));
+    },
+    semgrepignore: (root, path, lists) => {
+        lists.semgrepIgnores.push(...ignoreFileEntries(root, path));
+    },
 };
 
 /**

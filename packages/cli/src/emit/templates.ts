@@ -208,7 +208,11 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
         extra: view.extra,
         json: (value, indent = JSON_INDENT) => JSON.stringify(value, null, indent),
         tomlString: (value) => JSON.stringify(value),
-        has: (preset) => view.presets.includes(preset),
+        // A target written once for the repository asks about every scope; a target written for one scope asks about that scope.
+        has: (preset) =>
+            view.presets.includes(preset) ||
+            (selection.scope.path === '' &&
+                session.scopes.some((entry) => entry.selected.some((manifest) => manifest.preset.id === preset))),
         importAliases: (scope) => aliasesFor(session.root, scope),
         tools: toolNames(session),
         toolPackages: toolPackages(session),

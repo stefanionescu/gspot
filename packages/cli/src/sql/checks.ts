@@ -8,6 +8,9 @@ import { positionAt, sqlFile } from '#cli/sql/statements.ts';
 const POSTGRES_DIALECTS = new Set(['postgres', 'ansi']);
 const BLOCK_COMMENT = '/*';
 const LINE_COMMENT = '--';
+// :'name' and :"name" are quoted psql variables; :name after a space, a bracket, a comma or an equals sign is a plain one.
+const PSQL_QUOTED = /:'[A-Za-z_]\w*'|:"[A-Za-z_]\w*"/gu;
+const PSQL_NAMED = /(?<lead>[\s(,=]):[A-Za-z_]\w*/gu;
 // A string, a quoted name, a line comment, or the start of a block comment, whichever comes first.
 const SQL_TOKENS = /'[^']*'|"[^"]*"|--[^\n]*|\/\*/gu;
 
@@ -15,6 +18,17 @@ function sources(input: EngineInput): { path: string; text: string }[] {
     return input.files
         .filter((file) => file.nature === 'source')
         .map((file) => ({ path: file.path, text: readFileSync(join(input.root, file.path), 'utf8') }));
+}
+
+// A script for psql holds meta-commands and variables the server never sees. A meta-command line becomes blank and a
+// variable becomes a literal or a name of the same length class, so the parser reads what the server reads and lines keep their numbers.
+function withoutPsql(text: string): string {
+    return text
+        .split('\n')
+        .map((line) => (line.trimStart().startsWith('\\') ? '' : line))
+        .join('\n')
+        .replaceAll(PSQL_QUOTED, "''")
+        .replaceAll(PSQL_NAMED, (_match, lead: string) => `${lead}psql_variable`);
 }
 
 // The index of the first block comment outside a string and outside a line comment, or a negative number.
@@ -33,7 +47,7 @@ export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
     if (!POSTGRES_DIALECTS.has(dialect)) return [];
     const findings: Finding[] = [];
     for (const source of sources(input)) {
-        const parsed = await sqlFile(source.text);
+        const parsed = await sqlFile(withoutPsql(source.text));
         if (parsed.error === undefined) continue;
         const { text, line, column } = parsed.error;
         findings.push({

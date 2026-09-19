@@ -28,6 +28,8 @@ function toolTables(carried: CarriedLists, commitScopes: string[] | undefined, x
     const tables: Record<string, TomlTable | undefined> = {
         typos: nonEmpty({ words: carried.typosWords, exclude: carried.typosExcludes }),
         gitleaks: nonEmpty({ allow: carried.gitleaksAllow }),
+        sqlfluff: nonEmpty({ exclude: carried.sqlfluffExcludes }),
+        semgrep: nonEmpty({ ignore: carried.semgrepIgnores }),
         osv: nonEmpty({ ignore: carried.osvIgnores }),
         licenses: nonEmpty({ allow: carried.licenseAllow, exceptions: carried.licenseExceptions }),
         commitlint: nonEmpty({ scopes: commitScopes ?? [] }),
@@ -80,7 +82,9 @@ function bodyText(document: TomlTable): string {
     const scopes = (document['scope'] as TomlTable[] | undefined) ?? [];
     const bare = { ...document, scope: scopes.map(({ tools: _tools, ...rest }) => rest) };
     const plain = stringify(scopes.length === 0 ? document : bare);
-    const seed = plain.endsWith('\n') ? plain : `${plain}\n`;
+    // Arrays take the layout the TOML formatter keeps, so the first format check of the policy passes.
+    const tight = plain.replaceAll(/= \[ (?<items>[^\n]*) \]$/gmu, '= [$<items>]');
+    const seed = tight.endsWith('\n') ? tight : `${tight}\n`;
     if (scopes.every((scope) => scope['tools'] === undefined)) return seed;
     return patch(seed, document, { inlineTableStart: 2, bracketSpacing: false });
 }

@@ -44,7 +44,7 @@ stage = "commit"
 runs = "per-scope"
 cwd = "scope"
 command = ["tsc", "--noEmit", "-p", "tsconfig.json", "--pretty", "false"]
-inspection = ["types", "syntax"]
+inspection = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Checks that every TypeScript file type-checks with the strict compiler options."
 why = "A file that does not type-check can crash at run time in a way the editor already knew about."

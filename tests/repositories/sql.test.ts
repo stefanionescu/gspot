@@ -20,6 +20,8 @@ const INIT = [
 ];
 const CLEAN =
     '-- The accounts of the application.\nCREATE TABLE user_accounts (\n    id UUID PRIMARY KEY,\n    display_name TEXT NOT NULL\n);\n';
+// A script for psql: a meta-command and two kinds of variable, which the server never sees.
+const PSQL = "\\set team 'core'\nSELECT id FROM user_accounts WHERE display_name = :'team' AND id = :account_id;\n";
 const LONG = Array.from({ length: 401 }, (_, index) => `SELECT ${String(index)};\n`).join('');
 
 // The keyword arrives in two halves, because the spelling fixer corrects it when it is whole.
@@ -45,7 +47,11 @@ describe('the sql preset', () => {
     test(
         'every sql check fires on its planted defect',
         async () => {
-            await using fixture = await createFixture({ 'db/accounts.sql': CLEAN });
+            await using fixture = await createFixture({
+                'db/accounts.sql': CLEAN,
+                'db/report.sql': PSQL,
+                'db/.sqlfluffignore': '# Scripts for psql, which the linter cannot read\nreport.sql\n',
+            });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);

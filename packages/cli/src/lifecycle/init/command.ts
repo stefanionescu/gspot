@@ -23,6 +23,7 @@ import { note, print, paint } from '#cli/output/messages.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
 import { GSPOT_VERSION, writePin } from '#cli/run/version-pin.ts';
+import { pruneToolBaselines } from '#cli/emit/prune-baselines.ts';
 import { hasPolicy, PolicyError } from '#cli/policy/read-policy.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { firstRun, firstRunSummary } from '#cli/lifecycle/first-check.ts';
@@ -165,8 +166,11 @@ async function write(
         root,
         prepared.removed.filter((entry) => !rendered.has(entry.path)),
     );
-    // The replaced files are gone from the file set now, so the render that names source files is taken once more.
-    await applyAll(await openSession(root));
+    // The replaced files are gone from the file set now, so the render that names source files is taken once more,
+    // and a tool that keeps its own baseline drops what it recorded for them.
+    const after = await openSession(root);
+    await applyAll(after);
+    await pruneToolBaselines(after);
     const summary = firstRunSummary(first, installNote);
     const newer = await newerVersion(GSPOT_VERSION);
     const { dim } = paint();

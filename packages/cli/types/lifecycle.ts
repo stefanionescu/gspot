@@ -48,6 +48,8 @@ export type CarriedIgnore = { check: string; rule: string; reason: string; paths
 export type CarriedLists = {
     typosWords: { word: string; reason: string }[];
     typosExcludes: { paths: string[]; reason: string }[];
+    sqlfluffExcludes: { paths: string[]; reason: string }[];
+    semgrepIgnores: { paths: string[]; reason: string }[];
     gitleaksAllow: {
         description: string;
         paths: string[];

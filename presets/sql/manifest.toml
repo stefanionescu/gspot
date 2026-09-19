@@ -32,6 +32,7 @@ command = ["sqlfluff", "lint", "--config", "{config:sqlfluff}", "--ignore-local-
 fix_command = ["sqlfluff", "fix", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
 fix_order = "format"
 inspection = ["format", "style"]
+exclude_setting = "tools.sqlfluff.exclude"
 output = {format = "json", children = "violations", fields = {file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description"}}
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database preset names."
 why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
@@ -42,6 +43,7 @@ id = "sql/syntax"
 stage = "commit"
 engine = "integrity"
 analysis = "sql-syntax"
+exclude_setting = "tools.sqlfluff.exclude"
 inspection = ["syntax"]
 summary = "Parses every SQL file with the parser Postgres itself uses, when the dialect is postgres or ansi."
 why = "A migration that does not parse fails at deploy, halfway through a release."
@@ -74,6 +76,13 @@ kind = "string"
 direction = "neutral"
 default = "ansi"
 summary = "The sqlfluff dialect; a database preset sets it."
+
+[[settings]]
+name = "tools.sqlfluff.exclude"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "SQL paths the lint and the parse leave out, such as templates with placeholders and scripts for psql, each with a reason."
 
 [[settings]]
 name = "limits.sql.file_lines"

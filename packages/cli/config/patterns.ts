@@ -256,9 +256,10 @@ export const RULES_DIRECTORY_NAMES = ['rules', '.rules', '.cursor/rules', 'docs/
 /** License and notice files are another party's text, kept as written. */
 export const LICENSE_FILE = /^(?:LICENSE|LICENCE|COPYING|NOTICE)(?:$|[.-])/iu;
 
-/** Files gspot installs and rewrites on apply; nobody edits them, so they are generated. */
+/** Files gspot or a tool it drives writes; nobody edits them, so they are generated. A baseline keeps the layout its tool gave it. */
 export const INSTALLED_PREFIXES = [
     '.gspot/rules/',
+    '.gspot/baselines/',
     '.gspot/vale/styles/gspot/',
     '.gspot/vale/styles/config/vocabularies/gspot/',
 ];

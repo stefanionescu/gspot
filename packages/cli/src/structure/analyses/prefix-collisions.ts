@@ -6,6 +6,8 @@ import { directoryOf, directoryTree, prefixOf, stemOf } from '#cli/structure/dir
 
 const DEFAULT_THRESHOLD = 2;
 const INDEX_STEMS = new Set(['index', 'mod', '__init__']);
+// A tool names these files and finds them by that name, so a folder holds several of them by design.
+const TOOL_PREFIXES = new Set(['tsconfig', 'jsconfig', 'vitest', 'vite', 'docker', 'eslint', 'playwright']);
 
 function isPeer(entry: DirectoryEntry, prefix: string): boolean {
     if (entry.kind === 'dir')
@@ -41,7 +43,13 @@ export const prefixCollisions: Analysis = (context) => {
         const stem = stemOf(file.path);
         const prefix = prefixOf(stem);
         const key = `${directory}\n${prefix}`;
-        if (prefix === '' || INDEX_STEMS.has(stem) || seen.has(key) || isSkipped(directory, prefix, isAllowed))
+        if (
+            prefix === '' ||
+            TOOL_PREFIXES.has(prefix) ||
+            INDEX_STEMS.has(stem) ||
+            seen.has(key) ||
+            isSkipped(directory, prefix, isAllowed)
+        )
             return [];
         const peers = (tree.get(directory) ?? []).filter((entry) => isPeer(entry, prefix));
         if (peers.length < threshold) return [];

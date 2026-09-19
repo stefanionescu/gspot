@@ -14,6 +14,22 @@ function summaryOf(record: RunRecord): { failing: RunRecord['checks']; lines: st
     return { failing, lines: failing.map((check) => `${check.id}: ${check.note ?? check.status}`) };
 }
 
+// Format, syntax and schema findings enter no baseline, so the gate fails on them until a fix run; init says so.
+function unheldLines(first: FirstRun): string[] {
+    const held = new Set([
+        ...first.baselines.map((file) => file.check),
+        ...first.toolBaselines.map((entry) => entry.check),
+    ]);
+    const unheld = first.record.checks.filter((check) => check.findings.length > 0 && !held.has(check.id));
+    if (unheld.length === 0) return ['every other check passes'];
+    const ids = [...new Set(unheld.map((check) => check.id))].toSorted((a, b) => a.localeCompare(b));
+    const count = unheld.reduce((sum, check) => sum + check.findings.length, 0);
+    return [
+        `not held: ${String(count)} findings of ${ids.join(', ')} enter no baseline, because a fixer or a one-line edit clears them.`,
+        'run gspot check --fix, read the diff, and commit it; the gate fails on these until then',
+    ];
+}
+
 // A check with a baseline command (the ESLint suppressions) writes the tool's own file instead of a count file.
 async function writeToolBaselines(
     session: Session,
@@ -87,12 +103,12 @@ export function firstRunSummary(first: FirstRun, installNote: string): { lines: 
         const noun = baselines.length === 1 ? 'rule' : 'rules';
         const count = baselines.reduce((sum, file) => sum + file.count, 0);
         const shown = `${String(baselines.length)} ${noun}`;
-        lines.push(`baseline: ${shown} enter a baseline with ${String(count)} findings; every other check passes`);
+        lines.push(`baseline: ${shown} enter a baseline with ${String(count)} findings`);
     }
     for (const entry of first.toolBaselines)
         lines.push(
             `baseline: ${entry.check} wrote its own suppressions file for ${String(entry.count)} findings (${entry.scope === '' ? 'root' : entry.scope})`,
         );
     const summary = summaryOf(record);
-    return { lines: [...lines, ...summary.lines], failing: summary.failing.length };
+    return { lines: [...lines, ...unheldLines(first), ...summary.lines], failing: summary.failing.length };
 }
