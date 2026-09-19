@@ -1,0 +1,60 @@
+[preset]
+id = "vue"
+kind = "framework"
+title = "Vue"
+requires = ["javascript"]
+recommends = ["typescript", "css", "vitest"]
+description = "Vue single-file components: ESLint reads the template and the script together, with every recommended rule of the Vue plugin as an error."
+
+[detect]
+dependencies = ["vue"]
+extensions = [".vue"]
+
+[claims]
+extensions = [".vue"]
+natures = ["source"]
+
+[[tools]]
+name = "eslint-plugin-vue"
+kind = "library"
+version = "10.11.0"
+npm = "eslint-plugin-vue"
+
+[[tools]]
+name = "vue-eslint-parser"
+kind = "library"
+version = "10.4.1"
+npm = "vue-eslint-parser"
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/eslint.config.mjs"
+fragment = true
+
+[[checks]]
+id = "vue/eslint"
+stage = "commit"
+runs = "per-file-list"
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{suppressions}", "--format", "json", "{files}"]
+baseline_file = ".gspot/baselines/eslint.json"
+baseline_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--suppress-all", "--suppressions-location", "{baseline}", "{files}"]
+prune_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--prune-suppressions", "--suppressions-location", "{baseline}", "{files}"]
+fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
+fix_order = "codemod"
+tool = "eslint"
+claims = {extensions = [".vue"]}
+inspection = ["style", "syntax", "structure"]
+output = {format = "eslint-json"}
+tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:"
+summary = "Runs ESLint with the Vue plugin over every .vue file. It reads the markup and the script together."
+why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
+fix = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
+
+[inspections]
+".vue" = ["format", "syntax", "style", "structure", "spelling"]
+
+[rule_files]
+framework = ["framework/vue/VUE.md"]
+
+[required_rules]
+vue = ["vue/no-v-html", "vue/require-v-for-key", "vue/no-mutating-props", "vue/no-use-v-if-with-v-for"]

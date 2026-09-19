@@ -57,9 +57,8 @@ repository.
 
 ## Presets that do not ship
 
-Every preset with a file under [presets/](presets/README.md) ships: 46 of them. Six Phase 7
-presets have no file there yet: `react-native`, `django`, `nestjs`, `ruby`,
-`vue`, and `svelte`.
+Every preset with a file under [presets/](presets/README.md) ships: 48 of them. Four Phase 7
+presets have no file there yet: `react-native`, `django`, `nestjs`, and `ruby`.
 
 ## Order of work
 

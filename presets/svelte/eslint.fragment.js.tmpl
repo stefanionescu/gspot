@@ -1,0 +1,19 @@
+    // The plugin ships its recommended set as blocks, and every rule in them is an error here.
+    ...sveltePlugin.configs.recommended.map((block) => ({
+        ...block,
+        ...(block.rules === undefined ? {} : { rules: Object.fromEntries(Object.entries(block.rules).map(([rule, level]) => [rule, level === 'off' || level === 0 ? 'off' : 'error'])) }),
+    })),
+    {
+        files: ['**/*.svelte', '**/*.svelte.js', '**/*.svelte.ts'],
+        languageOptions: { parser: svelteParser, parserOptions: { <% if (has('typescript')) { %>parser: tseslint.parser, <% } %>extraFileExtensions: ['.svelte'] } },
+        rules: {
+            'svelte/no-at-html-tags': 'error',
+            'svelte/require-each-key': 'error',
+            'svelte/no-target-blank': 'error',
+            'svelte/button-has-type': 'error',
+            'svelte/no-reactive-reassign': 'error',
+            'svelte/no-useless-mustaches': 'error',
+            'svelte/prefer-const': 'error',
+            'svelte/block-lang': ['error', { script: [<% if (has('typescript')) { %>'ts'<% } else { %>null, 'js'<% } %>] }],
+        },
+    },

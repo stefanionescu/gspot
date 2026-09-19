@@ -179,3 +179,12 @@ export type PlantedCase = {
 
 /** What one acceptance run produced: the init output, the run record and how many checks ended in each status. */
 export type AcceptanceRun = { init: string; record: RunRecord; statuses: Record<string, number> };
+
+/** One framework of component files in the planted components test: its check, its presets, its files and its planted cases. */
+export type ComponentShape = {
+    check: string;
+    presets: string;
+    files: Record<string, string>;
+    planted: string;
+    cases: [string, string][];
+};

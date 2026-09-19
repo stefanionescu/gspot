@@ -1,0 +1,61 @@
+[preset]
+id = "svelte"
+kind = "framework"
+title = "Svelte"
+requires = ["javascript"]
+recommends = ["typescript", "css", "vitest"]
+description = "Svelte components: ESLint reads the markup and the script together, with every recommended rule of the Svelte plugin as an error."
+
+[detect]
+dependencies = ["svelte"]
+extensions = [".svelte"]
+
+[claims]
+extensions = [".svelte"]
+filenames = ["svelte.config.js", "svelte.config.ts"]
+natures = ["source"]
+
+[[tools]]
+name = "eslint-plugin-svelte"
+kind = "library"
+version = "3.23.0"
+npm = "eslint-plugin-svelte"
+
+[[tools]]
+name = "svelte-eslint-parser"
+kind = "library"
+version = "1.8.1"
+npm = "svelte-eslint-parser"
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/eslint.config.mjs"
+fragment = true
+
+[[checks]]
+id = "svelte/eslint"
+stage = "commit"
+runs = "per-file-list"
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{suppressions}", "--format", "json", "{files}"]
+baseline_file = ".gspot/baselines/eslint.json"
+baseline_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--suppress-all", "--suppressions-location", "{baseline}", "{files}"]
+prune_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--prune-suppressions", "--suppressions-location", "{baseline}", "{files}"]
+fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
+fix_order = "codemod"
+tool = "eslint"
+claims = {extensions = [".svelte"]}
+inspection = ["style", "syntax", "structure"]
+output = {format = "eslint-json"}
+tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:"
+summary = "Runs ESLint with the Svelte plugin over every .svelte file. It reads the markup and the script together."
+why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
+fix = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
+
+[inspections]
+".svelte" = ["format", "syntax", "style", "structure", "spelling"]
+
+[rule_files]
+framework = ["framework/svelte/SVELTE.md"]
+
+[required_rules]
+svelte = ["svelte/no-at-html-tags", "svelte/require-each-key", "svelte/no-target-blank"]

@@ -24,6 +24,8 @@ One page per preset. Each page states what the preset detects and claims, the to
 | ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------ |
 | nextjs     | `next`                   | eslint-config-next, boundaries, server-only, client environment, route segments, next config, CSS usage, locales | [nextjs.md](nextjs.md)         |
 | react      | `react`                  | the hooks and compiler rules as errors, keys, new-tab links, markup from a string                                | [react.md](react.md)           |
+| vue        | `vue`, `.vue`            | the Vue plugin over component files, every rule an error                                                         | [vue.md](vue.md)               |
+| svelte     | `svelte`, `.svelte`      | the Svelte plugin over component files, every rule an error                                                      | [svelte.md](svelte.md)         |
 | express    | `express`                | Semgrep API pack, OpenAPI lint and freshness, route tests                                                        | [express.md](express.md)       |
 | fastapi    | `fastapi`                | Ruff FAST, OpenAPI freshness, blocking IO in async                                                               | [fastapi.md](fastapi.md)       |
 | supabase   | `supabase/config.toml`   | Deno lint, migration names, types freshness, storage policies, service-role containment, Semgrep pack            | [supabase.md](supabase.md)     |
