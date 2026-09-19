@@ -155,6 +155,7 @@ The rows below come from the read of September 19, 2026, after the install in ya
 | K-125 | To read the first bytes of a file, `head` and the binary sniff read the whole file and cut it. Every command does this for most tracked files when it opens, and a text file is read once more for its banner. A repository with large files pays for each one on every `gspot check --staged`.                                                                                                                                                                                                                                                    | `repository/tracked.ts` (`head`), `repository/tags.ts` (`sniff`), `repository/natures.ts` (`hasBanner`)                              |
 | K-126 | Dependencies are read from `package.json`, a `pyproject.toml` in the PEP 621 form, and `Package.swift`. `requirements.txt`, Poetry tables, `Pipfile`, `go.mod`, `Cargo.toml` and `Gemfile` give no dependency, so a framework preset that is detected by a dependency (django, fastapi, a Go or Rust framework) is never proposed there.                                                                                                                                                                                                           | `repository/manifests.ts`                                                                                                            |
 | K-127 | `upgrade` runs every check of every stage again to find what needs a baseline, as `init` does (K-53). A finding of the image scan is twenty lines of a table joined into one message.                                                                                                                                                                                                                                                                                                                                                              | `lifecycle/upgrade/command.ts`, `integrity/docker/image-scan.ts`                                                                     |
+| K-128 | The tag table that tells a check what a file is knows no `.go`, `.rs`, `.rb`, `.vue`, `.svelte`, `.kt` or `.java` ending, although presets for five of those languages ship. Such a file gets the tag `text` and nothing else, so a check that selects by tag never sees it.                                                                                                                                                                                                                                                                       | `config/file-tags.ts`                                                                                                                |
 
 ## Test gaps
 
@@ -281,7 +282,7 @@ Read line by line:
 - `policy/schema.ts`, `settings.ts`, `normalize.ts`, `messages.ts`, `propose.ts`, `write.ts`, `loosening.ts`, `audit.ts`, `problems.ts`, `merge.ts`, `read-policy.ts`, `set-command.ts`, `ignore-command.ts` and `add-command.ts`;
 - `repository/`, and `presets/detect.ts`;
 - `structure/engine.ts`, `directories.ts`, `analyses/prefix-collisions.ts` and `folder-names.ts`;
-- `config/patterns.ts`, `carry.ts`, `reasons.ts`, `markers.ts`, `docs.ts` and the first half of `integrity.ts`;
+- `config/` except `prose.ts`;
 - the plugin entry `plugin.ts` and the rule `no-prefix-collisions`;
 - five test files, the test harness, and the guard test.
 
@@ -299,7 +300,7 @@ Read by measurement:
 
 Not read:
 
-- the 23 smaller files of `types/`, and `config/shell.ts`, `prose.ts`, `file-tags.ts`, `postgres.ts`, `supabase.ts`, `env-files.ts`, `grammars.ts` and `cases.ts`;
+- the 23 smaller files of `types/`, `config/prose.ts`, `run/record/schema.ts`, `emit/templates.ts`, `lifecycle/upgrade/report.ts`, the second half of `output/explain.ts`, and `output/completion.ts`, `json.ts`, `messages.ts` and `prompts.ts`;
 - the bodies of 25 plugin rules and of their tests, the bodies of the unit tests, and the bodies of 43 repository tests;
 - the templates of every preset, and the six guides beyond a word search.
 
