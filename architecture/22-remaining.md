@@ -24,7 +24,7 @@ read found.
 6. Do rows 1 to 24 of the Adoption phase. Row 12 also takes the ESLint decision below (K-217)
    and the linters of the table below (K-233, K-236).
 7. Apply the renames of [19-names.md](19-names.md), and reach the places K-224 and K-225 list.
-8. Rewrite the tests that hold a wrong answer or a removed flag (T-27 to T-35).
+8. Rewrite the tests that hold a wrong answer or a removed flag (T-27 to T-36).
 9. Redo the install in yap-swift-app and measure it. Ask the owner before any other repository.
 10. Write the README, the manual and the site ([21-documentation.md](21-documentation.md)).
 11. Before launch, settle the npm name (K-121) and the license text in each package (K-145).
@@ -248,6 +248,8 @@ with no line here fails the placement check.
 - [ ] K-251: Drop `--skip-updates` from the dotenv fixer, give v8r its config through `V8R_CONFIG_FILE`, and fail the contract test on a flag the pinned tool lacks.
 - [ ] K-252: Report a run whose report cannot be written in one line on stderr, and keep its findings and its exit code.
 - [ ] K-253: Make the workflow gspot writes follow `GITHUB-ACTIONS.md`: a pinned runner image, a timeout, and a concurrency group. Name the tasks as D-116 decides.
+- [ ] K-254: Run `bash -n` over Bash files alone, `zsh -n` over `.zsh` files, and `bats --count` over `.bats` files.
+- [ ] K-257: Write every file through a temporary file and a rename, and let a failed cache write be one line on stderr.
 
 ### Row 1: Takeover deletes nothing it does not own
 
@@ -366,6 +368,7 @@ with no line here fails the placement check.
 - [ ] K-239: Closes with D-145: stop writing `prepare` and the pins into `package.json`.
 - [ ] K-248: Carry the iOS and the Python Semgrep packs first. Build each other ledger row that names an unbuilt check, or mark it cut with its reason.
 - [ ] K-249: Raise the eight pins that sit below what a reference repository runs, and fail the release test on a pin below the floor the ledger records.
+- [ ] K-256: Write a nested SwiftLint file over the test folders the xctest preset claims, with the three rules off.
 
 ### Row 13: The core names no preset and no tool
 
@@ -407,6 +410,7 @@ with no line here fails the placement check.
 - [ ] K-231: With K-203, a language or framework file says what holds for every project of that kind. The rest moves into the repository it came from, during its migration.
 - [ ] K-232: The nextjs preset lists its second file. The swift preset lists the two framework files where the project imports that framework. A file with no preset to carry it is deleted (D-134) until a preset asks for it.
 - [ ] K-242: Move the working habits of the owner out of the general rule files into a profile, and add `quality/` to the words the rules lint refuses.
+- [ ] K-255: Ship `integrity/locales` and its one setting from the i18n preset alone, and make the nextjs preset recommend i18n.
 
 ### Row 14: Tests
 
@@ -447,6 +451,7 @@ with no line here fails the placement check.
 - [ ] T-33: One planted repository for each generator, committed as its generator wrote it, with the number of findings at `recommended` held as the expected value.
 - [ ] T-34: The fixture is a project Xcode generated.
 - [ ] T-35: Each of these changes in the commit that changes its subject (D-104, D-129 to D-133, D-144).
+- [ ] T-36: Add one test for each preset that compares every generated file of a fixed policy with a tracked copy.
 
 ### Row 15: The redo of the app
 
@@ -538,6 +543,7 @@ with no line here fails the placement check.
 - [ ] S-15: Write `01-product.md` again after the Adoption phase, from what the product does, with the test that holds each promise.
 - [ ] S-16: Correct the false sentences of `02`, `03`, `11`, and `19` with S-13, fix the empty list in the unexposed-setting message, and load every example config through the reader (S-11).
 - [ ] S-17: Change each false sentence of `04` to `12` in the commit that builds or drops what it says.
+- [ ] S-18: Write each preset page and the file tree from the manifests and the disk with S-14, and change the other sentences with S-13.
 
 ### The README, the manual, and the site
 
@@ -566,9 +572,10 @@ Not done in this read, and owed before the fixes start:
 - 12 rule files of the framework, library, and tool layers, which the owner chose to have read:
   `nextjs/SECURITY.md`, two fastapi files, seven library guides, `I18N.md`, and `DOCKER.md`. 33 other rule files stay
   unread by the owner's choice.
-- 42 of the 48 preset pages, by eye. The six framework pages and `jest` are read.
-- `16-file-tree.md` by eye (S-14 holds what a script found).
-- The flags each manifest passes, against the help text of the pinned version.
+- The flags of `docker compose`, because Docker is absent on this machine.
+
+Nothing else is owed. Every file of code, every test, every template, every manifest, and every
+document of this folder is read.
 
 Checked on September 19, 2026, with the row that holds what was found:
 
@@ -578,3 +585,6 @@ Checked on September 19, 2026, with the row that holds what was found:
 - The licenses of the 34 bundled dependencies and the nine grammars (K-245).
 - The build of the docs site: 301 pages, every internal link valid.
 - Every check id, flag, config key, manifest key, and path the documents name (S-14, K-246).
+- The 48 preset pages and `16-file-tree.md`, by eye (S-18, K-254 to K-256, T-36).
+- The flags each manifest passes, against the help text of the pinned tool (K-251).
+- A full disk, on a 12 MB disk image: the policy file is cut in half (K-257).
