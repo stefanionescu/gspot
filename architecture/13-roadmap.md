@@ -114,8 +114,9 @@ key, its test, and every mention in this folder and in the manual.
 | the sentence about subagents in the managed block (K-92)                                                                                                                                                                             | `rules/managed-block.ts`                                                                                                                                                                                                                                                                                                                      |
 | the nine `copy = true` stubs (K-47)                                                                                                                                                                                                  | seven manifests, `emit/targets.ts`                                                                                                                                                                                                                                                                                                            |
 
-The first seven fixes are small, and each gets a planted test:
+The first eight fixes are small, and each gets a planted test:
 
+0. The commit of `actions/checkout` is a real one, and CI runs for the first time (K-204). Nothing else counts as done before CI is green.
 1. Takeover keeps `setup.cfg` and `tox.ini` (K-36).
 2. A folder named `hooks` is no hooks folder (K-37).
 3. A run of the `message` stage writes no record (K-45, D-105).
@@ -150,7 +151,7 @@ The first seven fixes are small, and each gets a planted test:
 | 22    | The `recommended` level holds no house style and changes no build (K-74, K-75, K-91, K-92, D-126)                                                                                                          | init on a fresh Next.js project at `recommended` leaves `tsconfig.json` untouched and holds no finding about pinned versions, headers, or README shape                                                                                 |
 | 23    | This repository names its folders after languages, by its own exception, and keeps one copy of the structure logic (K-86, K-87, D-128, D-135)                                                              | `src/swift/` and `src/python/` exist here, `gspot.toml` holds one `folder_name_allowed` entry for them, and `gspot check` passes with no `[[ignore]]`                                                                                  |
 | 23b   | The command surface and GitLab (K-95, K-96, D-129 to D-133)                                                                                                                                                | `gspot --help` lists the commands of 02-cli.md; every flag in `--help` appears in a test and in a guide; init in a repository with `.gitlab-ci.yml` writes `.gitlab/ci/gspot.yml` and edits no other CI file                           |
-| 24    | gspot checks itself again after the renames, with no ignore entry, and closes the places where it does not check itself (S-1 to S-11, K-166), and installs for itself the tools of the table in 18-gaps.md | `gspot check` passes here and `gspot.toml` holds no `[[ignore]]`; a check writes every template of every preset and parses the result; a hook runs the tests and holds a coverage floor; a broken path in `architecture/` is a finding |
+| 24    | gspot checks itself again after the renames, with no ignore entry, and closes the places where it does not check itself (S-1 to S-12, K-166), and installs for itself the tools of the table in 18-gaps.md | `gspot check` passes here and `gspot.toml` holds no `[[ignore]]`; a check writes every template of every preset and parses the result; a hook runs the tests and holds a coverage floor; a broken path in `architecture/` is a finding |
 
 ### Where every other row lands
 
@@ -160,7 +161,7 @@ when every gap it names has left 18-gaps.md.
 
 | Work                                                        | Gaps it closes                                                                                                                 | Goes with row |
 | ----------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------ | ------------- |
-| Delete what nothing uses                                    | K-104, K-111, K-115, K-119, K-129, K-146, K-180, K-195                                                                         | Delete first  |
+| Delete what nothing uses                                    | K-104, K-111, K-115, K-119, K-129, K-146, K-180, K-195, K-205                                                                  | Delete first  |
 | Defects that give a wrong answer, fixed first               | K-103, K-108, K-114, K-134, K-140, K-147, K-157, K-172, K-178, K-181, K-186, K-189, K-192                                      | first fixes   |
 | Takeover and detection read what a repository really holds  | K-42, K-57, K-76, K-78, K-120, K-126, K-128, K-158, K-182, K-193                                                               | 1 and 2       |
 | Speed                                                       | K-71, K-125, K-127, K-138, K-143, K-148, K-162, K-176, K-196                                                                   | 3 and 21      |
