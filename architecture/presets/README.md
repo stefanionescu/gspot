@@ -23,6 +23,7 @@ One page per preset. Each page states what the preset detects and claims, the to
 | Preset     | Detects                  | Adds                                                                                                             | Page                           |
 | ---------- | ------------------------ | ---------------------------------------------------------------------------------------------------------------- | ------------------------------ |
 | nextjs     | `next`                   | eslint-config-next, boundaries, server-only, client environment, route segments, next config, CSS usage, locales | [nextjs.md](nextjs.md)         |
+| react      | `react`                  | the hooks and compiler rules as errors, keys, new-tab links, markup from a string                                | [react.md](react.md)           |
 | express    | `express`                | Semgrep API pack, OpenAPI lint and freshness, route tests                                                        | [express.md](express.md)       |
 | fastapi    | `fastapi`                | Ruff FAST, OpenAPI freshness, blocking IO in async                                                               | [fastapi.md](fastapi.md)       |
 | supabase   | `supabase/config.toml`   | Deno lint, migration names, types freshness, storage policies, service-role containment, Semgrep pack            | [supabase.md](supabase.md)     |

@@ -1,6 +1,6 @@
 # `nextjs`
 
-Kind: framework. Requires: typescript, css, config-files.
+Kind: framework. Requires: typescript, react. Recommends: css, config-files.
 
 ## Detects and claims
 
@@ -22,7 +22,7 @@ The typescript flat config gains, in order:
 - `eslint-config-next` core-web-vitals and typescript (wrapped by `@eslint/compat` on ESLint 10);
 - the `[architecture]` boundaries (route, feature, shared);
 - `gspot/require-server-only` over server files and `gspot/no-client-environment` over every file;
-- `react-hooks/*`, `react/no-array-index-key`, `react/no-danger`, `@next/next/no-async-client-component`;
+- the React rules come from the `react` preset, which this one requires; `@next/next/no-async-client-component`;
 - the framework-entry overrides that turn off `no-trivial-files`, `no-export-only-files`, `no-reexports-outside-index` and `no-single-file-folders` for `page`, `layout`, `template`, `default`, `loading`, `error`, `not-found`, `global-error`, `route`, `middleware` and `proxy` files.
 
 Server files: `**/server/**`, `**/*.server.*`, `features/*/server/**`, `lib/**/server.*`, and any
@@ -58,6 +58,6 @@ file with `'use server'`. Client files: any file with `'use client'`.
 
 ## Rule files
 
-`framework/nextjs/NEXTJS.md`, `framework/nextjs/SECURITY.md`, `framework/react/REACT.md`, `runtime/node/NODE.md`,
+`framework/nextjs/NEXTJS.md`, `framework/nextjs/SECURITY.md`, `runtime/node/NODE.md`,
 `runtime/browser/BROWSER.md`; `runtime/workers/WORKERS.md` through cloudflare when `@opennextjs/cloudflare` is
 present; `library/next-intl/NEXTINTL.md` when `next-intl` is a dependency.

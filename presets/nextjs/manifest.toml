@@ -2,7 +2,7 @@
 id = "nextjs"
 kind = "framework"
 title = "Next.js"
-requires = ["typescript"]
+requires = ["typescript", "react"]
 recommends = ["css", "config-files"]
 description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. Route segments serve one thing, the configuration turns no build check off, and message files parse."
 
@@ -18,18 +18,6 @@ name = "@next/eslint-plugin-next"
 kind = "library"
 version = "16.3.5"
 npm = "@next/eslint-plugin-next"
-
-[[tools]]
-name = "eslint-plugin-react-hooks"
-kind = "library"
-version = "6.1.1"
-npm = "eslint-plugin-react-hooks"
-
-[[tools]]
-name = "eslint-plugin-react"
-kind = "library"
-version = "7.37.5"
-npm = "eslint-plugin-react"
 
 [[configs]]
 template = "eslint.fragment.js.tmpl"
@@ -125,7 +113,7 @@ direction = "neutral"
 summary = "Where the message files live and which locale is the base: directory and base."
 
 [rule_files]
-framework = ["framework/nextjs/NEXTJS.md", "framework/react/REACT.md"]
+framework = ["framework/nextjs/NEXTJS.md"]
 
 [required_rules]
-tsx = ["react-hooks/rules-of-hooks", "react-hooks/exhaustive-deps", "@next/next/no-html-link-for-pages", "@next/next/no-async-client-component", "react/no-danger"]
+tsx = ["@next/next/no-html-link-for-pages", "@next/next/no-async-client-component"]

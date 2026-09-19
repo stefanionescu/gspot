@@ -5,13 +5,11 @@ description: "A Next.js app: the framework and hooks rules of ESLint, and server
 
 A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. Route segments serve one thing, the configuration turns no build check off, and message files parse.
 
-Kind: framework. Requires: `typescript`.
+Kind: framework. Requires: `typescript`, `react`.
 
 ## Tools
 
 - @next/eslint-plugin-next 16.3.5
-- eslint-plugin-react-hooks 6.1.1
-- eslint-plugin-react 7.37.5
 
 ## Generated configuration
 
@@ -37,4 +35,3 @@ Kind: framework. Requires: `typescript`.
 ## Rule files
 
 - `framework/nextjs/NEXTJS.md`
-- `framework/react/REACT.md`

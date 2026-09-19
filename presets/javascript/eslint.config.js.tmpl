@@ -1,5 +1,6 @@
 import { fileURLToPath } from 'node:url';
-
+<% if (has('react')) { %>import { readFileSync } from 'node:fs';
+<% } %>
 import eslint from '@eslint/js';
 import gspot from '@gspot/eslint-plugin';
 import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
@@ -17,7 +18,7 @@ import globals from 'globals';
 <% if (has('typescript')) { %>import tseslint from 'typescript-eslint';
 <% } %><% if (has('vitest')) { %>import vitest from '@vitest/eslint-plugin';
 <% } %><% if (has('nextjs')) { %>import nextPlugin from '@next/eslint-plugin-next';
-import reactHooks from 'eslint-plugin-react-hooks';
+<% } %><% if (has('react')) { %>import reactHooks from 'eslint-plugin-react-hooks';
 import react from 'eslint-plugin-react';
 <% } %><% if (has('i18n')) { %>import i18next from 'eslint-plugin-i18next';
 <% } %><% if (has('zod')) { %>import zodPlugin from 'eslint-plugin-zod';
@@ -66,7 +67,20 @@ const ignoredPaths = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/cov
 const testOverrides = has('vitest');
 %>
 const root = fileURLToPath(new URL('..', import.meta.url));
-
+<% if (has('react')) { %>
+// The React plugin finds the installed version through an ESLint function that ESLint 10 took out, so the version is read here.
+function installedReact() {
+    const folders = ['', <%~ scopePaths.filter((path) => path !== '').map((path) => json(`${path}/`)).join(', ') %>];
+    for (const folder of folders) {
+        try {
+            return JSON.parse(readFileSync(`${root}${folder}node_modules/react/package.json`, 'utf8')).version;
+        } catch {
+            // The next folder may hold it.
+        }
+    }
+    return '19.0';
+}
+<% } %>
 const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}'];
 const TYPESCRIPT = ['**/*.{ts,tsx,mts,cts}'];
 const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];

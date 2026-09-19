@@ -1,6 +1,6 @@
 ---
 layer: framework
-preset: nextjs
+preset: react
 title: React
 ---
 
