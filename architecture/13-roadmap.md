@@ -90,6 +90,13 @@ Vale alerts normalize their paths and line endings before becoming findings. Abs
 paths are resolved against the repository root. The regression covers a native path
 with Unicode and CRLF output, and the real document suite retains its path assertions.
 
+The [Windows job 106032095996](https://github.com/stefanionescu/gspot/actions/runs/35493409996/job/106032095996)
+confirms the Spectral repair but retains the duplication false pass. jscpd 5.2.0
+[canonicalizes its scan roots](https://github.com/kucherenko/jscpd/blob/v5.2.0/rust/crates/cpd-finder/src/orchestrate.rs),
+which can add the Windows extended-path prefix. Clone paths and the repository root
+use the same native namespace before relative-path comparison. The regression includes
+that form alongside ordinary absolute and relative paths.
+
 ### Preset deletion
 
 D-136 removes the Go, Rust, Ruby, and Django presets, leaving 48 manifests.

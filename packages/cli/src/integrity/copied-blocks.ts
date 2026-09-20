@@ -3,11 +3,11 @@ import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-// Copied blocks through jscpd: every clone is a finding that names both places, once the duplicated share passes the ceiling.
-import { isAbsolute, join, relative } from 'node:path';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { ClonePlace, CloneReport } from '#types/integrity.ts';
+// Copied blocks through jscpd: every clone is a finding that names both places, once the duplicated share passes the ceiling.
+import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const TOOL = 'jscpd';
@@ -15,7 +15,9 @@ const SCAN_TIMEOUT_MS = 600_000;
 const DEFAULT_CEILING = 4;
 
 function relativePlace(root: string, place: ClonePlace): string {
-    return toPosix(isAbsolute(place.name) ? relative(root, place.name) : place.name);
+    return toPosix(
+        isAbsolute(place.name) ? relative(toNamespacedPath(root), toNamespacedPath(place.name)) : place.name,
+    );
 }
 
 /**

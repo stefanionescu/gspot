@@ -1,12 +1,13 @@
-import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
+import { join, toNamespacedPath } from 'node:path';
 import type { CloneReport } from '#types/integrity.ts';
 import { cloneFindings } from '#cli/integrity/copied-blocks.ts';
 
 describe('clone findings', () => {
     test('native absolute and relative paths retain claimed copies and exclude other files', () => {
         const root = join(import.meta.dir, 'workspace café');
-        for (const prefix of [root, '']) {
+        const prefixes = new Set([root, toNamespacedPath(root), '']);
+        for (const prefix of prefixes) {
             const report: CloneReport = {
                 statistics: { total: { percentage: 12 } },
                 duplicates: [
