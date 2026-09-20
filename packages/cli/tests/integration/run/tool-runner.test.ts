@@ -82,7 +82,7 @@ stage = "commit"
     const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'all', skips: [], localSkips: [] })[0]!;
     planned.tool = { name: 'echo', windows: true, installers: {}, env: { TOOL_RELEASE: 'v3.4.0' } };
-    const prepared = prepareCommand(session, planned, planned.spec.command!, undefined);
+    const prepared = prepareCommand(session, planned, planned.spec.command!);
     const result = await run(prepared.commands[0]!, { cwd: prepared.cwd, env: prepared.env });
     expect(result.code, result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toEqual([
