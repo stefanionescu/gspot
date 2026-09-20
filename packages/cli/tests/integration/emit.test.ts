@@ -5,6 +5,7 @@ import { parse, stringify } from 'smol-toml';
 import { createSandbox } from '@gspot/testing';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
+import { parserFor } from '#cli/naming/parsers.ts';
 import { initCommand } from '#cli/lifecycle/init/command.ts';
 
 test.each([
@@ -140,4 +141,52 @@ test('an OSV expiry cannot inject another TOML table', async () => {
     });
     const session = await openSession(sandbox.path);
     expect(() => emitAll(session)).toThrow();
+});
+
+test('reason comments cannot add JavaScript statements or ignore entries', async () => {
+    const parser = await parserFor('javascript');
+    const shapes: string[] = [];
+    const reasons = [
+        'Reviewed upstream.',
+        'Reviewed upstream.\n];\nglobalThis.injected = true;\nexport default [',
+        'Reviewed upstream.\u{2028}];\u{2029}globalThis.injected = true;\nexport default [',
+    ];
+    for (const reason of reasons) {
+        await using sandbox = await createSandbox({
+            'gspot.toml': stringify({
+                version: 1,
+                presets: ['javascript', 'docker', 'prose'],
+                tools: {
+                    eslint: { extra: { reason, name: 'custom' } },
+                    trivy: { ignore: [{ id: 'CVE-2026-12345', reason }] },
+                },
+                prose: { disabled: [{ rule: 'Vale.Spelling', reason }] },
+            }),
+        });
+        const output = emitAll(await openSession(sandbox.path));
+        const script = output.files.find((file) => file.path === '.gspot/eslint.config.mjs');
+        expect(script).toBeDefined();
+        const tree = parser.parse(script!.content);
+        expect(tree).not.toBeNull();
+        try {
+            expect(tree!.rootNode.hasError).toBe(false);
+            shapes.push(tree!.rootNode.toString());
+        } finally {
+            tree!.delete();
+        }
+        const ignored = output.files.find((file) => file.path === '.gspot/trivyignore');
+        expect(ignored).toBeDefined();
+        expect(ignored!.content.split('\n').filter((line) => line !== '' && !line.startsWith('#'))).toEqual([
+            'CVE-2026-12345',
+        ]);
+        const vale = output.files.find((file) => file.path === '.gspot/vale.ini');
+        expect(vale).toBeDefined();
+        expect(
+            vale!.content
+                .split('\n')
+                .filter((line) => line !== '' && !line.startsWith('#'))
+                .every((line) => !line.includes('globalThis')),
+        ).toBe(true);
+    }
+    expect(new Set(shapes).size).toBe(1);
 });

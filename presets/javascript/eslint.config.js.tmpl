@@ -471,6 +471,6 @@ export default [
     { files: CODE, rules: <%= json(Object.fromEntries(rulesOffList.map((rule) => [rule, 'off']))) %> },
 <% } %><% const eslintRules = eslintTool.rules ?? {}; if (Object.keys(eslintRules).length > 0) { %>    // rule options from [tools.eslint] rules
     { files: CODE, rules: <%= json(eslintRules) %> },
-<% } %><% const extras = extra('eslint'); if (extras) { const entries = Object.fromEntries(Object.entries(extras).filter(([key]) => key !== 'reason')); if (Object.keys(entries).length > 0) { %>    // [tools.eslint.extra]: <%= extras.reason %>
+<% } %><% const extras = extra('eslint'); if (extras) { const entries = Object.fromEntries(Object.entries(extras).filter(([key]) => key !== 'reason')); if (Object.keys(entries).length > 0) { %>    // [tools.eslint.extra]: <%= json(extras.reason, 0) %>
     <%= json(entries) %>,
 <% } } %>];

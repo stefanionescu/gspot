@@ -226,7 +226,10 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
         rulesOff: view.rulesOff,
         ignoresFor: view.ignoresFor,
         extra: view.extra,
-        json: (value, indent = JSON_INDENT) => JSON.stringify(value, null, indent),
+        json: (value, indent = JSON_INDENT) =>
+            JSON.stringify(value, null, indent)
+                .replaceAll('\u{2028}', String.raw`\u2028`)
+                .replaceAll('\u{2029}', String.raw`\u2029`),
         toml: stringifyToml,
         tomlDate: TomlDate,
         // A target written once for the repository asks about every scope; a target written for one scope asks about that scope.

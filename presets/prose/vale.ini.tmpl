@@ -8,8 +8,8 @@ Vocab = gspot
 BasedOnStyles = Vale, gspot, <%= prose.packages.join(', ') %>
 BlockIgnores = <%= prose.blockIgnores.join(', ') %>
 TokenIgnores = <%= prose.tokenIgnores.join(', ') %>
-<% for (const [rule, reason] of prose.disabledUpstream) { %># <%= reason %>
+<% for (const [rule, reason] of prose.disabledUpstream) { %># <%= json(reason, 0) %>
 <%= rule %> = NO
-<% } %><% for (const entry of policy.prose.disabled) { %># <%= entry.reason %>
+<% } %><% for (const entry of policy.prose.disabled) { %># <%= json(entry.reason, 0) %>
 <%= entry.rule %> = NO
 <% } %>

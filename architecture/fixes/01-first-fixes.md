@@ -675,7 +675,9 @@ encode line breaks so they cannot introduce settings. Repository and profile reg
 the emitted configuration and verify the original values.
 
 Expiry dates in `osv-scanner.toml` use the TOML date type instead of raw interpolation. Other
-output formats and shared input validation remain open.
+output formats and shared input validation remain open. Reason comments in JavaScript, Vale,
+and Trivy output encode line terminators. Parser regressions verify that those comments cannot
+introduce JavaScript statements or active ignore entries.
 
 ## K-241: nine contradictions between rule files and checks
 
