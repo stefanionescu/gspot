@@ -63,7 +63,6 @@ const limits = {
     nestedCallbacks: 3,
     identicalFunctions: 3,
     barrelReexports: 20,
-    prefixCollisions: 2,
 };
 
 const sizeRules = {
@@ -142,14 +141,6 @@ const gspotRules = {
     'gspot/no-export-only-files': 'error',
     'gspot/no-exported-alias-constants': 'error',
     'gspot/no-index-imports': 'error',
-    'gspot/no-single-file-folders': ['error', { allow: [
-    "packages/npm/gspot"
-] }],
-    'gspot/no-prefix-collisions': ['error', { threshold: limits.prefixCollisions, allow: [
-    "packages/eslint-plugin/src/rules/**",
-    "packages/eslint-plugin/tests/rules/**",
-    "docs/src"
-] }],
     'gspot/header-comments-before-imports': 'error',
     'gspot/import-layout': 'error',
     'gspot/no-cross-folder-imports': ['error', { aliases: ALIASES }],
@@ -636,7 +627,7 @@ export default [
     { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },
     {
         files: SCRIPTS,
-        rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }], 'gspot/no-single-file-folders': 'off' },
+        rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] },
     },
     {
         files: TESTS,

@@ -155,8 +155,16 @@ uses the retained rule. The statement ceiling remains a Bash setting.
 Local verification passes 33 rule, plugin, and planted TypeScript cases. The plugin build,
 TypeScript check, schema validation, and all 274 reference comparisons pass.
 
-K-187 and K-188 remain open for the other duplicate rules. Level selection and review of
-public boundaries remain open under K-301.
+**K-187 locally verified.** Folder checks belong to the structure engine. The two plugin
+rules, their options, their tests, and their unused filename helpers are removed. Generated
+ESLint configuration delegates folder findings to that engine. Real TypeScript trees verify
+leaf folders, declaration files, nested directories, prefix groups, allowances, and thresholds.
+
+All 11 affected integration, plugin, and framework cases pass locally. TypeScript, ESLint,
+schema validation, and 274 reference comparisons pass.
+
+K-188 remains open for the other duplicate rules. Level selection and review of public
+boundaries remain open under K-301.
 
 Closes K-102, K-187, and K-188.
 

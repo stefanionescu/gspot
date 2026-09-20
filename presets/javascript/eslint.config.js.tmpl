@@ -105,7 +105,6 @@ const limits = {
     nestedCallbacks: <%= limitOf('nested_callbacks', 'typescript') %>,
     identicalFunctions: <%= limitOf('identical_functions', 'typescript') %>,
     barrelReexports: <%= limitOf('barrel_reexports', 'typescript') %>,
-    prefixCollisions: <%= limitOf('prefix_collisions') %>,
 };
 
 const sizeRules = {
@@ -189,8 +188,6 @@ const gspotRules = {
     'gspot/no-export-only-files': 'error',
     'gspot/no-exported-alias-constants': 'error',
     'gspot/no-index-imports': 'error',
-    'gspot/no-single-file-folders': ['error', { allow: <%= json(structure.single_file_folder_allowed.flatMap((entry) => entry.paths)) %> }],
-    'gspot/no-prefix-collisions': ['error', { threshold: limits.prefixCollisions, allow: <%= json(structure.prefix_collision_allowed.flatMap((entry) => entry.paths)) %> }],
     'gspot/header-comments-before-imports': 'error',
     'gspot/import-layout': 'error',
     'gspot/no-cross-folder-imports': ['error', { aliases: ALIASES }],
@@ -431,7 +428,7 @@ export default [
     { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },
     {
         files: SCRIPTS,
-        rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }], 'gspot/no-single-file-folders': 'off' },
+        rules: { 'n/no-process-exit': 'off', 'no-unused-vars': ['error', { args: 'all', argsIgnorePattern: '^_', varsIgnorePattern: '^_' }] },
     },
     {
         files: TESTS,

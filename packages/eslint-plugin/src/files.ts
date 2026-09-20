@@ -18,7 +18,6 @@ const INDEX_BASENAMES = new Set([
 ]);
 const STDIN_NAMES = new Set(['', '<input>', '<text>']);
 const FILE_SCHEME = 'file://';
-const DECLARATION_SUFFIX = '.d.ts';
 
 const directoryCache = new Map<string, DirectoryEntry[]>();
 const globCache = new Map<string, (path: string) => boolean>();
@@ -31,9 +30,6 @@ function aliasTarget(source: string, prefix: string, target: string): string | u
     const base = target.endsWith('*') ? target.slice(0, -1) : target;
     return posix.join(base, rest);
 }
-
-/** The extensions of code files the rules look at. */
-export const CODE_EXTENSIONS = ['.ts', '.tsx', '.mts', '.cts', '.js', '.jsx', '.mjs', '.cjs'];
 
 /**
  * Forward slashes, no query or hash, no file:// scheme.
@@ -77,28 +73,6 @@ export function lintedRoot(context: RuleContextOf): string {
  */
 export function isIndexFile(path: string): boolean {
     return INDEX_BASENAMES.has(posix.basename(normalizePath(path)));
-}
-
-/**
- * The base name without its extension; `.d.ts` counts as one extension.
- * @param path a file path
- * @returns the stem
- */
-export function stemOf(path: string): string {
-    const base = posix.basename(path);
-    if (base.endsWith(DECLARATION_SUFFIX)) return base.slice(0, -DECLARATION_SUFFIX.length);
-    const dot = base.lastIndexOf('.');
-    return dot <= 0 ? base : base.slice(0, dot);
-}
-
-/**
- * A grouping prefix: the stem up to its first dash or dot.
- * @param stem a file stem
- * @returns the prefix, or the whole stem when it has no dash or dot
- */
-export function prefixOf(stem: string): string {
-    const cuts = [stem.indexOf('-'), stem.indexOf('.')].filter((index) => index >= 0);
-    return cuts.length === 0 ? stem : stem.slice(0, Math.min(...cuts));
 }
 
 /**
