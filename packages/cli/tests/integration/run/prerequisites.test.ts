@@ -80,7 +80,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
     );
     expect(planned).toHaveLength(consumers.size + 1);
     for (const check of planned) {
-        const result = await runEngineCheck(session, check);
+        const result = await runEngineCheck(session, check.spec.engine!, check);
         if (check.check === 'static-site/build') {
             expect(result.status).toBe('fail');
             expect(result.findings[0]?.message).toContain('Planted build failure');
@@ -95,6 +95,6 @@ test('a failed site build skips every output consumer and a new session rebuilds
     );
     const next = await openSession(fixture.path);
     const [build] = planRun(next, { stage: 'push', skips: [], localSkips: [], only: 'static-site/build' });
-    const rebuilt = await runEngineCheck(next, build!);
+    const rebuilt = await runEngineCheck(next, build!.spec.engine!, build!);
     expect(rebuilt.status).toBe('ok');
 });

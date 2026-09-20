@@ -82,7 +82,7 @@ function cachedResult(root: string, key: string, planned: PlannedCheck): CheckRe
 }
 
 function freshResult(session: Session, planned: PlannedCheck, staged: Set<string> | undefined): Promise<CheckResult> {
-    if (planned.spec.engine !== undefined) return runEngineCheck(session, planned, staged);
+    if (planned.spec.engine !== undefined) return runEngineCheck(session, planned.spec.engine, planned, staged);
     const analysis = TOOL_ANALYSES[planned.spec.analysis ?? ''];
     return analysis === undefined ? runToolCheck(session, planned) : analysis(session, planned);
 }

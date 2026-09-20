@@ -56,6 +56,12 @@ describe('parseManifest', () => {
         ).toThrow('fix_order');
     });
 
+    test('a manifest rejects an unknown engine before planning checks', () => {
+        const text =
+            '[preset]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nname = "x/y"\nstage = "commit"\nengine = "nope"\nsummary = "A sentence long enough."\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n';
+        expect(() => parseManifest(text, 'presets/x')).toThrow('engine');
+    });
+
     test('every shipped manifest loads and its folder equals its name', () => {
         for (const [presetName, entry] of presetManifests()) expect(entry.dir.endsWith(`/${presetName}`)).toBe(true);
     });

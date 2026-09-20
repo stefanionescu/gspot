@@ -71,7 +71,7 @@ const checkSchema = z.strictObject({
     baseline_file: z.string().optional(),
     baseline_command: z.array(z.string()).optional(),
     prune_command: z.array(z.string()).optional(),
-    engine: z.string().optional(),
+    engine: z.enum(['integrity', 'naming', 'structure', 'prose']).optional(),
     analysis: z.string().optional(),
     reported_by: z.string().optional(),
     takes_over: z.string().optional(),

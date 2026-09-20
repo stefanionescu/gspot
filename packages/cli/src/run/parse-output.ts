@@ -1,7 +1,8 @@
+import { parseJson } from '#cli/output/json.ts';
 import type { Finding } from '#types/finding.ts';
 // Findings from a tool's output: one parser per output format a manifest can declare.
 import { toPosix } from '#cli/platform/paths.ts';
-import { parseJson } from '#cli/run/json-output.ts';
+import { UNPARSED_LIMIT } from '#config/markers.ts';
 import type { CheckSpec, OutputFormat } from '#types/manifest.ts';
 import type { EslintFile, EslintEntry, RegexParser } from '#types/run.ts';
 
@@ -10,7 +11,6 @@ const DEFAULT_FILE_PATTERN = String.raw`^(?<file>[^\s].*):$`;
 const DEFAULT_GROUPED_PATTERN = String.raw`^\s+(?<line>\d+): (?<message>.*)$`;
 const TRAILING_BRACKET_RULE = /\[(?<rule>[\w:/@.-]+)\]$/u;
 const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
-const UNPARSED_LIMIT = 400;
 
 const DEFAULT_OUTPUT: OutputFormat = { format: 'regex', pattern: DEFAULT_PATTERN };
 

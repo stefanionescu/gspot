@@ -1,5 +1,4 @@
 // The check graph for a run: stage, scope, file sets, requirements, skips.
-import { hasEngine } from '#cli/run/engines.ts';
 import type { RepositoryCheck } from '#types/config.ts';
 import type { TrackedFile } from '#types/repository.ts';
 import type { CheckSpec, Manifest, Stage, ToolPin } from '#types/manifest.ts';
@@ -94,8 +93,7 @@ function isStageOk(spec: CheckSpec, options: PlanOptions): boolean {
 function isWanted(spec: CheckSpec, options: PlanOptions): boolean {
     if (options.only !== undefined && spec.name !== options.only) return false;
     if (options.among?.has(spec.name) === false) return false;
-    if (!isStageOk(spec, options)) return false;
-    return spec.engine === undefined || hasEngine(spec.engine);
+    return isStageOk(spec, options);
 }
 
 function projectFiles(context: PlanContext, scopeForFiles: string): TrackedFile[] {

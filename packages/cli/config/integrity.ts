@@ -39,7 +39,6 @@ export const CONFIG_IMPORT_PREFIXES = ['#config/'];
 export const FILE_SIZE_KB_DEFAULT = 1024;
 
 /** The inline suppression forms per comment style: the directive, how its reason is written, and the rule name. Only the comment part of a line is searched. */
-export const COMMENT_OPENERS: Record<string, string[]> = { slash: ['//', '/*'], hash: ['#'] };
 export const SUPPRESSION_FORMS: Record<string, SuppressionForm[]> = {
     slash: [
         { form: 'eslint-disable', marker: /\beslint-disable(?:-next-line|-line)?\b/u, reason: / -- \S/u },

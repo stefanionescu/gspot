@@ -4,9 +4,9 @@ import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import type { TrackedFile } from '#types/repository.ts';
+import { SUPPRESSION_FORMS } from '#config/integrity.ts';
 import type { SuppressionForm } from '#types/integrity.ts';
-import { COMMENT_STYLE_BY_EXTENSION } from '#config/markers.ts';
-import { COMMENT_OPENERS, SUPPRESSION_FORMS } from '#config/integrity.ts';
+import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#config/markers.ts';
 
 function styleOf(file: TrackedFile): string | undefined {
     const dot = file.path.lastIndexOf('.');

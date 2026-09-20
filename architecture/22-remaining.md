@@ -189,7 +189,7 @@ deployment, or app adoption is inferred from this documentation review.
 
 Each named row links to its owning acceptance section, including rows grouped under another
 ID. The September 20 reconciliation found exactly one owner for each named row.
-Twenty-two requirements are locally complete; 306 named rows remain open.
+Twenty-three requirements are locally complete; 305 named rows remain open.
 Completed evidence stays in each owning acceptance section.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
@@ -207,7 +207,7 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-188](fixes/00-delete-first.md#k-102-seven-plugin-rules): Delete the five plugin rules a pinned tool covers, and write the rule of that tool in the template.
 - [ ] [K-111](fixes/00-delete-first.md#k-111-three-ways-to-silence-a-finding-become-one): Delete the `lint:justify` and `lint:allow-...` markers.
 - [ ] [K-115](fixes/00-delete-first.md#k-111-three-ways-to-silence-a-finding-become-one): Delete the `finding` key of `[[ignore]]`.
-- [ ] [K-119](fixes/00-delete-first.md#k-119-a-branch-for-an-engine-that-is-not-built): Delete the branch for an engine that is not built, and keep the comment openers and `UNPARSED_LIMIT` once.
+- [x] [K-119](fixes/00-delete-first.md#k-119-a-branch-for-an-engine-that-is-not-built): Delete the branch for an engine that is not built, and keep the comment openers and `UNPARSED_LIMIT` once.
 - [ ] [K-146](fixes/00-delete-first.md#k-146-the-word-corpus): Remove the word `corpus` from the 34 places in the source.
 - [ ] [K-180](fixes/00-delete-first.md#k-180-manifest-keys-a-pin-and-a-runner-that-do-nothing): Delete the manifest keys `executable` and `ubi`, and the three readers of `ubi`.
 - [ ] [K-240](fixes/00-delete-first.md#k-180-manifest-keys-a-pin-and-a-runner-that-do-nothing): Delete the runner value `uv` until a reference repository needs it.

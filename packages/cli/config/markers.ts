@@ -74,3 +74,12 @@ export const SUPPRESSION_FORMS: Record<string, { marker: RegExp; introducer: str
     'lint-justify': { marker: /lint:justify\b/u, introducer: '' },
     'gspot-ignore': { marker: /gspot-ignore +[a-z0-9/-]+/u, introducer: '--' },
 };
+
+export const UNPARSED_LIMIT = 400;
+
+export const COMMENT_OPENERS: Record<string, string[]> = {
+    slash: ['//', '/*'],
+    hash: ['#'],
+    dash: ['--'],
+    html: ['<!--'],
+};

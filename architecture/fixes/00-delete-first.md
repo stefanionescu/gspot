@@ -235,6 +235,14 @@ by one `gspot-ignore` comment with a reason. Nothing else.
 
 ## K-119: a branch for an engine that is not built
 
+**Status: complete (locally verified).** The manifest schema rejects unknown engine names.
+Dispatch covers the schema-derived union, and planning uses validated engines. Both output parsers use one fallback limit, and comment consumers share one
+opener table. The JSON parser and its behavioral tests live under `output/`.
+
+All 23 focused manifest, parser, ignore, and prerequisite tests pass (128 assertions).
+TypeScript and schema checks pass locally. Windows execution remains platform verification
+deferred.
+
 **What is wrong.** `run/engines.ts:56` returns a skip with the note that the engine is not in
 this build, and every engine a manifest names is built. `UNPARSED_LIMIT` is written in
 `parse-output.ts` and `json-output.ts`, and the comment openers in three files.

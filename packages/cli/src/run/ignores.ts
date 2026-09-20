@@ -6,9 +6,14 @@ import type { IgnoreEntry } from '#types/config.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import type { IgnoreUse, InlineIgnore } from '#types/run.ts';
-import { COMMENT_STYLE_BY_EXTENSION, HTML_COMMENT_CLOSE, INLINE_IGNORE, REASON_INTRODUCER } from '#config/markers.ts';
 
-const COMMENT_OPENERS: Record<string, string> = { slash: '//', hash: '#', dash: '--', html: '<!--' };
+import {
+    COMMENT_OPENERS,
+    COMMENT_STYLE_BY_EXTENSION,
+    HTML_COMMENT_CLOSE,
+    INLINE_IGNORE,
+    REASON_INTRODUCER,
+} from '#config/markers.ts';
 
 function isTextMatch(entry: IgnoreEntry, finding: Finding): boolean {
     if (entry.finding === undefined) return true;
@@ -43,7 +48,7 @@ function reasonIn(rest: string): string | undefined {
 }
 
 function targetLine(style: string, line: string, index: number): number {
-    const isStandalone = line.trim().startsWith(COMMENT_OPENERS[style] ?? '');
+    const isStandalone = (COMMENT_OPENERS[style] ?? []).some((opener) => line.trim().startsWith(opener));
     return index + (isStandalone ? 2 : 1);
 }
 

@@ -73,7 +73,7 @@ export type CheckSpec = {
     baseline_file?: string;
     baseline_command?: string[];
     prune_command?: string[];
-    engine?: string;
+    engine?: RawCheck['engine'];
     analysis?: string;
     reported_by?: string;
     takes_over?: string;
