@@ -62,7 +62,7 @@ scan. Other version control systems are not named.
 history scans. Without git, every check that needs no history runs over the files the walk
 finds.
 
-**Files.** `run/check-command.ts`, `presets/secrets/manifest.toml`, `doctor/changes.ts`,
+**Files.** `run/check-command.ts`, `presets/concern/secrets/manifest.toml`, `doctor/changes.ts`,
 `repository/tracked.ts`.
 
 **Logic.** `--staged` and `--changed` exit 2 with one sentence: this folder is no git
@@ -160,7 +160,7 @@ use the pre-commit framework, most husky setups call lint-staged, and some use
 lint-staged call.
 
 **Files.** `repository/hook-calls.ts`, `emit/hook-managers.ts`, `policy/schema.ts`,
-`presets/python/manifest.toml`.
+`presets/language/python/manifest.toml`.
 
 **Logic.** For the pre-commit framework, gspot writes one `repo: local` hook into
 `.pre-commit-config.yaml`, as a managed block, with `entry: gspot check --staged` and

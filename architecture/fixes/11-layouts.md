@@ -49,7 +49,7 @@ the snapshot library. A test file is found by what it imports.
 
 **Files.** `readers/xcode-project.ts`, `checks/xcode/orphan-sources.ts`,
 `checks/xctest/reference-images.ts`, `checks/xctest/disabled.ts`, new `readers/swift-tests.ts`,
-`presets/xctest/manifest.toml`.
+`presets/tool/xctest/manifest.toml`.
 
 **Logic.** The project reader resolves each file reference through its group path. The setting
 `tools.xctest.reference_layout` is a pattern with `{file}` and `{test}`, by default
@@ -116,7 +116,7 @@ is the default. A repository of MySQL files that names no dialect gets Postgres 
 **Target.** `sql/syntax` runs where the dialect is `postgres`. `init` proposes the dialect from
 what it finds.
 
-**Files.** `checks/sql/syntax.ts`, `presets/sql/manifest.toml`.
+**Files.** `checks/sql/syntax.ts`, `presets/language/sql/manifest.toml`.
 
 **Logic.** The setting `tools.sql.dialect` takes a `detect` table (K-93): a `supabase/` folder or
 `pg` in the dependencies gives `postgres`, `mysql2` gives `mysql`, and `better-sqlite3` gives

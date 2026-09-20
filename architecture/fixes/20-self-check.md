@@ -49,7 +49,7 @@ work of a change follows the [active CI bypass](../22-remaining.md#active-ci-byp
 While it is active, local verification permits continued implementation without a GitHub run.
 
 **Files.** `gspot.toml` (`tests/unit` as a `[[check]]` at push, with `inputs`),
-`.github/workflows/ci.yml`, `tests/repositories/docs.test.ts`, `presets/javascript/eslint.config.js.tmpl`,
+`.github/workflows/ci.yml`, `tests/repositories/docs.test.ts`, `presets/language/javascript/eslint.config.js.tmpl`,
 `CONTRIBUTING.md`.
 
 **Logic.** The check runs `bun test packages --coverage` and fails under the floor in

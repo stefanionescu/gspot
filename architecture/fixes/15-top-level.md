@@ -15,7 +15,8 @@ with one file.
 
 **Target.** The root of [16-file-tree.md](../16-file-tree.md).
 
-**Files.** `prose/styles/` and `prose/vocabularies/` move to `presets/prose/`. `schema/` and
+**Files.** `prose/styles/` and `prose/vocabularies/` move to `presets/concern/prose/`. All
+presets move under their manifest kind, with public names unchanged. `schema/` and
 `docs/public/schema/` are deleted, and `packages/cli/schemas.ts` writes `gspot.schema.json` at
 the root. `packages/cli/build/entry.ts` folds into `build.ts`. New: `examples/package/`,
 `examples/two-scopes/`, `examples/swift-package/`, `CONTRIBUTING.md`, `SECURITY.md`, and

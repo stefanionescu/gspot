@@ -129,7 +129,7 @@ needs the log of a complete build, and `swift/build` pays for it too.
 the `manual` stage (D-122).
 
 **Files.** `checks/swift/build.ts`, `checks/swift/analyzer.ts`, `checks/swift/plan.ts`,
-`presets/swift/manifest.toml`.
+`presets/language/swift/manifest.toml`.
 
 **Logic.** Two build plans. The compile plan has no `clean` and uses `buildFolder(root)`. The
 analyzer plan keeps `clean` and writes the log the analyzer reads.
@@ -171,8 +171,8 @@ although Vale reads `.py` itself. CSS comments are never read.
 
 **Target.** Vale runs once for each extension, over paths.
 
-**Files.** `presets/prose/vale.ini.tmpl`, `prose/grammars.ts`, `prose/vale.ts`,
-`presets/prose/manifest.toml`.
+**Files.** `presets/concern/prose/vale.ini.tmpl`, `prose/grammars.ts`, `prose/vale.ts`,
+`presets/concern/prose/manifest.toml`.
 
 **Logic.** `vale.ini` maps a borrowed extension under `[formats]`, the key Vale has for this:
 `sh = py` style lines for the languages Vale does not read. Python, CSS, and every other language

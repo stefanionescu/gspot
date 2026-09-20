@@ -15,7 +15,7 @@ changes what their own `tsc` and their build accept.
 `.gspot/tsconfig.check.json` that extends the file of the repository and adds flags that only add
 errors.
 
-**Files.** New `presets/typescript/tsconfig.check.json.tmpl`. Deleted: `tsconfig.base.json.tmpl`
+**Files.** New `presets/language/typescript/tsconfig.check.json.tmpl`. Deleted: `tsconfig.base.json.tmpl`
 and the merge stub of the manifest. `checks/typescript/tsc.ts`, `checks/typescript/tsconfig-options.ts`.
 
 **Logic.** At `recommended` the generated file adds `strict` only. At

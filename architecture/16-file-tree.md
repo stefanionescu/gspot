@@ -29,7 +29,7 @@ gspot/
 │   ├── eslint-plugin/          @gspot/eslint-plugin
 │   ├── testing/                private @gspot/testing: sandbox.ts, cleanup.test.ts, package.json
 │   └── npm/                    the launcher and the platform package template
-├── presets/                    one folder for each preset
+├── presets/                    grouped by manifest kind, then preset name
 ├── rules/                      the rule files, by layer
 ├── tests/                      command acceptance, shared harness, and release suites
 ├── AGENTS.md                   one managed block
@@ -233,7 +233,7 @@ what it carries from them. Beside the manifest sit its templates, named after th
 write, and its rule packs.
 
 ```text
-presets/<preset>/
+presets/<kind>/<preset>/
 ├── manifest.toml
 ├── <target-file>.tmpl          one for each file the preset writes
 ├── <target-file>.fragment.tmpl a section of a file another preset owns
@@ -241,8 +241,11 @@ presets/<preset>/
 └── semgrep/                    Semgrep packs
 ```
 
-`presets/prose/` also holds `styles/gspot/` and `vocabularies/gspot/`, the Vale style gspot
-ships. `presets/naming/` holds `policy.json`.
+The groups are `language`, `framework`, `library`, `platform`, `database`, `tool`, and
+`concern`. Each manifest owns its kind; discovery retains the actual directory.
+`presets/concern/prose/` also holds `styles/gspot/` and `vocabularies/gspot/`, the Vale style
+and shipped vocabulary. Its template owns package selection and default rule policy.
+Operational prose parsing stays in the CLI. `presets/concern/naming/` holds `policy.json`.
 
 ## `rules/`
 
@@ -376,7 +379,7 @@ Each path of today, and where it ends. A path not listed stays.
 | `config/integrity.ts`, `postgres.ts`, `supabase.ts`, `prose.ts`                        | `config/suppressions.ts`, and settings of the three manifests                 | K-38                |
 | `packages/cli/rules-lint/`                                                             | `src/rules/`; the Vale half is deleted                                        | S-10                |
 | `packages/cli/build/entry.ts`                                                          | `packages/cli/build.ts`                                                       | K-73                |
-| `prose/styles/`, `prose/vocabularies/`                                                 | `presets/prose/`; `prose/vale.ini` is deleted                                 | K-73, S-10          |
+| `prose/styles/`, `prose/vocabularies/`                                                 | `presets/concern/prose/`; `prose/vale.ini` is deleted                         | K-73, S-10          |
 | `schema/`, `docs/public/schema/`                                                       | `gspot.schema.json` at the root; the schema of the report is part of it       | K-68                |
 | the twelve lint files at the root, `eslint.config.mjs` included                        | deleted; each tool reads `.gspot/`                                            | D-100               |
 | `.config/mise/conf.d/gspot.toml`                                                       | `.mise/conf.d/gspot-tools.toml`                                               | D-127               |

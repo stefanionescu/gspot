@@ -60,7 +60,7 @@ beside imports sorted by line length and a file comment above the imports.
 **Target.** `configs.recommended` holds the rules that find a defect, and `configs.all` holds
 every rule.
 
-**Files.** `packages/eslint-plugin/src/plugin.ts`, `presets/javascript/eslint.config.js.tmpl`.
+**Files.** `packages/eslint-plugin/src/plugin.ts`, `presets/language/javascript/eslint.config.js.tmpl`.
 
 **Logic.** Each rule states `meta.docs.level`. `plugin.ts` builds both configs from that field,
 and the template spreads the config of the level.
@@ -88,7 +88,7 @@ unused functions. The header,
 order, underscore, owner, and doc-section rules are `all`.
 
 **Files.** `structure/analyses/scripts/`: `interpreter.ts` splits into `strict-mode.ts`,
-`temp-trap.ts`, and `script-header.ts`. `config/structure.ts`, `presets/bash/manifest.toml`.
+`temp-trap.ts`, and `script-header.ts`. `config/structure.ts`, `presets/language/bash/manifest.toml`.
 
 **Logic.** Three check names replace one: `structure/bash-strict-mode`, `structure/bash-temp-trap`
 (both `recommended`), and `structure/bash-script-header` (`all`).
@@ -115,7 +115,7 @@ manifest names.
 **Target.** `recommended` holds import-cycle defects. File and function length, call-through, placeholder prose, the seven conventions, pydoclint, and vulture are `all`. A thin wrapper is not a defect merely because it delegates (K-301). The ownership check is
 planned where the scope holds `uv.lock`, `poetry.lock`, or `pdm.lock`.
 
-**Files.** `presets/python/manifest.toml`, `presets/pytest/manifest.toml`,
+**Files.** `presets/language/python/manifest.toml`, `presets/tool/pytest/manifest.toml`,
 `checks/dependencies/ownership.ts`.
 
 **Logic.** The ownership check takes `waits_for` a lockfile through `[detect] project_files` of
@@ -167,8 +167,8 @@ vocabulary of 68 product names live in `config/prose.ts` and ship to every proje
 **Target.** `recommended` runs only demonstrated defect rules of the `gspot` style, excluding banned terms and house-style judgments. `all` runs the complete style, which is what `WRITING.md` tells an
 agent. `all` adds the packages. The off list and the vocabulary are data of the prose preset.
 
-**Files.** `presets/prose/manifest.toml`, `presets/prose/vale.ini.tmpl`,
-`presets/prose/vocabularies/gspot/accept.txt`, `prose/vocabulary.ts`. Deleted: `config/prose.ts`.
+**Files.** `presets/concern/prose/manifest.toml`, `presets/concern/prose/vale.ini.tmpl`,
+`presets/concern/prose/vocabularies/gspot/accept.txt`, `prose/vocabulary.ts`. Deleted: `config/prose.ts`.
 
 **Logic.** `vale.ini.tmpl` lists `BasedOnStyles = gspot` at `recommended` with every term-ban and house-style rule disabled by level. At `all` it enables those rules and adds the
 packages and the off list, which the manifest holds as a setting with its reasons. `apply`
@@ -193,7 +193,7 @@ template asks `has('nextjs')` and `has('nestjs')`.
 through a generated file that extends the `tsconfig.json` of the repository and adds flags that
 only add errors, as [17-recommended.md](17-recommended.md) builds it (K-74).
 
-**Files.** `presets/typescript/tsconfig.check.json.tmpl`, `presets/javascript/jsconfig.json.tmpl`.
+**Files.** `presets/language/typescript/tsconfig.check.json.tmpl`, `presets/language/javascript/jsconfig.json.tmpl`.
 
 **Logic.** The generated file holds `strict` at `recommended`, and four more flags at `all`. `javascript/checkjs`
 reads the `jsconfig.json` of the repository for resolution.
@@ -213,7 +213,7 @@ pack reports every `createAdminClient(...)` and asks for a comment, which clears
 
 **Target.** A shipped pack names the API of its framework and nothing else.
 
-**Files.** `presets/cloudflare/semgrep/`, `presets/express/semgrep/`, `presets/supabase/semgrep/`.
+**Files.** `presets/platform/cloudflare/semgrep/`, `presets/framework/express/semgrep/`, `presets/platform/supabase/semgrep/`.
 
 **Logic.** A rule that names a function of one repository moves into that repository, under
 `tools.semgrep.rules`, in its migration. The supabase rule reports `createClient` with the

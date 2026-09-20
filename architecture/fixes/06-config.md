@@ -110,8 +110,8 @@ Templates still name paths that D-127 moves, and the baseline folder that D-165 
 list of globs in `_files`. A rule of any tool is turned off through `[[ignore]]` alone.
 
 **Files.** Twelve settings in the html, static-site, licenses, docs, xcode, and prose manifests,
-`policy/schema.ts`, `presets/config-files/v8r.yml.tmpl`, `presets/formatting/prettierignore.tmpl`,
-`presets/spelling/typos.toml.tmpl`, and the Semgrep pack of the bash preset.
+`policy/schema.ts`, `presets/concern/config-files/v8r.yml.tmpl`, `presets/concern/formatting/prettierignore.tmpl`,
+`presets/concern/spelling/typos.toml.tmpl`, and the Semgrep pack of the bash preset.
 
 **Logic.** Renames only, each in one commit with its readers, its tests, and its row of
 [19-names.md](../19-names.md). The check becomes `xcode/asset-catalogs`. The Semgrep rule names of
@@ -132,7 +132,7 @@ table.
 
 **Target.** One value, `format.indent_width`, for every tool that indents.
 
-**Files.** `presets/formatting/editorconfig.tmpl`.
+**Files.** `presets/concern/formatting/editorconfig.tmpl`.
 
 **Logic.** The YAML block leaves the template.
 

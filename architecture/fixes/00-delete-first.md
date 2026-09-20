@@ -166,7 +166,8 @@ schema validation, and 274 reference comparisons pass.
 K-188 remains open for the other duplicate rules. Level selection and review of public
 boundaries remain open under K-301.
 
-Closes K-102, K-187, and K-188.
+K-102, K-187, and K-188 share this acceptance contract. K-188 closes only after the pinned replacement
+rules report the intended defects through generated configuration.
 
 **What is wrong.** `no-trivial-functions` repeats `no-call-through`, and its option changes
 nothing. `no-single-file-folders` and `no-prefix-collisions` repeat two structure checks. Five
@@ -174,11 +175,11 @@ rules repeat a pinned tool: `import-direction`, `no-harness-barrel-imports`,
 `no-reexports-outside-index`, `no-duplicate-barrel-exports`, and the `interface` message of
 `types-placement`. One fact is two findings under two names, with two allow lists.
 
-**Target.** The plugin holds 19 rules, and one fact has one finding.
+**Target.** One fact has one finding. Rule counts do not establish enforcement coverage.
 
 **Files.** Deleted under `packages/eslint-plugin/src/rules/` and `tests/rules/`: the six rule
 files and their six tests. `types-placement.ts` loses its `interface` message.
-`presets/javascript/eslint.config.js.tmpl` and `presets/typescript/eslint.fragment.js.tmpl`
+`presets/language/javascript/eslint.config.js.tmpl` and `presets/language/typescript/eslint.fragment.js.tmpl`
 change.
 
 **Logic.** `no-call-through` covers declarations, expressions, arrows, and methods, and keeps its
@@ -343,7 +344,7 @@ under `.gspot/` with uv, as D-157 decides ([08-frameworks.md](08-frameworks.md),
 **Files.** `presets/manifest-schema.ts`, `presets/read-manifests.ts` (`INSTALLER_KEYS`),
 `emit/targets.ts:106`, `emit/apply-command.ts:31`, `platform/install-hints.ts`,
 `policy/schema.ts` (`runnerSchema`), `commands/init.ts:80`, `lifecycle/questions.ts:28`,
-`lifecycle/install-tools.ts:16`, and `presets/python/manifest.toml:70`.
+`lifecycle/install-tools.ts:16`, and `presets/language/python/manifest.toml:70`.
 
 **Logic.** gspot pins itself in the mise file as `"github:stefanionescu/gspot"`, not through
 `ubi`, in `emit/runner-tasks.ts` and in the hint of `upgrade/command.ts:15`. Detection in

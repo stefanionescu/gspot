@@ -118,7 +118,8 @@ Replaced by D-119 and D-126.
 
 ## D-21 preset names are bare names
 
-`typescript`, not `language:typescript`. The kind is a field. Rejected: kind prefixes in every
+`typescript`, not `language:typescript`. The kind is a manifest field and groups preset directories as `presets/<kind>/<name>/`.
+Discovery resolves assets from the manifest directory. Rejected: kind prefixes in every
 id, which nobody typed correctly and which the folder name already says.
 
 ## D-22 The inverse config-purity check is not carried
@@ -421,7 +422,7 @@ manifest pattern is compiled once at load. Rejected: an `[[ignore]]` in this rep
 
 ## D-68 The names inside gspot follow the naming policy, so `sync` is `apply` and `render/` is `emit/`
 
-The naming groups in `presets/naming/policy.json` bind the identifiers, files, directories, setting names and architecture documents of gspot, with no group removed, and no allowance. The first draft of the file tree and the CLI carried banned parts; they were renamed rather than allowed:
+The naming groups in `presets/concern/naming/policy.json` bind the identifiers, files, directories, setting names and architecture documents of gspot, with no group removed, and no allowance. The first draft of the file tree and the CLI carried banned parts; they were renamed rather than allowed:
 
 - the `sync` command and everything named after it became `apply` (`gspot apply`, `apply --check`, `apply --baseline`, the `gspot:apply` task and script);
 - `src/render/` became `src/emit/`, and the `render*` functions and `*Render` types took names that say what they produce;

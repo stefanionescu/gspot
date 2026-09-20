@@ -7,8 +7,8 @@ the Swift presets can close its acceptance run.
 
 ## Status
 
-This table states what the code holds today: 48 presets and 26 plugin rules. The target is 49
-presets and 19 rules, and [22-remaining.md](22-remaining.md) holds the way there.
+This table records implementation evidence. Behavioral acceptance, rather than a fixed rule
+count, determines completion. [22-remaining.md](22-remaining.md) holds the remaining work.
 
 The table records implementation presence, not completed acceptance. The remaining-work index
 and [repository audit](23-repository-audit.md) take precedence over historical phase labels.

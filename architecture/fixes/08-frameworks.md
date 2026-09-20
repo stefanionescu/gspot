@@ -26,7 +26,7 @@ config, and its plugins stay, and takeover lists them for removal by hand (D-109
 `emit/targets.ts` (`runnerOutputs`), `emit/apply-command.ts` (`writePackages`),
 `emit/runner-tasks.ts` (`miseSurface`), `platform/tool-probe.ts` (`candidates`,
 `libraryVersion`), `lifecycle/install-tools.ts`, `lifecycle/uninstall-command.ts`
-(`removePackagePins`), `presets/javascript/knip.json.tmpl`, and `checks/dependencies/manifest-policy.ts`.
+(`removePackagePins`), `presets/language/javascript/knip.json.tmpl`, and `checks/dependencies/manifest-policy.ts`.
 
 **Logic.** `tool-packages.ts` collects every tool with an `npm` name from the selected manifests,
 with its pinned version, and writes `.gspot/package.json` with the mark `_gspot`. `install-tools.ts`
@@ -64,7 +64,7 @@ a function of its own, `installedReact`, because ESLint 10 took out what the plu
 **Target.** The pin is the newest ESLint that every shipped plugin supports (D-142), which is 9
 today. `@eslint/js` and unicorn are pinned at their last version for ESLint 9.
 
-**Files.** The javascript, react, and tanstack-query manifests, `presets/react/eslint.fragment.js.tmpl`,
+**Files.** The javascript, react, and tanstack-query manifests, `presets/framework/react/eslint.fragment.js.tmpl`,
 and the registry test of K-206.
 
 **Logic.** The registry test reads `peerDependencies.eslint` of every pinned plugin and fails a
@@ -90,9 +90,9 @@ Stylelint never sees a `<style>` block, and the naming engine reads no script bl
 reads it (D-137). A framework turns a shared rule off in its manifest, with a reason (D-138).
 Type check, format, style, and names reach a component file (D-140).
 
-**Files.** `presets/javascript/eslint.config.js.tmpl`, the manifests and fragments of react,
-nextjs, react-native, nestjs, vue, and svelte, `presets/formatting/manifest.toml`,
-`presets/css/manifest.toml`, `naming/extract.ts`, `naming/extractors/typescript.ts`.
+**Files.** `presets/language/javascript/eslint.config.js.tmpl`, the manifests and fragments of react,
+nextjs, react-native, nestjs, vue, and svelte, `presets/concern/formatting/manifest.toml`,
+`presets/language/css/manifest.toml`, `naming/extract.ts`, `naming/extractors/typescript.ts`.
 
 **Logic.** `CODE` in the template is built from the `claims.extensions` of the selected presets.
 A manifest takes `[[rules_off]]` with `rule` and `reason`, and the template renders that list.
@@ -141,7 +141,7 @@ to what its linters enforce, one section for each plugin.
 
 Closes K-50, K-133, and K-136.
 
-**What is wrong.** `presets/naming/policy.json` names Next.js for every repository.
+**What is wrong.** `presets/concern/naming/policy.json` names Next.js for every repository.
 `naming/engine.ts` (`REACT_FILE`) lets a `.tsx` file start a function with `handle`, and
 everywhere else `handleRequest` is a finding, in an Express server too. Every React component is
 a finding, because the policy asks functions for camelCase. The react planted test installs
@@ -150,7 +150,7 @@ without naming, so nothing ran the two together.
 **Target.** A framework preset carries its naming rules as `[[naming.rules]]` in its manifest
 (D-112). The engine knows no framework.
 
-**Files.** `presets/naming/policy.json`, the manifests of react, nextjs, react-native, vue,
+**Files.** `presets/concern/naming/policy.json`, the manifests of react, nextjs, react-native, vue,
 svelte, express, and nestjs, `naming/engine.ts`, `naming/validate-name.ts` (`callbackProblem`),
 `naming/policy.ts`, `tests/acceptance/frameworks/react/web.test.ts`.
 
@@ -213,7 +213,7 @@ Sass file is an error.
 **Target.** The css preset claims `.css` alone. Detection names Sass as a language gspot has no
 preset for.
 
-**Files.** `presets/css/manifest.toml`, the css preset page.
+**Files.** `presets/language/css/manifest.toml`, the css preset page.
 
 **Logic.** Two endings leave the claim.
 
@@ -234,7 +234,7 @@ package in every lockfile it scans. `supabase db lint` checks the functions of a
 **Target.** One check, `licenses/packages`, runs `osv-scanner` with its license flag over every
 lockfile of the scope. The supabase preset gains `supabase/db-lint` at the `manual` stage.
 
-**Files.** `presets/licenses/manifest.toml`, `presets/supabase/manifest.toml`. Deleted:
+**Files.** `presets/concern/licenses/manifest.toml`, `presets/platform/supabase/manifest.toml`. Deleted:
 `checks/licenses/npm.ts`.
 
 **Logic.** The allowed list stays `tools.licenses.allowed`, and the scanner takes it as
@@ -257,7 +257,7 @@ cloudflare pack holds four. Eleven rows name a check nobody built.
 
 **Target.** Every ledger row names a check that exists, or the fix file that builds it.
 
-**Files.** New `presets/swift/semgrep/ios.yml` and `presets/python/semgrep/python.yml`, carried
+**Files.** New `presets/language/swift/semgrep/ios.yml` and `presets/language/python/semgrep/python.yml`, carried
 from the two reference repositories, which are read and not changed.
 `architecture/06-enforcement-ledger.md`.
 
@@ -304,7 +304,7 @@ reads `tools.swiftlint.extra_configs`. The ESLint config does relax its rules ov
 **Target.** The xctest preset writes a nested SwiftLint file over the folders it claims, with the
 three rules off.
 
-**Files.** New `presets/xctest/swiftlint.tests.yml.tmpl`, `presets/xctest/manifest.toml`.
+**Files.** New `presets/tool/xctest/swiftlint.tests.yml.tmpl`, `presets/tool/xctest/manifest.toml`.
 
 **Logic.** SwiftLint reads a `.swiftlint.yml` in a subfolder as a nested config. The manifest
 writes one pointer file into each claimed test folder, with `parent_config` set to the file under

@@ -8,7 +8,7 @@ combine, and the catalog.
 A preset is a folder in the gspot distribution:
 
 ```text
-presets/typescript/
+presets/language/typescript/
   manifest.toml            everything the preset contributes
   eslint.fragment.js.tmpl  configuration templates
   tsconfig.check.json.tmpl
@@ -23,8 +23,10 @@ runs, settings it exposes, and rule files it installs. It contributes nothing it
 
 ## Kinds
 
-Seven kinds. The kind names the folder under `presets/` in this documentation and a `kind` field in
-the manifest. Preset names are bare names; the kind is not part of the name.
+Seven kinds. Each preset lives at `presets/<kind>/<name>/`, using its manifest's `kind`.
+Preset names are bare names; the kind is not part of the public name. Discovery reads each
+manifest's actual directory and resolves its assets there. No category registry, old-path
+aliases, or forwarding files duplicate that ownership.
 
 | Kind      | Selected by                                    | Claims files by                           | Examples                                                                                                                               |
 | --------- | ---------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |

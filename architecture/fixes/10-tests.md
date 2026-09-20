@@ -191,7 +191,7 @@ A source-file inventory or matching test filename does not establish coverage.
 
 Closes T-19 and T-33.
 
-**What is wrong.** Each naming test builds a policy of its own, so `presets/naming/policy.json`
+**What is wrong.** Each naming test builds a policy of its own, so `presets/concern/naming/policy.json`
 first met a React component in a real repository (K-136). The clean project of each test is
 written in the house style. No test installs into a project the way `create-vite`,
 `create-next-app`, `nest new`, `uv init`, or Xcode writes it, so what a stranger gets on day one

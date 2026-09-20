@@ -244,7 +244,7 @@ Banned-term checks belong to `all`; `generate` and `service` leave the shipped l
 | SwiftLint `explicit_top_level_acl`          | 826           |
 | SwiftLint `one_declaration_per_file`        | 337           |
 
-`presets/swift/swiftlint.yml.tmpl` turns on 95 opt-in rules for every repository.
+`presets/language/swift/swiftlint.yml.tmpl` turns on 95 opt-in rules for every repository.
 
 **Design (D-110).** A preset marks each opt-in rule `recommended` or `all`. `recommended` holds rules that
 find defects. `all` adds rules of taste, such as explicit access control on every
@@ -285,7 +285,7 @@ clean: it holds 724 Swift files with PascalCase names.
 
 ## A-15 Naming by language and by framework
 
-**Evidence.** `presets/naming/policy.json` holds case tables for six languages: TypeScript,
+**Evidence.** `presets/concern/naming/policy.json` holds case tables for six languages: TypeScript,
 JavaScript, Python, Swift, Bash, and SQL. `naming/extract.ts` holds five extractors. Go, Rust and Ruby shipped as presets with no table and no extractor, and are deleted (D-136). Nothing tells the person that names in those files go unchecked.
 
 No framework layer exists:

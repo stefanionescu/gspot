@@ -39,7 +39,7 @@ comment rule and the trivial function of PL/pgSQL were never written.
 **Files.** `structure/analyses/`: one file for each idea, with a small table for each language
 under `structure/languages/` that names the node kinds of a function, a call, a parameter, an
 import, and an export. The folders `apple/structure/` and `pyproject/structure/` fold into it.
-`presets/structure/manifest.toml` holds the limits once.
+`presets/concern/structure/manifest.toml` holds the limits once.
 
 **Logic.** An analysis asks the language table for nodes and never names a language. The name
 stays with the language: `structure/call-through` for shell, `python/call-through`,

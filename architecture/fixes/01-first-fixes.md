@@ -22,7 +22,7 @@ with flake8, pytest, and tox settings inside.
 **Target.** Takeover deletes a file only when one tool owns it (D-109). A shared file is read,
 its section is carried, and the plan names the section for the developer to remove.
 
-**Files.** `presets/sql/manifest.toml` gains its takeover rows (K-14). `config/patterns.ts` loses
+**Files.** `presets/language/sql/manifest.toml` gains its takeover rows (K-14). `config/patterns.ts` loses
 the tool file table in row 13. `lifecycle/takeover.ts`.
 
 **Logic.** A takeover row of a manifest has `file` and `shared = true` or no such key.
@@ -172,7 +172,7 @@ on every claimed file. `bash -n` exits 2 on any bats test file.
 **Target.** `bash/syntax` reads `.sh`, `.bash`, and files with a Bash shebang. `bash/zsh-syntax`
 runs `zsh -n` over `.zsh` files, and `bash/bats-syntax` runs `bats --count` over `.bats` files.
 
-**Files.** `presets/bash/manifest.toml`, and the bash preset page.
+**Files.** `presets/language/bash/manifest.toml`, and the bash preset page.
 
 **Logic.** Three checks with three claims. `zsh` and `bats` are host tools, so an absent one
 reports `missing` with its install hint. ShellCheck and shfmt keep skipping `.zsh`, which the
@@ -202,7 +202,7 @@ also fails on every clone.
 **Target.** `{file}` is replaced where it stands, in any position.
 
 **Files.** New `run/command-parts.ts`, which takes `plainPart`, `perFileCommands`, and
-`run/list-arguments.ts`. `presets/docker/manifest.toml`.
+`run/list-arguments.ts`. `presets/tool/docker/manifest.toml`.
 
 **Logic.** `plainPart` returns a marker object for `{file}`, and `perFileCommands` maps each
 built command by replacing the marker. The manifest command gains `--no-env-resolution`.
@@ -505,7 +505,7 @@ rule's own test, and the template turns the rule off one list at a time.
 keeps.
 
 **Files.** `packages/eslint-plugin/src/rules/no-trivial-files.ts`, its test, and
-`presets/javascript/eslint.config.js.tmpl`.
+`presets/language/javascript/eslint.config.js.tmpl`.
 
 **Logic.** The rule takes an `entryFiles` option, and the template passes the setting.
 
@@ -604,7 +604,7 @@ calls the network.
 
 **Target.** The check builds the references where the file holds any.
 
-**Files.** `presets/typescript/manifest.toml`, `packages/cli/src/integrity/tsc.ts`,
+**Files.** `presets/language/typescript/manifest.toml`, `packages/cli/src/integrity/tsc.ts`,
 and the shared tool-analysis registry.
 
 **Logic.** The check reads `tsconfig.json` through `jsonc-parser`. With references it runs
@@ -669,7 +669,7 @@ comment styles from `config/markers.ts` and the markers from the selected manife
 
 **Target.** Every emitted string, key, path, and comment uses destination-appropriate serialization under [03-configuration.md](../03-configuration.md).
 
-**Files.** `policy/schema.ts`, `policy/messages.ts`, `emit/templates.ts`, and every affected preset template, including `presets/spelling/typos.toml.tmpl`.
+**Files.** `policy/schema.ts`, `policy/messages.ts`, `emit/templates.ts`, and every affected preset template, including `presets/concern/spelling/typos.toml.tmpl`.
 
 **Logic.** Validate the semantic value, then encode it for TOML, JSON, JavaScript, shell arguments, or the relevant comment grammar. Use format writers where available. Never interpolate raw values into executable source or rely on a shared printable-text validator as escaping. Profiles use the same validators and writers.
 
@@ -704,7 +704,7 @@ example: `SWIFT.md` forbids an explicit `internal`, and `swiftlint.yml.tmpl` tur
 
 **Files.** `rules/language/SWIFT.md`, `rules/general/agent/SUPPRESSIONS.md`, `GIT.md`,
 `rules/general/code/COMMENTS.md`, `NAMING.md`, `NAMING-FILES.md`, `LOGGING.md`, and
-`presets/swift/swiftlint.yml.tmpl`.
+`presets/language/swift/swiftlint.yml.tmpl`.
 
 **Logic.** Each of the nine is settled on the side of the decision or the check, and the rule
 file changes. `explicit_acl` moves to the level `all` (row 11), and the rule file says so.
@@ -724,7 +724,7 @@ is named in five documents and has no code. The CI job runs `gspot apply` to fin
 **Target.** `integrity/generated-drift` ships in the structure preset at the commit stage. The
 name `generated-fresh` leaves every document (D-134).
 
-**Files.** `presets/structure/manifest.toml`, `checks/integrity/generated-drift.ts` (from
+**Files.** `presets/concern/structure/manifest.toml`, `checks/integrity/generated-drift.ts` (from
 `emit/drift.ts`), `emit/workflow.ts`.
 
 **Logic.** The workflow runs `gspot check`, and the drift check fails a generated file that
@@ -774,7 +774,7 @@ dotenv-linter refuses. v8r has no `--config` and no `--format`, so it reads the 
 
 **Target.** Every flag of every manifest exists in the pinned tool.
 
-**Files.** `presets/config-files/manifest.toml`, `presets/config-files/v8r.yml.tmpl`, and a new
+**Files.** `presets/concern/config-files/manifest.toml`, `presets/concern/config-files/v8r.yml.tmpl`, and a new
 contract test under `tests/release/`.
 
 **Logic.** The fixer drops the flag. The v8r check sets `V8R_CONFIG_FILE` through a new manifest
@@ -824,7 +824,7 @@ never asks for.
 **Target.** An example marked good passes the linter of its preset.
 
 **Files.** `rules/tool/docker/DOCKER.md`, `rules/framework/fastapi/`, `rules/library/zod/ZOD.md`,
-`rules/library/zustand/ZUSTAND.md`, `presets/zod/eslint.fragment.js.tmpl`, new
+`rules/library/zustand/ZUSTAND.md`, `presets/library/zod/eslint.fragment.js.tmpl`, new
 `src/rules/examples.ts`.
 
 **Logic.** `examples.ts` takes each fenced block under a line that starts with `Good`, writes it

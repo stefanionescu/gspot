@@ -21,7 +21,7 @@ the declaration is redundant or that its abstraction is wrong.
 
 ## Schema
 
-The shipped policy is `presets/naming/policy.json`. The repository extends it through
+The shipped policy is `presets/concern/naming/policy.json`. The repository extends it through
 `[naming]` in `gspot.toml`. Both use one schema.
 
 ```json
@@ -308,5 +308,5 @@ and `defensive` groups refuse removal by command and by hand alike (D-13).
 
 The Vale `gspot` style bans the words of the `marketing` and `defensive` groups in prose, so a
 comment cannot say what an identifier cannot say. The style holds its own lists under
-`presets/prose/styles/gspot/`, and a unit test holds each list equal to its group of
-`presets/naming/policy.json`.
+`presets/concern/prose/styles/gspot/`, and a unit test holds each list equal to its group of
+`presets/concern/naming/policy.json`.

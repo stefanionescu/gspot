@@ -85,7 +85,7 @@ folder through the naming checks. Level selection and broader usefulness review 
 
 **Target.** Banned terms run only at all; generate and service are allowed. Recommended means a demonstrated defect rather than a preferred naming or abstraction style.
 
-**Files.** `presets/naming/`, naming manifests and term sources, shared structure checks, prose rule sources, generated reference tests, and reference-project test data.
+**Files.** `presets/concern/naming/`, naming manifests and term sources, shared structure checks, prose rule sources, generated reference tests, and reference-project test data.
 
 **Logic.** Apply [08-naming-policy.md](../08-naming-policy.md) and [19-names.md](../19-names.md). Review call-through and trivial-wrapper rules: an API boundary is valid even when short. Move judgment-only rules to all, including call-through, duplicate-function, length, case, digit, and layout preferences. Retain a recommended rule only with a demonstrable correctness condition. Remove generate and service from every shipped banned/reserved source and generated copy, without forcing emit back to generate.
 

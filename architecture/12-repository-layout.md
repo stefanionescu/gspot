@@ -20,7 +20,7 @@ gspot/
 │   ├── eslint-plugin/          @gspot/eslint-plugin
 │   ├── testing/                private @gspot/testing: sandbox.ts, cleanup.test.ts, package.json
 │   └── npm/                    the launcher package and the platform package template
-├── presets/                    one folder for each preset: manifest.toml, templates, ast-grep rules, Semgrep packs
+├── presets/                    grouped by manifest kind, then preset name
 ├── rules/                      the rule files, by layer
 ├── tests/                      planted repositories and the release suite
 ├── gspot.schema.json  gspot.toml  mise.toml  package.json  bunfig.toml  tsconfig.json
@@ -46,7 +46,7 @@ top, and little else.
 | Biome    | `crates`, `packages`, `e2e-tests`, `scripts`, `plugins`                     | published with the npm package  |
 | gspot    | `packages`, `presets`, `rules`, `examples`, `architecture`, `docs`, `tests` | `gspot.schema.json` at the root |
 
-- The Vale style is the source of one preset, so it sits in `presets/prose/`. Vale loads a style
+- The Vale style is the source of one preset, so it sits in `presets/concern/prose/`. Vale loads a style
   from `<StylesPath>/<StyleName>/`, and the folder name is what a finding prints:
   `gspot.sentence-length`. A vocabulary works the same way.
 - The JSON Schema lets an editor complete and check `gspot.toml`. It is one tracked file at the
@@ -59,6 +59,11 @@ top, and little else.
 
 ## Folder rules
 
+- CLI unit and integration tests stay in `packages/cli/tests`. Tests for the separately
+  shipped plugin stay in `packages/eslint-plugin/tests`. Root `tests` owns whole-product
+  command acceptance, shared harness tests, and packaged release acceptance.
+- `packages/testing` owns shared filesystem setup and cleanup for those suites. Keep it
+  limited to shared test support. Test-only types live with their tests.
 - A folder has more than one file or does not exist.
 - `commands/` holds no logic. Each command is a function elsewhere that a test calls with no
   terminal.

@@ -34,6 +34,14 @@ in force.
 
 ## The order
 
+Before further ownership moves, reconcile the preset and test contracts in
+[12-repository-layout.md](12-repository-layout.md) and [16-file-tree.md](16-file-tree.md).
+The cleanup covers grouped preset discovery and embedded assets (K-73), prose policy
+ownership (K-175), replacement-rule findings (K-188), and behavioral assertions (T-29).
+Verify nested TypeScript package inheritance with the installed compiler and isolate Swift
+build observations by command session. These repairs precede candidate acceptance; they
+do not replace the remaining implementation scope below.
+
 The order is fixed by D-121. K-298 through K-301 are prerequisites of the affected lifecycle, hook, naming, and adoption steps, not work deferred until after launch. K-302 follows the release and manual.
 
 1. Leave yap-swift-app unchanged while implementing and verifying gspot.

@@ -116,7 +116,7 @@ comparison of a preset name under `src/`.
 
 Closes K-197, K-223, K-199, and K-220.
 
-**What is wrong.** `presets/javascript/eslint.config.js.tmpl` asks `has('zustand')`, and the same
+**What is wrong.** `presets/language/javascript/eslint.config.js.tmpl` asks `has('zustand')`, and the same
 for `react-hook-form`, `react-native`, `nestjs`, `drizzle`, and `trpc`. The cause is that
 `no-restricted-syntax` is one rule, so a later block replaces an earlier one. The stylelint,
 sqlfluff, vue, and svelte templates ask `has(...)` too. `ruff.toml.tmpl` repeats each default
@@ -127,7 +127,7 @@ beside the manifest that owns it. `knip.json.tmpl` names `build.ts`, `publish.ts
 preset, and no template holds a default.
 
 **Files.** The javascript template and the fragments of the seven presets, `emit/templates.ts`,
-`emit/targets.ts`, the four other templates, `presets/javascript/knip.json.tmpl`.
+`emit/targets.ts`, the four other templates, `presets/language/javascript/knip.json.tmpl`.
 
 **Logic.** A fragment exports two things: config blocks, and a list of selectors with messages.
 The template joins the selectors of every selected fragment into the one
@@ -227,7 +227,7 @@ of `limits.file_lines` says that a tool of another language counts every line. `
 **Target.** The types folder is proposed from what the repository holds: `types` or `src/types`
 in the root or in a scope. The commit scopes are what `tools.commitlint.scopes` names.
 
-**Files.** `lifecycle/init/plan.ts`, `presets/typescript/manifest.toml`.
+**Files.** `lifecycle/init/plan.ts`, `presets/language/typescript/manifest.toml`.
 
 **Logic.** The two folder names are the `detect` table of the setting `types_directory` in the
 typescript manifest (K-93).
@@ -309,7 +309,7 @@ with no word.
 **Target.** The i18n preset alone ships `i18n/locales` and its one setting. The nextjs preset
 recommends i18n where `next-intl` is a dependency.
 
-**Files.** `presets/i18n/manifest.toml`, `presets/nextjs/manifest.toml`, `checks/i18n/locales.ts`,
+**Files.** `presets/library/i18n/manifest.toml`, `presets/framework/nextjs/manifest.toml`, `checks/i18n/locales.ts`,
 `readers/locale-files.ts`.
 
 **Logic.** A manifest that repeats the check name of another manifest fails to load.
