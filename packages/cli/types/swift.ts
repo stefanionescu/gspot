@@ -16,6 +16,9 @@ export type SwiftBuildPlan = {
     scratch?: string;
 };
 
+/** The observed build status and its compiler output. */
+export type SwiftBuildOutput = { code: number; output: string };
+
 /** One parsed Swift file of a run. */
 export type SwiftSource = { path: string; text: string; lines: string[]; tree: Tree };
 

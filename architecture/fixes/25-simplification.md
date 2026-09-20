@@ -113,6 +113,11 @@ failed index reads. Real corrupt-index tests produce error verdicts for both che
 Attribute rules are captured per repository observation. An unreadable `.gitattributes`
 reports its error, and a later session sees edited attributes without a reset hook.
 
+Swift builds retain their exit status even when the command prints no diagnostic. Analysis
+refuses failed build logs and reports an unsuccessful or timed-out analyzer as an error.
+Focused tests exercise those verdicts at the subprocess boundary. Incremental builds and
+native platform acceptance remain open under K-143.
+
 Other Git observations and takeover parsing remain open. Windows execution remains platform verification deferred.
 
 Staged and changed-file readers retain deleted paths and both rename paths. Failed diffs and

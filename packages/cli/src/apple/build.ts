@@ -4,8 +4,8 @@ import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { swiftBuildPlan } from '#cli/apple/plan.ts';
-import type { SwiftBuildPlan } from '#types/swift.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
+import type { SwiftBuildPlan, SwiftBuildOutput } from '#types/swift.ts';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const BUILD_TIMEOUT_MS = 3_600_000;
@@ -13,7 +13,7 @@ const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>erro
 const RESPONSE_FILE = /@(?<path>\/\S+)/gu;
 const PRIVATE_PREFIX = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
 const RULE_SUFFIX = /^(?<text>.*\S)\s+\((?<rule>[a-z_]+)\)$/u;
-const built = new Map<string, Promise<string>>();
+const built = new Map<string, Promise<SwiftBuildOutput>>();
 
 // macOS reaches /tmp and /var through /private, and one tool names a file with the prefix while another leaves it out.
 function bare(path: string): string {
@@ -72,18 +72,19 @@ function expanded(log: string): string {
         .join('\n');
 }
 
-async function ranBuild(plan: SwiftBuildPlan): Promise<string> {
+async function ranBuild(plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
     if (plan.scratch !== undefined) rmSync(plan.scratch, { recursive: true, force: true });
     const result = await run(plan.argv, { cwd: plan.cwd, timeoutMs: BUILD_TIMEOUT_MS });
     if (result.missing) throw new MissingToolError(`The ${plan.argv[0] ?? 'build'} command is not installed.`);
+    if (result.isTimedOut === true) throw new Error('The Swift build timed out.');
     mkdirSync(plan.folder, { recursive: true });
     const output = expanded(`${result.stdout}\n${result.stderr}`);
     writeFileSync(plan.log, output);
-    return output;
+    return { output, code: result.code };
 }
 
 // One build for each scope in a process: the analyzer reads the log the build check wrote.
-function buildOutput(plan: SwiftBuildPlan): Promise<string> {
+function buildOutput(plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
     const running = built.get(plan.cwd) ?? ranBuild(plan);
     built.set(plan.cwd, running);
     return running;
@@ -95,14 +96,12 @@ function buildOutput(plan: SwiftBuildPlan): Promise<string> {
  * @returns the findings
  */
 export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
-    const output = await buildOutput(swiftBuildPlan(input));
+    const { output, code } = await buildOutput(swiftBuildPlan(input));
     const found = diagnostics(input, output, new Set(['error']), 'compiler');
-    if (found.length > 0 || !/BUILD FAILED|error: /u.test(output)) return found;
-    const [last = 'The build failed.'] = output
-        .split('\n')
-        .filter((line) => line.includes('error'))
-        .slice(-1);
-    return [{ check: input.spec.name, file: '', line: 1, rule: 'build', message: last.trim(), fixable: false }];
+    if (code === 0 || found.length > 0) return found;
+    const detail = output.trim().split('\n').at(-1) ?? '';
+    const text = detail === '' ? `The Swift build exited ${String(code)} without diagnostics.` : detail;
+    return [{ check: input.spec.name, file: '', line: 1, rule: 'build', message: text, fixable: false }];
 }
 
 /**
@@ -112,12 +111,17 @@ export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
  */
 export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
     const plan = swiftBuildPlan(input);
-    await buildOutput(plan);
+    const build = await buildOutput(plan);
+    if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
     const config = join(input.root, '.gspot', input.scope, 'swiftlint.yml');
     const argv = ['swiftlint', 'analyze', '--strict', '--quiet', '--config', config, '--compiler-log-path', plan.log];
     const result = await run(argv, { cwd: plan.cwd, timeoutMs: BUILD_TIMEOUT_MS });
     if (result.missing) throw new MissingToolError('SwiftLint is not installed.');
-    return diagnostics(input, `${result.stdout}\n${result.stderr}`, new Set(['error', 'warning']), 'analyzer');
+    if (result.isTimedOut === true) throw new Error('The SwiftLint analyzer timed out.');
+    const found = diagnostics(input, `${result.stdout}\n${result.stderr}`, new Set(['error', 'warning']), 'analyzer');
+    if (found.length === 0 && result.code !== 0)
+        throw new Error(`The SwiftLint analyzer exited ${String(result.code)}: ${result.stderr.trim()}`);
+    return found;
 }
 
 /**
