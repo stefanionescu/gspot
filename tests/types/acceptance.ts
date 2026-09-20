@@ -1,5 +1,5 @@
 import type { Finding } from '#types/finding.ts';
-import type { reportSchema } from '#cli/run/report/schema.ts';
+import type { RunReport } from '#types/report.ts';
 
 /** What a spawned command left behind, for tests. */
 export type SpawnOutcome = { code: number; stdout: string; stderr: string };
@@ -22,8 +22,8 @@ export type FindingCase = PlantedInput & {
     expected: Pick<Finding, 'file'> & Partial<Pick<Finding, 'rule' | 'line' | 'column' | 'message'>>;
 };
 
-/** Successful initialization and the validated report from a detached reference worktree. */
-export type AcceptanceRun = { init: string; report: ReturnType<typeof reportSchema.parse> };
+/** What one acceptance run produced: the init output, the run report and how many checks ended in each status. */
+export type AcceptanceRun = { init: string; report: RunReport; statuses: Record<string, number> };
 
 /** One framework of component files in the planted components test: its check, its presets, its files and its planted cases. */
 export type ComponentShape = {
