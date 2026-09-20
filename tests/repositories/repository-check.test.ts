@@ -19,6 +19,41 @@ pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<message>.*)$"
 `;
 
 describe('a [[check]] entry', () => {
+    test('reruns a repository check when an input outside its selected paths changes', async () => {
+        const command = [
+            process.execPath,
+            '-e',
+            "process.exit((await Bun.file('state.txt').text()) === 'valid' ? 0 : 1)",
+        ];
+        await using fixture = await createFixture({
+            '.gitignore': '.gspot/\n',
+            'gspot.toml': `version = 1
+presets = []
+
+[[check]]
+id = "notes/state"
+command = ${JSON.stringify(command)}
+paths = ["selected.txt"]
+stage = "commit"
+`,
+            'selected.txt': 'unchanged trigger',
+            'state.txt': 'invalid',
+        });
+        const failed = await run(fixture.path, ['check', 'notes/state']);
+        expect(failed.code).toBe(1);
+        expect(failed.stdout).toContain('notes/state');
+
+        await Bun.write(join(fixture.path, 'state.txt'), 'valid');
+        const passed = await run(fixture.path, ['check', 'notes/state']);
+        expect(passed.code).toBe(0);
+        expect(passed.stdout).toContain('notes/state');
+
+        await Bun.write(join(fixture.path, 'state.txt'), 'invalid');
+        const failedAgain = await run(fixture.path, ['check', 'notes/state']);
+        expect(failedAgain.code).toBe(1);
+        expect(failedAgain.stdout).toContain('notes/state');
+    });
+
     test(
         'runs the command of the repository and reports file and line through its output format',
         async () => {

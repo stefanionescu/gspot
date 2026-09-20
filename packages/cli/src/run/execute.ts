@@ -48,6 +48,8 @@ function baselineHash(session: Session, planned: PlannedCheck): string {
 }
 
 function keyFor(session: Session, planned: PlannedCheck, config: string): string | undefined {
+    // Repository paths select a check, but do not declare everything its command reads.
+    if (planned.manifest === undefined) return undefined;
     if (NEVER_CACHED.has(planned.id) || planned.spec.requires !== undefined) return undefined;
     if (planned.spec.runs !== 'per-file-list' && planned.files.length === 0) return undefined;
     const files = planned.files.map((file) => ({ path: file.path, hash: fileHash(session.root, file.path) }));

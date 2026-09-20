@@ -23,6 +23,12 @@ passes on the next run with the cache on.
 
 **Done when.** It passes.
 
+**Partial implementation, September 20, 2026.** Repository checks without declared cache
+inputs execute on every run. The planted regression changes an input outside `paths` and
+requires failure, success, and failure with caching enabled. This also prevents a cached
+`docs/generated` failure from rejecting corrected generated output. Explicit `inputs` and
+their schema, planning, and hashing remain open. K-69 is not complete.
+
 ## K-70: the push hook checks the working tree
 
 **What is wrong.** `emit/hooks.ts` writes a pre-push hook that runs `gspot check` over the whole
