@@ -182,7 +182,9 @@ to the repository, as the findings already do.
 **Partial implementation, September 20, 2026.** `Session.problems`, `PlanOptions.fix`,
 `ExistingTool.owned`, and `ReportOptions.docsBase` are absent from their types and producers.
 The reporter has no unused link branch. Runtime fixing remains owned by `RunOptions.fix`.
-The manifest conflict contract and run-record root remain open under K-104 and K-129.
+
+The serialized report omits the machine-specific root. Its JSON schema rejects that removed
+field. The manifest conflict contract remains open under K-104 and K-129.
 
 **Local verification.** Reporter and takeover regressions pass (four tests, 34 assertions).
 The TypeScript check passes. These removals do not establish acceptance for the remaining fields.

@@ -2,15 +2,15 @@
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { executeRun } from '#cli/run/execute.ts';
-import type { RunRecord } from '#types/record.ts';
+import type { RunReport } from '#types/report.ts';
 import { openSession } from '#cli/run/session.ts';
 import type { RunOutcome, Session } from '#types/run.ts';
 import { runSideCommand } from '#cli/run/tool-runner.ts';
 import type { FirstRun, ToolBaseline } from '#types/lifecycle.ts';
 import { writeBaselines, isBaselineAllowed } from '#cli/run/baselines.ts';
 
-function summaryOf(record: RunRecord): { failing: RunRecord['checks']; lines: string[] } {
-    const failing = record.checks.filter((check) => check.status === 'missing' || check.status === 'error');
+function summaryOf(report: RunReport): { failing: RunReport['checks']; lines: string[] } {
+    const failing = report.checks.filter((check) => check.status === 'missing' || check.status === 'error');
     return { failing, lines: failing.map((check) => `${check.check}: ${check.note ?? check.status}`) };
 }
 
@@ -20,7 +20,7 @@ function unheldLines(first: FirstRun): string[] {
         ...first.baselines.map((file) => file.check),
         ...first.toolBaselines.map((entry) => entry.check),
     ]);
-    const unheld = first.record.checks.filter((check) => check.findings.length > 0 && !held.has(check.check));
+    const unheld = first.report.checks.filter((check) => check.findings.length > 0 && !held.has(check.check));
     if (unheld.length === 0) return ['every other check passes'];
     const ids = [...new Set(unheld.map((check) => check.check))].toSorted((a, b) => a.localeCompare(b));
     const count = unheld.reduce((sum, check) => sum + check.findings.length, 0);
@@ -40,7 +40,7 @@ async function writeToolBaselines(
     for (const planned of outcome.planned) {
         const command = planned.spec.baseline_command;
         if (command === undefined || only?.has(planned.check) === false) continue;
-        const result = outcome.record.checks.find(
+        const result = outcome.report.checks.find(
             (check) => check.check === planned.check && check.scope === planned.scope.scope.path,
         );
         if (result === undefined || result.findings.length === 0) continue;
@@ -54,7 +54,7 @@ async function writeToolBaselines(
  * Runs the checks once and writes a baseline for each check that allows one and has findings.
  * @param root the repository root
  * @param only the checks that run and may get a baseline; every check when left out. Adding a preset names the checks it brings or changes, so nothing else runs and a count that rose elsewhere stays a finding.
- * @returns the run record and the baselines written
+ * @returns the run report and the baselines written
  */
 export async function firstRun(root: string, only?: Set<string>): Promise<FirstRun> {
     const session = await openSession(root);
@@ -67,7 +67,7 @@ export async function firstRun(root: string, only?: Set<string>): Promise<FirstR
         noCache: true,
         ...(only === undefined ? {} : { among: only }),
     });
-    const findings = outcome.record.checks.flatMap((check) => check.findings);
+    const findings = outcome.report.checks.flatMap((check) => check.findings);
     const toolBaselines = await writeToolBaselines(session, outcome, only);
     const owned = new Set(toolBaselines.map((entry) => entry.check));
     const allowed = new Set(
@@ -86,7 +86,7 @@ export async function firstRun(root: string, only?: Set<string>): Promise<FirstR
         (check) => (allowed.has(check) || declared.has(check)) && !owned.has(check) && only?.has(check) !== false,
     );
     if (baselines.length > 0) mkdirSync(join(root, '.gspot', 'baselines'), { recursive: true });
-    return { record: outcome.record, baselines, toolBaselines };
+    return { report: outcome.report, baselines, toolBaselines };
 }
 
 /**
@@ -96,8 +96,8 @@ export async function firstRun(root: string, only?: Set<string>): Promise<FirstR
  * @returns the lines and how many checks are missing a tool or broke
  */
 export function firstRunSummary(first: FirstRun, installNote: string): { lines: string[]; failing: number } {
-    const { record, baselines } = first;
-    const lines = ['', `written: gspot.toml, .gspot/ (${String(record.checks.length)} checks ran)`];
+    const { report, baselines } = first;
+    const lines = ['', `written: gspot.toml, .gspot/ (${String(report.checks.length)} checks ran)`];
     if (installNote !== '') lines.push(installNote);
     if (baselines.length === 0) lines.push('baseline: every check passes; none needed');
     else {
@@ -110,6 +110,6 @@ export function firstRunSummary(first: FirstRun, installNote: string): { lines: 
         lines.push(
             `baseline: ${entry.check} wrote its own suppressions file for ${String(entry.count)} findings (${entry.scope === '' ? 'root' : entry.scope})`,
         );
-    const summary = summaryOf(record);
+    const summary = summaryOf(report);
     return { lines: [...lines, ...unheldLines(first), ...summary.lines], failing: summary.failing.length };
 }

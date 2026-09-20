@@ -1,6 +1,6 @@
 // Check lines, findings, help lines, reproduce lines, the summary; columns from the longest id.
 import { paint } from '#cli/output/messages.ts';
-import type { RunRecord } from '#types/record.ts';
+import type { RunReport } from '#types/report.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
 import type { Columns, Painter, ReportOptions } from '#types/output.ts';
 
@@ -94,10 +94,10 @@ function checkLines(check: CheckResult, columns: Columns, options: ReportOptions
     return lines;
 }
 
-function baselineLines(record: RunRecord, colors: Painter): string[] {
-    const exceeded = record.baselines.filter((verdict) => !verdict.held);
-    const held = record.baselines.filter((verdict) => verdict.held);
-    const count = (verdict: RunRecord['baselines'][number]): string =>
+function baselineLines(report: RunReport, colors: Painter): string[] {
+    const exceeded = report.baselines.filter((verdict) => !verdict.held);
+    const held = report.baselines.filter((verdict) => verdict.held);
+    const count = (verdict: RunReport['baselines'][number]): string =>
         `${verdict.check}:${verdict.rule}  ${String(verdict.count)} of ${String(verdict.baseline)}`;
     return [
         ...exceeded.map((verdict) => `${colors.red('baseline exceeded')}  ${count(verdict)}`),
@@ -105,10 +105,10 @@ function baselineLines(record: RunRecord, colors: Painter): string[] {
     ];
 }
 
-function ignoreLines(record: RunRecord, options: ReportOptions, colors: Painter): string[] {
-    if (record.ignores.length === 0) return [];
-    if (!options.verbose) return [`ignores    ${String(record.ignores.length)} (printed with --verbose)`];
-    return record.ignores.map((ignore) => {
+function ignoreLines(report: RunReport, options: ReportOptions, colors: Painter): string[] {
+    if (report.ignores.length === 0) return [];
+    if (!options.verbose) return [`ignores    ${String(report.ignores.length)} (printed with --verbose)`];
+    return report.ignores.map((ignore) => {
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
         const paths = ignore.paths === undefined ? '' : ` ${ignore.paths.join(' ')}`;
         const matched = `(${String(ignore.matched)} matched)`;
@@ -121,46 +121,46 @@ function skipLine(check: string, source: string, colors: Painter): string {
     return `skipped    ${check}  ${colors.dim(shown)}`;
 }
 
-function tailLines(record: RunRecord, options: ReportOptions, colors: Painter): string[] {
+function tailLines(report: RunReport, options: ReportOptions, colors: Painter): string[] {
     const lines = [
-        ...baselineLines(record, colors),
-        ...ignoreLines(record, options, colors),
-        ...record.skips.map((skip) => skipLine(skip.check, skip.source, colors)),
+        ...baselineLines(report, colors),
+        ...ignoreLines(report, options, colors),
+        ...report.skips.map((skip) => skipLine(skip.check, skip.source, colors)),
     ];
-    if (record.coverage.unchecked > 0) lines.push(`unchecked  ${fileCount(record.coverage.unchecked)} (gspot doctor)`);
-    if (record.unstaged > 0) {
-        const verb = record.unstaged === 1 ? ' has' : 's have';
-        lines.push(`checked working tree; ${String(record.unstaged)} file${verb} unstaged changes`);
+    if (report.coverage.unchecked > 0) lines.push(`unchecked  ${fileCount(report.coverage.unchecked)} (gspot doctor)`);
+    if (report.unstaged > 0) {
+        const verb = report.unstaged === 1 ? ' has' : 's have';
+        lines.push(`checked working tree; ${String(report.unstaged)} file${verb} unstaged changes`);
     }
     return lines;
 }
 
-function summaryLine(record: RunRecord, options: ReportOptions, shownCount: number, colors: Painter): string {
-    if (record.failed.length > 0) return colors.red(`failed: ${record.failed.join(', ')}`);
+function summaryLine(report: RunReport, options: ReportOptions, shownCount: number, colors: Painter): string {
+    if (report.failed.length > 0) return colors.red(`failed: ${report.failed.join(', ')}`);
     if (shownCount === 0 && options.quiet) return 'passed';
-    const count = record.checks.length;
+    const count = report.checks.length;
     return `passed: ${String(count)} check${count === 1 ? '' : 's'}`;
 }
 
 /**
  * The run as text, the way 02-cli.md shows it.
- * @param record the run record
+ * @param report the run report
  * @param options quiet and verbose output flags
  * @returns the text for stdout
  */
-export function runText(record: RunRecord, options: ReportOptions): string {
+export function runText(report: RunReport, options: ReportOptions): string {
     const colors = paint();
     const isHidden = (check: CheckResult): boolean => options.quiet && QUIET_HIDES.has(check.status);
-    const shown = record.checks.filter((check) => !isHidden(check));
+    const shown = report.checks.filter((check) => !isHidden(check));
     const columns: Columns = {
-        scope: Math.max(SCOPE_WIDTH_MIN, ...record.checks.map((check) => scopeName(check.scope).length)),
-        check: Math.max(ID_WIDTH_MIN, ...record.checks.map((check) => check.check.length)),
+        scope: Math.max(SCOPE_WIDTH_MIN, ...report.checks.map((check) => scopeName(check.scope).length)),
+        check: Math.max(ID_WIDTH_MIN, ...report.checks.map((check) => check.check.length)),
     };
     const body = shown.flatMap((check) => checkLines(check, columns, options, colors));
-    const tail = tailLines(record, options, colors);
+    const tail = tailLines(report, options, colors);
     const isSeparated = tail.length > 0 && body.length > 0;
     const lines = [...body, ...(isSeparated ? [''] : []), ...tail];
     if (lines.length > 0) lines.push('');
-    lines.push(summaryLine(record, options, shown.length, colors));
+    lines.push(summaryLine(report, options, shown.length, colors));
     return `${lines.join('\n')}\n`;
 }

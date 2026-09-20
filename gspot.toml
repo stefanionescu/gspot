@@ -117,7 +117,7 @@ reason = "The Swift grammar has no npm package with a prebuilt WASM file, so the
 [[check]]
 name = "schema/generated"
 command = ["bun", "packages/cli/schemas.ts", "--check"]
-paths = ["schema/**", "docs/public/schema/**", "packages/cli/src/policy/schema.ts", "packages/cli/src/run/record/schema.ts"]
+paths = ["schema/**", "docs/public/schema/**", "packages/cli/src/policy/schema.ts", "packages/cli/src/run/report/schema.ts"]
 stage = "commit"
 summary = "Checks that the published JSON schemas match the zod schemas the binary reads with."
 

@@ -111,9 +111,9 @@ describe('correction outcomes', () => {
             isDryRun: false,
             noCache: true,
         });
-        expect(outcome.record.checks[0]?.status).toBe('ok');
-        expect(outcome.record.exitCode).toBe(1);
-        expect(outcome.record.failed).toContain('fixture/correction');
+        expect(outcome.report.checks[0]?.status).toBe('ok');
+        expect(outcome.report.exitCode).toBe(1);
+        expect(outcome.report.failed).toContain('fixture/correction');
         expect(outcome.fixes?.results[0]?.status).toBe('failed');
     });
 

@@ -1,4 +1,4 @@
-import type { RunRecord } from '#types/record.ts';
+import type { RunReport } from '#types/report.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
 import type { TrackedFile, Repository, ScopeEntry } from '#types/repository.ts';
 // Type aliases of the run modules.
@@ -54,7 +54,7 @@ export type Engine = (input: EngineInput) => Promise<Finding[]>;
 
 export type RunOptions = PlanOptions & { fix: boolean; isDryRun: boolean; noCache?: boolean };
 
-export type RunOutcome = { record: RunRecord; planned: PlannedCheck[]; fixes?: FixReport };
+export type RunOutcome = { report: RunReport; planned: PlannedCheck[]; fixes?: FixReport };
 
 export type FixResult = { check: string; changed: string[] } & (
     | { status: 'changed' | 'unchanged' | 'skipped' }
@@ -180,8 +180,8 @@ export type PlantedCase = {
     executable?: string[];
 };
 
-/** What one acceptance run produced: the init output, the run record and how many checks ended in each status. */
-export type AcceptanceRun = { init: string; record: RunRecord; statuses: Record<string, number> };
+/** What one acceptance run produced: the init output, the run report and how many checks ended in each status. */
+export type AcceptanceRun = { init: string; report: RunReport; statuses: Record<string, number> };
 
 /** One framework of component files in the planted components test: its check, its presets, its files and its planted cases. */
 export type ComponentShape = {

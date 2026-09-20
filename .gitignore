@@ -40,8 +40,8 @@ bun-debug.log*
 # >>> gspot managed >>>
 gspot.local.toml
 .gspot/cache/
-.gspot/last.json
-.gspot/last.sarif
+.gspot/report.json
+.gspot/report.sarif
 .gspot/vale/styles/Google/
 .gspot/vale/styles/Microsoft/
 .gspot/vale/styles/write-good/

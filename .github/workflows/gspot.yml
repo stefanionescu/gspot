@@ -18,6 +18,6 @@ jobs:
       - run: mise run gspot:check -- --at manual
         if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
       - uses: github/codeql-action/upload-sarif@df5a14dc28094dc936e103b37d749c6628682b60 # v3.25.0
-        if: always() && hashFiles('.gspot/last.sarif') != ''
+        if: always() && hashFiles('.gspot/report.sarif') != ''
         with:
-          sarif_file: .gspot/last.sarif
+          sarif_file: .gspot/report.sarif

@@ -1,15 +1,15 @@
-// The orchestrator: plan, run, filter through ignores and baselines, record, decide the exit code.
+// The orchestrator: plan, run, filter through ignores and baselines, report, decide the exit code.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { planRun } from '#cli/run/plan.ts';
 import { applyFixers } from '#cli/run/fixers.ts';
-import type { RunRecord } from '#types/record.ts';
+import type { RunReport } from '#types/report.ts';
 import { runEngineCheck } from '#cli/run/engines.ts';
 import { reproduceLine } from '#cli/run/reproduce.ts';
 import { SUPPRESSION_FORMS } from '#config/markers.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { stageLimiter } from '#cli/run/concurrency.ts';
-import { writeRecord } from '#cli/run/record/write.ts';
+import { writeReport } from '#cli/run/report/write.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import { toolBaselineFile } from '#cli/run/scope-paths.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
@@ -146,7 +146,7 @@ function mergeUses(into: Map<string, IgnoreUse>, uses: IgnoreUse[]): void {
     }
 }
 
-function ignoreRows(uses: Map<string, IgnoreUse>): RunRecord['ignores'] {
+function ignoreRows(uses: Map<string, IgnoreUse>): RunReport['ignores'] {
     return uses
         .values()
         .map(({ entry, matched }) => ({
@@ -197,7 +197,7 @@ function filterAll(
     results: CheckResult[],
     filtering: FilterInputs,
     uses: Map<string, IgnoreUse>,
-): RunRecord['baselines'] {
+): RunReport['baselines'] {
     const paired = results.flatMap((result, index): Sifted[] => {
         const check = active[index];
         return check === undefined ? [] : [{ check, result, remaining: [] }];
@@ -225,7 +225,7 @@ function isActive(check: PlannedCheck): boolean {
     return check.files.length > 0 || check.spec.stage === 'message';
 }
 
-function skipRows(planned: PlannedCheck[]): RunRecord['skips'] {
+function skipRows(planned: PlannedCheck[]): RunReport['skips'] {
     return planned.flatMap((check) => (check.skip ? [{ check: check.check, source: check.skip.source }] : []));
 }
 
@@ -236,10 +236,10 @@ function failedChecks(results: CheckResult[], fixes: FixReport | undefined): str
 }
 
 /**
- * Runs the checks and returns the record. Writes .gspot/last.json.
+ * Runs the checks and returns the report. Writes .gspot/report.json.
  * @param session the session
  * @param options stage, skips, fix and cache flags
- * @returns the record, the plan, and the fix report when --fix ran
+ * @returns the report, the plan, and the fix report when --fix ran
  */
 export async function executeRun(session: Session, options: RunOptions): Promise<RunOutcome> {
     const started = new Date();
@@ -260,12 +260,11 @@ export async function executeRun(session: Session, options: RunOptions): Promise
     const claimed = new Set(planned.flatMap((check) => check.files.map((file) => file.path)));
     const sources = session.repository.files.filter((file) => file.nature === 'source');
     const checkedSources = sources.filter((file) => claimed.has(file.path));
-    const record: RunRecord = {
+    const report: RunReport = {
         version: session.version,
         stage: options.stage,
         started: started.toISOString(),
         duration: Date.now() - started.getTime(),
-        root: session.root,
         checks: results,
         baselines: verdicts,
         ignores: ignoreRows(uses),
@@ -277,6 +276,6 @@ export async function executeRun(session: Session, options: RunOptions): Promise
         failed,
         exitCode: failed.length > 0 ? 1 : 0,
     };
-    if (!options.isDryRun) writeRecord(session.root, record);
-    return fixes ? { record, planned, fixes } : { record, planned };
+    if (!options.isDryRun) writeReport(session.root, report);
+    return fixes ? { report, planned, fixes } : { report, planned };
 }

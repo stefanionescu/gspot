@@ -48,3 +48,11 @@ gspot set limits.function_lines 80 --reason "The parser is one state machine."
 ```
 
 A loosening takes a reason; a tightening does not.
+
+## Machine-readable reports
+
+`gspot check --json` prints the check report. A run also writes `.gspot/report.json` and
+`.gspot/report.sarif`. The JSON schema is published at
+[`report.schema.json`](/schema/report.schema.json). Check results refer to their check through
+`check`; `coverage` reports check coverage, not test coverage. The report has no repository
+root field.

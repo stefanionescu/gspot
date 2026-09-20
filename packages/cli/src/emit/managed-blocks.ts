@@ -7,8 +7,8 @@ import { HASH_BLOCK_END, HASH_BLOCK_START, MANAGED_BLOCK_END, MANAGED_BLOCK_STAR
 const GITIGNORE_LINES = [
     'gspot.local.toml',
     '.gspot/cache/',
-    '.gspot/last.json',
-    '.gspot/last.sarif',
+    '.gspot/report.json',
+    '.gspot/report.sarif',
     '.gspot/vale/styles/Google/',
     '.gspot/vale/styles/Microsoft/',
     '.gspot/vale/styles/write-good/',

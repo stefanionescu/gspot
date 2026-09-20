@@ -1,10 +1,12 @@
+import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFixture } from 'fs-fixture';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
-import { sarifText } from '#cli/run/record/write.ts';
+import { existsSync, readFileSync } from 'node:fs';
+import { sarifText } from '#cli/run/report/write.ts';
 import { cacheKey, textHash } from '#cli/run/cache.ts';
-import { recordSchema } from '#cli/run/record/schema.ts';
+import { reportSchema } from '#cli/run/report/schema.ts';
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
 
 const policy = `version = 1
@@ -30,19 +32,26 @@ test('serializes check definitions and references without changing external SARI
         noCache: true,
     });
     expect(session.policyFiles.policy.checks[0]?.name).toBe('fixture/identity');
-    expect(outcome.record.checks[0]?.check).toBe('fixture/identity');
-    expect(outcome.record.checks[0]).not.toHaveProperty('id');
-    expect(outcome.record.checks[0]?.findings[0]?.check).toBe('fixture/identity');
-    expect(recordSchema.safeParse(outcome.record).success).toBe(true);
-    expect(outcome.record.coverage).toEqual({ checked: 1, unchecked: 1 });
-    expect(outcome.record).not.toHaveProperty('inspection');
-    expect(JSON.parse(sarifText(outcome.record))).toHaveProperty('runs.0.results.0.ruleId', 'fixture/identity');
+    expect(outcome.report.checks[0]?.check).toBe('fixture/identity');
+    expect(outcome.report.checks[0]).not.toHaveProperty('id');
+    expect(outcome.report.checks[0]?.findings[0]?.check).toBe('fixture/identity');
+    expect(reportSchema.safeParse(outcome.report).success).toBe(true);
+    expect(outcome.report).not.toHaveProperty('root');
+    const saved = readFileSync(join(fixture.path, '.gspot/report.json'), 'utf8');
+    expect(JSON.parse(saved)).toEqual(outcome.report);
+    expect(reportSchema.safeParse({ ...outcome.report, root: fixture.path }).success).toBe(false);
+    expect(existsSync(join(fixture.path, '.gspot/report.sarif'))).toBe(true);
+    expect(existsSync(join(fixture.path, '.gspot/last.json'))).toBe(false);
+    expect(existsSync(join(fixture.path, '.gspot/last.sarif'))).toBe(false);
+    expect(outcome.report.coverage).toEqual({ checked: 1, unchecked: 1 });
+    expect(outcome.report).not.toHaveProperty('inspection');
+    expect(JSON.parse(sarifText(outcome.report))).toHaveProperty('runs.0.results.0.ruleId', 'fixture/identity');
     expect(() => parsePolicyText(policy.replace('name =', 'id ='), 'gspot.toml')).toThrow('`id`');
     const stale = {
-        ...outcome.record,
-        checks: outcome.record.checks.map(({ check, ...result }) => ({ ...result, id: check })),
+        ...outcome.report,
+        checks: outcome.report.checks.map(({ check, ...result }) => ({ ...result, id: check })),
     };
-    expect(recordSchema.safeParse(stale).success).toBe(false);
+    expect(reportSchema.safeParse(stale).success).toBe(false);
 });
 
 test('does not reuse a cache key from the removed result identity contract', () => {

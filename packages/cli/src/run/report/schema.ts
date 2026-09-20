@@ -1,4 +1,4 @@
-// The zod schema of the run record, so .gspot/last.json and check --json have a published JSON schema.
+// The zod schema of the run report, so .gspot/report.json and check --json have a published JSON schema.
 import { z } from 'zod';
 
 const JSON_INDENT = 4;
@@ -46,13 +46,12 @@ const ignoreUse = z.strictObject({
 
 const skip = z.strictObject({ check: z.string(), source: z.enum(['local', 'flag', 'platform', 'rules']) });
 
-/** The run record as check --json prints it. */
-export const recordSchema = z.strictObject({
+/** The run report as check --json prints it. */
+export const reportSchema = z.strictObject({
     version: z.string(),
     stage: z.string(),
     started: z.string(),
     duration: z.number(),
-    root: z.string(),
     checks: z.array(checkResult),
     baselines: z.array(baselineVerdict),
     ignores: z.array(ignoreUse),
@@ -66,17 +65,17 @@ export const recordSchema = z.strictObject({
 });
 
 /**
- * The text written to schema/run-record.schema.json.
+ * The text written to schema/report.schema.json.
  * @returns the JSON text
  */
-export function recordJsonSchemaText(): string {
-    const schema = z.toJSONSchema(recordSchema, { io: 'input' }) as Record<string, unknown>;
+export function reportJsonSchemaText(): string {
+    const schema = z.toJSONSchema(reportSchema, { io: 'input' }) as Record<string, unknown>;
     const document = {
         $schema: 'https://json-schema.org/draft/2020-12/schema',
-        $id: 'https://gspot.dev/schema/run-record.schema.json',
-        title: 'gspot run record',
+        $id: 'https://gspot.dev/schema/report.schema.json',
+        title: 'gspot check report',
         description:
-            'What gspot check --json prints and .gspot/last.json holds: every check with its findings, the baselines, the ignores and the exit code.',
+            'What gspot check --json prints and .gspot/report.json holds: every check with its findings, the baselines, the ignores and the exit code.',
         ...schema,
     };
     return `${JSON.stringify(document, null, JSON_INDENT)}\n`;

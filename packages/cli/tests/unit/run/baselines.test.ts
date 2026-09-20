@@ -1,7 +1,7 @@
 import { createFixture } from 'fs-fixture';
 import type { Finding } from '#types/finding.ts';
 import { describe, expect, test } from 'bun:test';
-import type { BaselineVerdict } from '#types/record.ts';
+import type { BaselineVerdict } from '#types/report.ts';
 
 import {
     applyBaselines,

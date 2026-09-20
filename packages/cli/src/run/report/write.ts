@@ -1,7 +1,7 @@
-// .gspot/last.json, --json, and the SARIF rendering.
+// .gspot/report.json, --json, and the SARIF rendering.
 import { join } from 'node:path';
 import type { Finding } from '#types/finding.ts';
-import type { RunRecord } from '#types/record.ts';
+import type { RunReport } from '#types/report.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { SarifBuilder, SarifResultBuilder, SarifRuleBuilder, SarifRunBuilder } from 'node-sarif-builder';
 
@@ -21,26 +21,26 @@ function locationOf(finding: Finding): { fileUri: string; startLine: number; sta
 }
 
 /**
- * Writes .gspot/last.json and .gspot/last.sarif.
+ * Writes .gspot/report.json and .gspot/report.sarif.
  * @param root the repository root
- * @param record the run record
+ * @param report the run report
  */
-export function writeRecord(root: string, record: RunRecord): void {
+export function writeReport(root: string, report: RunReport): void {
     mkdirSync(join(root, '.gspot'), { recursive: true });
-    writeFileSync(join(root, '.gspot', 'last.json'), `${JSON.stringify(record, null, JSON_INDENT)}\n`);
-    writeFileSync(join(root, '.gspot', 'last.sarif'), sarifText(record));
+    writeFileSync(join(root, '.gspot', 'report.json'), `${JSON.stringify(report, null, JSON_INDENT)}\n`);
+    writeFileSync(join(root, '.gspot', 'report.sarif'), sarifText(report));
 }
 
 /**
- * The SARIF rendering of a record, with locations for findings that have them.
- * @param record the run record
+ * The SARIF rendering of a report, with locations for findings that have them.
+ * @param report the run report
  * @returns the SARIF JSON text
  */
-export function sarifText(record: RunRecord): string {
+export function sarifText(report: RunReport): string {
     const builder = new SarifBuilder();
-    const run = new SarifRunBuilder().initSimple({ toolDriverName: 'gspot', toolDriverVersion: record.version });
+    const run = new SarifRunBuilder().initSimple({ toolDriverName: 'gspot', toolDriverVersion: report.version });
     const rules = new Set<string>();
-    const findings = record.checks.flatMap((check) => check.findings);
+    const findings = report.checks.flatMap((check) => check.findings);
     for (const finding of findings) {
         const ruleId = ruleIdOf(finding);
         if (!rules.has(ruleId)) {

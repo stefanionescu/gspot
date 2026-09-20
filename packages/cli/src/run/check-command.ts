@@ -107,17 +107,17 @@ function resultFor(
     outcome: Awaited<ReturnType<typeof executeRun>>,
     unstaged: number,
 ): CommandResult {
-    outcome.record.unstaged = unstaged;
+    outcome.report.unstaged = unstaged;
     if (options.check !== undefined && outcome.planned.length === 0) return unknownCheck(options.check);
-    const rendered = runText(outcome.record, { quiet: options.quiet, verbose: options.verbose });
+    const rendered = runText(outcome.report, { quiet: options.quiet, verbose: options.verbose });
     const text = outcome.fixes ? fixSummary(outcome.fixes, options.isDryRun, rendered) : rendered;
-    return { text, json: outcome.record, exitCode: outcome.record.exitCode };
+    return { text, json: outcome.report, exitCode: outcome.report.exitCode };
 }
 
 /**
  * Runs check and returns what to print.
  * @param options the parsed flags
- * @returns the text, the run record and the exit code
+ * @returns the text, the run report and the exit code
  */
 export async function checkCommand(options: CheckOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);

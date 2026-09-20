@@ -27,9 +27,9 @@ describe('read-only script arguments', () => {
         await using fixture = await createFixture({
             ...sources,
             'schema/gspot.schema.json': '{"sentinel": true}\n',
-            'schema/run-record.schema.json': '{"sentinel": true}\n',
+            'schema/report.schema.json': '{"sentinel": true}\n',
             'docs/public/schema/gspot.schema.json': '{"sentinel": true}\n',
-            'docs/public/schema/run-record.schema.json': '{"sentinel": true}\n',
+            'docs/public/schema/report.schema.json': '{"sentinel": true}\n',
             'docs/src/content/docs/reference/sentinel.md': '# Authored reference\n',
         });
         for (const path of LINKS) symlinkSync(join(ROOT, path), join(fixture.path, path), 'dir');

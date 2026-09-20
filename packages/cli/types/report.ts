@@ -1,4 +1,4 @@
-// The record of one run: .gspot/last.json and the output of check --json.
+// The report of one run: .gspot/report.json and the output of check --json.
 
 import type { CheckResult } from '#types/finding.ts';
 
@@ -12,12 +12,11 @@ export type BaselineVerdict = {
     paths: Record<string, number>;
 };
 
-export type RunRecord = {
+export type RunReport = {
     version: string;
     stage: string;
     started: string;
     duration: number;
-    root: string;
     checks: CheckResult[];
     baselines: BaselineVerdict[];
     ignores: { check: string; rule?: string; paths?: string[]; reason: string; matched: number }[];

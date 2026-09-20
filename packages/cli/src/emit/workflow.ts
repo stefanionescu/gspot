@@ -81,9 +81,9 @@ function checkJob(shape: WorkflowShape, platform: string): string[] {
         `      - run: ${command} --at manual`,
         "        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
         `      - uses: ${SARIF} # v3.25.0`,
-        "        if: always() && hashFiles('.gspot/last.sarif') != ''",
+        "        if: always() && hashFiles('.gspot/report.sarif') != ''",
         '        with:',
-        '          sarif_file: .gspot/last.sarif',
+        '          sarif_file: .gspot/report.sarif',
     ];
 }
 

@@ -1,7 +1,7 @@
 // apply --lower-baselines: the counts of the last run become the baselines, for the checks that run read in full.
 import { join } from 'node:path';
 import { planRun } from '#cli/run/plan.ts';
-import type { RunRecord } from '#types/record.ts';
+import type { RunReport } from '#types/report.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { everyManifest } from '#cli/run/session.ts';
 import { lowerBaselines } from '#cli/run/baselines.ts';
@@ -18,9 +18,9 @@ function refusal(text: string, error: string): CommandResult {
 
 // The checks the last run read in full: each one ran in every scope the plan holds it in.
 // A run of one check, of one scope, or with a check skipped leaves the other counts unknown, and an unknown count is no zero.
-function completeChecks(session: Session, record: RunRecord): Set<string> {
+function completeChecks(session: Session, report: RunReport): Set<string> {
     const ran = new Set(
-        record.checks.filter((check) => RAN.has(check.status)).map((check) => `${check.check}\n${check.scope}`),
+        report.checks.filter((check) => RAN.has(check.status)).map((check) => `${check.check}\n${check.scope}`),
     );
     const planned = planRun(session, { stage: 'all', skips: [], localSkips: [] }).filter(
         (check) => check.skip === undefined || !NEVER_RUNS.has(check.skip.source),
@@ -38,10 +38,10 @@ function completeChecks(session: Session, record: RunRecord): Set<string> {
  * @returns what was lowered, removed, left alone, and refused because a count rose
  */
 export async function lowerFromLastRun(root: string, session: Session): Promise<CommandResult> {
-    const last = join(root, '.gspot', 'last.json');
+    const last = join(root, '.gspot', 'report.json');
     if (!existsSync(last)) return refusal('There is no last run to read. Run gspot check first.', 'no-last-run');
-    const record = JSON.parse(readFileSync(last, 'utf8')) as RunRecord;
-    if (record.narrowed)
+    const report = JSON.parse(readFileSync(last, 'utf8')) as RunReport;
+    if (report.narrowed)
         return refusal(
             'The last run read only the staged or changed files, so its counts are partial. Run gspot check first.',
             'narrowed-last-run',
@@ -50,7 +50,7 @@ export async function lowerFromLastRun(root: string, session: Session): Promise<
         ...everyManifest(session).flatMap((manifest) => manifest.checks.map((check) => check.name)),
         ...session.policyFiles.policy.checks.map((check) => check.name),
     ]);
-    const result = lowerBaselines(root, record.baselines, existing, completeChecks(session, record));
+    const result = lowerBaselines(root, report.baselines, existing, completeChecks(session, report));
     const pruned = await pruneToolBaselines(session);
     const lines = [
         ...pruned.map((id) => `pruned   ${id}  (the tool's own suppressions file)`),

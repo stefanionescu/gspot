@@ -31,7 +31,7 @@ export async function firstBaseline(session: Session, check: string): Promise<Co
         return refusal(
             `The findings of ${check} enter no baseline: a fixer or an edit clears them. Run gspot check --fix.`,
         );
-    const broken = outcome.record.checks.find(
+    const broken = outcome.report.checks.find(
         (entry) => entry.check === check && (entry.status === 'error' || entry.status === 'missing'),
     );
     if (broken !== undefined)
@@ -43,7 +43,7 @@ export async function firstBaseline(session: Session, check: string): Promise<Co
         return { text: `${check} wrote its own baseline file.\n`, json: { baselines: [check] }, exitCode: 0 };
     }
     const held = new Set(readBaselines(session.root).map((file) => `${file.check}\n${file.rule}`));
-    const findings = outcome.record.checks
+    const findings = outcome.report.checks
         .flatMap((entry) => entry.findings)
         .filter((finding) => !held.has(`${finding.check}\n${finding.rule ?? 'all'}`));
     const written = writeBaselines(session.root, findings, (id) => id === check);

@@ -185,7 +185,7 @@ async function write(
 /**
  * Runs init: detection, questions, plan, then the write, the install and the first run after a yes.
  * @param options the init flags
- * @returns the text, the JSON record and the exit code
+ * @returns the text, the JSON report and the exit code
  */
 export async function initCommand(options: InitOptions): Promise<InitResult> {
     const root = findRoot(options.cwd);
@@ -206,7 +206,7 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
     if (!isGo) return { text: 'Nothing written.\n', json: { root, plan, written: false }, exitCode: 0 };
     const written = await write(root, options, prepared);
     note('run gspot check to see the gate; gspot doctor for what it could not check');
-    const checks = written.first.record.checks.map((check) => ({
+    const checks = written.first.report.checks.map((check) => ({
         check: check.check,
         status: check.status,
         findings: check.findings.length,

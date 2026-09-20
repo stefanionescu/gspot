@@ -5,7 +5,7 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { Command, CommanderError } from 'commander';
 import packageManifest from '#package' with { type: 'json' };
-import { recordJsonSchemaText } from '#cli/run/record/schema.ts';
+import { reportJsonSchemaText } from '#cli/run/report/schema.ts';
 import { policyJsonSchemaText } from '#cli/policy/json-schema.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
@@ -14,7 +14,7 @@ const root = join(here, '..', '..');
 const FOLDERS = ['schema', join('docs', 'public', 'schema')];
 const FILES: [string, () => string][] = [
     ['gspot.schema.json', policyJsonSchemaText],
-    ['run-record.schema.json', recordJsonSchemaText],
+    ['report.schema.json', reportJsonSchemaText],
 ];
 
 function isCurrent(path: string, wanted: string): boolean {

@@ -1,7 +1,7 @@
 // The gspot count files under .gspot/baselines/; the verdict against them; apply --lower-baselines.
 import { join } from 'node:path';
 import type { Finding } from '#types/finding.ts';
-import type { BaselineVerdict } from '#types/record.ts';
+import type { BaselineVerdict } from '#types/report.ts';
 import type { BaselineFile, RuleCount } from '#types/run.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 

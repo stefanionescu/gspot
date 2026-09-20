@@ -12,7 +12,7 @@ import { hasPackagePins, emitAll } from '#cli/emit/targets.ts';
 import { isValePackageFile } from '#cli/repository/natures.ts';
 import { currentBlock, fileText } from '#cli/emit/managed-blocks.ts';
 
-const NEVER_STRAY = new Set(['.gspot/version', '.gspot/last.json', '.gspot/last.sarif']);
+const NEVER_STRAY = new Set(['.gspot/version', '.gspot/report.json', '.gspot/report.sarif']);
 const HEAD_BYTES = 600;
 const DIFF_CONTEXT = 2;
 

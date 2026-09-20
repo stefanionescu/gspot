@@ -136,6 +136,15 @@ and accurate coverage accounting remain open under their feature owners. Local v
 passes 116 affected unit tests (557 assertions), seven planted profile and repository-check
 tests (40 assertions), TypeScript, schema validation, and all reference pages.
 
+Check execution produces a `RunReport` and writes `.gspot/report.json` and
+`.gspot/report.sarif`. The report schema is `report.schema.json`; producers, consumers,
+generated ignore entries, and workflow artifact paths use these names. GitLab output,
+message-stage persistence, storage-failure handling, and report isolation remain open.
+The affected unit and script-argument suites pass (68 tests, 589 assertions), followed by
+the strengthened serialization regression (two tests, 18 assertions). Seven planted profile
+and repository-check tests pass (40 assertions), as do TypeScript, schema validation, and
+reference verification.
+
 **What is wrong.** The names guide endorsed a writing action called `didWrite` while rejecting
 `didRunFixer`. It prescribed `name` for a finding's check reference, although ignores and
 findings use `check`. The glossary retained runner surface, inspection, and project templates.

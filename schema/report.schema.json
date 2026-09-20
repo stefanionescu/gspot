@@ -1,8 +1,8 @@
 {
     "$schema": "https://json-schema.org/draft/2020-12/schema",
-    "$id": "https://gspot.dev/schema/run-record.schema.json",
-    "title": "gspot run record",
-    "description": "What gspot check --json prints and .gspot/last.json holds: every check with its findings, the baselines, the ignores and the exit code.",
+    "$id": "https://gspot.dev/schema/report.schema.json",
+    "title": "gspot check report",
+    "description": "What gspot check --json prints and .gspot/report.json holds: every check with its findings, the baselines, the ignores and the exit code.",
     "type": "object",
     "properties": {
         "version": {
@@ -16,9 +16,6 @@
         },
         "duration": {
             "type": "number"
-        },
-        "root": {
-            "type": "string"
         },
         "checks": {
             "type": "array",
@@ -285,7 +282,6 @@
         "stage",
         "started",
         "duration",
-        "root",
         "checks",
         "baselines",
         "ignores",
