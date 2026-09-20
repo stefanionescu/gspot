@@ -254,13 +254,19 @@ commit the report of the last full run is gone, and `gspot doctor` cannot say wh
 
 **Target.** A run of the `message` stage writes no report (D-105).
 
-**Files.** `run/execute.ts`, `run/record/write.ts`.
+**Files.** `run/execute.ts`, `run/report/write.ts`.
 
-**Logic.** `execute.ts` calls `writeRecord` only for a stage other than `message`.
+**Logic.** `execute.ts` calls `writeReport` only for a stage other than `message`.
 
 **What goes.** Nothing.
 
-**Tests.** `hooks.test.ts` commits, then holds that the report still names the earlier run.
+**Tests.** `commits.test.ts` commits, then holds that the report still names the
+earlier run. A rejected message check preserves both report formats byte for byte.
+
+**Status: complete (locally verified).** The existing execution guard preserves
+reports for the message stage. Eight hook and storage tests pass with 59
+assertions on macOS. Both successful commits and rejected messages retain the
+commit-stage report; unavailable platform execution remains deferred.
 
 **Done when.** That case passes.
 

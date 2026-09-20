@@ -1,5 +1,6 @@
 // The commits preset: the commit-msg hook refuses a message outside the convention and passes one inside it.
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
 import { git, gspot, toolsPath, PLANTED_TIMEOUT_MS, run, script } from '#tests/harness/planted.ts';
@@ -27,7 +28,7 @@ describe('the commits preset', () => {
             git(fixture.path, ['commit', '-qm', 'init']);
             const init = await run(fixture.path, INIT);
             expect(init.stdout).toContain('write');
-            expect(fixture.path).toBeTruthy();
+            expect(init.code, init.stdout + init.stderr).toBe(0);
             await Bun.write(join(fixture.path, 'notes.md'), '# notes\n');
             git(fixture.path, ['add', '-A']);
             const environment = {
@@ -39,7 +40,13 @@ describe('the commits preset', () => {
             expect(bad.code).not.toBe(0);
             expect(`${bad.stdout}${bad.stderr}`).toContain('type-empty');
             const good = git(fixture.path, ['commit', '-qm', 'docs: add the notes page'], environment);
-            expect(good.code).toBe(0);
+            expect(good.code, good.stdout + good.stderr).toBe(0);
+            const reportPath = join(fixture.path, '.gspot/report.json');
+            const report = readFileSync(reportPath, 'utf8');
+            const previous = JSON.parse(report) as { stage: string };
+            expect(previous.stage).toBe('commit');
+            const sarifPath = join(fixture.path, '.gspot/report.sarif');
+            const sarif = readFileSync(sarifPath, 'utf8');
             const draft = join(fixture.path, 'draft.txt');
             await Bun.write(draft, 'Fixed stuff.\n');
             const refused = await run(
@@ -49,6 +56,8 @@ describe('the commits preset', () => {
             );
             expect(refused.code).toBe(1);
             expect(refused.stdout).toContain('commits/commitlint');
+            expect(readFileSync(reportPath, 'utf8')).toBe(report);
+            expect(readFileSync(sarifPath, 'utf8')).toBe(sarif);
             const accepted = await run(fixture.path, ['check', 'commits/range', '--no-cache'], environment);
             expect(accepted.code).toBe(0);
             await Bun.write(join(fixture.path, 'more.md'), '# more\n');
