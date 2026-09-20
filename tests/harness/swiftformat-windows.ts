@@ -5,7 +5,8 @@ import { copyFileSync, mkdtempSync, rmSync } from 'node:fs';
 
 async function output(command: string[]): Promise<string> {
     const result = await run(command, { cwd: process.cwd() });
-    if (result.code !== 0) throw new Error(`Tool setup failed: ${result.stderr}${result.stdout}`);
+    if (result.code !== 0)
+        throw new Error(`Tool setup failed (exit ${String(result.code)}): ${result.stderr}${result.stdout}`);
     return result.stdout.trim();
 }
 
@@ -27,6 +28,9 @@ async function installSwiftFormat(): Promise<void> {
         const destination = join(installation, 'swiftformat.exe');
         copyFileSync(join(extracted, executables[0]!), destination);
         process.stdout.write(`${await output([destination, '--version'])}\n`);
+        const source = join(staging, 'smoke.swift');
+        await Bun.write(source, 'let value = 1\n');
+        await output([destination, '--lint', '--verbose', '--cache', 'ignore', source]);
     } finally {
         rmSync(staging, { recursive: true, force: true });
     }

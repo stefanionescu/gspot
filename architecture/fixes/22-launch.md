@@ -100,6 +100,12 @@ The CI self-check step runs on Windows after the tests and native build succeed.
 No platform condition skips that command. Successful Windows evidence remains required
 before K-263 closes.
 
+The [Windows job 106030240212](https://github.com/stefanionescu/gspot/actions/runs/35492697272/job/106030240212)
+passes SwiftFormat extraction and the version probe, then reports exit 5 during actual
+linting. Setup also runs a minimal formatting smoke check with the tool cache disabled.
+A setup failure includes the exit code and both output streams. The cause of the lint
+failure remains unconfirmed, and the Swift acceptance tests remain required.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.
