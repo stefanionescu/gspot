@@ -38,7 +38,6 @@
                 "manager",
                 "handler",
                 "processor",
-                "service",
                 "wrapper",
                 "shim",
                 "shims",
@@ -101,7 +100,6 @@
             "removable": true,
             "terms": [
                 "render",
-                "generate",
                 "sync",
                 "synchronize",
                 "synchronise",

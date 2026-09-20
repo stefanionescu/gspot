@@ -71,6 +71,10 @@ reference and working-tree content. Other command-surface and lifecycle contract
 
 ## K-301: Recommended adoption findings need usefulness tests
 
+**Partial implementation.** Ordinary `service` and `generate` names are permitted in the
+shipped naming policy. A real project exercises both words in declarations, files, and a
+folder through the naming checks. Level selection and broader usefulness review remain open.
+
 **What is wrong.** Banned terms and abstraction preferences were presented as defect-only checks. A fixed finding count does not establish that findings help a developer.
 
 **Target.** Banned terms run only at all; generate and service are allowed. Recommended means a demonstrated defect rather than a preferred naming or abstraction style.
