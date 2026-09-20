@@ -392,7 +392,7 @@ const commentRules = {
 const importStyleOverrides = <%= json(Object.entries(importStyle).map(([glob, style]) => ({ files: [[glob, '**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}']], rules: { 'gspot/import-path-style': ['error', { style, internalPrefixes: ['./', '../', ...Object.keys(aliases)] }] } }))) %>;
 
 const runtimeOverrides = [
-<% for (const [glob, runtime] of Object.entries(globalsByClass)) { %>    { files: [<%= json(glob) %>], languageOptions: <%= runtime === 'commonjs' ? "{ sourceType: 'commonjs', globals: { ...globals.node, ...globals.commonjs } }" : `{ globals: globals.${runtime === 'worker' ? 'serviceworker' : runtime} }` %><%= runtime === 'commonjs' ? ", rules: { 'unicorn/prefer-module': 'off', '@typescript-eslint/no-require-imports': 'off', 'unicorn/import-style': 'off' }" : '' %> },
+<% for (const [glob, runtime] of Object.entries(globalsByClass)) { %>    { files: [<%= json(glob) %>], languageOptions: <%= runtime === 'commonjs' ? "{ sourceType: 'commonjs', globals: { ...globals.node, ...globals.commonjs } }" : `{ globals: globals[${json(runtime === 'worker' ? 'serviceworker' : runtime, 0)}] }` %><%= runtime === 'commonjs' ? ", rules: { 'unicorn/prefer-module': 'off', '@typescript-eslint/no-require-imports': 'off', 'unicorn/import-style': 'off' }" : '' %> },
 <% } %>];
 
 const boundaryConfigs = [

@@ -681,7 +681,8 @@ introduce JavaScript statements or active ignore entries.
 
 JSON option keys and YAML strings use serialization. Xcode project paths and schemes retain
 their punctuation. The yamllint template merges
-rule overrides before serialization so each key appears once.
+rule overrides before serialization so each key appears once. ESLint runtime names use quoted
+property access, so configured names cannot become executable source.
 
 ## K-241: nine contradictions between rule files and checks
 

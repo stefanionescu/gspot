@@ -281,3 +281,32 @@ test('alias discovery accepts absent files and valid TypeScript comments and tra
     );
     expect(inputs.importAliases('')).toEqual({ '@app/': 'src/' });
 });
+
+test('runtime names remain data in generated JavaScript', async () => {
+    const parser = await parserFor('javascript');
+    for (const runtime of ['node', 'node }; globalThis.injected = true; //', 'node"\n/* café */']) {
+        await using sandbox = await createSandbox({
+            'gspot.toml': stringify({
+                version: 1,
+                presets: ['javascript'],
+                tools: { eslint: { globals: { '**/*.js': runtime } } },
+            }),
+        });
+        const output = emitAll(await openSession(sandbox.path));
+        const file = output.files.find((entry) => entry.path === '.gspot/eslint.config.mjs');
+        expect(file).toBeDefined();
+        const tree = parser.parse(file!.content);
+        expect(tree).not.toBeNull();
+        try {
+            expect(tree!.rootNode.hasError).toBe(false);
+            const indices = tree!.rootNode
+                .descendantsOfType('subscript_expression')
+                .filter((node) => node.childForFieldName('object')?.text === 'globals')
+                .map((node) => node.childForFieldName('index')!.text);
+            expect(indices).toHaveLength(1);
+            expect(JSON.parse(indices[0]!)).toBe(runtime);
+        } finally {
+            tree!.delete();
+        }
+    }
+});
