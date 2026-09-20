@@ -76,6 +76,9 @@ exercise both output streams, nonzero exits, unknown output, package metadata, a
 source bytes after a refused correction. Manifest-owned `version_exit_code` declares a tool's
 expected probe status when its documented help command uses a nonzero status.
 
+Probe results belong to the command session and distinguish complete pins and library search scopes.
+A new session observes the tools again; a timeout takes precedence over printed shim text.
+
 **Partial implementation.** The manifest-policy reader validates the fields it consumes and reports read or parse failures with the manifest path. Tests cover invalid JSON and invalid field shapes, denied reads, and repositories without package manifests. File listing and root discovery distinguish a confirmed non-Git directory from failed Git observation. Tests cover a corrupt index, incomplete Git metadata, a missing executable, and non-Git ignore handling.
 
 Formatter questions reuse the parsed takeover observation instead of performing a second read that hides errors. Full per-path formatter resolution remains open.

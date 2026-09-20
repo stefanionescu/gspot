@@ -1,4 +1,5 @@
 import type { RunReport } from '#types/report.ts';
+import type { ToolContext } from '#types/doctor.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
 import type { TrackedFile, Repository, ScopeEntry } from '#types/repository.ts';
 // Type aliases of the run modules.
@@ -104,8 +105,7 @@ export type ScopeSelection = {
     view: MergedView;
 };
 
-export type Session = {
-    root: string;
+export type Session = ToolContext & {
     version: string;
     policyFiles: PolicyFiles;
     manifests: Map<string, Manifest>;

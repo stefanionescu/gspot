@@ -76,6 +76,9 @@ reader from the list.
 
 ## K-38: tool names, flags, and banners in the core
 
+**Partially implemented.** Version commands come from tool manifests. The duplicate core
+version-flag table is removed. The remaining metadata and cache ownership work stays open.
+
 Closes K-38, K-17, K-85, K-113, K-177, and K-203.
 
 **What is wrong.** The core names `swift`, `prose`, `typescript`, `commits`, `nestjs`, and

@@ -29,7 +29,7 @@ function owed(session: Session, added: Manifest[], applied: ApplyReport): ApplyR
     const scopes = session.scopes.map((scope) => scope.scope.path);
     const isMissing = added
         .flatMap((manifest) => manifest.tools)
-        .some((tool) => tool.kind === 'library' && probeTool(session.root, tool, scopes).state === 'missing');
+        .some((tool) => tool.kind === 'library' && probeTool(session, tool, scopes).state === 'missing');
     return isMissing && applied.packages.length === 0 ? { ...applied, packages: ['package.json'] } : applied;
 }
 

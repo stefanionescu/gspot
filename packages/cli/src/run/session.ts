@@ -26,7 +26,7 @@ export async function openSession(root: string): Promise<Session> {
         const view = mergeForScope(surface, policyFiles.policy, selected, scope.path);
         return { scope, selected, surface, view };
     });
-    return { root, version: GSPOT_VERSION, policyFiles, manifests, repository: repo, scopes };
+    return { root, version: GSPOT_VERSION, policyFiles, manifests, repository: repo, scopes, probes: new Map() };
 }
 
 /**

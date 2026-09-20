@@ -18,6 +18,8 @@ export type ToolProbe = {
     floor?: string;
 };
 
+export type ToolContext = { root: string; probes: Map<string, ToolProbe> };
+
 export type CoverageReport = {
     unchecked: { path: string; reason: string; remedy?: string }[];
     partial: { path: string; missing: string[] }[];

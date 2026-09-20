@@ -1,6 +1,7 @@
 import { join } from 'node:path';
 import { createSandbox } from '@gspot/testing';
 import type { ToolPin } from '#types/manifest.ts';
+import { openSession } from '#cli/run/session.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import * as environment from '#cli/platform/environment.ts';
@@ -34,7 +35,7 @@ describe('the tool probe', () => {
         const which = spyOn(Bun, 'which').mockReturnValue(active);
         const home = spyOn(environment, 'miseHome').mockReturnValue(join(sandbox.path, 'mise'));
         try {
-            const probe = probeTool(sandbox.path, command('teller', '3.8.1'));
+            const probe = probeTool({ root: sandbox.path, probes: new Map() }, command('teller', '3.8.1'));
             expect(probe.state).toBe('ok');
             expect(probe.path).toBe(active);
         } finally {
@@ -51,7 +52,7 @@ describe('the tool probe', () => {
         chmodSync(join(sandbox.path, 'node_modules/teller/run.sh'), RUNS);
         mkdirSync(join(sandbox.path, 'node_modules/.bin'));
         symlinkSync('../teller/run.sh', join(sandbox.path, 'node_modules/.bin/teller'));
-        const probe = probeTool(sandbox.path, command('teller', '5.0.1', 'teller'));
+        const probe = probeTool({ root: sandbox.path, probes: new Map() }, command('teller', '5.0.1', 'teller'));
         expect(probe.found).toBe('5.0.1');
         expect(probe.state).toBe('ok');
     });
@@ -71,7 +72,7 @@ describe('the tool probe', () => {
         tool.floor = '0.9.0';
         tool.env = { WRAPPER_NATIVE_VERSION: native };
         tool.installers['npm'] = { name: 'wrapper', version: '0.7.0' };
-        const probe = probeTool(sandbox.path, tool);
+        const probe = probeTool({ root: sandbox.path, probes: new Map() }, tool);
         expect(probe.found).toBe(native);
         expect(probe.state).toBe(state);
     });
@@ -82,7 +83,7 @@ describe('the tool probe', () => {
                 "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
         });
         chmodSync(join(sandbox.path, 'node_modules/.bin/shimmed'), RUNS);
-        const probe = probeTool(sandbox.path, command('shimmed', '3.8.1'));
+        const probe = probeTool({ root: sandbox.path, probes: new Map() }, command('shimmed', '3.8.1'));
         expect(probe.state).toBe('missing');
         expect(probe.want).toBe('3.8.1');
     });
@@ -92,7 +93,7 @@ describe('the tool probe', () => {
             'node_modules/.bin/painter': "#!/bin/sh\nprintf 'painter \\033[1;36m26.8.0\\033[0m using more\\n'\n",
         });
         chmodSync(join(sandbox.path, 'node_modules/.bin/painter'), RUNS);
-        const probe = probeTool(sandbox.path, command('painter', '26.8.0'));
+        const probe = probeTool({ root: sandbox.path, probes: new Map() }, command('painter', '26.8.0'));
         expect(probe.found).toBe('26.8.0');
         expect(probe.state).toBe('ok');
     });
@@ -102,18 +103,20 @@ describe('the tool probe', () => {
             'node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
             'api/node_modules/eslint-plugin-n/package.json': '{"name":"eslint-plugin-n","version":"18.3.0"}',
         });
-        expect(probeTool(sandbox.path, library('globals', '17.12.0')).state).toBe('ok');
-        expect(probeTool(sandbox.path, library('eslint-plugin-n', '18.3.0'), ['api']).state).toBe('ok');
+        expect(probeTool({ root: sandbox.path, probes: new Map() }, library('globals', '17.12.0')).state).toBe('ok');
+        expect(
+            probeTool({ root: sandbox.path, probes: new Map() }, library('eslint-plugin-n', '18.3.0'), ['api']).state,
+        ).toBe('ok');
     });
 
     test('a library that is absent is missing, and one off its pin is reported', async () => {
         await using sandbox = await createSandbox({
             'node_modules/typescript/package.json': '{"name":"typescript","version":"6.0.0"}',
         });
-        const absent = probeTool(sandbox.path, library('eslint-plugin-regexp', '3.3.0'));
+        const absent = probeTool({ root: sandbox.path, probes: new Map() }, library('eslint-plugin-regexp', '3.3.0'));
         expect(absent.state).toBe('missing');
         expect(absent.want).toBe('3.3.0');
-        const newer = probeTool(sandbox.path, library('typescript', '5.9.3'));
+        const newer = probeTool({ root: sandbox.path, probes: new Map() }, library('typescript', '5.9.3'));
         expect(newer.state).toBe('newer');
         expect(newer.found).toBe('6.0.0');
     });
@@ -128,7 +131,7 @@ test.each([
     const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
     try {
         const tool = { ...command('version-teller', '3.8.1'), version_command: ['-e', script] };
-        const probe = probeTool(sandbox.path, tool);
+        const probe = probeTool({ root: sandbox.path, probes: new Map() }, tool);
         expect(probe.state).toBe(state);
         if (note === undefined) {
             expect(probe.found).toBe('3.8.1');
@@ -148,7 +151,7 @@ test('an npm package version does not hide a failed executable', async () => {
     chmodSync(join(sandbox.path, 'node_modules/teller/run.sh'), RUNS);
     mkdirSync(join(sandbox.path, 'node_modules/.bin'));
     symlinkSync('../teller/run.sh', join(sandbox.path, 'node_modules/.bin/teller'));
-    const probe = probeTool(sandbox.path, command('teller', '5.0.1', 'teller'));
+    const probe = probeTool({ root: sandbox.path, probes: new Map() }, command('teller', '5.0.1', 'teller'));
     expect(probe.state).toBe('error');
     expect(probe.note).toContain('exited 7');
 });
@@ -159,9 +162,9 @@ test('a version printed before a genuine timeout does not make a tool usable', a
     try {
         const tool = {
             ...command('version-teller', '3.8.1'),
-            version_command: ['-e', 'console.log("3.8.1"); setInterval(() => {}, 1000);'],
+            version_command: ['-e', 'console.log("3.8.1 No version is set for shim"); setInterval(() => {}, 1000);'],
         };
-        const probe = probeTool(sandbox.path, tool);
+        const probe = probeTool({ root: sandbox.path, probes: new Map() }, tool);
         expect(probe.state).toBe('error');
         expect(probe.note).toContain('timed out');
     } finally {
@@ -178,12 +181,46 @@ test('a manifest can declare its help command status without accepting other fai
             version_command: ['-e', 'console.log("version-help 3.8.1"); process.exitCode = 2;'],
             version_exit_code: 2,
         };
-        const probe = probeTool(sandbox.path, tool);
+        const context = { root: sandbox.path, probes: new Map() };
+        const probe = probeTool(context, tool);
         expect(probe.state).toBe('ok');
         expect(probe.found).toBe('3.8.1');
-        const failed = probeTool(sandbox.path, { ...tool, name: 'version-error', version_exit_code: 0 });
+        const failed = probeTool(context, { ...tool, version_exit_code: 0 });
         expect(failed.state).toBe('error');
         expect(failed.note).toContain('exited 2');
+    } finally {
+        which.mockRestore();
+    }
+});
+
+test('tool observations distinguish pins and library search scopes', async () => {
+    await using sandbox = await createSandbox({
+        'gspot.toml': 'version = 1\npresets = []\n',
+        'api/node_modules/example/package.json': '{"name":"example","version":"1.0.0"}',
+    });
+    const session = await openSession(sandbox.path);
+    const pin = library('example', '1.0.0');
+    expect(probeTool(session, pin).state).toBe('missing');
+    expect(probeTool(session, pin, ['api']).state).toBe('ok');
+    expect(probeTool(session, library('example', '2.0.0'), ['api']).state).toBe('outdated');
+});
+
+test('a command shares version observations and the next session probes again', async () => {
+    await using sandbox = await createSandbox({
+        'gspot.toml': 'version = 1\npresets = []\n',
+        'probe.ts':
+            'const file = Bun.file("calls.txt"); const calls = await file.exists() ? Number(await file.text()) : 0; await Bun.write("calls.txt", String(calls + 1)); console.log("3.8.1");',
+    });
+    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    try {
+        const pin = { ...command('version-teller', '3.8.1'), version_command: ['probe.ts'] };
+        const session = await openSession(sandbox.path);
+        expect(probeTool(session, pin).state).toBe('ok');
+        expect(probeTool(session, pin).state).toBe('ok');
+        expect(await Bun.file(join(sandbox.path, 'calls.txt')).text()).toBe('1');
+        const next = await openSession(sandbox.path);
+        expect(probeTool(next, pin).state).toBe('ok');
+        expect(await Bun.file(join(sandbox.path, 'calls.txt')).text()).toBe('2');
     } finally {
         which.mockRestore();
     }

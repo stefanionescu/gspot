@@ -40,7 +40,7 @@ function configurationHash(session: Session): string {
 
 function toolVersionOf(session: Session, planned: PlannedCheck): string {
     if (!planned.tool) return 'engine';
-    const probe = probeTool(session.root, planned.tool);
+    const probe = probeTool(session, planned.tool);
     return `${planned.tool.name}@${probe.found ?? probe.state}`;
 }
 
@@ -95,7 +95,7 @@ function freshResult(session: Session, planned: PlannedCheck, staged: Set<string
 
 function unrunnable(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {
     if (planned.skip) return { ...base, status: 'skipped', note: planned.skip.note };
-    if (planned.spec.requires === 'docker' && probeTool(session.root, DOCKER).state === 'missing')
+    if (planned.spec.requires === 'docker' && probeTool(session, DOCKER).state === 'missing')
         return { ...base, status: 'missing', note: 'this check needs a Docker daemon and docker is not installed' };
     return undefined;
 }

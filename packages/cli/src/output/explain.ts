@@ -113,7 +113,7 @@ function toolSummary(session: Session | undefined, tool: string, rule: string): 
         .values()
         .flatMap((manifest) => manifest.tools)
         .find((entry) => entry.name === tool);
-    const probe = session && pin ? probeTool(session.root, pin) : undefined;
+    const probe = session && pin ? probeTool(session, pin) : undefined;
     return source(rule, probe?.path ?? tool);
 }
 

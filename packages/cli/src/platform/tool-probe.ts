@@ -9,19 +9,11 @@ import type { SpawnResult } from '#types/platform.ts';
 import { miseHome } from '#cli/platform/environment.ts';
 import { installHint } from '#cli/platform/install-hints.ts';
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import type { PackageFacts, ToolProbe, VersionObservation } from '#types/doctor.ts';
+import type { PackageFacts, ToolProbe, VersionObservation, ToolContext } from '#types/doctor.ts';
 
 const VERSION_TIMEOUT_MS = 15_000;
-const VERSION_FLAGS: Record<string, string[]> = {
-    gitleaks: ['version'],
-    periphery: ['version'],
-    plutil: ['-help'],
-    xcodebuild: ['-version'],
-};
-
 // What a mise shim prints when no configuration in reach names a version of the tool.
 const NO_VERSION = 'No version is set for shim';
-const probeCache = new Map<string, ToolProbe>();
 
 function candidates(root: string, name: string): string[] {
     const isWindows = process.platform === 'win32';
@@ -64,7 +56,7 @@ function miseVersion(path: string, tool: ToolPin): string | undefined {
 // What the tool prints about its version, with no color codes: their numbers read as a version.
 // A mise shim answers for the folder it runs in, so the command runs in the repository.
 function printedVersion(root: string, path: string, tool: ToolPin): SpawnResult {
-    const command = tool.version_command ?? VERSION_FLAGS[tool.name] ?? ['--version'];
+    const command = tool.version_command ?? ['--version'];
     return runBlocking([path, ...command], {
         cwd: root,
         timeoutMs: VERSION_TIMEOUT_MS,
@@ -79,8 +71,8 @@ function parsedVersion(text: string, tool: ToolPin): string | undefined {
 }
 
 function versionFailure(result: SpawnResult, tool: ToolPin, text: string): VersionObservation | undefined {
-    if (result.missing || text.includes(NO_VERSION)) return { state: 'missing', note: text };
     if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version probe timed out.` };
+    if (result.missing || text.includes(NO_VERSION)) return { state: 'missing', note: text };
     if (result.code !== (tool.version_exit_code ?? 0))
         return { state: 'error', note: `${tool.name} version probe exited ${String(result.code)}: ${text}` };
     return undefined;
@@ -169,17 +161,18 @@ export function locateTool(root: string, name: string): string | undefined {
 }
 
 /**
- * Probes one tool. Cached per process.
- * @param root the repository root
+ * Probes one tool, sharing identical observations within its command session.
+ * @param context the repository root and session observations
  * @param tool the pin
  * @param scopes the scope paths, where a library may be installed beside the root
  * @returns where the tool is, its version and its state
  */
-export function probeTool(root: string, tool: ToolPin, scopes: string[] = []): ToolProbe {
-    const key = `${root}\n${tool.name}`;
-    const cached = probeCache.get(key);
+export function probeTool(context: ToolContext, tool: ToolPin, scopes: string[] = []): ToolProbe {
+    const { root, probes } = context;
+    const key = JSON.stringify([root, tool, scopes]);
+    const cached = probes.get(key);
     if (cached) return cached;
     const probe = tool.kind === 'library' ? probeLibrary(root, scopes, tool) : probeUncached(root, tool);
-    probeCache.set(key, probe);
+    probes.set(key, probe);
     return probe;
 }

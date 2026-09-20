@@ -142,7 +142,7 @@ function versionLine(report: DoctorReport): string {
  */
 export function doctorReport(session: Session, pinned: string | undefined): DoctorReport {
     const scopePaths = session.scopes.map((entry) => entry.scope.path).filter((path) => path !== '');
-    const tools = collectPins(everyManifest(session)).map((tool) => probeTool(session.root, tool, scopePaths));
+    const tools = collectPins(everyManifest(session)).map((tool) => probeTool(session, tool, scopePaths));
     const { policy } = session.policyFiles;
     const isBroken = tools.some((tool) => tool.state !== 'ok' && tool.state !== 'host');
     return {

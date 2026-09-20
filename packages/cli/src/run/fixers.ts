@@ -104,7 +104,7 @@ export async function runFixer(
     const check = plannedCheck.check;
     if (spec.fix_command === undefined || isSkipped(plannedCheck)) return { check, status: 'skipped', changed: [] };
     if (tool === undefined) return { check, status: 'failed', changed: [], note: 'No correction tool is configured.' };
-    const probe = probeTool(session.root, tool);
+    const probe = probeTool(session, tool);
     if (probe.path === undefined || ['missing', 'outdated', 'error'].includes(probe.state))
         return {
             check,
