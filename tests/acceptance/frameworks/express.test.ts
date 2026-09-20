@@ -67,9 +67,12 @@ const CASES: PlantedCase[] = [
     },
     {
         check: 'express/routes-tested',
-        files: { 'src/routes/orders.js': HEALTH },
+        files: {
+            'src/routes/orders.js': HEALTH,
+            'src/routes/orders.test.js': "// orders has no importing test.\nexport const label = 'orders';\n",
+        },
         policy: POLICY,
-        expected: 'No test file names orders',
+        expected: 'No test in this scope imports src/routes/orders.js',
     },
 ];
 

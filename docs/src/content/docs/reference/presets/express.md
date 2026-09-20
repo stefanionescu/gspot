@@ -22,7 +22,7 @@ Kind: framework. Requires: `javascript`.
 | ------------------------------------------------------------------ | ------ | ------------------------------------------------------------------------------------------- |
 | [`express/openapi-lint`](/reference/rules/express/openapi-lint/)   | commit | Lints the OpenAPI document named in tools.openapi.document with the Spectral OpenAPI rules. |
 | [`express/openapi-fresh`](/reference/rules/express/openapi-fresh/) | push   | Runs the command in tools.openapi.produced_by and fails when it changes the document.       |
-| [`express/routes-tested`](/reference/rules/express/routes-tested/) | push   | Checks that some test file names every route file.                                          |
+| [`express/routes-tested`](/reference/rules/express/routes-tested/) | push   | Checks that a test in the same scope imports each route file.                               |
 
 ## Settings
 

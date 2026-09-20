@@ -53,3 +53,5 @@ export type AstGrepMatch = { file: string; ruleId: string; range: { start: { lin
 
 /** A line of a shell script with its comment stripped, keyed by its one-based number. */
 export type CodeLine = { number: number; code: string };
+
+export type ImportIndex = { paths: string[]; importers: Map<string, Set<string>> };

@@ -51,13 +51,13 @@ help = "Run the command and commit the document it writes."
 [[checks]]
 name = "express/routes-tested"
 stage = "push"
-runs = "once"
+runs = "per-scope"
 engine = "integrity"
 analysis = "routes-tested"
 coverage = ["tests"]
-summary = "Checks that some test file names every route file."
+summary = "Checks that a test in the same scope imports each route file."
 why = "A route with no test is the one that changes behavior without anyone noticing."
-help = "Add a test file for the route, named after it."
+help = "Add a test that imports and exercises the route."
 
 [[settings]]
 name = "tools.openapi.document"

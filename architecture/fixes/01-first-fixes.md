@@ -417,7 +417,7 @@ anywhere in its text, and it reads every file of the repository.
 
 **Target.** A route counts as tested when a test file of the same scope imports it.
 
-**Files.** `checks/express/routes-tested.ts`, `structure/cross-file-index.ts`.
+**Files.** `packages/cli/src/express/routes.ts`, `packages/cli/src/structure/imports.ts`.
 
 **Logic.** The check asks the import index of the scope, which the structure engine builds, for
 the importers of the route file, and keeps those the test claim matches.
@@ -428,6 +428,13 @@ the importers of the route file, and keeps those the test claim matches.
 holds the finding.
 
 **Done when.** That case passes.
+
+**Status: locally verified.** The check reads resolved imports from the session's scope import index.
+Each scope runs independently. Child scopes keep their own imports and routes.
+
+The real CLI rejects a comment-only test; integration tests cover matching names in different scopes and TypeScript file resolution.
+CommonJS, dynamic imports, package imports, and TypeScript path aliases resolve to their route files.
+Native Windows and Linux execution remains deferred.
 
 ## K-178: a statement is reported at the line of its comment
 

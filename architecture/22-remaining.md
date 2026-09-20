@@ -189,7 +189,7 @@ deployment, or app adoption is inferred from this documentation review.
 
 Each named row links to its owning acceptance section, including rows grouped under another
 ID. The September 20 reconciliation found exactly one owner for each named row.
-Seventeen requirements are locally complete; 311 named rows remain open.
+Eighteen requirements are locally complete; 310 named rows remain open.
 Completed evidence stays in each owning acceptance section.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
@@ -228,7 +228,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-108](fixes/01-first-fixes.md#k-108-a-missing-hooks-table): Make a missing `[hooks]` table mean gspot does nothing there, as `[ci]` and `[runner]` do (D-130).
 - [ ] [K-109](fixes/01-first-fixes.md#k-109-gspot-replaces-a-script-of-the-developer): Never inject a lifecycle script; replace an existing lint task only with explicit acceptance and recoverable originals.
 - [ ] [K-147](fixes/01-first-fixes.md#k-147-one-wrong-line-stops-every-command): Run `check` with the rest of the config when one line is wrong, and report that line as a finding.
-- [ ] [K-172](fixes/01-first-fixes.md#k-172-a-route-is-tested-when-a-comment-names-it): A route counts as tested when a test file of the same scope imports it.
 - [ ] [K-186](fixes/01-first-fixes.md#k-186-no-trivial-files-reports-every-entry-file): The rule skips the entry files the repository names in `tools.knip.entry`, which is the one list of entries gspot already keeps.
 - [ ] [K-189](fixes/01-first-fixes.md#k-189-no-cross-folder-imports-reports-every-): The rule reports an import whose target leaves the top-level folder of the importer, which is what its summary says.
 - [ ] [K-192](fixes/01-first-fixes.md#k-192-a-protocol-name-fails-the-case-check): A name the repository cannot change is exempt from every name check, in `nameProblems`, once.
