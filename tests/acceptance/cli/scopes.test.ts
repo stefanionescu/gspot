@@ -1,8 +1,10 @@
-import { symlinkSync } from 'node:fs';
 // Planted repository: TypeScript selected in a scope only, with one ESLint configuration for the repository.
 import { delimiter, join } from 'node:path';
 import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
+import { symlinkSync, writeFileSync } from 'node:fs';
+import { treeContents } from '#tests/harness/contents.ts';
+import { parsePolicyText } from '#cli/policy/read-policy.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
@@ -91,4 +93,23 @@ describe('typescript in a scope', () => {
         },
         PLANTED_TIMEOUT_MS * 3,
     );
+});
+
+test('init proposes workspace scopes without a lockfile and preserves files after resolver failure', async () => {
+    await using sandbox = await createSandbox({
+        'package.json': '{"private":true,"workspaces":["packages/*"]}',
+        'packages/api/package.json': '{"name":"api"}',
+        'packages/api/source.js': 'export const port = 8080;\n',
+    });
+    const command = ['init', '--yes', '--no-hooks', '--no-ci', '--no-runner', '--no-rules', '--no-install'];
+    const proposed = await run(sandbox.path, [...command, '--dry-run', '--json']);
+    expect(proposed.code, proposed.stdout + proposed.stderr).toBe(0);
+    const proposal = JSON.parse(proposed.stdout) as { policy: string };
+    const policy = parsePolicyText(proposal.policy, 'gspot.toml');
+    expect(policy.scopes.map((scope) => scope.path)).toEqual(['packages/api']);
+    writeFileSync(join(sandbox.path, 'pnpm-workspace.yaml'), 'packages: [');
+    const before = treeContents(sandbox.path);
+    const refused = await run(sandbox.path, command);
+    expect(refused.code, refused.stdout + refused.stderr).not.toBe(0);
+    expect(treeContents(sandbox.path)).toEqual(before);
 });

@@ -1,10 +1,11 @@
 // Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
-import { getPackagesSync } from '@manypkg/get-packages';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#config/patterns.ts';
 import type { ManifestFacts, ScopeEntry } from '#types/repository.ts';
+import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
 
 function lastSegment(path: string): string {
     return path.slice(path.lastIndexOf('/') + 1);
@@ -15,21 +16,23 @@ function workspaceEntry(path: string): ScopeEntry {
     return { name: lastSegment(trimmed), path: trimmed, presets: [], source: 'workspace' };
 }
 
+function workspacePackages(root: string, workspaces: string[]): Package[] {
+    const declared = [PnpmTool, LernaTool, RushTool].find((tool) => tool.isMonorepoRootSync(root));
+    const resolver = declared ?? (workspaces.length > 0 ? YarnTool : undefined);
+    return resolver?.getPackagesSync(root).packages ?? [];
+}
+
 function npmScopes(root: string, byPath: Map<string, ManifestFacts>, lintOnly: string[]): ScopeEntry[] {
-    try {
-        const { packages } = getPackagesSync(root);
-        const scopes: ScopeEntry[] = [];
-        for (const found of packages) {
-            const rel = toPosix(found.relativeDir);
-            if (rel === '' || rel === '.') continue;
-            const fact = byPath.get(`${rel}/package.json`);
-            if (fact && isLintOnlyManifest(fact)) lintOnly.push(`${rel}/package.json`);
-            else scopes.push(workspaceEntry(rel));
-        }
-        return scopes;
-    } catch {
-        return [];
+    const packages = workspacePackages(root, byPath.get('package.json')?.workspaces ?? []);
+    const scopes: ScopeEntry[] = [];
+    for (const found of packages) {
+        const rel = toPosix(found.relativeDir);
+        if (rel === '' || rel === '.') continue;
+        const fact = byPath.get(`${rel}/package.json`);
+        if (fact && isLintOnlyManifest(fact)) lintOnly.push(`${rel}/package.json`);
+        else scopes.push(workspaceEntry(rel));
     }
+    return scopes;
 }
 
 function memberScopes(root: string, members: string[]): ScopeEntry[] {

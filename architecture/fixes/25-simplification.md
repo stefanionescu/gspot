@@ -88,7 +88,9 @@ and absent versus unreadable optional inputs. Other observation paths remain ope
 Project detection and manifest policy share a validated package reader. Detection reports
 failed reads, malformed package JSON or Python TOML, and invalid consumed fields instead of
 dropping a manifest. Python workspace discovery reuses those parsed facts. npm workspace
-resolution and the remaining readers still require review.
+resolution uses root-local tool resolvers, propagates errors, and works without a lockfile.
+Real workspace tests cover package arrays and objects, pnpm, Lerna, Rush, malformed inputs,
+and isolation from ancestor workspaces. Remaining readers still require review.
 
 Required content reads report failures, and metadata reads permit absence only for missing
 paths. Header and content classification share a bounded prefix reader that closes its file
