@@ -1,8 +1,8 @@
-// git tracks no environment file except the templates.
-import { git } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
+// git tracks no environment file except the templates.
+import { indexedPaths } from '#cli/repository/tracked.ts';
 import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#config/env-files.ts';
 
 /**
@@ -12,7 +12,7 @@ import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#config/env-files.ts';
  */
 export function envFiles(input: EngineInput): Promise<Finding[]> {
     const isEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
-    const tracked = (git(input.root, ['ls-files', '--cached', '-z']) ?? '').split('\0').filter((path) => path !== '');
+    const tracked = indexedPaths(input.root);
     const findings = tracked
         .filter(
             (path) => isEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1)),

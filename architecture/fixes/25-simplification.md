@@ -100,6 +100,10 @@ existing implementation rather than replaced with the stale parked assertion.
 
 The affected repository, doctor, emission, and uninstall suites pass locally (26 tests,
 88 assertions). Staged deletion triggers now have separate planner and execution regressions.
+Environment-file and tracked-dependency checks use a shared index reader. It preserves
+tracked deletions and literal path characters, permits an absent Git repository, and reports
+failed index reads. Real corrupt-index tests produce error verdicts for both checks.
+
 Other Git observations and takeover parsing remain open. Windows execution remains platform verification deferred.
 
 Staged and changed-file readers retain deleted paths and both rename paths. Failed diffs and

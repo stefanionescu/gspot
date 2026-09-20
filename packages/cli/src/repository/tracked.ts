@@ -105,6 +105,18 @@ export function findRoot(start: string): string {
 }
 
 /**
+ * Paths in the Git index, including tracked deletions. A non-Git directory has none.
+ * @param root the repository root
+ * @returns the indexed paths
+ */
+export function indexedPaths(root: string): string[] {
+    const listed = runBlocking(['git', 'ls-files', '--cached', '-z'], { cwd: root });
+    if (listed.code === 0) return [...new Set(listed.stdout.split('\0').filter((path) => path !== ''))];
+    if (isOutsideGit(root)) return [];
+    throw new Error(`Git index listing failed in ${root} (exit ${String(listed.code)}): ${listed.stderr.trim()}`);
+}
+
+/**
  * Tracked and about-to-be-tracked files, root-relative posix, sorted. Falls back to a gitignore walk without git.
  * @param root the repository root
  * @returns the entries with size, executable bit and symlink flag

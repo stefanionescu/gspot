@@ -1,8 +1,8 @@
-// No tracked file sits inside a folder a package manager fills.
-import { git } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { DEPENDENCY_FOLDERS } from '#config/integrity.ts';
+// No tracked file sits inside a folder a package manager fills.
+import { indexedPaths } from '#cli/repository/tracked.ts';
 
 function dependencyFolder(path: string): string | undefined {
     const segments = path.split('/').slice(0, -1);
@@ -16,7 +16,7 @@ function dependencyFolder(path: string): string | undefined {
  * @returns the findings
  */
 export function trackedDependencies(input: EngineInput): Promise<Finding[]> {
-    const tracked = (git(input.root, ['ls-files', '--cached', '-z']) ?? '').split('\0').filter((path) => path !== '');
+    const tracked = indexedPaths(input.root);
     const counts = new Map<string, number>();
     for (const path of tracked) {
         const folder = dependencyFolder(path);
