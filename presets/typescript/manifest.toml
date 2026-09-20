@@ -43,7 +43,8 @@ name = "typescript/tsc"
 stage = "commit"
 runs = "per-scope"
 cwd = "scope"
-command = ["tsc", "--noEmit", "-p", "tsconfig.json", "--pretty", "false"]
+tool = "tsc"
+analysis = "typescript"
 coverage = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Checks that every TypeScript file type-checks with the strict compiler options."

@@ -4,6 +4,7 @@ import { readFileSync } from 'node:fs';
 import { planRun } from '#cli/run/plan.ts';
 import { applyFixers } from '#cli/run/fixers.ts';
 import type { RunReport } from '#types/report.ts';
+import { TOOL_ANALYSES } from '#cli/run/analyses.ts';
 import { runEngineCheck } from '#cli/run/engines.ts';
 import { reproduceLine } from '#cli/run/reproduce.ts';
 import { SUPPRESSION_FORMS } from '#config/markers.ts';
@@ -81,9 +82,9 @@ function cachedResult(root: string, key: string, planned: PlannedCheck): CheckRe
 }
 
 function freshResult(session: Session, planned: PlannedCheck, staged: Set<string> | undefined): Promise<CheckResult> {
-    return planned.spec.engine === undefined
-        ? runToolCheck(session, planned)
-        : runEngineCheck(session, planned, staged);
+    if (planned.spec.engine !== undefined) return runEngineCheck(session, planned, staged);
+    const analysis = TOOL_ANALYSES[planned.spec.analysis ?? ''];
+    return analysis === undefined ? runToolCheck(session, planned) : analysis(session, planned);
 }
 
 function unrunnable(session: Session, planned: PlannedCheck, base: CheckResult): CheckResult | undefined {

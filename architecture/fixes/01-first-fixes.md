@@ -583,7 +583,8 @@ calls the network.
 
 **Target.** The check builds the references where the file holds any.
 
-**Files.** `presets/typescript/manifest.toml`, new `checks/typescript/tsc.ts`.
+**Files.** `presets/typescript/manifest.toml`, `packages/cli/src/integrity/tsc.ts`,
+and the shared tool-analysis registry.
 
 **Logic.** The check reads `tsconfig.json` through `jsonc-parser`. With references it runs
 `tsc -b --noEmit`, and without it runs `tsc --noEmit -p`.
@@ -593,6 +594,12 @@ calls the network.
 **Tests.** A planted repository with two referenced projects and a type error holds the finding.
 
 **Done when.** That case passes.
+
+**Status: locally verified.** The compiler builds solution references in a disposable copy.
+Root and nested-scope fixtures report errors from both referenced projects and pass after correction.
+They leave no build output in either project.
+Ordinary TypeScript projects retain project mode and pass the existing planted regressions.
+The nine focused tests, TypeScript check, schemas, and reference check passed.
 
 ## K-229: list items cut in mid-sentence
 

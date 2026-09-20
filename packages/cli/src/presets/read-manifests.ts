@@ -1,6 +1,7 @@
 // Read every embedded manifest, validate it, and refuse the shapes the design forbids.
 import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/policy/normalize.ts';
+import { TOOL_ANALYSES } from '#cli/run/analyses.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { manifestSchema } from '#cli/presets/manifest-schema.ts';
 import type { RawCheck, RawManifest, RawTool, CheckSpec, Manifest, ToolPin } from '#types/manifest.ts';
@@ -46,7 +47,8 @@ function isIdleManual(check: RawCheck): boolean {
 }
 
 function hasNoRunner(check: RawCheck): boolean {
-    return check.command === undefined && check.engine === undefined && check.reported_by === undefined;
+    const hasAnalysis = check.tool !== undefined && TOOL_ANALYSES[check.analysis ?? ''] !== undefined;
+    return !hasAnalysis && check.command === undefined && check.engine === undefined && check.reported_by === undefined;
 }
 
 function checkProblems(check: RawCheck): string[] {

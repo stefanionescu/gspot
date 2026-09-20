@@ -52,6 +52,8 @@ export type EngineInput = {
 
 export type Engine = (input: EngineInput) => Promise<Finding[]>;
 
+export type ToolAnalysis = (session: Session, planned: PlannedCheck) => Promise<CheckResult>;
+
 export type RunOptions = PlanOptions & { fix: boolean; isDryRun: boolean; noCache?: boolean };
 
 export type RunOutcome = { report: RunReport; planned: PlannedCheck[]; fixes?: FixReport };

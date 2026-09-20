@@ -1,12 +1,13 @@
 // Planted repository for the typescript preset and what it brings: every check fires on its planted defect.
 
 import { join } from 'node:path';
-import { symlinkSync } from 'node:fs';
 // The fixture links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
 import { fileURLToPath } from 'node:url';
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
+import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
+import { symlinkSync, writeFileSync, readdirSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
@@ -267,3 +268,58 @@ describe('the typescript preset', () => {
         PLANTED_TIMEOUT_MS * 2,
     );
 });
+
+const POLICY = `version = 1
+presets = ["typescript"]
+[runner]
+tool = "none"
+[hooks]
+tool = "none"
+[ci]
+provider = "none"
+[rules]
+install = false
+`;
+const PROJECT = '{"compilerOptions":{"composite":true,"strict":true,"types":[],"target":"ES2020"},"include":["*.ts"]}';
+
+for (const scope of ['', 'api/']) {
+    test(
+        `TypeScript solution ${scope || 'root'} checks both projects without writing build output`,
+        async () => {
+            const solution =
+                '{// The solution has no sources.\n"files":[],"references":[{"path":"./orders"},{"path":"./users"}],}';
+            await using fixture = await createFixture({
+                'gspot.toml': scope === '' ? POLICY : POLICY + '\n[[scope]]\npath = "api"\npresets = ["typescript"]\n',
+                '.gitignore': 'node_modules/\n.gspot/\n',
+                'tsconfig.json': scope === '' ? solution : '{"files":["root.ts"],"compilerOptions":{"types":[]}}',
+                'root.ts': 'export const root = 1;',
+                [`${scope}tsconfig.json`]: solution,
+                [`${scope}orders/tsconfig.json`]: PROJECT,
+                [`${scope}users/tsconfig.json`]: PROJECT,
+                [`${scope}orders/order.ts`]: 'export const total: number = "wrong";',
+                [`${scope}users/user.ts`]: 'export const active: boolean = 42;',
+            });
+            symlinkSync(join(root, 'node_modules'), join(fixture.path, 'node_modules'), 'dir');
+            commitAll(fixture.path);
+            const failed = await run(fixture.path, ['check', 'typescript/tsc', '--no-cache', '--json']);
+            const report = JSON.parse(failed.stdout) as RunReport;
+            expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+            const findings = report.checks.flatMap((check) => check.findings);
+            expect(
+                findings
+                    .filter((finding) => finding.rule === 'TS2322')
+                    .map((finding) => finding.file)
+                    .toSorted((left, right) => left.localeCompare(right)),
+            ).toEqual([`${scope}orders/order.ts`, `${scope}users/user.ts`]);
+            writeFileSync(join(fixture.path, `${scope}orders/order.ts`), 'export const total: number = 3;');
+            writeFileSync(join(fixture.path, `${scope}users/user.ts`), 'export const active: boolean = true;');
+            const clean = await run(fixture.path, ['check', 'typescript/tsc', '--no-cache', '--json']);
+            expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+            const output = ['orders', 'users'].flatMap((folder) =>
+                readdirSync(join(fixture.path, scope, folder), { recursive: true }).map(String),
+            );
+            expect(output.filter((path) => /\.(?:tsbuildinfo|js|d\.ts)$/u.test(path))).toEqual([]);
+        },
+        PLANTED_TIMEOUT_MS,
+    );
+}
