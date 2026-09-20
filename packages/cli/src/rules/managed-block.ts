@@ -21,7 +21,6 @@ const AREA_BY_LAYER: Record<string, string> = {
 const MIN_COLUMN = 3;
 const TITLED_LAYERS = new Set(['language', 'framework', 'library', 'tool', 'platform', 'database', 'runtime']);
 
-const SUBAGENTS = 'Do not use subagents or parallel agents unless asked in the conversation.';
 const CHECKS_INSTALLED =
     'Run `gspot check --staged` before committing. Change policy with `gspot set`, `gspot allow` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`.';
 const RULES_ALONE =
@@ -76,6 +75,6 @@ export function managedBlock(session: Session): string {
     const files = selectRuleFiles(session);
     const index = files.length > 0 ? indexLines(session, files) : [];
     const hasChecks = session.scopes.some((scope) => scope.selected.some((manifest) => manifest.checks.length > 0));
-    const closing = `${hasChecks ? CHECKS_INSTALLED : RULES_ALONE} ${SUBAGENTS}`;
+    const closing = hasChecks ? CHECKS_INSTALLED : RULES_ALONE;
     return ['# Engineering Guidelines', '', ...index, closing].join('\n');
 }

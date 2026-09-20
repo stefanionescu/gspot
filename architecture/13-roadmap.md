@@ -28,6 +28,12 @@ tests, and runs in the gate of this repository. [18-gaps.md](18-gaps.md) lists w
 | Adoption                              | Not started. The install in yap-swift-app showed that a developer would not keep gspot installed ([20-adoption.md](20-adoption.md)). No new preset starts before this phase is done.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Phases 2 to 5, Phase 7                | Phase 2 done: `sql`, `postgres`, `supabase`, `docker`, `nginx`, `express`, `vitest`, `ansible`, `python`, `pytest`, `fastapi`. Phase 3 done: `css`, `html`, `static-site`, `cloudflare`, `nextjs`, `i18n`, `zod`, `trpc`, `tanstack-query`, `zustand`, `react-hook-form`, `drizzle`; the acceptance runs over yap-landing and slopshop end with no check in error. Phase 4 done: `swift`, `xcode`, `xctest`. Phase 5 done. 48 presets ship today, and `jest` makes 49. Phase 7 done: `react`, `react-native`, `nestjs`, `vue`, and `svelte`, all thinner than D-141 asks, each with a planted repository. The acceptance run on a public repository of each shape is owed. Owed across phases: the manual rewrite (G-10) and the deeper unit tests of apply, carry, plan, execute, and doctor. |
 
+### Repository-owned agent preferences
+
+K-92 removes the delegation preference from generated instruction blocks. Tests cover
+blocks with and without checks. This repository keeps its preference outside the managed
+blocks in `AGENTS.md` and `CLAUDE.md`.
+
 ### Removed project templates
 
 K-97 removes the unused `init --own` and `--project-templates` flags, their option fields,

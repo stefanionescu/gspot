@@ -24,6 +24,8 @@ Read `.gspot/rules/general/agent/WORKING.md` and `.gspot/rules/general/prose/WRI
 | Task Runner               | `.gspot/rules/tool/tasks/TASKS.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
 | GitHub Actions            | `.gspot/rules/tool/github-actions/GITHUB-ACTIONS.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 
-Run `gspot check --staged` before committing. Change policy with `gspot set`, `gspot allow` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`. Do not use subagents or parallel agents unless asked in the conversation.
+Run `gspot check --staged` before committing. Change policy with `gspot set`, `gspot allow` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`.
 
 <!-- <<< gspot managed <<< -->
+
+Do not use subagents or parallel agents unless asked in the conversation.

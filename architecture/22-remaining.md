@@ -169,7 +169,6 @@ exactly one fix file fails it.
 - [ ] D-129: Delete `gspot declare`, six of the seven lists of `gspot allow`, `uninstall --keep-hooks`, and `apply --check`. File explanations are implemented by `explain <path>`.
 - [ ] D-100: Delete the twelve lint stubs at the root of this repository.
 - [ ] K-47: Delete the nine `copy = true` stubs and `copyStubContent` (D-100).
-- [ ] K-92: Delete the subagents sentence from the managed block.
 - [ ] K-99: Delete the five `architecture.*` keys nothing reads, and `[editor] vscode`.
 - [ ] K-100: Delete `limits.line_length`, `limits.trivial_ast_nodes` and `tools.trufflehog.verified_only`.
 - [ ] K-102: Delete `no-trivial-functions` and its option; `no-call-through` covers every function form (see K-235 for the other languages).

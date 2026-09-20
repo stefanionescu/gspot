@@ -99,25 +99,6 @@ preset writes the file itself there, with its mark, and editors read no other pl
 
 **Done when.** `git ls-files` at the root of gspot names no lint configuration file.
 
-## K-92: the subagents sentence
-
-**What is wrong.** `rules/managed-block.ts` writes `SUBAGENTS`, a working habit of one owner,
-into the `CLAUDE.md` of every repository.
-
-**Target.** The managed block holds facts about the repository: the guides, the check command,
-and how policy changes.
-
-**Files.** `src/rules/managed-block.ts`.
-
-**Logic.** The constant `SUBAGENTS` goes, and `closing` is `CHECKS_INSTALLED` or `RULES_ALONE`.
-
-**What goes.** The sentence in `CLAUDE.md` and `AGENTS.md` of this repository, on the next
-`gspot apply`. The owner keeps the habit in a file of their own, outside the managed block.
-
-**Tests.** The unit test of the managed block holds the new closing line.
-
-**Done when.** No file gspot writes holds the word subagents.
-
 ## K-99: keys and settings with no reader
 
 Closes K-99 and K-100.

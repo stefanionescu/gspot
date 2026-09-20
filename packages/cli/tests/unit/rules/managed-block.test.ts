@@ -7,6 +7,7 @@ describe('the managed block', () => {
     test('with no check selected it says nothing about gspot check', async () => {
         await using fixture = await createFixture({ 'gspot.toml': 'version = 1\npresets = []\n' });
         const block = managedBlock(await openSession(fixture.path));
+        expect(block).not.toContain('subagents');
         expect(block).toContain('general/agent/WORKING.md');
         expect(block).toContain('These files are installed copies');
         expect(block).not.toContain('gspot check');
@@ -18,6 +19,7 @@ describe('the managed block', () => {
                 'version = 1\npresets = ["spelling"]\n\n[rules]\nexclude = ["general/code/ACCESSIBILITY.md"]\n',
         });
         const block = managedBlock(await openSession(fixture.path));
+        expect(block).not.toContain('subagents');
         expect(block).toContain('Run `gspot check --staged` before committing');
         expect(block).not.toContain('ACCESSIBILITY.md');
         expect(block).toContain('general/code/NAMING.md');
