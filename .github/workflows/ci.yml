@@ -26,6 +26,6 @@ jobs:
               if: runner.os == 'Windows'
               run: bun tests/harness/swiftformat-windows.ts
             - run: bunx tsc --noEmit -p tsconfig.json
+            - run: mise run gspot:check
             - run: mise exec -- bun test --coverage
             - run: bun packages/cli/build.ts
-            - run: bun packages/cli/src/main.ts check

@@ -245,3 +245,7 @@ The macOS jobs for `02a430a` and `6cb1393` fail before the profile dry run start
 Git background maintenance removes `.git/objects/maintenance.lock` during the initial
 repository snapshot. The planted Git helper disables automatic maintenance and garbage
 collection. The dry-run test keeps its complete snapshot assertion, including Git files.
+
+The platform workflow runs the repository self-check after setup and type checking.
+The full test suite and binary build follow. This exposes tool invocation failures
+without waiting for the planted suites. All steps remain required for a green job.
