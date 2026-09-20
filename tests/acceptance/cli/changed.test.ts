@@ -3,8 +3,8 @@ import { expect, test } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { createSandbox } from '@gspot/testing';
 import { run } from '#tests/harness/planted.ts';
-import type { RunReport } from '#types/report.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { reportSchema } from '#cli/run/report/schema.ts';
 
 function git(root: string, ...argv: string[]): string {
     const result = runBlocking(['git', ...argv], { cwd: root });
@@ -44,20 +44,20 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
     await Bun.write(join(sandbox.path, 'web/source.txt'), 'working change');
     const selected = await run(sandbox.path, ['check', '--changed', 'api', '--json']);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
-    const report = JSON.parse(selected.stdout) as RunReport;
+    const report = reportSchema.parse(JSON.parse(selected.stdout));
     expect(report.comparison).toEqual({ content: 'working-tree', reference: 'refs/heads/base' });
     expect(report.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toEqual([
         'api/source.txt',
     ]);
     const explicit = await run(sandbox.path, ['check', '--changed=base', '--json']);
     expect(explicit.code, explicit.stdout + explicit.stderr).toBe(1);
-    const all = JSON.parse(explicit.stdout) as RunReport;
+    const all = reportSchema.parse(JSON.parse(explicit.stdout));
     expect(
         all.checks
             .flatMap((check) => check.findings.map((finding) => finding.message))
             .toSorted((a, b) => a.localeCompare(b)),
     ).toEqual(['api/source.txt', 'web/source.txt']);
-    const saved = (await Bun.file(join(sandbox.path, '.gspot/report.json')).json()) as RunReport;
+    const saved = reportSchema.parse(await Bun.file(join(sandbox.path, '.gspot/report.json')).json());
     expect(saved.comparison).toEqual(all.comparison);
     const invalid = await run(sandbox.path, ['check', '--changed=missing-ref', '--json']);
     expect(invalid.code).toBe(2);

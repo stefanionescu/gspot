@@ -5,6 +5,23 @@
     "description": "What gspot check --json prints and .gspot/report.json holds: every check with its findings, the baselines, the ignores and the exit code.",
     "type": "object",
     "properties": {
+        "comparison": {
+            "type": "object",
+            "properties": {
+                "content": {
+                    "type": "string",
+                    "const": "working-tree"
+                },
+                "reference": {
+                    "type": "string"
+                }
+            },
+            "required": [
+                "content",
+                "reference"
+            ],
+            "additionalProperties": false
+        },
         "version": {
             "type": "string"
         },

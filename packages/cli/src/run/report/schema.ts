@@ -49,6 +49,7 @@ const skip = z.strictObject({ check: z.string(), source: z.enum(['local', 'flag'
 
 /** The run report as check --json prints it. */
 export const reportSchema = z.strictObject({
+    comparison: z.strictObject({ content: z.literal('working-tree'), reference: z.string() }).optional(),
     version: z.string(),
     stage: z.string(),
     started: z.string(),
