@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/run/session.ts';
-import { copyFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { emitTarget, templateInputs } from '#cli/emit/templates.ts';
+import { copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 
 async function output(command: string[]): Promise<string> {
     const result = await run(command, { cwd: process.cwd() });
@@ -50,13 +50,22 @@ async function installSwiftFormat(): Promise<void> {
         const plain = await run([destination, '--lint', '--config', emptyConfig, source], { cwd: staging });
         process.stdout.write(`SwiftFormat empty config: exit ${String(plain.code)}\n${plain.stdout}${plain.stderr}`);
         let hasFailed = plain.code !== 0;
-        for (const flags of [[], ['--verbose'], ['--cache', 'ignore'], ['--verbose', '--cache', 'ignore']]) {
-            const result = await run([destination, '--lint', '--config', config, ...flags, source], { cwd: staging });
+        const settings = readFileSync(config, 'utf8')
+            .split('\n')
+            .filter((line) => line.startsWith('--'));
+        for (const setting of settings) {
+            await Bun.write(emptyConfig, `${setting}\n`);
+            const result = await run([destination, '--lint', '--config', emptyConfig, source], { cwd: staging });
             process.stdout.write(
-                `SwiftFormat smoke ${JSON.stringify(flags)}: exit ${String(result.code)}\n${result.stdout}${result.stderr}`,
+                `SwiftFormat setting ${setting}: exit ${String(result.code)}\n${result.stdout}${result.stderr}`,
             );
-            hasFailed ||= result.code !== 0;
+            hasFailed ||= result.code !== 0 && result.code !== 1;
         }
+        const configured = await run([destination, '--lint', '--config', config, source], { cwd: staging });
+        process.stdout.write(
+            `SwiftFormat shipped config: exit ${String(configured.code)}\n${configured.stdout}${configured.stderr}`,
+        );
+        hasFailed ||= configured.code !== 0;
         if (hasFailed) throw new Error('SwiftFormat formatting smoke checks failed.');
     } finally {
         rmSync(staging, { recursive: true, force: true });

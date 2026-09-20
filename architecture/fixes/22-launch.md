@@ -205,3 +205,7 @@ It is allowed to run across a pin mismatch. Failure and retry follow [02-cli.md]
 **Tests.** An old name rejected by the new schema still migrates. Cover dry-run, unknown migration, pin mismatch, lock-resolution failure, interruption before pin update, and safe retry with original recovery retained.
 
 **Done when.** It passes.
+
+The shipped configuration reproduces exit 5 on Windows with every cache and verbosity
+combination. The same function passes with an empty configuration. Setup probes each
+rendered setting separately to identify the failing option before changing formatter policy.
