@@ -90,6 +90,12 @@ Mise tool directory, and verifies its version. The helper removes its extraction
 on completion or failure and rejects unexpected script arguments. This supplies the
 Windows CI prerequisite. Product installer acceptance remains open.
 
+The linked Next.js fixture uses a temporary sibling of the checkout, so its dependencies
+and generated application share a drive. The [Windows job 106028903542](https://github.com/stefanionescu/gspot/actions/runs/35492181462/job/106028903542)
+shows webpack prefixing a dependency on drive D with `./` from a fixture on drive C.
+The fixture still runs clean and failing builds. Other fixtures retain their system
+temporary directories, and layout acceptance remains open under K-306.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.

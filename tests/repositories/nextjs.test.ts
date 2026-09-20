@@ -88,16 +88,20 @@ describe('the nextjs and i18n presets', () => {
     test(
         'the file checks fire on their planted defects, and the one ESLint configuration holds the framework rules',
         async () => {
-            await using fixture = await createFixture({
-                '.gitignore': 'node_modules\n.next\n',
-                'package.json': manifest('19.1.1'),
-                'tsconfig.json': '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "include": ["app"]\n}\n',
-                'next.config.mjs': CONFIG,
-                'app/page.tsx': PAGE,
-                'app/layout.tsx': LAYOUT,
-                'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
-                'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
-            });
+            // Webpack requires the linked dependencies and the fixture to share a drive.
+            await using fixture = await createFixture(
+                {
+                    '.gitignore': 'node_modules\n.next\n',
+                    'package.json': manifest('19.1.1'),
+                    'tsconfig.json': '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "include": ["app"]\n}\n',
+                    'next.config.mjs': CONFIG,
+                    'app/page.tsx': PAGE,
+                    'app/layout.tsx': LAYOUT,
+                    'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
+                    'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
+                },
+                { tempDir: join(MODULES, '../..') },
+            );
             symlinkSync(MODULES, join(fixture.path, 'node_modules'));
             commitAll(fixture.path);
             const environment = {
