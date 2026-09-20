@@ -1,10 +1,10 @@
-import { realpathSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
 import { rejects } from 'node:assert/strict';
 import * as processes from '#cli/platform/spawn.ts';
 import { basename, delimiter, join } from 'node:path';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { commitAll, install, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
+import { chmodSync, existsSync, readFileSync, realpathSync, statSync, writeFileSync } from 'node:fs';
 
 // Mise is the subprocess boundary; the resulting search path must locate a real executable.
 describe('the planted harness tool path', () => {
@@ -70,6 +70,40 @@ describe('the planted command deadline', () => {
         expect(await Bun.file(join(fixture.path, 'source.sql')).text()).toBe('select 1;\n');
         expect(await Bun.file(join(fixture.path, 'removed.sql')).text()).toBe('select 2;\n');
         expect(await Bun.file(join(fixture.path, 'new.sql')).exists()).toBe(false);
+    });
+
+    test('partial planting failure restores binary bytes, file modes, and new directories', async () => {
+        const policy = 'version = 1\n';
+        const original = Buffer.from([0, 255, 128, 13, 10]);
+        await using fixture = await createFixture({
+            'gspot.toml': policy,
+            'script.sh': '#!/bin/sh\nexit 0\n',
+        });
+        const scriptPath = join(fixture.path, 'script.sh');
+        const binaryPath = join(fixture.path, 'logo.png');
+        const scriptBytes = readFileSync(scriptPath);
+        chmodSync(scriptPath, 0o640);
+        const mode = statSync(scriptPath).mode;
+        writeFileSync(binaryPath, original);
+        await rejects(
+            runPlanted(
+                fixture.path,
+                {
+                    check: 'bash/syntax',
+                    files: { 'script.sh': 'broken', 'new/nested/source.sql': 'bad sql' },
+                    removed: ['logo.png'],
+                    executable: ['script.sh', 'absent.sh'],
+                    expected: 'unused',
+                },
+                {},
+            ),
+            /ENOENT/,
+        );
+        expect(readFileSync(binaryPath)).toEqual(original);
+        expect(readFileSync(scriptPath)).toEqual(scriptBytes);
+        expect(statSync(scriptPath).mode).toBe(mode);
+        expect(readFileSync(join(fixture.path, 'gspot.toml'), 'utf8')).toBe(policy);
+        expect(existsSync(join(fixture.path, 'new'))).toBe(false);
     });
 
     test('a completed CLI preserves successful and nonzero statuses', async () => {

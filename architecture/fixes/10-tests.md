@@ -18,9 +18,14 @@ runs even when a policy exists, missing required mise tools, and failed Git setu
 An unmatched policy edit fails before any fixture mutation. Fixture PATH includes
 the checkout's installed npm executables, so required formatters actually run.
 
-Seven harness regressions and the typed-table and Docker acceptance suites pass
-locally. TypeScript passes. Complete restoration after partial setup, realistic
-isolated installs, shared fixture construction, and the caller audit remain open.
+Fixture restoration preserves binary bytes and file modes after execution errors
+and partial setup. Native filesystem operations replace unchecked shell commands,
+and cleanup removes directories created by planting.
+
+The harness, typed-table, Docker, shell, and document acceptance suites pass locally.
+The restoration run passes 10 tests with 119 assertions, and TypeScript passes.
+Realistic isolated installs, shared fixture construction, and the caller audit
+remain open. Windows filesystem execution remains deferred.
 
 **What is wrong.** `install` in `tests/harness/planted.ts:137` reads only whether `gspot.toml`
 exists, so an `init` that crashes after it wrote the config passes. Seven tests run `init` through

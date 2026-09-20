@@ -4,35 +4,97 @@ import { delimiter, dirname, join } from 'node:path';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import type { PlantedCase, SpawnOutcome } from '#types/run.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { chmodSync, mkdirSync, readFileSync, rmdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 
-// Deletes the files a case removes, and returns what they held.
-async function takenOut(cwd: string, gone: string[]): Promise<Map<string, string>> {
-    const removed = new Map<string, string>();
-    for (const path of gone) removed.set(path, await Bun.file(join(cwd, path)).text());
-    for (const path of gone) Bun.spawnSync(['rm', '-f', join(cwd, path)]);
-    return removed;
+function originalFile(path: string): { bytes: Uint8Array; mode: number } | undefined {
+    try {
+        const mode = statSync(path).mode;
+        return { bytes: readFileSync(path), mode };
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        throw error;
+    }
 }
 
-// Writes the defect into the repository and returns the function that takes it out again.
-async function plant(cwd: string, planted: PlantedCase): Promise<() => Promise<void>> {
+function isAbsent(path: string): boolean {
+    try {
+        statSync(path);
+        return false;
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return true;
+        throw error;
+    }
+}
+
+function absentParents(cwd: string, paths: string[]): string[] {
+    const parents = new Set<string>();
+    for (const path of paths) {
+        let parent = dirname(join(cwd, path));
+        while (parent !== cwd && isAbsent(parent)) {
+            parents.add(parent);
+            parent = dirname(parent);
+        }
+    }
+    return [...parents].toSorted((a, b) => b.length - a.length);
+}
+
+function restoreFiles(cwd: string, originals: Map<string, { bytes: Uint8Array; mode: number } | undefined>): void {
+    for (const [path, original] of originals) {
+        const full = join(cwd, path);
+        if (original === undefined) rmSync(full, { force: true });
+        else {
+            writeFileSync(full, original.bytes);
+            chmodSync(full, original.mode);
+        }
+    }
+}
+
+function removeParents(parents: string[]): void {
+    for (const path of parents) {
+        try {
+            rmdirSync(path);
+        } catch (error) {
+            if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+        }
+    }
+}
+
+function plantFiles(cwd: string, planted: PlantedCase, policy: string): void {
+    const { removed = [], executable = [] } = planted;
+    for (const path of removed) rmSync(join(cwd, path));
+    for (const [path, text] of Object.entries(planted.files)) {
+        const full = join(cwd, path);
+        mkdirSync(dirname(full), { recursive: true });
+        writeFileSync(full, text);
+    }
+    for (const path of executable) chmodSync(join(cwd, path), statSync(join(cwd, path)).mode | 0o111);
+    writeFileSync(join(cwd, 'gspot.toml'), policy);
+}
+
+// Preserve bytes and permissions before the first mutation, including setup that fails partway through.
+function plant(cwd: string, planted: PlantedCase): () => void {
     const policyPath = join(cwd, 'gspot.toml');
-    const policy = await Bun.file(policyPath).text();
-    const editedPolicy = plantedPolicy(policy, planted);
-    const removed = await takenOut(cwd, planted.removed ?? []);
-    const planting = Object.entries(planted.files);
-    for (const [path] of planting)
-        if (await Bun.file(join(cwd, path)).exists()) removed.set(path, await Bun.file(join(cwd, path)).text());
-    for (const [path, text] of planting) await Bun.write(join(cwd, path), text);
+    const policy = plantedPolicy(readFileSync(policyPath, 'utf8'), planted);
+    const gone = planted.removed ?? [];
     const executables = planted.executable ?? [];
-    for (const path of executables) Bun.spawnSync(['chmod', '+x', join(cwd, path)]);
-    await Bun.write(policyPath, editedPolicy);
-    return async () => {
-        for (const path of Object.keys(planted.files)) Bun.spawnSync(['rm', '-f', join(cwd, path)]);
-        for (const [path, text] of removed) await Bun.write(join(cwd, path), text);
-        await Bun.write(policyPath, policy);
+    const paths = [...new Set(['gspot.toml', ...gone, ...executables, ...Object.keys(planted.files)])];
+    const originals = new Map(paths.map((path) => [path, originalFile(join(cwd, path))]));
+    for (const path of gone)
+        if (originals.get(path) === undefined) throw new Error(`The fixture removal target ${path} is absent.`);
+    const parents = absentParents(cwd, paths);
+    const restore = (): void => {
+        restoreFiles(cwd, originals);
+        removeParents(parents);
     };
+    try {
+        plantFiles(cwd, planted, policy);
+    } catch (error) {
+        restore();
+        throw error;
+    }
+    return restore;
 }
 
 function plantedPolicy(policy: string, planted: PlantedCase): string {
@@ -159,11 +221,11 @@ export async function runPlanted(
     planted: PlantedCase,
     environment: Record<string, string>,
 ): Promise<SpawnOutcome> {
-    const restore = await plant(cwd, planted);
+    const restore = plant(cwd, planted);
     try {
         return await run(cwd, ['check', planted.check, '--no-cache'], environment);
     } finally {
-        await restore();
+        restore();
     }
 }
 
