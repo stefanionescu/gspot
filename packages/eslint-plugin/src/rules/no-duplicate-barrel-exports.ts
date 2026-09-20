@@ -1,6 +1,6 @@
-// A name exported twice from one index, including through two `export *`.
-import { posix } from 'node:path';
 import { createRule } from '#plugin/rule.ts';
+// A name exported twice from one index, including through two `export *`.
+import { dirname, join, resolve } from 'node:path';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
@@ -29,12 +29,12 @@ function stemOf(path: string): string {
 
 function moduleFile(importer: string, source: string): string | undefined {
     if (!source.startsWith('.')) return undefined;
-    const base = posix.resolve(posix.dirname(importer), source);
+    const base = resolve(dirname(importer), source);
     const stem = stemOf(base);
     const candidates = [
         base,
         ...EXTENSIONS.map((extension) => `${stem}${extension}`),
-        ...EXTENSIONS.map((extension) => posix.join(base, `index${extension}`)),
+        ...EXTENSIONS.map((extension) => join(base, `index${extension}`)),
     ];
     return candidates.find((candidate) => existsSync(candidate) && statSync(candidate).isFile());
 }

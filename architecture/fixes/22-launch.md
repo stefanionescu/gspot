@@ -52,8 +52,9 @@ cannot find `bun` or `git` after a test replaces `PATH`. The environment snapsho
 normalizes Windows variable names, so a native `Path` entry is preserved when callers
 prepend to `PATH`. A subprocess regression test checks inherited executable lookup.
 
-The encoded-checkout asset test passes on Windows. Two plugin export tests also fail and
-remain open pending their replacement under K-102.
+The encoded-checkout asset test passes on Windows. Two plugin export tests also fail because
+the current resolver uses POSIX-only paths for filesystem reads. Native path operations
+repair that resolver while the rule remains in use. K-102 still owns its later replacement.
 
 SwiftLint declares `windows = false` in its tool metadata. The planted Swift tests
 require an explicit unsupported-platform result on Windows for SwiftLint, while keeping

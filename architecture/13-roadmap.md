@@ -44,7 +44,7 @@ rewriting the workflow.
   [The gspot workflow](https://github.com/stefanionescu/gspot/actions/runs/35487384007)
   also passes normal and manual checks for that revision.
 
-This closes the initial Linux and macOS CI gate only. Windows setup remains open under K-263.
+This closes the initial Linux and macOS CI gate only. Windows acceptance remains open under K-263.
 Function coverage is 40.66% and line coverage is 51.94%, below the final 80% floor.
 Required release tests remain skipped, and the CodeQL configuration selects no languages.
 The complete implementation gate and Yap handoff remain open.

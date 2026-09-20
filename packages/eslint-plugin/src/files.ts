@@ -2,6 +2,7 @@
 import picomatch from 'picomatch';
 import { posix } from 'node:path';
 import { readdirSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import type { DirectoryEntry, RuleContextOf } from '#plugin-types/plugin.ts';
 
@@ -43,7 +44,7 @@ export function normalizePath(value: string): string {
     const cut = value.search(/[?#]/u);
     const cleaned = cut === -1 ? value : value.slice(0, cut);
     const isUrl = cleaned.startsWith(FILE_SCHEME);
-    const bare = isUrl ? decodeURIComponent(cleaned.slice(FILE_SCHEME.length)) : cleaned;
+    const bare = isUrl ? fileURLToPath(cleaned) : cleaned;
     return bare.replaceAll('\\', '/');
 }
 

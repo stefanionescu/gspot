@@ -75,11 +75,15 @@ K-205 removes the docs check mode; passing that removed option must error rather
 
 **Done when.** No repository script mistakes URL encoding for a local directory name.
 
-**Implementation evidence, September 20, 2026.** Fourteen source and test files use
+**Implementation evidence, September 20, 2026.** Scripts, source, and tests use
 `fileURLToPath` for filesystem paths. The development-asset regression test reproduces
 an encoded-path failure before this change and passes after it. A checkout named
 `workspace % café` passes schema and reference validation, both package builds, and a
-source CLI explanation. Windows verification remains part of K-263.
+source CLI explanation. The encoded-checkout asset test also passes on Windows.
+
+The plugin uses the same
+conversion for file URLs, with a regression test that reads the original encoded path.
+Complete Windows acceptance remains part of K-263.
 
 ## K-307: Failure-to-empty helpers hide incomplete checks
 
