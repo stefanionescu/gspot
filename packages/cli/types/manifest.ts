@@ -91,6 +91,7 @@ export type CheckSpec = {
     count_regex?: string;
     tool_errors?: string;
     requires?: Requirement;
+    waits_for?: string;
     platform?: string[];
     tool?: string;
     claims?: Claims;

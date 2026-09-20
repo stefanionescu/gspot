@@ -171,18 +171,25 @@ function platformSkipFor(spec: CheckSpec, tool: ToolPin | undefined, platform: s
     return undefined;
 }
 
-function skipFor(
-    spec: CheckSpec,
-    tool: ToolPin | undefined,
-    options: PlanOptions,
-    platform: string,
-): PlannedCheck['skip'] {
+function skipFor(check: PlannedCheck, options: PlanOptions, platform: string): PlannedCheck['skip'] {
+    const { spec, tool } = check;
+    const waiting = waitingFor(check);
+    if (waiting) return waiting;
     if (spec.reported_by !== undefined) return { source: 'rules', note: `its findings come from ${spec.reported_by}` };
     const platformSkip = platformSkipFor(spec, tool, platform);
     if (platformSkip !== undefined) return platformSkip;
     if (options.localSkips.includes(spec.name)) return { source: 'local', note: 'skipped by gspot.local.toml' };
     if (options.skips.includes(spec.name)) return { source: 'flag', note: 'skipped by --skip' };
     return undefined;
+}
+
+function waitingFor(check: PlannedCheck): PlannedCheck['skip'] {
+    const setting = check.spec.waits_for;
+    if (setting === undefined) return undefined;
+    const value = check.scope.view.settings[setting];
+    const isEmpty =
+        value === undefined || value === false || value === '' || (Array.isArray(value) && value.length === 0);
+    return isEmpty ? { source: 'rules', note: `set ${setting} to turn this on` } : undefined;
 }
 
 function missingTriggers(context: PlanContext, spec: CheckSpec, scopePath: string): string[] {
@@ -206,7 +213,7 @@ function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean):
     const tool = spec.engine === undefined ? toolFor(spec, manifest, session) : undefined;
     if (tool) check.tool = tool;
     if (options.messageFile !== undefined) check.messageFile = options.messageFile;
-    const skip = skipFor(spec, tool, options, platform);
+    const skip = skipFor(check, options, platform);
     if (skip) check.skip = skip;
     return check;
 }

@@ -18,5 +18,6 @@ Write the header, put each statement under its section, and label tables and fun
 - Preset: [the postgres preset](/reference/presets/postgres/)
 - Stage: commit
 - Engine: integrity
+- Required setting: `tools.postgres.migration_docs`
 
 Turn it off for a path with a reason: `gspot ignore postgres/migration-docs --paths <glob> --reason "<why>"`.

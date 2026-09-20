@@ -40,13 +40,6 @@ function carriedSection(rows: TakeoverPlan['carried']): string[] {
     ];
 }
 
-function baselineLine(baselines: TakeoverPlan['baselines']): string {
-    if (baselines.rules === 0) return '  every check passes; no baseline needed';
-    const rules = `${String(baselines.rules)} rule${baselines.rules === 1 ? '' : 's'}`;
-    const findings = `${String(baselines.findings)} finding${baselines.findings === 1 ? '' : 's'}`;
-    return `  ${rules} enter a baseline with ${findings}; every other check passes`;
-}
-
 /**
  * The plan init prints before writing anything.
  * @param plan the plan
@@ -63,8 +56,6 @@ export function initPlanText(plan: TakeoverPlan): string {
         ...carriedSection(plan.carried),
         ...section('change', plan.change),
         ...section('no longer runs; delete when ready', plan.noLongerRuns),
-        'baseline',
-        baselineLine(plan.baselines),
     ];
     return `${lines.join('\n')}\n`;
 }

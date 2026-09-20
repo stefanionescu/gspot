@@ -102,6 +102,7 @@ help = "Create an index that starts with the foreign key column."
 
 [[checks]]
 name = "postgres/migration-docs"
+waits_for = "tools.postgres.migration_docs"
 stage = "commit"
 runs = "once"
 engine = "integrity"

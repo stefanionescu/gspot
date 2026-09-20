@@ -102,6 +102,7 @@ help = "Update the link. Skip a host that refuses crawlers under tools.linkinato
 
 [[checks]]
 name = "static-site/size"
+waits_for = "tools.site.size_limits"
 stage = "push"
 runs = "per-scope"
 requires = "build"

@@ -31,13 +31,12 @@ export function underFloor(report: CoverageReport, floors: CoverageFloor[]): str
 }
 
 /**
- * Runs the tests with coverage and compares each named target with its floor. With no floor the check passes.
+ * Runs the tests with coverage and compares each named target with its floor. The planner requires configured floors.
  * @param input the engine input
  * @returns the findings
  */
 export async function testCoverage(input: EngineInput): Promise<Finding[]> {
-    const floors = (input.view.tool('xctest')['coverage'] as CoverageFloor[] | undefined) ?? [];
-    if (floors.length === 0) return [];
+    const floors = input.view.tool('xctest')['coverage'] as CoverageFloor[];
     const plan = swiftBuildPlan(input);
     const bundle = join(plan.folder, 'coverage.xcresult');
     mkdirSync(plan.folder, { recursive: true });

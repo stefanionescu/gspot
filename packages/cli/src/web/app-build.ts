@@ -89,7 +89,6 @@ export async function frameworkTypes(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for a build that fails
  */
 export async function frameworkBuild(input: EngineInput): Promise<Finding[]> {
-    if (input.view.tool('next')['build_in_gate'] !== true) return [];
     const cwd = join(input.root, input.scope);
     const flags = (input.view.tool('next')['build_flags'] as string[] | undefined) ?? [];
     const command = [located(input, 'next'), 'build', ...flags];

@@ -51,8 +51,8 @@ const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string |
     },
 };
 
-function toolOf(check: CheckSpec): string | undefined {
-    return check.tool ?? check.command?.[0];
+function toolOf(check: CheckSpec): string {
+    return check.tool ?? check.command?.[0] ?? '~';
 }
 
 function isSelected(session: Session, presetName: string): boolean {
@@ -63,7 +63,7 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
     const found = allChecks().get(checkName);
     if (!found) return undefined;
     const { check, preset } = found;
-    const toolPrefix = `tools.${toolOf(check) ?? '~'}.`;
+    const toolPrefix = `tools.${toolOf(check)}.`;
     const settings = preset.settings
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
         .map((setting) => setting.name);
@@ -74,6 +74,7 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
         `What it looks for: ${check.summary}`,
         `Why it matters: ${check.why}`,
         `What to do: ${check.help}`,
+        ...(check.waits_for === undefined ? [] : [`Required setting: ${check.waits_for}`]),
         '',
         `Turn it off for some paths: gspot ignore ${checkName} --paths "<glob>" --reason "..."`,
     ];
@@ -86,12 +87,22 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
                 ? 'Selected in this repository: yes'
                 : `Selected in this repository: no (gspot add ${preset.preset.name})`,
         );
-    const { stage, summary, why, help } = check;
+    const { stage, summary, why, help, waits_for: waitsFor } = check;
     return {
         kind: 'check',
         subject: checkName,
         text: `${lines.join('\n')}\n`,
-        data: { check: checkName, preset: preset.preset.name, stage, summary, why, help, settings, rules },
+        data: {
+            check: checkName,
+            preset: preset.preset.name,
+            stage,
+            summary,
+            why,
+            help,
+            waits_for: waitsFor,
+            settings,
+            rules,
+        },
     };
 }
 

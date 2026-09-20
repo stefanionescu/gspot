@@ -22,11 +22,11 @@ async function runInstall(root: string, commands: string[][]): Promise<string> {
     for (const command of commands) {
         const result = await run(command, { cwd: root });
         const shown = command.join(' ');
-        notes.push(
-            result.code === 0
-                ? `ran ${shown}`
-                : `${shown} failed (exit ${String(result.code)}); gspot doctor names what is missing`,
-        );
+        if (result.code !== 0)
+            throw new Error(
+                `The installation command ${shown} failed (exit ${String(result.code)}): ${result.stderr.trim()}`,
+            );
+        notes.push(`ran ${shown}`);
     }
     return notes.join('; ');
 }
@@ -76,7 +76,7 @@ export async function installTools(
     }
     const commands = installCommands(runner);
     if (runner === 'mise') {
-        await run(['mise', 'trust', '.config/mise/conf.d/gspot.toml'], { cwd: root });
+        commands.unshift(['mise', 'trust', '.config/mise/conf.d/gspot.toml']);
         if (synced.packages.length > 0) {
             const detected = await detectPackageManager(root);
             commands.push([detected?.name ?? 'npm', 'install']);

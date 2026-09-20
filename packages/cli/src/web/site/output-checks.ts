@@ -8,8 +8,8 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
-import { filesUnder, siteBuild } from '#cli/web/site/build.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
+import { filesUnder, requireSiteBuild } from '#cli/web/site/build.ts';
 
 const TOOL_TIMEOUT_MS = 900_000;
 const BYTES_PER_KB = 1024;
@@ -30,8 +30,7 @@ function relative(input: EngineInput, absolute: string): string {
 }
 
 async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Finding[]> {
-    const build = await siteBuild(input);
-    if (!build.isBuilt) return [];
+    const build = await requireSiteBuild(input);
     const skipped = ((input.view.tool('linkinator')['skip'] as { pattern?: string }[] | undefined) ?? []).flatMap(
         (entry) => (entry.pattern === undefined ? [] : [entry.pattern]),
     );
@@ -69,11 +68,11 @@ function pageOf(url: string): string[] {
  * @returns the findings
  */
 export async function builtMarkup(input: EngineInput): Promise<Finding[]> {
-    const build = await siteBuild(input);
+    const build = await requireSiteBuild(input);
     const pages = filesUnder(build.output)
         .filter((path) => path.endsWith('.html'))
         .map((path) => join(build.output, path));
-    if (!build.isBuilt || pages.length === 0) return [];
+    if (pages.length === 0) return [];
     const config = join(input.root, '.gspot/html-validate-built.json');
     const result = await run([tool(input, 'html-validate'), '--config', config, '--formatter', 'json', ...pages], {
         cwd: build.cwd,
@@ -96,9 +95,9 @@ export async function builtMarkup(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for each unused selector
  */
 export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
-    const build = await siteBuild(input);
+    const build = await requireSiteBuild(input);
     const sheets = filesUnder(build.output).filter((path) => path.endsWith('.css'));
-    if (!build.isBuilt || sheets.length === 0) return [];
+    if (sheets.length === 0) return [];
     const safelist = ((input.view.tool('purgecss')['safelist'] as { names?: string[] }[] | undefined) ?? []).flatMap(
         (entry) => entry.names ?? [],
     );
@@ -150,9 +149,8 @@ export function externalLinks(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for each ceiling passed
  */
 export async function sizeLimits(input: EngineInput): Promise<Finding[]> {
-    const limits = (input.view.tool('site')['size_limits'] as SizeLimit[] | undefined) ?? [];
-    const build = await siteBuild(input);
-    if (limits.length === 0 || !build.isBuilt) return [];
+    const limits = input.view.tool('site')['size_limits'] as SizeLimit[];
+    const build = await requireSiteBuild(input);
     const files = filesUnder(build.output);
     return limits.flatMap((limit) => {
         const isCounted = pathMatcher(limit.paths);
@@ -179,9 +177,9 @@ export async function sizeLimits(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
-    const build = await siteBuild(input);
+    const build = await requireSiteBuild(input);
     const files = new Set(filesUnder(build.output));
-    if (!build.isBuilt || !files.has('sitemap.xml')) return [];
+    if (!files.has('sitemap.xml')) return [];
     const urls = readFileSync(join(build.output, 'sitemap.xml'), 'utf8')
         .matchAll(SITEMAP_LOCATION)
         .map((match) => match.groups?.['url'] ?? '')

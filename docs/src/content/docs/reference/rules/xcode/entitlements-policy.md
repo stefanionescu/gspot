@@ -18,5 +18,6 @@ Remove the entitlement, or add it to tools.xcode.allowed_entitlements.
 - Preset: [the xcode preset](/reference/presets/xcode/)
 - Stage: commit
 - Engine: integrity
+- Required setting: `tools.xcode.allowed_entitlements`
 
 Turn it off for a path with a reason: `gspot ignore xcode/entitlements-policy --paths <glob> --reason "<why>"`.

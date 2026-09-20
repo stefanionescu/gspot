@@ -1,4 +1,4 @@
-// init: read the repository, propose a policy, print the plan, write it after a yes, install the tools, baseline the findings.
+// init: read the repository, propose a policy, print the plan, write it after a yes, install the tools.
 import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { git } from '#cli/platform/spawn.ts';
@@ -22,11 +22,9 @@ import { note, print, paint } from '#cli/output/messages.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
 import { GSPOT_VERSION, writePin } from '#cli/run/version-pin.ts';
-import { pruneToolBaselines } from '#cli/emit/prune-baselines.ts';
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import { newerVersion } from '#cli/lifecycle/upgrade/newer-version.ts';
-import { firstRun, firstRunSummary } from '#cli/lifecycle/first-check.ts';
 import { askInitQuestions, askPresets } from '#cli/lifecycle/questions.ts';
 import { buildInitPlan, buildProposal } from '#cli/lifecycle/init/plan.ts';
 import { installTools, updatePackageJson } from '#cli/lifecycle/install-tools.ts';
@@ -150,7 +148,7 @@ async function write(
     root: string,
     options: InitOptions,
     prepared: InitPrepared,
-): Promise<{ lines: string[]; first: Awaited<ReturnType<typeof firstRun>>; installNote: string; failing: number }> {
+): Promise<{ lines: string[]; installNote: string }> {
     writeFileSync(join(root, 'gspot.toml'), prepared.policyText);
     writePin(root, GSPOT_VERSION);
     writeFileSync(join(root, '.gitignore'), applyBlock(fileText(root, '.gitignore'), gitignoreBlock(), 'hash'));
@@ -163,27 +161,23 @@ async function write(
     const session = await openSession(root);
     const synced = await applyAll(session);
     const installNote = await installTools(root, prepared.runner, synced, options.install);
-    const first = await firstRun(root);
     const rendered = new Set([...synced.written, ...synced.unchanged]);
     deleteReplaced(
         root,
         prepared.removed.filter((entry) => !rendered.has(entry.path)),
     );
-    // The replaced files are gone from the file set now, so the render that names source files is taken once more,
-    // and a tool that keeps its own baseline drops what it recorded for them.
+    // Refresh generated file lists after the accepted takeover.
     const after = await openSession(root);
     await applyAll(after);
-    await pruneToolBaselines(after);
-    const summary = firstRunSummary(first, installNote);
     const newer = await newerVersion(GSPOT_VERSION);
     const { dim } = paint();
     const version =
         newer === undefined ? `gspot ${GSPOT_VERSION}` : `gspot ${newer} is available: gspot upgrade --dry-run`;
-    return { lines: [...summary.lines, dim(version), ''], first, installNote, failing: summary.failing };
+    return { lines: ['written: gspot.toml, .gspot/', installNote, dim(version), ''], installNote };
 }
 
 /**
- * Runs init: detection, questions, plan, then the write, the install and the first run after a yes.
+ * Runs init: detection, questions, plan, then writes and installs after acceptance.
  * @param options the init flags
  * @returns the text, the JSON report and the exit code
  */
@@ -205,22 +199,15 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
     const isGo = await askConfirmation('Continue?', '--yes', true, options.yes);
     if (!isGo) return { text: 'Nothing written.\n', json: { root, plan, written: false }, exitCode: 0 };
     const written = await write(root, options, prepared);
-    note('run gspot check to see the gate; gspot doctor for what it could not check');
-    const checks = written.first.report.checks.map((check) => ({
-        check: check.check,
-        status: check.status,
-        findings: check.findings.length,
-    }));
+    note('run gspot check to check this repository; gspot doctor checks the setup');
     return {
         text: written.lines.join('\n'),
         json: {
             root,
             plan,
             policy: policyText,
-            baselines: written.first.baselines,
             install: written.installNote,
-            checks,
         },
-        exitCode: written.failing > 0 ? 1 : 0,
+        exitCode: 0,
     };
 }

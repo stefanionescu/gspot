@@ -61,6 +61,7 @@ help = "Delete the references of the test that is gone, or rename the folder aft
 
 [[checks]]
 name = "xctest/coverage"
+waits_for = "tools.xctest.coverage"
 stage = "push"
 runs = "per-scope"
 requires = "build"

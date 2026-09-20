@@ -18,5 +18,6 @@ Run next build and read the first error it prints.
 - Preset: [the nextjs preset](/reference/presets/nextjs/)
 - Stage: push
 - Engine: integrity
+- Required setting: `tools.next.build_in_gate`
 
 Turn it off for a path with a reason: `gspot ignore nextjs/build --paths <glob> --reason "<why>"`.

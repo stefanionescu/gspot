@@ -8,39 +8,19 @@ import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
-import { firstRun } from '#cli/lifecycle/first-check.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import type { CommandResult, Session } from '#types/run.ts';
 import type { TomlTable, Mutation } from '#types/config.ts';
 import { commitPolicy } from '#cli/policy/commit-policy.ts';
 import { installTools } from '#cli/lifecycle/install-tools.ts';
+import { presetManifests } from '#cli/presets/read-manifests.ts';
 import type { AddOptions, RemoveOptions } from '#types/commands.ts';
 import { requireChain, selectPresets } from '#cli/presets/select.ts';
-import { configurationName, presetManifests } from '#cli/presets/read-manifests.ts';
 
 function presetHolder(raw: TomlTable, scope: string | undefined): TomlTable {
     const holder = scopeHolder(raw, scope);
     if (!holder) throw new PolicyError([messages.scopeMissing(scope ?? '')]);
     return holder;
-}
-
-// The checks a new preset brings, and the checks it changes: a preset that adds a fragment to a configuration
-// changes what every check that reads that configuration finds.
-function arrivedChecks(added: Manifest[], manifests: Map<string, Manifest>): Set<string> {
-    const own = added.flatMap((manifest) => manifest.checks.map((check) => check.name));
-    const fragments = new Set(
-        added.flatMap((manifest) =>
-            manifest.configs
-                .filter((config) => config.fragment === true)
-                .map((config) => configurationName(config.target)),
-        ),
-    );
-    const readers = manifests
-        .values()
-        .flatMap((manifest) => manifest.checks)
-        .filter((check) => fragments.values().some((name) => (check.command ?? []).includes(`{config:${name}}`)))
-        .map((check) => check.name);
-    return new Set([...own, ...readers]);
 }
 
 // A pin that package.json already held is no change to apply, yet its package may be absent: a preset taken out
@@ -90,13 +70,8 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
         owed(session, added, applied),
         true,
     );
-    // What the new presets find today enters a baseline, as at init; the checks that were here before keep their counts.
-    const arrived = arrivedChecks(added, manifests);
-    const { baselines, toolBaselines } = await firstRun(root, arrived);
-    const count = [...baselines, ...toolBaselines].reduce((sum, file) => sum + file.count, 0);
-    const held = `baseline: ${String(count)} findings of the added presets are held\n`;
     const note = installed === '' ? '' : `${installed}\n`;
-    return { ...result, text: `${result.text}${note}${held}` };
+    return { ...result, text: `${result.text}${note}Run gspot check to check the selected presets.\n` };
 }
 
 /**

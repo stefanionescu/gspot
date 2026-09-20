@@ -106,6 +106,7 @@ function rulePage(check: CheckSpec, preset: Manifest): string {
         `- Preset: [the ${preset.preset.name} preset](/reference/presets/${preset.preset.name}/)\n- Stage: ${check.stage}\n`,
         tool === undefined ? '' : `- Tool: ${tool}\n`,
         check.engine === undefined ? '' : `- Engine: ${check.engine}\n`,
+        check.waits_for === undefined ? '' : `- Required setting: \`${check.waits_for}\`\n`,
         `\nTurn it off for a path with a reason: \`gspot ignore ${check.name} --paths <glob> --reason "<why>"\`.\n`,
     ];
     return lines.join('');

@@ -134,25 +134,41 @@ describe('the bash planted repository', () => {
     test(
         'a missing tool fails with the install hint',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': script, home: {}, bin: {} });
+            await using fixture = await createFixture({
+                'scripts/a.sh': script,
+                '.gitignore': 'home/\nbin/\n',
+                home: {},
+                bin: {},
+            });
             commitAll(fixture.path);
-            await run(fixture.path, [
-                'init',
-                '--yes',
-                '--presets',
-                'bash',
-                '--runner',
-                'none',
-                '--ci',
-                'none',
-                '--no-rules',
-                '--no-install',
-            ]);
             const bin = join(fixture.path, 'bin');
             const gitPath = Bun.which('git');
             expect(gitPath).not.toBeNull();
             symlinkSync(process.execPath, join(bin, process.platform === 'win32' ? 'bun.exe' : 'bun'));
             symlinkSync(gitPath!, join(bin, process.platform === 'win32' ? 'git.exe' : 'git'));
+            const environment = {
+                PATH: bin,
+                HOME: join(fixture.path, 'home'),
+                MISE_DATA_DIR: join(fixture.path, 'home', 'mise'),
+            };
+            const initialized = await run(
+                fixture.path,
+                [
+                    'init',
+                    '--yes',
+                    '--presets',
+                    'bash',
+                    '--runner',
+                    'none',
+                    '--ci',
+                    'none',
+                    '--no-rules',
+                    '--no-install',
+                ],
+                environment,
+            );
+            expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+            expect(initialized.stdout + initialized.stderr).toContain('run gspot check');
             const check = await run(fixture.path, ['check', 'bash/shellcheck', '--no-cache'], {
                 PATH: bin,
                 HOME: join(fixture.path, 'home'),

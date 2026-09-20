@@ -42,13 +42,12 @@ export function xcconfigLines(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * One finding for each entitlement outside tools.xcode.allowed_entitlements. With no list the check passes.
+ * One finding for each entitlement outside tools.xcode.allowed_entitlements. The planner requires a configured list.
  * @param input the engine input
  * @returns the findings
  */
 export function entitlementsPolicy(input: EngineInput): Promise<Finding[]> {
     const allowed = new Set(input.view.tool('xcode')['allowed_entitlements'] as string[] | undefined);
-    if (allowed.size === 0) return Promise.resolve([]);
     const findings = trackedEnding(input, ['.entitlements']).flatMap((path) => {
         const text = textOf(input, path);
         return text

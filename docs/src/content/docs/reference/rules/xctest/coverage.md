@@ -18,5 +18,6 @@ Add tests for the target, or lower its floor with a reason.
 - Preset: [the xctest preset](/reference/presets/xctest/)
 - Stage: push
 - Engine: integrity
+- Required setting: `tools.xctest.coverage`
 
 Turn it off for a path with a reason: `gspot ignore xctest/coverage --paths <glob> --reason "<why>"`.

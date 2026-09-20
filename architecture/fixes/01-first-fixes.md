@@ -154,7 +154,15 @@ marks its six checks `skipped` with the note `the site did not build`.
 **Tests.** A unit test over the manifests holds that every check that reads a setting with an
 empty default declares `waits_for`. A planted Next.js repository holds the `skipped` line.
 
-**Done when.** No check prints `ok` for work it did not do, held by those two tests.
+**Implementation status: locally verified.** The planner resolves `waits_for`
+from the selected scope. All five optional checks report their required setting.
+Execution regressions exercise the shipped manifests and an enabled entitlement
+policy. A failed site build skips all seven output consumers, including the
+manual external-link check; a new session rebuilds. The Next.js acceptance case
+checks the disabled-build diagnostic before exercising enabled builds.
+
+**Done when.** No check prints `ok` for work it did not do, held by execution
+regressions and the planted Next.js repository.
 
 ## K-254: `bash -n` over files Bash cannot read
 

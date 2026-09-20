@@ -1,8 +1,8 @@
-import { symlinkSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
-// A preset added after init: what it finds today is held, and only the checks it brings or changes run for that.
+// Adding a preset changes the next explicit check through its ESLint fragment.
 import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
+import { symlinkSync, readdirSync } from 'node:fs';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
@@ -28,15 +28,18 @@ const LOOSE =
 
 describe('gspot add', () => {
     test(
-        'a preset that only adds an ESLint fragment has its findings held, and the rest of the gate does not run',
+        'adding an ESLint fragment exposes its defect on the next explicit check',
         async () => {
             await using fixture = await createFixture({
                 '.gitignore': 'node_modules\n',
                 'package.json': PACKAGE,
-                'tsconfig.json': '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "include": ["src"]\n}\n',
-                'src/schema.ts': LOOSE,
+                'tsconfig.json': '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "include": ["*.ts"]\n}\n',
+                'schema.ts': LOOSE,
+                node_modules: {},
             });
-            symlinkSync(MODULES, join(fixture.path, 'node_modules'));
+            for (const entry of readdirSync(MODULES))
+                symlinkSync(join(MODULES, entry), join(fixture.path, 'node_modules', entry));
+            symlinkSync(join(MODULES, '../packages/cli/node_modules/zod'), join(fixture.path, 'node_modules/zod'));
             commitAll(fixture.path);
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
@@ -46,11 +49,9 @@ describe('gspot add', () => {
             expect(before.code, before.stdout + before.stderr).toBe(0);
             const added = await run(fixture.path, ['add', 'zod', '--json'], environment);
             expect(added.code, added.stdout + added.stderr).toBe(0);
-            expect(added.stdout).not.toContain('formatting/prettier');
             const after = await run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
-            expect(after.code, after.stdout + after.stderr).toBe(0);
-            const held = await Bun.file(join(fixture.path, '.gspot/baselines/eslint.json')).text();
-            expect(held).toContain('zod/no-any-schema');
+            expect(after.code, after.stdout + after.stderr).toBe(1);
+            expect(after.stdout).toContain('zod/no-any-schema');
         },
         PLANTED_TIMEOUT_MS * 4,
     );

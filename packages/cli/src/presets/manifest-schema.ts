@@ -75,6 +75,7 @@ const checkSchema = z.strictObject({
     count_regex: z.string().optional(),
     tool_errors: z.string().optional(),
     requires: z.enum(['build', 'docker', 'network']).optional(),
+    waits_for: z.string().optional(),
     platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
     tool: z.string().optional(),
     claims: claimsSchema.optional(),

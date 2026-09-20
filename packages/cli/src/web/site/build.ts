@@ -1,18 +1,19 @@
-// The build of a static site: run once for each scope in a process, because every output check reads the same folder.
+// The build of a static site: run once for each scope in a session, because every output check reads the same folder.
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { run } from '#cli/platform/spawn.ts';
 import type { SiteBuild } from '#types/web.ts';
-import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { scratchCopy } from '#cli/run/scratch-copy.ts';
+import type { EngineInput, Session } from '#types/run.ts';
+import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 import { existsSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 
 const BUILD_TIMEOUT_MS = 1_800_000;
 const DEFAULT_OUTPUT = 'dist';
 const DEFAULT_BUILD = 'npm run build';
 const SHOWN_DIFFERENCES = 10;
-const builds = new Map<string, Promise<SiteBuild>>();
+const builds = new WeakMap<Session, Map<string, Promise<SiteBuild>>>();
 
 function text(input: EngineInput, key: string, otherwise: string): string {
     const found = input.view.tool('site')[key];
@@ -59,9 +60,22 @@ export function filesUnder(folder: string): string[] {
  */
 export function siteBuild(input: EngineInput): Promise<SiteBuild> {
     const key = join(input.root, input.scope);
-    const running = builds.get(key) ?? built(input);
-    builds.set(key, running);
+    const scopeBuilds = builds.get(input.session) ?? new Map<string, Promise<SiteBuild>>();
+    builds.set(input.session, scopeBuilds);
+    const running = scopeBuilds.get(key) ?? built(input);
+    scopeBuilds.set(key, running);
     return running;
+}
+
+/**
+ * Requires built output before a dependent check reads it.
+ * @param input the engine input
+ * @returns the successful build, or a skipped-check error
+ */
+export async function requireSiteBuild(input: EngineInput): Promise<SiteBuild> {
+    const build = await siteBuild(input);
+    if (!build.isBuilt) throw new SkippedCheckError('The site did not build.');
+    return build;
 }
 
 /**
@@ -90,8 +104,7 @@ export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for each file that differs, appears or disappears
  */
 export async function buildReproducible(input: EngineInput): Promise<Finding[]> {
-    const first = await siteBuild(input);
-    if (!first.isBuilt) return [];
+    const first = await requireSiteBuild(input);
     const before = digests(first.output);
     const paths = input.session.repository.files.map((file) => file.path);
     const scratch = scratchCopy(input.session, paths);

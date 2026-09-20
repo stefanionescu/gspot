@@ -5,6 +5,7 @@ import type { CheckResult } from '#types/finding.ts';
 import { runStructure } from '#cli/structure/engine.ts';
 import { runIntegrity } from '#cli/integrity/dispatch.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
+import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 import type { EngineInput, Engine, Session, PlannedCheck } from '#types/run.ts';
 
 const engines = new Map<string, Engine>([
@@ -14,8 +15,9 @@ const engines = new Map<string, Engine>([
     ['prose', runProse],
 ]);
 
-// A command nobody installed is missing, which the person fixes with an install; anything else the engine threw is an error.
+// Classify missing tools and unmet prerequisites separately from engine errors.
 function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | 'note'> {
+    if (error instanceof SkippedCheckError) return { status: 'skipped', note: error.message };
     if (error instanceof MissingToolError) return { status: 'missing', note: error.message };
     return { status: 'error', note: `the ${name} engine failed: ${(error as Error).message}` };
 }

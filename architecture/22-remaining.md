@@ -188,8 +188,9 @@ deployment, or app adoption is inferred from this documentation review.
 ## Every row, by fix file
 
 Each named row links to its owning acceptance section, including rows grouped under another
-ID. The September 20 reconciliation found exactly one owner for each named row. After K-37, K-61, K-99, K-104, K-116, K-129, K-140, K-195, K-254, K-258, and S-10
-closed, 317 named rows remain open.
+ID. The September 20 reconciliation found exactly one owner for each named row.
+Closed rows: K-37, K-61, K-99, K-104, K-116, K-129, K-140, K-157, K-195, K-254, K-258, and S-10.
+The index has 316 open named rows.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
 
@@ -224,7 +225,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-159](fixes/01-first-fixes.md#k-156-a-check-deletes-untracked-sql-files): Make `express/openapi-fresh` write back the text it read, and never run `git checkout`.
 - [ ] [K-257](fixes/01-first-fixes.md#k-257-a-full-disk-cuts-the-policy-in-half): Write every file through a temporary file and a rename, and let a failed cache write be one line on stderr.
 - [ ] [K-252](fixes/01-first-fixes.md#k-257-a-full-disk-cuts-the-policy-in-half): Report a run whose report cannot be written in one line on stderr, and keep its findings and its exit code.
-- [ ] [K-157](fixes/01-first-fixes.md#k-157-a-check-that-is-off-reports-ok): Let a check declare the setting it waits for, and report `skipped` with that name when it is unset.
 - [ ] [K-45](fixes/01-first-fixes.md#k-45-the-message-run-overwrites-the-report): Write no report for a run of the `message` stage (D-105).
 - [ ] [K-108](fixes/01-first-fixes.md#k-108-a-missing-hooks-table): Make a missing `[hooks]` table mean gspot does nothing there, as `[ci]` and `[runner]` do (D-130).
 - [ ] [K-109](fixes/01-first-fixes.md#k-109-gspot-replaces-a-script-of-the-developer): Never inject a lifecycle script; replace an existing lint task only with explicit acceptance and recoverable originals.

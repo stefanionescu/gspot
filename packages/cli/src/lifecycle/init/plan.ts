@@ -114,7 +114,7 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
         })),
         write: [
             { path: 'gspot.toml', note: `your policy, ${String(policyLines)} lines` },
-            { path: '.gspot/', note: 'generated configuration, baselines, hooks, version pin' },
+            { path: '.gspot/', note: 'generated configuration, hooks, version pin' },
             ...stubRows(everySelected),
             ...agentRows,
         ],
@@ -123,7 +123,6 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
         carried: carriedRows(carried),
         change: [{ path: '.gitignore', note: 'one managed block' }, ...runnerRows(answers, everySelected)],
         noLongerRuns: noLongerRuns(tooling, pinnedTwice(root, everySelected)),
-        baselines: { rules: 0, findings: 0 },
         ignores: carried.ignores,
     };
 }

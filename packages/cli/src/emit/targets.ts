@@ -7,6 +7,7 @@ import { everyManifest } from '#cli/run/session.ts';
 import { hasEveryPin } from '#cli/emit/kept-pins.ts';
 import { workflowFile } from '#cli/emit/workflow.ts';
 import { assembleRules } from '#cli/rules/assemble.ts';
+import { GENERATED_JSON_KEY } from '#config/markers.ts';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { bodyStub, mergeStub } from '#cli/emit/stubs.ts';
 import { managedBlock } from '#cli/rules/managed-block.ts';
@@ -14,7 +15,6 @@ import type { ScopeSelection, Session } from '#types/run.ts';
 import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
 import { binaryPath, readAsset } from '#cli/platform/assets.ts';
 import type { ConfigurationTarget, Manifest } from '#types/manifest.ts';
-import { GENERATED_JSON_KEY, VERSION_FILE_LINE } from '#config/markers.ts';
 import { gspotHooks, huskyLines, lefthookBlock } from '#cli/emit/hooks.ts';
 import { miseTasks, npmPins, npmScripts } from '#cli/emit/runner-tasks.ts';
 import { emitTarget, templateText, templateInputs } from '#cli/emit/templates.ts';
@@ -215,12 +215,6 @@ export function hasPackagePins(root: string, output: PackageOutput): boolean {
 export function emitAll(session: Session): RenderedSet {
     const binary = binaryPath();
     const out: RenderedSet = { files: [], blocks: [], merges: [], packages: [] };
-    out.files.push({
-        path: '.gspot/version',
-        content: VERSION_FILE_LINE.replaceAll('{{version}}', () => session.version),
-        readOnly: false,
-        kind: 'version',
-    });
     const seen = new Set<string>();
     for (const selection of session.scopes)
         for (const manifest of selection.selected) configurationFiles(session, selection, manifest, out, seen);

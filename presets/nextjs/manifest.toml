@@ -38,6 +38,7 @@ help = "Read the first error tsc prints and fix that file; later errors are ofte
 
 [[checks]]
 name = "nextjs/build"
+waits_for = "tools.next.build_in_gate"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"

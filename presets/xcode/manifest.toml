@@ -102,6 +102,7 @@ help = "Replace the symlink with the folder it points at, or ignore the path wit
 
 [[checks]]
 name = "xcode/entitlements-policy"
+waits_for = "tools.xcode.allowed_entitlements"
 stage = "commit"
 runs = "once"
 engine = "integrity"

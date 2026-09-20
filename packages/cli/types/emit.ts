@@ -8,7 +8,7 @@ export type GeneratedFile = {
     content: string;
     readOnly: boolean;
     executable?: boolean;
-    kind: 'config' | 'stub' | 'hook' | 'runner' | 'workflow' | 'rules' | 'baseline' | 'version' | 'managed-block';
+    kind: 'config' | 'stub' | 'hook' | 'runner' | 'workflow' | 'rules' | 'baseline' | 'managed-block';
     preset?: string;
 };
 

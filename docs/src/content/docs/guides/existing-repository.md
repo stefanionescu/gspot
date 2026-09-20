@@ -36,6 +36,6 @@ you have read it.
 
 ## The first run
 
-After the write, `init` runs every check once. A check with findings gets a baseline, so the
-gate passes that day and fails when a count grows. `gspot apply --lower-baselines` lowers a baseline
-as findings are fixed; it never raises one.
+After accepting the proposal, `init` writes the configuration and installs the tools.
+Run `gspot check` when you are ready to see findings. Adding a preset or upgrading
+also leaves check execution to an explicit command.

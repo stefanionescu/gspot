@@ -1,7 +1,5 @@
 import type { Profile } from '#types/profile.ts';
-import type { BaselineFile } from '#types/run.ts';
 // init, upgrade and uninstall: their options, the selection, the questions, the takeover plan and the carried lists.
-import type { RunReport } from '#types/report.ts';
 import type { FormatSettings } from '#types/config.ts';
 import type { Manifest, Proposal, UnknownLanguage } from '#types/manifest.ts';
 import type { ExistingTooling, ManifestFacts, Repository, ScopeEntry, TrackedFile } from '#types/repository.ts';
@@ -15,7 +13,6 @@ export type TakeoverPlan = {
     carried: { from: string; count: number; into: string }[];
     change: { path: string; note: string }[];
     noLongerRuns: { path: string; note: string }[];
-    baselines: { rules: number; findings: number };
     ignores: { check: string; rule?: string; reason: string }[];
 };
 
@@ -117,12 +114,6 @@ export type InitAnswers = {
     runner: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none';
     format?: Partial<FormatSettings>;
 };
-
-/** The first check run after init and the baselines it wrote. */
-/** A baseline a tool wrote itself at init: the check, its scope and how many findings it covers. */
-export type ToolBaseline = { check: string; scope: string; count: number };
-
-export type FirstRun = { report: RunReport; baselines: BaselineFile[]; toolBaselines: ToolBaseline[] };
 
 /** Everything init computes before it asks to continue. */
 export type InitPrepared = {

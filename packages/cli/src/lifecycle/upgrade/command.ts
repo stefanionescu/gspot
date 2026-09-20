@@ -1,10 +1,9 @@
-// upgrade: report what a version changes, move the pin, re-render, baseline what arrives, install.
+// upgrade: report what a version changes, re-render, install, then move the pin.
 import { openSession } from '#cli/run/session.ts';
 import type { CommandResult } from '#types/run.ts';
 import { applyAll } from '#cli/emit/apply-command.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { askConfirmation } from '#cli/output/prompts.ts';
-import { firstRun } from '#cli/lifecycle/first-check.ts';
 import type { UpgradeOptions } from '#types/lifecycle.ts';
 import { installTools } from '#cli/lifecycle/install-tools.ts';
 import { newerVersion } from '#cli/lifecycle/upgrade/newer-version.ts';
@@ -31,7 +30,7 @@ async function alreadyAtTarget(header: string[], pinned: string | undefined, tar
 function actionLines(target: string, isInstalling: boolean): string[] {
     return [
         'action on upgrade',
-        `  move the pin to ${target}, re-render .gspot/, baseline what arrives${isInstalling ? ', run the install step' : ''}`,
+        `  re-render .gspot/${isInstalling ? ', run the install step' : ''}, then move the pin to ${target}`,
         '',
     ];
 }
@@ -43,21 +42,20 @@ async function applyUpgrade(
     target: string,
     lines: string[],
 ): Promise<CommandResult> {
-    writePin(root, target);
     const session = await openSession(root);
     const synced = await applyAll(session);
     const { tool: runner } = session.policyFiles.policy.runner;
     const installNote = await installTools(root, runner, synced, options.install);
-    const { baselines: written } = await firstRun(root);
-    const noun = written.length === 1 ? 'baseline' : 'baselines';
+    writePin(root, target);
     const install = installNote === '' ? '' : `; ${installNote}`;
     lines.push(
-        `pinned ${target}; ${String(written.length)} new ${noun}${install}`,
+        `pinned ${target}${install}`,
         'commit the diff of .gspot/ to finish',
+        'Run gspot check to check this repository.',
     );
     return {
         text: `${lines.join('\n')}\n`,
-        json: { pinned, target, applied: true, baselines: written, install: installNote },
+        json: { pinned, target, applied: true, install: installNote },
         exitCode: 0,
     };
 }

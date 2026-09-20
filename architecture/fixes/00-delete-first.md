@@ -422,4 +422,12 @@ lines of the reporter, the init plan line about baselines, and the widening step
 **Tests.** The planted installs hold that `init` starts no tool but the installers. A planted
 repository with an old finding in an untouched file commits a change to another file.
 
+**Implementation status: partially implemented.** Initialization, adding presets,
+and upgrading leave checking to an explicit command. Installation failures
+stop the command; upgrade changes the version pin only after installation
+succeeds. The automatic first-check implementation and its obsolete acceptance
+case are deleted. Local acceptance covers initialization without lint tools,
+explicit findings after adding a preset, and failed-install pin preservation.
+The explicit baseline commands, stored counts, and verdict adjustment remain open.
+
 **Done when.** A search of `packages/` for `baseline` finds only the file gitleaks keeps.
