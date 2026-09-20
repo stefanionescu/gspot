@@ -26,6 +26,19 @@ jobs:
               if: runner.os == 'Windows'
               run: bun tests/harness/swiftformat-windows.ts
             - run: bunx tsc --noEmit -p tsconfig.json
+            - name: Observe Windows planted processes
+              if: runner.os == 'Windows'
+              shell: pwsh
+              timeout-minutes: 16
+              run: ./tests/harness/process-observer.ps1 -Coverage
+            - name: Retain Windows process observations
+              if: ${{ always() && runner.os == 'Windows' }}
+              uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              with:
+                  name: windows-processes-${{ github.sha }}
+                  path: dist/process-observation/
+                  if-no-files-found: error
+                  retention-days: 7
             - run: mise run gspot:check
             - run: mise exec -- bun test --coverage
             - run: bun packages/cli/build.ts
