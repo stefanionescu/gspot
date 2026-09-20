@@ -45,7 +45,6 @@ export const SUPPRESSION_FORMS: Record<string, SuppressionForm[]> = {
         { form: 'ts-expect-error', marker: /@ts-expect-error\b/u, reason: /@ts-expect-error: \S/u },
         { form: 'ts-ignore', marker: /@ts-ignore\b/u, reason: /@ts-ignore: \S/u },
         { form: 'swiftlint-disable', marker: /swiftlint:disable\b/u, reason: / - \S/u },
-        { form: 'lint-justify', marker: /\blint:justify\b/u, reason: /reason: \S/u },
         { form: 'gspot-ignore', marker: /gspot-ignore +[a-z0-9-]+\/[a-z0-9-]+/u, reason: / -- \S/u },
         { form: 'nosemgrep', marker: /\bnosemgrep\b/u, reason: /$^/u, isForbidden: true },
     ],
@@ -53,7 +52,7 @@ export const SUPPRESSION_FORMS: Record<string, SuppressionForm[]> = {
         {
             form: 'shellcheck-disable',
             marker: /shellcheck disable=/u,
-            reason: /(?:# ?reason:|lint:justify reason:) \S/u,
+            reason: /# ?reason: \S/u,
         },
         { form: 'noqa', marker: /# ?noqa\b/u, reason: /#[^#]*# ?\S/u },
         { form: 'nosec', marker: /# ?nosec\b/u, reason: /#[^#]*# ?\S/u },

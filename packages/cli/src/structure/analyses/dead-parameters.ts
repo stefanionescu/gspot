@@ -1,8 +1,7 @@
 // A shell function called with arguments it never reads. Searched: shellcheck; it does not follow calls.
 import { withoutComment } from '#cli/structure/code-lines.ts';
 import type { Analysis, ScriptIndex } from '#types/structure.ts';
-import { markedNames } from '#cli/structure/analyses/unused-functions.ts';
-import { CALL_ENDINGS, FLOW_PREFIX, MARKERS, POSITIONAL_PARAMETERS } from '#config/structure.ts';
+import { CALL_ENDINGS, FLOW_PREFIX, POSITIONAL_PARAMETERS } from '#config/structure.ts';
 
 const CALL = /^([A-Za-z_]\w*)\b(.*)$/u;
 const OPERATORS = [' && ', ' || ', ' | ', ';'];
@@ -62,11 +61,9 @@ export const deadParameters: Analysis = async (context, scripts) => {
     const names = new Set(index.files.flatMap((file) => file.functions.map((entry) => entry.name)));
     const widest = widestCalls(index, names);
     return index.files.flatMap((file) => {
-        if (file.text.includes(MARKERS.deadParameters)) return [];
-        const allowed = markedNames(file, MARKERS.deadParameter);
         return file.functions.flatMap((entry) => {
             const width = widest.get(entry.name) ?? 0;
-            if (width === 0 || allowed.has(entry.name) || isReadingPositional(entry.body)) return [];
+            if (width === 0 || isReadingPositional(entry.body)) return [];
             return [
                 context.report(
                     file.path,

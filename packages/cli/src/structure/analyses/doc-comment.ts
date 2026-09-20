@@ -1,6 +1,6 @@
 // Every shell function announces itself in a comment block above it. Searched: shellcheck, shfmt, bashdoc; none requires it.
-import type { Analysis, ScriptFile, ScriptFunction } from '#types/structure.ts';
-import { DOC_SECTIONS, ENTRY_FUNCTIONS, MARKERS, VAGUE_SUMMARY_WORDS } from '#config/structure.ts';
+import type { Analysis, ScriptFunction } from '#types/structure.ts';
+import { DOC_SECTIONS, ENTRY_FUNCTIONS, VAGUE_SUMMARY_WORDS } from '#config/structure.ts';
 
 const SHELLCHECK_COMMENT = /^#\s*shellcheck\b/u;
 const WORD = /[A-Za-z0-9]+/gu;
@@ -38,16 +38,6 @@ function areSectionsInOrder(block: string[]): boolean {
     return positions.every((position, index) => index === 0 || position > (positions[index - 1] ?? -1));
 }
 
-function exemptNames(file: ScriptFile): Set<string> {
-    const names = new Set<string>();
-    const marker = new RegExp(String.raw`${MARKERS.undocumentedFunction}\s+([A-Za-z_][A-Za-z0-9_]*)`, 'u');
-    for (const line of file.lines) {
-        const match = marker.exec(line);
-        if (match?.[1] !== undefined) names.add(match[1]);
-    }
-    return names;
-}
-
 function problem(entry: ScriptFunction, block: string[], style: string): { rule: string; message: string } | undefined {
     const first = block[0];
     if (first === undefined)
@@ -81,10 +71,8 @@ export const docComment: Analysis = async (context, scripts) => {
     const style = context.bashText('doc_style', 'colon');
     const index = await scripts();
     return index.files.flatMap((file) => {
-        if (file.text.includes(MARKERS.undocumentedFunctions)) return [];
-        const exempt = exemptNames(file);
         return file.functions.flatMap((entry) => {
-            if (ENTRY_FUNCTIONS.includes(entry.name) || exempt.has(entry.name)) return [];
+            if (ENTRY_FUNCTIONS.includes(entry.name)) return [];
             const found = problem(entry, blockAbove(file.lines, entry.start), style);
             return found === undefined ? [] : [context.report(file.path, entry.start, found.rule, found.message)];
         });

@@ -15,11 +15,6 @@ import {
     REASON_INTRODUCER,
 } from '#config/markers.ts';
 
-function isTextMatch(entry: IgnoreEntry, finding: Finding): boolean {
-    if (entry.finding === undefined) return true;
-    return finding.message.includes(entry.finding) || entry.finding === finding.rule;
-}
-
 function isPathMatch(entry: IgnoreEntry, finding: Finding): boolean {
     return entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(finding.file);
 }
@@ -27,7 +22,7 @@ function isPathMatch(entry: IgnoreEntry, finding: Finding): boolean {
 function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
     if (entry.check !== finding.check) return false;
     if (entry.rule !== undefined && entry.rule !== finding.rule) return false;
-    return isTextMatch(entry, finding) && isPathMatch(entry, finding);
+    return isPathMatch(entry, finding);
 }
 
 function existingText(root: string, path: string): string {

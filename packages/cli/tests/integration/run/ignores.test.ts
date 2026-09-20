@@ -75,3 +75,36 @@ test('missing finding paths have no inline ignores but failed reads remain error
     mkdirSync(join(sandbox.path, 'missing.ts'));
     expect(() => applyInlineIgnores(sandbox.path, [finding])).toThrow();
 });
+
+test.each(['unused-functions', 'dead-parameters', 'trivial-function', 'doc-comment'])(
+    'a reasoned inline ignore suppresses only its target in structure/%s',
+    async (analysis) => {
+        const check = `structure/${analysis}`;
+        const calls = analysis === 'unused-functions' ? '' : 'first_action one\nsecond_action two\n';
+        const source = `first_action() { printf '%s\\n' ready; }\nsecond_action() { printf '%s\\n' ready; }\n${calls}`;
+        await using sandbox = await createSandbox({
+            'gspot.toml': 'version = 1\npresets = ["bash"]\n',
+            'actions.sh': source,
+            '.gitignore': '.gspot/\n',
+        });
+        const options = {
+            stage: 'all' as const,
+            skips: [],
+            localSkips: [],
+            only: [check],
+            fix: false,
+            isDryRun: false,
+            noCache: true,
+        };
+        const initial = await executeRun(await openSession(sandbox.path), options);
+        expect(initial.report.checks[0]?.findings).toHaveLength(2);
+        writeFileSync(
+            join(sandbox.path, 'actions.sh'),
+            `# gspot-ignore ${check} -- Required external callback.\n${source}`,
+        );
+        const result = await executeRun(await openSession(sandbox.path), options);
+        expect(result.report.exitCode).toBe(1);
+        expect(result.report.checks[0]?.findings).toMatchObject([{ check, file: 'actions.sh', line: 3 }]);
+        expect(result.report.checks[0]?.findings).toHaveLength(1);
+    },
+);

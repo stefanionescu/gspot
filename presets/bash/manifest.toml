@@ -155,7 +155,7 @@ coverage = ["structure"]
 searched = ["shellcheck SC2329", "knip"]
 summary = "Finds shell functions no script in the scope calls."
 why = "Dead code is read and maintained for nobody."
-help = "Delete the function, or mark a hook entry point with lint:allow-unused-function <name> and say why."
+help = "Delete the function, or put `gspot-ignore structure/unused-functions -- reason` on the preceding comment line for a required hook entry point."
 
 [[checks]]
 name = "structure/dead-parameters"
@@ -200,7 +200,7 @@ coverage = ["structure"]
 searched = ["shellcheck"]
 summary = "Finds a shell function used once whose body fits the trivial ceiling."
 why = "A name for two lines used once hides the two lines and adds a jump."
-help = "Inline the body at its one call, or mark the function with lint:allow-trivial-function <name> and say why."
+help = "Inline the body at its one call, or explain the required boundary with `gspot-ignore structure/trivial-function -- reason` on the preceding comment line."
 
 [[checks]]
 name = "structure/call-through"

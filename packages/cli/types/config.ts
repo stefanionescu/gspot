@@ -87,7 +87,6 @@ export type ToolTable = Record<string, unknown> & {
 export type IgnoreEntry = {
     check: string;
     rule?: string;
-    finding?: string;
     paths?: string[];
     reason: string;
 };

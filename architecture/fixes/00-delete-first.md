@@ -235,9 +235,16 @@ by one `gspot-ignore` comment with a reason. Nothing else.
 
 **What goes.** Six marker strings, and the `lint-justify` form of the suppression table.
 
-**Tests.** A planted shell script with `lint:allow-unused-function` reports the function.
+**Tests.** Run the four affected Bash analyses over real functions. A reasoned
+`gspot-ignore` suppresses its target while another finding remains visible.
 
-**Done when.** A search of `packages/cli` for `lint:` finds nothing.
+**Done when.** The supported ignore paths pass their behavior tests. Internal allow-marker
+branches and message-text matching are removed; external tool directives remain.
+
+**Status: complete (locally verified).** The seven internal allow markers, their two parsing helpers,
+and the internal justification form are removed. Ignore entries match checks, rules, and
+paths. Four execution regressions retain unrelated findings after a reasoned inline
+ignore. Shared ignore and suppression regressions remain in place.
 
 ## K-119: a branch for an engine that is not built
 

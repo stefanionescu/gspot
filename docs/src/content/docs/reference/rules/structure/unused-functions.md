@@ -11,7 +11,7 @@ Dead code is read and maintained for nobody.
 
 ## What to do
 
-Delete the function, or mark a hook entry point with lint:allow-unused-function <name> and say why.
+Delete the function, or put `gspot-ignore structure/unused-functions -- reason` on the preceding comment line for a required hook entry point.
 
 ## Where it runs
 

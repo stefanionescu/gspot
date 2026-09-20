@@ -52,17 +52,6 @@ export const MAIN_CALL = 'main "$@"';
 /** Strict mode supported by every declared Bash version. */
 export const STRICT_MODE = ['set -euo pipefail'];
 
-/** The comment markers a script may carry. */
-export const MARKERS = {
-    unusedFunctions: 'lint:allow-unused-functions',
-    unusedFunction: 'lint:allow-unused-function',
-    deadParameters: 'lint:allow-dead-parameters',
-    deadParameter: 'lint:allow-dead-parameter',
-    trivialFunction: 'lint:allow-trivial-function',
-    undocumentedFunctions: 'lint:allow-undocumented-functions',
-    undocumentedFunction: 'lint:allow-undocumented-function',
-};
-
 /** Functions every script may leave uncalled. */
 export const ENTRY_FUNCTIONS = ['main', 'run_step'];
 

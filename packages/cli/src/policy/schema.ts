@@ -131,7 +131,6 @@ const toolTable = z.object({ enabled: reasonedBoolean.optional(), extra: extraTa
 const ignoreSchema = z.strictObject({
     check: text,
     rule: text.optional(),
-    finding: text.optional(),
     paths: textList.optional(),
     reason: text,
 });

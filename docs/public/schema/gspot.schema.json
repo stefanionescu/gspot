@@ -1489,9 +1489,6 @@
                     "rule": {
                         "type": "string"
                     },
-                    "finding": {
-                        "type": "string"
-                    },
                     "paths": {
                         "type": "array",
                         "items": {

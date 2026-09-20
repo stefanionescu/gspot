@@ -11,7 +11,7 @@ A name for two lines used once hides the two lines and adds a jump.
 
 ## What to do
 
-Inline the body at its one call, or mark the function with lint:allow-trivial-function <name> and say why.
+Inline the body at its one call, or explain the required boundary with `gspot-ignore structure/trivial-function -- reason` on the preceding comment line.
 
 ## Where it runs
 

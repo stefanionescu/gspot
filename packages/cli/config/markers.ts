@@ -71,7 +71,6 @@ export const SUPPRESSION_FORMS: Record<string, { marker: RegExp; introducer: str
     nosemgrep: { marker: /nosemgrep\b/u, introducer: '#' },
     'shellcheck-disable': { marker: /# ?shellcheck +disable=[\w,]+/u, introducer: '#' },
     'swiftlint-disable': { marker: /swiftlint:disable(?::next|:this|:previous)?\b/u, introducer: '-' },
-    'lint-justify': { marker: /lint:justify\b/u, introducer: '' },
     'gspot-ignore': { marker: /gspot-ignore +[a-z0-9/-]+/u, introducer: '--' },
 };
 

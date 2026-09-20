@@ -189,7 +189,7 @@ deployment, or app adoption is inferred from this documentation review.
 
 Each named row links to its owning acceptance section, including rows grouped under another
 ID. The September 20 reconciliation found exactly one owner for each named row.
-Twenty-eight requirements are locally complete; 300 named rows remain open.
+Thirty requirements are locally complete; 298 named rows remain open.
 Completed evidence stays in each owning acceptance section.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
@@ -205,8 +205,8 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-102](fixes/00-delete-first.md#k-102-seven-plugin-rules): Delete `no-trivial-functions` and its option; `no-call-through` covers every function form (see K-235 for the other languages).
 - [ ] [K-187](fixes/00-delete-first.md#k-102-seven-plugin-rules): Delete the plugin rules `no-single-file-folders` and `no-prefix-collisions`; the structure engine owns facts about folders.
 - [ ] [K-188](fixes/00-delete-first.md#k-102-seven-plugin-rules): Delete the five plugin rules a pinned tool covers, and write the rule of that tool in the template.
-- [ ] [K-111](fixes/00-delete-first.md#k-111-three-ways-to-silence-a-finding-become-one): Delete the `lint:justify` and `lint:allow-...` markers.
-- [ ] [K-115](fixes/00-delete-first.md#k-111-three-ways-to-silence-a-finding-become-one): Delete the `finding` key of `[[ignore]]`.
+- [x] [K-111](fixes/00-delete-first.md#k-111-three-ways-to-silence-a-finding-become-one): Delete the `lint:justify` and `lint:allow-...` markers.
+- [x] [K-115](fixes/00-delete-first.md#k-111-three-ways-to-silence-a-finding-become-one): Delete the `finding` key of `[[ignore]]`.
 - [x] [K-119](fixes/00-delete-first.md#k-119-a-branch-for-an-engine-that-is-not-built): Delete the branch for an engine that is not built, and keep the comment openers and `UNPARSED_LIMIT` once.
 - [x] [K-146](fixes/00-delete-first.md#k-146-the-word-corpus): Remove the word `corpus` from the 34 places in the source.
 - [ ] [K-180](fixes/00-delete-first.md#k-180-manifest-keys-a-pin-and-a-runner-that-do-nothing): Delete the manifest keys `executable` and `ubi`, and the three readers of `ubi`.
