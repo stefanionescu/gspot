@@ -51,6 +51,17 @@ Editors run it. The plugin owns structural policies that the pinned tools do not
 Generated configuration selects those tools' rules where they already enforce the policy.
 Executed findings establish coverage; a fixed number of plugin rules does not.
 
+The following checks retain their enforcement under these owners. Moving an implementation
+does not remove its policy.
+
+| Previous implementation             | Enforcement owner                      | Behavior retained                                                                                                          |
+| ----------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
+| `gspot/no-trivial-functions`        | `gspot/no-call-through`                | Forwarding declarations, expressions, arrows, and methods, including anonymous block bodies, with the configured allowlist |
+| `gspot/no-duplicate-barrel-exports` | `import-x/export`                      | Duplicate exported names, including local declarations and nested star exports                                             |
+| `gspot/no-reexports-outside-index`  | `gspot/no-reexports` with `allowIndex` | Re-exports outside index files when the policy permits index barrels                                                       |
+| `gspot/no-single-file-folders`      | `structure/single-file-folder`         | Leaf folders holding one code file, including JavaScript and TypeScript                                                    |
+| `gspot/no-prefix-collisions`        | `structure/prefix-collisions`          | Files sharing a name prefix, with the configured threshold and allowances                                                  |
+
 | Rule                                   | Reports                                                                                                                                                           |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `gspot/no-call-through`                | A function that calls one other function or constructor with its own parameters unchanged and in order                                                            |

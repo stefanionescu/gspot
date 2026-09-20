@@ -2,12 +2,47 @@
 import { delimiter, join } from 'node:path';
 import { createSandbox } from '@gspot/testing';
 import { chmodSync, symlinkSync } from 'node:fs';
+import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const OWNER_WRITES = 0o644;
 const MODULES = join(import.meta.dir, '../../../node_modules');
+
+test.each(['none', 'index-only'])(
+    'Next.js entry files preserve the re-export policy in %s mode',
+    async (mode) => {
+        await using sandbox = await createSandbox({
+            'gspot.toml': `version = 1\npresets = ["nextjs"]\n[structure]\nreexports = "${mode}"\n`,
+            'package.json':
+                '{"name":"next-reexports","private":true,"type":"module","dependencies":{"react":"19.1.1","next":"16.3.5"}}',
+            'tsconfig.json': '{"compilerOptions":{"strict":true,"jsx":"preserve"},"include":["app/**/*.ts"]}',
+            'app/value.ts': 'export const value = 1;\n',
+            'app/page.ts': 'export { value } from "./value.ts";\n',
+            'app/forward.ts': 'export { value } from "./value.ts";\n',
+        });
+        symlinkSync(MODULES, join(sandbox.path, 'node_modules'), 'dir');
+        const applied = await run(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const outcome = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache', '--json']);
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+        const report = JSON.parse(outcome.stdout) as RunReport;
+        const findings = report.checks
+            .flatMap((check) => check.findings)
+            .filter((finding) => finding.rule === 'gspot/no-reexports');
+        expect(findings.map(({ file, line }) => ({ file, line }))).toEqual(
+            mode === 'none'
+                ? [
+                      { file: 'app/forward.ts', line: 1 },
+                      { file: 'app/page.ts', line: 1 },
+                  ]
+                : [{ file: 'app/forward.ts', line: 1 }],
+        );
+    },
+    PLANTED_TIMEOUT_MS,
+);
+
 const INIT = [
     'init',
     '--yes',

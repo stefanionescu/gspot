@@ -5,6 +5,7 @@ import { stringify as stringifyYaml } from 'yaml';
 import { jsonText } from '#cli/emit/json-format.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { policyValue } from '#cli/policy/settings.ts';
+import { targetInScope } from '#cli/run/scope-paths.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -68,10 +69,27 @@ function packageAliases(root: string, prefix: string): Record<string, string> {
     return aliases;
 }
 
-function tsconfigAliases(root: string, prefix: string): Record<string, string> {
+function generatedTsconfigs(session: Session): Map<string, string> {
+    const generated = new Map<string, string>();
+    for (const selection of session.scopes) {
+        const manifest = selection.selected.find((entry) => entry.preset.name === 'typescript');
+        const config = manifest?.configs.find((entry) => entry.stub?.path === 'tsconfig.json');
+        if (manifest === undefined || config === undefined) continue;
+        const target = targetInScope(selection.scope.path, config);
+        const inputs = templateInputs(session, selection);
+        generated.set(
+            join(session.root, target),
+            emitTarget(`${manifest.dir}/${config.template}`, target, inputs, config.header),
+        );
+    }
+    return generated;
+}
+
+function tsconfigAliases(session: Session, prefix: string): Record<string, string> {
+    const { root } = session;
     const aliases: Record<string, string> = {};
     const path = join(root, prefix, 'tsconfig.json');
-    const options = getTsconfig(path)?.options;
+    const options = getTsconfig(path, generatedTsconfigs(session))?.options;
     if (options === undefined) return aliases;
     const paths = Object.entries(options.paths ?? {});
     const inheritedBase = options['pathsBasePath'];
@@ -85,9 +103,9 @@ function tsconfigAliases(root: string, prefix: string): Record<string, string> {
     return aliases;
 }
 
-function aliasesFor(root: string, scope: string): Record<string, string> {
+function aliasesFor(session: Session, scope: string): Record<string, string> {
     const prefix = scope === '' ? '' : `${scope}/`;
-    return { ...packageAliases(root, prefix), ...tsconfigAliases(root, prefix) };
+    return { ...packageAliases(session.root, prefix), ...tsconfigAliases(session, prefix) };
 }
 
 function commented(lines: string[], mark: string): string {
@@ -239,7 +257,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
             view.presets.includes(preset) ||
             (selection.scope.path === '' &&
                 session.scopes.some((entry) => entry.selected.some((manifest) => manifest.preset.name === preset))),
-        importAliases: (scope) => aliasesFor(session.root, scope),
+        importAliases: (scope) => aliasesFor(session, scope),
         tools: toolNames(session),
         toolPackages: toolPackages(session),
         files,

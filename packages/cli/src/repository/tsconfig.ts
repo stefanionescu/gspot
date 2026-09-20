@@ -19,11 +19,16 @@ function configurationText(path: string): string | undefined {
 /**
  * Resolves compiler options and inherited paths with the TypeScript compiler.
  * @param path the absolute configuration path
+ * @param generated configurations being rendered before they exist on disk
  * @returns the parsed configuration, or undefined when the file is absent
  */
-export function getTsconfig(path: string): ts.ParsedCommandLine | undefined {
+export function getTsconfig(
+    path: string,
+    generated: ReadonlyMap<string, string> = new Map(),
+): ts.ParsedCommandLine | undefined {
     try {
-        const text = configurationText(path);
+        const read = (file: string): string | undefined => generated.get(file) ?? configurationText(file);
+        const text = read(path);
         if (text === undefined) return undefined;
         const source = ts.parseConfigFileTextToJson(path, text);
         if (source.error !== undefined)
@@ -31,7 +36,7 @@ export function getTsconfig(path: string): ts.ParsedCommandLine | undefined {
         const raw: unknown = source.config;
         const parsed = ts.parseJsonConfigFileContent(
             configSchema.parse(raw),
-            { ...ts.sys, readFile: configurationText },
+            { ...ts.sys, readFile: read, fileExists: (file) => generated.has(file) || ts.sys.fileExists(file) },
             dirname(path),
             undefined,
             path,

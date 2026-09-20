@@ -17,6 +17,7 @@
         rules: {
             'gspot/no-trivial-files': 'off',
             'gspot/no-export-only-files': 'off',
-            'gspot/no-reexports': 'off',
+<% if (policy.structure.reexports === 'index-only') { %>            'gspot/no-reexports': 'off',
+<% } %>
         },
     },

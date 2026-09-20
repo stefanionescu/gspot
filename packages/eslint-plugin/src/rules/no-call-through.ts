@@ -125,7 +125,8 @@ export const noCallThrough = createRule<NoCallThroughOptions, 'callThrough'>({
         const file = lintedFile(context);
         const relative = file === undefined ? '' : relativeToRoot(lintedRoot(context), file);
         const inspect = (node: NoCallThroughFunction): void => {
-            const name = functionName(node);
+            const name =
+                functionName(node) ?? (node.body.type === AST_NODE_TYPES.BlockStatement ? '<anonymous>' : undefined);
             if (name === undefined || isAllowed(allow, file, relative, name)) return;
             const callee = forwardedCallee(node);
             if (callee !== undefined) context.report({ node, messageId: 'callThrough', data: { name, callee } });

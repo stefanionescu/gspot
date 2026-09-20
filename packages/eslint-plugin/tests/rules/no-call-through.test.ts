@@ -32,6 +32,14 @@ tester().run('no-call-through', noCallThrough, {
     ],
     invalid: [
         {
+            code: 'export default function (value) { return build(value); }',
+            errors: [{ messageId: 'callThrough', data: { name: '<anonymous>', callee: 'build' } }],
+        },
+        {
+            code: 'items.map((item) => { return build(item); });',
+            errors: [{ messageId: 'callThrough', data: { name: '<anonymous>', callee: 'build' } }],
+        },
+        {
             code: 'function forward(a, b) { return build(a, b); }',
             errors: [{ messageId: 'callThrough', data: { name: 'forward', callee: 'build' } }],
         },

@@ -67,3 +67,17 @@ test('inherited aliases resolve from the configuration that declares them', asyn
     );
     expect(inputs.importAliases('')).toEqual({ '@app/': 'app/src/' });
 });
+
+test('generation resolves its unwritten TypeScript base without creating files or hiding missing authored bases', async () => {
+    await using sandbox = await createSandbox({
+        'gspot.toml': 'version = 1\npresets = ["typescript"]\n',
+        'tsconfig.json': '{"extends":"./.gspot/tsconfig.base.json","compilerOptions":{"paths":{"@app/*":["./src/*"]}}}',
+    });
+    const session = await openSession(sandbox.path);
+    const inputs = templateInputs(session, session.scopes[0]!);
+    expect(inputs.importAliases('')).toEqual({ '@app/': 'src/' });
+    expect(emitAll(session).files.some((file) => file.path === '.gspot/tsconfig.base.json')).toBe(true);
+    expect(await Bun.file(join(sandbox.path, '.gspot/tsconfig.base.json')).exists()).toBe(false);
+    writeFileSync(join(sandbox.path, 'tsconfig.json'), '{"extends":"./missing-base.json"}');
+    expect(() => inputs.importAliases('')).toThrow('missing-base.json');
+});

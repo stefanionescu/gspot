@@ -150,7 +150,10 @@ expressions, arrows, and methods. Its allow list also applies to those forms. De
 reordered arguments, and changes between rest and array arguments retain their behavior.
 
 The duplicate rule, option, types, and repeated tests are removed. The JavaScript template
-uses the retained rule. The statement ceiling remains a Bash setting.
+uses the retained rule. The statement ceiling remains a Bash setting. A later preservation
+audit found that anonymous block-bodied forwarding functions had lost enforcement during
+consolidation. The retained rule now reports those functions too, with regressions for
+default exports and callbacks.
 
 Local verification passes 33 rule, plugin, and planted TypeScript cases. The plugin build,
 TypeScript check, schema validation, and all 274 reference comparisons pass.
@@ -173,6 +176,10 @@ follow `.js` imports to `.ts` source. Corrected exports produce no duplicate fin
 The retained `no-reexports` rule handles index-only policy with `allowIndex`.
 The two replaced barrel rules, their tests, and their export-cache reset are removed.
 Import direction and harness import enforcement remain open.
+
+Next.js entry files keep their existing exemption only under index-only policy. The policy
+that forbids all re-exports still reports those entries. Generated-configuration regressions
+exercise both modes and an ordinary source module.
 
 The standalone plugin keeps forwarding
 functions at `all`; its recommended regression verifies private environment access in client
