@@ -72,6 +72,13 @@ binary directory ends with a POSIX path delimiter. Sixteen repository fixtures r
 that construction. Each uses the native delimiter and joins the npm binary directory
 with native path operations. The harness already preserves the inherited search path.
 
+Mise-installed Commitlint and Markdownlint fail to load `semver` and `unicorn-magic`
+on Windows in the same run. Repository setup selects npm as the installer for npm
+tools, using the existing pinned Node runtime. This is an explicit
+[Mise installer setting](https://mise.jdx.dev/dev-tools/backends/npm), not a dependency
+added to the application. An isolated installation rejects invalid commit messages and
+Markdown, and accepts a valid commit message. Windows acceptance still requires CI.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.
