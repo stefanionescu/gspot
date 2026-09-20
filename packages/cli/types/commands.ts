@@ -1,10 +1,11 @@
 // Type aliases of the commands modules.
 
-/** The flags every writing command shares. */
+/** The directory and preview flag of commands that support dry runs. */
 export type WriteOptions = { cwd: string; isDryRun: boolean };
 
 /** gspot ignore. */
-export type IgnoreOptions = WriteOptions & {
+export type IgnoreOptions = {
+    cwd: string;
     check: string;
     paths?: string[];
     rule?: string;
@@ -28,7 +29,8 @@ export type AllowOptions = WriteOptions & {
 };
 
 /** gspot set. */
-export type SetOptions = WriteOptions & {
+export type SetOptions = {
+    cwd: string;
     key: string;
     items: string[];
     reason?: string;

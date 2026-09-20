@@ -122,7 +122,26 @@ describe('profiles', () => {
     );
 });
 
-describe('gspot set on a loosening list', () => {
+describe('policy edits', () => {
+    test('removed dry-run flags are rejected before policy edits', async () => {
+        await using fixture = await createFixture({
+            'gspot.toml': 'version = 1\npresets = ["bash"]\n',
+            'scripts/a.sh': script,
+        });
+        commitAll(fixture.path);
+        const before = treeContents(fixture.path);
+        const commands = [
+            ['set', 'format.indent_width', '2', '--dry-run'],
+            ['ignore', 'bash/shellcheck', '--reason', 'A deliberately unquoted argument.', '--dry-run'],
+        ];
+        for (const command of commands) {
+            const result = run(fixture.path, command, TOOLS);
+            expect(result.code).toBe(2);
+            expect(result.stderr).toContain("unknown option '--dry-run'");
+            expect(treeContents(fixture.path)).toEqual(before);
+        }
+    });
+
     test(
         'an item that carries its own reason needs no flag, and --reason fills an item that has none',
         async () => {

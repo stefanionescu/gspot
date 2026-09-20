@@ -64,6 +64,9 @@ Invalid profiles fail before writes, and the removed subcommand is rejected.
 test rejects registry access and verifies that local diagnostics still report the repository.
 The remaining version lookup is owned by `lifecycle/upgrade/newer-version.ts`.
 
+`ignore` and `set` reject `--dry-run` before entering their policy writers. A regression
+compares repository contents and modes after each rejected invocation.
+
 ## D-100: the lint files at the root of this repository
 
 Closes D-100 and K-47.

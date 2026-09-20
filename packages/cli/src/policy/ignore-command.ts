@@ -53,7 +53,7 @@ async function removeIgnore(root: string, o: IgnoreOptions): Promise<CommandResu
         entry['check'] === o.check &&
         (entry['rule'] ?? undefined) === o.rule &&
         JSON.stringify(entry['paths'] ?? []) === paths;
-    const result = await commitPolicy(root, removeEntries('ignore', isMatch, counter), o.isDryRun, '');
+    const result = await commitPolicy(root, removeEntries('ignore', isMatch, counter), false, '');
     const noun = counter.removed === 1 ? 'entry' : 'entries';
     const text =
         counter.removed === 0
@@ -74,5 +74,5 @@ export async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
     if (o.remove) return removeIgnore(root, o);
     requireReason(o.reason, `gspot ignore ${o.check}`, ignoreCommandLine(o));
     const { entry, lines } = ignoreEntry(o);
-    return commitPolicy(root, appendEntry('ignore', entry), o.isDryRun, lines.join('\n'));
+    return commitPolicy(root, appendEntry('ignore', entry), false, lines.join('\n'));
 }

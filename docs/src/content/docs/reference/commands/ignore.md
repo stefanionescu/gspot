@@ -23,4 +23,3 @@ gspot ignore [options] <check-id>
 | `--rule <rule>`     | One rule inside the check                                   |
 | `--reason <text>`   | Why; required, and printed on every run                     |
 | `--remove`          | Delete the matching entry instead                           |
-| `--dry-run`         | Print what would be written and write nothing               |

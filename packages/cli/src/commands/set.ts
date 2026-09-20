@@ -17,7 +17,6 @@ export function registerSet(program: Command): void {
         .option('--replace', 'For a list: replace the whole list')
         .option('--remove', 'For a list: remove the named items')
         .option('--default', 'Delete the key so the shipped default applies again')
-        .option('--dry-run', 'Print what would be written and write nothing')
         .action(async (key: string, items: string[], flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(
@@ -29,7 +28,6 @@ export function registerSet(program: Command): void {
                         replace: flags['replace'] === true,
                         remove: flags['remove'] === true,
                         toDefault: flags['default'] === true,
-                        isDryRun: flags['dryRun'] === true,
                         ...textEntry(flags, 'reason', 'reason'),
                         ...textEntry(flags, 'scope', 'scope'),
                     }),

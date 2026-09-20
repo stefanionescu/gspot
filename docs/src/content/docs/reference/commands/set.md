@@ -25,4 +25,3 @@ gspot set [options] <key> [value...]
 | `--replace`       | For a list: replace the whole list                  |
 | `--remove`        | For a list: remove the named items                  |
 | `--default`       | Delete the key so the shipped default applies again |
-| `--dry-run`       | Print what would be written and write nothing       |

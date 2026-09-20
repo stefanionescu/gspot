@@ -148,12 +148,7 @@ function writeValue(
         requireReason(o.reason, where, `${where} ${o.items.join(' ')} --reason "..."`);
     else refuseBadReason(o.reason, where);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
-    return commitPolicy(
-        root,
-        setMutation(o, isList, value),
-        o.isDryRun,
-        describeSet(session, selection, o, shown, value),
-    );
+    return commitPolicy(root, setMutation(o, isList, value), false, describeSet(session, selection, o, shown, value));
 }
 
 /**
@@ -174,5 +169,5 @@ export async function setCommand(o: SetOptions): Promise<CommandResult> {
     const mutation: Mutation = (raw) => {
         deleteKey(o.key)(holderFor(raw, o.scope));
     };
-    return commitPolicy(root, mutation, o.isDryRun, `${shown} back to the shipped default`);
+    return commitPolicy(root, mutation, false, `${shown} back to the shipped default`);
 }

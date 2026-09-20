@@ -16,7 +16,6 @@ export function registerIgnore(program: Command): void {
         .option('--rule <rule>', 'One rule inside the check')
         .option('--reason <text>', 'Why; required, and printed on every run')
         .option('--remove', 'Delete the matching entry instead')
-        .option('--dry-run', 'Print what would be written and write nothing')
         .action(async (checkId: string, flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             const paths = listFlag(flags, 'paths');
@@ -26,7 +25,6 @@ export function registerIgnore(program: Command): void {
                         cwd: directoryOf(global),
                         check: checkId,
                         remove: flags['remove'] === true,
-                        isDryRun: flags['dryRun'] === true,
                         ...(paths === undefined ? {} : { paths }),
                         ...textEntry(flags, 'rule', 'rule'),
                         ...textEntry(flags, 'reason', 'reason'),
