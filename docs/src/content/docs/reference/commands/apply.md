@@ -16,4 +16,3 @@ gspot apply [options]
 | `--check`               | Render in memory and fail with a diff when a generated file differs           |
 | `--lower-baselines`     | Lower every baseline to the last run's counts; never raise one                |
 | `--baseline <check-id>` | Write the first baseline of one check; a baseline that exists is never raised |
-| `--project-templates`   | Copy the project templates that match into the project rule layer, once       |

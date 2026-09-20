@@ -18,7 +18,6 @@ export function registerApply(program: Command): void {
             '--baseline <check-id>',
             'Write the first baseline of one check; a baseline that exists is never raised',
         )
-        .option('--project-templates', 'Copy the project templates that match into the project rule layer, once')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(
@@ -28,7 +27,6 @@ export function registerApply(program: Command): void {
                         check: flags['check'] === true,
                         lowerBaselines: flags['lowerBaselines'] === true,
                         baseline: typeof flags['baseline'] === 'string' ? flags['baseline'] : undefined,
-                        projectTemplates: flags['projectTemplates'] === true,
                     }),
                 global,
             );

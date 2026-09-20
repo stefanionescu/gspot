@@ -47,5 +47,5 @@ has no way to extend another file.
 
 ## Rule files
 
-`platform/supabase/SUPABASE.md`, `database/postgres/POSTGRES.md`, `runtime/deno/DENO.md`;
-`templates/project/SUPABASE-DEPLOYMENT.md` offered at init.
+`platform/supabase/SUPABASE.md`, `database/postgres/POSTGRES.md`, `runtime/deno/DENO.md`.
+Project-specific deployment conventions belong to the repository.

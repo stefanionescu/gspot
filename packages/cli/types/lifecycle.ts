@@ -27,7 +27,6 @@ export type InitOptions = {
     presets?: string[];
     without?: string[];
     scopes?: string[];
-    own?: string[];
     hooks?: 'gspot' | 'lefthook' | 'husky' | 'none';
     ci?: 'github' | 'none';
     rules?: 'yes' | 'no';
@@ -38,7 +37,6 @@ export type InitOptions = {
     isListExact?: boolean;
     install: boolean;
     allowDirty: boolean;
-    projectTemplates: boolean;
 };
 
 export type InitResult = { text: string; json: Record<string, unknown>; exitCode: number };

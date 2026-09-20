@@ -39,6 +39,9 @@ its own. yap-swift-app takes the iOS architecture, the API architecture, and the
 deployment flow. yap-text-inference takes the Docker image stack and the inference vocabulary. A repository lists such files in its own agent file, outside the managed
 block, and gspot lints them as it lints any Markdown.
 
+The retired project templates remain in Git at `b553f9d`, under `rules/templates/project/`.
+Use that revision as the source when carrying the relevant material into its owning repository.
+
 ## What the merge dropped and the repair restored
 
 A heading comparison between the four source corpora and the merged corpus found general

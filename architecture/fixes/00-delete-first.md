@@ -118,27 +118,6 @@ and how policy changes.
 
 **Done when.** No file gspot writes holds the word subagents.
 
-## K-97: `init --own` and `--project-templates`
-
-**What is wrong.** Both flags are parsed into the options, and no code reads `own` or
-`projectTemplates`. The copy of project templates that D-79 describes is not built.
-
-**Target.** Neither flag exists. `rules/templates/project/` is deleted, and
-`rules/templates/docs/` stays, because the docs preset installs it.
-
-**Files.** `commands/init.ts`, `commands/apply.ts`, `types/lifecycle.ts`, `types/emit.ts`.
-Deleted: `rules/templates/project/`. Git keeps the five files, and each moves into the repository
-it describes during the migration of that repository ([09-rules.md](../09-rules.md)).
-
-**Logic.** Two option lines and two fields go. No function changes.
-
-**What goes.** D-79 shrinks to one line in the decision log, and the section on project templates
-leaves [09-rules.md](../09-rules.md) and [02-cli.md](../02-cli.md).
-
-**Tests.** None is needed beyond the completion test.
-
-**Done when.** `gspot init --help` shows neither flag.
-
 ## K-99: keys and settings with no reader
 
 Closes K-99 and K-100.

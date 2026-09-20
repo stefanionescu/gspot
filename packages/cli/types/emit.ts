@@ -37,7 +37,6 @@ export type ApplyOptions = {
     lowerBaselines: boolean;
     /** The check that gets its first baseline, when the flag is given. */
     baseline?: string | undefined;
-    projectTemplates: boolean;
 };
 
 export type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };

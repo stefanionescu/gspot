@@ -39,7 +39,7 @@ hadolint, trivy, docker (host).
 
 ## Rule files
 
-`tool/docker/DOCKER.md`; `templates/project/DOCKER-ML.md` offered when CUDA base images are detected.
+`tool/docker/DOCKER.md`. Project-specific CUDA conventions belong to the repository.
 
 ## Not covered here
 

@@ -264,6 +264,8 @@ tables with two reason conventions.
 
 ## D-45 `doctor` absorbs reconcile; `apply` absorbs `rules`
 
+D-134 and K-97 remove the unimplemented project-template option and the shipped project templates.
+
 `doctor` prints what changed in the repository after `init`: languages and frameworks that appeared, configuration files not owned, or hooks or CI changed by hand. Each line carries the command that applies it, beside the tool and coverage report `doctor` already printed. `apply` installs the rule
 files and the managed blocks, `apply --check` reports their drift, and
 `apply --project-templates` copies templates once. Fourteen commands, fifteen with D-55. Rejected: `init

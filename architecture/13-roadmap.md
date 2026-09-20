@@ -28,6 +28,13 @@ tests, and runs in the gate of this repository. [18-gaps.md](18-gaps.md) lists w
 | Adoption                              | Not started. The install in yap-swift-app showed that a developer would not keep gspot installed ([20-adoption.md](20-adoption.md)). No new preset starts before this phase is done.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Phases 2 to 5, Phase 7                | Phase 2 done: `sql`, `postgres`, `supabase`, `docker`, `nginx`, `express`, `vitest`, `ansible`, `python`, `pytest`, `fastapi`. Phase 3 done: `css`, `html`, `static-site`, `cloudflare`, `nextjs`, `i18n`, `zod`, `trpc`, `tanstack-query`, `zustand`, `react-hook-form`, `drizzle`; the acceptance runs over yap-landing and slopshop end with no check in error. Phase 4 done: `swift`, `xcode`, `xctest`. Phase 5 done. 48 presets ship today, and `jest` makes 49. Phase 7 done: `react`, `react-native`, `nestjs`, `vue`, and `svelte`, all thinner than D-141 asks, each with a planted repository. The acceptance run on a public repository of each shape is owed. Owed across phases: the manual rewrite (G-10) and the deeper unit tests of apply, carry, plan, execute, and doctor. |
 
+### Removed project templates
+
+K-97 removes the unused `init --own` and `--project-templates` flags, their option fields,
+and the five project templates. The CLI rejects the removed options. Completion and
+type checks pass, and the generated command references match the reduced surface.
+Repository-specific material remains in Git for its owning migration.
+
 ### CI repair
 
 K-204 closed on September 20, 2026 at `faf350fa49cf87bcc5f8278954db06788bd00305`.

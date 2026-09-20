@@ -16,7 +16,6 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         presets: listFlag(flags, 'presets'),
         without: listFlag(flags, 'without'),
         scopes: listFlag(flags, 'scope'),
-        own: listFlag(flags, 'own'),
     };
     const choices = {
         hooks: textFlag(flags, 'hooks') as InitOptions['hooks'],
@@ -36,7 +35,6 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         install: flags['install'] !== false,
         allowDirty: flags['allowDirty'] === true,
         ...textEntry(flags, 'from', 'from'),
-        projectTemplates: flags['projectTemplates'] === true,
         ...given,
     };
 }
@@ -58,11 +56,6 @@ export function registerInit(program: Command): void {
             'A scope and its presets; repeat for each scope',
             (value: string, previous: string[] | undefined) => [...(previous ?? []), value],
         )
-        .option(
-            '--own <tools>',
-            'The tools gspot takes over, comma separated; the default is every tool it has a preset for',
-            commaList,
-        )
         .option('--no-install', 'Skip the install step and print the command instead')
         .option('--allow-dirty', 'Run although the working tree has uncommitted changes')
         .addOption(new Option('--hooks <tool>', 'Where hooks go').choices(['gspot', 'lefthook', 'husky', 'none']))
@@ -70,7 +63,6 @@ export function registerInit(program: Command): void {
         .option('--no-rules', 'Leave the agent rule files out')
         .addOption(new Option('--keep-format', 'Keep your formatter settings').conflicts('shippedFormat'))
         .addOption(new Option('--shipped-format', 'Take the shipped formatter settings').conflicts('keepFormat'))
-        .option('--project-templates', 'Copy the project templates that match into the project rule layer')
         .addOption(
             new Option('--runner <surface>', 'The task runner surface').choices([
                 'mise',
