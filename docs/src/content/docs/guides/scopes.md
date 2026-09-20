@@ -24,8 +24,11 @@ presets = ["swift", "xcode"]
 - The checks of its presets run over its files, with the generated configuration written under
   `.gspot/<path>/` when a tool needs one per scope.
 - A file belongs to the nearest scope; a file outside every scope belongs to the root.
-- `gspot check --scope api` runs one scope. `gspot why <file>` says which scope claims a file and
+- `gspot check --scope api` runs one scope. `gspot explain <file>` says which scope claims a file and
   why.
+
+Use `./` to select a file whose name also identifies a check, preset, or setting.
+For example, `gspot explain bash` explains the preset, and `gspot explain ./bash` explains the file.
 
 ## Settings per scope
 

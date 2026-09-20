@@ -1,5 +1,6 @@
-// explain: a check, a tool rule, a preset or a setting, in plain words.
+// Explain a check, tool rule, preset, setting, or file path.
 import type { Session } from '#types/run.ts';
+import { explainPath } from '#cli/output/file.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Explanation } from '#types/output.ts';
@@ -141,9 +142,9 @@ function stageLines(row: ListingRow): string[] {
     );
 }
 
-function presetExplanation(id: string): Explanation | undefined {
+function presetExplanation(id: string): Explanation | { error: string } {
     const manifest = presetManifests().get(id);
-    if (!manifest) return undefined;
+    if (!manifest) return { error: messages.unknownPreset(id, nearMatches(id, presetManifests().keys().toArray())) };
     const row = toRow(manifest);
     const { detect, claims } = manifest;
     const lines = [
@@ -228,13 +229,16 @@ function explainDotted(session: Session | undefined, subject: string): Explanati
 /**
  * Explains whatever the argument names, or returns the near matches.
  * @param session the session, or undefined outside a repository
- * @param subject a check id, a tool/rule pair, a preset id or a setting key
+ * @param subject a check id, a tool/rule pair, a preset id, a setting key, or a file path
  * @returns the explanation, or an error naming the closest matches
  */
 export function explain(session: Session | undefined, subject: string): Explanation | { error: string } {
-    if (subject.includes('/')) return explainSlashed(session, subject);
-    if (subject.includes('.')) return explainDotted(session, subject);
-    const preset = presetExplanation(subject);
-    if (preset) return preset;
-    return { error: messages.unknownPreset(subject, nearMatches(subject, presetManifests().keys().toArray())) };
+    const file = explainPath(session, subject);
+    if (file !== undefined && subject.startsWith('./')) return file;
+    let named: Explanation | { error: string };
+    if (subject.includes('/')) named = explainSlashed(session, subject);
+    else if (subject.includes('.')) named = explainDotted(session, subject);
+    else named = presetExplanation(subject);
+    if (!('error' in named)) return named;
+    return file ?? named;
 }

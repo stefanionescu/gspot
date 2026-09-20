@@ -1,7 +1,6 @@
 // The commander program: every command from commands/, the global flags, and the run over argv.
 import { registerAdd } from '#cli/commands/add.ts';
 import { registerSet } from '#cli/commands/set.ts';
-import { registerWhy } from '#cli/commands/why.ts';
 import { Command, CommanderError } from 'commander';
 import { PromptError } from '#cli/output/prompts.ts';
 import { registerInit } from '#cli/commands/init.ts';
@@ -71,7 +70,6 @@ export function buildProgram(): Command {
     registerAllow(program);
     registerSet(program);
     registerDeclare(program);
-    registerWhy(program);
     registerExplain(program);
     registerDoctor(program);
     registerUpgrade(program);

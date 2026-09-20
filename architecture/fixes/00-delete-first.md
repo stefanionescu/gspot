@@ -50,6 +50,12 @@ that use a removed flag change in this commit (T-35).
 
 **Done when.** `gspot --help` matches the public command list in [02-cli.md](../02-cli.md), and none of the removed flags parses.
 
+**Partial implementation, September 20, 2026.** `explain <path>` reports tracked file
+classification, scope, claims, checks, baselines, and ignores. The `why` command and its
+output module are removed. Command tests cover text and JSON output, a name shared by
+a file and a preset, and unknown-command refusal. D-129 remains open for its other
+commands and flags.
+
 ## D-100: the lint files at the root of this repository
 
 Closes D-100 and K-47.

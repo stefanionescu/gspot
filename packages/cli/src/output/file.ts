@@ -1,10 +1,10 @@
-// why <path>: the presets that claim a file, the checks that run on it, the baselines and ignores that touch it.
-import type { WhyReport } from '#types/output.ts';
 import type { Manifest } from '#types/manifest.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { readBaselines } from '#cli/run/baselines.ts';
 import type { TrackedFile } from '#types/repository.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
+// File explanations: claims, checks, baselines, and ignores within the selected scope.
+import type { Explanation, PathExplanation } from '#types/output.ts';
 import { claimants, claimedByClaims, pathMatcher } from '#cli/presets/claims.ts';
 
 function uncheckedNote(file: TrackedFile): string | undefined {
@@ -22,7 +22,7 @@ function checksFor(
     selection: ScopeSelection,
     file: TrackedFile,
     scopePath: string,
-): WhyReport['checks'] {
+): PathExplanation['checks'] {
     return owners.flatMap((manifest) =>
         manifest.checks
             .filter(
@@ -33,14 +33,14 @@ function checksFor(
     );
 }
 
-function baselinesFor(root: string, path: string): WhyReport['baselines'] {
+function baselinesFor(root: string, path: string): PathExplanation['baselines'] {
     return readBaselines(root).flatMap((baseline) => {
         const count = baseline.paths[path];
         return count === undefined ? [] : [{ check: baseline.check, rule: baseline.rule, count }];
     });
 }
 
-function ignoresFor(session: Session, path: string): WhyReport['ignores'] {
+function ignoresFor(session: Session, path: string): PathExplanation['ignores'] {
     return session.policyFiles.policy.ignores
         .filter((entry) => entry.paths !== undefined && pathMatcher(entry.paths)(path))
         .map((entry) => ({
@@ -50,12 +50,12 @@ function ignoresFor(session: Session, path: string): WhyReport['ignores'] {
         }));
 }
 
-function ignoreLine(entry: WhyReport['ignores'][number]): string {
+function ignoreLine(entry: PathExplanation['ignores'][number]): string {
     const rule = entry.rule === undefined ? '' : ` ${entry.rule}`;
     return `  ${entry.check}${rule}  ${entry.reason}`;
 }
 
-function annotated(report: WhyReport, file: TrackedFile, ownerCount: number): WhyReport {
+function annotated(report: PathExplanation, file: TrackedFile, ownerCount: number): PathExplanation {
     const unchecked = uncheckedNote(file);
     if (unchecked !== undefined) report.unchecked = unchecked;
     if (ownerCount === 0 && file.nature === 'source') {
@@ -75,13 +75,13 @@ function section(title: string, rows: string[]): string[] {
  * @param path the file, relative to the root
  * @returns the report, or an error when git does not track the path
  */
-export function why(session: Session, path: string): WhyReport | { error: string } {
+function pathReport(session: Session, path: string): PathExplanation | { error: string } {
     const file = session.repository.files.find((entry) => entry.path === path);
     if (!file) return { error: `${path} is not a file git tracks or would track here.` };
     const scope = scopeOf(path, session.repository.scopes);
     const selection = session.scopes.find((entry) => entry.scope.path === scope.path) ?? session.scopes[0];
     const owners = selection ? claimants(file, selection.selected) : [];
-    const report: WhyReport = {
+    const report: PathExplanation = {
         path,
         scope: scope.path === '' ? 'root' : scope.path,
         nature: file.nature,
@@ -100,7 +100,7 @@ export function why(session: Session, path: string): WhyReport | { error: string
  * @param report the report
  * @returns the text for stdout
  */
-export function whyText(report: WhyReport): string {
+function pathText(report: PathExplanation): string {
     const by = report.natureSource === undefined ? '' : ` by ${report.natureSource}`;
     const lines = [
         `${report.path}  (scope ${report.scope}, ${report.nature}${by})`,
@@ -124,4 +124,23 @@ export function whyText(report: WhyReport): string {
         ...(report.remedy === undefined ? [] : ['', `to change this: ${report.remedy}`]),
     ];
     return `${lines.join('\n')}\n`;
+}
+
+/**
+ * Explains a repository file or an explicitly requested path.
+ * @param session the repository session, or undefined outside a configured repository
+ * @param subject the file path or another explanation subject
+ * @returns the file explanation, a missing-path error, or undefined for another subject
+ */
+export function explainPath(
+    session: Session | undefined,
+    subject: string,
+): Explanation | { error: string } | undefined {
+    if (session === undefined) return undefined;
+    const path = subject.startsWith('./') ? subject.slice('./'.length) : subject;
+    const isTracked = session.repository.files.some((file) => file.path === path);
+    if (!isTracked && !subject.startsWith('./')) return undefined;
+    const report = pathReport(session, path);
+    if ('error' in report) return report;
+    return { kind: 'path', subject: path, text: pathText(report), data: report };
 }

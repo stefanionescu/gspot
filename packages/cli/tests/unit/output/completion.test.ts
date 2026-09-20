@@ -27,7 +27,6 @@ describe('completion', () => {
             'allow',
             'set',
             'declare',
-            'why',
             'explain',
             'doctor',
             'upgrade',

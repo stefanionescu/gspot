@@ -1,7 +1,7 @@
 // Type aliases of the output modules.
 
 export type Explanation = {
-    kind: 'check' | 'tool-rule' | 'preset' | 'setting';
+    kind: 'check' | 'tool-rule' | 'preset' | 'setting' | 'path';
     subject: string;
     text: string;
     data: Record<string, unknown>;
@@ -13,7 +13,7 @@ export type OutputOptions = { verbosity: Verbosity; json: boolean; color: boolea
 
 export type ReportOptions = { quiet: boolean; verbose: boolean; docsBase?: string };
 
-export type WhyReport = {
+export type PathExplanation = {
     path: string;
     scope: string;
     nature: string;

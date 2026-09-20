@@ -13,7 +13,7 @@ async function explainResult(directory: string, subject: string): Promise<Comman
     const session = hasPolicy(root) ? await openSession(root) : undefined;
     const result = explain(session, subject);
     if ('error' in result) return { text: `${result.error}\n`, json: result, exitCode: 2 };
-    return { text: result.text, json: { kind: result.kind, subject: result.subject, ...result.data }, exitCode: 0 };
+    return { text: result.text, json: { ...result.data, kind: result.kind, subject: result.subject }, exitCode: 0 };
 }
 
 /**
@@ -23,7 +23,7 @@ async function explainResult(directory: string, subject: string): Promise<Comman
 export function registerExplain(program: Command): void {
     program
         .command('explain <subject>')
-        .description('Say what a check, a tool rule, a preset or a setting is, in plain words')
+        .description('Say what a check, a tool rule, a preset, a setting, or a file path is, in plain words')
         .action(async (subject: string, _flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(() => explainResult(directoryOf(global), subject), global);
