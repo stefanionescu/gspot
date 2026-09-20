@@ -505,6 +505,11 @@ keeps.
 
 **Done when.** A planted Vite app has no such finding.
 
+**Status: locally verified.** The rule receives declared Knip entries through one template owner.
+Root declarations retain repository paths; scoped declarations use their declaring scope.
+Ten rule cases and the built-plugin Vite fixture pass.
+The fixture builds with Vite and verifies inherited paths, scoped globs, and exclusions through generated ESLint configuration.
+
 ## K-189: `no-cross-folder-imports` reports every `../`
 
 **What is wrong.** The rule reports any import that starts with `../`, also one inside a feature

@@ -61,10 +61,10 @@ const directionRoles = {
     env: envOwners,
     runtime: roleGlobs('runtime', ['src/**']),
 };
-const scopeAliasOverrides = scopes.flatMap((scope) => {
+const scopeRules = scopes.map((scope) => {
     const scoped = importAliases(scope.path);
-    if (Object.keys(scoped).length === 0) return [];
-    return [{ files: [`${scope.path}/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`], rules: { 'gspot/no-cross-folder-imports': ['error', { aliases: scoped }], 'gspot/import-direction': ['error', { roles: directionRoles, aliases: scoped, scope: scope.path }] } }];
+    const imports = Object.keys(scoped).length === 0 ? {} : { 'gspot/no-cross-folder-imports': ['error', { aliases: scoped }], 'gspot/import-direction': ['error', { roles: directionRoles, aliases: scoped, scope: scope.path }] };
+    return { files: [`${scope.path}/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`], rules: { ...imports, 'gspot/no-trivial-files': ['error', { entryFiles: entryFiles(scope.path) }] } };
 });
 const rulesOffList = rulesOff(has('typescript') ? 'typescript/eslint' : 'javascript/eslint').concat(has('typescript') ? rulesOff('javascript/eslint') : []);
 const restricted = settings['tools.eslint.restricted_imports'] ?? [];
@@ -187,7 +187,7 @@ const coreRules = {
 const gspotRules = {
     'gspot/no-trivial-functions': ['error', { maxStatements: limits.trivialStatements }],
     'gspot/no-call-through': ['error', { allow: <%= json(structure.call_through_allowed.map((entry) => `${entry.file}:${entry.name}`)) %> }],
-    'gspot/no-trivial-files': 'error',
+    'gspot/no-trivial-files': ['error', { entryFiles: <%= json(entryFiles('')) %> }],
     'gspot/no-export-only-files': 'error',
     'gspot/no-exported-alias-constants': 'error',
     'gspot/no-index-imports': 'error',
@@ -408,7 +408,7 @@ const boundaryConfigs = [
     },
 <% } %>];
 
-const scopeAliasOverrides = <%= json(scopeAliasOverrides) %>;
+const scopeRules = <%= json(scopeRules) %>;
 
 export default [
     { ignores: <%= json(ignoredPaths) %> },
@@ -425,7 +425,7 @@ export default [
     },
     { files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'none', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } },
     ...importStyleOverrides,
-    ...scopeAliasOverrides,
+    ...scopeRules,
     ...runtimeOverrides,
     ...boundaryConfigs,
 <%~ fragments %>

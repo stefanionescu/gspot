@@ -131,7 +131,16 @@ const coreRules = {
 const gspotRules = {
     'gspot/no-trivial-functions': ['error', { maxStatements: limits.trivialStatements }],
     'gspot/no-call-through': ['error', { allow: [] }],
-    'gspot/no-trivial-files': 'error',
+    'gspot/no-trivial-files': ['error', { entryFiles: [
+    "**/build.ts",
+    "**/publish.ts",
+    "packages/cli/schemas.ts",
+    "packages/cli/src/rules/command.ts",
+    "packages/npm/gspot/gspot.js",
+    "docs/reference-pages.ts",
+    "docs/astro.config.ts",
+    "docs/src/content.config.ts"
+] }],
     'gspot/no-export-only-files': 'error',
     'gspot/no-exported-alias-constants': 'error',
     'gspot/no-index-imports': 'error',
@@ -402,7 +411,7 @@ const runtimeOverrides = [
 const boundaryConfigs = [
 ];
 
-const scopeAliasOverrides = [
+const scopeRules = [
     {
         "files": [
             "packages/cli/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
@@ -453,6 +462,21 @@ const scopeAliasOverrides = [
                         "#package": "packages/cli/package.json"
                     },
                     "scope": "packages/cli"
+                }
+            ],
+            "gspot/no-trivial-files": [
+                "error",
+                {
+                    "entryFiles": [
+                        "**/build.ts",
+                        "**/publish.ts",
+                        "packages/cli/schemas.ts",
+                        "packages/cli/src/rules/command.ts",
+                        "packages/npm/gspot/gspot.js",
+                        "docs/reference-pages.ts",
+                        "docs/astro.config.ts",
+                        "docs/src/content.config.ts"
+                    ]
                 }
             ]
         }
@@ -508,6 +532,43 @@ const scopeAliasOverrides = [
                     },
                     "scope": "packages/eslint-plugin"
                 }
+            ],
+            "gspot/no-trivial-files": [
+                "error",
+                {
+                    "entryFiles": [
+                        "**/build.ts",
+                        "**/publish.ts",
+                        "packages/cli/schemas.ts",
+                        "packages/cli/src/rules/command.ts",
+                        "packages/npm/gspot/gspot.js",
+                        "docs/reference-pages.ts",
+                        "docs/astro.config.ts",
+                        "docs/src/content.config.ts"
+                    ]
+                }
+            ]
+        }
+    },
+    {
+        "files": [
+            "docs/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}"
+        ],
+        "rules": {
+            "gspot/no-trivial-files": [
+                "error",
+                {
+                    "entryFiles": [
+                        "**/build.ts",
+                        "**/publish.ts",
+                        "packages/cli/schemas.ts",
+                        "packages/cli/src/rules/command.ts",
+                        "packages/npm/gspot/gspot.js",
+                        "docs/reference-pages.ts",
+                        "docs/astro.config.ts",
+                        "docs/src/content.config.ts"
+                    ]
+                }
             ]
         }
     }
@@ -537,7 +598,7 @@ export default [
     },
     { files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'none', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } },
     ...importStyleOverrides,
-    ...scopeAliasOverrides,
+    ...scopeRules,
     ...runtimeOverrides,
     ...boundaryConfigs,
     ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: TYPESCRIPT })),

@@ -3,6 +3,11 @@ import { noTrivialFiles } from '#plugin/rules/no-trivial-files.ts';
 
 tester().run('no-trivial-files', noTrivialFiles, {
     valid: [
+        {
+            code: "import { start } from './start';\nstart();",
+            filename: '/repo/src/main.ts',
+            options: [{ entryFiles: ['src/main.{ts,js}'] }],
+        },
         { code: "import { a } from './a';\nexport const b = a + 1;", filename: '/repo/src/b.ts' },
         {
             code: "import { start } from './start';\nstart();\nexport function stop() {}",
@@ -19,7 +24,8 @@ tester().run('no-trivial-files', noTrivialFiles, {
     invalid: [
         {
             code: "import { start } from './start';\nstart();",
-            filename: '/repo/src/main.ts',
+            filename: '/repo/feature/main.ts',
+            options: [{ entryFiles: ['src/main.{ts,js}'] }],
             errors: [{ messageId: 'trivial' }],
         },
         {

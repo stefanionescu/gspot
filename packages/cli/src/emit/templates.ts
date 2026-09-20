@@ -6,6 +6,7 @@ import { parse as parseJsonc } from 'jsonc-parser';
 import { jsonText } from '#cli/emit/json-format.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
+import { policyValue } from '#cli/policy/settings.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
 import { GENERATED_HEADER_LINES, GENERATED_JSON_KEY } from '#config/markers.ts';
 import type { JsonFormat, PackageImports, TemplateInputs, TsconfigPaths } from '#types/emit.ts';
@@ -110,6 +111,23 @@ function toolPackages(session: Session): string[] {
     return [...new Set(names)].toSorted((a, b) => a.localeCompare(b));
 }
 
+function knipEntries(session: Session, scope: string): string[] {
+    const { policy } = session.policyFiles;
+    const layers = [
+        { path: '', table: policy },
+        ...Object.entries(policy.scopeTables)
+            .filter(([path]) => path === scope || scope.startsWith(`${path}/`))
+            .map(([path, table]) => ({ path, table })),
+    ];
+    return layers.flatMap(({ path, table }) => {
+        const entries = (policyValue(table, 'tools.knip.entry')?.value ?? []) as string[];
+        return entries.map((pattern) => {
+            if (path === '') return pattern;
+            return pattern.startsWith('!') ? `!${path}/${pattern.slice(1)}` : `${path}/${pattern}`;
+        });
+    });
+}
+
 /** The layout of generated JSON when no policy says otherwise. */
 export const SHIPPED_JSON_FORMAT: JsonFormat = { width: JSON_WIDTH, indent: JSON_INDENT };
 
@@ -201,6 +219,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
         settings: view.settings,
         fragments,
         tool: view.tool,
+        entryFiles: (scope) => knipEntries(session, scope),
         toolEnabled: view.toolEnabled,
         limit: view.limit,
         rulesOff: view.rulesOff,

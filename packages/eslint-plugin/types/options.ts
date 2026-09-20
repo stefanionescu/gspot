@@ -25,6 +25,8 @@ export type ImportDirectionOptions = [
 
 export type MaxBarrelReexportsOptions = [{ max?: number }];
 
+export type NoTrivialFilesOptions = [{ entryFiles?: string[] }];
+
 export type NoTrivialFunctionsOptions = [{ maxStatements?: number }];
 
 export type TestsDirectoryContentsOptions = [

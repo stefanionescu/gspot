@@ -73,6 +73,7 @@ export type TemplateInputs = {
     settings: Record<string, unknown>;
     fragments: string;
     tool: (name: string) => Record<string, unknown>;
+    entryFiles: (scope: string) => string[];
     toolEnabled: (name: string) => boolean;
     limit: (key: string, language?: string) => number | undefined;
     rulesOff: (check: string) => string[];
