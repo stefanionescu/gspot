@@ -4,7 +4,7 @@ import { rejects } from 'node:assert/strict';
 import * as processes from '#cli/platform/spawn.ts';
 import { basename, delimiter, join } from 'node:path';
 import { describe, expect, spyOn, test } from 'bun:test';
-import { run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, install, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 // Mise is the subprocess boundary; the resulting search path must locate a real executable.
 describe('the planted harness tool path', () => {
@@ -80,5 +80,66 @@ describe('the planted command deadline', () => {
         const invalid = await run(fixture.path, ['--unknown-option']);
         expect(invalid.code).not.toBe(0);
         expect(invalid.stderr).toContain('unknown option');
+    });
+});
+
+describe('required fixture setup', () => {
+    test('invalid Git metadata stops fixture setup', async () => {
+        await using fixture = await createFixture({ '.git': 'invalid git directory\n' });
+        expect(() => {
+            commitAll(fixture.path);
+        }).toThrow('Fixture Git setup failed');
+    });
+
+    test('a missing required tool fails before a check runs', () => {
+        const outcome = Bun.spawnSync([process.execPath, '--version'], { stdout: 'pipe', stderr: 'pipe' });
+        const probe = spyOn(Bun, 'spawnSync').mockReturnValueOnce({
+            ...outcome,
+            exitCode: 1,
+            stdout: Buffer.from(''),
+            stderr: Buffer.from('not installed'),
+        });
+        try {
+            expect(() => toolsPath(['shellcheck'])).toThrow('Run mise install shellcheck');
+        } finally {
+            probe.mockRestore();
+        }
+    });
+
+    test('init failure is rejected even when a policy already exists', async () => {
+        await using fixture = await createFixture({ 'gspot.toml': 'version = 1\n' });
+        const probe = spyOn(processes, 'run').mockResolvedValueOnce({
+            code: 1,
+            missing: false,
+            duration: 1,
+            stdout: 'policy written',
+            stderr: 'installation failed',
+        });
+        try {
+            await rejects(install(fixture.path, ['init', '--yes']), /installation failed/);
+        } finally {
+            probe.mockRestore();
+        }
+    });
+
+    test('an absent policy-edit target fails before changing fixture files', async () => {
+        await using fixture = await createFixture({
+            'gspot.toml': 'version = 1\n',
+            'source.sql': 'select 1;\n',
+        });
+        await rejects(
+            runPlanted(
+                fixture.path,
+                {
+                    check: 'postgres/squawk',
+                    files: { 'source.sql': 'bad sql' },
+                    policyEdit: ['missing = true', 'missing = false'],
+                    expected: 'unused',
+                },
+                {},
+            ),
+            /did not change the fixture/,
+        );
+        expect(await Bun.file(join(fixture.path, 'source.sql')).text()).toBe('select 1;\n');
     });
 });

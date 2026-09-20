@@ -19,6 +19,7 @@ async function takenOut(cwd: string, gone: string[]): Promise<Map<string, string
 async function plant(cwd: string, planted: PlantedCase): Promise<() => Promise<void>> {
     const policyPath = join(cwd, 'gspot.toml');
     const policy = await Bun.file(policyPath).text();
+    const editedPolicy = plantedPolicy(policy, planted);
     const removed = await takenOut(cwd, planted.removed ?? []);
     const planting = Object.entries(planted.files);
     for (const [path] of planting)
@@ -26,7 +27,7 @@ async function plant(cwd: string, planted: PlantedCase): Promise<() => Promise<v
     for (const [path, text] of planting) await Bun.write(join(cwd, path), text);
     const executables = planted.executable ?? [];
     for (const path of executables) Bun.spawnSync(['chmod', '+x', join(cwd, path)]);
-    await Bun.write(policyPath, plantedPolicy(policy, planted));
+    await Bun.write(policyPath, editedPolicy);
     return async () => {
         for (const path of Object.keys(planted.files)) Bun.spawnSync(['rm', '-f', join(cwd, path)]);
         for (const [path, text] of removed) await Bun.write(join(cwd, path), text);
@@ -36,6 +37,8 @@ async function plant(cwd: string, planted: PlantedCase): Promise<() => Promise<v
 
 function plantedPolicy(policy: string, planted: PlantedCase): string {
     const edited = planted.policyEdit === undefined ? policy : policy.replace(...planted.policyEdit);
+    if (edited === policy && planted.policyEdit !== undefined)
+        throw new Error(`The policy edit for ${planted.check} did not change the fixture.`);
     return planted.policy === undefined ? edited : `${edited}\n${planted.policy}`;
 }
 
@@ -108,7 +111,7 @@ export function git(cwd: string, argv: string[], environment: Record<string, str
 }
 
 /**
- * A PATH that starts with the folders of the named mise-installed tools, for a planted repository outside this one.
+ * A PATH with the required mise tools and this checkout's npm tools for an external fixture.
  * @param names the tool names as mise knows them (`taplo`, `npm:v8r`)
  * @returns the PATH value
  */
@@ -120,9 +123,13 @@ export function toolsPath(names: string[]): string {
             stderr: 'pipe',
         });
         const found = result.stdout.toString().trim();
-        return found !== '' && result.exitCode === 0 ? [dirname(found)] : [];
+        if (found === '' || result.exitCode !== 0)
+            throw new Error(
+                `Required tool ${name} is unavailable. Run mise install ${name}. ${result.stderr.toString()}`,
+            );
+        return [dirname(found)];
     });
-    return [...folders, environmentVariables()['PATH'] ?? ''].join(delimiter);
+    return [...folders, join(root, 'node_modules', '.bin'), environmentVariables()['PATH'] ?? ''].join(delimiter);
 }
 
 /**
@@ -130,9 +137,14 @@ export function toolsPath(names: string[]): string {
  * @param cwd the planted repository
  */
 export function commitAll(cwd: string): void {
-    git(cwd, ['init', '-q']);
-    git(cwd, ['add', '-A']);
-    git(cwd, ['commit', '-qm', 'init']);
+    for (const args of [
+        ['init', '-q'],
+        ['add', '-A'],
+        ['commit', '-qm', 'init'],
+    ]) {
+        const result = git(cwd, args);
+        if (result.code !== 0) throw new Error(`Fixture Git setup failed: ${result.stderr}${result.stdout}`);
+    }
 }
 
 /**
@@ -156,14 +168,15 @@ export async function runPlanted(
 }
 
 /**
- * Runs gspot init in a planted repository, and stops the test with what init printed when it wrote no policy.
- * A nonzero exit alone is not a failure: init exits nonzero when a tool is missing on this machine, after it wrote everything.
+ * Runs gspot init and requires successful completion and a written policy.
  * @param cwd the planted repository, with one commit
  * @param argv the init command line
  * @param environment extra variables, such as the PATH of the tools
  */
 export async function install(cwd: string, argv: string[], environment: Record<string, string> = {}): Promise<void> {
     const outcome = await run(cwd, argv, environment);
+    if (outcome.code !== 0)
+        throw new Error(`Fixture init failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`);
     if (await Bun.file(join(cwd, 'gspot.toml')).exists()) return;
     throw new Error(`The init command wrote no policy in the planted repository: ${outcome.stderr}${outcome.stdout}`);
 }

@@ -13,6 +13,15 @@ fixes it (T-20). A test that uses a removed flag changes with the flag (T-35).
 
 Closes T-27, T-4, T-8, T-21, and T-9.
 
+**Partially implemented, September 20, 2026.** The harness rejects failed init
+runs even when a policy exists, missing required mise tools, and failed Git setup.
+An unmatched policy edit fails before any fixture mutation. Fixture PATH includes
+the checkout's installed npm executables, so required formatters actually run.
+
+Seven harness regressions and the typed-table and Docker acceptance suites pass
+locally. TypeScript passes. Complete restoration after partial setup, realistic
+isolated installs, shared fixture construction, and the caller audit remain open.
+
 **What is wrong.** `install` in `tests/harness/planted.ts:137` reads only whether `gspot.toml`
 exists, so an `init` that crashes after it wrote the config passes. Seven tests run `init` through
 `run`, which checks nothing. `toolsPath` (line 89) leaves out a tool mise cannot find and says
