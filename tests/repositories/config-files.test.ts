@@ -77,6 +77,36 @@ const CASES: PlantedCase[] = [
 
 describe('the config-files preset', () => {
     test(
+        'a tool crash reports the cause after its informational output',
+        async () => {
+            await using fixture = await createFixture({
+                'settings/layout.toml': 'a = 1\n',
+                'bin/taplo': `#!/usr/bin/env bun
+if (process.argv.includes('--version')) {
+    console.log('taplo 0.10.0');
+    process.exit(0);
+}
+console.error('INFO taplo: loaded configuration');
+console.error('ERROR taplo: cannot read the formatting configuration');
+process.exit(2);
+`,
+                'bin/taplo.cmd': '@echo off\r\nbun "%~dp0taplo" %*\r\n',
+            });
+            chmodSync(join(fixture.path, 'bin/taplo'), 0o755);
+            commitAll(fixture.path);
+            const environment = {
+                PATH: `${join(fixture.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
+            };
+            await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
+            const result = run(fixture.path, ['check', 'config-files/toml-format', '--no-cache'], environment);
+            expect(result.code, result.stderr + result.stdout).toBe(1);
+            expect(result.stdout).toContain('taplo broke:');
+            expect(result.stdout).toContain('cannot read the formatting configuration');
+        },
+        PLANTED_TIMEOUT_MS,
+    );
+
+    test(
         'action pin verification reports a rejected commit and preserves the workflow',
         async () => {
             await using fixture = await createFixture({

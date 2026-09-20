@@ -289,7 +289,7 @@ async function runCommands(
         // A check the repository declares prints what its author chose, so only a shipped check is read for a crash.
         const isShipped = planned.manifest !== undefined;
         if (isBroken(spec, result) || (isShipped && isCrash(spec, result, parsed, [cwd, state.root]))) {
-            const detail = firstLine(result, `${tool.name} exited ${String(result.code)}`);
+            const detail = tailLines(result, `${tool.name} exited ${String(result.code)}`);
             const note = `${tool.name} broke: ${detail}`;
             return { ...base, status: 'error', duration: performance.now() - started, note, command: argv };
         }
