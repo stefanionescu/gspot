@@ -55,6 +55,9 @@
                                 "check": {
                                     "type": "string"
                                 },
+                                "engine": {
+                                    "type": "string"
+                                },
                                 "file": {
                                     "type": "string"
                                 },

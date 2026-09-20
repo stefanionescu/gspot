@@ -23,7 +23,7 @@ const INIT = [
     '--no-install',
 ];
 const CLEAN =
-    'import Foundation\n\n/// Builds the greeting for a person.\nfunc greeting(for name: String) -> String {\n    "hello \\(name)"\n}\n';
+    'import Foundation\n\n/// Builds the greeting for a person.\npublic func greeting(for name: String) -> String {\n    "hello \\(name)"\n}\n';
 const CAST =
     'import Foundation\n\n/// Reads a value as text.\nfunc text(from value: Any) -> NSString {\n    value as! NSString\n}\n';
 const SPACED = CLEAN.replace('func greeting', () => 'func   greeting');

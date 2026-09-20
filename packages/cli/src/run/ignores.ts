@@ -8,7 +8,6 @@ import { pathMatcher } from '#cli/presets/claims.ts';
 import type { IgnoreUse, InlineIgnore } from '#types/run.ts';
 import { COMMENT_STYLE_BY_EXTENSION, HTML_COMMENT_CLOSE, INLINE_IGNORE, REASON_INTRODUCER } from '#config/markers.ts';
 
-const ENGINE_PREFIXES = ['structure/', 'naming/', 'integrity/', 'prose/'];
 const COMMENT_OPENERS: Record<string, string> = { slash: '//', hash: '#', dash: '--', html: '<!--' };
 
 function isTextMatch(entry: IgnoreEntry, finding: Finding): boolean {
@@ -54,10 +53,6 @@ function inlineIgnoreOf(style: string, line: string, index: number): InlineIgnor
     if (!match || check === undefined) return undefined;
     const reason = reasonIn(line.slice(match.index + match[0].length));
     return { line: targetLine(style, line, index), check, ...(reason === undefined ? {} : { reason }) };
-}
-
-function isEngineFinding(finding: Finding): boolean {
-    return ENGINE_PREFIXES.some((prefix) => finding.check.startsWith(prefix));
 }
 
 function missingReasonFinding(file: string, entry: InlineIgnore): Finding {
@@ -119,7 +114,7 @@ export function applyInlineIgnores(root: string, findings: Finding[]): Finding[]
     };
     const kept = findings.filter(
         (finding) =>
-            !isEngineFinding(finding) ||
+            finding.engine === undefined ||
             inlineFor(finding.file).every((entry) => !(entry.check === finding.check && entry.line === finding.line)),
     );
     const unexplained = [...byFile].flatMap(([file, inline]) =>

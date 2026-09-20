@@ -5,6 +5,7 @@ const JSON_INDENT = 4;
 
 const finding = z.strictObject({
     check: z.string(),
+    engine: z.string().optional(),
     file: z.string(),
     line: z.number().int().optional(),
     column: z.number().int().optional(),

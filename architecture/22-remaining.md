@@ -189,8 +189,8 @@ deployment, or app adoption is inferred from this documentation review.
 
 Each named row links to its owning acceptance section, including rows grouped under another
 ID. The September 20 reconciliation found exactly one owner for each named row.
-Closed rows: K-37, K-45, K-61, K-99, K-104, K-116, K-129, K-140, K-157, K-195, K-254, K-258, and S-10.
-The index has 315 open named rows.
+Fourteen requirements are locally complete; 314 named rows remain open.
+Completed evidence stays in each owning acceptance section.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
 
@@ -227,7 +227,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-252](fixes/01-first-fixes.md#k-257-a-full-disk-cuts-the-policy-in-half): Report a run whose report cannot be written in one line on stderr, and keep its findings and its exit code.
 - [ ] [K-108](fixes/01-first-fixes.md#k-108-a-missing-hooks-table): Make a missing `[hooks]` table mean gspot does nothing there, as `[ci]` and `[runner]` do (D-130).
 - [ ] [K-109](fixes/01-first-fixes.md#k-109-gspot-replaces-a-script-of-the-developer): Never inject a lifecycle script; replace an existing lint task only with explicit acceptance and recoverable originals.
-- [ ] [K-114](fixes/01-first-fixes.md#k-114-gspot-ignore-works-for-four-id-prefixes-only): Let a `gspot-ignore` comment work for every check an engine runs. The test reads the engine of the check, not its name.
 - [ ] [K-134](fixes/01-first-fixes.md#k-134-strict-mode-asks-for-an-option-bash-32-lacks): Require `inherit_errexit` only where the header declares Bash 4.4, and list it among the Bash 4 features.
 - [ ] [K-147](fixes/01-first-fixes.md#k-147-one-wrong-line-stops-every-command): Run `check` with the rest of the config when one line is wrong, and report that line as a finding.
 - [ ] [K-172](fixes/01-first-fixes.md#k-172-a-route-is-tested-when-a-comment-names-it): A route counts as tested when a test file of the same scope imports it.

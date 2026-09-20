@@ -351,6 +351,14 @@ and the comment does nothing there.
 
 **Tests.** A planted Swift file with `// gspot-ignore swift/... -- reason` holds no finding.
 
+**Status: complete (locally verified).** Findings carry their producing engine
+through caching and report serialization. Inline ignores use that metadata.
+A real Swift analysis verifies findings before suppression, explained ignores,
+cached results, and missing reasons. External-tool findings remain visible.
+
+The Swift acceptance suite also passes its native build and analyzer cases.
+Windows execution remains deferred.
+
 **Done when.** That case passes.
 
 ## K-134: strict mode asks for an option Bash 3.2 lacks

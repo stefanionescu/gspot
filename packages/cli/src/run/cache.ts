@@ -5,7 +5,7 @@ import type { CheckResult } from '#types/finding.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
-const CACHE_FORMAT = 2;
+const CACHE_FORMAT = 3;
 
 function cacheDir(root: string): string {
     return join(root, '.gspot', 'cache');

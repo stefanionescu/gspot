@@ -2,6 +2,7 @@
 
 export type Finding = {
     check: string;
+    engine?: string;
     file: string;
     line?: number;
     column?: number;
