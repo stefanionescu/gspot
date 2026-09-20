@@ -34,8 +34,9 @@ The run record becomes the report: `.gspot/report.json` and `report.schema.json`
 `[inspection] strict` becomes `[coverage] strict`. `[[declare]]` becomes `[[generated]]` with `paths`,
 and `[[vendored]]`. Policy becomes config in text a person reads.
 
-**Files.** `policy/schema.ts`, `run/record/` (which becomes `run/report/`), `commands/*.ts` help text,
-`output/messages.ts`, `doctor/report.ts`, the six guides, and the rule files.
+**Files.** Policy schema, command help, output messages, doctor output, public guides, and rule
+files that expose these terms. The public report name does not require a `run/report/`
+directory. Follow the result and rendering owners in [16-file-tree.md](../16-file-tree.md).
 
 **Logic.** A key rename follows D-144, with its row in the names table. Type names inside the
 code change only where the table says so.

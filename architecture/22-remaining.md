@@ -132,7 +132,14 @@ prove the same intended protection on every affected surface first.
       and catalogs where they add no behavior. Preserve shared context and preparation owners.
 - [ ] **20. Stop using integrity as a miscellaneous catalog.** Move checks to the domain they
       inspect. Move shared parsing and platform operations outside check catalogs. Infrastructure
-      must not import the entire catalog for a basic operation. Change ownership, not just names.
+      must not import the entire catalog for a basic operation.
+
+Follow the boundaries in [16-file-tree.md](16-file-tree.md). Keep structure, naming, and prose
+analysis with their owners. Separate result computation from rendering. Create directories only
+for implemented responsibilities; do not scaffold future folders or require one per domain.
+Change ownership with all callers, imports, assets, and build inputs in the same bounded move.
+Preserve public rule exports and enforcement across supported languages and frameworks.
+
 - [ ] **21. Observe the repository once per command.** Share files, scopes, metadata, and Git
       observations within a session. The next session observes changes. Remove repeated discovery
       and process-global caches that need test reset hooks; retain repeated Swift-session regression.
@@ -200,6 +207,8 @@ Keep the planted defects; delete low-signal assertions.
 
 Delete unused or forwarding helpers and test-only production types.
 Do not centralize every command, filename, literal, or timeout into configuration tables.
+Do not mirror source directories in tests or add placeholders to fill a proposed tree.
+Test actual current behavior; directory shape and wrapper invocation are not product evidence.
 
 - [ ] **36. Exercise representative projects.** Use a small matrix covering fresh and existing
       projects, mixed languages, nested scopes, and clean clones. Exercise actual installation,
@@ -581,7 +590,7 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-242](fixes/09-manifests.md#k-231-guides-that-are-the-notes-of-one-product): Move the working habits of the owner out of the general rule files into a profile, and add `quality/` to the words the rules lint refuses.
 - [ ] [K-262](fixes/09-manifests.md#k-231-guides-that-are-the-notes-of-one-product): Write the six cut items of `DOCKER.md` and the broken sentences whole, and take each habit of the owner out of the twelve guides.
 - [ ] [K-255](fixes/09-manifests.md#k-255-one-check-name-shipped-by-two-presets): Ship `integrity/locales` and its one setting from the i18n preset alone, and make the nextjs preset recommend i18n.
-- [ ] [G-13](fixes/09-manifests.md#g-13-two-conventions-for-constants): Keep the constants of the plugin in one `config/` folder, as the CLI does.
+- [ ] [G-13](fixes/09-manifests.md#g-13-two-conventions-for-constants): Colocate local constants; share only actual contracts. Remove the mandatory plugin `config/` migration and placement-only tests.
 
 ### Tests
 
@@ -604,7 +613,7 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [T-17](fixes/10-tests.md#t-28-checks-that-no-test-makes-fail): Closes with T-28.
 - [ ] [T-14](fixes/10-tests.md#t-28-checks-that-no-test-makes-fail): Make the guard test pass only for a check name inside a planted case that expects exit 1.
 - [ ] [T-30](fixes/10-tests.md#t-28-checks-that-no-test-makes-fail): One case for each preset, which expects the message of its own selector and exit 1.
-- [ ] [G-2](fixes/10-tests.md#t-28-checks-that-no-test-makes-fail): Give every check a planted defect and every engine folder a unit test, and delete the empty test folders.
+- [ ] [G-2](fixes/10-tests.md#t-28-checks-that-no-test-makes-fail): Exercise actual check defects and corrected inputs; retain meaningful engine behavior tests and delete empty test folders.
 - [ ] [T-29](fixes/10-tests.md#t-29-expectations-that-any-output-holds): Each expects the rule name or the sentence of its finding.
 - [ ] [T-26](fixes/10-tests.md#t-29-expectations-that-any-output-holds): Each expects the rule or the sentence of its finding, as the other cases do.
 - [ ] [T-5](fixes/10-tests.md#t-29-expectations-that-any-output-holds): Closes with T-29.

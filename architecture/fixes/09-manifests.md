@@ -311,19 +311,24 @@ recommends i18n where `next-intl` is a dependency.
 
 ## G-13: two conventions for constants
 
-**What is wrong.** `packages/cli` keeps constants in `config/`, and `packages/eslint-plugin` keeps
-47 constants beside the rules that use them. No decision says which a package follows.
+**Historical proposal.** The audit contrasted CLI constants in `config/` with 47 plugin
+constants beside their rules and proposed matching directories. That difference alone is not
+a defect. Mandatory centralization separates local data from its only consumer.
 
-**Target.** Both packages keep literal tables in a `config/` folder, and
-`integrity/config-purity` guards both.
+**Target.** Colocate constants with the behavior that uses them. Share a literal contract only
+when multiple consumers need it. Presets own shipped tool pins and policy. The package layout
+need not match between CLI and plugin.
 
-**Files.** New `packages/eslint-plugin/config/`, the rule files, and the `gspot.toml` of this
-repository, whose `config` role gains the second folder.
+**Files.** Change actual duplicated definitions and their callers. No new plugin `config/`
+directory or repository policy change is required solely for symmetry.
 
-**Logic.** Moves only. A constant of one algorithm stays inline (D-22).
+**Logic.** Remove unrelated central tables and forwarding accessors. Keep algorithm constants
+with their algorithm and preserve legitimate shared contracts.
 
-**What goes.** Nothing.
+**What goes.** The mandatory constants-directory migration and tests that prove only placement.
 
-**Tests.** `integrity/config-purity` over the new folder.
+**Tests.** Exercise the behavior that consumes a shared contract. Moving a local constant alone
+does not justify a new test.
 
-**Done when.** It passes.
+**Done when.** Duplicated policy has one owner and consumers preserve their behavior. Directory
+symmetry and source-text scans are not completion criteria.

@@ -71,7 +71,12 @@ top, and little else.
   does not require its own source file, wrapper, test file, or registry layer.
 - Planning resolves the implementation once. Infrastructure does not import a check catalog
   merely to read config or compute paths.
-- Shared readers parse once per command session. Language-specific semantics remain explicit.
+- Shared readers parse formats; repository observations belong to the command session.
+  Keep single-consumer parsing with its owner and language-specific semantics explicit.
+- Structure, naming, and prose analysis retain their distinct owners. Domain checks do not
+  duplicate them. The runner computes results; output renders them.
+- Create directories for implemented responsibilities. Do not scaffold future folders or mirror
+  the source tree in tests. The boundaries in [16-file-tree.md](16-file-tree.md) govern moves.
 - No folder is named `util`, `helper`, `common`, `shared`, `core`, `lib` or `misc`. The naming
   policy gspot ships refuses them, and gspot lints itself.
 - Presets own shipped policy and tool data. Colocate algorithm-specific constants and types

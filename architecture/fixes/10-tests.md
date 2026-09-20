@@ -190,8 +190,8 @@ structure, bash, python, and swift presets. Eighteen unit test files hold one in
 Pure text logic needs no tool or repository; filesystem and process behavior use their actual
 boundaries. Do not invent a universal input abstraction solely to make every test look alike.
 
-**Files.** `packages/cli/tests/unit/checks/`, `tests/unit/structure/analyses/`,
-`tests/unit/doctor/`, `tests/unit/lifecycle/`.
+**Files.** CLI behavior tests belong under `packages/cli/tests/`. Group cases by behavior;
+no mirrored source tree or new root unit-test hierarchy is required.
 
 **Logic.** Test actual consumed inputs, relevant limit boundaries, and valid inputs that must
 not match. Share established setup behavior without forcing every analysis through a test adapter.
@@ -216,9 +216,9 @@ is unmeasured.
 
 **Target.** The shipped defaults are measured on ordinary code.
 
-**Files.** New `tests/acceptance/generated/`, with one folder for each generator, committed as
-its generator wrote it. New `tests/acceptance/cli/generated.test.ts`. New
-`packages/cli/tests/unit/naming/shipped-policy.test.ts`.
+**Files.** Extend root command acceptance and package-owned naming tests. Keep actual generated
+project inputs beside the consuming acceptance cases with their generator versions recorded.
+Create fixture directories only for exercised projects, not every possible generator.
 
 **Logic.** For each generated project and representative established multi-package project, run `init --yes` and `check`. Review each recommended finding for a demonstrated defect and false positives before accepting any message or count snapshot (K-301). Include valid API wrappers, framework adapters, and identifiers containing `generate` or `service`. A count alone is not an acceptance criterion. The naming test runs the shipped policy over one short file for each
 language and framework, and expects no finding.

@@ -64,6 +64,11 @@ prerequisites, missing tools, and delegated coverage accurately. Validate `repor
 `takes_over` ownership so descriptive coverage never impersonates an executed check.
 Infrastructure stays independent of domain check catalogs.
 
+[16-file-tree.md](16-file-tree.md) assigns implementation ownership. Structure, naming, and
+prose each own their analysis; domain checks own project and artifact checks. The runner
+produces one result model and aggregate status. Output renders that model for terminals and
+structured reports without repeating analysis or reclassifying success.
+
 Preserve intended enforcement when replacing rules. Generated configuration using the pinned
 replacement must demonstrate scope, aliases, type-only imports, exemptions, valid cases, and
 finding locations before deleting an implementation. If the replacement cannot express the

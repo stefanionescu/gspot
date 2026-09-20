@@ -254,7 +254,7 @@ commit the report of the last full run is gone, and `gspot doctor` cannot say wh
 
 **Target.** A run of the `message` stage writes no report (D-105).
 
-**Files.** `run/execute.ts`, `run/report/write.ts`.
+**Files.** Run execution and the output owner that writes reports.
 
 **Logic.** `execute.ts` calls `writeReport` only for a stage other than `message`.
 

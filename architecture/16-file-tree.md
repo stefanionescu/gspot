@@ -6,6 +6,11 @@ no mirrored constants/types tree or one-file-per-check scheme is required. A mov
 ownership or dependencies. Existing code and an earlier planned layout carry no preservation
 privilege. [22-remaining.md](22-remaining.md) owns the implementation sequence and open work.
 
+This is the target ownership structure, not a claim that every move is complete. Create a
+directory when implemented behavior needs it. Do not create empty future directories,
+placeholder modules, or `.gitkeep` files to make the checkout resemble a diagram. Optional
+internal splits follow actual code; they are not additional architecture requirements.
+
 ## Root
 
 ```text
@@ -50,36 +55,57 @@ a file that only forwards a call is not required.
 
 #### `checks/` and `readers/`
 
-Group check implementations by the domain inspected. Separate shared parsing and platform
-operations from executable check catalogs. A domain may use several checks from one module;
-one file per identifier is not a contract. Planning resolves implementations once.
+`checks/` owns domain checks of project configuration, dependencies, build results, and other
+artifacts. Group related checks in a domain module. Introduce a domain directory only when
+several substantive modules need it; no directory or wrapper is required for each framework,
+language, preset, or check identifier. Planning resolves implementations once.
 
-Readers share repository observations within a command session. They distinguish absent,
-unreadable, and malformed inputs. Language-specific semantics remain explicit. Sharing does
-not require a universal syntax-tree framework or a table describing every language operation.
+Source structure belongs to `structure/`, naming to `naming/`, and prose analysis to `prose/`.
+For example, Swift forwarding-function analysis belongs to structure; Swift build-result checks
+belong to domain checks. A policy has one CLI implementation owner even when multiple presets
+select it. Standalone ESLint exports retain their own execution contract.
+
+`readers/` holds format parsers shared by actual consumers. A parser used by one owner stays
+with that owner. Readers distinguish absent, unreadable, and malformed inputs. They do not
+own subprocess execution, repository discovery, mutation, or a second cache. Repository
+observations belong to the command session. Language-specific semantics remain explicit;
+sharing does not require a universal syntax-tree framework.
 
 #### The other folders
 
-| Owner                               | Responsibility                                                                |
-| ----------------------------------- | ----------------------------------------------------------------------------- |
-| `run/`                              | Planning, common tool execution, cancellation, results, and execution status. |
-| `repository/`                       | Command-scoped file, scope, metadata, and Git observations.                   |
-| `policy/`                           | Validated user policy, merge, persistent exceptions, and policy editing.      |
-| `presets/`                          | Manifest loading, detection, selection, and asset lookup.                     |
-| `emit/`                             | Pure generation of proposed output from validated inputs.                     |
-| `lifecycle/`                        | Managed application, ownership, collision handling, recovery, and removal.    |
-| Naming, structure, and prose owners | Actual analysis and operational parsing, using preset-owned policy.           |
-| Presentation owner                  | Human and structured output from the same command results.                    |
+| Owner         | Responsibility                                                                           |
+| ------------- | ---------------------------------------------------------------------------------------- |
+| `run/`        | Planning, common tool execution, cancellation, findings, and aggregate execution status. |
+| `repository/` | Command-scoped file, scope, metadata, and Git observations.                              |
+| `policy/`     | Validated user policy, merge, persistent exceptions, and policy editing.                 |
+| `presets/`    | Manifest loading, detection, selection, and asset lookup.                                |
+| `emit/`       | Pure generation of proposed output from validated inputs.                                |
+| `lifecycle/`  | Managed application, ownership, collision handling, recovery, and removal.               |
+| `structure/`  | Source and directory structural analysis with explicit language semantics.               |
+| `naming/`     | Identifier and path naming analysis.                                                     |
+| `prose/`      | Prose analysis and operational parsing using preset-owned policy.                        |
+| `output/`     | Human, JSON, and SARIF rendering of the same command results.                            |
+| `platform/`   | Shared operating-system operations required by actual callers.                           |
 
-These responsibilities constrain dependencies, not the number of files. Split a module when it
-owns distinct behavior; merge forwarding-only layers. Generation never applies its own writes.
-Infrastructure never depends on a large check catalog for basic path or configuration work.
+The runner computes results and statuses once. Output renders those results and writes requested
+reports; it does not repeat analysis or classify success independently. Do not create a parallel
+reporting pipeline or require a `run/report/` directory. Commands select presentation and
+translate arguments; renderers belong to output.
+
+These responsibilities constrain dependencies, not the number of files. Existing rule assembly,
+profile, and doctor behavior stays with its implementing owner; this table does not mandate a
+new abstraction around it. Split modules for distinct behavior and merge forwarding-only layers.
+Generation never applies its own writes. Infrastructure never imports a large check catalog for
+basic path or configuration work.
 
 ### `types/`
 
 Keep shared types only for shared contracts. Derive parsed-input types from schemas. Colocate
 owner-specific and normalized types where used. Test-only types belong to tests. Delete
 parallel handwritten definitions that repeat schema fields without a transformation.
+
+Neither `config/` nor `types/` requires a matching tree for every source directory. Do not move local
+constants or types merely to fill either directory.
 
 ## `packages/eslint-plugin/`
 
@@ -141,6 +167,15 @@ exact defects, corrected input, actual process status, and preserved files. Dele
 removed details; retain surviving behavioral contracts at their new owners. Test filenames,
 source tokens, counts, and forwarding calls are not acceptance.
 
+Test directories group behaviors under their package or product owner. They do not mirror every
+source directory. Add fixtures only for inputs exercised by a test; keep case-specific data with
+its case. A shared harness must perform real setup, execution, or cleanup. Delete empty test
+folders and assertions about removed implementation details.
+
+For enforcement, demonstrate the actual defect and corrected input through the public execution
+path appropriate to that test. Preserve coverage across Swift, JavaScript, TypeScript, Python,
+and their frameworks. Passing a directory-shape assertion does not establish working enforcement.
+
 ## What is not in the tree
 
 Do not add compatibility forwarding files, generic workflow or test-case languages, parallel
@@ -150,18 +185,18 @@ Keep legitimate subprocess, registry, filesystem, restoration, and serialization
 
 ## What moves
 
-| Current responsibility                                                  | Target and deletion condition                                                                                       |
-| ----------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------- |
-| `integrity/`, `web/`, `apple/`, `pyproject/`, and SQL check collections | Domain-owned checks; move shared parsers and platform operations outside catalogs. Preserve every retained finding. |
-| Adapter subprocess/reporting copies                                     | Shared runner contract after actual adapter execution tests pass; retain necessary preparation.                     |
-| Dispatch-only engine and analysis layers                                | Resolve in planning and execute once; retain real context and preparation.                                          |
-| Lifecycle ownership reconstructed from templates or paths               | One recorded ownership and recovery model after preservation and interruption tests pass.                           |
-| Writers embedded in generation                                          | One managed application boundary, with render failure leaving prior output intact.                                  |
-| Repeated schema, help, docs, and type fields                            | Validated definition owner; preserve real normalized representations.                                               |
-| Process-global caches and test reset hooks                              | Command-session observations or justified caches with verified invalidation.                                        |
-| Duplicate custom rules                                                  | Pinned replacement through generated config, only after equivalent enforcement is demonstrated.                     |
-| Repeated release publication setup                                      | One fresh installed-consumer journey retaining identity assertions.                                                 |
-| Generated reference copies and decisions mirror                         | Build-owned reference output and a separate link to design history.                                                 |
+| Current responsibility                                                  | Target and deletion condition                                                                                                           |
+| ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
+| `integrity/`, `web/`, `apple/`, `pyproject/`, and SQL check collections | Domain-owned checks; move shared parsers and platform operations outside catalogs. Preserve every retained finding.                     |
+| Adapter subprocess/reporting copies                                     | Shared runner contract after actual adapter execution tests pass; retain necessary preparation.                                         |
+| Dispatch-only engine and analysis layers                                | Resolve in planning and execute once; retain real context and preparation.                                                              |
+| Lifecycle ownership reconstructed from templates or paths               | One recorded ownership and recovery model after preservation and interruption tests pass.                                               |
+| Writers embedded in generation                                          | One managed application boundary, with render failure leaving prior output intact.                                                      |
+| Repeated schema, help, docs, and type fields                            | Validated definition owner; preserve real normalized representations.                                                                   |
+| Process-global caches and test reset hooks                              | Command-session observations or justified caches with verified invalidation.                                                            |
+| Duplicate rule internals                                                | Share or replace internals only after equivalent enforcement is demonstrated. Preserve all public rule exports and standalone behavior. |
+| Repeated release publication setup                                      | One fresh installed-consumer journey retaining identity assertions.                                                                     |
+| Generated reference copies and decisions mirror                         | Build-owned reference output and a separate link to design history.                                                                     |
 
 The full task list and acceptance live in [22-remaining.md](22-remaining.md#cleanup-acceptance-backlog).
 Do not execute a cosmetic rename campaign before the behavioral and ownership prerequisites.

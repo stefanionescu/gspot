@@ -207,7 +207,8 @@ name.
 
 **Target.** A job that shows findings in a merge request.
 
-**Files.** `emit/gitlab.ts`, `run/report/write.ts`, `repository/existing-tooling.ts`.
+**Files.** `emit/gitlab.ts`, the output owner for report serialization, and
+`repository/existing-tooling.ts`.
 
 **Logic.** Every run but the message run writes three files under `.gspot/`: `report.json`,
 `report.sarif`, and `report.codequality.json` in the CodeClimate form. The job sets `GIT_DEPTH: 0` and runs `gspot install`. Its `rules` select merge request
