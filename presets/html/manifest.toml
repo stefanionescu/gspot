@@ -15,8 +15,8 @@ natures = ["source"]
 
 [[tools]]
 name = "html-validate"
-version = "10.0.0"
-floor = "9.0.0"
+version = "11.6.1"
+floor = "11.6.1"
 npm = "html-validate"
 
 [[configs]]

@@ -9,7 +9,7 @@ Kind: language. Requires: `formatting`.
 
 ## Tools
 
-- html-validate 10.0.0
+- html-validate 11.6.1
 
 ## Generated configuration
 

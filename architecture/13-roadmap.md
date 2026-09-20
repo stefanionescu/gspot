@@ -69,6 +69,13 @@ parser normalizes those line endings before matching and converts native finding
 and the repository root to the report path format. Regression cases cover both tools,
 grouped diagnostics, and paths with spaces and Unicode.
 
+The HTML validator is pinned at 11.6.1, the upstream release that fixes absolute Windows
+configuration paths. [The upstream changelog](https://html-validate.org/changelog/index.html)
+records that fix. The previous version joined the fixture directory to an already absolute
+configuration path in the Windows HTML tests. Both HTML and static-site planted suites
+pass locally with the upgraded tool: two tests and 46 assertions. Windows confirmation
+remains part of K-263.
+
 ### Preset deletion
 
 D-136 removes the Go, Rust, Ruby, and Django presets, leaving 48 manifests.

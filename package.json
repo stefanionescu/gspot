@@ -53,7 +53,7 @@
         "eslint-plugin-zod": "4.12.0",
         "fs-fixture": "2.16.0",
         "globals": "17.12.0",
-        "html-validate": "10.0.0",
+        "html-validate": "11.6.1",
         "jscpd": "5.2.0",
         "knip": "6.35.1",
         "license-checker-rseidelsohn": "5.0.1",
