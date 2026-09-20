@@ -1,5 +1,6 @@
 export const SHEBANG_INTERPRETERS: Record<string, string> = {
     bash: 'shell',
+    bats: 'shell',
     sh: 'shell',
     zsh: 'shell',
     dash: 'shell',

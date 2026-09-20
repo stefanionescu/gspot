@@ -4,7 +4,7 @@ export const EXTENSION_TAGS: Record<string, string[]> = {
     '.sh': ['shell', 'bash', 'text'],
     '.bash': ['shell', 'bash', 'text'],
     '.zsh': ['shell', 'zsh', 'text'],
-    '.bats': ['shell', 'bash', 'text'],
+    '.bats': ['shell', 'bats', 'text'],
     '.py': ['python', 'text'],
     '.pyi': ['python', 'pyi', 'text'],
     '.js': ['javascript', 'text'],
@@ -64,7 +64,7 @@ export const FILENAME_TAGS: Record<string, string[]> = {
 };
 
 export const SHEBANG_TAGS: Record<string, string[]> = {
-    shell: ['shell', 'bash', 'executable', 'text'],
+    shell: ['shell', 'executable', 'text'],
     python: ['python', 'executable', 'text'],
     node: ['javascript', 'node', 'executable', 'text'],
 };

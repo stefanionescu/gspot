@@ -1,9 +1,9 @@
 ---
 title: "bash/syntax"
-description: "Checks that every shell script parses before anything else runs it."
+description: "Checks that Bash scripts parse before running them."
 ---
 
-Checks that every shell script parses before anything else runs it.
+Checks that Bash scripts parse before running them.
 
 ## Why
 

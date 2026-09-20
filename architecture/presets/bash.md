@@ -6,14 +6,14 @@ Kind: language. Requires: structure. Recommends: naming, formatting, spelling.
 
 |                         |                                                                                                            |
 | ----------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Detect                  | `.sh`, `.bash` in the tree; a `bash`, `sh`, `zsh` shebang                                                  |
+| Detect                  | `.sh`, `.bash`, `.zsh`, `.bats` in the tree; shell shebangs                                                |
 | Claims                  | `.sh`, `.bash`, `.zsh`, `.bats`, extensionless files with a shell shebang, including hooks, and task files |
 | Required check coverage | format, syntax, style, structure, naming, prose, spelling                                                  |
 
 ## Tools
 
-shellcheck, shfmt, bash (host). All three run on Windows through Git for Windows or their own
-builds.
+ShellCheck, shfmt, and the host commands Bash, Zsh, and Bats. The development
+fixture uses Bats 1.14.0. Windows execution remains deferred during the CI pause.
 
 ## Generated configuration
 
@@ -27,6 +27,8 @@ builds.
 | Id                                                                              | Stage  | Command                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                             |
 | ------------------------------------------------------------------------------- | ------ | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | `bash/syntax`                                                                   | commit | `bash -n <file>` per file                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
+| `bash/zsh-syntax`                                                               | commit | `zsh -n <file>` for Zsh files and launchers                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
+| `bash/bats-syntax`                                                              | commit | `bats --count <file>` for Bats test files                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | `bash/shellcheck`                                                               | commit | `shellcheck --rcfile .gspot/shellcheckrc --severity=style --check-sourced {files}`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                  |
 | `bash/shfmt`                                                                    | commit | `shfmt -d -i <indent> -ci -s {files}`; fix `-w`, order format                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | `structure/shell-interpreter`                                                   | commit | shebang is `#!/usr/bin/env bash` or `#!/bin/bash`; line 2 is `#`; line 3 is a concrete description; line 4 is `# Runtime: Bash N.N+, macOS and Linux.` (or `Linux`); `set -euo pipefail` and `shopt -s inherit_errexit` before the first command in an executable; Bash 4 features named in the header; computed directory constants use `CDPATH=`, `cd --`, `pwd -P` and a failure path; `main "$@"` last in an executable; top-level assignments `readonly`; a library (sourced) file is declarative at top level and not executable; an executable file has the bit set through git; every `mktemp` has a `trap` that removes it |
@@ -62,5 +64,7 @@ builds.
 
 ## Not covered here
 
-zsh-specific syntax. Files with a `zsh` shebang get `zsh -n`, shfmt and the structure checks;
-ShellCheck skips them and `doctor` says so.
+Zsh-specific lint and formatting remain outside this preset. Zsh syntax uses
+`zsh -n`; Bash syntax uses `bash -n`; Bats syntax uses `bats --count`. ShellCheck
+and shfmt claim Bash and Bats files. Broader dialect-aware structure analysis
+remains open.

@@ -120,16 +120,6 @@ function withoutTrailingVersion(word: string): string {
     return word.slice(0, end);
 }
 
-function interpreterToken(firstLine: string): string | undefined {
-    if (!firstLine.startsWith('#!')) return undefined;
-    const tokens = firstLine.slice(2).trim().split(/\s+/u);
-    let index = 0;
-    if (tokens[index]?.endsWith(ENV_SUFFIX) === true) index += 1;
-    if (tokens[index] === '-S') index += 1;
-    const word = tokens[index];
-    return word === undefined || word === '' ? undefined : word.slice(word.lastIndexOf('/') + 1);
-}
-
 /**
  * Proposes presets from the tree, the manifests and the dependencies, with the evidence for each.
  * @param files the tracked files
@@ -185,12 +175,27 @@ export function unknownLanguages(files: TrackedFile[], manifests: Map<string, Ma
 }
 
 /**
+ * Reads the executable token, including env -S and interpreter arguments.
+ * @param firstLine the first line of the file
+ * @returns the executable basename or undefined without a shebang
+ */
+export function shebangExecutable(firstLine: string): string | undefined {
+    if (!firstLine.startsWith('#!')) return undefined;
+    const tokens = firstLine.slice(2).trim().split(/\s+/u);
+    let index = 0;
+    if (tokens[index]?.endsWith(ENV_SUFFIX) === true) index += 1;
+    if (tokens[index] === '-S') index += 1;
+    const word = tokens[index];
+    return word === undefined || word === '' ? undefined : word.slice(word.lastIndexOf('/') + 1);
+}
+
+/**
  * The interpreter a shebang names, or undefined.
  * @param firstLine the first line of the file
  * @returns the interpreter name the table knows
  */
 export function shebangInterpreter(firstLine: string): string | undefined {
-    const word = interpreterToken(firstLine);
+    const word = shebangExecutable(firstLine);
     if (word === undefined) return undefined;
     const stripped = withoutTrailingVersion(word);
     return SHEBANG_INTERPRETERS[word] ?? SHEBANG_INTERPRETERS[stripped];

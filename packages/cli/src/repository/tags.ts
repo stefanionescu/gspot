@@ -1,9 +1,9 @@
 // File tags computed the way pre-commit's identify does: extension, filename, shebang, executable bit, content.
 import { readPrefix } from '#cli/repository/tracked.ts';
-import { shebangInterpreter } from '#cli/presets/detect.ts';
 import type { Tagged, RawEntry } from '#types/repository.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import { BINARY_EXTENSIONS, LOCKFILE_NAMES } from '#config/patterns.ts';
+import { shebangExecutable, shebangInterpreter } from '#cli/presets/detect.ts';
 import { BINARY_SNIFF_BYTES, EXTENSION_TAGS, FILENAME_TAGS, SHEBANG_TAGS } from '#config/file-tags.ts';
 
 function sniff(root: string, path: string): { isBinary: boolean; firstLine: string } {
@@ -37,11 +37,11 @@ function shebangTags(firstLine: string): { shebang: string | undefined; tags: st
     if (!firstLine.startsWith('#!')) return { shebang: undefined, tags: [] };
     const shebang = shebangInterpreter(firstLine);
     if (shebang === undefined) return { shebang, tags: [] };
-    const lastWord = firstLine.trim().split(/\s+/u).pop() ?? '';
-    const interpreter = lastWord.slice(lastWord.lastIndexOf('/') + 1);
+    const interpreter = shebangExecutable(firstLine);
+    const dialect = interpreter === 'zsh' || interpreter === 'bats' ? interpreter : 'bash';
     return {
         shebang,
-        tags: [...(SHEBANG_TAGS[shebang] ?? []), `shebang:${shebang}`, ...(interpreter === 'zsh' ? ['zsh'] : [])],
+        tags: [...(SHEBANG_TAGS[shebang] ?? []), `shebang:${shebang}`, ...(shebang === 'shell' ? [dialect] : [])],
     };
 }
 
@@ -53,6 +53,7 @@ function requiresSniff(entry: RawEntry, tags: Set<string>, extension: string): b
 function textTags(tags: Set<string>, firstLine: string): Tagged {
     const { shebang, tags: fromShebang } = shebangTags(firstLine);
     for (const tag of fromShebang) tags.add(tag);
+    if (tags.has('zsh') || tags.has('bats')) tags.delete('bash');
     tags.add('text');
     return shebang === undefined ? { tags: [...tags], binary: false } : { tags: [...tags], binary: false, shebang };
 }

@@ -7,7 +7,7 @@ recommends = ["naming", "formatting", "spelling"]
 description = "Shell scripts, hooks and task files: ShellCheck, shfmt, a syntax pass, and the structure rules for shell."
 
 [detect]
-extensions = [".sh", ".bash"]
+extensions = [".sh", ".bash", ".zsh", ".bats"]
 shebangs = ["shell"]
 
 [claims]
@@ -37,6 +37,14 @@ github = "mvdan/sh"
 name = "bash"
 provider = "host"
 
+[[tools]]
+name = "zsh"
+provider = "host"
+
+[[tools]]
+name = "bats"
+provider = "host"
+
 [[configs]]
 template = "shellcheckrc.tmpl"
 target = ".gspot/shellcheckrc"
@@ -47,16 +55,42 @@ name = "bash/syntax"
 stage = "commit"
 runs = "per-file-list"
 command = ["bash", "-n", "{file}"]
+claims = {tags = ["bash"]}
 coverage = ["syntax"]
 output = {format = "regex", pattern = "^(?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$"}
-summary = "Checks that every shell script parses before anything else runs it."
+summary = "Checks that Bash scripts parse before running them."
 why = "A script with a syntax error stops at the broken line, sometimes after it has already done half its work."
 help = "Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about."
+
+[[checks]]
+name = "bash/zsh-syntax"
+stage = "commit"
+runs = "per-file-list"
+command = ["zsh", "-n", "{file}"]
+claims = {tags = ["zsh"]}
+coverage = ["syntax"]
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):\\s*(?<message>.*)$"}
+summary = "Checks Zsh syntax with the Zsh interpreter."
+why = "Zsh syntax differs from Bash, so a Bash parser rejects valid Zsh programs."
+help = "Fix the syntax at the line Zsh reports. Install zsh when the command is missing."
+
+[[checks]]
+name = "bash/bats-syntax"
+stage = "commit"
+runs = "per-file-list"
+command = ["bats", "--count", "{file}"]
+claims = {tags = ["bats"]}
+coverage = ["syntax"]
+output = {format = "regex", pattern = "^# (?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$"}
+summary = "Parses Bats test files while counting their test cases."
+why = "Bats test declarations need the Bats parser before Bash can read them."
+help = "Fix the syntax reported by Bats. Install bats-core when the command is missing."
 
 [[checks]]
 name = "bash/shellcheck"
 stage = "commit"
 runs = "per-file-list"
+claims = {tags = ["bash", "bats"]}
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
 coverage = ["style", "security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
@@ -68,6 +102,7 @@ help = "Read the SC code in the finding; gspot explain shellcheck/SC2086 links t
 name = "bash/shfmt"
 stage = "commit"
 runs = "per-file-list"
+claims = {tags = ["bash", "bats"]}
 command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
 fix_command = ["shfmt", "-w", "-i", "{indent}", "-ci", "-s", "{files}"]
 fix_order = "format"
@@ -369,6 +404,8 @@ default = "macOS and Linux"
 summary = "The platforms the fourth header line of every script names."
 
 [coverage]
+".zsh" = ["syntax"]
+".bats" = ["syntax", "style", "format"]
 ".sh" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
 ".bash" = ["format", "syntax", "style", "structure", "naming", "prose", "spelling"]
 

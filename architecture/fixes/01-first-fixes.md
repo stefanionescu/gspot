@@ -174,6 +174,14 @@ manifest already says.
 
 **Tests.** `bash.test.ts` plants a valid bats file and a broken one, and holds one finding.
 
+**Status: complete (locally verified).** Dialect claims select Bash, Zsh, and Bats
+syntax commands separately. Shared shebang parsing retains interpreter arguments.
+Real CLI checks accept clean scripts and reject broken syntax for all three dialects.
+
+The 24 focused acceptance, tagging, detection, selection, and planner tests pass
+with 166 assertions on macOS. TypeScript, schema validation, and all 274 reference
+pages pass. Windows and Linux execution remain deferred.
+
 **Done when.** That case passes.
 
 ## K-258: the Compose check loses a word of its command
