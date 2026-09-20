@@ -1,5 +1,5 @@
 [preset]
-id = "html"
+name = "html"
 kind = "language"
 title = "HTML"
 requires = ["formatting"]

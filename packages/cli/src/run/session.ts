@@ -38,6 +38,6 @@ export function everyManifest(session: Session): Manifest[] {
     const seen = new Map<string, Manifest>();
     for (const scope of session.scopes)
         for (const manifest of scope.selected)
-            if (!seen.has(manifest.preset.id)) seen.set(manifest.preset.id, manifest);
+            if (!seen.has(manifest.preset.name)) seen.set(manifest.preset.name, manifest);
     return seen.values().toArray();
 }

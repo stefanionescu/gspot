@@ -1,5 +1,5 @@
 [preset]
-id = "config-files"
+name = "config-files"
 kind = "concern"
 title = "Configuration Files"
 default = true

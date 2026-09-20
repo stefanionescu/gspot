@@ -1,5 +1,5 @@
 [preset]
-id = "bash"
+name = "bash"
 kind = "language"
 title = "Bash"
 requires = ["structure"]

@@ -1,5 +1,5 @@
 [preset]
-id = "supabase"
+name = "supabase"
 kind = "platform"
 title = "Supabase"
 requires = ["postgres"]

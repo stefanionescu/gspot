@@ -74,7 +74,7 @@ export const prefixCollisions: Analysis = (context) => {
         input.session.policyFiles.policy.structure.prefix_collision_allowed.flatMap((entry) => entry.paths),
     );
     const selected = input.session.scopes.find((entry) => entry.scope.path === input.scope)?.selected ?? [];
-    const isNamedByFramework = frameworkNames(selected.map((manifest) => manifest.preset.id));
+    const isNamedByFramework = frameworkNames(selected.map((manifest) => manifest.preset.name));
     const tree = directoryTree(input.session.repository.files);
     const seen = new Set<string>();
     const findings = context.files.flatMap((file) => {

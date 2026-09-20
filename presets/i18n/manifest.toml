@@ -1,5 +1,5 @@
 [preset]
-id = "i18n"
+name = "i18n"
 kind = "library"
 title = "Translations"
 requires = ["javascript"]

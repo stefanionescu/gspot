@@ -1,5 +1,5 @@
 [preset]
-id = "prose"
+name = "prose"
 kind = "concern"
 title = "Prose"
 requires = ["markdown"]

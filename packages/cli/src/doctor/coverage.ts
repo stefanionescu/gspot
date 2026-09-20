@@ -41,7 +41,7 @@ function coverSource(session: Session, file: TrackedFile, report: CoverageReport
 // A binary file is read by the secrets scan alone, and by nothing when no secrets preset is selected.
 function binaryReason(session: Session): string {
     const isScanned = session.scopes.some((scope) =>
-        scope.selected.some((manifest) => manifest.preset.id === 'secrets'),
+        scope.selected.some((manifest) => manifest.preset.name === 'secrets'),
     );
     return isScanned ? 'binary: secrets scan only' : 'binary: not checked';
 }

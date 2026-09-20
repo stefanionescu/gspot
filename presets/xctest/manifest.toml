@@ -1,5 +1,5 @@
 [preset]
-id = "xctest"
+name = "xctest"
 kind = "tool"
 title = "Swift Tests"
 requires = ["swift"]

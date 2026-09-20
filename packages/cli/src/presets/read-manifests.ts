@@ -118,7 +118,7 @@ function checkRequires(manifests: Map<string, Manifest>): void {
     for (const manifest of manifests.values())
         for (const required of manifest.preset.requires)
             if (!manifests.has(required))
-                throw new ManifestError(manifest.preset.id, [`it requires \`${required}\`, which does not exist.`]);
+                throw new ManifestError(manifest.preset.name, [`it requires \`${required}\`, which does not exist.`]);
 }
 
 /**
@@ -136,7 +136,7 @@ export function configurationName(target: string): string {
 export class ManifestError extends Error {
     /**
      * Names the preset and lists its problems.
-     * @param preset the preset id
+     * @param preset the preset name
      * @param problems the problems in plain English
      */
     constructor(preset: string, problems: string[]) {
@@ -154,15 +154,15 @@ export class ManifestError extends Error {
 export function parseManifest(text: string, dir: string): Manifest {
     const parsed = parseToml(text);
     const result = manifestSchema.safeParse(parsed);
-    const id = (parsed as { preset?: { id?: string } }).preset?.id ?? dir;
+    const presetName = result.success ? result.data.preset.name : dir;
     if (!result.success)
         throw new ManifestError(
-            id,
+            presetName,
             result.error.issues.map((issue) => `${issue.path.map(String).join('.')}: ${issue.message}`),
         );
     const raw = result.data;
     const problems = refusals(raw);
-    if (problems.length > 0) throw new ManifestError(raw.preset.id, problems);
+    if (problems.length > 0) throw new ManifestError(raw.preset.name, problems);
     return {
         preset: raw.preset,
         detect: raw.detect,
@@ -179,7 +179,7 @@ export function parseManifest(text: string, dir: string): Manifest {
 }
 
 /**
- * Every embedded manifest by preset id. Read once per process.
+ * Every embedded manifest by preset name. Read once per process.
  * @returns the manifests
  */
 export function presetManifests(): Map<string, Manifest> {
@@ -190,11 +190,11 @@ export function presetManifests(): Map<string, Manifest> {
         const dir = path.slice(0, -'/manifest.toml'.length);
         const manifest = parseManifest(readAsset(path), dir);
         const folder = dir.slice(dir.lastIndexOf('/') + 1);
-        if (folder !== manifest.preset.id)
-            throw new ManifestError(manifest.preset.id, [
-                `the folder is \`${folder}\` and the id is \`${manifest.preset.id}\`; they must match.`,
+        if (folder !== manifest.preset.name)
+            throw new ManifestError(manifest.preset.name, [
+                `the folder is \`${folder}\` and the name is \`${manifest.preset.name}\`; they must match.`,
             ]);
-        manifests.set(manifest.preset.id, manifest);
+        manifests.set(manifest.preset.name, manifest);
     }
     checkRequires(manifests);
     state.cache = manifests;

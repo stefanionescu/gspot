@@ -1,5 +1,5 @@
 [preset]
-id = "commits"
+name = "commits"
 kind = "concern"
 title = "Commits"
 default = true

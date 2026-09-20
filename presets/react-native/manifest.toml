@@ -1,5 +1,5 @@
 [preset]
-id = "react-native"
+name = "react-native"
 kind = "framework"
 title = "React Native"
 requires = ["react"]

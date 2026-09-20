@@ -1,5 +1,5 @@
 [preset]
-id = "sql"
+name = "sql"
 kind = "language"
 title = "SQL"
 requires = ["formatting"]

@@ -29,7 +29,7 @@ function checksFor(
                 (check) =>
                     !check.claims || claimedByClaims(check.claims, selection.selected, [file], scopePath).length > 0,
             )
-            .map((check) => ({ id: check.id, stage: check.stage, preset: manifest.preset.id })),
+            .map((check) => ({ id: check.id, stage: check.stage, preset: manifest.preset.name })),
     );
 }
 
@@ -86,7 +86,7 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
         scope: scope.path === '' ? 'root' : scope.path,
         nature: file.nature,
         tags: file.tags,
-        presets: owners.map((manifest) => manifest.preset.id),
+        presets: owners.map((manifest) => manifest.preset.name),
         checks: selection ? checksFor(owners, selection, file, scope.path) : [],
         baselines: baselinesFor(session.root, path),
         ignores: ignoresFor(session, path),

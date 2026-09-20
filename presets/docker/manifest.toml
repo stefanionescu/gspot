@@ -1,5 +1,5 @@
 [preset]
-id = "docker"
+name = "docker"
 kind = "tool"
 title = "Docker"
 requires = ["config-files"]

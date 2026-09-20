@@ -106,10 +106,10 @@ function proposalFor(manifest: Manifest, tree: TreeFacts): Proposal | undefined 
     const { preset } = manifest;
     const byExtension = extensionEvidence(manifest, tree);
     if (byExtension !== undefined)
-        return { preset: preset.id, kind: preset.kind, evidence: byExtension, count: extensionCount(manifest, tree) };
+        return { preset: preset.name, kind: preset.kind, evidence: byExtension, count: extensionCount(manifest, tree) };
     for (const source of EVIDENCE) {
         const evidence = source(manifest, tree);
-        if (evidence !== undefined) return { preset: preset.id, kind: preset.kind, evidence };
+        if (evidence !== undefined) return { preset: preset.name, kind: preset.kind, evidence };
     }
     return undefined;
 }

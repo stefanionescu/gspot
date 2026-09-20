@@ -1,5 +1,5 @@
 [preset]
-id = "spelling"
+name = "spelling"
 kind = "concern"
 title = "Spelling"
 default = true

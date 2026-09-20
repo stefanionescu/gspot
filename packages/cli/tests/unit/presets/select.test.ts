@@ -5,14 +5,14 @@ import { parseManifest, presetManifests } from '#cli/presets/read-manifests.ts';
 
 function manifest(id: string, requires: string[] = [], conflicts: string[] = []): Manifest {
     return parseManifest(
-        `[preset]\nid = "${id}"\nkind = "language"\ntitle = "${id}"\nrequires = ${JSON.stringify(requires)}\nconflicts = ${JSON.stringify(conflicts)}\ndescription = "A preset for the tests, long enough."\n`,
+        `[preset]\nname = "${id}"\nkind = "language"\ntitle = "${id}"\nrequires = ${JSON.stringify(requires)}\nconflicts = ${JSON.stringify(conflicts)}\ndescription = "A preset for the tests, long enough."\n`,
         `presets/${id}`,
     );
 }
 
 describe('selectPresets', () => {
     test('pulls required presets in, dependencies first, in order of first mention', () => {
-        const ids = selectPresets(['typescript'], presetManifests()).map((entry) => entry.preset.id);
+        const ids = selectPresets(['typescript'], presetManifests()).map((entry) => entry.preset.name);
         expect(ids.indexOf('structure')).toBeLessThan(ids.indexOf('javascript'));
         expect(ids.indexOf('javascript')).toBeLessThan(ids.indexOf('typescript'));
         expect(ids).toEqual(['structure', 'javascript', 'typescript']);
@@ -21,7 +21,7 @@ describe('selectPresets', () => {
     test('a recommended preset is not pulled in by selection; init adds it and a person can drop it', () => {
         const manifests = presetManifests();
         expect(manifests.get('typescript')?.preset.recommends).toEqual(['naming', 'formatting', 'spelling']);
-        const ids = selectPresets(['bash'], manifests).map((entry) => entry.preset.id);
+        const ids = selectPresets(['bash'], manifests).map((entry) => entry.preset.name);
         expect(ids).not.toContain('naming');
     });
 
@@ -50,7 +50,7 @@ describe('parseManifest', () => {
     test('refuses a check with no stage or an empty summary', () => {
         expect(() =>
             parseManifest(
-                '[preset]\nid = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nid = "x/y"\ncommand = ["x"]\nsummary = ""\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n',
+                '[preset]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nid = "x/y"\ncommand = ["x"]\nsummary = ""\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n',
                 'presets/x',
             ),
         ).toThrow('not valid');
@@ -59,7 +59,7 @@ describe('parseManifest', () => {
     test('refuses a fix_command without a fix_order', () => {
         expect(() =>
             parseManifest(
-                '[preset]\nid = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nid = "x/y"\nstage = "commit"\ncommand = ["x"]\nfix_command = ["x", "--fix"]\nsummary = "A sentence long enough."\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n',
+                '[preset]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nid = "x/y"\nstage = "commit"\ncommand = ["x"]\nfix_command = ["x", "--fix"]\nsummary = "A sentence long enough."\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n',
                 'presets/x',
             ),
         ).toThrow('fix_order');
@@ -72,7 +72,7 @@ describe('parseManifest', () => {
 
 test('manifest advice uses help and rejects the old prose field', () => {
     const source = `[preset]
-id = "fixture"
+name = "fixture"
 kind = "tool"
 title = "Fixture"
 description = "A correction contract fixture."
@@ -84,6 +84,8 @@ summary = "Checks a fixture source file."
 why = "The fixture must satisfy its contract."
 help = "Review the fixture source file."
 `;
+    expect(parseManifest(source, 'presets/fixture').preset.name).toBe('fixture');
+    expect(() => parseManifest(source.replace('name =', 'id ='), 'presets/fixture')).toThrow('not valid');
     expect(parseManifest(source, 'presets/fixture').checks[0]?.help).toBe('Review the fixture source file.');
     expect(() => parseManifest(source.replace('help =', 'fix ='), 'presets/fixture')).toThrow('not valid');
     expect(() => parseManifest(`${source}fix_command = []\nfix_order = "format"`, 'presets/fixture')).toThrow(

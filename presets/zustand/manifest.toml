@@ -1,5 +1,5 @@
 [preset]
-id = "zustand"
+name = "zustand"
 kind = "library"
 title = "Zustand"
 requires = ["javascript"]

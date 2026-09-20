@@ -1,5 +1,5 @@
 [preset]
-id = "react-hook-form"
+name = "react-hook-form"
 kind = "library"
 title = "React Hook Form"
 requires = ["javascript"]

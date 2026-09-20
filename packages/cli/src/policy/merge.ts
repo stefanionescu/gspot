@@ -89,7 +89,7 @@ export function mergeForScope(
     const ignoresFor = (check: string): IgnoreEntry[] => policy.ignores.filter((entry) => entry.check === check);
     return {
         scope,
-        presets: selected.map((manifest) => manifest.preset.id),
+        presets: selected.map((manifest) => manifest.preset.name),
         settings,
         reasons,
         format: { ...(shippedFormat() as FormatSettings), ...policy.format, ...policy.scopeTables[scope]?.format },

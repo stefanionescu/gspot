@@ -38,7 +38,7 @@ function pathInScope(scope: string, path: string): string {
 function fragmentOwners(session: Session, selection: ScopeSelection, owner: ConfigurationTarget): Manifest[] {
     if (owner.per_scope === true) return selection.selected;
     const every = [selection, ...session.scopes].flatMap((entry) => entry.selected);
-    return new Map(every.map((manifest) => [manifest.preset.id, manifest])).values().toArray();
+    return new Map(every.map((manifest) => [manifest.preset.name, manifest])).values().toArray();
 }
 
 function fragmentsFor(session: Session, selection: ScopeSelection, owner: ConfigurationTarget): string {
@@ -65,16 +65,16 @@ function stubFor(context: EmitContext, config: ConfigurationTarget, file: Genera
             content: copyStubContent(file.content, stubPath),
             readOnly: true,
             kind: 'stub',
-            preset: manifest.preset.id,
+            preset: manifest.preset.name,
         });
-    else out.files.push(bodyStub(stub, stubPath, file.path, session.version, manifest.preset.id));
+    else out.files.push(bodyStub(stub, stubPath, file.path, session.version, manifest.preset.name));
 }
 
 // A target with a needs key is written only while the preset it names is selected somewhere in the repository.
 function isWanted(config: ConfigurationTarget, session: Session): boolean {
     if (config.needs === undefined) return true;
     const wanted = config.needs;
-    return session.scopes.some((entry) => entry.selected.some((manifest) => manifest.preset.id === wanted));
+    return session.scopes.some((entry) => entry.selected.some((manifest) => manifest.preset.name === wanted));
 }
 
 // A target that is not written for each scope is written once, by the first scope that selects its preset.
@@ -101,7 +101,7 @@ function configurationFiles(
             content: emitTarget(`${manifest.dir}/${config.template}`, target, inputs, config.header !== false),
             readOnly: true,
             kind: 'config',
-            preset: manifest.preset.id,
+            preset: manifest.preset.name,
         };
         if (config.executable === true) file.executable = true;
         out.files.push(file);
@@ -152,7 +152,7 @@ function workflowOutput(session: Session, out: RenderedSet): void {
     const { policy } = session.policyFiles;
     if (policy.ci.provider !== 'github') return;
     const swiftScope = session.scopes.find((selection) =>
-        selection.selected.some((manifest) => manifest.preset.id === 'swift'),
+        selection.selected.some((manifest) => manifest.preset.name === 'swift'),
     );
     out.files.push(
         workflowFile({
@@ -228,7 +228,7 @@ export function emitAll(session: Session): RenderedSet {
     runnerOutputs(session, out);
     workflowOutput(session, out);
     out.files.push(...assembleRules(session));
-    if (session.scopes.some((selection) => selection.selected.some((manifest) => manifest.preset.id === 'prose')))
+    if (session.scopes.some((selection) => selection.selected.some((manifest) => manifest.preset.name === 'prose')))
         out.files.push(...styleFiles(session.policyFiles.policy, rootView(session)));
     blockOutputs(session, out);
     out.files.sort((a, b) => a.path.localeCompare(b.path));

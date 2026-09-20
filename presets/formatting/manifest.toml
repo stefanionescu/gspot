@@ -1,5 +1,5 @@
 [preset]
-id = "formatting"
+name = "formatting"
 kind = "concern"
 title = "Formatting"
 description = "One [format] block every formatter reads, so indentation cannot disagree between Prettier, shfmt, Ruff, and markdownlint."

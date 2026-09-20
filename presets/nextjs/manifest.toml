@@ -1,5 +1,5 @@
 [preset]
-id = "nextjs"
+name = "nextjs"
 kind = "framework"
 title = "Next.js"
 requires = ["typescript", "react"]

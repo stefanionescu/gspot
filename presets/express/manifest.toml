@@ -1,5 +1,5 @@
 [preset]
-id = "express"
+name = "express"
 kind = "framework"
 title = "Express"
 requires = ["javascript"]

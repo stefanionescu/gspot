@@ -1,5 +1,5 @@
 [preset]
-id = "duplication"
+name = "duplication"
 kind = "concern"
 title = "Duplication"
 proposed = true

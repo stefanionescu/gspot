@@ -1,5 +1,5 @@
 [preset]
-id = "drizzle"
+name = "drizzle"
 kind = "library"
 title = "Drizzle"
 requires = ["javascript"]

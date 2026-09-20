@@ -1,5 +1,5 @@
 [preset]
-id = "pytest"
+name = "pytest"
 kind = "tool"
 title = "pytest"
 requires = ["python"]

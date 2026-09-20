@@ -55,7 +55,7 @@ function toolChanges(session: Session): UpgradeReport['tools'] {
             manifest.tools.flatMap((tool) => {
                 if (seen.has(tool.name)) return [];
                 seen.add(tool.name);
-                const change = toolChange(tool, manifest.preset.id, pinned);
+                const change = toolChange(tool, manifest.preset.name, pinned);
                 return change === undefined ? [] : [change];
             }),
         ),

@@ -1,5 +1,5 @@
 [preset]
-id = "static-site"
+name = "static-site"
 kind = "concern"
 title = "Static Site"
 requires = ["html", "css", "javascript"]

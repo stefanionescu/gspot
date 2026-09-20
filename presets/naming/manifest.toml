@@ -1,5 +1,5 @@
 [preset]
-id = "naming"
+name = "naming"
 kind = "concern"
 title = "Naming"
 description = "The naming engine: banned terms, case rules, length and word ceilings over every identifier, file, and folder."

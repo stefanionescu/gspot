@@ -8,7 +8,7 @@ import type { ExistingTooling, ManifestFacts, Repository, ScopeEntry, TrackedFil
 
 export type TakeoverPlan = {
     profile?: { name: string; digest: string; selection: string; detected: string[] };
-    presets: { id: string; how: PresetReason; checks: number }[];
+    presets: { preset: string; how: PresetReason; checks: number }[];
     write: { path: string; note: string }[];
     remove: { path: string; note: string }[];
     unread: { path: string; note: string }[];

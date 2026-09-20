@@ -1,5 +1,5 @@
 [preset]
-id = "swift"
+name = "swift"
 kind = "language"
 title = "Swift"
 requires = ["formatting"]

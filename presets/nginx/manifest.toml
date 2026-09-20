@@ -1,5 +1,5 @@
 [preset]
-id = "nginx"
+name = "nginx"
 kind = "tool"
 title = "nginx"
 description = "nginx configuration: gixy for the security mistakes, and the server's own parser in a container for the rest."

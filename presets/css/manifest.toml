@@ -1,5 +1,5 @@
 [preset]
-id = "css"
+name = "css"
 kind = "language"
 title = "CSS"
 requires = ["formatting"]

@@ -1,5 +1,5 @@
 [preset]
-id = "dependencies"
+name = "dependencies"
 kind = "concern"
 title = "Dependencies"
 default = true

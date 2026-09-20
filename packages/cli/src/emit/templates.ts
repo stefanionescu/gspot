@@ -192,7 +192,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
             .filter((entry) => entry.scope.path !== '')
             .map((entry) => ({
                 path: entry.scope.path,
-                presets: entry.selected.map((manifest) => manifest.preset.id),
+                presets: entry.selected.map((manifest) => manifest.preset.name),
             })),
         presets: view.presets,
         policy: session.policyFiles.policy,
@@ -212,7 +212,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
         has: (preset) =>
             view.presets.includes(preset) ||
             (selection.scope.path === '' &&
-                session.scopes.some((entry) => entry.selected.some((manifest) => manifest.preset.id === preset))),
+                session.scopes.some((entry) => entry.selected.some((manifest) => manifest.preset.name === preset))),
         importAliases: (scope) => aliasesFor(session.root, scope),
         tools: toolNames(session),
         toolPackages: toolPackages(session),

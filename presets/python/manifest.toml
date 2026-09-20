@@ -1,5 +1,5 @@
 [preset]
-id = "python"
+name = "python"
 kind = "language"
 title = "Python"
 requires = ["formatting"]

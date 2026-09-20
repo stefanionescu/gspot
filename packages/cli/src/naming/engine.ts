@@ -20,7 +20,7 @@ const TEST_FILE = /(?:(?:^|\/)(?:tests?|__tests__)\/)|(?:\.(?:test|spec)\.[^./]+
 function languageOf(input: EngineInput, file: TrackedFile): string | undefined {
     const selection = input.session.scopes.find((entry) => entry.scope.path === input.scope);
     const languages = selection === undefined ? [] : languagePresets(selection.selected);
-    return languages.find((manifest) => isClaimed(manifest.claims, file))?.preset.id;
+    return languages.find((manifest) => isClaimed(manifest.claims, file))?.preset.name;
 }
 
 function policyFor(input: EngineInput): EffectivePolicy | undefined {

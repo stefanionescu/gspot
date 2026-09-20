@@ -1,5 +1,5 @@
 [preset]
-id = "docs"
+name = "docs"
 kind = "concern"
 title = "Docs"
 default = true

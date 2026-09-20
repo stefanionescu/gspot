@@ -1,5 +1,5 @@
 [preset]
-id = "cloudflare"
+name = "cloudflare"
 kind = "platform"
 title = "Cloudflare"
 requires = ["javascript"]

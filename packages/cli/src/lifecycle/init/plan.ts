@@ -108,8 +108,8 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
     return {
         ...(profile ? { profile } : {}),
         presets: everySelected.map((manifest) => ({
-            id: manifest.preset.id,
-            how: how.get(manifest.preset.id) ?? 'required',
+            preset: manifest.preset.name,
+            how: how.get(manifest.preset.name) ?? 'required',
             checks: manifest.checks.length,
         })),
         write: [

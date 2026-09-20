@@ -87,14 +87,14 @@ function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingS
     const previous = surface.defaults.get(spec.name);
     const isConflict =
         previous !== undefined &&
-        previous.preset !== manifest.preset.id &&
+        previous.preset !== manifest.preset.name &&
         JSON.stringify(previous.value) !== JSON.stringify(spec.default);
     const isList = surface.specs.get(spec.name)?.kind === 'list';
     if (!isList && isConflict && !OVERRIDING_KINDS.has(manifest.preset.kind)) {
-        surface.problems.push(messages.conflictingScalars(spec.name, previous.preset, manifest.preset.id));
+        surface.problems.push(messages.conflictingScalars(spec.name, previous.preset, manifest.preset.name));
         return;
     }
-    surface.defaults.set(spec.name, { value: spec.default, preset: manifest.preset.id });
+    surface.defaults.set(spec.name, { value: spec.default, preset: manifest.preset.name });
 }
 
 function addEnabledSpecs(surface: ExposedSettings, manifest: Manifest): void {
@@ -108,7 +108,7 @@ function addEnabledSpecs(surface: ExposedSettings, manifest: Manifest): void {
             default: true,
             summary: `Whether the ${tool.name} checks run. Turning it off needs a reason.`,
         });
-        surface.defaults.set(enabledKey, { value: true, preset: manifest.preset.id });
+        surface.defaults.set(enabledKey, { value: true, preset: manifest.preset.name });
     }
 }
 

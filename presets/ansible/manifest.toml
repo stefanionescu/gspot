@@ -1,5 +1,5 @@
 [preset]
-id = "ansible"
+name = "ansible"
 kind = "tool"
 title = "Ansible"
 requires = ["config-files"]

@@ -55,8 +55,8 @@ function toolOf(check: CheckSpec): string | undefined {
     return check.tool ?? check.command?.[0];
 }
 
-function isSelected(session: Session, presetId: string): boolean {
-    return session.scopes.some((scope) => scope.selected.some((manifest) => manifest.preset.id === presetId));
+function isSelected(session: Session, presetName: string): boolean {
+    return session.scopes.some((scope) => scope.selected.some((manifest) => manifest.preset.name === presetName));
 }
 
 function checkExplanation(session: Session | undefined, id: string): Explanation | undefined {
@@ -69,7 +69,7 @@ function checkExplanation(session: Session | undefined, id: string): Explanation
         .map((setting) => setting.name);
     const rules = Object.values(preset.rule_files).flat();
     const lines = [
-        `${id}  (${preset.preset.id} preset, ${check.stage} stage)`,
+        `${id}  (${preset.preset.name} preset, ${check.stage} stage)`,
         '',
         `What it looks for: ${check.summary}`,
         `Why it matters: ${check.why}`,
@@ -82,16 +82,16 @@ function checkExplanation(session: Session | undefined, id: string): Explanation
     if (rules.length > 0) lines.push(`Rule files that state it: ${rules.join(', ')}`);
     if (session)
         lines.push(
-            isSelected(session, preset.preset.id)
+            isSelected(session, preset.preset.name)
                 ? 'Selected in this repository: yes'
-                : `Selected in this repository: no (gspot add ${preset.preset.id})`,
+                : `Selected in this repository: no (gspot add ${preset.preset.name})`,
         );
     const { stage, summary, why, help } = check;
     return {
         kind: 'check',
         subject: id,
         text: `${lines.join('\n')}\n`,
-        data: { id, preset: preset.preset.id, stage, summary, why, help, settings, rules },
+        data: { id, preset: preset.preset.name, stage, summary, why, help, settings, rules },
     };
 }
 

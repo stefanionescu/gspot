@@ -1,5 +1,5 @@
 [preset]
-id = "fastapi"
+name = "fastapi"
 kind = "framework"
 title = "FastAPI"
 requires = ["python"]

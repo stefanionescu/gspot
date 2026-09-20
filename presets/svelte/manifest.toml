@@ -1,5 +1,5 @@
 [preset]
-id = "svelte"
+name = "svelte"
 kind = "framework"
 title = "Svelte"
 requires = ["javascript"]

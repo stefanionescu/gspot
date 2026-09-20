@@ -1,5 +1,5 @@
 [preset]
-id = "javascript"
+name = "javascript"
 kind = "language"
 title = "JavaScript"
 requires = ["structure"]

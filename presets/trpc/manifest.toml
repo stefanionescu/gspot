@@ -1,5 +1,5 @@
 [preset]
-id = "trpc"
+name = "trpc"
 kind = "library"
 title = "tRPC"
 requires = ["javascript"]

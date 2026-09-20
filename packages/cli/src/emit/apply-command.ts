@@ -106,7 +106,7 @@ function checkDrift(session: Session): CommandResult {
 
 async function installProsePackages(session: Session, report: ApplyReport): Promise<void> {
     const isProse = session.scopes.some((selection) =>
-        selection.selected.some((manifest) => manifest.preset.id === 'prose'),
+        selection.selected.some((manifest) => manifest.preset.name === 'prose'),
     );
     if (!isProse || hasPackages(session.root)) return;
     const problem = await installPackages(session.root);

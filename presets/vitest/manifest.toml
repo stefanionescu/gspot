@@ -1,5 +1,5 @@
 [preset]
-id = "vitest"
+name = "vitest"
 kind = "tool"
 title = "Vitest"
 requires = ["javascript"]

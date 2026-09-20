@@ -42,7 +42,7 @@ function recommendedNotSelected(session: Session, selected: Set<string>): Change
             if (!selected.has(id) && !rows.has(id))
                 rows.set(id, {
                     preset: id,
-                    evidence: `recommended by ${manifest.preset.id}`,
+                    evidence: `recommended by ${manifest.preset.name}`,
                     command: `gspot add ${id}`,
                 });
     return rows.values().toArray();
@@ -61,7 +61,7 @@ function configurationRow(session: Session, config: ExistingTool, selected: Set<
     return {
         path: config.path,
         note: owner ? `${config.tool} has a preset` : `${config.tool} has no gspot preset`,
-        command: owner ? `gspot add ${owner.preset.id}` : 'none; add a [[check]] entry to run it',
+        command: owner ? `gspot add ${owner.preset.name}` : 'none; add a [[check]] entry to run it',
     };
 }
 
@@ -106,7 +106,7 @@ function workflowRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
  */
 export function changeReport(session: Session): ChangeReport {
     const facts = readManifests(session.root, session.repository.files);
-    const selected = new Set(everyManifest(session).map((manifest) => manifest.preset.id));
+    const selected = new Set(everyManifest(session).map((manifest) => manifest.preset.name));
     const tooling = existingTooling(session.root, session.repository.files, session.repository.scopes, facts);
     return {
         detectedNotSelected: detectedNotSelected(session, facts, selected),

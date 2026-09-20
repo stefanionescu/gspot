@@ -1,5 +1,5 @@
 [preset]
-id = "xcode"
+name = "xcode"
 kind = "tool"
 title = "Xcode"
 requires = ["config-files"]

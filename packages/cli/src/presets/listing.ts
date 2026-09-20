@@ -11,7 +11,7 @@ const FORMAT_PREFIX = 'format.';
  */
 export function toRow(manifest: Manifest): ListingRow {
     return {
-        id: manifest.preset.id,
+        name: manifest.preset.name,
         kind: manifest.preset.kind,
         title: manifest.preset.title,
         description: manifest.preset.description,

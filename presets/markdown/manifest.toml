@@ -1,5 +1,5 @@
 [preset]
-id = "markdown"
+name = "markdown"
 kind = "language"
 title = "Markdown"
 requires = ["formatting"]

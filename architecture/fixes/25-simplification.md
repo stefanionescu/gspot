@@ -106,6 +106,12 @@ pass (111 tests, 529 assertions), as do the two planted repository-check tests. 
 published-schema validation, and all 272 reference-page comparisons pass. Windows execution
 remains deferred.
 
+Preset definitions use `name` throughout their schema, manifests, selection, detection, and
+generated-output consumers. Preset listing rows use `name`, while takeover-plan rows refer
+to a `preset`. The old manifest `id` field is rejected. The affected unit and planted init,
+profile, and explanation suites pass (85 tests, 306 assertions), together with type checking
+and all 272 reference-page comparisons. Check-definition and result identity remain open.
+
 **What is wrong.** The names guide endorsed a writing action called `didWrite` while rejecting
 `didRunFixer`. It prescribed `name` for a finding's check reference, although ignores and
 findings use `check`. The glossary retained runner surface, inspection, and project templates.

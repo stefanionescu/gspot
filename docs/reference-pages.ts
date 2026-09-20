@@ -103,7 +103,7 @@ function rulePage(check: CheckSpec, preset: Manifest): string {
     const lines = [
         frontMatter(check.id, check.summary),
         `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Where it runs\n\n`,
-        `- Preset: [the ${preset.preset.id} preset](/reference/presets/${preset.preset.id}/)\n- Stage: ${check.stage}\n`,
+        `- Preset: [the ${preset.preset.name} preset](/reference/presets/${preset.preset.name}/)\n- Stage: ${check.stage}\n`,
         tool === undefined ? '' : `- Tool: ${tool}\n`,
         check.engine === undefined ? '' : `- Engine: ${check.engine}\n`,
         `\nTurn it off for a path with a reason: \`gspot ignore ${check.id} --paths <glob> --reason "<why>"\`.\n`,
@@ -115,7 +115,7 @@ function settingsPage(manifests: Manifest[]): string {
     const seen = new Map<string, { setting: SettingSpec; preset: string }>();
     for (const manifest of manifests)
         for (const setting of manifest.settings)
-            if (!seen.has(setting.name)) seen.set(setting.name, { setting, preset: manifest.preset.id });
+            if (!seen.has(setting.name)) seen.set(setting.name, { setting, preset: manifest.preset.name });
     const rows = seen
         .values()
         .toArray()
@@ -178,8 +178,8 @@ function pages(): Map<string, string> {
     const manifests = presetManifests()
         .values()
         .toArray()
-        .toSorted((a, b) => a.preset.id.localeCompare(b.preset.id));
-    for (const manifest of manifests) out.set(`presets/${manifest.preset.id}.md`, presetPage(manifest));
+        .toSorted((a, b) => a.preset.name.localeCompare(b.preset.name));
+    for (const manifest of manifests) out.set(`presets/${manifest.preset.name}.md`, presetPage(manifest));
     const checks = allChecks();
     for (const { check, preset } of checks.values()) out.set(`rules/${check.id}.md`, rulePage(check, preset));
     out.set('settings.md', settingsPage(manifests));

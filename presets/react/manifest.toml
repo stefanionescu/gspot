@@ -1,5 +1,5 @@
 [preset]
-id = "react"
+name = "react"
 kind = "framework"
 title = "React"
 requires = ["javascript"]

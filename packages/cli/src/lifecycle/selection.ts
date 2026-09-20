@@ -156,7 +156,7 @@ function closure(ids: Iterable<string>, manifests: Map<string, Manifest>): Set<s
     const selected = new Set<string>();
     for (const id of ids) {
         const required = selectPresets([id], manifests);
-        for (const manifest of required) selected.add(manifest.preset.id);
+        for (const manifest of required) selected.add(manifest.preset.name);
     }
     return selected;
 }

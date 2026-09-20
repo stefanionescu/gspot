@@ -1,5 +1,5 @@
 [preset]
-id = "nestjs"
+name = "nestjs"
 kind = "framework"
 title = "NestJS"
 requires = ["typescript"]

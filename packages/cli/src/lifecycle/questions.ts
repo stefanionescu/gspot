@@ -129,10 +129,10 @@ export async function askPresets(
     const choices = manifests
         .values()
         .map((manifest) => {
-            const how = selection.how.get(manifest.preset.id);
+            const how = selection.how.get(manifest.preset.name);
             const hint =
                 how === 'required' ? 'required by another selected preset' : (how ?? manifest.preset.description);
-            return { value: manifest.preset.id, label: manifest.preset.id, hint };
+            return { value: manifest.preset.name, label: manifest.preset.name, hint };
         })
         .toArray();
     const initial = [...selection.selectedIds];

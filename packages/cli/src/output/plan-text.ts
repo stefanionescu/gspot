@@ -17,7 +17,7 @@ function presetSection(rows: TakeoverPlan['presets']): string[] {
     if (rows.length === 0) return ['presets', '  none: the rule files install alone', ''];
     const lines = rows.map((row) => {
         const noun = row.checks === 1 ? 'check' : 'checks';
-        return `  ${row.id.padEnd(PRESET_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun}`;
+        return `  ${row.preset.padEnd(PRESET_WIDTH)} ${row.how.padEnd(REASON_WIDTH)} ${String(row.checks)} ${noun}`;
     });
     return ['presets', ...lines, ''];
 }

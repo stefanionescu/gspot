@@ -3,24 +3,24 @@ import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Manifest, SelectionWalk } from '#types/manifest.ts';
 
-function visit(walk: SelectionWalk, id: string): void {
-    if (walk.seen.has(id)) return;
-    if (walk.visiting.includes(id)) {
-        const chain = [...walk.visiting.slice(walk.visiting.indexOf(id)), id];
+function visit(walk: SelectionWalk, presetName: string): void {
+    if (walk.seen.has(presetName)) return;
+    if (walk.visiting.includes(presetName)) {
+        const chain = [...walk.visiting.slice(walk.visiting.indexOf(presetName)), presetName];
         walk.problems.push(messages.circularRequires(chain));
         return;
     }
-    const manifest = walk.manifests.get(id);
+    const manifest = walk.manifests.get(presetName);
     if (!manifest) {
         const known = walk.manifests.keys().toArray();
-        walk.problems.push(messages.unknownPreset(id, nearMatches(id, known)));
-        walk.seen.add(id);
+        walk.problems.push(messages.unknownPreset(presetName, nearMatches(presetName, known)));
+        walk.seen.add(presetName);
         return;
     }
-    walk.visiting.push(id);
+    walk.visiting.push(presetName);
     for (const required of manifest.preset.requires) visit(walk, required);
     walk.visiting.pop();
-    walk.seen.add(id);
+    walk.seen.add(presetName);
     walk.order.push(manifest);
 }
 
@@ -42,11 +42,11 @@ function chainFrom(
 }
 
 function conflictProblems(order: Manifest[]): string[] {
-    const selectedIds = new Set(order.map((manifest) => manifest.preset.id));
+    const selectedNames = new Set(order.map((manifest) => manifest.preset.name));
     return order.flatMap((manifest) =>
         manifest.preset.conflicts
-            .filter((conflict) => selectedIds.has(conflict))
-            .map((conflict) => messages.presetConflict(manifest.preset.id, conflict)),
+            .filter((conflict) => selectedNames.has(conflict))
+            .map((conflict) => messages.presetConflict(manifest.preset.name, conflict)),
     );
 }
 
@@ -70,21 +70,21 @@ export class SelectionError extends Error {
  * @param target the preset that is required
  * @param from the preset the chain starts at
  * @param manifests every preset manifest
- * @returns the preset ids from `from` to `target`
+ * @returns the preset names from `from` to `target`
  */
 export function requireChain(target: string, from: string, manifests: Map<string, Manifest>): string[] | undefined {
     return chainFrom(target, from, manifests, new Set());
 }
 
 /**
- * Resolves preset ids to ordered manifests. Throws SelectionError for unknown, circular or conflicting presets.
- * @param ids the preset ids named
+ * Resolves preset names to ordered manifests. Throws SelectionError for unknown, circular or conflicting presets.
+ * @param presetNames the requested preset names
  * @param manifests every preset manifest
  * @returns the manifests, requirements first, in order of first mention
  */
-export function selectPresets(ids: string[], manifests: Map<string, Manifest>): Manifest[] {
+export function selectPresets(presetNames: string[], manifests: Map<string, Manifest>): Manifest[] {
     const walk: SelectionWalk = { manifests, problems: [], order: [], seen: new Set(), visiting: [] };
-    for (const id of ids) visit(walk, id);
+    for (const presetName of presetNames) visit(walk, presetName);
     const problems = [...walk.problems, ...conflictProblems(walk.order)];
     if (problems.length > 0) throw new SelectionError([...new Set(problems)]);
     return walk.order;
@@ -92,13 +92,17 @@ export function selectPresets(ids: string[], manifests: Map<string, Manifest>): 
 
 /**
  * The selection for one scope: the root selection plus the scope's own, deduplicated in order.
- * @param rootIds the root preset ids
- * @param scopeIds the scope's preset ids
+ * @param rootNames the root preset names
+ * @param scopeNames the scope's preset names
  * @param manifests every preset manifest
  * @returns the manifests in order
  */
-export function selectForScope(rootIds: string[], scopeIds: string[], manifests: Map<string, Manifest>): Manifest[] {
-    return selectPresets([...rootIds, ...scopeIds], manifests);
+export function selectForScope(
+    rootNames: string[],
+    scopeNames: string[],
+    manifests: Map<string, Manifest>,
+): Manifest[] {
+    return selectPresets([...rootNames, ...scopeNames], manifests);
 }
 
 /**

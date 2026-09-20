@@ -59,7 +59,7 @@ function isTsconfigName(path: string): boolean {
 // verbatimModuleSyntax refuses, and parameter properties, which erasableSyntaxOnly refuses.
 function requiredFor(input: EngineInput): string[] {
     const selected = input.session.scopes.find((entry) => entry.scope.path === input.scope)?.selected ?? [];
-    if (selected.every((manifest) => manifest.preset.id !== 'nestjs')) return REQUIRED;
+    if (selected.every((manifest) => manifest.preset.name !== 'nestjs')) return REQUIRED;
     return [...REQUIRED.filter((option) => !DECORATOR_CLASHES.has(option)), ...DECORATOR_OPTIONS];
 }
 

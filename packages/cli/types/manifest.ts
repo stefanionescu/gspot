@@ -11,7 +11,7 @@ export type Requirement = 'build' | 'docker' | 'network';
 export type FixOrder = 'codemod' | 'imports' | 'manifest' | 'format';
 
 export type PresetHeader = {
-    id: string;
+    name: string;
     kind: PresetKind;
     title: string;
     requires: string[];
@@ -144,7 +144,7 @@ export type Manifest = {
 };
 
 export type ListingRow = {
-    id: string;
+    name: string;
     kind: string;
     title: string;
     description: string;

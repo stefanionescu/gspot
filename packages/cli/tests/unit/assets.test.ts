@@ -12,7 +12,7 @@ const SOURCES = [
     'packages/cli/src/platform/assets.ts',
     'packages/cli/src/platform/paths.ts',
 ];
-const PRESET = '[preset]\nid = "bash"\n';
+const PRESET = '[preset]\nname = "bash"\n';
 const PROBE = `import { readAsset, listAssets } from './packages/cli/src/platform/assets.ts';
 console.log(JSON.stringify({ text: readAsset('presets/bash/manifest.toml'), files: listAssets('presets') }));
 `;

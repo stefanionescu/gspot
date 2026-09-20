@@ -1,5 +1,5 @@
 [preset]
-id = "licenses"
+name = "licenses"
 kind = "concern"
 title = "Licenses"
 proposed = true
