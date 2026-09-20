@@ -6,7 +6,9 @@ import { RuleTester } from '@typescript-eslint/rule-tester';
 RuleTester.afterAll = afterAll;
 RuleTester.describe = describe;
 RuleTester.it = it;
-RuleTester.itOnly = it.only;
+RuleTester.itOnly = () => {
+    throw new Error('Focused rule tests are not permitted. Run the complete rule suite.');
+};
 RuleTester.itSkip = it.skip;
 RuleTester.describeSkip = describe.skip;
 
