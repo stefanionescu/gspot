@@ -56,6 +56,12 @@ Crash reports retain the exit code and the first 20 lines of each output stream.
 A planted crash test checks that stdout diagnostics survive nonempty stderr. The strict
 formatter finding assertion remains in place.
 
+The [Windows job 106025469643](https://github.com/stefanionescu/gspot/actions/runs/35490879911/job/106025469643)
+exposes CRLF output rejected by the ShellCheck and XML regular expressions. The shared
+parser normalizes those line endings before matching and converts native finding paths
+and the repository root to the report path format. Regression cases cover both tools,
+grouped diagnostics, and paths with spaces and Unicode.
+
 ### Preset deletion
 
 D-136 removes the Go, Rust, Ruby, and Django presets, leaving 48 manifests.

@@ -1,5 +1,6 @@
-// Findings from a tool's output: one parser per output format a manifest can declare.
 import type { Finding } from '#types/finding.ts';
+// Findings from a tool's output: one parser per output format a manifest can declare.
+import { toPosix } from '#cli/platform/paths.ts';
 import { parseJson } from '#cli/run/json-output.ts';
 import type { CheckSpec, OutputFormat } from '#types/manifest.ts';
 import type { EslintFile, EslintEntry, RegexParser } from '#types/run.ts';
@@ -150,7 +151,7 @@ function parseLines(check: string, text: string, help: string): Finding[] {
 function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string): Finding[] {
     const output = spec.output ?? DEFAULT_OUTPUT;
     // A tool that colors its output although nothing reads colors still yields clean paths and messages.
-    const text = Bun.stripANSI(`${stdout}\n${stderr}`);
+    const text = Bun.stripANSI(`${stdout}\n${stderr}`).replaceAll('\r\n', '\n');
     switch (output.format) {
         case 'none': {
             return [];
@@ -189,6 +190,6 @@ function relativeTo(root: string, file: string): string {
 export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, root: string): Finding[] {
     return parseRaw(spec, stdout, stderr, root).map((finding) => ({
         ...finding,
-        file: relativeTo(root, finding.file),
+        file: relativeTo(toPosix(root), toPosix(finding.file)),
     }));
 }
