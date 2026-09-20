@@ -71,7 +71,11 @@ function presetPage(manifest: Manifest): string {
     const tools = manifest.tools.map((tool) =>
         tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`,
     );
-    const targets = manifest.configs.map((config) => `\`${config.target}\``);
+    const targets = manifest.configs.map((config) =>
+        config.needs === undefined
+            ? `\`${config.target}\``
+            : `\`${config.target}\` when the [${config.needs} preset](/reference/presets/${config.needs}/) is selected`,
+    );
     const rules = Object.values(manifest.rule_files).flatMap((files) => files.map((file) => `\`${file}\``));
     const settings = manifest.settings.map((setting) => `\`${setting.name}\`: ${setting.summary}`);
     const requires = preset.requires.map((id) => `\`${id}\``).join(', ');

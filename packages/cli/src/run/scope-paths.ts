@@ -12,7 +12,7 @@ const GSPOT_DIRECTORY = '.gspot/';
  * @returns the repository-relative path
  */
 export function targetInScope(scope: string, config: ConfigurationTarget): string {
-    if (scope === '' || config.per_scope !== true) return config.target;
+    if (scope === '' || !config.per_scope) return config.target;
     if (config.target.startsWith(GSPOT_DIRECTORY))
         return `${GSPOT_DIRECTORY}${scope}/${config.target.slice(GSPOT_DIRECTORY.length)}`;
     return `${scope}/${config.target}`;

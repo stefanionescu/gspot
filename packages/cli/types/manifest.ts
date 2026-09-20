@@ -55,23 +55,9 @@ export type ToolPin = {
     installers: Record<string, string>;
 };
 
-export type StubSpec = {
-    path: string;
-    body?: string;
-    merge?: Record<string, unknown>;
-    copy?: boolean;
-};
+export type ConfigurationTarget = RawManifest['configs'][number];
 
-export type ConfigurationTarget = {
-    template: string;
-    target: string;
-    stub?: StubSpec;
-    fragment?: boolean;
-    per_scope?: boolean;
-    executable?: boolean;
-    header?: boolean;
-    needs?: string | undefined;
-};
+export type StubSpec = NonNullable<ConfigurationTarget['stub']>;
 
 export type CheckSpec = {
     name: string;
@@ -166,9 +152,6 @@ export type RawTool = RawManifest['tools'][number];
 
 /** One [[checks]] entry as written. */
 export type RawCheck = RawManifest['checks'][number];
-
-/** One [[configs]] entry as written. */
-export type RawConfiguration = RawManifest['configs'][number];
 
 /** The state of one selection walk over the requires graph. */
 export type SelectionWalk = {

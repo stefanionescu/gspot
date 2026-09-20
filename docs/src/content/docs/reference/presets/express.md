@@ -13,7 +13,7 @@ Kind: framework. Requires: `javascript`.
 
 ## Generated configuration
 
-- `.gspot/semgrep/express.yml`
+- `.gspot/semgrep/express.yml` when the [security preset](/reference/presets/security/) is selected
 - `.gspot/spectral.yaml`
 
 ## Checks

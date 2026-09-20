@@ -14,7 +14,7 @@ Kind: framework. Requires: `python`.
 ## Generated configuration
 
 - `.gspot/spectral.yaml`
-- `.gspot/semgrep/fastapi.yml`
+- `.gspot/semgrep/fastapi.yml` when the [security preset](/reference/presets/security/) is selected
 
 ## Checks
 

@@ -36,7 +36,7 @@ function pathInScope(scope: string, path: string): string {
 
 // The presets whose fragments a target takes: a target written for one scope asks that scope, and a target written once asks every scope.
 function fragmentOwners(session: Session, selection: ScopeSelection, owner: ConfigurationTarget): Manifest[] {
-    if (owner.per_scope === true) return selection.selected;
+    if (owner.per_scope) return selection.selected;
     const every = [selection, ...session.scopes].flatMap((entry) => entry.selected);
     return new Map(every.map((manifest) => [manifest.preset.name, manifest])).values().toArray();
 }
@@ -45,7 +45,7 @@ function fragmentsFor(session: Session, selection: ScopeSelection, owner: Config
     return fragmentOwners(session, selection, owner)
         .flatMap((manifest) =>
             manifest.configs
-                .filter((fragment) => fragment.fragment === true && fragment.target === owner.target)
+                .filter((fragment) => fragment.fragment && fragment.target === owner.target)
                 .map((fragment) =>
                     templateText(readAsset(`${manifest.dir}/${fragment.template}`), templateInputs(session, selection)),
                 ),
@@ -57,7 +57,7 @@ function stubFor(context: EmitContext, config: ConfigurationTarget, file: Genera
     const { session, selection, manifest } = context;
     const { stub } = config;
     if (!stub) return;
-    const stubPath = pathInScope(config.per_scope === true ? selection.scope.path : '', stub.path);
+    const stubPath = pathInScope(config.per_scope ? selection.scope.path : '', stub.path);
     if (stub.merge) out.merges.push({ ...mergeStub(session.root, stub, stubPath, file.path), target: file.path, stub });
     else if (stub.copy === true)
         out.files.push({
@@ -80,7 +80,7 @@ function isWanted(config: ConfigurationTarget, session: Session): boolean {
 // A target that is not written for each scope is written once, by the first scope that selects its preset.
 // The set of targets already seen keeps the root first, so a preset the root selects is rendered with the root settings.
 function isRenderedHere(config: ConfigurationTarget): boolean {
-    return config.fragment !== true;
+    return !config.fragment;
 }
 
 function configurationFiles(
@@ -98,12 +98,12 @@ function configurationFiles(
         const inputs = templateInputs(session, selection, fragmentsFor(session, selection, config));
         const file: GeneratedFile = {
             path: target,
-            content: emitTarget(`${manifest.dir}/${config.template}`, target, inputs, config.header !== false),
+            content: emitTarget(`${manifest.dir}/${config.template}`, target, inputs, config.header),
             readOnly: true,
             kind: 'config',
             preset: manifest.preset.name,
         };
-        if (config.executable === true) file.executable = true;
+        if (config.executable) file.executable = true;
         out.files.push(file);
         stubFor({ session, selection, manifest }, config, file, out);
     }

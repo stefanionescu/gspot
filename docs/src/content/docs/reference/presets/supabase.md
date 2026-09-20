@@ -14,7 +14,7 @@ Kind: platform. Requires: `postgres`.
 
 ## Generated configuration
 
-- `.gspot/semgrep/supabase.yml`
+- `.gspot/semgrep/supabase.yml` when the [security preset](/reference/presets/security/) is selected
 
 ## Checks
 

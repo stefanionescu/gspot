@@ -467,6 +467,11 @@ writes a Semgrep pack with no security preset to read it.
 **Tests.** A planted Cloudflare repository without the security preset holds no
 `.gspot/semgrep/workers.yml`.
 
+**Status: complete (locally verified).** Configuration targets and stubs derive
+their types from the validated schema. The loader preserves every parsed field.
+Conditional generation passes for Cloudflare, Express, FastAPI, and Supabase.
+The Cloudflare acceptance suite and generated-output regressions pass locally.
+
 **Done when.** That case passes.
 
 ## K-186: `no-trivial-files` reports every entry file

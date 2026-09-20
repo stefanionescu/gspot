@@ -68,7 +68,7 @@ function allConfigs(session: Session, planned: PlannedCheck): ConfigurationTarge
 
 function configurationPath(session: Session, planned: PlannedCheck, name: string): string {
     const target = allConfigs(session, planned).find(
-        (config) => config.fragment !== true && configurationName(config.target) === name,
+        (config) => !config.fragment && configurationName(config.target) === name,
     );
     if (!target) throw new Error(`Check ${planned.check} names {config:${name}} and no preset renders it.`);
     return targetInScope(planned.scope.scope.path, target);

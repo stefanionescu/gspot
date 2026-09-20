@@ -3,17 +3,7 @@ import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/policy/normalize.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { manifestSchema } from '#cli/presets/manifest-schema.ts';
-
-import type {
-    RawCheck,
-    RawConfiguration,
-    RawManifest,
-    RawTool,
-    CheckSpec,
-    ConfigurationTarget,
-    Manifest,
-    ToolPin,
-} from '#types/manifest.ts';
+import type { RawCheck, RawManifest, RawTool, CheckSpec, Manifest, ToolPin } from '#types/manifest.ts';
 
 const INSTALLER_KEYS = ['npm', 'pypi', 'mise', 'brew', 'apt', 'cargo', 'github', 'winget', 'scoop', 'ubi'] as const;
 const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
@@ -44,18 +34,6 @@ function toCheck(raw: RawCheck): CheckSpec {
         check.claims = { extensions, filenames, tags, paths, from_languages: isFromLanguages, natures };
     }
     return check;
-}
-
-function toConfiguration(config: RawConfiguration): ConfigurationTarget {
-    return compact({
-        template: config.template,
-        target: config.target,
-        stub: config.stub === undefined ? undefined : compact(config.stub),
-        fragment: config.fragment,
-        per_scope: config.per_scope,
-        executable: config.executable,
-        header: config.header,
-    });
 }
 
 function isIdleManual(check: RawCheck): boolean {
@@ -168,7 +146,7 @@ export function parseManifest(text: string, dir: string): Manifest {
         detect: raw.detect,
         claims: raw.claims,
         tools: raw.tools.map((tool) => toTool(tool)),
-        configs: raw.configs.map((config) => toConfiguration(config)),
+        configs: raw.configs,
         checks: raw.checks.map((check) => toCheck(check)),
         settings: raw.settings.map((setting) => compact(setting)),
         coverage: raw.coverage,

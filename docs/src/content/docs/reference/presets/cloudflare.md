@@ -13,7 +13,7 @@ Kind: platform. Requires: `javascript`.
 
 ## Generated configuration
 
-- `.gspot/semgrep/workers.yml`
+- `.gspot/semgrep/workers.yml` when the [security preset](/reference/presets/security/) is selected
 
 ## Checks
 
