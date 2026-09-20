@@ -1,30 +1,21 @@
-// The carry readers of takeover: the exception lists and disabled rules that old configuration files hold.
-import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
+// The carry readers of takeover: the exception lists and disabled rules that old configuration files hold.
+import { extname, join } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import type { TomlTable } from '#types/config.ts';
-import { parse as parseJsonc } from 'jsonc-parser';
 import { CARRIED_REASON } from '#config/reasons.ts';
-import type { CarryPush, CarriedLists } from '#types/lifecycle.ts';
 import { ignoreFileEntries } from '#cli/lifecycle/ignore-files.ts';
+import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 import { CHECK_BY_TOOL, TYPOS_DEFAULT_EXCLUDES } from '#config/carry.ts';
+import type { CarryPush, CarriedLists, CarrySource } from '#types/lifecycle.ts';
 
 const DATE_LENGTH = 10;
 const COMMENT_MARK = /^(?:#|\/\/)\s?/u;
 const PYRIGHT_DEFAULT_EXCLUDES = new Set(['__pycache__', 'node_modules', 'build', 'dist']);
-const OFF_WORDS = ["'off'", '"off"', "['off'", '["off"', "[ 'off'", '[ "off"'];
 
 function reasonFor(file: string): string {
     return CARRIED_REASON.replaceAll('{{file}}', () => file);
-}
-
-function readText(root: string, path: string): string {
-    try {
-        return readFileSync(join(root, path), 'utf8');
-    } catch {
-        return '';
-    }
 }
 
 function asRaw(value: unknown): TomlTable | undefined {
@@ -43,28 +34,30 @@ function asText(value: unknown): string | undefined {
     return typeof value === 'string' ? value : undefined;
 }
 
-function tryParseToml(text: string): TomlTable | undefined {
-    try {
-        return parseToml(text);
-    } catch {
-        return undefined;
-    }
+function parseJsoncTable(text: string): unknown {
+    const errors: ParseError[] = [];
+    const parsed: unknown = parseJsonc(text, errors, { allowTrailingComma: true });
+    if (errors.length > 0) throw new Error(`Invalid JSON configuration at offset ${String(errors[0]?.offset)}.`);
+    return parsed;
 }
 
-function tryParseYaml(text: string): TomlTable | undefined {
-    try {
-        return asRaw(parseYaml(text));
-    } catch {
-        return undefined;
-    }
-}
+const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
+    '.toml': (text) => parseToml(text),
+    '.yaml': (text) => parseYaml(text) as unknown,
+    '.yml': (text) => parseYaml(text) as unknown,
+    '.json': (text) => JSON.parse(text) as unknown,
+    '.jsonc': parseJsoncTable,
+};
 
-function tryParseJson(text: string): TomlTable | undefined {
-    try {
-        return asRaw(JSON.parse(text));
-    } catch {
-        return undefined;
-    }
+function parseSource(tool: string, path: string, text: string): unknown {
+    if (tool === 'eslint' || /\.[cm]?[jt]s$/u.test(path))
+        throw new Error('This configuration requires tool-specific evaluation.');
+    if (tool === 'licenses') return JSON.parse(text) as unknown;
+    if (tool === 'pyright') return parseJsoncTable(text);
+    const parse = STRUCTURED_PARSERS[extname(path)];
+    if (parse !== undefined) return parse(text);
+    if (['prettier', 'markdownlint', 'stylelint', 'yamllint'].includes(tool)) return parseYaml(text) as unknown;
+    return {};
 }
 
 function commentAbove(lines: string[], index: number): string | undefined {
@@ -98,10 +91,9 @@ function carryTyposWords(lines: string[], words: TomlTable, path: string, lists:
     }
 }
 
-function carryTypos(root: string, path: string, lists: CarriedLists): void {
-    const text = readText(root, path);
-    const parsed = tryParseToml(text);
-    if (!parsed) return;
+function carryTypos(source: CarrySource, path: string, lists: CarriedLists): void {
+    const text = source.text;
+    const parsed = source.parsed;
     const defaults = asRaw(parsed['default']);
     // typos with no locale accepts British and American spellings alike, and the repository was written under that.
     lists.typosLocale = asText(defaults?.['locale']) ?? 'en';
@@ -125,9 +117,8 @@ function targetKeys(entry: TomlTable): { regex_target?: string; condition?: stri
     };
 }
 
-function carryGitleaks(root: string, path: string, lists: CarriedLists): void {
-    const parsed = tryParseToml(readText(root, path));
-    if (!parsed) return;
+function carryGitleaks(source: CarrySource, path: string, lists: CarriedLists): void {
+    const parsed = source.parsed;
     const single = asRaw(parsed['allowlist']);
     const entries = [...(single ? [single] : []), ...asList(parsed['allowlists'])];
     for (const value of entries) {
@@ -149,9 +140,8 @@ function reviewBy(value: unknown): string | undefined {
     return text?.slice(0, DATE_LENGTH);
 }
 
-function carryOsv(root: string, path: string, lists: CarriedLists): void {
-    const parsed = tryParseToml(readText(root, path));
-    if (!parsed) return;
+function carryOsv(source: CarrySource, path: string, lists: CarriedLists): void {
+    const parsed = source.parsed;
     const entries = asList(parsed['IgnoredVulns']);
     for (const value of entries) {
         const entry = asRaw(value);
@@ -170,9 +160,8 @@ function namesOf(value: unknown): string[] {
     return items.map((item) => item.trim()).filter((item) => item !== '');
 }
 
-function carryLicenses(root: string, path: string, lists: CarriedLists): void {
-    const parsed = tryParseJson(readText(root, path));
-    if (!parsed) return;
+function carryLicenses(source: CarrySource, path: string, lists: CarriedLists): void {
+    const parsed = source.parsed;
     const excluded = namesOf(parsed['excludePackages']);
     for (const name of excluded)
         lists.licenseExceptions.push({ package: name, license: 'UNKNOWN', reason: reasonFor(path) });
@@ -204,97 +193,62 @@ function disabledSqlfluff(text: string, push: CarryPush): void {
     }
 }
 
-function disabledFromList(parsed: TomlTable | undefined, key: string, push: CarryPush): void {
-    const rules = asStrings(parsed?.[key]);
+function disabledFromList(parsed: TomlTable, key: string, push: CarryPush): void {
+    const rules = asStrings(parsed[key]);
     for (const rule of rules) push(rule);
 }
 
-function parseByExtension(path: string, text: string): TomlTable | undefined {
-    const isYaml = path.endsWith('.yaml') || path.endsWith('.yml');
-    return isYaml ? tryParseYaml(text) : asRaw(parseJsonc(text));
-}
-
-function disabledFromRulesTable(tool: string, path: string, text: string, push: CarryPush): void {
-    const parsed = parseByExtension(path, text);
-    if (!parsed) return;
+function disabledFromRulesTable(tool: string, parsed: TomlTable, push: CarryPush): void {
     const table = tool === 'markdownlint' ? (asRaw(parsed['config']) ?? parsed) : (asRaw(parsed['rules']) ?? {});
-    const rules = Object.entries(table);
-    for (const [rule, value] of rules) if (value === false || value === null) push(rule);
-}
-
-function unquoted(text: string): string {
-    const trimmed = text.trim();
-    const isQuoted =
-        (trimmed.startsWith("'") && trimmed.endsWith("'")) || (trimmed.startsWith('"') && trimmed.endsWith('"'));
-    return isQuoted ? trimmed.slice(1, -1) : trimmed;
-}
-
-function isOffValue(value: string): boolean {
-    if (OFF_WORDS.some((off) => value.startsWith(off))) return true;
-    return value === '0' || value.startsWith('0,');
-}
-
-function disabledEslint(text: string, push: CarryPush): void {
-    for (const line of text.split('\n')) {
-        const colon = line.indexOf(':');
-        if (colon === -1) continue;
-        const rule = unquoted(line.slice(0, colon));
-        if (rule === '' || (!rule.includes('/') && !/^[a-z][a-z0-9-]*$/u.test(rule))) continue;
-        if (isOffValue(line.slice(colon + 1).trim())) push(rule);
-    }
+    for (const [rule, value] of Object.entries(table)) if (value === false || value === null) push(rule);
 }
 
 function ruffLintTable(parsed: TomlTable): TomlTable {
     return asRaw(asRaw(asRaw(parsed['tool'])?.['ruff'])?.['lint']) ?? asRaw(parsed['lint']) ?? parsed;
 }
 
-function disabledRuff(text: string, push: CarryPush): void {
-    const parsed = tryParseToml(text);
-    if (!parsed) return;
+function disabledRuff(parsed: TomlTable, push: CarryPush): void {
     const lint = ruffLintTable(parsed);
     disabledFromList(lint, 'ignore', push);
     const perFile = Object.entries(asRaw(lint['per-file-ignores']) ?? {});
     for (const [glob, codes] of perFile) for (const code of asStrings(codes)) push(code, [glob]);
 }
 
-const DISABLED_READERS: Record<string, (text: string, path: string, push: CarryPush) => void> = {
-    shellcheck: (text, _path, push) => {
-        disabledShellcheck(text, push);
+const DISABLED_READERS: Record<string, (source: CarrySource, push: CarryPush) => void> = {
+    shellcheck: (source, push) => {
+        disabledShellcheck(source.text, push);
     },
-    sqlfluff: (text, _path, push) => {
-        disabledSqlfluff(text, push);
+    sqlfluff: (source, push) => {
+        disabledSqlfluff(source.text, push);
     },
-    squawk: (text, _path, push) => {
-        disabledFromList(tryParseToml(text), 'excluded_rules', push);
+    squawk: (source, push) => {
+        disabledFromList(source.parsed, 'excluded_rules', push);
     },
-    swiftlint: (text, _path, push) => {
-        disabledFromList(tryParseYaml(text), 'disabled_rules', push);
+    swiftlint: (source, push) => {
+        disabledFromList(source.parsed, 'disabled_rules', push);
     },
-    hadolint: (text, _path, push) => {
-        disabledFromList(tryParseYaml(text), 'ignored', push);
+    hadolint: (source, push) => {
+        disabledFromList(source.parsed, 'ignored', push);
     },
-    markdownlint: (text, path, push) => {
-        disabledFromRulesTable('markdownlint', path, text, push);
+    markdownlint: (source, push) => {
+        disabledFromRulesTable('markdownlint', source.parsed, push);
     },
-    stylelint: (text, path, push) => {
-        disabledFromRulesTable('stylelint', path, text, push);
+    stylelint: (source, push) => {
+        disabledFromRulesTable('stylelint', source.parsed, push);
     },
-    eslint: (text, _path, push) => {
-        disabledEslint(text, push);
-    },
-    ruff: (text, _path, push) => {
-        disabledRuff(text, push);
+    ruff: (source, push) => {
+        disabledRuff(source.parsed, push);
     },
 };
 
-function carryDisabled(root: string, tool: string, path: string, lists: CarriedLists): void {
+function carryDisabled(source: CarrySource, tool: string, path: string, lists: CarriedLists): void {
     const check = CHECK_BY_TOOL[tool];
     const reader = DISABLED_READERS[tool];
     if (check === undefined || reader === undefined) return;
     const push: CarryPush = (rule, paths) => {
         lists.ignores.push({ check, rule, reason: reasonFor(path), ...(paths ? { paths } : {}) });
     };
-    reader(readText(root, path), path, push);
+    reader(source, push);
 }
 
 // The folders the preset leaves out on its own, and dot folders, which hold caches and environments git does not track.
@@ -304,36 +258,51 @@ function isShippedExclude(entry: string): boolean {
 }
 
 // Only a file at the root is carried: its paths start at the root, which is where tools.basedpyright.exclude starts.
-function carryPyright(root: string, path: string, lists: CarriedLists): void {
+function carryPyright(source: CarrySource, path: string, lists: CarriedLists): void {
     if (path.includes('/')) return;
-    const parsed = asRaw(parseJsonc(readText(root, path)));
-    const kept = asStrings(parsed?.['exclude']).filter((entry) => !isShippedExclude(entry));
+    const parsed = source.parsed;
+    const kept = asStrings(parsed['exclude']).filter((entry) => !isShippedExclude(entry));
     if (kept.length > 0) lists.pyrightExcludes.push({ paths: kept, reason: reasonFor(path) });
 }
 
-const CARRIERS: Record<string, (root: string, path: string, lists: CarriedLists) => void> = {
+const CARRIERS: Record<string, (source: CarrySource, path: string, lists: CarriedLists) => void> = {
     typos: carryTypos,
     gitleaks: carryGitleaks,
     osv: carryOsv,
     pyright: carryPyright,
     licenses: carryLicenses,
-    sqlfluffignore: (root, path, lists) => {
-        lists.sqlfluffExcludes.push(...ignoreFileEntries(root, path));
+    sqlfluffignore: (source, path, lists) => {
+        lists.sqlfluffExcludes.push(...ignoreFileEntries(source.text, path));
     },
-    semgrepignore: (root, path, lists) => {
-        lists.semgrepIgnores.push(...ignoreFileEntries(root, path));
+    semgrepignore: (source, path, lists) => {
+        lists.semgrepIgnores.push(...ignoreFileEntries(source.text, path));
     },
 };
 
 /**
- * Reads what one old configuration file holds that gspot keeps: exception lists for the four list tools, disabled rules for the rest.
+ * Reads and parses takeover input once; failed observations and unsupported executable formats raise errors.
  * @param root the repository root
+ * @param tool the tool the file configures
+ * @param path the file, relative to the root
+ * @returns the original text and parsed table
+ */
+export function readCarrySource(root: string, tool: string, path: string): CarrySource {
+    const text = readFileSync(join(root, path), 'utf8');
+    const value = parseSource(tool, path, text);
+    const parsed = asRaw(value);
+    if (parsed === undefined) throw new Error('Configuration must contain a settings table.');
+    return { text, parsed };
+}
+
+/**
+ * Reads what one old configuration file holds that gspot keeps: exception lists for the four list tools, disabled rules for the rest.
+ * @param source the input already read and parsed
  * @param tool the tool the file configures
  * @param path the file, relative to the root
  * @param lists the lists the entries are added to
  */
-export function carryFrom(root: string, tool: string, path: string, lists: CarriedLists): void {
+export function carryFrom(source: CarrySource, tool: string, path: string, lists: CarriedLists): void {
     const carrier = CARRIERS[tool];
-    if (carrier) carrier(root, path, lists);
-    else carryDisabled(root, tool, path, lists);
+    if (carrier) carrier(source, path, lists);
+    else carryDisabled(source, tool, path, lists);
 }

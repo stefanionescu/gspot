@@ -1,6 +1,6 @@
 import type { Profile } from '#types/profile.ts';
 // init, upgrade and uninstall: their options, the selection, the questions, the takeover plan and the carried lists.
-import type { FormatSettings } from '#types/config.ts';
+import type { TomlTable, FormatSettings } from '#types/config.ts';
 import type { Manifest, Proposal, UnknownLanguage } from '#types/manifest.ts';
 import type { ExistingTooling, ManifestFacts, Repository, ScopeEntry, TrackedFile } from '#types/repository.ts';
 
@@ -77,6 +77,9 @@ export type UpgradeOptions = {
     yes: boolean;
     install: boolean;
 };
+
+/** Original takeover text and the parsed settings used by every carry reader. */
+export type CarrySource = { text: string; parsed: TomlTable };
 
 /** Adds one carried ignore: a rule the old configuration turned off, with the paths it applied to when it had any. */
 export type CarryPush = (rule: string, paths?: string[]) => void;

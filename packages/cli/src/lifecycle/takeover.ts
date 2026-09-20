@@ -1,9 +1,8 @@
 // Takeover at init: delete the old configuration of every owned tool, carry the exception lists, list what stops running.
 import { join } from 'node:path';
-import { carryFrom } from '#cli/lifecycle/carry.ts';
 import { existsSync, rmSync, statSync } from 'node:fs';
 import type { ExistingTooling } from '#types/repository.ts';
-import { unreadableReason } from '#cli/lifecycle/unreadable.ts';
+import { carryFrom, readCarrySource } from '#cli/lifecycle/carry.ts';
 import type { CarriedLists, TakeoverPlan } from '#types/lifecycle.ts';
 
 const DELETED_ALONGSIDE_OWNER: Record<string, string> = {
@@ -88,12 +87,13 @@ export function collectCarried(root: string, tooling: ExistingTooling, selected:
     };
     for (const { tool, path } of tooling.configs) {
         if (!isOwned(tool, selected)) continue;
-        const problem = unreadableReason(root, path);
-        if (problem !== undefined) {
-            lists.unread.push({ path, note: `not read and not deleted: ${problem}` });
+        try {
+            const source = readCarrySource(root, tool, path);
+            carryFrom(source, tool, path, lists);
+        } catch (error) {
+            lists.unread.push({ path, note: `not read and not deleted: ${(error as Error).message}` });
             continue;
         }
-        carryFrom(root, tool, path, lists);
         lists.removed.push({ path, note: `replaced by gspot's ${tool} configuration` });
     }
     return lists;

@@ -46,11 +46,15 @@ describe('takeover', () => {
         PLANTED_TIMEOUT_MS,
     );
 
-    test(
-        'unreadable takeover input preserves every original file and mode',
-        async () => {
+    test.each([
+        ['typos.toml', '[default\n'],
+        ['.markdownlint.jsonc', '{ "MD013": false, broken }\n'],
+        ['eslint.config.mjs', "export default [{ rules: { 'no-console': 'off' } }];\n"],
+    ])(
+        'unreadable or unsupported %s preserves every original file and mode',
+        async (path, text) => {
             await using fixture = await createFixture({
-                'typos.toml': '[default\n',
+                [path]: text,
                 'notes.md': '# Notes\n',
             });
             const before = treeContents(fixture.path);
@@ -76,9 +80,7 @@ describe('takeover', () => {
                 'typos.toml':
                     '[default.extend-words]\n# The device identifier API name.\nudid = "udid"\ncertifi = "certifi"\n',
                 '.shellcheckrc': 'disable=SC2086,SC2034\n',
-                'eslint.config.mjs':
-                    "export default [\n    {\n        rules: {\n            'no-console': 'off',\n            'no-var': 'error',\n        },\n    },\n];\n",
-                '.markdownlint.jsonc': '{ "MD013": false, "MD033": true }\n',
+                '.markdownlint.jsonc': '// Keep long prose lines.\n{ "MD013": false, "MD033": true, }\n',
                 'quality/lint.sh': script,
             });
             git(fixture.path, ['init', '-q']);
@@ -95,9 +97,6 @@ describe('takeover', () => {
             expect(readFileSync(join(fixture.path, '.gspot/typos.toml'), 'utf8')).toContain('locale = "en"');
             expect(policy).toContain('SC2086');
             expect(policy).toContain('carried from .shellcheckrc at init');
-            expect(policy).toContain('no-console');
-            expect(policy).not.toContain('no-var');
-            expect(policy).toContain('carried from eslint.config.mjs at init');
             expect(policy).toContain('MD013');
             expect(policy).not.toContain('MD033');
             for (const stub of ['typos.toml', '.shellcheckrc', '.markdownlint-cli2.jsonc'])
@@ -107,7 +106,6 @@ describe('takeover', () => {
             );
             expect(eslintStub).toBeDefined();
             expect(readFileSync(join(fixture.path, eslintStub ?? ''), 'utf8')).toContain('gspot');
-            expect(readFileSync(join(fixture.path, eslintStub ?? ''), 'utf8')).not.toContain('no-var');
             expect(existsSync(join(fixture.path, '.markdownlint.jsonc'))).toBe(false);
             expect(existsSync(join(fixture.path, 'quality', 'lint.sh'))).toBe(true);
             const applied = await run(fixture.path, ['apply', '--check']);

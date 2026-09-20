@@ -104,7 +104,13 @@ Real-file regressions cover both parsers and a directory where a manifest belong
 Init refuses all mutation when takeover reports unread configuration, including generated
 root pointers that otherwise overwrite retained originals. Its preview still shows the
 proposal. A real init regression verifies unchanged repository bytes and modes.
-Consolidating the takeover parsers remains open.
+
+Takeover reads each input once and passes its parsed table to carry readers. JSONC
+errors are collected and reported; malformed JSONC is never accepted as a partial table.
+Executable configurations and ESLint configurations remain explicit unsupported input until
+the tool-specific resolver lands. Init preserves these files and refuses application.
+The duplicate suffix preflight and failure-to-empty carry parsers are removed.
+Formatting takeover and the remaining Git observations are still open.
 
 **What is wrong.** `platform/spawn.ts` maps every failed Git command to `undefined`; `repository/tracked.ts` then falls back to a non-Git walk. `entryFor()` drops a path after any stat failure, and `head()` returns empty text after any read failure. `integrity/manifest-policy.ts` treats unreadable or malformed package JSON as absent. The takeover readers also catch read and parse errors, while a separate preflight reparses only selected suffixes.
 

@@ -1,6 +1,4 @@
 // An ignore file of a replaced tool holds paths somebody chose to leave out. They travel into the policy with the comment above them as the reason.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 
 const COMMENT = '#';
@@ -23,11 +21,11 @@ function reasonFrom(path: string, comment: string): string {
 
 /**
  * The entries of one ignore file: each run of lines under a comment is one entry with that comment as its reason.
- * @param root the repository root
+ * @param text the contents already read from the ignore file
  * @param path the ignore file, relative to the root
  * @returns the entries, each with its globs and its reason
  */
-export function ignoreFileEntries(root: string, path: string): { paths: string[]; reason: string }[] {
+export function ignoreFileEntries(text: string, path: string): { paths: string[]; reason: string }[] {
     const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
     const entries: { paths: string[]; reason: string }[] = [];
     let reason = `carried from ${path} at init`;
@@ -36,7 +34,7 @@ export function ignoreFileEntries(root: string, path: string): { paths: string[]
         if (current.length > 0) entries.push({ paths: current, reason });
         current = [];
     };
-    const lines = readFileSync(join(root, path), 'utf8').split('\n');
+    const lines = text.split('\n');
     for (const raw of lines) {
         const line = raw.trim();
         if (line.startsWith(COMMENT)) {

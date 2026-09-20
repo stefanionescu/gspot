@@ -11,12 +11,13 @@ redundant. It prints its plan and waits for a yes.
 If the plan lists unread configuration, `init` exits with status 2 before
 writing or installing anything. Fix the listed files and run `gspot init` again.
 Use `gspot init --dry-run` to inspect the proposal without changing files.
+Executable configurations and ESLint configurations for selected tools require tool-specific
+evaluation. `init` reports them as unsupported and refuses to apply the proposal.
 
 ## What it deletes
 
-The configuration file of every tool a selected preset owns: `.eslintrc`, `eslint.config.js`,
-`.prettierrc`, `typos.toml`, `.shellcheckrc`, `.markdownlint.jsonc` and the rest. Git keeps
-them; the plan prints the `git show` command for each.
+Readable configurations of selected tools include `typos.toml`, `.shellcheckrc`,
+and `.markdownlint.jsonc`. Git keeps them; the plan prints the `git show` command for each.
 
 ## What it carries
 
