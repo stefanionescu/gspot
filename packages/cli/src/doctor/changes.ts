@@ -6,7 +6,7 @@ import { hasHeader } from '#cli/emit/templates.ts';
 import { everyManifest } from '#cli/run/session.ts';
 import { isOwned } from '#cli/lifecycle/takeover.ts';
 import { detectPresets } from '#cli/presets/detect.ts';
-import { pinnedTwice } from '#cli/emit/runner-surface.ts';
+import { pinnedTwice } from '#cli/emit/runner-tasks.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import type { ChangeReport, ChangeRow } from '#types/doctor.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';

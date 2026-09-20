@@ -6,7 +6,7 @@ import type { Manifest } from '#types/manifest.ts';
 import type { ScopeEntry } from '#types/repository.ts';
 import { noLongerRuns } from '#cli/lifecycle/takeover.ts';
 import { xcodeProposal } from '#cli/lifecycle/xcode-proposal.ts';
-import { pinnedTwice, collectPins, npmPins } from '#cli/emit/runner-surface.ts';
+import { pinnedTwice, collectPins, npmPins } from '#cli/emit/runner-tasks.ts';
 import type { CarriedLists, InitAnswers, InitPlanInputs, InitSelection, TakeoverPlan } from '#types/lifecycle.ts';
 
 const TYPES_DIRECTORIES = ['types', 'src/types', 'api/types'];

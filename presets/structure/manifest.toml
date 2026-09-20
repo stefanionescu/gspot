@@ -112,7 +112,7 @@ runs = "once"
 engine = "integrity"
 analysis = "task-policy"
 inspection = ["consistency"]
-summary = "Checks that the runner surface holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath."
+summary = "Checks that the task runner holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath."
 why = "A missing task or a hook nobody points at means the gate runs only when someone remembers to."
 help = "Run gspot apply; it rewrites the tasks and the hooks and sets core.hooksPath."
 

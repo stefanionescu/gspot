@@ -66,7 +66,7 @@ export const SUPPRESSION_FORMS: Record<string, SuppressionForm[]> = {
     ],
 };
 
-/** The tasks each runner surface must hold. */
+/** The tasks each task runner must hold. */
 export const REQUIRED_TASKS: Record<string, string[]> = {
     mise: ['gspot:check', 'gspot:fix', 'gspot:apply', 'gspot:doctor', 'gspot:setup'],
     npm: ['check', 'check:fix', 'apply', 'prepare'],

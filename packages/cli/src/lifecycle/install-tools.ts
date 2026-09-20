@@ -3,11 +3,11 @@ import { existsSync } from 'node:fs';
 import { detectPackageManager } from 'nypm';
 import { run } from '#cli/platform/spawn.ts';
 import type { Manifest } from '#types/manifest.ts';
-// The install step of init and upgrade: the package.json pins, then the tool install through the runner surface.
+// The install step of init and upgrade: the package.json pins, then the tool install through the task runner.
 import { mergedPins } from '#cli/emit/kept-pins.ts';
 import type { InitAnswers } from '#types/lifecycle.ts';
+import { npmPins, npmScripts } from '#cli/emit/runner-tasks.ts';
 import type { ApplyReport, PackageContent } from '#types/emit.ts';
-import { npmPins, npmScripts } from '#cli/emit/runner-surface.ts';
 
 const PACKAGE_RUNNERS = new Set(['bun', 'npm', 'pnpm']);
 
@@ -34,7 +34,7 @@ async function runInstall(root: string, commands: string[][]): Promise<string> {
 /**
  * Adds the pinned devDependencies and the gspot scripts to package.json, creating the file when there is none.
  * @param root the repository root
- * @param runner the runner surface chosen
+ * @param runner the task runner chosen
  * @param everySelected every selected manifest
  */
 export async function updatePackageJson(
@@ -56,9 +56,9 @@ export async function updatePackageJson(
 }
 
 /**
- * Installs the pinned tools through the runner surface, or says how to when --no-install was given.
+ * Installs the pinned tools through the task runner, or says how to when --no-install was given.
  * @param root the repository root
- * @param runner the runner surface chosen
+ * @param runner the task runner chosen
  * @param synced what apply wrote, for the package manager step mise needs
  * @param isInstalling whether init was asked to install
  * @returns the note for the summary, empty when there is no runner

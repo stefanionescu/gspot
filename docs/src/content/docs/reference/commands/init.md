@@ -25,5 +25,5 @@ gspot init [options]
 | `--no-rules`         | Leave the agent rule files out                                    |
 | `--keep-format`      | Keep your formatter settings                                      |
 | `--shipped-format`   | Take the shipped formatter settings                               |
-| `--runner <surface>` | The task runner surface                                           |
+| `--runner <tool>`    | The task runner                                                   |
 | `--dry-run`          | Print the plan and write nothing                                  |

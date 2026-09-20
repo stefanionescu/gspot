@@ -1,6 +1,6 @@
 // The install command for a tool on this platform: mise first, then the platform's manager.
 import type { ToolPin } from '#types/manifest.ts';
-import type { RunnerSurface } from '#types/config.ts';
+import type { RunnerTool } from '#types/config.ts';
 
 const HOST_HINTS: Record<string, string> = {
     xcodebuild: 'install Xcode from the App Store',
@@ -36,7 +36,7 @@ function githubHint(tool: ToolPin): string | undefined {
     return `mise use ${source}@${tool.version ?? 'latest'}`;
 }
 
-function packageHint(tool: ToolPin, runner: RunnerSurface): string | undefined {
+function packageHint(tool: ToolPin, runner: RunnerTool): string | undefined {
     const { installers } = tool;
     if (installers['npm'] !== undefined) return `${NPM_RUNNERS.has(runner) ? runner : 'bun'} install`;
     if (installers['pypi'] !== undefined)
@@ -48,7 +48,7 @@ function hasMiseInstaller(tool: ToolPin): boolean {
     return MISE_INSTALLERS.some((installer) => tool.installers[installer] !== undefined);
 }
 
-function installerHint(tool: ToolPin, runner: RunnerSurface): string | undefined {
+function installerHint(tool: ToolPin, runner: RunnerTool): string | undefined {
     return packageHint(tool, runner) ?? platformHint(tool.installers) ?? cargoHint(tool.installers) ?? githubHint(tool);
 }
 
@@ -59,10 +59,10 @@ function plainHint(tool: ToolPin): string {
 /**
  * The one line doctor prints under a missing tool.
  * @param tool the pin
- * @param runner the runner surface the repository uses
+ * @param runner the task runner the repository uses
  * @returns the command to run
  */
-export function installHint(tool: ToolPin, runner: RunnerSurface = 'mise'): string {
+export function installHint(tool: ToolPin, runner: RunnerTool = 'mise'): string {
     if (tool.provider === 'host') return HOST_HINTS[tool.name] ?? `install ${tool.name}`;
     if (runner === 'mise' && hasMiseInstaller(tool)) return 'mise install';
     return installerHint(tool, runner) ?? plainHint(tool);

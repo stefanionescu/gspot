@@ -19,27 +19,27 @@ const RUNNER_EXEC: Record<string, string> = {
 
 /**
  * The command that resolves the pinned gspot for a runner.
- * @param surface the runner surface
+ * @param runner the task runner
  * @param binaryPath the gspot binary to call when there is no runner
  * @returns the command prefix
  */
-export function runnerExec(surface: string, binaryPath?: string): string {
-    return RUNNER_EXEC[surface] ?? binaryPath ?? 'gspot';
+export function runnerExec(runner: string, binaryPath?: string): string {
+    return RUNNER_EXEC[runner] ?? binaryPath ?? 'gspot';
 }
 
 /**
  * The body of one hook.
  * @param name the hook
- * @param surface the runner surface
+ * @param runner the task runner
  * @param binaryPath the gspot binary to call when there is no runner
  * @returns the script text; only commit-msg forwards an argument (the message file), because git hands pre-push the remote name and URL
  */
-export function hookBody(name: HookName, surface: string, binaryPath?: string): string {
+export function hookBody(name: HookName, runner: string, binaryPath?: string): string {
     const lfs =
         name === 'pre-push'
             ? ['    if command -v git-lfs >/dev/null 2>&1; then', '        git lfs pre-push "$@"', '    fi']
             : [];
-    const exec = runnerExec(surface, binaryPath)
+    const exec = runnerExec(runner, binaryPath)
         .split(' ')
         .map((word) => `'${word}'`)
         .join(' ');
@@ -67,14 +67,14 @@ export function hookBody(name: HookName, surface: string, binaryPath?: string): 
 
 /**
  * The three gspot hook files.
- * @param surface the runner surface
+ * @param runner the task runner
  * @param binaryPath the gspot binary to call when there is no runner
  * @returns the executable hook files under .gspot/hooks
  */
-export function gspotHooks(surface: string, binaryPath?: string): GeneratedFile[] {
+export function gspotHooks(runner: string, binaryPath?: string): GeneratedFile[] {
     return HOOK_NAMES.map((name) => ({
         path: `.gspot/hooks/${name}`,
-        content: hookBody(name, surface, binaryPath),
+        content: hookBody(name, runner, binaryPath),
         readOnly: false,
         executable: true,
         kind: 'hook',
@@ -100,12 +100,12 @@ export function removeHooksPath(root: string): void {
 
 /**
  * The husky files: one line each, appended to whatever the person has.
- * @param surface the runner surface
+ * @param runner the task runner
  * @param binaryPath the gspot binary to call when there is no runner
  * @returns the line per husky file
  */
-export function huskyLines(surface: string, binaryPath?: string): { path: string; line: string }[] {
-    const exec = runnerExec(surface, binaryPath);
+export function huskyLines(runner: string, binaryPath?: string): { path: string; line: string }[] {
+    const exec = runnerExec(runner, binaryPath);
     return HOOK_NAMES.map((name) => ({
         path: `.husky/${name}`,
         line: `${exec} ${HOOK_ARGS[name]}${name === 'commit-msg' ? ' "$1"' : ''}`,
@@ -114,12 +114,12 @@ export function huskyLines(surface: string, binaryPath?: string): { path: string
 
 /**
  * The lefthook block.
- * @param surface the runner surface
+ * @param runner the task runner
  * @param binaryPath the gspot binary to call when there is no runner
  * @returns the three hook tables lefthook.yml carries
  */
-export function lefthookBlock(surface: string, binaryPath?: string): LefthookBlock {
-    const exec = runnerExec(surface, binaryPath);
+export function lefthookBlock(runner: string, binaryPath?: string): LefthookBlock {
+    const exec = runnerExec(runner, binaryPath);
     return {
         'pre-commit': { commands: { gspot: { run: `${exec} check --staged` } } },
         'pre-push': { commands: { gspot: { run: `${exec} check` } } },

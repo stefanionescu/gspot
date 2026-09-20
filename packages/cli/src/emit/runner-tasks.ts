@@ -1,4 +1,4 @@
-// The task-runner surface: .config/mise/conf.d/gspot.toml, package.json scripts and devDependencies, the uv dependency group.
+// The task runner: .config/mise/conf.d/gspot.toml, package.json scripts and devDependencies, the uv dependency group.
 import { join } from 'node:path';
 import { existsSync, readFileSync } from 'node:fs';
 import { headerFor } from '#cli/emit/templates.ts';
@@ -95,7 +95,7 @@ export function collectPins(manifests: Manifest[]): ToolPin[] {
  * @param isPackagePinned whether npm tools are pinned in package.json instead
  * @returns the generated file
  */
-export function miseSurface(manifests: Manifest[], version: string, isPackagePinned: boolean): GeneratedFile {
+export function miseTasks(manifests: Manifest[], version: string, isPackagePinned: boolean): GeneratedFile {
     const lines = [headerFor(MISE_PATH, version).trimEnd(), '', '[tools]'];
     if (isEmbedded()) lines.push(`"ubi:stefanionescu/gspot" = "${version}"`);
     for (const tool of collectPins(manifests)) {
@@ -109,24 +109,24 @@ export function miseSurface(manifests: Manifest[], version: string, isPackagePin
 }
 
 /**
- * The devDependencies an npm-family surface pins.
+ * The devDependencies an npm-family task runner pins.
  * @param manifests the selected manifests
- * @param surface the runner surface; under mise, tools mise can pin stay out
+ * @param runner the task runner; under mise, tools mise can pin stay out
  * @returns package name to version, sorted
  */
-export function npmPins(manifests: Manifest[], surface = 'npm'): Record<string, string> {
+export function npmPins(manifests: Manifest[], runner = 'npm'): Record<string, string> {
     const pins: [string, string][] = [];
     for (const tool of collectPins(manifests)) {
         const name = tool.installers['npm'];
         if (name === undefined || tool.version === undefined) continue;
-        if (surface === 'mise' && tool.installers['mise'] !== undefined) continue;
+        if (runner === 'mise' && tool.installers['mise'] !== undefined) continue;
         pins.push([name, tool.version]);
     }
     return Object.fromEntries(pins.toSorted(([a], [b]) => a.localeCompare(b)));
 }
 
 /**
- * The scripts an npm-family surface writes.
+ * The scripts an npm-family task runner writes.
  * @returns script name to command
  */
 export function npmScripts(): Record<string, string> {

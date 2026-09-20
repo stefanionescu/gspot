@@ -38,7 +38,7 @@ export async function licensesNpm(input: EngineInput): Promise<Finding[]> {
     if (!existsSync(join(start, 'node_modules'))) return [];
     const binary = locateTool(input.root, TOOL);
     if (binary === undefined)
-        throw new MissingToolError(`${TOOL} is not installed; run the install of the runner surface.`);
+        throw new MissingToolError(`${TOOL} is not installed; run the install of the task runner.`);
     const result = await run([binary, '--json', '--excludePrivatePackages', '--start', start], {
         cwd: start,
         timeoutMs: SCAN_TIMEOUT_MS,

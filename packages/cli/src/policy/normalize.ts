@@ -78,7 +78,7 @@ function normalizeScalars(raw: RawPolicy): Pick<Policy, 'hooks' | 'ci' | 'rules'
         rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
         editor: defaulted<Policy['editor']>(raw.editor, { vscode: false }),
         inspection: defaulted<Policy['inspection']>(raw.inspection, { strict: false }),
-        runner: defaulted<Policy['runner']>(raw.runner, { surface: 'none' }),
+        runner: defaulted<Policy['runner']>(raw.runner, { tool: 'none' }),
     };
 }
 

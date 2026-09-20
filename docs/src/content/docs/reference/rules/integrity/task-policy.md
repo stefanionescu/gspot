@@ -1,9 +1,9 @@
 ---
 title: "integrity/task-policy"
-description: "Checks that the runner surface holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath."
+description: "Checks that the task runner holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath."
 ---
 
-Checks that the runner surface holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath.
+Checks that the task runner holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath.
 
 ## Why
 

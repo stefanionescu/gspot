@@ -46,8 +46,8 @@ async function applyUpgrade(
     writePin(root, target);
     const session = await openSession(root);
     const synced = await applyAll(session);
-    const { surface } = session.policyFiles.policy.runner;
-    const installNote = await installTools(root, surface, synced, options.install);
+    const { tool: runner } = session.policyFiles.policy.runner;
+    const installNote = await installTools(root, runner, synced, options.install);
     const { baselines: written } = await firstRun(root);
     const noun = written.length === 1 ? 'baseline' : 'baselines';
     const install = installNote === '' ? '' : `; ${installNote}`;

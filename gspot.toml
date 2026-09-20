@@ -32,7 +32,7 @@ directory = ".gspot/rules"
 strict = false
 
 [runner]
-surface = "mise"
+tool = "mise"
 
 [tools]
 

@@ -1830,7 +1830,7 @@
         "runner": {
             "type": "object",
             "properties": {
-                "surface": {
+                "tool": {
                     "type": "string",
                     "enum": [
                         "mise",

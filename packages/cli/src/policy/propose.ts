@@ -115,6 +115,6 @@ export function proposeText(proposal: Proposal): string {
     document['ci'] = { ...asTable(document['ci']), provider: proposal.ci };
     document['rules'] = { directory: '.gspot/rules', ...asTable(document['rules']), install: proposal.rules };
     document['inspection'] = { strict: false, ...asTable(document['inspection']) };
-    document['runner'] = { ...asTable(document['runner']), surface: proposal.runner };
+    document['runner'] = { ...asTable(document['runner']), tool: proposal.runner };
     return `${PREFACE}${bodyText(document)}`;
 }

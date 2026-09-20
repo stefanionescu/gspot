@@ -155,3 +155,10 @@ fix_order = "imports"
         expect(problems(`${check}fix_command = []\nfix_order = "format"`)).not.toEqual([]);
     });
 });
+
+test('uses runner.tool and rejects the removed runner field', () => {
+    const policy = parsePolicyText(`${minimal}[runner]\ntool = "mise"\n`, 'gspot.toml');
+    expect(policy.runner.tool).toBe('mise');
+    expect(policy.runner).not.toHaveProperty('surface');
+    expect(problems(`${minimal}[runner]\nsurface = "mise"\n`)[0]).toContain('`surface`');
+});

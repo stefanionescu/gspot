@@ -123,6 +123,12 @@ with 541 assertions and six planted repository-check and explanation tests with 
 Type checking, schema validation, and all 272 reference-page comparisons pass. Windows
 execution remains deferred.
 
+Runner configuration uses `runner.tool`. Task generation lives in `emit/runner-tasks.ts`,
+and the runner type is derived from the normalized configuration. Runner choices,
+installation ownership, and selected-settings vocabulary remain open. The affected policy,
+emitter, doctor, output, planted init, and profile suites pass (66 tests, 231 assertions).
+Type checking, schema validation, and reference verification pass locally.
+
 **What is wrong.** The names guide endorsed a writing action called `didWrite` while rejecting
 `didRunFixer`. It prescribed `name` for a finding's check reference, although ignores and
 findings use `check`. The glossary retained runner surface, inspection, and project templates.

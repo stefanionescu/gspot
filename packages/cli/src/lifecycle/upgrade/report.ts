@@ -47,7 +47,7 @@ function toolChange(
 }
 
 function toolChanges(session: Session): UpgradeReport['tools'] {
-    if (session.policyFiles.policy.runner.surface === 'none') return [];
+    if (session.policyFiles.policy.runner.tool === 'none') return [];
     const pinned = new Map([...misePins(session.root), ...packagePins(session.root)]);
     const seen = new Set<string>();
     return session.scopes.flatMap((scope) =>

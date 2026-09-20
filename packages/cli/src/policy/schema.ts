@@ -191,7 +191,7 @@ const editorSchema = z.strictObject({ vscode: flag.optional() });
 
 const inspectionSchema = z.strictObject({ strict: flag.optional() });
 
-const runnerSchema = z.strictObject({ surface: z.enum(['mise', 'npm', 'bun', 'pnpm', 'uv', 'none']).optional() });
+const runnerSchema = z.strictObject({ tool: z.enum(['mise', 'npm', 'bun', 'pnpm', 'uv', 'none']).optional() });
 
 const namingTable = namingLists.catchall(namingLanguage);
 

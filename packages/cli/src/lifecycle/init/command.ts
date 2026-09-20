@@ -63,7 +63,7 @@ function profileAnswers(profile: Profile): Partial<InitOptions> {
         presets: presets.length === 0 ? ['none'] : presets,
         hooks: tables.hooks?.tool,
         ci: tables.ci?.provider,
-        runner: tables.runner?.surface,
+        runner: tables.runner?.tool,
         rules: install === undefined ? undefined : toChoice(install),
     });
 }

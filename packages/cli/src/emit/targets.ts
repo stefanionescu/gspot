@@ -16,7 +16,7 @@ import { binaryPath, readAsset } from '#cli/platform/assets.ts';
 import type { ConfigurationTarget, Manifest } from '#types/manifest.ts';
 import { GENERATED_JSON_KEY, VERSION_FILE_LINE } from '#config/markers.ts';
 import { gspotHooks, huskyLines, lefthookBlock } from '#cli/emit/hooks.ts';
-import { miseSurface, npmPins, npmScripts } from '#cli/emit/runner-surface.ts';
+import { miseTasks, npmPins, npmScripts } from '#cli/emit/runner-tasks.ts';
 import { emitTarget, templateText, templateInputs } from '#cli/emit/templates.ts';
 import type { EmitContext, GeneratedFile, PackageContent, PackageOutput, RenderedSet } from '#types/emit.ts';
 
@@ -113,11 +113,11 @@ function hookOutputs(session: Session, out: RenderedSet, binary: string | undefi
     const { policy } = session.policyFiles;
     switch (policy.hooks.tool) {
         case 'gspot': {
-            out.files.push(...gspotHooks(policy.runner.surface, binary));
+            out.files.push(...gspotHooks(policy.runner.tool, binary));
             break;
         }
         case 'husky': {
-            for (const line of huskyLines(policy.runner.surface, binary))
+            for (const line of huskyLines(policy.runner.tool, binary))
                 out.blocks.push({ path: line.path, block: line.line, style: 'hash' });
             break;
         }
@@ -126,7 +126,7 @@ function hookOutputs(session: Session, out: RenderedSet, binary: string | undefi
                 !existsSync(join(session.root, 'lefthook.yml')) && existsSync(join(session.root, '.lefthook.yml'));
             out.lefthook = {
                 path: isDotted ? '.lefthook.yml' : 'lefthook.yml',
-                block: lefthookBlock(policy.runner.surface, binary),
+                block: lefthookBlock(policy.runner.tool, binary),
             };
 
             break;
@@ -136,14 +136,14 @@ function hookOutputs(session: Session, out: RenderedSet, binary: string | undefi
 }
 
 function runnerOutputs(session: Session, out: RenderedSet): void {
-    const { surface } = session.policyFiles.policy.runner;
+    const { tool: runner } = session.policyFiles.policy.runner;
     const isRootPackage = hasRootPackage(session.root);
-    if (surface === 'mise') out.files.push(miseSurface(everyManifest(session), session.version, isRootPackage));
-    const isNpmRunner = NPM_RUNNERS.has(surface);
-    if (isRootPackage && (isNpmRunner || surface === 'mise'))
+    if (runner === 'mise') out.files.push(miseTasks(everyManifest(session), session.version, isRootPackage));
+    const isNpmRunner = NPM_RUNNERS.has(runner);
+    if (isRootPackage && (isNpmRunner || runner === 'mise'))
         out.packages.push({
             path: 'package.json',
-            devDependencies: npmPins(everyManifest(session), surface),
+            devDependencies: npmPins(everyManifest(session), runner),
             scripts: isNpmRunner ? npmScripts() : {},
         });
 }
@@ -159,7 +159,7 @@ function workflowOutput(session: Session, out: RenderedSet): void {
             version: session.version,
             platforms: policy.ci.platforms,
             swiftScope: swiftScope?.scope.path,
-            isMise: policy.runner.surface === 'mise',
+            isMise: policy.runner.tool === 'mise',
         }),
     );
 }

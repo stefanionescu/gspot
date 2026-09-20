@@ -1,4 +1,4 @@
-// The runner surface holds the tasks gspot writes, and the hooks gspot installs are in place and call it.
+// The task runner holds the tasks gspot writes, and the hooks gspot installs are in place and call it.
 import { join } from 'node:path';
 import { git } from '#cli/platform/spawn.ts';
 import { parse as parseToml } from 'smol-toml';
@@ -14,8 +14,8 @@ function finding(input: EngineInput, file: string, rule: string, text: string): 
     return { check: input.spec.name, file, line: 1, rule, message: text, fixable: false };
 }
 
-function taskNames(root: string, surface: string): { file: string; names: Set<string> } {
-    if (surface === 'mise') {
+function taskNames(root: string, runner: string): { file: string; names: Set<string> } {
+    if (runner === 'mise') {
         const path = join(root, MISE_FILE);
         if (!existsSync(path)) return { file: MISE_FILE, names: new Set() };
         const parsed = parseToml(readFileSync(path, 'utf8')) as { tasks?: Record<string, unknown> };
@@ -28,14 +28,14 @@ function taskNames(root: string, surface: string): { file: string; names: Set<st
 }
 
 function taskFindings(input: EngineInput): Finding[] {
-    const surface = input.session.policyFiles.policy.runner.surface;
-    const required = REQUIRED_TASKS[surface];
+    const runner = input.session.policyFiles.policy.runner.tool;
+    const required = REQUIRED_TASKS[runner];
     if (required === undefined) return [];
-    const { file, names } = taskNames(input.root, surface);
+    const { file, names } = taskNames(input.root, runner);
     return required
         .filter((name) => !names.has(name))
         .map((name) =>
-            finding(input, file, 'missing-task', `The ${surface} surface has no ${name} task; run gspot apply.`),
+            finding(input, file, 'missing-task', `The ${runner} task runner has no ${name} task; run gspot apply.`),
         );
 }
 
@@ -68,7 +68,7 @@ function hookFindings(input: EngineInput): Finding[] {
 }
 
 /**
- * One finding per required task the runner surface lacks and per hook that is missing, silent or not pointed at.
+ * One finding per required task the task runner lacks and per hook that is missing, silent or not pointed at.
  * @param input the engine input
  * @returns the findings
  */

@@ -64,14 +64,7 @@ export function registerInit(program: Command): void {
         .addOption(new Option('--keep-format', 'Keep your formatter settings').conflicts('shippedFormat'))
         .addOption(new Option('--shipped-format', 'Take the shipped formatter settings').conflicts('keepFormat'))
         .addOption(
-            new Option('--runner <surface>', 'The task runner surface').choices([
-                'mise',
-                'npm',
-                'bun',
-                'pnpm',
-                'uv',
-                'none',
-            ]),
+            new Option('--runner <tool>', 'The task runner').choices(['mise', 'npm', 'bun', 'pnpm', 'uv', 'none']),
         )
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {

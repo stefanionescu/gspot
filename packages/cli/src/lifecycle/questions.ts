@@ -87,7 +87,7 @@ async function askRuleFiles(options: InitOptions): Promise<boolean> {
 
 async function askRunner(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['runner']> {
     if (options.runner !== undefined) return options.runner;
-    return askChoice('Task runner surface?', '--runner', RUNNER_CHOICES, runnerDefault(tooling), options.yes);
+    return askChoice('Task runner?', '--runner', RUNNER_CHOICES, runnerDefault(tooling), options.yes);
 }
 
 async function askFormat(
@@ -155,7 +155,7 @@ export function formatDiffers(root: string, tooling: ExistingTooling): Partial<F
 }
 
 /**
- * Asks the init questions that flags left open: hooks, CI, rule files, runner surface and formatter settings.
+ * Asks the init questions that flags left open: hooks, CI, rule files, task runner and formatter settings.
  * @param root the repository root
  * @param options the init flags
  * @param tooling the configuration files, hooks and runner found

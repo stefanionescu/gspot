@@ -98,7 +98,7 @@ function swiftJob(shape: WorkflowShape): string[] {
 
 /**
  * The workflow: one job per platform in [ci] platforms, plus a macOS job when a Swift scope exists.
- * @param shape the version, the platforms, the Swift scope and the runner surface
+ * @param shape the version, the platforms, the Swift scope and the task runner
  * @returns the generated file
  */
 export function workflowFile(shape: WorkflowShape): GeneratedFile {

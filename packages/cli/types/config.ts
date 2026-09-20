@@ -140,7 +140,7 @@ export type Policy = {
     rules: { install: boolean; directory: string; project?: string; exclude: string[] };
     editor: { vscode: boolean };
     inspection: { strict: boolean };
-    runner: { surface: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none' };
+    runner: { tool: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none' };
     scopeTables: Record<string, Partial<Policy>>;
 };
 
@@ -241,8 +241,8 @@ export type RawLimits = NonNullable<RawPolicy['limits']>;
 /** The [naming] table as written. */
 export type RawNaming = NonNullable<RawPolicy['naming']>;
 
-/** The task-runner surfaces gspot can write. */
-export type RunnerSurface = 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none';
+/** The configured task runner. */
+export type RunnerTool = Policy['runner']['tool'];
 
 /** What resolving a value for one scope needs. */
 export type PolicyScopeLayer = { surface: ExposedSettings; policy: Policy; scope: string };
