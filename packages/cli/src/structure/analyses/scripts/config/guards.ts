@@ -1,15 +1,15 @@
-import { CONFIG_GUARD } from '#config/shell.ts';
 // Every configuration owner opens with one include guard that no other owner shares. Searched: shellcheck; no such rule.
 import type { Finding } from '#types/finding.ts';
+import { CONFIG_GUARD } from '#config/structure.ts';
 import { codeLines } from '#cli/structure/code-lines.ts';
-import type { Analysis, CodeLine, ShellFile, StructureContext } from '#types/structure.ts';
+import type { Analysis, CodeLine, ScriptFile, StructureContext } from '#types/structure.ts';
 
 function guardName(first: CodeLine | undefined): string | undefined {
     return first === undefined ? undefined : CONFIG_GUARD.exec(first.code)?.groups?.['name'];
 }
 
 function markProblems(
-    file: ShellFile,
+    file: ScriptFile,
     lines: [CodeLine, CodeLine | undefined],
     name: string,
     seen: Map<string, string>,
@@ -29,7 +29,7 @@ function markProblems(
     return findings;
 }
 
-function guardFindings(file: ShellFile, seen: Map<string, string>, context: StructureContext): Finding[] {
+function guardFindings(file: ScriptFile, seen: Map<string, string>, context: StructureContext): Finding[] {
     const [first, second] = codeLines(file.lines).filter((line) => !line.code.startsWith('#!'));
     const name = guardName(first);
     if (first === undefined || name === undefined)
@@ -47,12 +47,12 @@ function guardFindings(file: ShellFile, seen: Map<string, string>, context: Stru
 /**
  * One finding per owner without the guard, with a malformed second line, or with a guard another owner already uses.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const shellConfigGuards: Analysis = async (context, shell) => {
+export const scriptConfigGuards: Analysis = async (context, scripts) => {
     const owners = new Set(context.bashList('config_owners'));
-    const index = await shell();
+    const index = await scripts();
     const seen = new Map<string, string>();
     return index.files.filter((file) => owners.has(file.path)).flatMap((file) => guardFindings(file, seen, context));
 };

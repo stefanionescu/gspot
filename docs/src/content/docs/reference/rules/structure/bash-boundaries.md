@@ -1,5 +1,5 @@
 ---
-title: "structure/shell-boundaries"
+title: "structure/bash-boundaries"
 description: "Checks that scripts under the architecture roots declare their boundary and source what they call."
 ---
 
@@ -19,4 +19,4 @@ Add a Boundary line to the header comment, annotate every source with # shellche
 - Stage: commit
 - Engine: structure
 
-Turn it off for a path with a reason: `gspot ignore structure/shell-boundaries --paths <glob> --reason "<why>"`.
+Turn it off for a path with a reason: `gspot ignore structure/bash-boundaries --paths <glob> --reason "<why>"`.

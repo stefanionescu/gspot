@@ -12,12 +12,12 @@ function ownerPaths(roles: Record<string, string | string[]>): string[] {
 /**
  * One finding per read of an owner-declared variable outside the owner.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const envAccessOwner: Analysis = async (context, shell) => {
+export const envAccessOwner: Analysis = async (context, scripts) => {
     const isOwner = pathMatcher(ownerPaths(context.input.session.policyFiles.policy.architecture.roles));
-    const index = await shell();
+    const index = await scripts();
     const owned = new Set(index.files.filter((file) => isOwner(file.path)).flatMap((file) => [...file.assignments]));
     if (owned.size === 0) return [];
     const read = new RegExp(String.raw`\$\{?(${[...owned].join('|')})\b`, 'u');

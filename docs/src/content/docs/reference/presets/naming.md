@@ -21,7 +21,7 @@ Kind: concern.
 - `naming.allowed`: Exact identifiers allowed despite the policy, each with a reason.
 - `naming.external`: Names a platform or framework fixes, matched whole, and never checked.
 - `naming.reserved`: Terms banned except in the named uses.
-- `naming.remove_groups`: Removable term groups this repository drops, each with a reason. The marketing and defensive groups never drop.
+- `naming.remove_groups`: Removable term groups this repository drops, each with a reason. The marketing, defensive, and terminology groups never drop.
 - `naming.contract_properties`: Property keys a protocol or format fixes, exempt in one named file.
 - `naming.max_chars`: The most characters one identifier may have.
 - `naming.max_words`: The most words one identifier may have.

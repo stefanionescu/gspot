@@ -1,8 +1,8 @@
 // A shell function called with arguments it never reads. Searched: shellcheck; it does not follow calls.
 import { withoutComment } from '#cli/structure/code-lines.ts';
-import type { Analysis, ShellIndex } from '#types/structure.ts';
+import type { Analysis, ScriptIndex } from '#types/structure.ts';
 import { markedNames } from '#cli/structure/analyses/unused-functions.ts';
-import { CALL_ENDINGS, FLOW_PREFIX, MARKERS, POSITIONAL_PARAMETERS } from '#config/shell.ts';
+import { CALL_ENDINGS, FLOW_PREFIX, MARKERS, POSITIONAL_PARAMETERS } from '#config/structure.ts';
 
 const CALL = /^([A-Za-z_]\w*)\b(.*)$/u;
 const OPERATORS = [' && ', ' || ', ' | ', ';'];
@@ -35,7 +35,7 @@ function callOn(line: string, names: Set<string>): { name: string; count: number
     return { name, count: argumentCount(rest) };
 }
 
-function widestCalls(index: ShellIndex, names: Set<string>): Map<string, number> {
+function widestCalls(index: ScriptIndex, names: Set<string>): Map<string, number> {
     const widest = new Map<string, number>();
     for (const file of index.files) {
         for (const line of file.lines) {
@@ -54,11 +54,11 @@ function isReadingPositional(body: string[]): boolean {
 /**
  * One finding per function that is called with arguments somewhere but never reads a positional parameter.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const deadParameters: Analysis = async (context, shell) => {
-    const index = await shell();
+export const deadParameters: Analysis = async (context, scripts) => {
+    const index = await scripts();
     const names = new Set(index.files.flatMap((file) => file.functions.map((entry) => entry.name)));
     const widest = widestCalls(index, names);
     return index.files.flatMap((file) => {

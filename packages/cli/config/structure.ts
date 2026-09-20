@@ -4,7 +4,7 @@
 export const BASH_SHEBANGS = ['#!/usr/bin/env bash', '#!/bin/bash'];
 
 /** A shebang that names another shell; such a file is not held to the Bash contract. */
-export const OTHER_SHELL_SHEBANG = /^#!.*\b(?:zsh|sh|dash|ksh)\b/u;
+export const OTHER_INTERPRETER_SHEBANG = /^#!.*\b(?:zsh|sh|dash|ksh)\b/u;
 
 /** The fourth header line: the Bash version and the platforms. */
 export const RUNTIME_HEADER = /^# Runtime: Bash (?<major>\d+)\.(?<minor>\d+)\+, (?<platforms>.+)\.$/u;

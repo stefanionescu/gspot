@@ -44,7 +44,7 @@ const CASES: PlantedCase[] = [
         expected: 'not formatted the way shfmt formats it',
     },
     {
-        check: 'structure/shell-interpreter',
+        check: 'structure/bash-interpreter',
         files: { 'scripts/headless.sh': '#!/usr/bin/env bash\nmain() {\n    echo hi\n}\n\nmain "$@"\n' },
         expected: 'runtime-header',
         executable: ['scripts/headless.sh'],
@@ -137,7 +137,7 @@ const CASES: PlantedCase[] = [
         expected: 'main has 71 code lines',
     },
     {
-        check: 'structure/shell-script-policy',
+        check: 'structure/bash-script-policy',
         files: {
             'scripts/node.sh': file(
                 `# main: runs the script.\nmain() {\n    node -e 'console.log(1)' "$1"\n}\n\nmain "$@"\n`,
@@ -146,7 +146,7 @@ const CASES: PlantedCase[] = [
         expected: 'An inline Node snippet belongs in a .js file',
     },
     {
-        check: 'structure/shell-embeds',
+        check: 'structure/bash-embeds',
         files: {
             'scripts/python.sh': file(
                 `# main: runs the script.\nmain() {\n    python3 - <<'PY'\nprint(1)\nPY\n}\n\nmain "$@"\n`,
@@ -155,7 +155,7 @@ const CASES: PlantedCase[] = [
         expected: 'inline Python heredoc',
     },
     {
-        check: 'structure/shell-ssh-blocks',
+        check: 'structure/bash-ssh-blocks',
         files: {
             'scripts/remote.sh': file(
                 `# main: runs the script.\nmain() {\n    ssh "$1" <<'REMOTE'\nuptime\nREMOTE\n}\n\nmain "$@"\n`,
@@ -164,7 +164,7 @@ const CASES: PlantedCase[] = [
         expected: 'An ssh heredoc carries a',
     },
     {
-        check: 'structure/shell-config-defaults',
+        check: 'structure/bash-config-defaults',
         files: {
             'scripts/defaults.sh': file(
                 `# main: runs the script.\nmain() {\n    local port="\${PORT:-8080}"\n    echo "\${port} $1"\n}\n\nmain "$@"\n`,
@@ -173,7 +173,7 @@ const CASES: PlantedCase[] = [
         expected: 'sets a default outside the configuration owners',
     },
     {
-        check: 'structure/shell-config-guards',
+        check: 'structure/bash-config-guards',
         files: {
             'scripts/settings.sh':
                 '#!/usr/bin/env bash\n#\n# Holds the settings.\n# Runtime: Bash 4.0+, macOS and Linux.\n\nreadonly PORT=8080\n',
@@ -182,7 +182,7 @@ const CASES: PlantedCase[] = [
         expected: 'A configuration owner opens with',
     },
     {
-        check: 'structure/shell-boundaries',
+        check: 'structure/bash-boundaries',
         files: { 'deploy/step.sh': file(MAIN) },
         policy: '[tools.bash]\narchitecture_roots = ["deploy"]\n',
         expected: 'A script under an architecture root opens with',
@@ -201,17 +201,17 @@ const CASES: PlantedCase[] = [
         expected: 'DEPLOY_TARGET is read here but declared by the environment owner',
     },
     {
-        check: 'structure/shell-branches',
+        check: 'structure/bash-branches',
         files: { 'scripts/branchy.sh': file(`# main: runs the script.\nmain() {\n${BRANCHES}\n}\n\nmain "$@"\n`) },
         expected: 'branches, over the ceiling',
     },
     {
-        check: 'structure/shell-nesting',
+        check: 'structure/bash-nesting',
         files: { 'scripts/deep.sh': file(`# main: runs the script.\nmain() {\n${NESTED}\n}\n\nmain "$@"\n`) },
         expected: 'levels of nesting, over the ceiling',
     },
     {
-        check: 'structure/shell-mutable-assignments',
+        check: 'structure/bash-mutable-assignments',
         files: {
             'scripts/mutable.sh': file(
                 `# main: runs the script.\nmain() {\n    local total="$1"\n${ASSIGNMENTS}\n    echo "\${total}"\n}\n\nmain "$@"\n`,
@@ -220,7 +220,7 @@ const CASES: PlantedCase[] = [
         expected: 'assignments, over the ceiling',
     },
     {
-        check: 'structure/shell-safety',
+        check: 'structure/bash-safety',
         files: {
             'scripts/unsafe.sh': file(
                 `# main: runs the script.\nmain() {\n    cd "$1"\n    rm -rf "\${HOME}/x" || true\n}\n\nmain "$@"\n`,
@@ -286,7 +286,7 @@ test.each([
     });
     const path = join(sandbox.path, 'greet.sh');
     chmodSync(path, 0o755);
-    const command = ['check', '--only', 'structure/shell-interpreter', '--no-cache'];
+    const command = ['check', '--only', 'structure/bash-interpreter', '--no-cache'];
     const clean = await run(sandbox.path, command);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     writeFileSync(path, source(!isInherited));

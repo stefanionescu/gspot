@@ -122,7 +122,7 @@
         },
         "terminology": {
             "removable": false,
-            "terms": ["fixture", "fixtures"]
+            "terms": ["fixture", "fixtures", "shell"]
         },
         "test": {
             "removable": true,

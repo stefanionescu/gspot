@@ -23,7 +23,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
         };
     });
     try {
-        const matches = astGrepMatches(sandbox.path, 'presets/bash/rules/shell-branches.yml', files);
+        const matches = astGrepMatches(sandbox.path, 'presets/bash/rules/bash-branches.yml', files);
         expect(received).toEqual(files);
         expect(matches?.map((match) => match.file)).toEqual(files);
         expect(processRun.mock.calls.length).toBeGreaterThan(1);
@@ -44,7 +44,7 @@ test('ast-grep rejects a failed scan even when stdout contains partial JSON', as
         stderr: 'cannot read source.sh',
     });
     try {
-        expect(() => astGrepMatches(sandbox.path, 'presets/bash/rules/shell-branches.yml', ['source.sh'])).toThrow(
+        expect(() => astGrepMatches(sandbox.path, 'presets/bash/rules/bash-branches.yml', ['source.sh'])).toThrow(
             'cannot read source.sh',
         );
     } finally {

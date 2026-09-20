@@ -23,7 +23,7 @@ export const PROSE_GRAMMARS: Record<string, { mode: 'path' | 'stdin'; extension:
 };
 
 /** A file with no extension and a shell shebang reads as shell. */
-export const SHELL_TAG = 'shell';
+export const SCRIPT_TAG = 'shell';
 
 /** The upstream style packages, in the order Vale syncs them. */
 export const VALE_PACKAGES = ['Google', 'Microsoft', 'write-good', 'proselint', 'alex', 'RedHat', 'Harper'];

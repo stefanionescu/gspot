@@ -5,13 +5,13 @@ import { codeLineCount } from '#cli/structure/code-lines.ts';
 /**
  * One finding per script whose code lines exceed limits.bash.file_lines.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const fileLength: Analysis = async (context, shell) => {
+export const fileLength: Analysis = async (context, scripts) => {
     const ceiling = context.limit('file_lines', 'bash');
     if (ceiling === undefined) return [];
-    const index = await shell();
+    const index = await scripts();
     return index.files.flatMap((file) => {
         const count = codeLineCount(file.lines);
         if (count <= ceiling) return [];

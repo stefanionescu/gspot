@@ -1,5 +1,5 @@
 # Compound statements nested deeper than limits.bash.function_nesting.
-id: shell-nesting
+id: bash-nesting
 language: bash
 rule:
     any:

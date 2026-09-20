@@ -1,6 +1,6 @@
-import { ENTRY_FUNCTIONS, MARKERS } from '#config/shell.ts';
 // A shell function no script calls. Searched: shellcheck (SC2329 sees one file), knip (no shell); neither reads the set.
-import type { Analysis, ShellFile } from '#types/structure.ts';
+import type { Analysis, ScriptFile } from '#types/structure.ts';
+import { ENTRY_FUNCTIONS, MARKERS } from '#config/structure.ts';
 
 /**
  * The names a marker allows in a file.
@@ -8,7 +8,7 @@ import type { Analysis, ShellFile } from '#types/structure.ts';
  * @param marker the per-function marker
  * @returns the names
  */
-export function markedNames(file: ShellFile, marker: string): Set<string> {
+export function markedNames(file: ScriptFile, marker: string): Set<string> {
     const names = new Set<string>();
     const pattern = new RegExp(String.raw`${marker}\s+([A-Za-z_][A-Za-z0-9_]*)`, 'u');
     for (const line of file.lines) {
@@ -21,11 +21,11 @@ export function markedNames(file: ShellFile, marker: string): Set<string> {
 /**
  * One finding per function that no script references, outside the entry functions and the markers.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const unusedFunctions: Analysis = async (context, shell) => {
-    const index = await shell();
+export const unusedFunctions: Analysis = async (context, scripts) => {
+    const index = await scripts();
     const referenced = new Set(index.files.flatMap((file) => file.references.keys().toArray()));
     return index.files.flatMap((file) => {
         if (file.text.includes(MARKERS.unusedFunctions)) return [];

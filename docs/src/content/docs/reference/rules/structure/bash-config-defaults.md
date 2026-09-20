@@ -1,5 +1,5 @@
 ---
-title: "structure/shell-config-defaults"
+title: "structure/bash-config-defaults"
 description: "Finds variable defaults of the form name:-value outside the configuration owners."
 ---
 
@@ -19,4 +19,4 @@ Set the default in a configuration owner named under tools.bash.config_owners an
 - Stage: commit
 - Engine: structure
 
-Turn it off for a path with a reason: `gspot ignore structure/shell-config-defaults --paths <glob> --reason "<why>"`.
+Turn it off for a path with a reason: `gspot ignore structure/bash-config-defaults --paths <glob> --reason "<why>"`.

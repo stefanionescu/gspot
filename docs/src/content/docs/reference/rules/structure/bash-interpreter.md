@@ -1,5 +1,5 @@
 ---
-title: "structure/shell-interpreter"
+title: "structure/bash-interpreter"
 description: "Checks the contract every Bash script keeps: the four-line header, strict mode, one main called last, readonly constants, declarative libraries, cleaned-up temporary files."
 ---
 
@@ -19,4 +19,4 @@ Open with the shebang, a bare #, one line saying what the script does, and the R
 - Stage: commit
 - Engine: structure
 
-Turn it off for a path with a reason: `gspot ignore structure/shell-interpreter --paths <glob> --reason "<why>"`.
+Turn it off for a path with a reason: `gspot ignore structure/bash-interpreter --paths <glob> --reason "<why>"`.

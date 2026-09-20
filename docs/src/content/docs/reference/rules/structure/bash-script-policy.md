@@ -1,5 +1,5 @@
 ---
-title: "structure/shell-script-policy"
+title: "structure/bash-script-policy"
 description: "Finds forwarding wrappers, compatibility aliases, and inline Node in shell scripts."
 ---
 
@@ -19,4 +19,4 @@ Call the target script directly, delete the alias, and move the Node code into a
 - Stage: commit
 - Engine: structure
 
-Turn it off for a path with a reason: `gspot ignore structure/shell-script-policy --paths <glob> --reason "<why>"`.
+Turn it off for a path with a reason: `gspot ignore structure/bash-script-policy --paths <glob> --reason "<why>"`.

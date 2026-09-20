@@ -1,5 +1,5 @@
 ---
-title: "structure/shell-ssh-blocks"
+title: "structure/bash-ssh-blocks"
 description: "Checks that multi-line ssh blocks are named, documented, and inside a function."
 ---
 
@@ -19,4 +19,4 @@ Move the block into a named function and write "# name - what it does" above it.
 - Stage: commit
 - Engine: structure
 
-Turn it off for a path with a reason: `gspot ignore structure/shell-ssh-blocks --paths <glob> --reason "<why>"`.
+Turn it off for a path with a reason: `gspot ignore structure/bash-ssh-blocks --paths <glob> --reason "<why>"`.

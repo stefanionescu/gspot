@@ -2,19 +2,19 @@ import type { Analysis } from '#types/structure.ts';
 // The destructive and silencing forms a script may not use outside its owners. Searched: shellcheck, semgrep; the ownership rule is original.
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { withoutComment } from '#cli/structure/code-lines.ts';
-import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES, UNCHECKED_CD } from '#config/shell.ts';
+import { SAFETY_LINE_RULES, SAFETY_OWNER_RULES, UNCHECKED_CD } from '#config/structure.ts';
 
 /**
  * One finding per line that discards a failure, sources state, sweeps processes or trees outside an owner, or changes directory unchecked.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const shellSafety: Analysis = async (context, shell) => {
+export const scriptSafety: Analysis = async (context, scripts) => {
     const safety = context.bashSetting('safety') as { owners?: unknown } | undefined;
     const owners = Array.isArray(safety?.owners) ? (safety.owners as string[]) : [];
     const isOwner = pathMatcher(owners);
-    const index = await shell();
+    const index = await scripts();
     return index.files.flatMap((file) =>
         file.lines.flatMap((line, position) => {
             const code = withoutComment(line);

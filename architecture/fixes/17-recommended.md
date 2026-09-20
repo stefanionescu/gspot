@@ -52,7 +52,7 @@ Every TypeScript type sits under one folder, and no folder holds one file.
 
 **Logic.** `level = "all"` on `dependencies/manifest-policy`, `dependencies/install-policy`, the
 scope rule of `docs/readme-present`, the banned list of `docs/headings`,
-`structure/shell-script-header`, `structure/single-file-folder`, and `gspot/types-placement`.
+`structure/bash-script-header`, `structure/single-file-folder`, and `gspot/types-placement`.
 `dependencies/lockfile-fresh` and `dependencies/lockfile-hosts` stay `recommended`, because they
 find a defect.
 

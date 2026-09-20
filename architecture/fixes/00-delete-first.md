@@ -221,7 +221,7 @@ command writes and no guide names.
 **Target.** A finding is silenced by `[[ignore]]` with `check`, `rule`, `paths`, and `reason`, or
 by one `gspot-ignore` comment with a reason. Nothing else.
 
-**Files.** `config/shell.ts` (`MARKERS`), `config/markers.ts`, `config/integrity.ts`,
+**Files.** `config/structure.ts` (`MARKERS`), `config/markers.ts`, `config/integrity.ts`,
 `policy/schema.ts`, `run/ignores.ts`.
 
 **Logic.** `ignores.ts` loses the two lines that read `entry.finding`. The shell analyses read

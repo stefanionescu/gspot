@@ -1,5 +1,5 @@
 ---
-title: "structure/shell-safety"
+title: "structure/bash-safety"
 description: "Finds discarded failures, broad process kills, recursive deletes outside their owners, unchecked cd, and sourced state files."
 ---
 
@@ -19,4 +19,4 @@ Handle the failure, check the cd, and move the delete or kill into a script name
 - Stage: commit
 - Engine: structure
 
-Turn it off for a path with a reason: `gspot ignore structure/shell-safety --paths <glob> --reason "<why>"`.
+Turn it off for a path with a reason: `gspot ignore structure/bash-safety --paths <glob> --reason "<why>"`.

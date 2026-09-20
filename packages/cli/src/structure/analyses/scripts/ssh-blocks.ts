@@ -1,7 +1,7 @@
 import { functionAt } from '#cli/structure/parser.ts';
 // Multi-line ssh blocks: named, documented, inside a function. Searched: shellcheck; it does not read intent.
-import type { Analysis, ShellFile } from '#types/structure.ts';
-import { CLOSING_QUOTE_LINE, RUN_SSH_START, SSH_BLOCK_MIN_LINES, SSH_HEREDOC } from '#config/shell.ts';
+import type { Analysis, ScriptFile } from '#types/structure.ts';
+import { CLOSING_QUOTE_LINE, RUN_SSH_START, SSH_BLOCK_MIN_LINES, SSH_HEREDOC } from '#config/structure.ts';
 
 function unescapedQuotes(text: string, quote: string): number {
     let count = 0;
@@ -22,7 +22,7 @@ function isBlockEnd(trimmed: string): boolean {
     return trimmed === '"' || trimmed === "'" || CLOSING_QUOTE_LINE.test(trimmed);
 }
 
-function quotedBlocks(file: ShellFile): { start: number; length: number }[] {
+function quotedBlocks(file: ScriptFile): { start: number; length: number }[] {
     const blocks: { start: number; length: number }[] = [];
     let open: { start: number; length: number } | undefined;
     for (const [index, line] of file.lines.entries()) {
@@ -43,11 +43,11 @@ function quotedBlocks(file: ShellFile): { start: number; length: number }[] {
 /**
  * One finding per multi-line run_ssh block outside a function, and per ssh heredoc without a named comment above it.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const shellSshBlocks: Analysis = async (context, shell) => {
-    const index = await shell();
+export const scriptSshBlocks: Analysis = async (context, scripts) => {
+    const index = await scripts();
     return index.files.flatMap((file) => {
         const quoted = quotedBlocks(file)
             .filter(

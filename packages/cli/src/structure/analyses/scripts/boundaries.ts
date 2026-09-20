@@ -2,7 +2,7 @@
 import { posix } from 'node:path';
 import type { Finding } from '#types/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import type { Analysis, ShellFile, ShellIndex, StructureContext } from '#types/structure.ts';
+import type { Analysis, ScriptFile, ScriptIndex, StructureContext } from '#types/structure.ts';
 
 import {
     BOUNDARY_HEADER,
@@ -10,9 +10,9 @@ import {
     BOUNDARY_MIN_WORDS,
     SOURCE_ANNOTATION,
     SOURCE_STATEMENT,
-} from '#config/shell.ts';
+} from '#config/structure.ts';
 
-function hasBoundary(file: ShellFile): boolean {
+function hasBoundary(file: ScriptFile): boolean {
     return file.lines.slice(0, BOUNDARY_HEADER_WINDOW).some((line) => {
         const description = BOUNDARY_HEADER.exec(line)?.groups?.['description'];
         return description !== undefined && description.split(/\s+/u).length >= BOUNDARY_MIN_WORDS;
@@ -25,7 +25,7 @@ function resolvedSource(owner: string, annotation: string): string {
     return posix.normalize(posix.join(directory, annotation));
 }
 
-function annotatedSources(file: ShellFile, context: StructureContext): { sources: Set<string>; findings: Finding[] } {
+function annotatedSources(file: ScriptFile, context: StructureContext): { sources: Set<string>; findings: Finding[] } {
     const sources = new Set<string>();
     const findings = file.lines.flatMap((line, position) => {
         if (!SOURCE_STATEMENT.test(line.trim())) return [];
@@ -46,9 +46,9 @@ function annotatedSources(file: ShellFile, context: StructureContext): { sources
 }
 
 function dependencyFindings(
-    file: ShellFile,
+    file: ScriptFile,
     sources: Set<string>,
-    index: ShellIndex,
+    index: ScriptIndex,
     context: StructureContext,
 ): Finding[] {
     return file.references
@@ -71,14 +71,14 @@ function dependencyFindings(
 /**
  * The boundary findings for scripts under [tools.bash] architecture_roots: the header, source annotations, barrels and implicit dependencies.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const shellBoundaries: Analysis = async (context, shell) => {
+export const scriptBoundaries: Analysis = async (context, scripts) => {
     const roots = context.bashList('architecture_roots');
     if (roots.length === 0) return [];
     const isGoverned = pathMatcher(roots.map((root) => (root.includes('*') ? root : `${root.replace(/\/$/u, '')}/**`)));
-    const index = await shell();
+    const index = await scripts();
     return index.files
         .filter((file) => isGoverned(file.path))
         .flatMap((file) => {

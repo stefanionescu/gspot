@@ -10,16 +10,16 @@ import {
     FORWARDING_MAX_LINES,
     INLINE_NODE,
     FORWARDER_STEM,
-} from '#config/shell.ts';
+} from '#config/structure.ts';
 
 /**
  * One finding per policy the script breaks: inline Node, a wrapper stem, a deprecated alias, or a forwarding body.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const shellScriptPolicy: Analysis = async (context, shell) => {
-    const index = await shell();
+export const scriptPolicy: Analysis = async (context, scripts) => {
+    const index = await scripts();
     return index.files.flatMap((file) => {
         const findings = [];
         const code = codeLines(file.lines).filter((line) => !line.code.startsWith('#!'));

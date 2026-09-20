@@ -1,5 +1,5 @@
 ---
-title: "structure/shell-config-guards"
+title: "structure/bash-config-guards"
 description: "Checks that every configuration owner opens with one include guard nobody else uses."
 ---
 
@@ -19,4 +19,4 @@ Open the owner with [[-n ${_CFG_NAME_READY:-}]] && return 0 and then readonly \_
 - Stage: commit
 - Engine: structure
 
-Turn it off for a path with a reason: `gspot ignore structure/shell-config-guards --paths <glob> --reason "<why>"`.
+Turn it off for a path with a reason: `gspot ignore structure/bash-config-guards --paths <glob> --reason "<why>"`.

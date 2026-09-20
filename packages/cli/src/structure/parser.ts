@@ -1,13 +1,13 @@
 // Shell scripts through tree-sitter: the functions with their line ranges and bodies.
 import { parserFor } from '#cli/naming/parsers.ts';
-import type { ShellFunction } from '#types/structure.ts';
+import type { ScriptFunction } from '#types/structure.ts';
 
 /**
  * The functions a shell script declares, in order.
  * @param text the script text
  * @returns the functions with one-based start and end lines and the lines between the braces
  */
-export async function shellFunctions(text: string): Promise<ShellFunction[]> {
+export async function scriptFunctions(text: string): Promise<ScriptFunction[]> {
     const parser = await parserFor('bash');
     const tree = parser.parse(text);
     if (tree === null) return [];
@@ -31,6 +31,6 @@ export async function shellFunctions(text: string): Promise<ShellFunction[]> {
  * @param line the one-based line
  * @returns the function, or undefined at the top level
  */
-export function functionAt(functions: ShellFunction[], line: number): ShellFunction | undefined {
+export function functionAt(functions: ScriptFunction[], line: number): ScriptFunction | undefined {
     return functions.find((entry) => entry.start <= line && line <= entry.end);
 }

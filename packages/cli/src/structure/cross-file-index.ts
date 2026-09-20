@@ -3,15 +3,15 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#types/run.ts';
 import type { TrackedFile } from '#types/repository.ts';
-import { TOP_LEVEL_ASSIGNMENT } from '#config/shell.ts';
-import { functionAt, shellFunctions } from '#cli/structure/parser.ts';
-import type { ShellFile, ShellFunction, ShellIndex } from '#types/structure.ts';
+import { TOP_LEVEL_ASSIGNMENT } from '#config/structure.ts';
+import { functionAt, scriptFunctions } from '#cli/structure/parser.ts';
 import { withoutComment, withoutDeclaration } from '#cli/structure/code-lines.ts';
+import type { ScriptFile, ScriptFunction, ScriptIndex } from '#types/structure.ts';
 
 const IDENTIFIER = /[A-Za-z_]\w*/gu;
-const cache = new WeakMap<object, Map<string, Promise<ShellIndex>>>();
+const cache = new WeakMap<object, Map<string, Promise<ScriptIndex>>>();
 
-function referencesOf(lines: string[], functions: ShellFunction[]): Map<string, number[]> {
+function referencesOf(lines: string[], functions: ScriptFunction[]): Map<string, number[]> {
     const references = new Map<string, number[]>();
     const declarations = new Set(functions.map((entry) => entry.start));
     for (const [index, line] of lines.entries()) {
@@ -26,7 +26,7 @@ function referencesOf(lines: string[], functions: ShellFunction[]): Map<string, 
     return references;
 }
 
-function assignmentsOf(lines: string[], functions: ShellFunction[]): Set<string> {
+function assignmentsOf(lines: string[], functions: ScriptFunction[]): Set<string> {
     const names = new Set<string>();
     for (const [index, line] of lines.entries()) {
         if (functionAt(functions, index + 1) !== undefined) continue;
@@ -37,10 +37,10 @@ function assignmentsOf(lines: string[], functions: ShellFunction[]): Set<string>
     return names;
 }
 
-async function readShellFile(root: string, file: TrackedFile): Promise<ShellFile> {
+async function readScriptFile(root: string, file: TrackedFile): Promise<ScriptFile> {
     const text = readFileSync(join(root, file.path), 'utf8');
     const lines = text.split('\n');
-    const functions = await shellFunctions(text);
+    const functions = await scriptFunctions(text);
     return {
         path: file.path,
         text,
@@ -52,9 +52,9 @@ async function readShellFile(root: string, file: TrackedFile): Promise<ShellFile
     };
 }
 
-async function build(input: EngineInput, files: TrackedFile[]): Promise<ShellIndex> {
-    const read: ShellFile[] = [];
-    for (const file of files) read.push(await readShellFile(input.root, file));
+async function build(input: EngineInput, files: TrackedFile[]): Promise<ScriptIndex> {
+    const read: ScriptFile[] = [];
+    for (const file of files) read.push(await readScriptFile(input.root, file));
     const owners = new Map<string, string>();
     for (const file of read)
         for (const entry of file.functions) if (!owners.has(entry.name)) owners.set(entry.name, file.path);
@@ -67,7 +67,7 @@ async function build(input: EngineInput, files: TrackedFile[]): Promise<ShellInd
  * @param files the shell files the check runs over
  * @returns the index
  */
-export function shellIndex(input: EngineInput, files: TrackedFile[]): Promise<ShellIndex> {
+export function scriptIndex(input: EngineInput, files: TrackedFile[]): Promise<ScriptIndex> {
     let perScope = cache.get(input.session);
     if (perScope === undefined) {
         perScope = new Map();
@@ -89,7 +89,7 @@ export function shellIndex(input: EngineInput, files: TrackedFile[]): Promise<Sh
  * @param owner the owner's path
  * @returns the other paths, sorted
  */
-export function outsideCallers(index: ShellIndex, name: string, owner: string): string[] {
+export function outsideCallers(index: ScriptIndex, name: string, owner: string): string[] {
     return index.files
         .filter((file) => file.path !== owner && (file.references.get(name)?.length ?? 0) > 0)
         .map((file) => file.path)

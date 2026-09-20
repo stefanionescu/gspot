@@ -1,5 +1,5 @@
 ---
-title: "structure/shell-nesting"
+title: "structure/bash-nesting"
 description: "Measures how deep control flow nests in each shell function against the ceiling."
 ---
 
@@ -19,4 +19,4 @@ Return early or split the inner block into a function, or raise limits.bash.func
 - Stage: commit
 - Engine: structure
 
-Turn it off for a path with a reason: `gspot ignore structure/shell-nesting --paths <glob> --reason "<why>"`.
+Turn it off for a path with a reason: `gspot ignore structure/bash-nesting --paths <glob> --reason "<why>"`.

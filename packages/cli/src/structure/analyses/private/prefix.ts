@@ -1,16 +1,16 @@
-import { ENTRY_FUNCTIONS } from '#config/shell.ts';
 // The underscore on shell functions no other file calls. Searched: shellcheck; it has no notion of a file set.
 import type { Analysis } from '#types/structure.ts';
+import { ENTRY_FUNCTIONS } from '#config/structure.ts';
 import { outsideCallers } from '#cli/structure/cross-file-index.ts';
 
 /**
  * One finding per function whose underscore disagrees with its callers: file-local without one, or private with outside callers.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const privatePrefix: Analysis = async (context, shell) => {
-    const index = await shell();
+export const privatePrefix: Analysis = async (context, scripts) => {
+    const index = await scripts();
     return index.files.flatMap((file) =>
         file.functions.flatMap((entry) => {
             if (ENTRY_FUNCTIONS.includes(entry.name)) return [];

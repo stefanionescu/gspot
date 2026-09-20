@@ -1,5 +1,5 @@
 # Counts branch keywords per function; the engine compares the count with limits.bash.function_branches.
-id: shell-branches
+id: bash-branches
 language: bash
 rule:
     any:

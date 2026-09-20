@@ -2,7 +2,7 @@
 import semver from 'semver';
 import type { Finding } from '#types/finding.ts';
 import { functionAt } from '#cli/structure/parser.ts';
-import type { Analysis, CodeLine, ShellFile, ShellReport, StructureContext } from '#types/structure.ts';
+import type { Analysis, CodeLine, ScriptFile, ScriptReport, StructureContext } from '#types/structure.ts';
 import { codeLines, isDirectoryConstant, withoutComment, withoutDeclaration } from '#cli/structure/code-lines.ts';
 
 import {
@@ -12,12 +12,12 @@ import {
     DIRECTORY_CONSTANT_PIECES,
     HEADER_LINES,
     MAIN_CALL,
-    OTHER_SHELL_SHEBANG,
+    OTHER_INTERPRETER_SHEBANG,
     RUNTIME_HEADER,
     SOURCE_STATEMENT,
     STRICT_MODE,
     TOP_LEVEL_ASSIGNMENT,
-} from '#config/shell.ts';
+} from '#config/structure.ts';
 
 const EXIT_CALL = /\bexit(?:\s|$)/u;
 const REMOVE_CALL = /\brm\b/u;
@@ -27,12 +27,12 @@ function isDescriptionLine(line: string): boolean {
     return line.startsWith('# ') && line.slice('# '.length).trim() !== '';
 }
 
-function shebangProblem(file: ShellFile, report: ShellReport): void {
+function shebangProblem(file: ScriptFile, report: ScriptReport): void {
     if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))
         report(1, 'shebang', `The first line is not one of ${BASH_SHEBANGS.join(' or ')}.`);
 }
 
-function headerProblem(file: ShellFile, report: ShellReport): void {
+function headerProblem(file: ScriptFile, report: ScriptReport): void {
     const [, second = '', third = ''] = file.lines;
     if (second !== '#' || file.lines.length < HEADER_LINES || !isDescriptionLine(third))
         report(2, 'header', 'Lines 2 and 3 are a bare "#" and then "# <what this script does>".');
@@ -43,7 +43,7 @@ function isPlatformNamed(runtime: RegExpExecArray | null, platforms: string): bo
     return named === 'Linux' || named === platforms;
 }
 
-function runtimeVersion(file: ShellFile, platforms: string, report: ShellReport): string | undefined {
+function runtimeVersion(file: ScriptFile, platforms: string, report: ScriptReport): string | undefined {
     const runtime = RUNTIME_HEADER.exec(file.lines[HEADER_LINES - 1] ?? '');
     if (runtime === null || !isPlatformNamed(runtime, platforms)) {
         report(HEADER_LINES, 'runtime-header', `Line 4 is "# Runtime: Bash N.N+, ${platforms}." (or "Linux").`);
@@ -53,7 +53,7 @@ function runtimeVersion(file: ShellFile, platforms: string, report: ShellReport)
     return `${version.major}.${version.minor}.0`;
 }
 
-function versionProblems(file: ShellFile, version: string | undefined, report: ShellReport): void {
+function versionProblems(file: ScriptFile, version: string | undefined, report: ScriptReport): void {
     if (version === undefined) return;
     for (const [index, line] of file.lines.entries()) {
         const code = withoutComment(line);
@@ -63,7 +63,7 @@ function versionProblems(file: ShellFile, version: string | undefined, report: S
     }
 }
 
-function directoryProblems(code: CodeLine[], report: ShellReport): void {
+function directoryProblems(code: CodeLine[], report: ScriptReport): void {
     for (const line of code) {
         if (!isDirectoryConstant(line.code)) continue;
         const missing = DIRECTORY_CONSTANT_PIECES.filter((piece) => !line.code.includes(piece));
@@ -82,13 +82,13 @@ function isFrozenLater(code: CodeLine[], after: number, name: string): boolean {
     });
 }
 
-function unfrozenName(file: ShellFile, line: CodeLine): string | undefined {
+function unfrozenName(file: ScriptFile, line: CodeLine): string | undefined {
     if (functionAt(file.functions, line.number) !== undefined || line.code.startsWith(READONLY_WORD)) return undefined;
     const name = TOP_LEVEL_ASSIGNMENT.exec(withoutDeclaration(line.code))?.groups?.['name'];
     return name === undefined || isDirectoryConstant(line.code) ? undefined : name;
 }
 
-function readonlyProblems(file: ShellFile, code: CodeLine[], report: ShellReport): void {
+function readonlyProblems(file: ScriptFile, code: CodeLine[], report: ScriptReport): void {
     for (const line of code) {
         const name = unfrozenName(file, line);
         if (name !== undefined && !isFrozenLater(code, line.number, name))
@@ -96,7 +96,7 @@ function readonlyProblems(file: ShellFile, code: CodeLine[], report: ShellReport
     }
 }
 
-function strictModeProblems(code: CodeLine[], version: string | undefined, report: ShellReport): void {
+function strictModeProblems(code: CodeLine[], version: string | undefined, report: ScriptReport): void {
     const first = code.findIndex((line) => !line.code.startsWith('set ') && !line.code.startsWith('shopt '));
     const before = new Set(code.slice(0, first === -1 ? code.length : first).map((line) => line.code));
     const required = [...STRICT_MODE];
@@ -107,14 +107,14 @@ function strictModeProblems(code: CodeLine[], version: string | undefined, repor
         report(code[0]?.number ?? 1, 'strict-mode', `${missing.join(' and ')} come before the first command.`);
 }
 
-function entryProblems(file: ShellFile, code: CodeLine[], report: ShellReport): void {
+function entryProblems(file: ScriptFile, code: CodeLine[], report: ScriptReport): void {
     if (file.functions.filter((entry) => entry.name === 'main').length !== 1)
         report(1, 'main-function', 'An executable defines exactly one main function.');
     const last = code.at(-1);
     if (last?.code !== MAIN_CALL) report(last?.number ?? 1, 'main-call', `An executable ends with ${MAIN_CALL}.`);
 }
 
-function isDeclarative(line: CodeLine, file: ShellFile): boolean {
+function isDeclarative(line: CodeLine, file: ScriptFile): boolean {
     const { code } = line;
     return (
         SOURCE_STATEMENT.test(code) ||
@@ -124,7 +124,7 @@ function isDeclarative(line: CodeLine, file: ShellFile): boolean {
     );
 }
 
-function libraryLineProblem(line: CodeLine, file: ShellFile, isConfigOwner: boolean): [string, string] | undefined {
+function libraryLineProblem(line: CodeLine, file: ScriptFile, isConfigOwner: boolean): [string, string] | undefined {
     if (line.code.startsWith('set ')) return ['library-options', 'A sourced library does not change shell options.'];
     if (line.code === MAIN_CALL) return ['library-main', 'A sourced library does not call main.'];
     const isTopLevel = functionAt(file.functions, line.number) === undefined;
@@ -134,7 +134,7 @@ function libraryLineProblem(line: CodeLine, file: ShellFile, isConfigOwner: bool
     return undefined;
 }
 
-function libraryProblems(file: ShellFile, code: CodeLine[], isConfigOwner: boolean, report: ShellReport): void {
+function libraryProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: boolean, report: ScriptReport): void {
     if (file.functions.some((entry) => entry.name === 'main'))
         report(1, 'library-main', 'A sourced library defines no main.');
     for (const line of code) {
@@ -143,7 +143,7 @@ function libraryProblems(file: ShellFile, code: CodeLine[], isConfigOwner: boole
     }
 }
 
-function roleProblems(file: ShellFile, code: CodeLine[], isConfigOwner: boolean, report: ShellReport): void {
+function roleProblems(file: ScriptFile, code: CodeLine[], isConfigOwner: boolean, report: ScriptReport): void {
     const last = code.at(-1);
     if (file.isExecutable) {
         entryProblems(file, code, report);
@@ -156,7 +156,7 @@ function roleProblems(file: ShellFile, code: CodeLine[], isConfigOwner: boolean,
     else libraryProblems(file, code, isConfigOwner, report);
 }
 
-function cleanupProblems(code: CodeLine[], report: ShellReport): void {
+function cleanupProblems(code: CodeLine[], report: ScriptReport): void {
     const temporary = code.find((line) => /\bmktemp\b/u.test(line.code));
     const isTrapped = code.some((line) => line.code.startsWith('trap ') && REMOVE_CALL.test(line.code));
     if (temporary !== undefined && !isTrapped)
@@ -165,12 +165,12 @@ function cleanupProblems(code: CodeLine[], report: ShellReport): void {
 
 function fileProblems(
     context: StructureContext,
-    file: ShellFile,
+    file: ScriptFile,
     platforms: string,
     isConfigOwner: boolean,
 ): Finding[] {
     const findings: Finding[] = [];
-    const report: ShellReport = (line, rule, text) => {
+    const report: ScriptReport = (line, rule, text) => {
         findings.push(context.report(file.path, line, rule, text));
     };
     shebangProblem(file, report);
@@ -189,14 +189,14 @@ function fileProblems(
 /**
  * The findings of the interpreter contract over every Bash script; a script with another shell's shebang is left alone.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const shellInterpreter: Analysis = async (context, shell) => {
+export const scriptInterpreter: Analysis = async (context, scripts) => {
     const platforms = context.bashText('runtime_header', 'macOS and Linux');
     const owners = new Set(context.bashList('config_owners'));
-    const index = await shell();
+    const index = await scripts();
     return index.files
-        .filter((file) => !OTHER_SHELL_SHEBANG.test(file.lines[0] ?? ''))
+        .filter((file) => !OTHER_INTERPRETER_SHEBANG.test(file.lines[0] ?? ''))
         .flatMap((file) => fileProblems(context, file, platforms, owners.has(file.path)));
 };

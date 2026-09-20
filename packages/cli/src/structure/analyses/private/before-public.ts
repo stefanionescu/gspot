@@ -4,11 +4,11 @@ import type { Analysis } from '#types/structure.ts';
 /**
  * One finding per private function below a public one, and one when main is not the last function.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const privateBeforePublic: Analysis = async (context, shell) => {
-    const index = await shell();
+export const privateBeforePublic: Analysis = async (context, scripts) => {
+    const index = await scripts();
     return index.files.flatMap((file) => {
         let isPublicSeen = false;
         const findings = file.functions.flatMap((entry) => {

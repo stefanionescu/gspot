@@ -4,14 +4,14 @@ import type { Finding } from '#types/finding.ts';
 import type { TrackedFile } from '#types/repository.ts';
 
 /** One shell function: its name, its declaration line and closing line (one-based), and the lines between the braces. */
-export type ShellFunction = { name: string; start: number; end: number; body: string[] };
+export type ScriptFunction = { name: string; start: number; end: number; body: string[] };
 
 /** One shell script the engine reads. */
-export type ShellFile = {
+export type ScriptFile = {
     path: string;
     text: string;
     lines: string[];
-    functions: ShellFunction[];
+    functions: ScriptFunction[];
     isExecutable: boolean;
     /** Identifier tokens outside declaration lines, by name, with the lines they appear on. */
     references: Map<string, number[]>;
@@ -20,7 +20,7 @@ export type ShellFile = {
 };
 
 /** The shell scripts of one scope, with the function owners across them. */
-export type ShellIndex = { files: ShellFile[]; owners: Map<string, string> };
+export type ScriptIndex = { files: ScriptFile[]; owners: Map<string, string> };
 
 /** An entry a directory holds, as the tracked file list sees it. */
 export type DirectoryEntry = { name: string; kind: 'file' | 'dir' };
@@ -43,10 +43,10 @@ export type StructureContext = {
 };
 
 /** One analysis: a function over the context that returns findings. */
-export type Analysis = (context: StructureContext, shell: () => Promise<ShellIndex>) => Promise<Finding[]>;
+export type Analysis = (context: StructureContext, scripts: () => Promise<ScriptIndex>) => Promise<Finding[]>;
 
 /** How an analysis reports one problem in one file. */
-export type ShellReport = (line: number, rule: string, message: string) => void;
+export type ScriptReport = (line: number, rule: string, message: string) => void;
 
 /** One ast-grep match. */
 export type AstGrepMatch = { file: string; ruleId: string; range: { start: { line: number }; end: { line: number } } };

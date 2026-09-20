@@ -181,7 +181,7 @@ describe('the bash planted repository', () => {
             expect(check.code).toBe(1);
             expect(check.stdout).toContain('missing');
             expect(check.stdout).toContain('shellcheck 0.11.0 is not installed');
-            for (const name of ['shell-branches', 'shell-nesting', 'shell-mutable-assignments']) {
+            for (const name of ['bash-branches', 'bash-nesting', 'bash-mutable-assignments']) {
                 const missing = await run(sandbox.path, ['check', '--only', `structure/${name}`, '--no-cache'], {
                     PATH: bin,
                     HOME: join(sandbox.path, 'home'),

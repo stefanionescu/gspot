@@ -86,7 +86,7 @@ a tool, or a check name, because a manifest holds those (K-38, K-39).
 | `paths.ts`        | every path gspot writes: the hooks folder, and the mise file                 |
 | `patterns.ts`     | the regular expressions the engines share                                    |
 | `reasons.ts`      | the reasons a loosening refuses                                              |
-| `shell.ts`        | the word lists of the shell analyses                                         |
+| `structure.ts`    | the word lists of the script and repository structure analyses               |
 | `suppressions.ts` | the suppression comment forms of every language gspot reads                  |
 
 ### `src/`

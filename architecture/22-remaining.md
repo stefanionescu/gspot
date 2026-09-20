@@ -317,7 +317,7 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-52](fixes/07-levels.md#k-198-every-template-starts-at-the-strictest-setting): Mark each opt-in SwiftLint rule `recommended` or `all`, and render by level (D-110).
 - [ ] [K-221](fixes/07-levels.md#k-198-every-template-starts-at-the-strictest-setting): With K-198, each template renders by level.
 - [ ] [K-101](fixes/07-levels.md#k-101-the-plugin-calls-house-style-recommended): Keep in `recommended` of the plugin the rules that find a defect, and add an `all` config for the rest.
-- [ ] [K-135](fixes/07-levels.md#k-135-one-shell-check-holds-sixteen-rules): Split `structure/shell-interpreter` so strict mode and the `mktemp` trap are checks of their own at `recommended`.
+- [ ] [K-135](fixes/07-levels.md#k-135-one-shell-check-holds-sixteen-rules): Split `structure/bash-interpreter` so strict mode and the `mktemp` trap are checks of their own at `recommended`.
 - [ ] [K-141](fixes/07-levels.md#k-135-one-shell-check-holds-sixteen-rules): Move the default-owner, underscore, doc-section and ordering rules of shell to the `all` level.
 - [ ] [K-142](fixes/07-levels.md#k-135-one-shell-check-holds-sixteen-rules): Keep the shell defect checks at `recommended`: discarded failures, unchecked `cd`, recursive remove, broad `pkill`, `mktemp` with no trap, unread arguments, and duplicate or unused functions.
 - [ ] [K-123](fixes/07-levels.md#k-135-one-shell-check-holds-sixteen-rules): Delete the `run_ssh`, `_CFG_<NAME>_READY`, `nvidia-smi` and `/root/.cache` checks from the bash preset.

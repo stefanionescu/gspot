@@ -107,8 +107,8 @@ boundary remain open. Windows permission behavior remains platform verification 
 ## K-140: three checks pass when ast-grep is absent
 
 **What is wrong.** `astGrepMatches` in `structure/ast-grep.ts:26` returns an empty list when no
-ast-grep is installed, so `structure/shell-branches`, `shell-nesting`, and
-`shell-mutable-assignments` report `ok`. ast-grep also gets every file on one command line.
+ast-grep is installed, so `structure/bash-branches`, `bash-nesting`, and
+`bash-mutable-assignments` report `ok`. ast-grep also gets every file on one command line.
 
 **Target.** A check whose tool is absent reports `missing`, as every tool check does.
 
@@ -363,14 +363,14 @@ Windows execution remains deferred.
 
 ## K-134: strict mode asks for an option Bash 3.2 lacks
 
-**What is wrong.** `STRICT_MODE` in `config/shell.ts:51` requires `shopt -s inherit_errexit` in
+**What is wrong.** `STRICT_MODE` in `config/structure.ts:51` requires `shopt -s inherit_errexit` in
 every executable script. The option needs Bash 4.4, and the same check accepts a header that
 declares Bash 3.2.
 
 **Target.** The option is required where the header declares Bash 4.4 and up. It is a finding of
-`shell-interpreter` where the header declares an older Bash.
+`bash-interpreter` where the header declares an older Bash.
 
-**Files.** `config/shell.ts`, `structure/analyses/shell/interpreter.ts`, `rules/language/BASH.md`.
+**Files.** `config/structure.ts`, `structure/analyses/scripts/interpreter.ts`, `rules/language/BASH.md`.
 
 **Logic.** `BASH_FOUR_FEATURES` gains the option. `STRICT_MODE` holds `set -euo pipefail` alone,
 and a second constant holds what Bash 4.4 adds.

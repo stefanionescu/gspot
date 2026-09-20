@@ -72,7 +72,7 @@ name = "naming.remove_groups"
 kind = "list"
 direction = "loosening"
 default = []
-summary = "Removable term groups this repository drops, each with a reason. The marketing and defensive groups never drop."
+summary = "Removable term groups this repository drops, each with a reason. The marketing, defensive, and terminology groups never drop."
 
 [[settings]]
 name = "naming.contract_properties"

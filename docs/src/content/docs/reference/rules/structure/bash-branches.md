@@ -1,5 +1,5 @@
 ---
-title: "structure/shell-branches"
+title: "structure/bash-branches"
 description: "Counts the branches in each shell function against the ceiling."
 ---
 
@@ -19,4 +19,4 @@ Split the function by branch, or raise limits.bash.function_branches with a reas
 - Stage: commit
 - Engine: structure
 
-Turn it off for a path with a reason: `gspot ignore structure/shell-branches --paths <glob> --reason "<why>"`.
+Turn it off for a path with a reason: `gspot ignore structure/bash-branches --paths <glob> --reason "<why>"`.

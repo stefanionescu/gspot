@@ -23,14 +23,14 @@ hadolint, trivy, docker (host).
 
 ## Checks
 
-| Id                       | Stage                   | Command                                                                                             |
-| ------------------------ | ----------------------- | --------------------------------------------------------------------------------------------------- |
-| `docker/hadolint`        | commit                  | `hadolint --config .gspot/hadolint.yaml {files}` (ShellCheck runs over `RUN` lines inside hadolint) |
-| `docker/compose-config`  | push, docker            | `docker compose -f <file> config --quiet` per compose file (parses without a daemon)                |
-| `docker/dockerignore`    | commit                  | `.dockerignore` exists beside every Dockerfile and excludes `.git`, `node_modules`, `.env`          |
-| `docker/trivy-config`    | push                    | `trivy config --config .gspot/trivy.yaml <dir>`                                                     |
-| `docker/trivy-image`     | manual, docker, network | `trivy image` over images the compose file names, with `[tools.trivy] ignore` (id, reason)          |
-| `structure/shell-embeds` | commit                  | no inline Python or Node heredocs in `RUN` lines                                                    |
+| Id                      | Stage                   | Command                                                                                             |
+| ----------------------- | ----------------------- | --------------------------------------------------------------------------------------------------- |
+| `docker/hadolint`       | commit                  | `hadolint --config .gspot/hadolint.yaml {files}` (ShellCheck runs over `RUN` lines inside hadolint) |
+| `docker/compose-config` | push, docker            | `docker compose -f <file> config --quiet` per compose file (parses without a daemon)                |
+| `docker/dockerignore`   | commit                  | `.dockerignore` exists beside every Dockerfile and excludes `.git`, `node_modules`, `.env`          |
+| `docker/trivy-config`   | push                    | `trivy config --config .gspot/trivy.yaml <dir>`                                                     |
+| `docker/trivy-image`    | manual, docker, network | `trivy image` over images the compose file names, with `[tools.trivy] ignore` (id, reason)          |
+| `structure/bash-embeds` | commit                  | no inline Python or Node heredocs in `RUN` lines                                                    |
 
 ## Settings
 

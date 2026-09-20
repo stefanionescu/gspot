@@ -113,10 +113,10 @@ why = "One formatter means diffs show what changed, not how someone's editor ind
 help = "Run gspot check --fix to format every script, or shfmt -w on one file."
 
 [[checks]]
-name = "structure/shell-interpreter"
+name = "structure/bash-interpreter"
 stage = "commit"
 engine = "structure"
-analysis = "shell-interpreter"
+analysis = "bash-interpreter"
 coverage = ["structure"]
 searched = ["shellcheck", "shfmt", "bashate"]
 summary = "Checks the contract every Bash script keeps: the four-line header, strict mode, one main called last, readonly constants, declarative libraries, cleaned-up temporary files."
@@ -238,10 +238,10 @@ why = "A long function does more than its name says."
 help = "Split the function, or raise limits.bash.function_lines with a reason."
 
 [[checks]]
-name = "structure/shell-script-policy"
+name = "structure/bash-script-policy"
 stage = "commit"
 engine = "structure"
-analysis = "shell-script-policy"
+analysis = "bash-script-policy"
 coverage = ["structure"]
 searched = ["shellcheck", "semgrep"]
 summary = "Finds forwarding wrappers, compatibility aliases, and inline Node in shell scripts."
@@ -249,10 +249,10 @@ why = "A wrapper is a second entry point that drifts from the first; inline Node
 help = "Call the target script directly, delete the alias, and move the Node code into a .js file."
 
 [[checks]]
-name = "structure/shell-embeds"
+name = "structure/bash-embeds"
 stage = "commit"
 engine = "structure"
-analysis = "shell-embeds"
+analysis = "bash-embeds"
 coverage = ["structure"]
 searched = ["shellcheck", "semgrep"]
 summary = "Finds inline Python, Node and generated-script heredocs in shell scripts."
@@ -260,10 +260,10 @@ why = "Code inside a heredoc is checked by nothing."
 help = "Move the embedded code into its own file and run that."
 
 [[checks]]
-name = "structure/shell-ssh-blocks"
+name = "structure/bash-ssh-blocks"
 stage = "commit"
 engine = "structure"
-analysis = "shell-ssh-blocks"
+analysis = "bash-ssh-blocks"
 coverage = ["structure"]
 searched = ["shellcheck"]
 summary = "Checks that multi-line ssh blocks are named, documented, and inside a function."
@@ -271,10 +271,10 @@ why = "A remote command block with no name is the hardest thing in a script to t
 help = "Move the block into a named function and write \"# name - what it does\" above it."
 
 [[checks]]
-name = "structure/shell-config-defaults"
+name = "structure/bash-config-defaults"
 stage = "commit"
 engine = "structure"
-analysis = "shell-config-defaults"
+analysis = "bash-config-defaults"
 coverage = ["structure"]
 searched = ["shellcheck"]
 summary = "Finds variable defaults of the form name:-value outside the configuration owners."
@@ -282,10 +282,10 @@ why = "A default set in three places is three settings with one name."
 help = "Set the default in a configuration owner named under tools.bash.config_owners and read the variable everywhere else."
 
 [[checks]]
-name = "structure/shell-config-guards"
+name = "structure/bash-config-guards"
 stage = "commit"
 engine = "structure"
-analysis = "shell-config-guards"
+analysis = "bash-config-guards"
 coverage = ["structure"]
 searched = ["shellcheck"]
 summary = "Checks that every configuration owner opens with one include guard nobody else uses."
@@ -293,10 +293,10 @@ why = "A configuration file sourced twice runs its side effects twice."
 help = "Open the owner with [[ -n ${_CFG_NAME_READY:-} ]] && return 0 and then readonly _CFG_NAME_READY=1."
 
 [[checks]]
-name = "structure/shell-boundaries"
+name = "structure/bash-boundaries"
 stage = "commit"
 engine = "structure"
-analysis = "shell-boundaries"
+analysis = "bash-boundaries"
 coverage = ["structure"]
 searched = ["shellcheck source="]
 summary = "Checks that scripts under the architecture roots declare their boundary and source what they call."
@@ -315,10 +315,10 @@ why = "When any script reads the environment, nobody can list what the program n
 help = "Read the variable in the owner named under architecture.roles.env and pass the value in."
 
 [[checks]]
-name = "structure/shell-branches"
+name = "structure/bash-branches"
 stage = "commit"
 engine = "structure"
-analysis = "shell-branches"
+analysis = "bash-branches"
 limit = "limits.bash.function_branches"
 coverage = ["structure"]
 searched = ["shellcheck"]
@@ -327,10 +327,10 @@ why = "A function with many branches is several functions with one name."
 help = "Split the function by branch, or raise limits.bash.function_branches with a reason."
 
 [[checks]]
-name = "structure/shell-nesting"
+name = "structure/bash-nesting"
 stage = "commit"
 engine = "structure"
-analysis = "shell-nesting"
+analysis = "bash-nesting"
 limit = "limits.bash.function_nesting"
 coverage = ["structure"]
 searched = ["shellcheck"]
@@ -339,10 +339,10 @@ why = "Deep nesting is the shape of code nobody can hold in their head."
 help = "Return early or split the inner block into a function, or raise limits.bash.function_nesting with a reason."
 
 [[checks]]
-name = "structure/shell-mutable-assignments"
+name = "structure/bash-mutable-assignments"
 stage = "commit"
 engine = "structure"
-analysis = "shell-mutable-assignments"
+analysis = "bash-mutable-assignments"
 limit = "limits.bash.mutable_assignments"
 coverage = ["structure"]
 searched = ["shellcheck"]
@@ -351,10 +351,10 @@ why = "A function that reassigns many variables is tracking state a reader canno
 help = "Split the function, or raise limits.bash.mutable_assignments with a reason."
 
 [[checks]]
-name = "structure/shell-safety"
+name = "structure/bash-safety"
 stage = "commit"
 engine = "structure"
-analysis = "shell-safety"
+analysis = "bash-safety"
 coverage = ["structure", "security"]
 searched = ["shellcheck", "semgrep"]
 summary = "Finds discarded failures, broad process kills, recursive deletes outside their owners, unchecked cd, and sourced state files."

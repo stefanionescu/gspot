@@ -75,7 +75,7 @@ and the template spreads the config of the level.
 
 Closes K-135, K-141, K-142, and K-123.
 
-**What is wrong.** `structure/shell-interpreter` holds the shebang, a three-line header, computed
+**What is wrong.** `structure/bash-interpreter` holds the shebang, a three-line header, computed
 directories, `readonly` on every name, strict mode, one `main`, the executable bit, and a trap
 for `mktemp`. `${PORT:-8080}` anywhere is a finding, and every function needs a comment in a
 fixed section order. Four checks look for the habits of one deploy repository: `run_ssh`,
@@ -87,11 +87,11 @@ They are also a recursive remove, a broad `pkill`, unread arguments, duplicate f
 unused functions. The header,
 order, underscore, owner, and doc-section rules are `all`.
 
-**Files.** `structure/analyses/shell/`: `interpreter.ts` splits into `strict-mode.ts`,
-`temp-trap.ts`, and `script-header.ts`. `config/shell.ts`, `presets/bash/manifest.toml`.
+**Files.** `structure/analyses/scripts/`: `interpreter.ts` splits into `strict-mode.ts`,
+`temp-trap.ts`, and `script-header.ts`. `config/structure.ts`, `presets/bash/manifest.toml`.
 
-**Logic.** Three check names replace one: `structure/shell-strict-mode`, `structure/shell-temp-trap`
-(both `recommended`), and `structure/shell-script-header` (`all`).
+**Logic.** Three check names replace one: `structure/bash-strict-mode`, `structure/bash-temp-trap`
+(both `recommended`), and `structure/bash-script-header` (`all`).
 
 **What goes.** `shell/ssh-blocks.ts`, `shell/config/guards.ts`, the `nvidia-smi` and
 `/root/.cache` patterns of `shell/safety.ts`, and their word lists. They named one repository.

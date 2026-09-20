@@ -3,12 +3,12 @@ import type { Finding } from '#types/finding.ts';
 import { functionAt } from '#cli/structure/parser.ts';
 import { astGrepMatches } from '#cli/structure/ast-grep.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import type { AstGrepMatch, ShellIndex, StructureContext } from '#types/structure.ts';
+import type { AstGrepMatch, ScriptIndex, StructureContext } from '#types/structure.ts';
 
 const RULES: Record<string, { limit: string; noun: string; isDepth: boolean }> = {
-    'shell-branches': { limit: 'function_branches', noun: 'branches', isDepth: false },
-    'shell-nesting': { limit: 'function_nesting', noun: 'levels of nesting', isDepth: true },
-    'shell-mutable-assignments': { limit: 'mutable_assignments', noun: 'assignments', isDepth: false },
+    'bash-branches': { limit: 'function_branches', noun: 'branches', isDepth: false },
+    'bash-nesting': { limit: 'function_nesting', noun: 'levels of nesting', isDepth: true },
+    'bash-mutable-assignments': { limit: 'mutable_assignments', noun: 'assignments', isDepth: false },
 };
 const OUTER_LEVELS = 2;
 
@@ -34,7 +34,7 @@ function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
  * @param index the shell index
  * @returns the findings; a missing ast-grep raises MissingToolError
  */
-export function countFindings(analysis: string, context: StructureContext, index: ShellIndex): Finding[] {
+export function countFindings(analysis: string, context: StructureContext, index: ScriptIndex): Finding[] {
     const rule = RULES[analysis];
     const ceiling = rule === undefined ? undefined : context.limit(rule.limit, 'bash');
     if (rule === undefined || ceiling === undefined) return [];

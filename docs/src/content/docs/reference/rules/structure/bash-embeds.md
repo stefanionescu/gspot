@@ -1,5 +1,5 @@
 ---
-title: "structure/shell-embeds"
+title: "structure/bash-embeds"
 description: "Finds inline Python, Node and generated-script heredocs in shell scripts."
 ---
 
@@ -19,4 +19,4 @@ Move the embedded code into its own file and run that.
 - Stage: commit
 - Engine: structure
 
-Turn it off for a path with a reason: `gspot ignore structure/shell-embeds --paths <glob> --reason "<why>"`.
+Turn it off for a path with a reason: `gspot ignore structure/bash-embeds --paths <glob> --reason "<why>"`.

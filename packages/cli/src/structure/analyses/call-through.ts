@@ -1,6 +1,6 @@
-import { ENTRY_FUNCTIONS } from '#config/shell.ts';
 // A shell function that forwards "$@" to one command. Searched: shellcheck; it has no such rule.
 import type { Analysis } from '#types/structure.ts';
+import { ENTRY_FUNCTIONS } from '#config/structure.ts';
 import { codeLines } from '#cli/structure/code-lines.ts';
 
 const CALLEE = /^[\w./-]+$/u;
@@ -16,16 +16,16 @@ function forwardedCallee(code: string): string | undefined {
 /**
  * One finding per function whose whole body is one call with its own arguments forwarded unchanged.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const callThrough: Analysis = async (context, shell) => {
+export const callThrough: Analysis = async (context, scripts) => {
     const allowed = new Set(
         context.input.session.policyFiles.policy.structure.call_through_allowed.map(
             (entry) => `${entry.file}\n${entry.name}`,
         ),
     );
-    const index = await shell();
+    const index = await scripts();
     return index.files.flatMap((file) =>
         file.functions.flatMap((entry) => {
             if (ENTRY_FUNCTIONS.includes(entry.name) || allowed.has(`${file.path}\n${entry.name}`)) return [];

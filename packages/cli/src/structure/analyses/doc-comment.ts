@@ -1,6 +1,6 @@
 // Every shell function announces itself in a comment block above it. Searched: shellcheck, shfmt, bashdoc; none requires it.
-import type { Analysis, ShellFile, ShellFunction } from '#types/structure.ts';
-import { DOC_SECTIONS, ENTRY_FUNCTIONS, MARKERS, VAGUE_SUMMARY_WORDS } from '#config/shell.ts';
+import type { Analysis, ScriptFile, ScriptFunction } from '#types/structure.ts';
+import { DOC_SECTIONS, ENTRY_FUNCTIONS, MARKERS, VAGUE_SUMMARY_WORDS } from '#config/structure.ts';
 
 const SHELLCHECK_COMMENT = /^#\s*shellcheck\b/u;
 const WORD = /[A-Za-z0-9]+/gu;
@@ -38,7 +38,7 @@ function areSectionsInOrder(block: string[]): boolean {
     return positions.every((position, index) => index === 0 || position > (positions[index - 1] ?? -1));
 }
 
-function exemptNames(file: ShellFile): Set<string> {
+function exemptNames(file: ScriptFile): Set<string> {
     const names = new Set<string>();
     const marker = new RegExp(String.raw`${MARKERS.undocumentedFunction}\s+([A-Za-z_][A-Za-z0-9_]*)`, 'u');
     for (const line of file.lines) {
@@ -48,7 +48,7 @@ function exemptNames(file: ShellFile): Set<string> {
     return names;
 }
 
-function problem(entry: ShellFunction, block: string[], style: string): { rule: string; message: string } | undefined {
+function problem(entry: ScriptFunction, block: string[], style: string): { rule: string; message: string } | undefined {
     const first = block[0];
     if (first === undefined)
         return {
@@ -74,12 +74,12 @@ function problem(entry: ShellFunction, block: string[], style: string): { rule: 
 /**
  * One finding per function without a summary line, with a vague summary, or with doc sections out of order.
  * @param context the check context
- * @param shell the shell index
+ * @param scripts the shell index
  * @returns the findings
  */
-export const docComment: Analysis = async (context, shell) => {
+export const docComment: Analysis = async (context, scripts) => {
     const style = context.bashText('doc_style', 'colon');
-    const index = await shell();
+    const index = await scripts();
     return index.files.flatMap((file) => {
         if (file.text.includes(MARKERS.undocumentedFunctions)) return [];
         const exempt = exemptNames(file);

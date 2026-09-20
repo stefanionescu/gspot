@@ -104,28 +104,28 @@ keeps the checks over the config and the files gspot writes: `policy`, `generate
 `config-purity`, `suppressions`, `allowlists-match`, `task-policy`, and
 `large-files`. Every other check name moves, and the old name is unknown (D-134):
 
-| Today                                                                             | Becomes                                                                                     |
-| --------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------- |
-| `integrity/docs-headings`                                                         | `docs/headings`                                                                             |
-| `integrity/stale-paths`                                                           | `docs/stale-paths`                                                                          |
-| `integrity/lockfile-fresh`                                                        | `dependencies/lockfile-fresh`                                                               |
-| `integrity/lockfile-hosts`                                                        | `dependencies/lockfile-hosts`                                                               |
-| `integrity/manifest-policy`                                                       | `dependencies/manifest-policy`                                                              |
-| `integrity/install-policy`                                                        | `dependencies/install-policy`                                                               |
-| `integrity/tracked-dependencies`                                                  | `dependencies/tracked`                                                                      |
-| `integrity/dependency-ownership`                                                  | `dependencies/ownership`                                                                    |
-| `integrity/env-files`                                                             | `secrets/env-files`                                                                         |
-| `integrity/gitleaks-baseline`                                                     | `secrets/gitleaks-baseline`                                                                 |
-| `integrity/locales`                                                               | `i18n/locales`                                                                              |
-| `integrity/css-usage`                                                             | `css/usage`                                                                                 |
-| `integrity/typecheck-membership`                                                  | `typescript/typecheck-membership`                                                           |
-| `integrity/tsconfig-options`                                                      | `typescript/tsconfig-options`                                                               |
-| `integrity/required-rules`                                                        | `javascript/required-rules`                                                                 |
-| `licenses/npm`                                                                    | `licenses/packages`                                                                         |
-| `xcode/asset-catalogues`                                                          | `xcode/asset-catalogs`                                                                      |
-| `structure/shell-interpreter`                                                     | `structure/shell-strict-mode`, `structure/shell-temp-trap`, `structure/shell-script-header` |
-| `structure/trivial-function`, `python/trivial-function`, `swift/trivial-function` | the call-through check of each language                                                     |
-| `vue/eslint`, `svelte/eslint`                                                     | `javascript/eslint`                                                                         |
+| Today                                                                             | Becomes                                                                                  |
+| --------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------- |
+| `integrity/docs-headings`                                                         | `docs/headings`                                                                          |
+| `integrity/stale-paths`                                                           | `docs/stale-paths`                                                                       |
+| `integrity/lockfile-fresh`                                                        | `dependencies/lockfile-fresh`                                                            |
+| `integrity/lockfile-hosts`                                                        | `dependencies/lockfile-hosts`                                                            |
+| `integrity/manifest-policy`                                                       | `dependencies/manifest-policy`                                                           |
+| `integrity/install-policy`                                                        | `dependencies/install-policy`                                                            |
+| `integrity/tracked-dependencies`                                                  | `dependencies/tracked`                                                                   |
+| `integrity/dependency-ownership`                                                  | `dependencies/ownership`                                                                 |
+| `integrity/env-files`                                                             | `secrets/env-files`                                                                      |
+| `integrity/gitleaks-baseline`                                                     | `secrets/gitleaks-baseline`                                                              |
+| `integrity/locales`                                                               | `i18n/locales`                                                                           |
+| `integrity/css-usage`                                                             | `css/usage`                                                                              |
+| `integrity/typecheck-membership`                                                  | `typescript/typecheck-membership`                                                        |
+| `integrity/tsconfig-options`                                                      | `typescript/tsconfig-options`                                                            |
+| `integrity/required-rules`                                                        | `javascript/required-rules`                                                              |
+| `licenses/npm`                                                                    | `licenses/packages`                                                                      |
+| `xcode/asset-catalogues`                                                          | `xcode/asset-catalogs`                                                                   |
+| `structure/bash-interpreter`                                                      | `structure/bash-strict-mode`, `structure/bash-temp-trap`, `structure/bash-script-header` |
+| `structure/trivial-function`, `python/trivial-function`, `swift/trivial-function` | the call-through check of each language                                                  |
+| `vue/eslint`, `svelte/eslint`                                                     | `javascript/eslint`                                                                      |
 
 Three more settings change with the same table: `tools.xcode.allowed_entitlements` becomes
 `tools.xcode.entitlements_allowed`, `tools.licenses.allow` becomes `tools.licenses.licenses_allowed`,

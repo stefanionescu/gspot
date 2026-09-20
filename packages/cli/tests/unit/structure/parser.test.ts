@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { shellFunctions } from '#cli/structure/parser.ts';
+import { scriptFunctions } from '#cli/structure/parser.ts';
 import { codeLines, withoutComment } from '#cli/structure/code-lines.ts';
 
 describe('shell parsing', () => {
@@ -11,7 +11,7 @@ describe('shell parsing', () => {
     });
 
     test('functions carry their range and body', async () => {
-        const found = await shellFunctions(
+        const found = await scriptFunctions(
             '#!/usr/bin/env bash\n_one() {\n    echo 1\n}\n\nmain() {\n    _one "$@"\n}\n',
         );
         expect(found).toEqual([

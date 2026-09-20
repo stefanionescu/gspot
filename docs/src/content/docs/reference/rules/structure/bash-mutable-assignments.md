@@ -1,5 +1,5 @@
 ---
-title: "structure/shell-mutable-assignments"
+title: "structure/bash-mutable-assignments"
 description: "Counts the variable assignments in each shell function against the ceiling."
 ---
 
@@ -19,4 +19,4 @@ Split the function, or raise limits.bash.mutable_assignments with a reason.
 - Stage: commit
 - Engine: structure
 
-Turn it off for a path with a reason: `gspot ignore structure/shell-mutable-assignments --paths <glob> --reason "<why>"`.
+Turn it off for a path with a reason: `gspot ignore structure/bash-mutable-assignments --paths <glob> --reason "<why>"`.
