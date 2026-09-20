@@ -116,3 +116,13 @@ checks the folder `api`. With no value the ref is `@{upstream}`, then the defaul
 path, and holds that `--since` is an unknown option with exit 2.
 
 **Done when.** It passes, and no document or help text holds the word `--since`.
+
+**Locally verified, partial implementation.** The CLI accepts `--changed=<ref>` and a bare
+`--changed` followed by positional paths. It resolves the configured upstream first, then
+remote default-branch references. No usable default produces an explicit-ref setup error.
+A missing configured upstream remains an error rather than selecting another branch.
+
+Text and JSON reports identify the working-tree comparison reference. Tests exercise actual
+Git histories, working edits, path selection, missing refs, no-Git operation, and shallow
+history guidance. Existing deletion and rename regressions remain active. Internal push
+snapshots and event-specific CI selection remain open under K-293 and K-294.

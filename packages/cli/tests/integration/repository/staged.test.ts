@@ -3,7 +3,7 @@ import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, writeFileSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { changedSince, stagedFiles, pushBase } from '#cli/repository/staged.ts';
+import { changedFiles, stagedFiles, pushBase } from '#cli/repository/staged.ts';
 
 function git(root: string, ...argv: string[]): void {
     const result = runBlocking(['git', ...argv], { cwd: root });
@@ -31,7 +31,7 @@ describe('Git change observation', () => {
         commit(sandbox.path);
         git(sandbox.path, 'rm', 'source.ts');
         expect(stagedFiles(sandbox.path).staged).toEqual(['source.ts']);
-        expect(changedSince(sandbox.path, 'HEAD')).toEqual(['source.ts']);
+        expect(changedFiles(sandbox.path, 'HEAD').paths).toEqual(['source.ts']);
     });
 
     test('keeps both paths of a rename across directories', async () => {
@@ -39,7 +39,7 @@ describe('Git change observation', () => {
         commit(sandbox.path);
         git(sandbox.path, 'mv', 'api/source.ts', 'web/source.ts');
         expect(stagedFiles(sandbox.path).staged).toEqual(['api/source.ts', 'web/source.ts']);
-        expect(changedSince(sandbox.path, 'HEAD')).toEqual(['api/source.ts', 'web/source.ts']);
+        expect(changedFiles(sandbox.path, 'HEAD').paths).toEqual(['api/source.ts', 'web/source.ts']);
     });
 
     test('reports corrupt or absent Git state instead of an empty staged set', async () => {
@@ -53,9 +53,9 @@ describe('Git change observation', () => {
     test('rejects invalid reference observations without interpreting options', async () => {
         await using sandbox = await createSandbox({ 'source.ts': 'export {};\n' });
         commit(sandbox.path);
-        expect(changedSince(sandbox.path, 'HEAD')).toEqual([]);
-        expect(() => changedSince(sandbox.path, 'missing-reference')).toThrow('Git merge-base failed');
-        expect(() => changedSince(sandbox.path, '--output=outside.txt')).toThrow('Git merge-base failed');
+        expect(changedFiles(sandbox.path, 'HEAD').paths).toEqual([]);
+        expect(() => changedFiles(sandbox.path, 'missing-reference')).toThrow('Git merge-base failed');
+        expect(() => changedFiles(sandbox.path, '--output=outside.txt')).toThrow('Git merge-base failed');
         expect(existsSync(join(sandbox.path, 'outside.txt'))).toBe(false);
     });
     test('push comparison distinguishes an absent upstream from a missing upstream object', async () => {

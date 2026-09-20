@@ -262,6 +262,9 @@ export async function executeRun(session: Session, options: RunOptions): Promise
     const sources = session.repository.files.filter((file) => file.nature === 'source');
     const checkedSources = sources.filter((file) => claimed.has(file.path));
     const report: RunReport = {
+        ...(options.comparison === undefined
+            ? {}
+            : { comparison: { content: 'working-tree' as const, reference: options.comparison } }),
         version: session.version,
         stage: options.stage,
         started: started.toISOString(),
@@ -273,7 +276,7 @@ export async function executeRun(session: Session, options: RunOptions): Promise
         coverage: { checked: checkedSources.length, unchecked: sources.length - checkedSources.length },
         suppressions: census(session, checkedSources),
         unstaged: 0,
-        narrowed: [options.staged, options.since, options.paths].some((selection) => selection !== undefined),
+        narrowed: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
         failed,
         exitCode: failed.length > 0 ? 1 : 0,
     };

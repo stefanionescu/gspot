@@ -8,8 +8,8 @@ import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import type { CheckSpec } from '#types/manifest.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { stagedFiles } from '#cli/repository/staged.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
+import { changedFiles, stagedFiles } from '#cli/repository/staged.ts';
 
 const options = { stage: 'commit' as const, skips: [], localSkips: [], only: ['sandbox/project'] };
 const policy = `version = 1
@@ -50,7 +50,12 @@ function projectChecks(session: Session): void {
     }
 }
 
-test.each(['delete', 'rename'])('a last-file %s triggers the affected project through execution', async (operation) => {
+test.each([
+    ['delete', 'staged'],
+    ['rename', 'staged'],
+    ['delete', 'changed'],
+    ['rename', 'changed'],
+])('a last-file %s triggers the affected project with %s selection', async (operation, selection) => {
     await using sandbox = await createSandbox({
         'gspot.toml': policy,
         'api/source.ts': 'export {};\n',
@@ -64,17 +69,20 @@ test.each(['delete', 'rename'])('a last-file %s triggers the affected project th
     mkdirSync(join(sandbox.path, 'api'), { recursive: true });
     const session = await openSession(sandbox.path);
     projectChecks(session);
-    const staged = stagedFiles(sandbox.path).staged;
-    const planned = planRun(session, { ...options, staged });
+    const revision =
+        selection === 'staged'
+            ? { staged: stagedFiles(sandbox.path).staged }
+            : { changed: changedFiles(sandbox.path, 'HEAD').paths };
+    const planned = planRun(session, { ...options, ...revision });
     const api = planned.find((check) => check.scope.scope.path === 'api')!;
     expect(api.files).toEqual([]);
     expect(api.triggerPaths).toContain('api/source.ts');
-    const fileChecks = planRun(session, { ...options, only: ['sandbox/files'], staged });
+    const fileChecks = planRun(session, { ...options, only: ['sandbox/files'], ...revision });
     expect(fileChecks.flatMap((check) => check.triggerPaths)).toEqual([]);
     expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toEqual(
         operation === 'delete' ? [] : ['web/source.ts'],
     );
-    const outcome = await executeRun(session, { ...options, staged, fix: false, isDryRun: false, noCache: true });
+    const outcome = await executeRun(session, { ...options, ...revision, fix: false, isDryRun: false, noCache: true });
     expect(outcome.report.exitCode).toBe(1);
     expect(outcome.report.checks.map((check) => check.scope)).toEqual(
         operation === 'delete' ? ['api'] : ['api', 'web'],

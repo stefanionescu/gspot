@@ -162,5 +162,9 @@ export function runText(report: RunReport, options: ReportOptions): string {
     const lines = [...body, ...(isSeparated ? [''] : []), ...tail];
     if (lines.length > 0) lines.push('');
     lines.push(summaryLine(report, options, shown.length, colors));
-    return `${lines.join('\n')}\n`;
+    const comparison =
+        report.comparison === undefined || options.quiet
+            ? ''
+            : `Working tree compared with the merge base of ${report.comparison.reference}.\n`;
+    return `${comparison}${lines.join('\n')}\n`;
 }

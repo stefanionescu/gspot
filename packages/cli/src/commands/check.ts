@@ -1,11 +1,21 @@
-import type { Command } from 'commander';
 import type { Stage } from '#types/manifest.ts';
-// gspot check
-import { Option, InvalidArgumentError } from 'commander';
 import { checkCommand } from '#cli/run/check-command.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import type { StageFilter, CheckOptions } from '#types/run.ts';
+// gspot check
+import { Command, Option, InvalidArgumentError } from 'commander';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
+
+class CheckCommand extends Command {
+    override parseOptions(argv: string[]): { operands: string[]; unknown: string[] } {
+        const end = argv.indexOf('--');
+        return super.parseOptions(
+            argv.map((argument, index) =>
+                argument === '--changed' && (end === -1 || index < end) ? '--changed=' : argument,
+            ),
+        );
+    }
+}
 
 const PUBLIC_STAGES: Stage[] = ['commit', 'push', 'manual'];
 
@@ -31,7 +41,7 @@ function optionsFrom(paths: string[], flags: Record<string, unknown>, global: Re
         noCache: flags['cache'] === false,
         paths,
         ...(only === undefined ? {} : { only }),
-        ...textEntry(flags, 'since', 'since'),
+        ...(typeof flags['changed'] === 'string' ? { changed: flags['changed'] } : {}),
         ...(stage === undefined ? {} : { stage }),
         ...(scope === undefined ? {} : { scope: scope.endsWith('/') ? scope.slice(0, -1) : scope }),
         ...textEntry(flags, 'messageFile', 'messageFile'),
@@ -43,12 +53,17 @@ function optionsFrom(paths: string[], flags: Record<string, unknown>, global: Re
  * @param program the commander program
  */
 export function registerCheck(program: Command): void {
-    program
-        .command('check [paths...]')
+    const command = new CheckCommand('check');
+    program.addCommand(command);
+    command
+        .argument('[paths...]')
         .description('Run checks over the selected files and folders and print findings')
         .option('--only <checks...>', 'Run the named checks')
         .option('--staged', 'The commit stage over staged files, as the pre-commit hook runs it')
-        .option('--since <ref>', 'Commit and push stages over files changed since a git ref')
+        .option(
+            '--changed [ref]',
+            'Changed paths from the upstream or default branch; use --changed=<ref> to choose a ref',
+        )
         .option('--fix', 'Run every fixer in order, then the checks again')
         .option('--dry-run', 'With --fix, print the diff of every fix and write nothing')
         .addOption(new Option('--stage <stage>', 'One stage').choices(PUBLIC_STAGES).argParser(stageArgument))

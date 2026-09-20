@@ -13,6 +13,7 @@ export type BaselineVerdict = {
 };
 
 export type RunReport = {
+    comparison?: { content: 'working-tree'; reference: string };
     version: string;
     stage: string;
     started: string;

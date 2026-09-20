@@ -27,7 +27,7 @@ export type CheckOptions = {
     only?: string[];
     paths: string[];
     staged: boolean;
-    since?: string;
+    changed?: string;
     fix: boolean;
     isDryRun: boolean;
     stage?: StageFilter;
@@ -55,7 +55,7 @@ export type Engine = (input: EngineInput) => Promise<Finding[]>;
 
 export type ToolAnalysis = (session: Session, planned: PlannedCheck) => Promise<CheckResult>;
 
-export type RunOptions = PlanOptions & { fix: boolean; isDryRun: boolean; noCache?: boolean };
+export type RunOptions = PlanOptions & { fix: boolean; isDryRun: boolean; noCache?: boolean; comparison?: string };
 
 export type RunOutcome = { report: RunReport; planned: PlannedCheck[]; fixes?: FixReport };
 
@@ -75,7 +75,7 @@ export type StageFilter = 'all' | 'commit' | 'push' | 'manual' | 'message';
 export type PlanOptions = {
     stage: StageFilter;
     staged?: string[];
-    since?: string[];
+    changed?: string[];
     only?: string[];
     /** Root-relative paths selected by positional file and directory arguments. */
     paths?: string[];

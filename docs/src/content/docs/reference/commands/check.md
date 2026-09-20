@@ -17,14 +17,14 @@ gspot check [options] [paths...]
 
 ## Options
 
-| Flag                 | Meaning                                                            |
-| -------------------- | ------------------------------------------------------------------ |
-| `--only <checks...>` | Run the named checks                                               |
-| `--staged`           | The commit stage over staged files, as the pre-commit hook runs it |
-| `--since <ref>`      | Commit and push stages over files changed since a git ref          |
-| `--fix`              | Run every fixer in order, then the checks again                    |
-| `--dry-run`          | With --fix, print the diff of every fix and write nothing          |
-| `--stage <stage>`    | One stage                                                          |
-| `--scope <path>`     | One scope only                                                     |
-| `--skip <checks...>` | Skip the named checks for this run                                 |
-| `--no-cache`         | Run every check even when its inputs are unchanged                 |
+| Flag                 | Meaning                                                                                |
+| -------------------- | -------------------------------------------------------------------------------------- |
+| `--only <checks...>` | Run the named checks                                                                   |
+| `--staged`           | The commit stage over staged files, as the pre-commit hook runs it                     |
+| `--changed [ref]`    | Changed paths from the upstream or default branch; use --changed=<ref> to choose a ref |
+| `--fix`              | Run every fixer in order, then the checks again                                        |
+| `--dry-run`          | With --fix, print the diff of every fix and write nothing                              |
+| `--stage <stage>`    | One stage                                                                              |
+| `--scope <path>`     | One scope only                                                                         |
+| `--skip <checks...>` | Skip the named checks for this run                                                     |
+| `--no-cache`         | Run every check even when its inputs are unchanged                                     |

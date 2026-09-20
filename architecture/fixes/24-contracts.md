@@ -65,7 +65,9 @@ references use the same contract; the positional check-name form is removed.
 
 Stage selection uses `--stage`. Message-hook arguments stay executable but are hidden
 from public help, completion, and generated command references.
-Other command-surface and lifecycle contracts remain open.
+Reference selection uses `--changed[=<ref>]`, with an equals sign required for an explicit
+ref. Bare selection preserves following positional paths. Reports identify the selected
+reference and working-tree content. Other command-surface and lifecycle contracts remain open.
 
 ## K-301: Recommended adoption findings need usefulness tests
 

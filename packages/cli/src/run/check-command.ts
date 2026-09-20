@@ -1,4 +1,3 @@
-// check: open the session, honor the pin, run, render, decide the exit code.
 import { readFileSync } from 'node:fs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
@@ -6,10 +5,12 @@ import { runText } from '#cli/output/reporter.ts';
 import { note, warn } from '#cli/output/messages.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+// check: open the session, honor the pin, run, render, decide the exit code.
+import type { ChangedSet } from '#types/repository.ts';
 import { SelectionError } from '#cli/presets/select.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import { isAbsolute, relative, resolve, sep } from 'node:path';
-import { changedSince, stagedFiles } from '#cli/repository/staged.ts';
+import { changedFiles, stagedFiles } from '#cli/repository/staged.ts';
 import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#config/env-files.ts';
 import type { CheckOptions, CommandResult, FixReport, RunOptions, StageFilter, Session } from '#types/run.ts';
 
@@ -43,7 +44,7 @@ function runOptions(
     options: CheckOptions,
     stage: StageFilter,
     staged: string[] | undefined,
-    since: string[] | undefined,
+    changed: ChangedSet | undefined,
     localSkips: string[],
 ): RunOptions {
     return {
@@ -54,7 +55,7 @@ function runOptions(
         isDryRun: options.isDryRun,
         noCache: options.noCache,
         ...(staged === undefined ? {} : { staged }),
-        ...(since === undefined ? {} : { since }),
+        ...(changed === undefined ? {} : { changed: changed.paths, comparison: changed.reference }),
         ...(options.only === undefined ? {} : { only: options.only }),
         ...(options.paths.length === 0 ? {} : { paths: options.paths }),
         ...(options.scope === undefined ? {} : { scope: options.scope }),
@@ -133,6 +134,12 @@ function unknownSelection(session: Session, only: string[] | undefined): Command
     return unknown === undefined ? undefined : unknownCheck(unknown);
 }
 
+function revisionSelection(session: Session, options: CheckOptions): ChangedSet | undefined {
+    if ((options.staged || options.changed !== undefined) && !session.repository.hasGit)
+        throw new SelectionError(['Revision selection requires a Git repository.']);
+    return options.changed === undefined ? undefined : changedFiles(session.root, options.changed);
+}
+
 function resultFor(
     options: CheckOptions,
     outcome: Awaited<ReturnType<typeof executeRun>>,
@@ -155,19 +162,19 @@ export async function checkCommand(options: CheckOptions): Promise<CommandResult
     const session = await openSession(root);
     const unknown = unknownSelection(session, options.only);
     if (unknown !== undefined) return unknown;
+    const changed = revisionSelection(session, options);
     const set = options.staged ? stagedFiles(root) : { staged: undefined, unstaged: 0 };
     const stage: StageFilter = options.stage ?? (options.staged ? 'commit' : 'all');
     const refusal = refusalFor(options, stage, set.staged);
     if (refusal) return refusal;
-    const since = options.since === undefined ? undefined : changedSince(root, options.since);
     const paths = selectedPaths(
         session,
         options,
-        [set.staged, since].flatMap((selection) => selection ?? []),
+        [set.staged, changed?.paths].flatMap((selection) => selection ?? []),
     );
     const outcome = await executeRun(
         session,
-        runOptions({ ...options, paths }, stage, set.staged, since, session.policyFiles.local.skip),
+        runOptions({ ...options, paths }, stage, set.staged, changed, session.policyFiles.local.skip),
     );
     return resultFor(options, outcome, set.unstaged);
 }

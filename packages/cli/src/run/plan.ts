@@ -216,7 +216,7 @@ function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean):
 }
 
 function narrowSet(options: PlanOptions): Set<string> | undefined {
-    const changed = options.staged ?? options.since;
+    const changed = options.staged ?? options.changed;
     if (options.paths === undefined) return changed === undefined ? undefined : new Set(changed);
     return new Set(options.paths.filter((path) => changed === undefined || changed.includes(path)));
 }

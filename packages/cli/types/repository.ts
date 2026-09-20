@@ -61,6 +61,8 @@ export type Attribute = { matcher: (path: string) => boolean; attributes: string
 
 export type NatureVerdict = { nature: Nature; source: string; producedBy?: string };
 
+export type ChangedSet = { reference: string; paths: string[] };
+
 export type StagedSet = { staged: string[]; unstaged: number };
 
 export type Tagged = { tags: string[]; binary: boolean; shebang?: string };
