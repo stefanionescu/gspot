@@ -89,6 +89,17 @@ export function fail(text: string): void {
 }
 
 /**
+ * Reports an operational storage failure without changing the established check verdict.
+ * @param path the output that was not saved
+ * @param error the filesystem error
+ */
+export function reportStorageFailure(path: string, error: unknown): void {
+    if (!(error instanceof Error && 'code' in error)) throw error;
+    const detail = error.message.replaceAll(/[\r\n]+/gu, ' ');
+    fail(`Could not write ${JSON.stringify(path)}: ${detail}`);
+}
+
+/**
  * Output that is the command's record: stdout.
  * @param text the text
  */

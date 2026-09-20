@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import type { Finding } from '#types/finding.ts';
 import type { RunReport } from '#types/report.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { reportStorageFailure } from '#cli/output/messages.ts';
 import { SarifBuilder, SarifResultBuilder, SarifRuleBuilder, SarifRunBuilder } from 'node-sarif-builder';
 
 const JSON_INDENT = 4;
@@ -26,9 +27,17 @@ function locationOf(finding: Finding): { fileUri: string; startLine: number; sta
  * @param report the run report
  */
 export function writeReport(root: string, report: RunReport): void {
-    mkdirSync(join(root, '.gspot'), { recursive: true });
-    writeFileSync(join(root, '.gspot', 'report.json'), `${JSON.stringify(report, null, JSON_INDENT)}\n`);
-    writeFileSync(join(root, '.gspot', 'report.sarif'), sarifText(report));
+    const json = `${JSON.stringify(report, null, JSON_INDENT)}\n`;
+    const sarif = sarifText(report);
+    let path = join(root, '.gspot', 'report.json');
+    try {
+        mkdirSync(join(root, '.gspot'), { recursive: true });
+        writeFileSync(path, json);
+        path = join(root, '.gspot', 'report.sarif');
+        writeFileSync(path, sarif);
+    } catch (error) {
+        reportStorageFailure(path, error);
+    }
 }
 
 /**

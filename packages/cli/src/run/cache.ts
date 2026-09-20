@@ -2,6 +2,7 @@
 import { join } from 'node:path';
 import type { CacheKeyInput } from '#types/run.ts';
 import type { CheckResult } from '#types/finding.ts';
+import { reportStorageFailure } from '#cli/output/messages.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const CACHE_FORMAT = 2;
@@ -68,7 +69,13 @@ export function readCached(root: string, key: string): CheckResult | undefined {
  * @param result the result to record
  */
 export function writeCached(root: string, key: string, result: CheckResult): void {
-    mkdirSync(cacheDir(root), { recursive: true });
+    const path = join(cacheDir(root), `${key}.json`);
     const status = result.status === 'cache' ? 'ok' : result.status;
-    writeFileSync(join(cacheDir(root), `${key}.json`), JSON.stringify({ ...result, status }));
+    const text = JSON.stringify({ ...result, status });
+    try {
+        mkdirSync(cacheDir(root), { recursive: true });
+        writeFileSync(path, text);
+    } catch (error) {
+        reportStorageFailure(path, error);
+    }
 }

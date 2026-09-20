@@ -276,6 +276,6 @@ export async function executeRun(session: Session, options: RunOptions): Promise
         failed,
         exitCode: failed.length > 0 ? 1 : 0,
     };
-    if (!options.isDryRun) writeReport(session.root, report);
+    if (!options.isDryRun && options.stage !== 'message') writeReport(session.root, report);
     return fixes ? { report, planned, fixes } : { report, planned };
 }

@@ -61,3 +61,7 @@ Set `line_base = 0` when the tool counts lines and columns from zero.
 [`report.schema.json`](/schema/report.schema.json). Check results refer to their check through
 `check`; `coverage` reports check coverage, not test coverage. The report has no repository
 root field.
+
+If a cache or report write fails, gspot prints the affected path and filesystem error on
+stderr. The findings and exit code remain available. Message-hook checks preserve the
+reports from the previous run.

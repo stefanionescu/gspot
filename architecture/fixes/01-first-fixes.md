@@ -95,6 +95,15 @@ with a read-only `.gspot/` holds exit 1, the findings on stdout, and one line on
 **Done when.** The two planted cases pass, and `grep writeFileSync packages/cli/src` names one
 file.
 
+**Partially implemented, September 20, 2026.** Cache and report write errors print one
+stderr line through the output owner. Both clean and failing runs keep their established
+findings and exit code. Both report formats are rendered before writing starts.
+
+The storage,
+report identity, and output suites pass locally with a real read-only directory fixture
+(13 tests, 81 assertions). Atomic replacement, tracked-file writers, and the shared lifecycle
+boundary remain open. Windows permission behavior remains platform verification deferred.
+
 ## K-140: three checks pass when ast-grep is absent
 
 **What is wrong.** `astGrepMatches` in `structure/ast-grep.ts:26` returns an empty list when no

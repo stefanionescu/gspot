@@ -160,8 +160,11 @@ tests (40 assertions), TypeScript, schema validation, and all reference pages.
 
 Check execution produces a `RunReport` and writes `.gspot/report.json` and
 `.gspot/report.sarif`. The report schema is `report.schema.json`; producers, consumers,
-generated ignore entries, and workflow artifact paths use these names. GitLab output,
-message-stage persistence, storage-failure handling, and report isolation remain open.
+generated ignore entries, and workflow artifact paths use these names. GitLab output and
+report isolation remain open.
+
+Message-stage runs preserve earlier reports. Cache and report
+write errors retain findings and exit status, with a storage diagnostic on stderr under K-257.
 The affected unit and script-argument suites pass (68 tests, 589 assertions), followed by
 the strengthened serialization regression (two tests, 18 assertions). Seven planted profile
 and repository-check tests pass (40 assertions), as do TypeScript, schema validation, and
