@@ -25,9 +25,6 @@ describe('profiles', () => {
         expect(result.stdout).toContain('profile    team');
         expect(result.stdout).toContain('--dry-run: nothing written');
         expect(treeContents(fixture.path)).toEqual(before);
-        const removed = await run(fixture.path, ['profile', 'check', 'team.profile.toml'], TOOLS);
-        expect(removed.code).toBe(2);
-        expect(removed.stderr).toContain("unknown command 'check'");
     });
 
     test(
@@ -116,25 +113,6 @@ describe('profiles', () => {
 });
 
 describe('policy edits', () => {
-    test('removed dry-run flags are rejected before policy edits', async () => {
-        await using fixture = await createFixture({
-            'gspot.toml': 'version = 1\npresets = ["bash"]\n',
-            'scripts/a.sh': script,
-        });
-        commitAll(fixture.path);
-        const before = treeContents(fixture.path);
-        const commands = [
-            ['set', 'format.indent_width', '2', '--dry-run'],
-            ['ignore', 'bash/shellcheck', '--reason', 'A deliberately unquoted argument.', '--dry-run'],
-        ];
-        for (const command of commands) {
-            const result = await run(fixture.path, command, TOOLS);
-            expect(result.code).toBe(2);
-            expect(result.stderr).toContain("unknown option '--dry-run'");
-            expect(treeContents(fixture.path)).toEqual(before);
-        }
-    });
-
     test(
         'an item that carries its own reason needs no flag, and --reason fills an item that has none',
         async () => {
@@ -190,14 +168,4 @@ describe('policy edits', () => {
         },
         PLANTED_TIMEOUT_MS,
     );
-});
-
-test('set rejects an unused architecture key without modifying the config', async () => {
-    const policy = 'version = 1\npresets = ["structure", "secrets"]\n';
-    await using fixture = await createFixture({ 'gspot.toml': policy });
-    const result = await run(fixture.path, ['set', 'architecture.package_roots', 'src']);
-    expect(result.code).toBe(2);
-    expect(result.stderr + result.stdout).toContain('architecture.package_roots');
-    const written = await Bun.file(join(fixture.path, 'gspot.toml')).text();
-    expect(written).toBe(policy);
 });

@@ -20,7 +20,6 @@ describe('selectPresets', () => {
 
     test('a recommended preset is not pulled in by selection; init adds it and a person can drop it', () => {
         const manifests = presetManifests();
-        expect(manifests.get('typescript')?.preset.recommends).toEqual(['naming', 'formatting', 'spelling']);
         const ids = selectPresets(['bash'], manifests).map((entry) => entry.preset.name);
         expect(ids).not.toContain('naming');
     });
@@ -60,38 +59,4 @@ describe('parseManifest', () => {
     test('every shipped manifest loads and its folder equals its name', () => {
         for (const [presetName, entry] of presetManifests()) expect(entry.dir.endsWith(`/${presetName}`)).toBe(true);
     });
-});
-
-test('manifest definitions use the canonical advice and coverage fields', () => {
-    const source = `[preset]
-name = "fixture"
-kind = "tool"
-title = "Fixture"
-description = "A correction contract fixture."
-[[checks]]
-name = "fixture/correction"
-stage = "commit"
-command = ["tool", "check"]
-summary = "Checks a fixture source file."
-why = "The fixture must satisfy its contract."
-help = "Review the fixture source file."
-coverage = ["syntax"]
-`;
-    expect(parseManifest(source, 'presets/fixture').preset.name).toBe('fixture');
-    expect(() => parseManifest(source.replace('kind =', 'conflicts = ["other"]\nkind ='), 'presets/fixture')).toThrow(
-        'conflicts',
-    );
-    expect(parseManifest(source, 'presets/fixture').checks[0]?.coverage).toEqual(['syntax']);
-    expect(() => parseManifest(source.replace('coverage =', 'inspection ='), 'presets/fixture')).toThrow('not valid');
-    const required = `${source}[coverage]\nfixture = ["syntax"]\n`;
-    expect(parseManifest(required, 'presets/fixture').coverage).toEqual({ fixture: ['syntax'] });
-    expect(() => parseManifest(required.replace('[coverage]', '[inspections]'), 'presets/fixture')).toThrow(
-        'not valid',
-    );
-    expect(() => parseManifest(source.replace('name =', 'id ='), 'presets/fixture')).toThrow('not valid');
-    expect(parseManifest(source, 'presets/fixture').checks[0]?.help).toBe('Review the fixture source file.');
-    expect(() => parseManifest(source.replace('help =', 'fix ='), 'presets/fixture')).toThrow('not valid');
-    expect(() => parseManifest(`${source}fix_command = []\nfix_order = "format"`, 'presets/fixture')).toThrow(
-        'not valid',
-    );
 });

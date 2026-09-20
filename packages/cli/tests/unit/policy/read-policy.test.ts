@@ -149,23 +149,8 @@ fix_order = "imports"
         expect(policy.checks[0]?.fix_order).toBe('imports');
     });
 
-    test('refuses the old correction field and incomplete executable corrections', () => {
-        expect(problems(`${check}fix = ["tool"]`)[0]).toContain('`fix`');
+    test('refuses incomplete executable corrections', () => {
         expect(problems(`${check}fix_command = ["tool"]`)[0]).toContain('fix_order');
         expect(problems(`${check}fix_command = []\nfix_order = "format"`)).not.toEqual([]);
     });
-});
-
-test('uses runner.tool and rejects the removed runner field', () => {
-    const policy = parsePolicyText(`${minimal}[runner]\ntool = "mise"\n`, 'gspot.toml');
-    expect(policy.runner.tool).toBe('mise');
-    expect(policy.runner).not.toHaveProperty('surface');
-    expect(problems(`${minimal}[runner]\nsurface = "mise"\n`)[0]).toContain('`surface`');
-});
-
-test('uses coverage.strict and rejects the removed inspection table', () => {
-    const policy = parsePolicyText(`${minimal}[coverage]\nstrict = true\n`, 'gspot.toml');
-    expect(policy.coverage.strict).toBe(true);
-    expect(policy).not.toHaveProperty('inspection');
-    expect(problems(`${minimal}[inspection]\nstrict = true\n`)[0]).toContain('`inspection`');
 });

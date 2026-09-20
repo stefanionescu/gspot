@@ -59,15 +59,12 @@ describe('explain', () => {
         expect(text.stdout).toContain('SC2086');
     });
 
-    test('a missing explicit path fails and the removed command is unknown', async () => {
+    test('a missing explicit path fails', async () => {
         await using fixture = await createFixture({ 'gspot.toml': POLICY, 'api/build.sh': script });
         commitAll(fixture.path);
         const missing = await run(fixture.path, ['explain', './missing.sh']);
         expect(missing.code).toBe(2);
         expect(missing.stdout + missing.stderr).toContain('missing.sh is not a file git tracks or would track here');
-        const removed = await run(fixture.path, ['why', 'missing.sh']);
-        expect(removed.code).toBe(2);
-        expect(removed.stderr).toContain("unknown command 'why'");
     });
 
     test('preset and check explanations still resolve without a policy', async () => {

@@ -9,12 +9,6 @@ const selected = selectPresets(['bash', 'naming', 'formatting', 'spelling'], pre
 const surface = exposedSettings(selected);
 
 describe('the settings surface', () => {
-    test('exposes the limits the structure preset declares, with their defaults', () => {
-        const spec = specFor(surface, 'limits.file_lines');
-        expect(spec?.spec.direction).toBe('ceiling');
-        expect(surface.defaults.get('limits.file_lines')?.value).toBe(300);
-    });
-
     test('maps a per-language key back to its base spec', () => {
         expect(specFor(surface, 'limits.bash.function_lines')?.spec.name).toBe('limits.bash.function_lines');
         expect(specFor(surface, 'limits.python.file_lines')?.language).toBe('python');

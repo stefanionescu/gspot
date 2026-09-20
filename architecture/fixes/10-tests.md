@@ -97,6 +97,11 @@ in a stage listing or run only on a clean repository, among them `docker/compose
 fails on every file (K-258). The library presets are proven by the rule names `no-restricted-imports`
 and `no-restricted-syntax`, which every selector prints. Several test folders are empty.
 
+**Status: partially implemented.** The source-text name guard is deleted. It did not prove
+that a check ran or found a defect. The executable planted-case ledger remains open.
+Deletion-only command and schema tests, duplicate process cases, and configuration
+inventory assertions are also removed. Real input, process, and storage failure cases remain.
+
 **Target.** Every shipped check has one planted defect that makes it fail, with the message of
 its own rule.
 

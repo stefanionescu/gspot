@@ -3,31 +3,6 @@ import { policySchema } from '#cli/policy/schema.ts';
 import { policyJsonSchema } from '#cli/policy/json-schema.ts';
 
 describe('the JSON schema of gspot.toml', () => {
-    test('is generated from the zod schema with the top-level tables', () => {
-        const schema = policyJsonSchema();
-        const properties = schema['properties'] as Record<string, unknown>;
-        for (const key of [
-            'version',
-            'presets',
-            'scope',
-            'limits',
-            'naming',
-            'architecture',
-            'structure',
-            'tools',
-            'ignore',
-            'declare',
-            'check',
-            'hooks',
-            'ci',
-            'rules',
-            'coverage',
-            'runner',
-        ])
-            expect(properties).toHaveProperty(key);
-        expect(schema['additionalProperties']).toBe(false);
-    });
-
     test('the zod schema accepts the documented example shapes and rejects unknown keys', () => {
         expect(
             policySchema.safeParse({

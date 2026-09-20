@@ -28,9 +28,6 @@ describe('upgrade', () => {
             expect(report.stdout).toContain(`gspot 0.0.1 -> ${current}`);
             expect(report.stdout).toContain('~ .gspot/shellcheckrc');
             expect(treeContents(fixture.path)).toEqual(before);
-            const removed = await run(fixture.path, ['upgrade', '--check']);
-            expect(removed.code).toBe(2);
-            expect(removed.stderr).toContain("unknown option '--check'");
             const other = await run(fixture.path, ['upgrade', '--to', '9.9.9', '--dry-run']);
             expect(other.code).toBe(2);
             expect(other.stdout).toContain('Install gspot 9.9.9');

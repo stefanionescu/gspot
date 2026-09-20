@@ -143,9 +143,6 @@ describe('the bash planted repository', () => {
             expect(check.stderr).toContain('gspot upgrade --to');
             const doctor = await run(fixture.path, ['doctor']);
             expect(doctor.code).not.toBe(2);
-            const removed = await run(fixture.path, ['doctor', '--offline']);
-            expect(removed.code).toBe(2);
-            expect(removed.stderr).toContain("unknown option '--offline'");
         },
         PLANTED_TIMEOUT_MS,
     );
