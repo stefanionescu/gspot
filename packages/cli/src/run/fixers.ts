@@ -105,12 +105,12 @@ export async function runFixer(
     if (spec.fix_command === undefined || isSkipped(plannedCheck)) return { check, status: 'skipped', changed: [] };
     if (tool === undefined) return { check, status: 'failed', changed: [], note: 'No correction tool is configured.' };
     const probe = probeTool(session.root, tool);
-    if (probe.path === undefined || probe.state === 'missing' || probe.state === 'outdated')
+    if (probe.path === undefined || ['missing', 'outdated', 'error'].includes(probe.state))
         return {
             check,
             status: 'failed',
             changed: [],
-            note: `${tool.name} is unavailable. Run: ${probe.hint ?? 'install the configured tool'}`,
+            note: probe.note ?? `${tool.name} is unavailable. Run: ${probe.hint ?? 'install the configured tool'}`,
         };
     const prepared = prepareCommand({ ...session, root: workingDirectory }, plannedCheck, spec.fix_command, probe.path);
     return runCorrection(plannedCheck, prepared);

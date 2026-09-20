@@ -28,6 +28,7 @@ function toTool(raw: RawTool): ToolPin {
     if (raw.floor !== undefined) tool.floor = raw.floor;
     if (raw.provider !== undefined) tool.provider = raw.provider;
     if (raw.version_command !== undefined) tool.version_command = raw.version_command;
+    if (raw.version_exit_code !== undefined) tool.version_exit_code = raw.version_exit_code;
     if (raw.version_regex !== undefined) tool.version_regex = raw.version_regex;
     if (raw.env !== undefined) tool.env = raw.env;
     return tool;

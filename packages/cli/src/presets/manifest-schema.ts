@@ -27,6 +27,8 @@ const installerFields = {
     scoop: installerSchema.optional(),
 };
 
+const MAX_EXIT_CODE = 255;
+
 const toolSchema = z.strictObject({
     name: z.string(),
     kind: z.enum(['binary', 'library']).default('binary'),
@@ -35,6 +37,7 @@ const toolSchema = z.strictObject({
     provider: z.literal('host').optional(),
     windows: z.boolean().default(true),
     version_command: z.array(z.string()).optional(),
+    version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional(),
     version_regex: z.string().optional(),
     env: z.record(z.string(), z.string()).optional(),
     ...installerFields,

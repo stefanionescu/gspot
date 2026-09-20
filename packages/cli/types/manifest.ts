@@ -53,6 +53,7 @@ export type ToolPin = {
     provider?: 'host';
     windows: boolean;
     version_command?: string[];
+    version_exit_code?: number;
     version_regex?: string;
     env?: Record<string, string>;
     installers: Record<string, InstallerPin>;

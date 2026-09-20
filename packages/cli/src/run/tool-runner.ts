@@ -255,6 +255,7 @@ export async function runToolCheck(session: Session, planned: PlannedCheck): Pro
     if (tool === undefined || spec.command === undefined)
         return { ...base, status: 'error', note: 'this check has no command to run' };
     const probe = probeTool(session.root, tool);
+    if (probe.state === 'error') return { ...base, status: 'error', note: probe.note ?? 'The version probe failed.' };
     if (probe.state === 'missing' || probe.state === 'outdated') return missingResult(base, tool, probe, probe.state);
     const prepared = prepareCommand(session, planned, spec.command, probe.path);
     return runCommands(planned, tool, prepared, base);
@@ -275,6 +276,8 @@ export async function runSideCommand(
     const { tool } = planned;
     if (tool === undefined) return undefined;
     const probe = probeTool(session.root, tool);
+    if (probe.state === 'error')
+        return { code: 1, stdout: '', stderr: probe.note ?? 'The version probe failed.', missing: false, duration: 0 };
     if (probe.state === 'missing' || probe.state === 'outdated') return undefined;
     const prepared = prepareCommand(session, planned, command, probe.path);
     const baseline = baselinePath(session, planned);

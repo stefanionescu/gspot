@@ -36,6 +36,9 @@ function stateLabel(tool: ToolProbe, colors: Painter): string {
         case 'ok': {
             return green('ok');
         }
+        case 'error': {
+            return red('error');
+        }
         case 'missing': {
             return red('missing');
         }
@@ -63,7 +66,9 @@ function toolLines(tools: ToolProbe[], colors: Painter): string[] {
     const width = Math.max(...tools.map((tool) => `${tool.name} ${tool.want ?? ''}`.length)) + VERSION_GAP;
     return tools.map((tool) => {
         const isBroken = tool.state !== 'ok' && tool.state !== 'host';
-        const tail = isBroken ? (tool.hint ?? '') : (tool.path ?? '');
+        const tail = isBroken
+            ? [tool.note, tool.hint].filter((part) => part !== undefined).join(' ')
+            : (tool.path ?? '');
         const label = stateLabel(tool, colors).padEnd(LABEL_WIDTH);
         return `  ${label} ${versionText(tool).padEnd(width)} ${tail}`.trimEnd();
     });

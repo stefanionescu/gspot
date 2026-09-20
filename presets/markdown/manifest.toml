@@ -19,6 +19,7 @@ version = "0.23.2"
 npm = "markdownlint-cli2"
 mise = "npm:markdownlint-cli2"
 version_command = ["--help"]
+version_exit_code = 2
 version_regex = "markdownlint-cli2 v(\\d+\\.\\d+\\.\\d+)"
 
 [[configs]]

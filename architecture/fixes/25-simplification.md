@@ -69,6 +69,13 @@ Complete Windows acceptance remains part of K-263.
 
 ## K-307: Failure-to-empty helpers hide incomplete checks
 
+Version probes preserve command failure instead of parsing a printed version from a failed
+process. Unparsable versions are errors, and an installed npm package cannot hide a failed
+executable. Check, correction, and doctor consumers report that state. Local regressions
+exercise both output streams, nonzero exits, unknown output, package metadata, and unchanged
+source bytes after a refused correction. Manifest-owned `version_exit_code` declares a tool's
+expected probe status when its documented help command uses a nonzero status.
+
 **Partial implementation.** The manifest-policy reader validates the fields it consumes and reports read or parse failures with the manifest path. Tests cover invalid JSON and invalid field shapes, denied reads, and repositories without package manifests. File listing and root discovery distinguish a confirmed non-Git directory from failed Git observation. Tests cover a corrupt index, incomplete Git metadata, a missing executable, and non-Git ignore handling. Takeover reader failures remain open.
 
 Required content reads report failures, and metadata reads permit absence only for missing

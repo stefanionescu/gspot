@@ -5,9 +5,9 @@ import { createSandbox } from '@gspot/testing';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
-import { prepareCommand } from '#cli/run/tool-runner.ts';
 import type { Session, PlannedCheck } from '#types/run.ts';
 import { applyFixers, runFixer } from '#cli/run/fixers.ts';
+import { prepareCommand, runToolCheck } from '#cli/run/tool-runner.ts';
 import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 
 const policy = `version = 1
@@ -195,4 +195,29 @@ test('Correction environment paths expand against the execution root', async () 
     const result = await runFixer(session, planned, sandbox.path);
     expect(result.status).toBe('changed');
     expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('corrected');
+});
+
+test('a failed version probe blocks a check and its correction without changing source bytes', async () => {
+    await using sandbox = await createSandbox({ 'gspot.toml': policy, 'source.txt': 'original' });
+    const session = await openSession(sandbox.path);
+    const planned = correction(session, "await Bun.write('source.txt', 'changed')");
+    planned.tool = {
+        name: 'version-teller',
+        version: '3.8.1',
+        windows: true,
+        installers: {},
+        version_command: ['-e', 'console.log("3.8.1"); process.exitCode = 7;'],
+    };
+    planned.spec.fix_command![0] = 'version-teller';
+    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    try {
+        const checked = await runToolCheck(session, planned);
+        expect(checked.status).toBe('error');
+        expect(checked.note).toContain('exited 7');
+        const fixed = await runFixer(session, planned, sandbox.path);
+        expect(fixed.status).toBe('failed');
+        expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
+    } finally {
+        which.mockRestore();
+    }
 });

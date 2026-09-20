@@ -5,10 +5,11 @@ import { dirname, join } from 'node:path';
 import type { ToolPin } from '#types/manifest.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
+import type { SpawnResult } from '#types/platform.ts';
 import { miseHome } from '#cli/platform/environment.ts';
 import { installHint } from '#cli/platform/install-hints.ts';
-import type { PackageFacts, ToolProbe } from '#types/doctor.ts';
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
+import type { PackageFacts, ToolProbe, VersionObservation } from '#types/doctor.ts';
 
 const VERSION_TIMEOUT_MS = 15_000;
 const VERSION_FLAGS: Record<string, string[]> = {
@@ -62,14 +63,13 @@ function miseVersion(path: string, tool: ToolPin): string | undefined {
 
 // What the tool prints about its version, with no color codes: their numbers read as a version.
 // A mise shim answers for the folder it runs in, so the command runs in the repository.
-function printedVersion(root: string, path: string, tool: ToolPin): string {
+function printedVersion(root: string, path: string, tool: ToolPin): SpawnResult {
     const command = tool.version_command ?? VERSION_FLAGS[tool.name] ?? ['--version'];
-    const result = runBlocking([path, ...command], {
+    return runBlocking([path, ...command], {
         cwd: root,
         timeoutMs: VERSION_TIMEOUT_MS,
         env: { NO_COLOR: '1', ...tool.env },
     });
-    return stripVTControlCharacters(`${result.stdout}\n${result.stderr}`);
 }
 
 function parsedVersion(text: string, tool: ToolPin): string | undefined {
@@ -78,21 +78,32 @@ function parsedVersion(text: string, tool: ToolPin): string | undefined {
     return match?.[1] ?? match?.[0];
 }
 
+function versionFailure(result: SpawnResult, tool: ToolPin, text: string): VersionObservation | undefined {
+    if (result.missing || text.includes(NO_VERSION)) return { state: 'missing', note: text };
+    if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version probe timed out.` };
+    if (result.code !== (tool.version_exit_code ?? 0))
+        return { state: 'error', note: `${tool.name} version probe exited ${String(result.code)}: ${text}` };
+    return undefined;
+}
+
 // An npm tool is the version its package says. Some print another one: license-checker-rseidelsohn 5.0.1 prints 4.4.2.
 // A shim that no configuration gives a version starts nothing, whatever mise keeps installed for other repositories.
-function readVersion(root: string, path: string, tool: ToolPin): string | undefined {
+function readVersion(root: string, path: string, tool: ToolPin): VersionObservation {
     const npm = tool.installers['npm'];
-    const name = npm?.version === tool.version ? npm?.name : undefined;
-    const held = packageVersion(path, name);
-    if (held !== undefined) return held;
-    const text = printedVersion(root, path, tool);
-    if (text.includes(NO_VERSION)) return NO_VERSION;
-    return miseVersion(path, tool) ?? parsedVersion(text, tool);
+    const name = npm !== undefined && npm.version === tool.version ? npm.name : undefined;
+    const result = printedVersion(root, path, tool);
+    const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
+    const failure = versionFailure(result, tool, text);
+    if (failure !== undefined) return failure;
+    const version = packageVersion(path, name) ?? miseVersion(path, tool) ?? parsedVersion(text, tool);
+    if (version === undefined || semver.coerce(version) === null)
+        return { state: 'error', note: `${tool.name} did not report a valid version: ${text}` };
+    return { version };
 }
 
 function stateFor(found: string, want: string, floor: string): ToolProbe['state'] {
     const version = semver.coerce(found);
-    if (version === null) return 'ok';
+    if (version === null) return 'error';
     const lowest = semver.coerce(floor);
     if (lowest !== null && semver.lt(version, lowest)) return 'outdated';
     const pinned = semver.coerce(want);
@@ -132,9 +143,9 @@ function probeUncached(root: string, tool: ToolPin): ToolProbe {
             ...(tool.version === undefined ? {} : { want: tool.version }),
         };
     if (tool.provider === 'host' || tool.version === undefined) return { name: tool.name, state: 'host', path, hint };
-    const found = readVersion(root, path, tool);
-    if (found === NO_VERSION) return { name: tool.name, state: 'missing', hint, want: tool.version };
-    if (found === undefined) return { name: tool.name, state: 'ok', path, want: tool.version, found: 'unknown', hint };
+    const observed = readVersion(root, path, tool);
+    if ('state' in observed) return { name: tool.name, path, hint, want: tool.version, ...observed };
+    const found = observed.version;
     const floor = tool.floor ?? tool.version;
     return {
         name: tool.name,

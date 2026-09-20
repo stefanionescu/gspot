@@ -1,9 +1,11 @@
 // What doctor reports.
 
-export type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host';
+export type ToolState = 'ok' | 'outdated' | 'newer' | 'missing' | 'host' | 'error';
 
 /** The two facts of a package.json that say which package it is. */
 export type PackageFacts = { name?: string; version?: string };
+
+export type VersionObservation = { version: string } | { state: 'missing' | 'error'; note: string };
 
 export type ToolProbe = {
     name: string;
@@ -12,6 +14,7 @@ export type ToolProbe = {
     found?: string;
     path?: string;
     hint?: string;
+    note?: string;
     floor?: string;
 };
 

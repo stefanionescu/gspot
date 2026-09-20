@@ -118,3 +118,73 @@ describe('the tool probe', () => {
         expect(newer.found).toBe('6.0.0');
     });
 });
+
+test.each([
+    ['console.log("3.8.1"); process.exitCode = 7;', 'error', 'exited 7'],
+    ['console.log("unrecognized output");', 'error', 'valid version'],
+    ['console.error("3.8.1");', 'ok', undefined],
+] as const)('a version process classifies %s as %s', async (script, state, note) => {
+    await using sandbox = await createSandbox({});
+    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    try {
+        const tool = { ...command('version-teller', '3.8.1'), version_command: ['-e', script] };
+        const probe = probeTool(sandbox.path, tool);
+        expect(probe.state).toBe(state);
+        if (note === undefined) {
+            expect(probe.found).toBe('3.8.1');
+        } else {
+            expect(probe.note).toContain(note);
+        }
+    } finally {
+        which.mockRestore();
+    }
+});
+
+test('an npm package version does not hide a failed executable', async () => {
+    await using sandbox = await createSandbox({
+        'node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
+        'node_modules/teller/run.sh': '#!/bin/sh\necho 5.0.1\nexit 7\n',
+    });
+    chmodSync(join(sandbox.path, 'node_modules/teller/run.sh'), RUNS);
+    mkdirSync(join(sandbox.path, 'node_modules/.bin'));
+    symlinkSync('../teller/run.sh', join(sandbox.path, 'node_modules/.bin/teller'));
+    const probe = probeTool(sandbox.path, command('teller', '5.0.1', 'teller'));
+    expect(probe.state).toBe('error');
+    expect(probe.note).toContain('exited 7');
+});
+
+test('a version printed before a genuine timeout does not make a tool usable', async () => {
+    await using sandbox = await createSandbox({});
+    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    try {
+        const tool = {
+            ...command('version-teller', '3.8.1'),
+            version_command: ['-e', 'console.log("3.8.1"); setInterval(() => {}, 1000);'],
+        };
+        const probe = probeTool(sandbox.path, tool);
+        expect(probe.state).toBe('error');
+        expect(probe.note).toContain('timed out');
+    } finally {
+        which.mockRestore();
+    }
+}, 20_000);
+
+test('a manifest can declare its help command status without accepting other failed probes', async () => {
+    await using sandbox = await createSandbox({});
+    const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
+    try {
+        const tool = {
+            ...command('version-help', '3.8.1'),
+            version_command: ['-e', 'console.log("version-help 3.8.1"); process.exitCode = 2;'],
+            version_exit_code: 2,
+        };
+        const probe = probeTool(sandbox.path, tool);
+        expect(probe.state).toBe('ok');
+        expect(probe.found).toBe('3.8.1');
+        const failed = probeTool(sandbox.path, { ...tool, name: 'version-error', version_exit_code: 0 });
+        expect(failed.state).toBe('error');
+        expect(failed.note).toContain('exited 2');
+    } finally {
+        which.mockRestore();
+    }
+});

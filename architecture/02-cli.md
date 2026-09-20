@@ -394,7 +394,7 @@ last full run   2026-09-19
 
 The hooks line comes from git, not from the config. It names one of three states: the hooks
 run, the hooks exist and this clone does not run them, or none exist. The second state ends with
-`gspot install` (D-115). Exit 0 unless a tool is missing or outdated.
+`gspot install` (D-115). Exit 0 unless a tool is missing, outside its accepted version range, or cannot be probed.
 
 ## `ignore`
 
