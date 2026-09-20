@@ -15,5 +15,5 @@ const workspaceEntries = (scope) => entryFiles(scope).flatMap((pattern) => {
     "ignoreBinaries": <%= json([...tools, "vale", "git", "mise", "bunx", "npx"]) %>,
     "ignoreExportsUsedInFile": true,
     "workspaces": <%= json(Object.fromEntries([{ path: '' }, ...scopes].map((scope) => [scope.path === '' ? '.' : scope.path, { entry: [...new Set([...workspaceEntries(scope.path), 'src/main.{ts,js}', 'src/index.{ts,js}', 'src/plugin.{ts,js}', '**/*.{test,spec}.{ts,tsx,js}', 'tests/**/*.{ts,js}', 'build.ts', 'publish.ts'])], project: ['**/*.{ts,tsx,mts,cts,js,mjs,cjs}'] }]))) %><% const extras = extra('knip'); if (extras) { for (const [key, value] of Object.entries(extras)) { if (key !== 'reason') { %>,
-    "<%= key %>": <%= json(value) %><% } } } %>
+    <%= json(key, 0) %>: <%= json(value) %><% } } } %>
 }

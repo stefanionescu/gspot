@@ -1,10 +1,12 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
+import { parse as parseYaml } from 'yaml';
 import { parse, stringify } from 'smol-toml';
 import { createSandbox } from '@gspot/testing';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
+import { parse as parseJsonc } from 'jsonc-parser';
 import { parserFor } from '#cli/naming/parsers.ts';
 import { initCommand } from '#cli/lifecycle/init/command.ts';
 
@@ -189,4 +191,50 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
         ).toBe(true);
     }
     expect(new Set(shapes).size).toBe(1);
+});
+
+test('JSON option keys and YAML values keep their literal structure', async () => {
+    const key = 'custom"key\\name\ncafé';
+    const value = 'yes: # quoted "value"';
+    const extra = { reason: 'An upstream option.', [key]: value };
+    const project = 'ios/App: # café.xcodeproj';
+    const scheme = 'null';
+    const registries = ['null', 'registry.example.com:5000'];
+    await using sandbox = await createSandbox({
+        'gspot.toml': stringify({
+            version: 1,
+            presets: ['typescript', 'formatting', 'markdown', 'config-files', 'docker', 'swift'],
+            tools: {
+                prettier: { extra },
+                typescript: { extra },
+                knip: { extra },
+                markdownlint: { rules: { [key]: value } },
+                yamllint: { rules: { [key]: { level: 'warning' }, indentation: { spaces: 2 } } },
+                xcode: { project, scheme },
+                hadolint: { trusted_registries: registries },
+                trivy: { timeout: '10m', severity: 'HIGH,CRITICAL' },
+            },
+        }),
+    });
+    const output = emitAll(await openSession(sandbox.path));
+    for (const path of ['.gspot/prettier.json', '.gspot/knip.json', '.gspot/markdownlint.jsonc']) {
+        const file = output.files.find((entry) => entry.path === path);
+        expect(file).toBeDefined();
+        const parsed: unknown = parseJsonc(file!.content);
+        expect(parsed).toMatchObject({ [key]: value });
+    }
+    const typescript = output.files.find((file) => file.path === '.gspot/tsconfig.base.json');
+    expect(typescript).toBeDefined();
+    expect(JSON.parse(typescript!.content)).toMatchObject({ compilerOptions: { [key]: value } });
+    const yaml = new Map(
+        output.files
+            .filter((file) => /\.ya?ml$/u.test(file.path))
+            .map((file) => [file.path, parseYaml(file.content) as unknown]),
+    );
+    expect(yaml.get('.gspot/periphery.yml')).toMatchObject({ project, schemes: [scheme] });
+    expect(yaml.get('.gspot/hadolint.yaml')).toMatchObject({ trustedRegistries: registries });
+    expect(yaml.get('.gspot/yamllint.yml')).toMatchObject({
+        rules: { [key]: { level: 'warning' }, indentation: { spaces: 2 } },
+    });
+    expect(yaml.get('.gspot/trivy.yaml')).toMatchObject({ timeout: '10m', severity: ['HIGH', 'CRITICAL'] });
 });

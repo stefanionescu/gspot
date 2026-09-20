@@ -27,7 +27,7 @@
         "esModuleInterop": true,
         "types": <%= json(settings['tools.typescript.types'] ?? []) %><% const paths = tool('typescript').paths; if (paths && Object.keys(paths).length > 0) { %>,
         "paths": <%= json(paths, 8).replace(/\n/g, '\n        ') %><% } %><% const extras = extra('typescript'); if (extras) { for (const [key, value] of Object.entries(extras)) { if (key !== 'reason') { %>,
-        "<%= key %>": <%= json(value) %><% } } } %>
+        <%= json(key, 0) %>: <%= json(value) %><% } } } %>
     },
     "exclude": ["${configDir}/node_modules", "${configDir}/dist", "${configDir}/build", "${configDir}/coverage", "${configDir}/.gspot"]
 }

@@ -81,6 +81,7 @@ export type TemplateInputs = {
     extra: (name: string) => Record<string, unknown> | undefined;
     json: (value: unknown, indent?: number) => string;
     toml: (value: Record<string, unknown>) => string;
+    yaml: (value: Record<string, unknown>) => string;
     tomlDate: new (value: string) => Date;
     has: (preset: string) => boolean;
     files: (extension: string) => string[];

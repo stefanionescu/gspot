@@ -679,6 +679,10 @@ output formats and shared input validation remain open. Reason comments in JavaS
 and Trivy output encode line terminators. Parser regressions verify that those comments cannot
 introduce JavaScript statements or active ignore entries.
 
+JSON option keys and YAML strings use serialization. Xcode project paths and schemes retain
+their punctuation. The yamllint template merges
+rule overrides before serialization so each key appears once.
+
 ## K-241: nine contradictions between rule files and checks
 
 **What is wrong.** Rule files say one thing and a pinned linter or a decision says another. One

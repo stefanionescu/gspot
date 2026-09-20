@@ -1,8 +1,8 @@
 <% const project = settings['tools.xcode.project'] ?? ''; const scheme = settings['tools.xcode.scheme'] ?? ''; if (project !== '') { -%>
-project: <%= project %>
+project: <%= json(project, 0) %>
 <% } if (scheme !== '') { -%>
 schemes:
-    - <%= scheme %>
+    - <%= json(scheme, 0) %>
 <% } -%>
 retain_public: true
 retain_objc_accessible: true

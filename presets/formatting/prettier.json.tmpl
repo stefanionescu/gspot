@@ -8,5 +8,5 @@
     "endOfLine": "<%= format.line_ending %>",
     "arrowParens": "always",
     "embeddedLanguageFormatting": "off"<% const extras = extra('prettier'); if (extras) { for (const [key, value] of Object.entries(extras)) { if (key !== 'reason') { %>,
-    "<%= key %>": <%= json(value) %><% } } } %>
+    <%= json(key, 0) %>: <%= json(value) %><% } } } %>
 }

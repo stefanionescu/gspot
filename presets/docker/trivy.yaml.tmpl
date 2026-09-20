@@ -1,6 +1,6 @@
-timeout: <%= settings['tools.trivy.timeout'] ?? '10m' %>
+timeout: <%= json(settings['tools.trivy.timeout'] ?? '10m', 0) %>
 severity:
-<% for (const level of String(settings['tools.trivy.severity'] ?? 'HIGH,CRITICAL').split(',')) { %>    - <%= level.trim() %>
+<% for (const level of String(settings['tools.trivy.severity'] ?? 'HIGH,CRITICAL').split(',')) { %>    - <%= json(level.trim(), 0) %>
 <% } %>scan:
     skip-dirs:
         - node_modules

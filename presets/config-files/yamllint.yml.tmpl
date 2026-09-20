@@ -1,19 +1,14 @@
-extends: default
-
-rules:
-    line-length: disable
-    document-start: disable
-    comments:
-        min-spaces-from-content: 1
-    truthy:
-        check-keys: false
-    braces:
-        max-spaces-inside: 1
-    brackets:
-        max-spaces-inside: 1
-    indentation:
-        spaces: <%= format.indent_width %>
-        indent-sequences: consistent
-<% const options = tool('yamllint').rules; if (options && typeof options === 'object') { for (const [name, value] of Object.entries(options)) { %>    <%= name %>: <%= json(value) %>
-<% } } %><% for (const name of rulesOff('config-files/yaml')) { %>    <%= name %>: disable
-<% } %>
+<%~ yaml({
+    extends: 'default',
+    rules: {
+        'line-length': 'disable',
+        'document-start': 'disable',
+        comments: { 'min-spaces-from-content': 1 },
+        truthy: { 'check-keys': false },
+        braces: { 'max-spaces-inside': 1 },
+        brackets: { 'max-spaces-inside': 1 },
+        indentation: { spaces: format.indent_width, 'indent-sequences': 'consistent' },
+        ...tool('yamllint').rules,
+        ...Object.fromEntries(rulesOff('config-files/yaml').map((name) => [name, 'disable'])),
+    },
+}).trimEnd() %>

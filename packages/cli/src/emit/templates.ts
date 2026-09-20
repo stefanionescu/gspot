@@ -1,6 +1,7 @@
 // Render a preset template with the merged settings; prepend the generated-file header.
 import { Eta } from 'eta';
 import { join } from 'node:path';
+import { stringify as stringifyYaml } from 'yaml';
 import { existsSync, readFileSync } from 'node:fs';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { jsonText } from '#cli/emit/json-format.ts';
@@ -231,6 +232,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
                 .replaceAll('\u{2028}', String.raw`\u2028`)
                 .replaceAll('\u{2029}', String.raw`\u2029`),
         toml: stringifyToml,
+        yaml: stringifyYaml,
         tomlDate: TomlDate,
         // A target written once for the repository asks about every scope; a target written for one scope asks about that scope.
         has: (preset) =>
