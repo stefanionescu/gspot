@@ -1,5 +1,8 @@
 # gspot Architecture
 
+The [active CI bypass](22-remaining.md#active-ci-bypass) governs all implementation work.
+Skip CI on every commit and push until the user explicitly re-enables it.
+
 This folder is the specification for gspot. Implementation follows it. When code and this folder
 disagree, fix one of them in the same change.
 
@@ -16,6 +19,9 @@ policy, and on a yes it:
    match the same selection.
 
 Every repository on the same gspot version runs the same rules. Upgrading gspot upgrades all three.
+
+The [repository accounting](23-repository-audit.md) distinguishes current implementation,
+open requirements, historical completion claims, and deferred verification.
 
 ## Reading order
 

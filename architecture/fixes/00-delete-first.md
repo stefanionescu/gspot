@@ -5,8 +5,9 @@ code, the flag or key, its test, and every mention in `architecture/` and in the
 commit. Nothing is renamed to a softer form, and no message is written for a thing that is gone.
 An old key is an unknown key, and an old flag is an unknown flag.
 
-K-204 closes before this step starts, so every deletion runs under a working CI (K-282). A
-deletion whose replacement lives in a later fix file moves into that file: `apply --check` goes
+K-204 has recorded repair evidence. Follow the [active CI bypass](../22-remaining.md#active-ci-bypass)
+for current verification; deletions do not require a new CI run while it applies. A deletion
+whose replacement lives in a later fix file moves into that file: `apply --check` goes
 with `integrity/generated-drift` (K-246), `apply --lower-baselines` with the baseline itself (K-290),
 and `doctor --settings` with `gspot list` (K-62).
 

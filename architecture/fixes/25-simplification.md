@@ -142,3 +142,22 @@ Keep validation of external data, command failures, permissions, and missing opt
 Keep format-aware serialization and helpers that own actual grammar or lifecycle behavior.
 Do not delete every `catch`, optional value, short function, or `safeParse` call by spelling.
 A proposed deletion must identify the current caller and the owner that takes over its work.
+
+## September 20 verification details
+
+Keep K-307 open for `repository/staged.ts`: failed Git observations still become empty path
+sets, and `--diff-filter=ACMRT` excludes deletions. Preserve deleted tracked paths as triggers
+without attempting to read them as current source. Test last-file deletion and both rename ends
+through the planner, not only through the Git listing helper.
+
+K-263 and K-307 also cover the subprocess boundary in `platform/spawn.ts`. Windows currently
+infers a timeout from any signal when a deadline was configured. Its error handler settles
+before stream closure, and the blocking result can expose null streams on launch failure.
+The Bun timer is cleared only after successful stream/exit completion. Verify non-timeout
+signals, launch errors, stream failure, and child/pipe termination independently. Preserve
+both streams and classify missing executables separately from denied execution.
+
+The async harness change at `7af4d71` is partial evidence, not an established explanation of
+the Windows timeout. Do not retain a permanent diagnostic workflow or add unconditional exits,
+longer deadlines, or blind retries. Use bounded reproductions and keep only the lifecycle repair
+and useful regression tests once the mechanism is established.

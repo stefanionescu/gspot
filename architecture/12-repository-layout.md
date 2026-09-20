@@ -1,5 +1,9 @@
 # The gspot Repository
 
+Verification follows the [active CI bypass](22-remaining.md#active-ci-bypass). Local checks
+and hooks remain required; GitHub execution and CI-only acceptance are deferred until the
+user explicitly re-enables CI.
+
 This document decides the gspot repository: packages, folders, tests, and how gspot lints
 itself.
 

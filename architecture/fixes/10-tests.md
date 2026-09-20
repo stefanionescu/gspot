@@ -312,3 +312,30 @@ rule, `tools.licenses.exceptions`, `route_glob`, or `produced_by`.
 
 **Done when.** A search of the tests for the removed flags of
 [00-delete-first.md](00-delete-first.md) finds nothing.
+
+## K-310: the registry harness can accept an unrelated server
+
+**What is wrong.** `tests/harness/registry.ts` derives a port from the PID modulo 1,000.
+`waitFor()` accepts any successful ping at that address without checking whether the spawned
+Verdaccio process owns it. Startup failure leaves the process and temporary directory behind.
+Both streams are discarded; `stop()` kills without awaiting exit before deleting storage.
+A fetch has no request deadline, so the polling count does not bound a stalled response.
+
+**Target.** Package tests publish and install only against their own isolated local registry.
+Startup, request and shutdown deadlines are bounded. Failed startup releases owned resources
+and preserves useful process output without exposing credentials.
+
+**Files.** `tests/harness/registry.ts` and release harness tests under T-24 and K-164.
+
+**Logic.** Use a supported isolated listen address/port allocation, observe child startup and
+exit, and verify readiness belongs to the child before returning a registry. An occupied port
+must not allow publication into the existing service. Always await owned-child termination and
+clean temporary storage, including failure before a registry object is returned. Keep retries
+limited to documented startup readiness; never retry failed publication into another registry.
+
+**Tests.** Cover an occupied port with a healthy unrelated HTTP responder, missing executable,
+early child exit, a stalled ping, parallel registries, startup timeout, and normal shutdown.
+Assert no publication reaches the unrelated responder and no owned child or temporary folder
+survives each completed failure path. Run on supported platforms when CI is re-enabled.
+
+**Done when.** Readiness identifies the owned server and all setup/teardown paths release it.

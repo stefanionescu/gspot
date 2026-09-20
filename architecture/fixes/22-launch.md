@@ -1,16 +1,24 @@
 # Before Launch
 
+The [active CI bypass](../22-remaining.md#active-ci-bypass) applies to every release and
+platform requirement below. Do not start or wait for CI until the user explicitly re-enables
+it. Record unexecuted platform acceptance as deferred and continue local implementation.
+
 Implement and test these code and packaging fixes before the app handoff.
 Follow [22-remaining.md](../22-remaining.md). Actual public publication and registry ownership are
 release gates after adoption, not prerequisites for testing through the local registry.
 Each row here can ship a broken or an unlawful package, and local testing alone is insufficient.
 
-## K-263: gspot has never run on Windows
+## K-263: Windows and packaged-platform acceptance remain incomplete
 
-**What is wrong.** D-31 promises that gspot runs natively on Windows. The Windows job of `ci.yml`
-skips `gspot:setup` and `gspot check`, and every run of it stopped at the checkout step (K-204).
-The hooks are Bash files whose header says macOS and Linux. Eight source files branch on
-`win32`, and no test enters one of those branches.
+**Current status.** Windows setup, self-checks, unit tests and planted repositories have run
+in GitHub Actions. Historical successful runs do not close later failures or packaged-binary
+acceptance. See [the repository audit](../23-repository-audit.md) for the timeout evidence and
+its limits. The active CI bypass defers further remote verification.
+
+**Original defect.** The Windows job skipped setup and self-check and failed at checkout.
+The repairs and subsequent failures below are historical evidence, not instructions to repeat
+already completed patches.
 
 **Target.** The Windows job runs the unit tests, the planted repositories, and `gspot check`.
 

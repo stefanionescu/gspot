@@ -45,7 +45,8 @@ too late. The ESLint rules that catch a weak test are off here, because the temp
 on with the vitest preset alone. Nobody read a run on GitHub, so 92 red runs went unseen.
 
 **Target.** The unit tests run at the push stage with a coverage floor. No test skips itself. The
-work of a change ends when its run on GitHub is green.
+work of a change follows the [active CI bypass](../22-remaining.md#active-ci-bypass).
+While it is active, local verification permits continued implementation without a GitHub run.
 
 **Files.** `gspot.toml` (`tests/unit` as a `[[check]]` at push, with `inputs`),
 `.github/workflows/ci.yml`, `tests/repositories/docs.test.ts`, `presets/javascript/eslint.config.js.tmpl`,
@@ -55,7 +56,9 @@ work of a change ends when its run on GitHub is green.
 `bunfig.toml`. The docs test fetches the Vale packages in its setup, or fails with the command
 that fetches them. The jest preset of [08-frameworks.md](08-frameworks.md) reads `bun:test`
 through `globalPackage`, and this repository selects it. This repository sets `level = "all"` and `[coverage] strict = true`.
-`CONTRIBUTING.md` says that a change is done when its run is green, and how to read the run.
+
+`CONTRIBUTING.md` explains local verification and how to read CI results when CI is enabled.
+It must not require a GitHub run while the active bypass applies.
 
 **What goes.** `describe.skipIf` in the docs test.
 
@@ -115,3 +118,30 @@ breaks a build, and no test is named for any of them.
 **Tests.** `docs/samples` resolves each test path the document names.
 
 **Done when.** It passes.
+
+## K-309: repository CI repeats expensive work
+
+**What is wrong.** `ci.yml` runs setup and self-check on three platforms for each main push
+and pull request. `gspot.yml` repeats Ubuntu setup and self-check for the same revision.
+Neither workflow cancels obsolete runs. Full coverage and builds run with every matrix job.
+
+**Target.** Define the required checks and execution frequency before re-enabling CI.
+Keep fast local feedback, one owner for each repository CI check, and explicit full-platform
+and package acceptance checkpoints. Do not restore a full matrix on every intermediate commit.
+
+**Files.** `.github/workflows/ci.yml`, the owner of generated `gspot.yml`, repository task
+configuration, and contributor documentation. Never hand-edit generated workflow output.
+
+**Logic.** Inventory duplicate jobs, preserve unique manual and report checks, share reusable
+setup where it saves work, and cancel superseded runs in the same workflow/ref group. Choose
+path filtering and required-check behavior together so a skipped required check cannot leave
+an unexplained pending merge gate. Record cold and warm durations before claiming improvement.
+Do not suppress failures, replace platform acceptance with a Linux-only badge, or enable paid
+capacity. This work does not authorize running CI during the active bypass.
+
+**Tests.** Validate trigger and job selection locally for documentation-only and source changes,
+forks, main pushes, and concurrent revisions. After explicit re-enablement, verify the agreed
+schedule and exact-revision results. Keep that remote evidence deferred until then.
+
+**Done when.** Each required check has one execution owner, the user has agreed the execution
+frequency, and the enabled workflow follows it. `[skip ci]` remains the temporary user override.

@@ -479,8 +479,9 @@ K-35 is decided in D-93.
 
 ## What is still to check
 
-These were named on 2026-09-19 and are not done. Each ends as gap rows above, or as a line here
-that says it was checked and found sound.
+This table preserves the September 19 review backlog. Its dated observations do not establish
+current acceptance. The [remaining index](22-remaining.md) and
+[historical dispositions](23-repository-audit.md#historical-requirement-dispositions) own current status.
 
 | What                                                                                                                                                                                                | When                                            |
 | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ----------------------------------------------- |
@@ -492,7 +493,7 @@ that says it was checked and found sound.
 | `upgrade` and `uninstall` where a developer edited generated files or deleted half of `.gspot/`                                                                                                     | during the fixes, as planted tests              |
 | The time of every check on a repository the size of yap-swift-app                                                                                                                                   | step 3 of D-121                                 |
 | A real install, with every written file read                                                                                                                                                        | step 3 of D-121, and nowhere else before step 4 |
-| Windows: nothing has run there, and no machine here can run it (K-263)                                                                                                                              | after CI is green                               |
+| Windows: historical runs and later failures are recorded in the roadmap; current platform acceptance remains open (K-263)                                                                           | after CI is green                               |
 | The seven Vale packages that `apply` downloads are MIT, BSD-3-Clause, and Apache-2.0, and gspot ships none of them. The Semgrep registry packs run from the registry and are not shipped either     | done                                            |
 | The docs site builds: 301 pages, every internal link valid, on 2026-09-19. Still to check: the site on a phone, and with scripts off                                                                | before launch                                   |
 | Stale branches, the parked stash `hooks-existing`, the second `vale.ini` under `prose/`                                                                                                             | with the delete pass                            |
@@ -545,9 +546,10 @@ Read by measurement:
 
 Not read:
 
-- 33 of the 107 rule files under `rules/`, which three scripts read and no person did. The owner chose on 2026-09-19 that only framework, library, and tool files are read.
+- The September 19 review left 33 of its 107 rule files unread by a person. The [implementation reconciliation](23-repository-audit.md#implementation-reconciliation) records the retained guides reviewed and their open defect owners.
 
-The rows above are a floor. Every file under `packages/cli/src` has now been read line by line.
+The rows above describe the historical review. They do not certify every current source file
+or close any acceptance criterion without implementation and verification evidence.
 
 ## Architecture review, September 20, 2026
 
@@ -576,3 +578,19 @@ K-164, K-263, and S-14 are amended rather than counted again.
 | K-306 | File URLs are used as filesystem paths. The docs generator, build scripts, schema generator, publisher, asset reader, and test harness use `new URL(...).pathname`. For a checkout containing a space, pathname retains `%20`, while the actual filesystem path contains a space. The same conversion also needs platform-correct drive handling.                                                                                                                                                       |
 | K-307 | Failure-to-empty helpers hide incomplete checks. `platform/spawn.ts` maps every failed Git command to `undefined`; `repository/tracked.ts` then falls back to a non-Git walk. `entryFor()` drops a path after any stat failure, and `head()` returns empty text after any read failure. `integrity/manifest-policy.ts` treats unreadable or malformed package JSON as absent. The takeover readers also catch read and parse errors, while a separate preflight reparses only selected suffixes.        |
 | K-308 | Naming contracts disagree. The names guide endorses predicate-shaped writing functions, report identity differs from finding references, `fix` means both advice and executable correction, and the glossary retains removed terms. Define role-specific names and one action/result vocabulary in `19-names.md`; implement through `fixes/25-simplification.md`.                                                                                                                                       |
+
+## Repository accounting, September 20, 2026
+
+The [revision-scoped audit](23-repository-audit.md) supersedes earlier statements that all
+files are currently verified or that Windows has never executed. Historical evidence above
+remains historical. An omitted row is not proof of a tested repair.
+
+| Gap   | Evidence and owner                                                                                                                                                                      |
+| ----- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| K-309 | Both repository workflows repeat Ubuntu setup and self-check; obsolete runs are not canceled. Define execution ownership and frequency in [20-self-check.md](fixes/20-self-check.md).   |
+| K-310 | The local registry harness accepts any successful ping on a predictable port and leaks resources on startup failure. Isolate readiness and cleanup in [10-tests.md](fixes/10-tests.md). |
+
+S-14 also owns reconciliation of historical IDs absent from the remaining index. Give each
+such ID a repair revision and acceptance evidence, an explicit superseding row, or a recorded
+scope deletion. Reopen a requirement when none of those dispositions can be established.
+Do not count a design decision by itself as implementation acceptance.

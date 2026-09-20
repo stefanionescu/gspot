@@ -1547,3 +1547,14 @@ Atomic rename is not a substitute for any of these guarantees.
 ## D-176 Website source and deployment
 
 The website stays in `docs/` in this repository. [21-documentation.md](https://github.com/stefanionescu/gspot/blob/main/architecture/21-documentation.md) owns the release-aligned build, deployment, previews, domain cutover, and rollback contract. A site build alone is not a deployed website.
+
+## D-177 CI bypass until explicit user re-enablement
+
+The [active CI bypass](https://github.com/stefanionescu/gspot/blob/main/architecture/22-remaining.md#active-ci-bypass) overrides earlier requirements to run
+or wait for GitHub CI during implementation, including per-change and candidate gates. Every
+gspot commit carries `[skip ci]` until the user explicitly re-enables CI. Local verification
+and Git hooks remain required. Record CI-only evidence as deferred and continue implementation.
+Do not treat a milestone or handoff as permission to re-enable CI.
+
+Rejected: waiting for the full platform matrix after every implementation commit, or resuming
+CI automatically at a checkpoint while the user instruction remains active.

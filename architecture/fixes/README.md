@@ -1,5 +1,8 @@
 # Fixes
 
+Follow the [active CI bypass](../22-remaining.md#active-ci-bypass) for every fix. CI acceptance
+is deferred until the user explicitly re-enables CI; continue locally verified implementation.
+
 One file for each step of the order in `architecture/13-roadmap.md`. A file holds one section
 for each row of [18-gaps.md](../18-gaps.md) that its step closes. Every section has the same seven
 labels in bold, so a reader finds the same thing in the same place.
