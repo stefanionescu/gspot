@@ -3,10 +3,10 @@ import type { Manifest } from '#types/manifest.ts';
 import { selectPresets } from '#cli/presets/select.ts';
 import { parseManifest, presetManifests } from '#cli/presets/read-manifests.ts';
 
-function manifest(id: string, requires: string[] = [], conflicts: string[] = []): Manifest {
+function manifest(presetName: string, requires: string[] = []): Manifest {
     return parseManifest(
-        `[preset]\nname = "${id}"\nkind = "language"\ntitle = "${id}"\nrequires = ${JSON.stringify(requires)}\nconflicts = ${JSON.stringify(conflicts)}\ndescription = "A preset for the tests, long enough."\n`,
-        `presets/${id}`,
+        `[preset]\nname = "${presetName}"\nkind = "language"\ntitle = "${presetName}"\nrequires = ${JSON.stringify(requires)}\ndescription = "A preset for the tests, long enough."\n`,
+        `presets/${presetName}`,
     );
 }
 
@@ -36,14 +36,6 @@ describe('selectPresets', () => {
         ]);
         expect(() => selectPresets(['a'], map)).toThrow('a -> b -> a');
     });
-
-    test('conflicting presets fail with both named', () => {
-        const map = new Map([
-            ['a', manifest('a', [], ['b'])],
-            ['b', manifest('b')],
-        ]);
-        expect(() => selectPresets(['a', 'b'], map)).toThrow('`a` and `b` cannot be selected together');
-    });
 });
 
 describe('parseManifest', () => {
@@ -65,8 +57,8 @@ describe('parseManifest', () => {
         ).toThrow('fix_order');
     });
 
-    test('every shipped manifest loads and its folder equals its id', () => {
-        for (const [id, entry] of presetManifests()) expect(entry.dir.endsWith(`/${id}`)).toBe(true);
+    test('every shipped manifest loads and its folder equals its name', () => {
+        for (const [presetName, entry] of presetManifests()) expect(entry.dir.endsWith(`/${presetName}`)).toBe(true);
     });
 });
 
@@ -86,6 +78,9 @@ help = "Review the fixture source file."
 coverage = ["syntax"]
 `;
     expect(parseManifest(source, 'presets/fixture').preset.name).toBe('fixture');
+    expect(() => parseManifest(source.replace('kind =', 'conflicts = ["other"]\nkind ='), 'presets/fixture')).toThrow(
+        'conflicts',
+    );
     expect(parseManifest(source, 'presets/fixture').checks[0]?.coverage).toEqual(['syntax']);
     expect(() => parseManifest(source.replace('coverage =', 'inspection ='), 'presets/fixture')).toThrow('not valid');
     const required = `${source}[coverage]\nfixture = ["syntax"]\n`;

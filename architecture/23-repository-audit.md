@@ -263,3 +263,11 @@ product enforcement from a file count. The following concrete defects remain ope
 The Bash and Python trials used isolated snippets with no network, installation, or destructive
 operation. Rule-source repairs and example enforcement remain in their implementation owners.
 Yap is unchanged. Candidate artifacts and adoption acceptance do not exist for this work.
+
+## Verified deletions after reconciliation
+
+K-104 and K-129 are complete: the unused fields, manifest conflict behavior, and serialized
+repository root are removed. Selection and report-contract tests pass, and TypeScript,
+reference verification, and Knip complete locally. Knip reports configuration hints but no
+unused-code findings. Together with the earlier K-195 deletion, these closures leave 325
+named requirements open. The original 328-row review remains historical evidence.

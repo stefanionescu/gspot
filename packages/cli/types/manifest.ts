@@ -16,7 +16,6 @@ export type PresetHeader = {
     title: string;
     requires: string[];
     recommends: string[];
-    conflicts: string[];
     default: boolean;
     proposed: boolean;
     description: string;

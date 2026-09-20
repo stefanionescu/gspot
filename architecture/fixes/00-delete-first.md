@@ -184,10 +184,20 @@ to the repository, as the findings already do.
 The reporter has no unused link branch. Runtime fixing remains owned by `RunOptions.fix`.
 
 The serialized report omits the machine-specific root. Its JSON schema rejects that removed
-field. The manifest conflict contract remains open under K-104 and K-129.
+field. The earlier partial state left the manifest conflict contract open under K-104 and K-129.
 
 **Local verification.** Reporter and takeover regressions pass (four tests, 34 assertions).
 The TypeScript check passes. These removals do not establish acceptance for the remaining fields.
+
+**K-104 and K-129 complete, September 20, 2026.** The unused manifest conflict field,
+selection branch, and message are removed. The strict manifest schema rejects `conflicts`.
+All six named unused fields are absent. The report
+serialization regression verifies that `root` is omitted and rejected by the report schema.
+
+Local verification covers preset selection, rejected fields, report serialization, TypeScript,
+reference generation, and the unused-code check (10 tests, 85 assertions). Knip exits zero
+with configuration hints and no unused-code findings. These deletions require no platform-specific
+runtime behavior. Broader lifecycle and report requirements remain with their owners.
 
 ## K-111: three ways to silence a finding become one
 

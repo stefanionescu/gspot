@@ -41,15 +41,6 @@ function chainFrom(
     return undefined;
 }
 
-function conflictProblems(order: Manifest[]): string[] {
-    const selectedNames = new Set(order.map((manifest) => manifest.preset.name));
-    return order.flatMap((manifest) =>
-        manifest.preset.conflicts
-            .filter((conflict) => selectedNames.has(conflict))
-            .map((conflict) => messages.presetConflict(manifest.preset.name, conflict)),
-    );
-}
-
 /** Every problem a selection has, as one error with one line per problem. */
 export class SelectionError extends Error {
     readonly problems: string[];
@@ -77,7 +68,7 @@ export function requireChain(target: string, from: string, manifests: Map<string
 }
 
 /**
- * Resolves preset names to ordered manifests. Throws SelectionError for unknown, circular or conflicting presets.
+ * Resolves preset names to ordered manifests. Throws SelectionError for unknown presets or circular requirements.
  * @param presetNames the requested preset names
  * @param manifests every preset manifest
  * @returns the manifests, requirements first, in order of first mention
@@ -85,7 +76,7 @@ export function requireChain(target: string, from: string, manifests: Map<string
 export function selectPresets(presetNames: string[], manifests: Map<string, Manifest>): Manifest[] {
     const walk: SelectionWalk = { manifests, problems: [], order: [], seen: new Set(), visiting: [] };
     for (const presetName of presetNames) visit(walk, presetName);
-    const problems = [...walk.problems, ...conflictProblems(walk.order)];
+    const { problems } = walk;
     if (problems.length > 0) throw new SelectionError([...new Set(problems)]);
     return walk.order;
 }

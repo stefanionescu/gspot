@@ -73,16 +73,6 @@ export function unknownPreset(name: string, near: string[]): string {
 }
 
 /**
- * Two presets whose manifests declare a conflict.
- * @param a the first preset id
- * @param b the second preset id
- * @returns the message
- */
-export function presetConflict(a: string, b: string): string {
-    return `The presets \`${a}\` and \`${b}\` cannot be selected together. Remove one with \`gspot remove <preset>\`.`;
-}
-
-/**
  * A preset named in --without that a selected preset requires.
  * @param name the preset the person left out
  * @param chain the preset ids from the one selected to the one required
