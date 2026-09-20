@@ -116,8 +116,8 @@ async function prepare(root: string, options: InitOptions): Promise<InitPrepared
             }),
         );
     const selection = await chosenSelection(inputs, options, detected);
-    const answers = await askInitQuestions(root, options, tooling);
     const carried = collectCarried(root, tooling, selection.selectedIds);
+    const answers = await askInitQuestions(root, options, tooling, carried.formatSource);
     const proposal = buildProposal(root, selection, answers, carried);
     const profileTables = options.profile?.tables as TomlTable | undefined;
     const policyText = proposeText(profileTables ? { ...proposal, profileTables } : proposal);

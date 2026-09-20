@@ -1,12 +1,12 @@
 // The questions init asks, each answered by a flag or the terminal, with the default read from the repository.
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import type { Manifest } from '#types/manifest.ts';
-import { existsSync, readFileSync } from 'node:fs';
 import type { FormatSettings } from '#types/config.ts';
 import { shippedFormat } from '#cli/presets/listing.ts';
 import type { ExistingTooling } from '#types/repository.ts';
 import { askChoice, askMany, askConfirmation } from '#cli/output/prompts.ts';
-import type { InitAnswers, InitOptions, InitSelection } from '#types/lifecycle.ts';
+import type { CarrySource, InitAnswers, InitOptions, InitSelection } from '#types/lifecycle.ts';
 
 const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
     { value: 'gspot', label: 'gspot writes .gspot/hooks' },
@@ -29,15 +29,7 @@ const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
     { value: 'none', label: 'none' },
 ];
 
-function readPrettier(root: string, path: string): Record<string, unknown> | undefined {
-    try {
-        return JSON.parse(readFileSync(join(root, path), 'utf8')) as Record<string, unknown>;
-    } catch {
-        return undefined;
-    }
-}
-
-function differingFormat(parsed: Record<string, unknown>): Partial<FormatSettings> {
+function differingFormat(parsed: Record<string, unknown>): Partial<FormatSettings> | undefined {
     const found: Partial<FormatSettings> = {};
     const tabWidth = parsed['tabWidth'];
     const printWidth = parsed['printWidth'];
@@ -46,7 +38,8 @@ function differingFormat(parsed: Record<string, unknown>): Partial<FormatSetting
     if (typeof tabWidth === 'number' && tabWidth !== shipped['indent_width']) found.indent_width = tabWidth;
     if (typeof printWidth === 'number' && printWidth !== shipped['print_width']) found.print_width = printWidth;
     if (trailingComma === 'es5' || trailingComma === 'none') found.trailing_comma = trailingComma;
-    return { ...found, ...flagFormat(parsed) };
+    const format = { ...found, ...flagFormat(parsed) };
+    return Object.keys(format).length === 0 ? undefined : format;
 }
 
 function flagFormat(parsed: Record<string, unknown>): Partial<FormatSettings> {
@@ -142,34 +135,24 @@ export async function askPresets(
 }
 
 /**
- * The formatter settings a Prettier file holds that differ from the shipped ones.
- * @param root the repository root
- * @param tooling the configuration files found
- * @returns the differing settings, or undefined when there are none
- */
-export function formatDiffers(root: string, tooling: ExistingTooling): Partial<FormatSettings> | undefined {
-    const prettier = tooling.configs.find((config) => config.tool === 'prettier' && config.path.endsWith('.json'));
-    const parsed = prettier ? readPrettier(root, prettier.path) : undefined;
-    const found = parsed ? differingFormat(parsed) : {};
-    return Object.keys(found).length > 0 ? found : undefined;
-}
-
-/**
  * Asks the init questions that flags left open: hooks, CI, rule files, task runner and formatter settings.
  * @param root the repository root
  * @param options the init flags
  * @param tooling the configuration files, hooks and runner found
+ * @param formatSource the formatter input already parsed during takeover observation
  * @returns the answers
  */
 export async function askInitQuestions(
     root: string,
     options: InitOptions,
     tooling: ExistingTooling,
+    formatSource: CarrySource | undefined,
 ): Promise<InitAnswers> {
     const hooks = await askHooks(options, tooling);
     const ci = await askCi(root, options, tooling);
     const isRules = await askRuleFiles(options);
     const runner = await askRunner(options, tooling);
-    const format = await askFormat(options, formatDiffers(root, tooling));
+    const differing = formatSource === undefined ? undefined : differingFormat(formatSource.parsed);
+    const format = await askFormat(options, differing);
     return { hooks, ci, isRules, runner, ...(format ? { format } : {}) };
 }

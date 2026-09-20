@@ -49,6 +49,7 @@ describe('takeover', () => {
 
     test.each([
         ['typos.toml', '[default\n'],
+        ['.prettierrc.json', '{ "semi": false, broken }\n'],
         ['.markdownlint.jsonc', '{ "MD013": false, broken }\n'],
         ['eslint.config.mjs', "export default [{ rules: { 'no-console': 'off' } }];\n"],
     ])(

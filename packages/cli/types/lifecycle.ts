@@ -41,6 +41,7 @@ export type InitResult = { text: string; json: Record<string, unknown>; exitCode
 export type CarriedIgnore = { check: string; rule: string; reason: string; paths?: string[] };
 
 export type CarriedLists = {
+    formatSource?: CarrySource;
     typosWords: { word: string; reason: string }[];
     typosExcludes: { paths: string[]; reason: string }[];
     /** The paths an old pyrightconfig.json at the root left out of the type check. */

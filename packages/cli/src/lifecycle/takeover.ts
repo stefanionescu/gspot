@@ -90,6 +90,8 @@ export function collectCarried(root: string, tooling: ExistingTooling, selected:
         try {
             const source = readCarrySource(root, tool, path);
             carryFrom(source, tool, path, lists);
+            if (tool === 'prettier' && path.endsWith('.json') && lists.formatSource === undefined)
+                lists.formatSource = source;
         } catch (error) {
             lists.unread.push({ path, note: `not read and not deleted: ${(error as Error).message}` });
             continue;
