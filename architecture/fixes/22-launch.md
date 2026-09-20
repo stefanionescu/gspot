@@ -240,3 +240,8 @@ finds no files. Tool file arguments retain the forward slashes of repository pat
 A planted test validates `settings/café.json` against a local schema through v8r.
 It reports the invalid value and passes after the value is corrected. Both runs
 select only the staged file and disable the cache.
+
+The macOS jobs for `02a430a` and `6cb1393` fail before the profile dry run starts.
+Git background maintenance removes `.git/objects/maintenance.lock` during the initial
+repository snapshot. The planted Git helper disables automatic maintenance and garbage
+collection. The dry-run test keeps its complete snapshot assertion, including Git files.

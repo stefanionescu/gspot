@@ -78,12 +78,26 @@ export function run(cwd: string, argv: string[], environment: Record<string, str
  * @returns the exit code and both streams
  */
 export function git(cwd: string, argv: string[], environment: Record<string, string> = {}): SpawnOutcome {
-    const result = Bun.spawnSync(['git', '-c', 'user.email=t@t', '-c', 'user.name=t', ...argv], {
-        cwd,
-        env: { ...environmentVariables(), ...environment },
-        stdout: 'pipe',
-        stderr: 'pipe',
-    });
+    const result = Bun.spawnSync(
+        [
+            'git',
+            '-c',
+            'user.email=t@t',
+            '-c',
+            'user.name=t',
+            '-c',
+            'maintenance.auto=false',
+            '-c',
+            'gc.auto=0',
+            ...argv,
+        ],
+        {
+            cwd,
+            env: { ...environmentVariables(), ...environment },
+            stdout: 'pipe',
+            stderr: 'pipe',
+        },
+    );
     return { code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() };
 }
 
