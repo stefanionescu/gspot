@@ -29,4 +29,3 @@ jobs:
             - run: mise exec -- bun test --coverage
             - run: bun packages/cli/build.ts
             - run: bun packages/cli/src/main.ts check
-              if: runner.os != 'Windows'

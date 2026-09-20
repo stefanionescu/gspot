@@ -96,6 +96,10 @@ shows webpack prefixing a dependency on drive D with `./` from a fixture on driv
 The fixture still runs clean and failing builds. Other fixtures retain their system
 temporary directories, and layout acceptance remains open under K-306.
 
+The CI self-check step runs on Windows after the tests and native build succeed.
+No platform condition skips that command. Successful Windows evidence remains required
+before K-263 closes.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.
