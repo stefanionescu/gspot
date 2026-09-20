@@ -4,7 +4,7 @@ import { createFixture } from 'fs-fixture';
 import { hookBody } from '#cli/emit/hooks.ts';
 import { chmodSync, existsSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
-import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, git, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
 
 const SYSTEM_BASH = '/bin/bash';
 const QUIET = ['--runner', 'none', '--ci', 'none', '--no-rules', '--no-install'];
@@ -67,13 +67,23 @@ describe('init refusals', () => {
     );
 
     test.skipIf(!existsSync(SYSTEM_BASH))('every hook body runs under the system Bash', async () => {
-        await using fixture = await createFixture({});
+        await using fixture = await createFixture({ 'README.md': '# Hook test\n' });
+        commitAll(fixture.path);
+        const remote = 'https://example.com/planted.git';
+        expect(git(fixture.path, ['remote', 'add', 'origin', remote]).code).toBe(0);
+        const argumentsByHook = {
+            'pre-commit': [],
+            'pre-push': ['origin', remote],
+            'commit-msg': ['message-file'],
+        };
         for (const name of ['pre-commit', 'pre-push', 'commit-msg'] as const) {
             const path = join(fixture.path, name);
             await Bun.write(path, hookBody(name, 'none', '/bin/echo'));
             chmodSync(path, 0o755);
-            const result = Bun.spawnSync([SYSTEM_BASH, path, 'message-file'], {
-                env: { PATH: '/usr/bin:/bin', GSPOT_BIN: '' },
+            const result = Bun.spawnSync([SYSTEM_BASH, path, ...argumentsByHook[name]], {
+                cwd: fixture.path,
+                env: { PATH: toolsPath([]), GSPOT_BIN: '' },
+                stdin: 'ignore',
                 stdout: 'pipe',
                 stderr: 'pipe',
             });
