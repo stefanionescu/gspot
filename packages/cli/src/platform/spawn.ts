@@ -14,7 +14,7 @@ function environment(extra?: Record<string, string>): Record<string, string> {
 function failed(error: unknown, started: number): SpawnResult {
     const { code, message: text } = error as NodeJS.ErrnoException;
     return {
-        code: MISSING_CODE,
+        code: code === 'ENOENT' ? MISSING_CODE : FAILED_CODE,
         stdout: '',
         stderr: text,
         missing: code === 'ENOENT',
@@ -22,43 +22,10 @@ function failed(error: unknown, started: number): SpawnResult {
     };
 }
 
-function runOnWindows(
-    executable: string,
-    argv: string[],
-    options: SpawnOptions,
-    started: number,
-): Promise<SpawnResult> {
-    return new Promise((settle) => {
-        const child = crossSpawn(executable, argv, {
-            cwd: options.cwd,
-            env: environment(options.env),
-            stdio: ['pipe', 'pipe', 'pipe'],
-            ...(options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs }),
-        });
-        const out: Buffer[] = [];
-        const error: Buffer[] = [];
-        child.stdout?.on('data', (chunk: Buffer) => {
-            out.push(chunk);
-        });
-        child.stderr?.on('data', (chunk: Buffer) => {
-            error.push(chunk);
-        });
-        child.on('error', (spawnError: NodeJS.ErrnoException) => {
-            settle(failed(spawnError, started));
-        });
-        child.on('close', (code, signal) => {
-            settle({
-                isTimedOut: signal !== null && options.timeoutMs !== undefined,
-                code: code ?? FAILED_CODE,
-                stdout: Buffer.concat(out).toString('utf8'),
-                stderr: Buffer.concat(error).toString('utf8'),
-                missing: false,
-                duration: performance.now() - started,
-            });
-        });
-        if (options.stdin === undefined) child.stdin?.end();
-        else child.stdin?.end(options.stdin);
-    });
+function capturedText(output: string | null, error?: Error | null): string {
+    const text = output ?? '';
+    if (error === undefined || error === null) return text;
+    return text === '' ? error.message : `${text}\n${error.message}`;
 }
 
 async function spawnBun(command: string[], options: SpawnOptions, started: number): Promise<SpawnResult> {
@@ -74,41 +41,31 @@ async function spawnBun(command: string[], options: SpawnOptions, started: numbe
         options.timeoutMs === undefined
             ? undefined
             : setTimeout(() => {
+                  if (proc.exitCode !== null || proc.signalCode !== null) return;
                   state.isTimedOut = true;
-                  proc.kill();
+                  proc.kill('SIGKILL');
               }, options.timeoutMs);
-    const [stdout, stderr, code] = await Promise.all([
-        new Response(proc.stdout).text(),
-        new Response(proc.stderr).text(),
-        proc.exited,
-    ]);
-    if (timer !== undefined) clearTimeout(timer);
-    return {
-        code,
-        stdout,
-        stderr,
-        missing: false,
-        duration: performance.now() - started,
-        isTimedOut: state.isTimedOut,
-    };
-}
-
-function runBlockingOnWindows(executable: string, argv: string[], options: SpawnOptions, started: number): SpawnResult {
-    const result = crossSpawn.sync(executable, argv, {
-        cwd: options.cwd,
-        env: environment(options.env),
-        input: options.stdin,
-        encoding: 'utf8',
-        ...(options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs }),
-    });
-    const isMissing = (result.error as NodeJS.ErrnoException | undefined)?.code === 'ENOENT';
-    return {
-        code: result.status ?? (isMissing ? MISSING_CODE : FAILED_CODE),
-        stdout: result.stdout,
-        stderr: result.stderr === '' ? (result.error?.message ?? '') : result.stderr,
-        missing: isMissing,
-        duration: performance.now() - started,
-    };
+    try {
+        const [stdout, stderr, code] = await Promise.all([
+            new Response(proc.stdout).text(),
+            new Response(proc.stderr).text(),
+            proc.exited,
+        ]);
+        return {
+            code,
+            stdout,
+            stderr,
+            missing: false,
+            duration: performance.now() - started,
+            isTimedOut: state.isTimedOut,
+        };
+    } catch (error) {
+        if (proc.exitCode === null && proc.signalCode === null) proc.kill('SIGKILL');
+        await proc.exited;
+        throw error;
+    } finally {
+        clearTimeout(timer);
+    }
 }
 
 function spawnBunBlocking(command: string[], options: SpawnOptions, started: number): SpawnResult {
@@ -131,6 +88,104 @@ function spawnBunBlocking(command: string[], options: SpawnOptions, started: num
 }
 
 /**
+ * Executes the cross-spawn backend used on Windows.
+ * @param executable the resolved program
+ * @param argv its arguments
+ * @param options working directory, input, environment, and deadline
+ * @param started the monotonic start time
+ * @returns the completed status and captured streams
+ */
+export function runOnWindows(
+    executable: string,
+    argv: string[],
+    options: SpawnOptions,
+    started: number,
+): Promise<SpawnResult> {
+    return new Promise((settle) => {
+        const child = crossSpawn(executable, argv, {
+            cwd: options.cwd,
+            env: environment(options.env),
+            stdio: ['pipe', 'pipe', 'pipe'],
+        });
+        let launchError: NodeJS.ErrnoException | undefined;
+        let isTimedOut = false;
+        const timer =
+            options.timeoutMs === undefined
+                ? undefined
+                : setTimeout(() => {
+                      if (child.exitCode !== null || child.signalCode !== null) return;
+                      isTimedOut = true;
+                      child.kill('SIGKILL');
+                  }, options.timeoutMs);
+        const out: Buffer[] = [];
+        const error: Buffer[] = [];
+        child.stdout?.on('data', (chunk: Buffer) => {
+            out.push(chunk);
+        });
+        child.stderr?.on('data', (chunk: Buffer) => {
+            error.push(chunk);
+        });
+        child.on('error', (spawnError: NodeJS.ErrnoException) => {
+            launchError = spawnError;
+        });
+        child.on('close', (code) => {
+            clearTimeout(timer);
+            const result: SpawnResult = {
+                isTimedOut,
+                code: code ?? FAILED_CODE,
+                stdout: Buffer.concat(out).toString('utf8'),
+                stderr: capturedText(Buffer.concat(error).toString('utf8'), launchError),
+                missing: false,
+                duration: performance.now() - started,
+            };
+            if (launchError !== undefined) {
+                const failure = failed(launchError, started);
+                result.code = failure.code;
+                result.missing = failure.missing;
+            }
+            settle(result);
+        });
+        if (options.stdin === undefined) child.stdin?.end();
+        else child.stdin?.end(options.stdin);
+    });
+}
+
+/**
+ * Executes the synchronous cross-spawn backend used on Windows.
+ * @param executable the resolved program
+ * @param argv its arguments
+ * @param options working directory, input, environment, and deadline
+ * @param started the monotonic start time
+ * @returns the completed status and captured streams
+ */
+export function runBlockingOnWindows(
+    executable: string,
+    argv: string[],
+    options: SpawnOptions,
+    started: number,
+): SpawnResult {
+    const result = crossSpawn.sync(executable, argv, {
+        cwd: options.cwd,
+        env: environment(options.env),
+        input: options.stdin,
+        encoding: 'utf8',
+        maxBuffer: Infinity,
+        killSignal: 'SIGKILL',
+        ...(options.timeoutMs === undefined ? {} : { timeout: options.timeoutMs }),
+    });
+    const errorCode = (result.error as NodeJS.ErrnoException | undefined)?.code;
+    const isMissing = errorCode === 'ENOENT';
+    return {
+        code: result.status ?? (isMissing ? MISSING_CODE : FAILED_CODE),
+        stdout: capturedText(result.stdout),
+        stderr: capturedText(result.stderr, result.error),
+        isTimedOut: errorCode === 'ETIMEDOUT',
+        missing: isMissing,
+        duration: performance.now() - started,
+    };
+}
+
+/**
  * Runs a command to completion and returns its output. A missing executable is reported, never thrown.
  * @param command the executable and its arguments
  * @param options the working directory, environment, stdin and timeout
@@ -140,8 +195,8 @@ export async function run(command: string[], options: SpawnOptions): Promise<Spa
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
-    if (isWindows) return runOnWindows(executable, argv, options, started);
     try {
+        if (isWindows) return await runOnWindows(executable, argv, options, started);
         return await spawnBun(command, options, started);
     } catch (error) {
         return failed(error, started);
@@ -158,8 +213,8 @@ export function runBlocking(command: string[], options: SpawnOptions): SpawnResu
     const started = performance.now();
     const [executable, ...argv] = command;
     if (executable === undefined) throw new Error('An empty command cannot run.');
-    if (isWindows) return runBlockingOnWindows(executable, argv, options, started);
     try {
+        if (isWindows) return runBlockingOnWindows(executable, argv, options, started);
         return spawnBunBlocking(command, options, started);
     } catch (error) {
         return failed(error, started);

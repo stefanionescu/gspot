@@ -133,6 +133,21 @@ a function with a string interpolation. The probe compares an empty configuratio
 the shipped SwiftFormat template rendered through the normal template owner. It records
 each mode under that configuration. No preset workaround is accepted from the minimal probe alone.
 
+**Local subprocess evidence, September 20, 2026.** Real-process tests exercise native
+asynchronous and synchronous dispatch and both production cross-spawn entry points on macOS.
+They preserve successful and finding exit statuses, drain both streams beyond pipe-buffer
+capacity, distinguish missing and denied executables, and distinguish deadlines from other
+signals. The cross-spawn completion waits for closed streams and classifies timeout from its
+own timer. Synchronous output normalizes the nullable fields observed under Bun.
+A failed Bun stream read terminates and awaits the child before reporting failure.
+
+The focused process and planted-harness suites pass 37 tests with 309 assertions. This is
+local backend evidence, not a reproduction or explanation of the historical Windows shell,
+PostgreSQL, or secrets failures. Windows native-parent comparisons, isolated and suite-order
+fixture runs, coverage comparisons, and packaged execution remain platform verification
+deferred while CI is bypassed. The permission-bit fixture is POSIX-specific; Windows denied
+launch still needs its platform reproducer.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.

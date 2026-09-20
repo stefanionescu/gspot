@@ -71,6 +71,11 @@ Complete Windows acceptance remains part of K-263.
 
 **Partial implementation.** The manifest-policy reader validates the fields it consumes and reports read or parse failures with the manifest path. Tests cover invalid JSON and invalid field shapes, denied reads, and repositories without package manifests. File listing and root discovery distinguish a confirmed non-Git directory from failed Git observation. Tests cover a corrupt index, incomplete Git metadata, a missing executable, and non-Git ignore handling. File metadata reads and takeover reader failures remain open.
 
+Process launch failures distinguish `ENOENT` from permission errors. Both captured streams
+and child status are preserved through completion. Local real-process regressions cover the
+Bun and cross-spawn backends. These repairs do not close failed Git observations or takeover
+read errors, and native Windows verification remains deferred under K-263.
+
 **What is wrong.** `platform/spawn.ts` maps every failed Git command to `undefined`; `repository/tracked.ts` then falls back to a non-Git walk. `entryFor()` drops a path after any stat failure, and `head()` returns empty text after any read failure. `integrity/manifest-policy.ts` treats unreadable or malformed package JSON as absent. The takeover readers also catch read and parse errors, while a separate preflight reparses only selected suffixes.
 
 **Target.** Keep real boundary validation, but do not turn failed observation into valid empty input or a clean verdict.
