@@ -267,6 +267,15 @@ under `.gspot/` with uv, as D-157 decides ([08-frameworks.md](08-frameworks.md),
 
 **Done when.** No manifest key of the schema is unused by all 48 manifests, held by a unit test.
 
+**K-195 complete, September 20, 2026.** The unused Python formatter pin is absent from the
+preset and the repository tool setup. The preset reference names only tools the manifest
+installs. Schema validation remains owned by `validate-pyproject`; no check or fixer depended
+on the deleted pin. K-180 and K-240 remain open.
+
+Local verification passes all 10 preset-selection and planted Python tool tests (93
+assertions). Schema and generated-reference checks pass. The Python reference is generated
+in a disposable directory through the existing owner. Platform verification remains deferred.
+
 ## K-205: generated pages that git tracks
 
 **What is wrong.** 293 of the 309 tracked files under `docs/` are pages that

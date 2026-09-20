@@ -15,7 +15,6 @@ ruff = "0.16.8"
 "pipx:gixy-ng" = "0.2.53"
 "pipx:import-linter" = "2.15"
 "pipx:pydoclint" = "0.9.1"
-"pipx:pyproject-fmt" = "2.29.4"
 "pipx:pytest" = {version = "9.1.1", depends = ["uv"], uvx_args = "--with pytest-cov==7.1.0"}
 "pipx:sqlfluff" = "4.0.0"
 "pipx:validate-pyproject" = "0.26"

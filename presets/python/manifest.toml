@@ -66,12 +66,6 @@ mise = "pipx:validate-pyproject"
 pypi = "validate-pyproject"
 version_regex = "(\\d+\\.\\d+(?:\\.\\d+)?)"
 
-[[tools]]
-name = "pyproject-fmt"
-version = "2.29.4"
-mise = "pipx:pyproject-fmt"
-pypi = "pyproject-fmt"
-
 [[configs]]
 template = "ruff.toml.tmpl"
 target = ".gspot/ruff.toml"

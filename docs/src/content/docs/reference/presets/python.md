@@ -16,7 +16,6 @@ Kind: language. Requires: `formatting`.
 - deptry 0.25.1
 - vulture 2.16
 - validate-pyproject 0.26
-- pyproject-fmt 2.29.4
 
 ## Generated configuration
 
