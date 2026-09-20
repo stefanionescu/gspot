@@ -17,9 +17,9 @@ describe.skipIf(!isReleaseTestWanted())('npm binary wrappers', () => {
                 entries.filter(([name]) => ['@taplo/cli', 'editorconfig-checker'].includes(name)),
             );
             await using fixture = await createFixture({
-                'package.json': JSON.stringify({ name: 'wrapper-probe', private: true, dependencies }),
+                'package.json': `${JSON.stringify({ name: 'wrapper-probe', private: true, dependencies })}\n`,
                 'settings.toml': 'a    =    1\n',
-                'notes.txt': 'text   ',
+                'notes.json': '"text"   ',
             });
             const added = await runProcess([process.execPath, 'install', '--ignore-scripts'], {
                 cwd: fixture.path,
@@ -58,8 +58,8 @@ describe.skipIf(!isReleaseTestWanted())('npm binary wrappers', () => {
             const whitespace = ['check', 'formatting/editorconfig-checker', '--no-cache'];
             const trailing = await run(fixture.path, whitespace);
             expect(trailing.code, trailing.stdout + trailing.stderr).toBe(1);
-            expect(trailing.stdout).toContain('notes.txt');
-            await Bun.write(join(fixture.path, 'notes.txt'), 'text\n');
+            expect(trailing.stdout).toContain('notes.json');
+            await Bun.write(join(fixture.path, 'notes.json'), '"text"\n');
             const clean = await run(fixture.path, whitespace);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
         },

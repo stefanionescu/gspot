@@ -1,6 +1,6 @@
 import { test, expect, describe } from 'bun:test';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
-import { isReleaseTestWanted } from '#cli/platform/environment.ts';
+import { environmentVariables, isReleaseTestWanted } from '#cli/platform/environment.ts';
 
 const REQUEST_MS = 15_000;
 const REGISTRIES = ['npm', 'pypi', 'cargo', 'github'] as const;
@@ -57,8 +57,14 @@ describe.skipIf(!isReleaseTestWanted())('published tool pins', () => {
             identity,
             async () => {
                 const url = metadataUrl(pin.registry, pin.name, pin.version);
+                const headers: Record<string, string> = {
+                    'User-Agent': 'gspot release verification',
+                    Accept: 'application/json',
+                };
+                const token = environmentVariables()['GITHUB_TOKEN'];
+                if (token !== undefined && pin.registry === 'github') headers['Authorization'] = `Bearer ${token}`;
                 const response = await fetch(url, {
-                    headers: { 'User-Agent': 'gspot release verification', Accept: 'application/json' },
+                    headers,
                     signal: AbortSignal.timeout(REQUEST_MS),
                 });
                 expect(response.ok, `${url}: HTTP ${String(response.status)}`).toBe(true);

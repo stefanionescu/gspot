@@ -558,15 +558,16 @@ It also verifies an external browser API name that exceeds the ordinary length l
 
 ## K-206: two pins their npm package never had
 
-**Status: partially implemented; external gate deferred.** Installer-specific versions feed
-runner output, probes, hints, and upgrade reports. npm Taplo 0.7.0 runs native 0.9.0 and passes
-syntax, formatting, and correction cases. EditorConfig pins its downloaded native release
-through `EC_VERSION` in checks and probes.
+**Status: complete (locally verified).** Installer-specific versions feed runner output,
+probes, hints, and upgrade reports. npm Taplo 0.7.0 runs native 0.9.0 and passes syntax,
+formatting, and correction cases. EditorConfig pins its downloaded native release through
+`EC_VERSION` in checks and probes.
 
-The registry suite found 81 published pins before eight GitHub requests returned HTTP 403.
-The remaining plugin pin passes publication and metadata lookup in isolated Verdaccio.
-EditorConfig download acceptance also stops at GitHub HTTP 403, including the corrected
-`v3.4.0` request. These failures remain open; the network gate has not passed.
+The initial anonymous registry requests reached the GitHub rate limit. Authenticated
+verification passes all 89 public pins and the plugin publication case in isolated Verdaccio
+(183 assertions). Both installed npm wrappers detect planted defects and accept corrected
+files (11 assertions). The release tests accept `GITHUB_TOKEN` for GitHub requests alone.
+Native execution on other platforms remains platform verification deferred.
 
 **What is wrong.** A manifest holds one `version` for every installer. taplo 0.10.0 and
 editorconfig-checker 3.4.0 are binary versions, and the npm packages number by themselves.
