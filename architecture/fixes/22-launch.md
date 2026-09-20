@@ -84,6 +84,12 @@ was appended to the destination repository, so loading failed. Profile loading u
 native path resolution. Its regression loads the same profile by a relative path and by
 an absolute path from another working directory. Test paths contain spaces and Unicode.
 
+SwiftFormat 0.61.1 publishes its Windows executable in a Windows Installer package. CI extracts that pinned
+package administratively into a temporary directory, copies the executable into the
+Mise tool directory, and verifies its version. The helper removes its extraction directory
+on completion or failure and rejects unexpected script arguments. This supplies the
+Windows CI prerequisite. Product installer acceptance remains open.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.
