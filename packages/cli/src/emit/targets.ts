@@ -2,11 +2,11 @@ import { join } from 'node:path';
 import { styleFiles } from '#cli/prose/vale.ts';
 import type { MergedView } from '#types/config.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import { everyManifest } from '#cli/run/session.ts';
 // Every generated file for the selection: path, template, stub; the managed blocks and the merge stubs beside them.
 import { hasEveryPin } from '#cli/emit/kept-pins.ts';
 import { workflowFile } from '#cli/emit/workflow.ts';
 import { assembleRules } from '#cli/rules/assemble.ts';
+import { everyManifest } from '#cli/presets/select.ts';
 import { GENERATED_JSON_KEY } from '#config/markers.ts';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { bodyStub, mergeStub } from '#cli/emit/stubs.ts';

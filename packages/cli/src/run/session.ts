@@ -1,4 +1,3 @@
-import type { Manifest } from '#types/manifest.ts';
 import { mergeForScope } from '#cli/policy/merge.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 // One session per command: the policy, the manifests, the repository, the selection and the merged view per scope.
@@ -27,17 +26,4 @@ export async function openSession(root: string): Promise<Session> {
         return { scope, selected, surface, view };
     });
     return { root, version: GSPOT_VERSION, policyFiles, manifests, repository: repo, scopes, probes: new Map() };
-}
-
-/**
- * Every distinct manifest across the scopes, in first-seen order.
- * @param session the session
- * @returns the manifests
- */
-export function everyManifest(session: Session): Manifest[] {
-    const seen = new Map<string, Manifest>();
-    for (const scope of session.scopes)
-        for (const manifest of scope.selected)
-            if (!seen.has(manifest.preset.name)) seen.set(manifest.preset.name, manifest);
-    return seen.values().toArray();
 }

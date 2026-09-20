@@ -27,6 +27,12 @@ version = "8.70.0"
 npm = "typescript-eslint"
 floor = "8.29.0"
 
+[[tools]]
+name = "eslint-import-resolver-typescript"
+kind = "library"
+version = "4.4.5"
+npm = "eslint-import-resolver-typescript"
+
 [[configs]]
 template = "eslint.fragment.js.tmpl"
 target = ".gspot/eslint.config.mjs"

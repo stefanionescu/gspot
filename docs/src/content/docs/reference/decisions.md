@@ -807,12 +807,12 @@ holds the split, and the plugin imports it.
 their manifest. The shared policy names no framework. The init plan and `gspot doctor` say, for
 each language preset, whether names are checked.
 
-## D-113 Tests keep their fixed values in one place, and test the path a person takes
+## D-113 Tests own their inputs and test the path a person takes
 
-`tests/config/` holds the init command lines, the manifests, the test repository text, the tool lists and
-the timeouts. One planted test installs with defaults and the mise runner in a repository of two
-scopes. `toolsPath` fails with the name of the tool it cannot find. `repository-check.test.ts`
-becomes `declared-check.test.ts`, and `scope-languages.test.ts` becomes `scope-presets.test.ts`.
+Suites keep their command inputs and expected behavior beside the cases that use them.
+Share setup only when callers need the same behavior. Do not require a central inventory
+of commands, files, or constants. One planted test installs with defaults and the mise runner
+in a repository of two scopes. `toolsPath` fails with the name of the tool it cannot find.
 
 ## D-114 gspot goes where the hook already points
 

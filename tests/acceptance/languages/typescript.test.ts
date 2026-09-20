@@ -47,6 +47,54 @@ test(
     PLANTED_TIMEOUT_MS,
 );
 
+test.each([
+    ['star exports', 'export * from "./first.js";\nexport * from "./second.js";\n'],
+    ['a local declaration', 'export { shared } from "./first.js";\nexport const shared = 3;\n'],
+    ['nested star exports', 'export * from "./bridge/index.js";\nexport { shared } from "./first.js";\n'],
+])(
+    'generated index-only policy reports duplicate names from %s',
+    async (_scenario, barrel) => {
+        await using sandbox = await createSandbox({
+            'gspot.toml': 'version = 1\npresets = ["typescript"]\n[structure]\nreexports = "index-only"\n',
+            'package.json': '{"name":"barrel-check","private":true,"type":"module"}',
+            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
+            'src/first.ts': 'export const shared = 1;\n',
+            'src/second.ts': 'export const shared = 2;\n',
+            'src/index.ts': barrel,
+            'src/bridge/index.ts': 'export * from "../first.js";\n',
+            'src/forward.ts': 'export { shared } from "./first.ts";\n',
+        });
+        symlinkSync(join(root, 'node_modules'), join(sandbox.path, 'node_modules'), 'dir');
+        const applied = await run(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const outcome = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache', '--json']);
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+        const report = JSON.parse(outcome.stdout) as RunReport;
+        const findings = report.checks.flatMap((check) => check.findings);
+        expect(findings.filter((finding) => finding.rule === 'gspot/no-reexports')).toMatchObject([
+            { check: 'typescript/eslint', file: 'src/forward.ts', line: 1, column: 1 },
+        ]);
+        expect(findings.filter((finding) => finding.rule === 'import-x/export')).toMatchObject([
+            { check: 'typescript/eslint', file: 'src/index.ts', line: 1 },
+            { check: 'typescript/eslint', file: 'src/index.ts', line: 2 },
+        ]);
+        writeFileSync(
+            join(sandbox.path, 'src/index.ts'),
+            'export * from "./first.js";\nexport { shared as second } from "./second.js";\n',
+        );
+        writeFileSync(join(sandbox.path, 'src/forward.ts'), 'export const shared = 1;\n');
+        const corrected = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache', '--json']);
+        const correctedReport = JSON.parse(corrected.stdout) as RunReport;
+        expect(correctedReport.checks[0]?.status).not.toBe('error');
+        expect(
+            correctedReport.checks
+                .flatMap((check) => check.findings)
+                .filter((finding) => finding.rule === 'gspot/no-reexports' || finding.rule === 'import-x/export'),
+        ).toEqual([]);
+    },
+    PLANTED_TIMEOUT_MS,
+);
+
 const PACKAGE = `{
     "name": "planted",
     "version": "1.0.0",

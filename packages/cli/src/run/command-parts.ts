@@ -3,9 +3,8 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { toPlatform } from '#cli/platform/paths.ts';
 import type { ConfigurationTarget } from '#types/manifest.ts';
-import { configurationName } from '#cli/presets/read-manifests.ts';
 import type { CommandPart, Substitutions, Session, PlannedCheck } from '#types/run.ts';
-import { isWorkspace, targetInScope, toolBaselineFile } from '#cli/run/scope-paths.ts';
+import { configurationName, isWorkspace, targetInScope, toolBaselineFile } from '#cli/run/scope-paths.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
 const STUB_PLACEHOLDER = /\{stub:(?<name>[^}]+)\}/gu;

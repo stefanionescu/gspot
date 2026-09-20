@@ -3,7 +3,7 @@ import type { Session } from '#types/run.ts';
 import type { RuleFile } from '#types/rules.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import type { GeneratedFile } from '#types/emit.ts';
-import { everyManifest } from '#cli/run/session.ts';
+import { everyManifest } from '#cli/presets/select.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 
 const AGENT_LAYERS = new Set(['general/agent', 'general/code', 'general/prose']);

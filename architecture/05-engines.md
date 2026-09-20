@@ -47,24 +47,19 @@ Runs external tools. Owns nothing about what they find.
 ## 2. The `@gspot/eslint-plugin` package
 
 An ESLint plugin published from the gspot repository and imported by the generated flat config.
-Editors run it. The rules are the 21 JavaScript and TypeScript structural rules the reference
-repositories wrote, ported with their tests and their semantics, plus the five gspot adds
-(`private-before-public`, `types-placement`, `import-direction`, `no-reexports`,
-`env-access-owner`).
+Editors run it. The plugin owns structural policies that the pinned tools do not enforce.
+Generated configuration selects those tools' rules where they already enforce the policy.
+Executed findings establish coverage; a fixed number of plugin rules does not.
 
 | Rule                                   | Reports                                                                                                                                                           |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gspot/no-trivial-functions`           | A block-bodied function with two or fewer executable statements, or ten or fewer AST nodes, that only forwards                                                    |
 | `gspot/no-call-through`                | A function that calls one other function or constructor with its own parameters unchanged and in order                                                            |
 | `gspot/no-trivial-files`               | A file whose only runtime behavior is calling imported values; generated files exempt by banner                                                                   |
 | `gspot/no-export-only-files`           | A non-index file that only re-exports                                                                                                                             |
 | `gspot/no-exported-alias-constants`    | `export const A = B` where B is an identifier or member                                                                                                           |
-| `gspot/no-duplicate-barrel-exports`    | A name exported twice from one index, including through two `export *`                                                                                            |
-| `gspot/no-reexports-outside-index`     | A re-export in a file that is not an index                                                                                                                        |
+| `import-x/export`                      | A name exported twice, including through two `export *`                                                                                                           |
 | `gspot/max-barrel-reexports`           | More than the limit of re-exports in one index                                                                                                                    |
 | `gspot/no-index-imports`               | An import path that names an index file or a barrel                                                                                                               |
-| `gspot/no-single-file-folders`         | A leaf folder holding one code file                                                                                                                               |
-| `gspot/no-prefix-collisions`           | Two or more files in one directory sharing a name prefix, above the threshold                                                                                     |
 | `gspot/header-comments-before-imports` | A file comment placed after the import block                                                                                                                      |
 | `gspot/import-layout`                  | Imports not grouped and sorted by statement shape and length                                                                                                      |
 | `gspot/import-path-style`              | An internal import using the wrong suffix or alias style for its runtime boundary                                                                                 |

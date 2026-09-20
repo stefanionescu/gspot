@@ -166,7 +166,13 @@ schema validation, and 274 reference comparisons pass.
 **K-188 partial local verification.** Generated TypeScript configuration reports an interface
 once through the pinned `@typescript-eslint/consistent-type-definitions` rule, with its source
 location. The duplicate `types-placement` message and `allowInterface` option are removed.
-The other duplicate rules remain open.
+
+Generated configuration also reports duplicate names from star exports, local declarations,
+and nested barrels through `import-x/export`. Its TypeScript parser and pinned resolver
+follow `.js` imports to `.ts` source. Corrected exports produce no duplicate finding.
+The retained `no-reexports` rule handles index-only policy with `allowIndex`.
+The two replaced barrel rules, their tests, and their export-cache reset are removed.
+Import direction and harness import enforcement remain open.
 
 The standalone plugin keeps forwarding
 functions at `all`; its recommended regression verifies private environment access in client

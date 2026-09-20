@@ -2,8 +2,8 @@
 import type { Session } from '#types/run.ts';
 import type { Painter } from '#types/output.ts';
 import { paint } from '#cli/output/messages.ts';
-import { everyManifest } from '#cli/run/session.ts';
 import { changeReport } from '#cli/doctor/changes.ts';
+import { everyManifest } from '#cli/presets/select.ts';
 import { collectPins } from '#cli/emit/runner-tasks.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import { coverageReport } from '#cli/doctor/coverage.ts';

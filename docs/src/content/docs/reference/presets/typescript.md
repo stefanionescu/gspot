@@ -11,6 +11,7 @@ Kind: language. Requires: `javascript`, `structure`.
 
 - tsc 5.9.3
 - typescript-eslint 8.70.0
+- eslint-import-resolver-typescript 4.4.5
 
 ## Generated configuration
 

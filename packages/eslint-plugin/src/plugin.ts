@@ -17,8 +17,6 @@ import { noCrossFolderImports } from '#plugin/rules/no-cross-folder-imports.ts';
 import { noCrossProjectImports } from '#plugin/rules/no-cross-project-imports.ts';
 import { testsDirectoryContents } from '#plugin/rules/tests-directory-contents.ts';
 import { noHarnessBarrelImports } from '#plugin/rules/no-harness-barrel-imports.ts';
-import { noReexportsOutsideIndex } from '#plugin/rules/no-reexports-outside-index.ts';
-import { noDuplicateBarrelExports } from '#plugin/rules/no-duplicate-barrel-exports.ts';
 import { noExportedAliasConstants } from '#plugin/rules/no-exported-alias-constants.ts';
 // The plugin object: rules and configs. The package entry; the flat config registers it under the key `gspot`.
 import { envAccessOwner as environmentAccessOwner } from '#plugin/rules/env-access-owner.ts';
@@ -35,12 +33,10 @@ const rules = {
     'no-client-environment': noClientEnvironment,
     'no-cross-folder-imports': noCrossFolderImports,
     'no-cross-project-imports': noCrossProjectImports,
-    'no-duplicate-barrel-exports': noDuplicateBarrelExports,
     'no-export-only-files': noExportOnlyFiles,
     'no-exported-alias-constants': noExportedAliasConstants,
     'no-index-imports': noIndexImports,
     'no-reexports': noReexports,
-    'no-reexports-outside-index': noReexportsOutsideIndex,
     'tests-directory-contents': testsDirectoryContents,
     'no-harness-barrel-imports': noHarnessBarrelImports,
     'no-trivial-files': noTrivialFiles,
@@ -51,7 +47,7 @@ const rules = {
 };
 
 // The rules for a project that allows re-exports in index files only; the recommended set bans re-exports outright.
-const INDEX_ONLY_RULES = new Set(['no-reexports-outside-index', 'no-duplicate-barrel-exports', 'max-barrel-reexports']);
+const INDEX_ONLY_RULES = new Set(['max-barrel-reexports']);
 
 const base = { meta: { name: packageManifest.name, version: packageManifest.version }, rules };
 

@@ -17,6 +17,7 @@ import unicorn from 'eslint-plugin-unicorn';
 import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 import tseslint from 'typescript-eslint';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 
 
 const root = fileURLToPath(new URL('..', import.meta.url));
@@ -347,6 +348,7 @@ const regexpRules = {
 };
 
 const importRules = {
+    'import-x/export': 'error',
     'import-x/first': 'error',
     'import-x/newline-after-import': ['error', { count: 1 }],
     'import-x/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: true }],
@@ -594,6 +596,15 @@ export default [
     {
         files: TYPESCRIPT,
         languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } },
+        settings: {
+            'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
+            'import-x/resolver-next': [createTypeScriptImportResolver({ project: [
+    "tsconfig.json",
+    "packages/cli/tsconfig.json",
+    "packages/eslint-plugin/tsconfig.json",
+    "docs/tsconfig.json"
+] })],
+        },
         rules: {
             '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
             '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'separate-type-imports' }],

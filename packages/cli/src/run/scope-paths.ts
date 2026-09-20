@@ -38,3 +38,14 @@ export function toolBaselineFile(file: string, scope: string): string {
 export function isWorkspace(root: string, scope: string): boolean {
     return scope !== '' && existsSync(join(root, scope, 'package.json'));
 }
+
+/**
+ * The name a `{config:<name>}` placeholder uses for a target: the file name under .gspot without its extensions.
+ * @param target the target path
+ * @returns the name
+ */
+export function configurationName(target: string): string {
+    const bare = target.startsWith(GSPOT_DIRECTORY) ? target.slice(GSPOT_DIRECTORY.length) : target;
+    const dot = bare.indexOf('.');
+    return dot === -1 ? bare : bare.slice(0, dot);
+}

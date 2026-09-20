@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { planRun } from '#cli/run/plan.ts';
 import type { RunReport } from '#types/report.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import { everyManifest } from '#cli/run/session.ts';
+import { everyManifest } from '#cli/presets/select.ts';
 import { lowerBaselines } from '#cli/run/baselines.ts';
 import type { Session, CommandResult } from '#types/run.ts';
 import { pruneToolBaselines } from '#cli/emit/prune-baselines.ts';

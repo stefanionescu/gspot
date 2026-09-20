@@ -2,12 +2,12 @@
 import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/policy/normalize.ts';
 import { TOOL_ANALYSES } from '#cli/run/analyses.ts';
+import { configurationName } from '#cli/run/scope-paths.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { manifestSchema, INSTALLER_KEYS } from '#cli/presets/manifest-schema.ts';
 import type { RawCheck, RawManifest, RawTool, CheckSpec, Manifest, ToolPin } from '#types/manifest.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
-const GSPOT_DIRECTORY = '.gspot/';
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
 
@@ -110,17 +110,6 @@ function checkRequires(manifests: Map<string, Manifest>): void {
         for (const required of manifest.preset.requires)
             if (!manifests.has(required))
                 throw new ManifestError(manifest.preset.name, [`it requires \`${required}\`, which does not exist.`]);
-}
-
-/**
- * The name a `{config:<name>}` placeholder uses for a target: the file name under .gspot without its extensions.
- * @param target the target path
- * @returns the name
- */
-export function configurationName(target: string): string {
-    const bare = target.startsWith(GSPOT_DIRECTORY) ? target.slice(GSPOT_DIRECTORY.length) : target;
-    const dot = bare.indexOf('.');
-    return dot === -1 ? bare : bare.slice(0, dot);
 }
 
 /** A manifest that the schema or the design refuses. */

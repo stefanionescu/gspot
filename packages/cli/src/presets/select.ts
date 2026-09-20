@@ -1,4 +1,5 @@
 // Selection: the presets named plus every preset they require, dependencies first, in order of first mention.
+import type { Session } from '#types/run.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import type { Manifest, SelectionWalk } from '#types/manifest.ts';
@@ -103,4 +104,17 @@ export function selectForScope(
  */
 export function languagePresets(selected: Manifest[]): Manifest[] {
     return selected.filter((manifest) => manifest.preset.kind === 'language');
+}
+
+/**
+ * Every distinct manifest across the scopes, in first-seen order.
+ * @param session the session
+ * @returns the manifests
+ */
+export function everyManifest(session: Session): Manifest[] {
+    const seen = new Map<string, Manifest>();
+    for (const scope of session.scopes)
+        for (const manifest of scope.selected)
+            if (!seen.has(manifest.preset.name)) seen.set(manifest.preset.name, manifest);
+    return seen.values().toArray();
 }

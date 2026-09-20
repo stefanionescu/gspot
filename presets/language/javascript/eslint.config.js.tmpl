@@ -16,6 +16,7 @@ import unicorn from 'eslint-plugin-unicorn';
 import prettierConfig from 'eslint-config-prettier';
 import globals from 'globals';
 <% if (has('typescript')) { %>import tseslint from 'typescript-eslint';
+import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescript';
 <% } %><% if (has('vitest')) { %>import vitest from '@vitest/eslint-plugin';
 <% } %><% if (has('nextjs')) { %>import nextPlugin from '@next/eslint-plugin-next';
 <% } %><% if (has('react')) { %>import reactHooks from 'eslint-plugin-react-hooks';
@@ -199,8 +200,7 @@ const gspotRules = {
     'gspot/import-direction': ['error', { roles: <%= json(directionRoles) %>, aliases: ALIASES }],
     'gspot/env-access-owner': ['error', { owners: <%= json(envOwners) %> }],
 <% if (structure.reexports === 'none') { %>    'gspot/no-reexports': 'error',
-<% } else { %>    'gspot/no-reexports-outside-index': 'error',
-    'gspot/no-duplicate-barrel-exports': 'error',
+<% } else { %>    'gspot/no-reexports': ['error', { allowIndex: true }],
     'gspot/max-barrel-reexports': ['error', { max: limits.barrelReexports }],
 <% } %>};
 
@@ -368,6 +368,7 @@ const regexpRules = {
 };
 
 const importRules = {
+    'import-x/export': 'error',
     'import-x/first': 'error',
     'import-x/newline-after-import': ['error', { count: 1 }],
     'import-x/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: true }],
