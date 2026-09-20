@@ -163,7 +163,12 @@ leaf folders, declaration files, nested directories, prefix groups, allowances, 
 All 11 affected integration, plugin, and framework cases pass locally. TypeScript, ESLint,
 schema validation, and 274 reference comparisons pass.
 
-K-188 remains open for the other duplicate rules. The standalone plugin keeps forwarding
+**K-188 partial local verification.** Generated TypeScript configuration reports an interface
+once through the pinned `@typescript-eslint/consistent-type-definitions` rule, with its source
+location. The duplicate `types-placement` message and `allowInterface` option are removed.
+The other duplicate rules remain open.
+
+The standalone plugin keeps forwarding
 functions at `all`; its recommended regression verifies private environment access in client
 code. Generated configuration level selection and review of public boundaries remain open
 under K-301.

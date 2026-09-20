@@ -9,7 +9,7 @@ export type HeaderCommentsOptions = [{ allowRequire?: boolean }];
 
 export type EnvAccessOwnerOptions = [{ owners?: string[] }];
 
-export type TypesPlacementOptions = [{ typesDirectory?: string; allowInterface?: boolean; exempt?: string[] }];
+export type TypesPlacementOptions = [{ typesDirectory?: string; exempt?: string[] }];
 
 export type CrossProjectImportsOptions = [{ scopes?: string[]; allowedEscapes?: string[] }];
 

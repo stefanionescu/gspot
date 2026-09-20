@@ -76,14 +76,8 @@ function insideListeners(report: TypesPlacementReporter): Record<string, (node: 
     };
 }
 
-function outsideListeners(
-    report: TypesPlacementReporter,
-    isInterfaceAllowed: boolean,
-): Record<string, (node: never) => void> {
+function outsideListeners(report: TypesPlacementReporter): Record<string, (node: never) => void> {
     return {
-        TSInterfaceDeclaration(node: TSESTree.TSInterfaceDeclaration) {
-            if (!isInterfaceAllowed) report(node, 'interface');
-        },
         TSTypeAliasDeclaration(node: TSESTree.TSTypeAliasDeclaration) {
             report(node, 'aliasOutside', { name: node.id.name });
         },
@@ -110,12 +104,10 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
         schema: [
             optionsSchema({
                 typesDirectory: { type: 'string' },
-                allowInterface: { type: 'boolean' },
                 exempt: stringList,
             }),
         ],
         messages: {
-            interface: 'Use a type alias under {{directory}} instead of an interface.',
             aliasOutside: 'Type aliases live under {{directory}}. Move {{name}} there and import it with import type.',
             enumOutside:
                 'An as-const object that stands in for an enum lives under {{directory}} beside its type. Move {{name}} there.',
@@ -124,7 +116,7 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
             valueImportInside: 'Files under {{directory}} import types only. Write import type for "{{source}}".',
         },
     },
-    defaultOptions: [{ typesDirectory: DEFAULT_DIRECTORY, allowInterface: false, exempt: [] }],
+    defaultOptions: [{ typesDirectory: DEFAULT_DIRECTORY, exempt: [] }],
     create(context, [options]) {
         const file = lintedFile(context);
         if (file === undefined || file.endsWith('.d.ts')) return {};
@@ -135,6 +127,6 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
         const report: TypesPlacementReporter = (node, id, extra = {}) => {
             context.report({ node, messageId: id, data: { directory, ...extra } });
         };
-        return isInside ? insideListeners(report) : outsideListeners(report, options.allowInterface === true);
+        return isInside ? insideListeners(report) : outsideListeners(report);
     },
 });

@@ -12,6 +12,41 @@ import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#test
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 
+test(
+    'generated TypeScript configuration reports an interface once through the pinned replacement rule',
+    async () => {
+        await using sandbox = await createSandbox({
+            'gspot.toml': 'version = 1\npresets = ["typescript"]\n',
+            'package.json': '{"name":"interface-check","private":true,"type":"module"}',
+            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
+            'src/order.ts': 'export interface Order { total: number }\n',
+        });
+        symlinkSync(join(root, 'node_modules'), join(sandbox.path, 'node_modules'), 'dir');
+        const applied = await run(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const outcome = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache', '--json']);
+        expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+        const report = JSON.parse(outcome.stdout) as RunReport;
+        const findings = report.checks
+            .flatMap((check) => check.findings)
+            .filter(
+                (finding) =>
+                    finding.rule === '@typescript-eslint/consistent-type-definitions' ||
+                    finding.rule === 'gspot/types-placement',
+            );
+        expect(findings.map(({ check, file, line, column, rule }) => ({ check, file, line, column, rule }))).toEqual([
+            {
+                check: 'typescript/eslint',
+                file: 'src/order.ts',
+                line: 1,
+                column: 18,
+                rule: '@typescript-eslint/consistent-type-definitions',
+            },
+        ]);
+    },
+    PLANTED_TIMEOUT_MS,
+);
+
 const PACKAGE = `{
     "name": "planted",
     "version": "1.0.0",
