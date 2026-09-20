@@ -50,7 +50,7 @@ function fromRepoCheck(entry: RepositoryCheck): CheckSpec {
     return {
         ...definition,
         runs: 'per-file-list',
-        inspection: [],
+        coverage: [],
         summary: entry.summary ?? `Runs the repository's own check ${entry.name}.`,
         why: 'The repository declared this command in gspot.toml as part of its gate.',
         help: entry.help ?? 'Read the command output; the repository owns this check.',

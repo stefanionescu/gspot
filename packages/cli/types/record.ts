@@ -22,7 +22,7 @@ export type RunRecord = {
     baselines: BaselineVerdict[];
     ignores: { check: string; rule?: string; paths?: string[]; reason: string; matched: number }[];
     skips: { check: string; source: 'local' | 'flag' | 'platform' | 'rules' }[];
-    inspection: { checked: number; unchecked: number };
+    coverage: { checked: number; unchecked: number };
     suppressions: Record<string, number>;
     unstaged: number;
     /** True when the run read only the staged files or the files a ref does not hold yet, so its counts are partial. */

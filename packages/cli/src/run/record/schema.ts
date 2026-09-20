@@ -57,7 +57,7 @@ export const recordSchema = z.strictObject({
     baselines: z.array(baselineVerdict),
     ignores: z.array(ignoreUse),
     skips: z.array(skip),
-    inspection: z.strictObject({ checked: z.number().int(), unchecked: z.number().int() }),
+    coverage: z.strictObject({ checked: z.number().int(), unchecked: z.number().int() }),
     suppressions: z.record(z.string(), z.number().int()),
     unstaged: z.number().int(),
     narrowed: z.boolean(),

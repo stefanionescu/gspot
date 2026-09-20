@@ -74,7 +74,7 @@ export async function firstRun(root: string, only?: Set<string>): Promise<FirstR
         session.scopes.flatMap((scope) =>
             scope.selected.flatMap((manifest) =>
                 manifest.checks
-                    .filter((check) => isBaselineAllowed(check.inspection) && check.baseline_command === undefined)
+                    .filter((check) => isBaselineAllowed(check.coverage) && check.baseline_command === undefined)
                     .map((check) => check.name),
             ),
         ),

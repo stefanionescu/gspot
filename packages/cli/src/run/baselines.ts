@@ -133,11 +133,11 @@ export function countByRule(findings: Finding[]): Map<string, RuleCount> {
 
 /**
  * True when a check's findings may enter a baseline. Format, syntax and schema findings never do.
- * @param inspection the check's inspection kinds
+ * @param coverageKinds the check's coverage kinds
  * @returns whether a baseline is allowed
  */
-export function isBaselineAllowed(inspection: string[]): boolean {
-    return inspection.every((kind) => !NEVER_BASELINED.has(kind));
+export function isBaselineAllowed(coverageKinds: string[]): boolean {
+    return coverageKinds.every((kind) => !NEVER_BASELINED.has(kind));
 }
 
 /**

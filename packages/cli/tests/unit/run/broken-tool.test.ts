@@ -5,7 +5,7 @@ import { isToolBroken } from '#cli/run/broken-tool.ts';
 const base: Omit<CheckSpec, 'name' | 'output'> = {
     stage: 'commit',
     runs: 'per-file-list',
-    inspection: [],
+    coverage: [],
     summary: '',
     why: '',
     help: '',

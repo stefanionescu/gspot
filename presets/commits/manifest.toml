@@ -26,7 +26,7 @@ stage = "message"
 runs = "per-file-list"
 command = ["commitlint", "--config", "{config:commitlint}", "--edit", "{message_file}"]
 output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
-inspection = []
+coverage = []
 summary = "Checks the commit message being written: a conventional type, a known scope, a short subject, and a wrapped body."
 why = "A history of typed, scoped subjects is what release notes, blame and bisect are read from; a free-form message hides the change."
 help = "Write <type>(<scope>): <subject>, with a type from the list and a subject under 72 characters, or change the list with gspot set tools.commitlint.types."
@@ -37,7 +37,7 @@ stage = "push"
 runs = "per-scope"
 command = ["commitlint", "--config", "{config:commitlint}", "--from", "{merge_base}", "--to", "HEAD"]
 output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
-inspection = []
+coverage = []
 summary = "Checks every commit message about to be pushed, from the merge base with the upstream branch to HEAD."
 why = "A message written past the hook (--no-verify, a rebase, a merge) still reaches the shared branch unless the push checks it."
 help = "Reword the commits that fail with git rebase -i, or change the rule with gspot set tools.commitlint.rules."

@@ -1818,7 +1818,7 @@
             },
             "additionalProperties": false
         },
-        "inspection": {
+        "coverage": {
             "type": "object",
             "properties": {
                 "strict": {

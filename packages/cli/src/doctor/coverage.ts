@@ -1,4 +1,4 @@
-// Unchecked and partial files: what no preset claims, and what falls short of its required inspections.
+// Unchecked and partial files: what no preset claims, and what falls short of its required check kinds.
 import type { Manifest } from '#types/manifest.ts';
 import { claimants } from '#cli/presets/claims.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
@@ -13,11 +13,11 @@ function selectionFor(session: Session, file: TrackedFile): ScopeSelection | und
 }
 
 function requiredKinds(owners: Manifest[], extension: string): Set<string> {
-    return new Set(owners.flatMap((owner) => owner.inspections[extension] ?? []));
+    return new Set(owners.flatMap((owner) => owner.coverage[extension] ?? []));
 }
 
 function providedKinds(selected: Manifest[]): Set<string> {
-    return new Set(selected.flatMap((manifest) => manifest.checks.flatMap((check) => check.inspection)));
+    return new Set(selected.flatMap((manifest) => manifest.checks.flatMap((check) => check.coverage)));
 }
 
 function coverSource(session: Session, file: TrackedFile, report: CoverageReport): void {

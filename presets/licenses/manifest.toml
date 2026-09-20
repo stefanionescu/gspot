@@ -24,7 +24,7 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "licenses-npm"
 claims = {filenames = ["package.json"]}
-inspection = ["licenses"]
+coverage = ["licenses"]
 summary = "Compares the license every installed npm package reports with the allowed list and the exceptions."
 why = "A license the project cannot accept arrives silently with a transitive dependency."
 help = "Replace the package, or record it with gspot allow licenses <name@version> --license <id> --reason. An exception holds only while the package reports that license."

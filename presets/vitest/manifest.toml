@@ -30,7 +30,7 @@ runs = "per-scope"
 cwd = "scope"
 command = ["vitest", "run", "{each:--config:tools.vitest.coverage_file}", "--coverage", "--coverage.reporter=text-summary", "--coverage.thresholds.lines={setting:tools.vitest.coverage_lines}", "--coverage.thresholds.branches={setting:tools.vitest.coverage_branches}", "--coverage.thresholds.functions={setting:tools.vitest.coverage_functions}", "--coverage.thresholds.statements={setting:tools.vitest.coverage_statements}"]
 claims = {extensions = [".ts", ".tsx", ".js", ".jsx", ".mjs"]}
-inspection = ["coverage"]
+coverage = ["coverage"]
 output = {format = "regex", pattern = "^ERROR: (?<message>Coverage for .*)$"}
 summary = "Runs the test suite with coverage, and fails when lines, branches, functions, or statements fall under their floors."
 why = "A floor keeps new code from arriving untested, which is when its behavior is cheapest to pin down."

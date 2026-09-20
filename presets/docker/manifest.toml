@@ -54,7 +54,7 @@ name = "docker/hadolint"
 stage = "commit"
 command = ["hadolint", "--no-color", "--config", "{config:hadolint}", "{files}"]
 claims = {paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile"]}
-inspection = ["syntax", "style"]
+coverage = ["syntax", "style"]
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+) (?<rule>[A-Z]+\\d+) [a-z]+: (?<message>.*)$"}
 summary = "Lints every Dockerfile, and runs ShellCheck over its RUN lines."
 why = "An unpinned base image or a cache left in a layer makes a build nobody can repeat and an image larger than it needs to be."
@@ -67,7 +67,7 @@ requires = "docker"
 tool = "docker"
 command = ["docker", "compose", "-f", "{file}", "config", "--quiet"]
 claims = {paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"]}
-inspection = ["syntax"]
+coverage = ["syntax"]
 output = {format = "lines"}
 summary = "Asks Docker Compose to parse every Compose file, which needs no running daemon."
 why = "A Compose file that is valid YAML can still name a key Compose refuses, and the first person to learn that is deploying."
@@ -79,7 +79,7 @@ stage = "commit"
 runs = "once"
 engine = "integrity"
 analysis = "dockerignore"
-inspection = ["security"]
+coverage = ["security"]
 summary = "Checks that an ignore file sits beside every Dockerfile and keeps the git folder, installed dependencies, and environment files out of the build."
 why = "Without it the whole folder goes to the daemon, and copying the folder puts the history and the secrets into the image."
 help = "Add a .dockerignore beside the Dockerfile with the entries the message names."
@@ -90,7 +90,7 @@ stage = "push"
 runs = "once"
 command = ["trivy", "config", "--quiet", "--config", "{config:trivy}", "--exit-code", "1", "--format", "template", "--template", "@{config:trivy-findings}", "{root}"]
 tool = "trivy"
-inspection = ["security"]
+coverage = ["security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<rule>[^:]+):(?<message>.*)$"}
 summary = "Scans Dockerfiles and Compose files for misconfiguration: a root user, a missing health check, an exposed secret."
 why = "A container that runs as root turns any bug in the service into control of the container."
@@ -104,7 +104,7 @@ requires = "docker"
 engine = "integrity"
 analysis = "trivy-image"
 tool = "trivy"
-inspection = ["security"]
+coverage = ["security"]
 summary = "Scans every image a Compose file names for known vulnerabilities in its packages."
 why = "A base image carries hundreds of packages, and their advisories arrive after the image was chosen."
 help = "Move to a newer tag of the image. Accept one advisory with a reason under tools.trivy.ignore."

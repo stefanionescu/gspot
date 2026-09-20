@@ -270,7 +270,7 @@ export async function executeRun(session: Session, options: RunOptions): Promise
         baselines: verdicts,
         ignores: ignoreRows(uses),
         skips: skipRows(planned),
-        inspection: { checked: checkedSources.length, unchecked: sources.length - checkedSources.length },
+        coverage: { checked: checkedSources.length, unchecked: sources.length - checkedSources.length },
         suppressions: census(session, checkedSources),
         unstaged: 0,
         narrowed: options.staged !== undefined || options.since !== undefined,

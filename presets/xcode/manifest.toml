@@ -24,7 +24,7 @@ platform = ["macos"]
 tool = "plutil"
 command = ["plutil", "-lint", "{files}"]
 claims = {extensions = [".plist", ".entitlements"]}
-inspection = ["syntax"]
+coverage = ["syntax"]
 output = {format = "regex", pattern = "^(?<file>.+?): (?!OK$)(?<message>.+)$"}
 summary = "Asks plutil whether every property list and entitlements file parses."
 why = "A property list that does not parse stops the build at the signing step, far from the edit that broke it."
@@ -37,7 +37,7 @@ runs = "once"
 engine = "integrity"
 analysis = "xcode-xcconfig"
 claims = {extensions = [".xcconfig"]}
-inspection = ["syntax"]
+coverage = ["syntax"]
 summary = "Checks that every line of a build settings file is a setting, an include, or a comment."
 why = "Xcode ignores a line it cannot read, so a typo turns a setting off without a word."
 help = "Write the line as a name, an equals sign, and a value."
@@ -49,7 +49,7 @@ runs = "once"
 engine = "integrity"
 analysis = "xcode-xcstrings"
 claims = {extensions = [".xcstrings"]}
-inspection = ["consistency"]
+coverage = ["consistency"]
 summary = "Checks that every string catalog parses, and that every string has a translation for every locale the catalog uses."
 why = "A string with no translation shows its source language in the middle of a translated screen."
 help = "Add the translation, or mark the string as not translated in the catalog."
@@ -61,7 +61,7 @@ runs = "once"
 engine = "integrity"
 analysis = "xcode-assets"
 claims = {paths = ["**/*.xcassets/**"], extensions = [".swift"]}
-inspection = ["consistency"]
+coverage = ["consistency"]
 summary = "Checks that every asset Contents.json parses, that every image set holds the images it names, and that some source names every asset."
 why = "An image set with no image draws nothing at run time, and an asset nobody names ships in the app for nothing."
 help = "Add the image, or delete the asset. Set tools.xcode.orphan_assets to false when assets are named at run time."
@@ -72,7 +72,7 @@ stage = "commit"
 runs = "once"
 engine = "integrity"
 analysis = "xcode-test-plans"
-inspection = ["tests"]
+coverage = ["tests"]
 summary = "Checks that every shared scheme that runs tests names a test plan, and that every test target is in a plan."
 why = "A test target outside every plan never runs in CI, and its tests rot while they look present."
 help = "Add the target to a test plan, and point the scheme at the plan."
@@ -84,7 +84,7 @@ runs = "once"
 engine = "integrity"
 analysis = "xcode-orphan-sources"
 claims = {extensions = [".swift"], paths = ["**/project.pbxproj"]}
-inspection = ["consistency"]
+coverage = ["consistency"]
 summary = "Compares the Swift files in the tree with the files the project names: a file in no target, and a target file that is gone."
 why = "A Swift file in no target is never compiled, so it breaks without anyone seeing it."
 help = "Add the file to a target or delete it, and remove the reference to a file that is gone."
@@ -95,7 +95,7 @@ stage = "commit"
 runs = "once"
 engine = "integrity"
 analysis = "xcode-symlinks"
-inspection = ["consistency"]
+coverage = ["consistency"]
 summary = "Reports every tracked symlink beside or under an Xcode project, with where it points."
 why = "Xcode, git, and each lint tool follow a symlink their own way, so one file is checked twice or never."
 help = "Replace the symlink with the folder it points at, or ignore the path with a reason."
@@ -107,7 +107,7 @@ runs = "once"
 engine = "integrity"
 analysis = "xcode-entitlements"
 claims = {extensions = [".entitlements"]}
-inspection = ["security"]
+coverage = ["security"]
 summary = "Checks that every entitlement is on tools.xcode.allowed_entitlements, when the policy holds that list."
 why = "An entitlement is a capability the system grants the app, and a new one deserves a review of its own."
 help = "Remove the entitlement, or add it to tools.xcode.allowed_entitlements."
@@ -119,7 +119,7 @@ runs = "once"
 engine = "integrity"
 analysis = "xcode-ats"
 claims = {extensions = [".plist"]}
-inspection = ["security"]
+coverage = ["security"]
 summary = "Refuses a property list that allows arbitrary loads, which turns transport security off for every host."
 why = "With arbitrary loads the app speaks plain HTTP to anyone, and one forgotten debug setting ships it."
 help = "Remove the key, and add an exception for the one host that needs it."

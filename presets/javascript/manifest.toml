@@ -146,7 +146,7 @@ prune_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
 claims = {extensions = [".js", ".jsx", ".mjs", ".cjs"], tags = ["shebang:node"]}
-inspection = ["style", "structure", "security"]
+coverage = ["style", "structure", "security"]
 output = {format = "eslint-json"}
 tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:"
 summary = "Runs ESLint with the shipped rule set over every JavaScript file."
@@ -160,7 +160,7 @@ runs = "once"
 command = ["tsc", "-p", "{config:jsconfig}", "--pretty", "false"]
 tool = "tsc"
 claims = {extensions = [".js", ".mjs", ".cjs", ".jsx"]}
-inspection = ["types"]
+coverage = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks plain JavaScript through its JSDoc comments."
 why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."
@@ -172,7 +172,7 @@ stage = "push"
 runs = "per-scope"
 command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "compact", "{workspace:--workspace}"]
 cwd = "root"
-inspection = ["dependencies"]
+coverage = ["dependencies"]
 output = {format = "regex", pattern = "^(?<file>[^:\\s]+)(?::\\s*(?<message>.*))?$"}
 summary = "Finds files, exports, and dependencies nothing uses."
 why = "Dead code is read, maintained, and shipped for nobody."
@@ -248,7 +248,7 @@ direction = "loosening"
 default = []
 summary = "Dependencies knip does not report as unused, each with a reason: packages only a spawned command uses."
 
-[inspections]
+[coverage]
 ".js" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".mjs" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 ".cjs" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
@@ -260,7 +260,7 @@ stage = "push"
 runs = "per-scope"
 engine = "integrity"
 analysis = "required-rules"
-inspection = ["integrity"]
+coverage = ["integrity"]
 summary = "Checks that the configuration ESLint resolves for a file still turns on every rule the presets require."
 why = "The configuration is put together from the blocks of many presets, and a later block can turn off a rule that an earlier one turned on."
 help = "Run gspot apply to write the configuration again. A rule the repository decided against is recorded with gspot ignore, which carries a reason."

@@ -127,8 +127,7 @@ function tailLines(record: RunRecord, options: ReportOptions, colors: Painter): 
         ...ignoreLines(record, options, colors),
         ...record.skips.map((skip) => skipLine(skip.check, skip.source, colors)),
     ];
-    if (record.inspection.unchecked > 0)
-        lines.push(`unchecked  ${fileCount(record.inspection.unchecked)} (gspot doctor)`);
+    if (record.coverage.unchecked > 0) lines.push(`unchecked  ${fileCount(record.coverage.unchecked)} (gspot doctor)`);
     if (record.unstaged > 0) {
         const verb = record.unstaged === 1 ? ' has' : 's have';
         lines.push(`checked working tree; ${String(record.unstaged)} file${verb} unstaged changes`);

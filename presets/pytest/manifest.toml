@@ -22,7 +22,7 @@ runs = "per-scope"
 cwd = "scope"
 command = ["pytest", "-q", "--strict-markers", "--strict-config", "--cov", "--cov-fail-under={setting:tools.pytest.coverage}", "--no-header", "-p", "no:cacheprovider"]
 claims = {extensions = [".py"]}
-inspection = ["coverage"]
+coverage = ["coverage"]
 output = {format = "regex", pattern = "^(?<message>(?:FAIL Required test coverage|FAILED |ERROR ).*)$"}
 summary = "Runs the test suite with coverage, and fails when a test fails or the covered share falls under the floor."
 why = "A floor keeps new code from arriving untested."

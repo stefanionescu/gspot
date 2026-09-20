@@ -37,7 +37,7 @@ stage = "commit"
 command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}", "--formatter", "unix", "--allow-empty-input", "{files}"]
 fix_command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}", "--fix", "--allow-empty-input", "{files}"]
 fix_order = "codemod"
-inspection = ["style", "syntax"]
+coverage = ["style", "syntax"]
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$"}
 summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
 why = "A browser skips a declaration it cannot read without a word, so a typo in a property ships as a missing style."
@@ -50,12 +50,12 @@ runs = "per-scope"
 engine = "integrity"
 analysis = "css-module-usage"
 claims = {extensions = [".css", ".scss", ".pcss", ".ts", ".tsx", ".js", ".jsx"]}
-inspection = ["consistency"]
+coverage = ["consistency"]
 summary = "For every CSS module, checks that the code uses each class it defines, and that each class the code reads is defined."
 why = "A class the code reads and the stylesheet lacks is undefined at run time, and the element silently loses its style."
 help = "Delete the class nobody reads, or define the class the code reads."
 
-[inspections]
+[coverage]
 ".css" = ["format", "syntax", "style", "spelling"]
 ".scss" = ["format", "syntax", "style", "spelling"]
 ".pcss" = ["format", "syntax", "style", "spelling"]

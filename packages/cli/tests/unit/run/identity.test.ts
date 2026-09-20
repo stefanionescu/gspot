@@ -34,6 +34,8 @@ test('serializes check definitions and references without changing external SARI
     expect(outcome.record.checks[0]).not.toHaveProperty('id');
     expect(outcome.record.checks[0]?.findings[0]?.check).toBe('fixture/identity');
     expect(recordSchema.safeParse(outcome.record).success).toBe(true);
+    expect(outcome.record.coverage).toEqual({ checked: 1, unchecked: 1 });
+    expect(outcome.record).not.toHaveProperty('inspection');
     expect(JSON.parse(sarifText(outcome.record))).toHaveProperty('runs.0.results.0.ruleId', 'fixture/identity');
     expect(() => parsePolicyText(policy.replace('name =', 'id ='), 'gspot.toml')).toThrow('`id`');
     const stale = {

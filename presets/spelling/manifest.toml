@@ -31,7 +31,7 @@ runs = "per-file-list"
 command = ["typos", "--config", "{config:typos}", "--force-exclude", "--format", "brief", "--color", "never", "{files}"]
 fix_command = ["typos", "--config", "{config:typos}", "--force-exclude", "--write-changes", "--color", "never", "{files}"]
 fix_order = "codemod"
-inspection = ["spelling"]
+coverage = ["spelling"]
 exclude_setting = "tools.typos.exclude"
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*)$"}
 summary = "Finds misspelled words in code, comments, and documentation."

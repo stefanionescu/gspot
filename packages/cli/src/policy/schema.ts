@@ -189,7 +189,7 @@ const rulesSchema = z.strictObject({
 
 const editorSchema = z.strictObject({ vscode: flag.optional() });
 
-const inspectionSchema = z.strictObject({ strict: flag.optional() });
+const coverageSchema = z.strictObject({ strict: flag.optional() });
 
 const runnerSchema = z.strictObject({ tool: z.enum(['mise', 'npm', 'bun', 'pnpm', 'uv', 'none']).optional() });
 
@@ -221,6 +221,6 @@ export const policySchema = z.strictObject({
     ci: ciSchema.optional(),
     rules: rulesSchema.optional(),
     editor: editorSchema.optional(),
-    inspection: inspectionSchema.optional(),
+    coverage: coverageSchema.optional(),
     runner: runnerSchema.optional(),
 });

@@ -41,7 +41,7 @@ runs = "per-file-list"
 command = ["prettier", "--check", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 fix_command = ["prettier", "--write", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
 fix_order = "format"
-inspection = ["format"]
+coverage = ["format"]
 output = {format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", message = "This file is not formatted the way Prettier formats it."}
 tool_errors = "\\[error\\] (?:No parser|Cannot find|Invalid)"
 summary = "Checks that every file Prettier formats is already formatted that way."
@@ -54,7 +54,7 @@ stage = "commit"
 runs = "per-file-list"
 command = ["ec", "-no-color", "-disable-indent-size", "{files}"]
 tool = "ec"
-inspection = ["format"]
+coverage = ["format"]
 output = {format = "grouped", file_pattern = "^(?<file>[^\\s].*):$", pattern = "^\\s+(?<line>\\d+)(?:-\\d+)?: (?<message>.*)$"}
 summary = "Checks line endings, final newlines and trailing whitespace in every file against .editorconfig."
 why = "These rules cover the files no formatter touches, so a stray tab or missing newline never lands in a diff. Indentation is the formatters' job and is not checked here."

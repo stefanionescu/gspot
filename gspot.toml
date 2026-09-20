@@ -28,7 +28,7 @@ provider = "github"
 install = true
 directory = ".gspot/rules"
 
-[inspection]
+[coverage]
 strict = false
 
 [runner]

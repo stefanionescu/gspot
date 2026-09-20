@@ -47,7 +47,7 @@ const record: RunRecord = {
     baselines: [{ check: 'bash/shellcheck', rule: 'SC2154', count: 3, baseline: 5, held: true, paths: { 'a.sh': 3 } }],
     ignores: [{ check: 'bash/shellcheck', rule: 'SC2312', reason: 'why', matched: 1 }],
     skips: [],
-    inspection: { checked: 3, unchecked: 2 },
+    coverage: { checked: 3, unchecked: 2 },
     suppressions: {},
     unstaged: 0,
     narrowed: false,

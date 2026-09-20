@@ -129,6 +129,13 @@ installation ownership, and selected-settings vocabulary remain open. The affect
 emitter, doctor, output, planted init, and profile suites pass (66 tests, 231 assertions).
 Type checking, schema validation, and reference verification pass locally.
 
+Configuration, manifests, check definitions, and reports use `coverage`. A manifest table
+declares required check kinds by extension; each check lists the kinds it supplies. This
+field describes check coverage. Test coverage remains a separate metric. Strict enforcement
+and accurate coverage accounting remain open under their feature owners. Local verification
+passes 116 affected unit tests (557 assertions), seven planted profile and repository-check
+tests (40 assertions), TypeScript, schema validation, and all reference pages.
+
 **What is wrong.** The names guide endorsed a writing action called `didWrite` while rejecting
 `didRunFixer`. It prescribed `name` for a finding's check reference, although ignores and
 findings use `check`. The glossary retained runner surface, inspection, and project templates.

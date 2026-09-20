@@ -229,7 +229,7 @@
                 "additionalProperties": false
             }
         },
-        "inspection": {
+        "coverage": {
             "type": "object",
             "properties": {
                 "checked": {
@@ -290,7 +290,7 @@
         "baselines",
         "ignores",
         "skips",
-        "inspection",
+        "coverage",
         "suppressions",
         "unstaged",
         "narrowed",

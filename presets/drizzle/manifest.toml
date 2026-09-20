@@ -30,7 +30,7 @@ stage = "commit"
 engine = "integrity"
 analysis = "drizzle-relations"
 claims = {extensions = [".ts"]}
-inspection = ["structure"]
+coverage = ["structure"]
 summary = "Checks that every table with a reference has a relations entry."
 why = "The query builder joins through relations, so a reference without one works in SQL and is missing in code."
 help = "Add a relations call for the table."
@@ -43,7 +43,7 @@ engine = "integrity"
 analysis = "drizzle-migrations"
 tool = "drizzle-kit"
 claims = {extensions = [".ts", ".sql"]}
-inspection = ["consistency"]
+coverage = ["consistency"]
 summary = "Asks drizzle-kit to write migrations, and fails when it writes one."
 why = "A schema change with no migration works on the machine that pushed the schema and nowhere else."
 help = "Run drizzle-kit generate and commit the migration."

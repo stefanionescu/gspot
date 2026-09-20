@@ -27,7 +27,7 @@ export async function firstBaseline(session: Session, check: string): Promise<Co
     const planned = outcome.planned.filter((entry) => entry.check === check);
     const [first] = planned;
     if (first === undefined) return refusal(`No selected preset runs a check called \`${check}\`.`);
-    if (!isBaselineAllowed(first.spec.inspection))
+    if (!isBaselineAllowed(first.spec.coverage))
         return refusal(
             `The findings of ${check} enter no baseline: a fixer or an edit clears them. Run gspot check --fix.`,
         );

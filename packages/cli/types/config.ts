@@ -139,7 +139,7 @@ export type Policy = {
     ci: { provider: 'github' | 'none'; platforms: string[] };
     rules: { install: boolean; directory: string; project?: string; exclude: string[] };
     editor: { vscode: boolean };
-    inspection: { strict: boolean };
+    coverage: { strict: boolean };
     runner: { tool: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none' };
     scopeTables: Record<string, Partial<Policy>>;
 };

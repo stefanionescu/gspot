@@ -70,7 +70,7 @@ describe('parseManifest', () => {
     });
 });
 
-test('manifest advice uses help and rejects the old prose field', () => {
+test('manifest definitions use the canonical advice and coverage fields', () => {
     const source = `[preset]
 name = "fixture"
 kind = "tool"
@@ -83,8 +83,16 @@ command = ["tool", "check"]
 summary = "Checks a fixture source file."
 why = "The fixture must satisfy its contract."
 help = "Review the fixture source file."
+coverage = ["syntax"]
 `;
     expect(parseManifest(source, 'presets/fixture').preset.name).toBe('fixture');
+    expect(parseManifest(source, 'presets/fixture').checks[0]?.coverage).toEqual(['syntax']);
+    expect(() => parseManifest(source.replace('coverage =', 'inspection ='), 'presets/fixture')).toThrow('not valid');
+    const required = `${source}[coverage]\nfixture = ["syntax"]\n`;
+    expect(parseManifest(required, 'presets/fixture').coverage).toEqual({ fixture: ['syntax'] });
+    expect(() => parseManifest(required.replace('[coverage]', '[inspections]'), 'presets/fixture')).toThrow(
+        'not valid',
+    );
     expect(() => parseManifest(source.replace('name =', 'id ='), 'presets/fixture')).toThrow('not valid');
     expect(parseManifest(source, 'presets/fixture').checks[0]?.help).toBe('Review the fixture source file.');
     expect(() => parseManifest(source.replace('help =', 'fix ='), 'presets/fixture')).toThrow('not valid');

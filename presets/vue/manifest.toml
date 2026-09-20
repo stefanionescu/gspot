@@ -43,14 +43,14 @@ fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
 tool = "eslint"
 claims = {extensions = [".vue"]}
-inspection = ["style", "syntax", "structure"]
+coverage = ["style", "syntax", "structure"]
 output = {format = "eslint-json"}
 tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:"
 summary = "Runs ESLint with the Vue plugin over every .vue file. It reads the markup and the script together."
 why = "A component file is markup and code in one, and a plain JavaScript parser reads neither half of it."
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
-[inspections]
+[coverage]
 ".vue" = ["format", "syntax", "style", "structure", "spelling"]
 
 [rule_files]

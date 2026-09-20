@@ -101,7 +101,7 @@ const checkSchema = z.strictObject({
     output: outputSchema.optional(),
     cwd: z.enum(['root', 'scope']).optional(),
     exclude_setting: z.string().optional(),
-    inspection: stringList,
+    coverage: stringList,
     summary: sentence,
     why: sentence,
     help: sentence,
@@ -152,7 +152,7 @@ export const manifestSchema = z.strictObject({
     configs: z.array(configSchema).default([]),
     checks: z.array(checkSchema).default([]),
     settings: z.array(settingSchema).default([]),
-    inspections: stringListTable.default({}),
+    coverage: stringListTable.default({}),
     rule_files: stringListTable.default({}),
     required_rules: stringListTable.default({}),
 });

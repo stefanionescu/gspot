@@ -41,7 +41,7 @@ stage = "push"
 runs = "per-file-list"
 platform = ["macos", "linux"]
 command = ["semgrep", "scan", "--config", "{root}/.gspot/semgrep", "{each:--config:tools.semgrep.rules}", "--error", "--metrics", "off", "--disable-version-check", "--no-rewrite-rule-ids", "--quiet", "--vim", "{files}"]
-inspection = ["security"]
+coverage = ["security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+):[EWI]:(?<rule>[^:]+):(?<message>.*)$"}
 summary = "Runs the Semgrep rule packs of the selected presets, and the repository's own rules, over the changed files."
 why = "An injection or a logged secret reads like ordinary code, and a pattern rule finds it before a reviewer has to."
@@ -55,7 +55,7 @@ requires = "network"
 platform = ["macos", "linux"]
 command = ["semgrep", "scan", "{each:--config:tools.semgrep.registry}", "--error", "--metrics", "off", "--disable-version-check", "--quiet", "--vim", "{files}"]
 tool = "semgrep"
-inspection = ["security"]
+coverage = ["security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+):[EWI]:(?<rule>[^:]+):(?<message>.*)$"}
 summary = "Runs the public Semgrep registry packs named in tools.semgrep.registry, which the registry serves over the network."
 why = "The registry packs cover the common vulnerability classes, and their license keeps them out of this package."
@@ -68,7 +68,7 @@ runs = "once"
 engine = "integrity"
 analysis = "codeql"
 tool = "codeql"
-inspection = ["security"]
+coverage = ["security"]
 summary = "Builds a CodeQL database for every language in tools.codeql.languages and runs the security suite over it."
 why = "Data-flow analysis follows a value from a request to a query across files, which a pattern rule cannot."
 help = "Change the code the result names. Record a false positive under tools.codeql.false_positives with its rule, its paths, and a reason."

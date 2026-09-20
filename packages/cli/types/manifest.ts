@@ -108,7 +108,7 @@ export type CheckSpec = {
     output?: OutputFormat;
     cwd?: 'root' | 'scope';
     exclude_setting?: string;
-    inspection: string[];
+    coverage: string[];
     summary: string;
     why: string;
     help: string;
@@ -137,7 +137,7 @@ export type Manifest = {
     configs: ConfigurationTarget[];
     checks: CheckSpec[];
     settings: SettingSpec[];
-    inspections: Record<string, string[]>;
+    coverage: Record<string, string[]>;
     rule_files: Record<string, string[]>;
     required_rules: Record<string, string[]>;
     dir: string;

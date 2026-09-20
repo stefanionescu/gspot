@@ -114,7 +114,7 @@ export function proposeText(proposal: Proposal): string {
     document['hooks'] = { ...asTable(document['hooks']), tool: proposal.hooks };
     document['ci'] = { ...asTable(document['ci']), provider: proposal.ci };
     document['rules'] = { directory: '.gspot/rules', ...asTable(document['rules']), install: proposal.rules };
-    document['inspection'] = { strict: false, ...asTable(document['inspection']) };
+    document['coverage'] = { strict: false, ...asTable(document['coverage']) };
     document['runner'] = { ...asTable(document['runner']), tool: proposal.runner };
     return `${PREFACE}${bodyText(document)}`;
 }
