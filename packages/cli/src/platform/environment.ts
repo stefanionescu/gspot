@@ -56,11 +56,14 @@ export function acceptanceRepositories(): string[] {
 }
 
 /**
- * The whole environment with the undefined entries dropped, for spawning tools.
+ * The environment for spawning tools, with Windows names normalized to uppercase.
  * @returns the variables as strings
  */
 export function environmentVariables(): Record<string, string> {
     const variables: Record<string, string> = {};
-    for (const [key, value] of Object.entries(process.env)) if (value !== undefined) variables[key] = value;
+    for (const [key, value] of Object.entries(process.env)) {
+        const name = process.platform === 'win32' ? key.toUpperCase() : key;
+        if (value !== undefined) variables[name] = value;
+    }
     return variables;
 }

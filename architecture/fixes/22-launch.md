@@ -46,6 +46,15 @@ The planted test harness uses the native path delimiter and directory extraction
 building tool search paths. Its executable-resolution test exercises the resulting first
 search-path entry. This removes the hard-coded POSIX separators before Windows tests run.
 
+[Windows job 106023465084](https://github.com/stefanionescu/gspot/actions/runs/35490101242/job/106023465084)
+reaches the full suite at `20dff88ef5`. It passes 377 tests and fails 66. Most failures
+cannot find `bun` or `git` after a test replaces `PATH`. The environment snapshot now
+normalizes Windows variable names, so a native `Path` entry is preserved when callers
+prepend to `PATH`. A subprocess regression test checks inherited executable lookup.
+
+The encoded-checkout asset test passes on Windows. Two plugin export tests also fail and
+remain open pending their replacement under K-102.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.
