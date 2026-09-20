@@ -129,6 +129,11 @@ Cached check results are validated with the report schema. An absent entry permi
 run; malformed JSON, invalid result fields, and denied reads report the cache path and
 preserve the prior report. Three cache observation regressions cover these failures.
 
+Hook discovery, task validation, and hook removal share one Git configuration reader.
+It preserves value whitespace and distinguishes an unset key from a failed command.
+A real-repository regression discovers a configured dispatcher and then rejects malformed
+Git configuration instead of reporting no hooks.
+
 Other Git observations and takeover parsing remain open. Windows execution remains platform verification deferred.
 
 Staged and changed-file readers retain deleted paths and both rename paths. Failed diffs and

@@ -1,6 +1,6 @@
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import { join } from 'node:path';
-import { git } from '#cli/platform/spawn.ts';
+import { readGitSetting } from '#cli/platform/spawn.ts';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
 import type { ExistingTool, ExistingTooling, ManifestFacts, ScopeEntry, TrackedFile } from '#types/repository.ts';
@@ -63,7 +63,7 @@ function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTo
 }
 
 function hooksFound(root: string, paths: Set<string>): ExistingTooling['hooks'] {
-    const hooksPath = git(root, ['config', '--get', 'core.hooksPath'])?.trim() ?? '';
+    const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
     const isForeignPath = hooksPath !== '' && hooksPath !== '.gspot/hooks';
     const lefthook = ['lefthook.yml', '.lefthook.yml'].find((name) => paths.has(name));
     return [

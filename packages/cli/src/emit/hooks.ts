@@ -1,6 +1,6 @@
-// .gspot/hooks/*, core.hooksPath, the husky and lefthook forms.
-import { git } from '#cli/platform/spawn.ts';
 import { HOOK_HEADER } from '#config/markers.ts';
+// .gspot/hooks/*, core.hooksPath, the husky and lefthook forms.
+import { git, readGitSetting } from '#cli/platform/spawn.ts';
 import type { HookName, GeneratedFile, LefthookBlock } from '#types/emit.ts';
 
 const RUNTIME_LINE = '# Runtime: Bash 3.2+, macOS and Linux.';
@@ -94,7 +94,7 @@ export function installHooksPath(root: string): void {
  * @param root the repository root
  */
 export function removeHooksPath(root: string): void {
-    const current = git(root, ['config', '--get', 'core.hooksPath'])?.trim();
+    const current = readGitSetting(root, 'core.hooksPath');
     if (current === '.gspot/hooks') git(root, ['config', '--unset', 'core.hooksPath']);
 }
 

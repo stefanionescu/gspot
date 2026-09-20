@@ -1,10 +1,10 @@
 // The task runner holds the tasks gspot writes, and the hooks gspot installs are in place and call it.
 import { join } from 'node:path';
-import { git } from '#cli/platform/spawn.ts';
 import { parse as parseToml } from 'smol-toml';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
+import { readGitSetting } from '#cli/platform/spawn.ts';
 import { HOOK_FILES, REQUIRED_TASKS } from '#config/integrity.ts';
 
 const MISE_FILE = '.config/mise/conf.d/gspot.toml';
@@ -53,7 +53,7 @@ function hookFindings(input: EngineInput): Finding[] {
             `The ${name} hook is missing or does not call gspot; run gspot apply.`,
         ),
     );
-    const hooksPath = git(input.root, ['config', 'core.hooksPath'])?.trim();
+    const hooksPath = readGitSetting(input.root, 'core.hooksPath');
     const isPointed = hooksPath === HOOKS_DIRECTORY;
     return isPointed
         ? missing
