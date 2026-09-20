@@ -23,7 +23,7 @@ function input(root: string, files: TrackedFile[], policy: Partial<Policy>): Eng
         scopes: [],
     };
     const view: Partial<MergedView> = { limit: () => undefined, tool: () => ({}) };
-    const spec: Partial<CheckSpec> = { id: 'integrity/test' };
+    const spec: Partial<CheckSpec> = { name: 'integrity/test' };
     const partial: Partial<EngineInput> = {
         root,
         scope: '',

@@ -29,7 +29,7 @@ async function scanned(input: EngineInput, file: string, image: string): Promise
     const said = `${result.stdout}\n${result.stderr}`.split('\n').filter((line) => line.trim() !== '');
     return [
         {
-            check: input.spec.id,
+            check: input.spec.name,
             file,
             line: 1,
             rule: 'image',

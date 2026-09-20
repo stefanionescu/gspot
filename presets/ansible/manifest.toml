@@ -22,7 +22,7 @@ brew = "ansible-lint"
 windows = false
 
 [[checks]]
-id = "ansible/lint"
+name = "ansible/lint"
 stage = "commit"
 runs = "once"
 platform = ["macos", "linux"]

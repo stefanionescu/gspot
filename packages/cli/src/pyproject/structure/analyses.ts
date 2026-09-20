@@ -35,7 +35,7 @@ function analysis(read: StructureReader): (input: EngineInput) => Promise<Findin
         const problems = read({ modules, functions: modules.flatMap((module) => functionsOf(module)) }, input);
         for (const module of modules) module.tree.delete();
         return problems.map((entry) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: entry.file,
             line: entry.line,
             rule: entry.rule,

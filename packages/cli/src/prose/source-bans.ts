@@ -15,7 +15,7 @@ function lineFindings(input: EngineInput, path: string, lines: string[]): Findin
         if (MARKDOWN.has(extension) && VALE_DIRECTIVE.test(line.replaceAll(CODE_SPAN, '')))
             return [
                 {
-                    check: input.spec.id,
+                    check: input.spec.name,
                     file: path,
                     line: index + 1,
                     rule: 'vale-directive',
@@ -27,7 +27,7 @@ function lineFindings(input: EngineInput, path: string, lines: string[]): Findin
         if (SQL.has(extension) && line.includes(SQL_BLOCK_COMMENT))
             return [
                 {
-                    check: input.spec.id,
+                    check: input.spec.name,
                     file: path,
                     line: index + 1,
                     rule: 'block-comment',

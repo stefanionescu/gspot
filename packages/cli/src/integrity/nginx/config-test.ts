@@ -24,7 +24,7 @@ async function tested(input: EngineInput, path: string, work: string, image: str
     const said = result.stderr.split('\n').find((line) => line.includes('[emerg]')) ?? result.stderr.trim();
     const line = /:(?<line>\d+)\s*$/u.exec(said)?.groups?.['line'];
     return [
-        { check: input.spec.id, file: path, line: Number(line ?? 1), rule: 'nginx-t', message: said, fixable: false },
+        { check: input.spec.name, file: path, line: Number(line ?? 1), rule: 'nginx-t', message: said, fixable: false },
     ];
 }
 

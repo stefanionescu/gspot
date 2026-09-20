@@ -8,7 +8,7 @@ description = "The naming engine: banned terms, case rules, length and word ceil
 from_languages = true
 
 [[checks]]
-id = "naming/identifiers"
+name = "naming/identifiers"
 stage = "commit"
 engine = "naming"
 analysis = "identifiers"
@@ -19,7 +19,7 @@ why = "Slop announces itself in the name: `enhancedHandler`, `ensureConfigIfNeed
 help = "Rename after what the thing is or does. Allow one exact name with gspot allow naming <name> --reason, or adjust a ceiling with gspot set naming.<language>.max_words."
 
 [[checks]]
-id = "naming/paths"
+name = "naming/paths"
 stage = "commit"
 engine = "naming"
 analysis = "paths"
@@ -30,7 +30,7 @@ why = "A file named `enhanced-utils.ts` is a home for code nobody placed; the ca
 help = "Rename the file or folder, or add a path rule under [[naming.rules]] with a reason."
 
 [[checks]]
-id = "naming/policy-schema"
+name = "naming/policy-schema"
 stage = "commit"
 engine = "naming"
 analysis = "policy-schema"

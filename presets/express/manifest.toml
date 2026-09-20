@@ -25,7 +25,7 @@ template = "spectral.yaml.tmpl"
 target = ".gspot/spectral.yaml"
 
 [[checks]]
-id = "express/openapi-lint"
+name = "express/openapi-lint"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -38,7 +38,7 @@ why = "Clients are written from this document, so an operation with no id or an 
 help = "Change the document the way the rule says, or the code that writes it."
 
 [[checks]]
-id = "express/openapi-fresh"
+name = "express/openapi-fresh"
 stage = "push"
 runs = "once"
 engine = "integrity"
@@ -49,7 +49,7 @@ why = "A committed document that lags the routes describes a service that does n
 help = "Run the command and commit the document it writes."
 
 [[checks]]
-id = "express/routes-tested"
+name = "express/routes-tested"
 stage = "push"
 runs = "once"
 engine = "integrity"

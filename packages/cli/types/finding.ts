@@ -14,7 +14,7 @@ export type Finding = {
 export type CheckStatus = 'ok' | 'fail' | 'cache' | 'missing' | 'skipped' | 'error';
 
 export type CheckResult = {
-    id: string;
+    check: string;
     scope: string;
     status: CheckStatus;
     files: number;

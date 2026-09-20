@@ -43,7 +43,7 @@ describe('explain', () => {
             scope: 'api',
             nature: 'source',
             presets: expect.arrayContaining(['bash']),
-            checks: expect.arrayContaining([{ id: 'bash/shellcheck', stage: 'commit', preset: 'bash' }]),
+            checks: expect.arrayContaining([{ check: 'bash/shellcheck', stage: 'commit', preset: 'bash' }]),
             ignores: [
                 {
                     check: 'bash/shellcheck',

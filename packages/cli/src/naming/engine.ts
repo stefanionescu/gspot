@@ -40,7 +40,7 @@ function sourceFiles(input: EngineInput): { file: TrackedFile; language: string 
 function findingsFor(input: EngineInput, policy: EffectivePolicy, identifiers: Identifier[], path: string): Finding[] {
     const context: NamingContext = { policy, isReactFile: REACT_FILE.test(path), isTestFile: TEST_FILE.test(path) };
     return identifiers.flatMap((identifier) =>
-        nameProblems(identifier, context).map((problem) => nameFinding(input.spec.id, identifier, problem)),
+        nameProblems(identifier, context).map((problem) => nameFinding(input.spec.name, identifier, problem)),
     );
 }
 
@@ -97,7 +97,7 @@ async function schemaFindings(input: EngineInput, policy: EffectivePolicy): Prom
         .filter((entry) => !removable.has(entry.group))
         .map((entry) => `naming.remove_groups names "${entry.group}", which is not a removable group.`);
     return [...unused, ...dead, ...groups, ...caseNames].map((text) => ({
-        check: input.spec.id,
+        check: input.spec.name,
         file: 'gspot.toml',
         message: text,
         fixable: false,

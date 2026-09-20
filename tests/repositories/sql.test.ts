@@ -29,15 +29,19 @@ const MISSPELLED = ['TAB', 'EL'].join('');
 
 const CASES: PlantedCase[] = [
     {
-        id: 'sql/syntax',
+        check: 'sql/syntax',
         files: { 'db/broken.sql': `CREATE ${MISSPELLED} user_accounts (id UUID);\n` },
         expected: `syntax error at or near "${MISSPELLED}"`,
     },
-    { id: 'sql/block-comments', files: { 'db/commented.sql': '/* Old. */\nSELECT 1;\n' }, expected: 'A block comment' },
-    { id: 'sql/file-length', files: { 'db/long.sql': LONG }, expected: '401 code lines is over the ceiling of 400' },
-    { id: 'sql/sqlfluff', files: { 'db/lower.sql': 'select id from user_accounts;\n' }, expected: 'CP01' },
     {
-        id: 'naming/identifiers',
+        check: 'sql/block-comments',
+        files: { 'db/commented.sql': '/* Old. */\nSELECT 1;\n' },
+        expected: 'A block comment',
+    },
+    { check: 'sql/file-length', files: { 'db/long.sql': LONG }, expected: '401 code lines is over the ceiling of 400' },
+    { check: 'sql/sqlfluff', files: { 'db/lower.sql': 'select id from user_accounts;\n' }, expected: 'CP01' },
+    {
+        check: 'naming/identifiers',
         files: { 'db/camel.sql': 'CREATE TABLE audit_entries (\n    "createdAt" TIMESTAMPTZ NOT NULL\n);\n' },
         expected: 'sql column "createdAt"',
     },
@@ -55,15 +59,15 @@ describe('the sql preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
-            const checkIds = new Set(CASES.map((planted) => planted.id));
+            const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
                 const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
         },
         PLANTED_TIMEOUT_MS * 4,

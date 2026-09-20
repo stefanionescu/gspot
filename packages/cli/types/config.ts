@@ -105,7 +105,7 @@ export type DeclareEntry = {
 };
 
 export type RepositoryCheck = {
-    id: string;
+    name: string;
     command: string[];
     paths: string[];
     stage: 'commit' | 'push' | 'manual';

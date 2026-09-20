@@ -43,7 +43,7 @@ target = ".gspot/shellcheckrc"
 stub = {path = ".shellcheckrc", copy = true}
 
 [[checks]]
-id = "bash/syntax"
+name = "bash/syntax"
 stage = "commit"
 runs = "per-file-list"
 command = ["bash", "-n", "{file}"]
@@ -54,7 +54,7 @@ why = "A script with a syntax error stops at the broken line, sometimes after it
 help = "Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about."
 
 [[checks]]
-id = "bash/shellcheck"
+name = "bash/shellcheck"
 stage = "commit"
 runs = "per-file-list"
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
@@ -65,7 +65,7 @@ why = "ShellCheck catches the quoting, globbing and exit-status mistakes that ma
 help = "Read the SC code in the finding; gspot explain shellcheck/SC2086 links to its page. Turn one code off with gspot ignore bash/shellcheck --rule SC2086 --reason."
 
 [[checks]]
-id = "bash/shfmt"
+name = "bash/shfmt"
 stage = "commit"
 runs = "per-file-list"
 command = ["shfmt", "-d", "-i", "{indent}", "-ci", "-s", "{files}"]
@@ -78,7 +78,7 @@ why = "One formatter means diffs show what changed, not how someone's editor ind
 help = "Run gspot check --fix to format every script, or shfmt -w on one file."
 
 [[checks]]
-id = "structure/shell-interpreter"
+name = "structure/shell-interpreter"
 stage = "commit"
 engine = "structure"
 analysis = "shell-interpreter"
@@ -89,7 +89,7 @@ why = "A script that skips strict mode or hides its runtime fails on the machine
 help = "Open with the shebang, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail and shopt -s inherit_errexit first, and end an executable with a call to main."
 
 [[checks]]
-id = "structure/doc-comment"
+name = "structure/doc-comment"
 stage = "commit"
 engine = "structure"
 analysis = "doc-comment"
@@ -100,7 +100,7 @@ why = "A function with no summary makes the reader run it in their head; a vague
 help = "Write \"# name: what it does\" above the function; when it carries doc sections, keep Globals, Arguments, Outputs, Returns in that order."
 
 [[checks]]
-id = "structure/duplicate-functions"
+name = "structure/duplicate-functions"
 stage = "commit"
 engine = "structure"
 analysis = "duplicate-functions"
@@ -112,7 +112,7 @@ why = "Two copies drift apart; the fix lands in one and the bug stays in the oth
 help = "Keep one function and call it from both places."
 
 [[checks]]
-id = "structure/unused-functions"
+name = "structure/unused-functions"
 stage = "commit"
 engine = "structure"
 analysis = "unused-functions"
@@ -123,7 +123,7 @@ why = "Dead code is read and maintained for nobody."
 help = "Delete the function, or mark a hook entry point with lint:allow-unused-function <name> and say why."
 
 [[checks]]
-id = "structure/dead-parameters"
+name = "structure/dead-parameters"
 stage = "commit"
 engine = "structure"
 analysis = "dead-parameters"
@@ -134,7 +134,7 @@ why = "An argument the callee ignores is a promise the call site believes in."
 help = "Read the argument in the function, or drop it from every call."
 
 [[checks]]
-id = "structure/private-prefix"
+name = "structure/private-prefix"
 stage = "commit"
 engine = "structure"
 analysis = "private-prefix"
@@ -145,7 +145,7 @@ why = "The underscore tells a reader what the file publishes without reading eve
 help = "Rename the function with a leading underscore, or drop the underscore when another file calls it."
 
 [[checks]]
-id = "structure/private-before-public"
+name = "structure/private-before-public"
 stage = "commit"
 engine = "structure"
 analysis = "private-before-public"
@@ -156,7 +156,7 @@ why = "A file read top to bottom then explains its helpers before it uses them a
 help = "Move the private functions above the public ones and main to the end."
 
 [[checks]]
-id = "structure/trivial-function"
+name = "structure/trivial-function"
 stage = "commit"
 engine = "structure"
 analysis = "trivial-function"
@@ -168,7 +168,7 @@ why = "A name for two lines used once hides the two lines and adds a jump."
 help = "Inline the body at its one call, or mark the function with lint:allow-trivial-function <name> and say why."
 
 [[checks]]
-id = "structure/call-through"
+name = "structure/call-through"
 stage = "commit"
 engine = "structure"
 analysis = "call-through"
@@ -179,7 +179,7 @@ why = "A forwarding function is a second name for the command it wraps."
 help = "Call the command directly, or allow the function with a reason under structure.call_through_allowed."
 
 [[checks]]
-id = "structure/file-length"
+name = "structure/file-length"
 stage = "commit"
 engine = "structure"
 analysis = "file-length"
@@ -191,7 +191,7 @@ why = "A long script holds more than one job; split it by the job."
 help = "Split the script, or raise limits.bash.file_lines with a reason."
 
 [[checks]]
-id = "structure/function-length"
+name = "structure/function-length"
 stage = "commit"
 engine = "structure"
 analysis = "function-length"
@@ -203,7 +203,7 @@ why = "A long function does more than its name says."
 help = "Split the function, or raise limits.bash.function_lines with a reason."
 
 [[checks]]
-id = "structure/shell-script-policy"
+name = "structure/shell-script-policy"
 stage = "commit"
 engine = "structure"
 analysis = "shell-script-policy"
@@ -214,7 +214,7 @@ why = "A wrapper is a second entry point that drifts from the first; inline Node
 help = "Call the target script directly, delete the alias, and move the Node code into a .js file."
 
 [[checks]]
-id = "structure/shell-embeds"
+name = "structure/shell-embeds"
 stage = "commit"
 engine = "structure"
 analysis = "shell-embeds"
@@ -225,7 +225,7 @@ why = "Code inside a heredoc is checked by nothing."
 help = "Move the embedded code into its own file and run that."
 
 [[checks]]
-id = "structure/shell-ssh-blocks"
+name = "structure/shell-ssh-blocks"
 stage = "commit"
 engine = "structure"
 analysis = "shell-ssh-blocks"
@@ -236,7 +236,7 @@ why = "A remote command block with no name is the hardest thing in a script to t
 help = "Move the block into a named function and write \"# name - what it does\" above it."
 
 [[checks]]
-id = "structure/shell-config-defaults"
+name = "structure/shell-config-defaults"
 stage = "commit"
 engine = "structure"
 analysis = "shell-config-defaults"
@@ -247,7 +247,7 @@ why = "A default set in three places is three settings with one name."
 help = "Set the default in a configuration owner named under tools.bash.config_owners and read the variable everywhere else."
 
 [[checks]]
-id = "structure/shell-config-guards"
+name = "structure/shell-config-guards"
 stage = "commit"
 engine = "structure"
 analysis = "shell-config-guards"
@@ -258,7 +258,7 @@ why = "A configuration file sourced twice runs its side effects twice."
 help = "Open the owner with [[ -n ${_CFG_NAME_READY:-} ]] && return 0 and then readonly _CFG_NAME_READY=1."
 
 [[checks]]
-id = "structure/shell-boundaries"
+name = "structure/shell-boundaries"
 stage = "commit"
 engine = "structure"
 analysis = "shell-boundaries"
@@ -269,7 +269,7 @@ why = "A script that works only because another file was sourced first breaks wh
 help = "Add a Boundary line to the header comment, annotate every source with # shellcheck source=, and source the file a function comes from."
 
 [[checks]]
-id = "structure/env-access-owner"
+name = "structure/env-access-owner"
 stage = "commit"
 engine = "structure"
 analysis = "env-access-owner"
@@ -280,7 +280,7 @@ why = "When any script reads the environment, nobody can list what the program n
 help = "Read the variable in the owner named under architecture.roles.env and pass the value in."
 
 [[checks]]
-id = "structure/shell-branches"
+name = "structure/shell-branches"
 stage = "commit"
 engine = "structure"
 analysis = "shell-branches"
@@ -292,7 +292,7 @@ why = "A function with many branches is several functions with one name."
 help = "Split the function by branch, or raise limits.bash.function_branches with a reason."
 
 [[checks]]
-id = "structure/shell-nesting"
+name = "structure/shell-nesting"
 stage = "commit"
 engine = "structure"
 analysis = "shell-nesting"
@@ -304,7 +304,7 @@ why = "Deep nesting is the shape of code nobody can hold in their head."
 help = "Return early or split the inner block into a function, or raise limits.bash.function_nesting with a reason."
 
 [[checks]]
-id = "structure/shell-mutable-assignments"
+name = "structure/shell-mutable-assignments"
 stage = "commit"
 engine = "structure"
 analysis = "shell-mutable-assignments"
@@ -316,7 +316,7 @@ why = "A function that reassigns many variables is tracking state a reader canno
 help = "Split the function, or raise limits.bash.mutable_assignments with a reason."
 
 [[checks]]
-id = "structure/shell-safety"
+name = "structure/shell-safety"
 stage = "commit"
 engine = "structure"
 analysis = "shell-safety"

@@ -25,7 +25,7 @@ target = ".gspot/typos.toml"
 stub = {path = "typos.toml", copy = true}
 
 [[checks]]
-id = "spelling/typos"
+name = "spelling/typos"
 stage = "commit"
 runs = "per-file-list"
 command = ["typos", "--config", "{config:typos}", "--force-exclude", "--format", "brief", "--color", "never", "{files}"]

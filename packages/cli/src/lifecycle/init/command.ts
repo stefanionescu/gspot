@@ -207,7 +207,7 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
     const written = await write(root, options, prepared);
     note('run gspot check to see the gate; gspot doctor for what it could not check');
     const checks = written.first.record.checks.map((check) => ({
-        id: check.id,
+        check: check.check,
         status: check.status,
         findings: check.findings.length,
     }));

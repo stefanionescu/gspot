@@ -15,7 +15,7 @@ const TABLE = /export const (?<name>\w+) = \w*[tT]able\(/gu;
 const KIT_TIMEOUT_MS = 300_000;
 
 function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
-    return { check: input.spec.id, file, line, rule, message: text, fixable: false };
+    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
 }
 
 function sources(input: EngineInput): { path: string; text: string }[] {

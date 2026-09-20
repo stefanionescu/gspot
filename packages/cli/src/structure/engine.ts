@@ -73,7 +73,14 @@ function contextFor(input: EngineInput): StructureContext {
         bashText: (slot, otherwise) => (typeof bash[slot] === 'string' ? bash[slot] : otherwise),
         bashList: (slot) => (Array.isArray(bash[slot]) ? (bash[slot] as string[]) : []),
         bashSetting: (slot) => bash[slot],
-        report: (file, line, rule, text) => ({ check: input.spec.id, file, line, rule, message: text, fixable: false }),
+        report: (file, line, rule, text) => ({
+            check: input.spec.name,
+            file,
+            line,
+            rule,
+            message: text,
+            fixable: false,
+        }),
     };
 }
 

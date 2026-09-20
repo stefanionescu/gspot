@@ -29,7 +29,7 @@ function checksFor(
                 (check) =>
                     !check.claims || claimedByClaims(check.claims, selection.selected, [file], scopePath).length > 0,
             )
-            .map((check) => ({ id: check.id, stage: check.stage, preset: manifest.preset.name })),
+            .map((check) => ({ check: check.name, stage: check.stage, preset: manifest.preset.name })),
     );
 }
 
@@ -109,7 +109,7 @@ function pathText(report: PathExplanation): string {
         ...(report.presets.length === 0 ? [] : [`claimed by: ${report.presets.join(', ')}`]),
         ...section(
             'checks:',
-            report.checks.map((check) => `  ${check.id}  ${check.stage}  (${check.preset})`),
+            report.checks.map((check) => `  ${check.check}  ${check.stage}  (${check.preset})`),
         ),
         ...section(
             'baselines:',

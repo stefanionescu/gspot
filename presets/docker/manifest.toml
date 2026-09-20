@@ -50,7 +50,7 @@ target = ".gspot/trivy-findings.tpl"
 header = false
 
 [[checks]]
-id = "docker/hadolint"
+name = "docker/hadolint"
 stage = "commit"
 command = ["hadolint", "--no-color", "--config", "{config:hadolint}", "{files}"]
 claims = {paths = ["**/Dockerfile", "**/Dockerfile.*", "**/*.dockerfile"]}
@@ -61,7 +61,7 @@ why = "An unpinned base image or a cache left in a layer makes a build nobody ca
 help = "Change the instruction the way the rule says. Turn one rule off with gspot ignore docker/hadolint --rule <id> --reason."
 
 [[checks]]
-id = "docker/compose-config"
+name = "docker/compose-config"
 stage = "push"
 requires = "docker"
 tool = "docker"
@@ -74,7 +74,7 @@ why = "A Compose file that is valid YAML can still name a key Compose refuses, a
 help = "Read the message Compose prints; it names the key and the service."
 
 [[checks]]
-id = "docker/dockerignore"
+name = "docker/dockerignore"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -85,7 +85,7 @@ why = "Without it the whole folder goes to the daemon, and copying the folder pu
 help = "Add a .dockerignore beside the Dockerfile with the entries the message names."
 
 [[checks]]
-id = "docker/trivy-config"
+name = "docker/trivy-config"
 stage = "push"
 runs = "once"
 command = ["trivy", "config", "--quiet", "--config", "{config:trivy}", "--exit-code", "1", "--format", "template", "--template", "@{config:trivy-findings}", "{root}"]
@@ -97,7 +97,7 @@ why = "A container that runs as root turns any bug in the service into control o
 help = "Change the file the way the message says. Accept one id with a reason under tools.trivy.ignore."
 
 [[checks]]
-id = "docker/trivy-image"
+name = "docker/trivy-image"
 stage = "manual"
 runs = "once"
 requires = "docker"

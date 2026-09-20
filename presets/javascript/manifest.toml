@@ -136,7 +136,7 @@ target = ".gspot/knip.json"
 header = false
 
 [[checks]]
-id = "javascript/eslint"
+name = "javascript/eslint"
 stage = "commit"
 runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{suppressions}", "--format", "json", "{files}"]
@@ -154,7 +154,7 @@ why = "ESLint catches mistakes and slop the runtime accepts: unused code, unsafe
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[checks]]
-id = "javascript/checkjs"
+name = "javascript/checkjs"
 stage = "commit"
 runs = "once"
 command = ["tsc", "-p", "{config:jsconfig}", "--pretty", "false"]
@@ -167,7 +167,7 @@ why = "A JavaScript file with a wrong call crashes at run time; the checker sees
 help = "Add or fix the JSDoc type the checker names; gspot explain tsc/TS2345 links the error page."
 
 [[checks]]
-id = "javascript/knip"
+name = "javascript/knip"
 stage = "push"
 runs = "per-scope"
 command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "compact", "{workspace:--workspace}"]
@@ -255,7 +255,7 @@ summary = "Dependencies knip does not report as unused, each with a reason: pack
 ".jsx" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
 
 [[checks]]
-id = "integrity/required-rules"
+name = "integrity/required-rules"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"

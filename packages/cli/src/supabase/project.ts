@@ -57,5 +57,5 @@ export function supabaseFinding(
     rule: string,
     text: string,
 ): Finding {
-    return { check: input.spec.id, file: at.file, line: at.line, rule, message: text, fixable: false };
+    return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
 }

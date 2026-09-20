@@ -44,7 +44,7 @@ describe('the pytest preset', () => {
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             const untested: PlantedCase = {
-                id: 'pytest/coverage',
+                check: 'pytest/coverage',
                 files: {
                     'tests/test_math.py': TESTS.replace('    assert triple(2) == 6\n', () => '').replace(
                         ', triple',
@@ -93,7 +93,7 @@ describe('the fastapi preset', () => {
             const blocked = await runPlanted(
                 fixture.path,
                 {
-                    id: 'fastapi/no-blocking-io-in-async',
+                    check: 'fastapi/no-blocking-io-in-async',
                     files: { 'planted/health.py': ROUTE('    time.sleep(1)\n') },
                     expected: 'time.sleep blocks the event loop',
                 },

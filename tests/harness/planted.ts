@@ -149,7 +149,7 @@ export async function runPlanted(
 ): Promise<SpawnOutcome> {
     const restore = await plant(cwd, planted);
     try {
-        return await run(cwd, ['check', planted.id, '--no-cache'], environment);
+        return await run(cwd, ['check', planted.check, '--no-cache'], environment);
     } finally {
         await restore();
     }

@@ -83,7 +83,7 @@ describe('the react-native preset', () => {
             for (const [expected, path, text] of LINT) {
                 const outcome = await runPlanted(
                     fixture.path,
-                    { id: 'typescript/eslint', files: { [path]: text }, expected },
+                    { check: 'typescript/eslint', files: { [path]: text }, expected },
                     environment,
                 );
                 expect(outcome.stdout, `${expected}: ${outcome.stdout}${outcome.stderr}`).toContain(expected);

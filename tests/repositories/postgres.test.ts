@@ -35,33 +35,33 @@ const FROZEN_POLICY = '[tools.squawk]\nfrozen_through = "20240101000000"\n';
 
 const CASES: PlantedCase[] = [
     {
-        id: 'postgres/squawk',
+        check: 'postgres/squawk',
         files: { [later('add_size')]: 'ALTER TABLE public.teams ADD COLUMN size INT NOT NULL;\n' },
         expected: 'adding-required-field',
     },
     {
-        id: 'postgres/migration-order',
+        check: 'postgres/migration-order',
         files: { [`${FOLDER}/20240101000000_second.sql`]: 'SELECT 1;\n' },
         expected: 'already has the version 20240101000000',
     },
     {
-        id: 'postgres/migration-order',
+        check: 'postgres/migration-order',
         files: { [`${FOLDER}/20230101000000_early.sql`]: 'SELECT 1;\n' },
         expected: 'A new migration sorts before 20240101000000_create_teams.sql',
     },
     {
-        id: 'postgres/migrations-frozen',
+        check: 'postgres/migrations-frozen',
         files: { [FIRST]: `${TEAMS}SELECT 1;\n` },
         policy: FROZEN_POLICY,
         expected: 'This migration has run, and its text changed',
     },
     {
-        id: 'postgres/rls-present',
+        check: 'postgres/rls-present',
         files: { [later('create_notes')]: 'CREATE TABLE IF NOT EXISTS public.notes (id UUID PRIMARY KEY);\n' },
         expected: 'public.notes never enables row level security',
     },
     {
-        id: 'postgres/rls-present',
+        check: 'postgres/rls-present',
         files: {
             [later('create_notes')]:
                 'CREATE TABLE IF NOT EXISTS public.notes (id UUID PRIMARY KEY);\nALTER TABLE public.notes ENABLE ROW LEVEL SECURITY;\n',
@@ -69,12 +69,12 @@ const CASES: PlantedCase[] = [
         expected: 'no migration gives it a policy',
     },
     {
-        id: 'postgres/explicit-grants',
+        check: 'postgres/explicit-grants',
         files: { [later('grant_teams')]: 'GRANT ALL ON public.teams TO anon;\n' },
         expected: 'GRANT ALL gives every privilege',
     },
     {
-        id: 'postgres/security-definer-search-path',
+        check: 'postgres/security-definer-search-path',
         files: {
             [later('create_touch')]:
                 'CREATE FUNCTION public.touch() RETURNS void LANGUAGE sql SECURITY DEFINER AS $$ SELECT 1 $$;\n',
@@ -82,7 +82,7 @@ const CASES: PlantedCase[] = [
         expected: 'sets no search_path',
     },
     {
-        id: 'postgres/index-covers-foreign-key',
+        check: 'postgres/index-covers-foreign-key',
         files: {
             [later('create_members')]:
                 'CREATE TABLE IF NOT EXISTS private.members (\n    id UUID PRIMARY KEY,\n    team_id UUID REFERENCES public.teams (id)\n);\n',
@@ -90,7 +90,7 @@ const CASES: PlantedCase[] = [
         expected: 'private.members.team_id is a foreign key and no index leads with it',
     },
     {
-        id: 'postgres/migration-docs',
+        check: 'postgres/migration-docs',
         files: {},
         policy: '[tools.postgres]\nmigration_docs = true\n',
         expected: 'The second line is "-- Migration: 20240101000000_create_teams.sql"',
@@ -106,15 +106,15 @@ describe('the postgres preset', () => {
             const environment = { PATH: toolsPath(['squawk', 'sqlfluff', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             commitAll(fixture.path);
-            const checkIds = new Set(CASES.map((planted) => planted.id));
+            const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
                 const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
         },
         PLANTED_TIMEOUT_MS * 5,

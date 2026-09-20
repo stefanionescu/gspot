@@ -20,15 +20,15 @@ function refusal(text: string, error: string): CommandResult {
 // A run of one check, of one scope, or with a check skipped leaves the other counts unknown, and an unknown count is no zero.
 function completeChecks(session: Session, record: RunRecord): Set<string> {
     const ran = new Set(
-        record.checks.filter((check) => RAN.has(check.status)).map((check) => `${check.id}\n${check.scope}`),
+        record.checks.filter((check) => RAN.has(check.status)).map((check) => `${check.check}\n${check.scope}`),
     );
     const planned = planRun(session, { stage: 'all', skips: [], localSkips: [] }).filter(
         (check) => check.skip === undefined || !NEVER_RUNS.has(check.skip.source),
     );
     const missed = new Set(
-        planned.filter((check) => !ran.has(`${check.id}\n${check.scope.scope.path}`)).map((check) => check.id),
+        planned.filter((check) => !ran.has(`${check.check}\n${check.scope.scope.path}`)).map((check) => check.check),
     );
-    return new Set(planned.map((check) => check.id).filter((id) => !missed.has(id)));
+    return new Set(planned.map((check) => check.check).filter((id) => !missed.has(id)));
 }
 
 /**
@@ -47,8 +47,8 @@ export async function lowerFromLastRun(root: string, session: Session): Promise<
             'narrowed-last-run',
         );
     const existing = new Set([
-        ...everyManifest(session).flatMap((manifest) => manifest.checks.map((check) => check.id)),
-        ...session.policyFiles.policy.checks.map((check) => check.id),
+        ...everyManifest(session).flatMap((manifest) => manifest.checks.map((check) => check.name)),
+        ...session.policyFiles.policy.checks.map((check) => check.name),
     ]);
     const result = lowerBaselines(root, record.baselines, existing, completeChecks(session, record));
     const pruned = await pruneToolBaselines(session);

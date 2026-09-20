@@ -111,7 +111,7 @@ async function fileFindings(input: EngineInput, path: string): Promise<Finding[]
         const problem = await problemFor(input.root, parser, withoutPlaceholders(fence.body, parser));
         if (problem !== undefined)
             findings.push({
-                check: input.spec.id,
+                check: input.spec.name,
                 file: path,
                 line: fence.line,
                 rule: fence.language,

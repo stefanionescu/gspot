@@ -22,7 +22,7 @@ function input(root: string, checks: Partial<CheckSpec>[]): EngineInput {
         scopes: [selection as ScopeSelection],
         policyFiles: policyFiles as Session['policyFiles'],
     };
-    const spec: Partial<CheckSpec> = { id: 'integrity/baselines-current' };
+    const spec: Partial<CheckSpec> = { name: 'integrity/baselines-current' };
     const partial: Partial<EngineInput> = {
         root,
         scope: '',
@@ -50,7 +50,7 @@ describe('baselines-current', () => {
         });
         mkdirSync(join(fixture.path, 'src'), { recursive: true });
         const found = await baselinesCurrent(
-            input(fixture.path, [{ id: 'typescript/eslint', baseline_file: '.gspot/baselines/eslint.json' }]),
+            input(fixture.path, [{ name: 'typescript/eslint', baseline_file: '.gspot/baselines/eslint.json' }]),
         );
         expect(found.map((finding) => [finding.rule, finding.message.split(' ', 1)[0]])).toEqual([
             ['unknown-check', 'The'],

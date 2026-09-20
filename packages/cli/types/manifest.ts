@@ -85,7 +85,7 @@ export type ConfigurationTarget = {
 };
 
 export type CheckSpec = {
-    id: string;
+    name: string;
     stage: Stage;
     runs: 'per-file-list' | 'per-scope' | 'once';
     command?: string[];
@@ -150,7 +150,7 @@ export type ListingRow = {
     description: string;
     requires: string[];
     tools: string[];
-    checks: { id: string; stage: string }[];
+    checks: { check: string; stage: string }[];
     settings: string[];
     rules: string[];
     default: boolean;

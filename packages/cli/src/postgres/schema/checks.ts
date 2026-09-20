@@ -11,7 +11,7 @@ import type { SqlNode, SqlStatementView } from '#types/sql.ts';
 
 function finding(input: EngineInput, at: Declared, rule: string, text: string): Finding {
     return {
-        check: input.spec.id,
+        check: input.spec.name,
         file: at.path,
         ...positionAt(at.text, at.offset),
         rule,

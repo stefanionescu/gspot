@@ -14,7 +14,7 @@ export type BaselineFile = {
 };
 
 export type CacheKeyInput = {
-    id: string;
+    check: string;
     scope: string;
     toolVersion: string;
     configurationHash: string;
@@ -83,7 +83,7 @@ export type PlanOptions = {
 };
 
 export type PlannedCheck = {
-    id: string;
+    check: string;
     scope: ScopeSelection;
     spec: CheckSpec;
     manifest?: Manifest;
@@ -171,7 +171,7 @@ export type Registry = { url: string; npmrc: string; work: string; stop: () => v
 
 /** One planted defect: the files that hold it, the check that finds it, and what the check says. */
 export type PlantedCase = {
-    id: string;
+    check: string;
     files: Record<string, string>;
     expected: string;
     policy?: string;

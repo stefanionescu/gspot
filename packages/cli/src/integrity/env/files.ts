@@ -18,7 +18,7 @@ export function envFiles(input: EngineInput): Promise<Finding[]> {
             (path) => isEnvironmentFile(path) && !ENV_TEMPLATE_NAMES.includes(path.slice(path.lastIndexOf('/') + 1)),
         )
         .map((path) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: path,
             line: 1,
             rule: 'tracked-environment-file',

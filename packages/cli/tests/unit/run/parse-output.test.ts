@@ -11,7 +11,7 @@ describe('tool output across platforms', () => {
         await using fixture = await createFixture({ 'scripts/café build.sh': 'echo $1\n' });
         const spec = presetManifests()
             .get('bash')!
-            .checks.find((check) => check.id === 'bash/shellcheck')!;
+            .checks.find((check) => check.name === 'bash/shellcheck')!;
         const path = join('scripts', 'café build.sh');
         for (const ending of ['\n', '\r\n']) {
             const output = `${path}:1:6: note: Double quote to prevent globbing and word splitting. [SC2086]${ending}`;
@@ -26,7 +26,7 @@ describe('tool output across platforms', () => {
         await using fixture = await createFixture({ 'settings/feed.xml': '<feed><entry></feed>\n' });
         const spec = presetManifests()
             .get('config-files')!
-            .checks.find((check) => check.id === 'config-files/xml')!;
+            .checks.find((check) => check.name === 'config-files/xml')!;
         const findings = parseOutput(
             spec,
             '',
@@ -42,7 +42,7 @@ describe('tool output across platforms', () => {
         await using fixture = await createFixture({ 'settings/café.toml': 'a=1\n' });
         const spec = presetManifests()
             .get('config-files')!
-            .checks.find((check) => check.id === 'config-files/toml-format')!;
+            .checks.find((check) => check.name === 'config-files/toml-format')!;
         const path = join(fixture.path, 'settings', 'café.toml');
         const diff = `--- a/${path}\n+++ b/${path}\n@@ -1 +1 @@\n-a=1\n+a = 1\n`;
         const log = `ERROR taplo:format_files: the file is not properly formatted path="${path}"\n`;
@@ -62,7 +62,7 @@ describe('tool output across platforms', () => {
         await using fixture = await createFixture({ 'settings/café.toml': 'a=1\n' });
         const base = presetManifests()
             .get('config-files')!
-            .checks.find((check) => check.id === 'config-files/toml-format')!;
+            .checks.find((check) => check.name === 'config-files/toml-format')!;
         const spec: CheckSpec = { ...base, output: { format: 'grouped' } };
         const output = `${join(fixture.path, 'settings', 'café.toml')}:\r\n  1: Incorrect spacing\r\n`;
         const findings = parseOutput(spec, output, '', fixture.path);

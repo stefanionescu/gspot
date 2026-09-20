@@ -25,7 +25,7 @@ template = "squawk.toml.tmpl"
 target = ".gspot/squawk.toml"
 
 [[checks]]
-id = "postgres/squawk"
+name = "postgres/squawk"
 stage = "commit"
 command = ["squawk", "--config", "{config:squawk}", "--reporter", "json", "{files}"]
 inspection = ["security"]
@@ -35,7 +35,7 @@ why = "A migration that takes an exclusive lock on a large table stops the appli
 help = "Follow the help squawk prints for the rule. Turn one rule off with gspot ignore postgres/squawk --rule <name> --reason."
 
 [[checks]]
-id = "postgres/migration-order"
+name = "postgres/migration-order"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -46,7 +46,7 @@ why = "A migration that sorts before one already applied never runs on the datab
 help = "Rename the new migration with a version later than the newest committed one."
 
 [[checks]]
-id = "postgres/migrations-frozen"
+name = "postgres/migrations-frozen"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -57,7 +57,7 @@ why = "A migration that ran never runs again, so an edit to it changes new datab
 help = "Restore the file with git checkout, and write the change as a new migration."
 
 [[checks]]
-id = "postgres/rls-present"
+name = "postgres/rls-present"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -68,7 +68,7 @@ why = "A table in an exposed schema with no row security is readable and writabl
 help = "Enable row level security on the table, and add its policies in the same or a later migration."
 
 [[checks]]
-id = "postgres/explicit-grants"
+name = "postgres/explicit-grants"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -79,7 +79,7 @@ why = "Granting everything includes truncating the table, adding triggers, and e
 help = "Name the privileges the role needs, such as `SELECT` alone."
 
 [[checks]]
-id = "postgres/security-definer-search-path"
+name = "postgres/security-definer-search-path"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -90,7 +90,7 @@ why = "A definer function runs with its owner's rights, and a caller who control
 help = "Give the function an empty `search_path` in its definition, and qualify every name inside it."
 
 [[checks]]
-id = "postgres/index-covers-foreign-key"
+name = "postgres/index-covers-foreign-key"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -101,7 +101,7 @@ why = "Deleting a parent row scans the whole child table when the foreign key ha
 help = "Create an index that starts with the foreign key column."
 
 [[checks]]
-id = "postgres/migration-docs"
+name = "postgres/migration-docs"
 stage = "commit"
 runs = "once"
 engine = "integrity"

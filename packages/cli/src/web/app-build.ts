@@ -57,7 +57,7 @@ function typeFinding(input: EngineInput, line: string): Finding[] {
     if (groups === undefined) return [];
     return [
         {
-            check: input.spec.id,
+            check: input.spec.name,
             file: inScope(input, groups['file'] ?? ''),
             line: Number(groups['line']),
             column: Number(groups['column']),
@@ -98,7 +98,7 @@ export async function frameworkBuild(input: EngineInput): Promise<Finding[]> {
     const said = lastLines(`${result.stdout}${result.stderr}`);
     return [
         {
-            check: input.spec.id,
+            check: input.spec.name,
             file: inScope(input, 'package.json'),
             line: 1,
             rule: 'build',

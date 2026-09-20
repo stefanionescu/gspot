@@ -33,7 +33,7 @@ export function docsHeadings(input: EngineInput): Promise<Finding[]> {
                     if (text === undefined || !banned.has(text)) return [];
                     return [
                         {
-                            check: input.spec.id,
+                            check: input.spec.name,
                             file: file.path,
                             line: index + 1,
                             rule: 'banned-heading',

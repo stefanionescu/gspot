@@ -39,7 +39,7 @@ stub = {path = "tsconfig.json", merge = {extends = "{target}"}}
 per_scope = true
 
 [[checks]]
-id = "typescript/tsc"
+name = "typescript/tsc"
 stage = "commit"
 runs = "per-scope"
 cwd = "scope"
@@ -51,7 +51,7 @@ why = "A file that does not type-check can crash at run time in a way the editor
 help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
 
 [[checks]]
-id = "typescript/eslint"
+name = "typescript/eslint"
 stage = "commit"
 runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{suppressions}", "--format", "json", "{files}"]
@@ -69,7 +69,7 @@ why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsaf
 help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[checks]]
-id = "integrity/tsconfig-options"
+name = "integrity/tsconfig-options"
 stage = "commit"
 engine = "integrity"
 analysis = "tsconfig-options"

@@ -22,7 +22,7 @@ async function linted(input: EngineInput, folder: string, skipped: string[]): Pr
         const file = folder === '' ? (groups['file'] ?? '') : `${folder}/${groups['file'] ?? ''}`;
         return [
             {
-                check: input.spec.id,
+                check: input.spec.name,
                 file,
                 line: Number(groups['line']),
                 rule: groups['rule'] ?? 'ansible-lint',
@@ -46,7 +46,7 @@ export async function ansibleLint(input: EngineInput): Promise<Finding[]> {
         .map((file) => file.path)
         .filter((path) => path === PROJECT_FILE || path.endsWith(`/${PROJECT_FILE}`))
         .map((path) => (path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : ''));
-    const skipped = input.view.rulesOff(input.spec.id);
+    const skipped = input.view.rulesOff(input.spec.name);
     const findings: Finding[] = [];
     for (const folder of folders) findings.push(...(await linted(input, folder, skipped)));
     return findings;

@@ -11,7 +11,7 @@ const MISE_FILE = '.config/mise/conf.d/gspot.toml';
 const HOOKS_DIRECTORY = '.gspot/hooks';
 
 function finding(input: EngineInput, file: string, rule: string, text: string): Finding {
-    return { check: input.spec.id, file, line: 1, rule, message: text, fixable: false };
+    return { check: input.spec.name, file, line: 1, rule, message: text, fixable: false };
 }
 
 function taskNames(root: string, surface: string): { file: string; names: Set<string> } {

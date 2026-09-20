@@ -26,7 +26,7 @@ template = "sqlfluff.cfg.tmpl"
 target = ".gspot/sqlfluff.cfg"
 
 [[checks]]
-id = "sql/sqlfluff"
+name = "sql/sqlfluff"
 stage = "commit"
 command = ["sqlfluff", "lint", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "--format", "json", "{files}"]
 fix_command = ["sqlfluff", "fix", "--config", "{config:sqlfluff}", "--ignore-local-config", "--disable-progress-bar", "{files}"]
@@ -39,7 +39,7 @@ why = "SQL that reads one way in every file lets a reviewer look at what the sta
 help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule <code> --reason."
 
 [[checks]]
-id = "sql/syntax"
+name = "sql/syntax"
 stage = "commit"
 engine = "integrity"
 analysis = "sql-syntax"
@@ -50,7 +50,7 @@ why = "A migration that does not parse fails at deploy, halfway through a releas
 help = "Correct the statement at the line and column the message names."
 
 [[checks]]
-id = "sql/block-comments"
+name = "sql/block-comments"
 stage = "commit"
 engine = "integrity"
 analysis = "sql-block-comments"
@@ -60,7 +60,7 @@ why = "The prose and spelling checks read line comments, and a block comment hid
 help = "Rewrite the block as line comments that start with two dashes."
 
 [[checks]]
-id = "sql/file-length"
+name = "sql/file-length"
 stage = "commit"
 engine = "integrity"
 analysis = "sql-file-length"

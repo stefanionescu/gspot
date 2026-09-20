@@ -17,7 +17,7 @@ export function toRow(manifest: Manifest): ListingRow {
         description: manifest.preset.description,
         requires: manifest.preset.requires,
         tools: manifest.tools.map((tool) => (tool.version === undefined ? tool.name : `${tool.name} ${tool.version}`)),
-        checks: manifest.checks.map((check) => ({ id: check.id, stage: check.stage })),
+        checks: manifest.checks.map((check) => ({ check: check.name, stage: check.stage })),
         settings: manifest.settings.map((setting) => setting.name),
         rules: Object.values(manifest.rule_files).flat(),
         default: manifest.preset.default,
@@ -33,7 +33,7 @@ export function allChecks(): Map<string, { check: CheckSpec; preset: Manifest }>
     const checks = new Map<string, { check: CheckSpec; preset: Manifest }>();
     for (const manifest of presetManifests().values())
         for (const check of manifest.checks)
-            if (!checks.has(check.id)) checks.set(check.id, { check, preset: manifest });
+            if (!checks.has(check.name)) checks.set(check.name, { check, preset: manifest });
     return checks;
 }
 

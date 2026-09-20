@@ -111,7 +111,7 @@ export async function migrationDocs(input: EngineInput): Promise<Finding[]> {
     const migrations = await migrationsOf(input);
     return migrations.flatMap((migration) =>
         docProblems(migration, sections).map((problem) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: migration.path,
             line: problem.line,
             rule: problem.rule,

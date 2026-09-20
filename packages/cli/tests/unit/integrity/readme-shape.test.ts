@@ -20,7 +20,7 @@ function input(root: string, paths: string[], docs: Record<string, unknown> = {}
     const repository: Partial<Repository> = { files, scopes: [] };
     const partialSession: Partial<Session> = { repository: repository as Repository };
     const session = partialSession as Session;
-    const spec: Partial<CheckSpec> = { id: 'docs/readme-shape' };
+    const spec: Partial<CheckSpec> = { name: 'docs/readme-shape' };
     const partial: Partial<EngineInput> = { root, scope: '', spec: spec as CheckSpec, files, view, session };
     return partial as EngineInput;
 }

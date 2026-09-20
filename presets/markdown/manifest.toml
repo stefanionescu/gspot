@@ -27,7 +27,7 @@ target = ".gspot/markdownlint.jsonc"
 stub = {path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"extends\": \"./.gspot/markdownlint.jsonc\" },\n    \"globs\": [\"**/*.md\", \"**/*.mdx\", \"!.gspot/**\", \"!**/node_modules/**\", \"!**/dist/**\", \"!**/build/**\", \"!**/coverage/**\"]\n}\n"}
 
 [[checks]]
-id = "markdown/markdownlint"
+name = "markdown/markdownlint"
 stage = "commit"
 runs = "per-file-list"
 command = ["markdownlint-cli2", "--no-globs", "--config", "{config:markdownlint}", "{files}"]
@@ -40,7 +40,7 @@ why = "Markdown that lints the same everywhere renders the same everywhere."
 help = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."
 
 [[checks]]
-id = "markdown/prettier"
+name = "markdown/prettier"
 stage = "commit"
 reported_by = "formatting/prettier"
 inspection = ["format"]
@@ -49,7 +49,7 @@ why = "One formatter keeps a diff about the words, not the table padding."
 help = "Run gspot check --fix, or prettier --write on the file."
 
 [[checks]]
-id = "markdown/fences"
+name = "markdown/fences"
 stage = "commit"
 engine = "integrity"
 analysis = "fences"

@@ -78,7 +78,7 @@ export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
             throw new Error(`The jscpd command wrote no report: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
         const named = input.view.settings['limits.duplication.threshold_percent'];
         return cloneFindings(JSON.parse(readFileSync(path, 'utf8')) as CloneReport, {
-            check: input.spec.id,
+            check: input.spec.name,
             root: input.root,
             ceiling: typeof named === 'number' ? named : DEFAULT_CEILING,
             claimed: new Set(claimed),

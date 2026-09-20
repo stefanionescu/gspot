@@ -27,49 +27,49 @@ const MODULE = 'planted/math.py';
 
 const CASES: PlantedCase[] = [
     {
-        id: 'python/ruff',
+        check: 'python/ruff',
         files: {
             [MODULE]: `${CLEAN}\n\ndef run(code: str) -> object:\n    """Run code.\n\n    Args:\n        code: The code.\n\n    Returns:\n        What it gave.\n    """\n    return eval(code)\n`,
         },
         expected: 'S307',
     },
     {
-        id: 'python/ruff-format',
+        check: 'python/ruff-format',
         files: { [MODULE]: CLEAN.replace('return value * 2', () => 'return value*2') },
         expected: 'not formatted the way Ruff formats it',
     },
     {
-        id: 'python/basedpyright',
+        check: 'python/basedpyright',
         files: { [MODULE]: CLEAN.replace('return value * 2', () => 'return str(value)') },
         expected: 'reportReturnType',
     },
     {
-        id: 'python/pydoclint',
+        check: 'python/pydoclint',
         files: { [MODULE]: CLEAN.replace('        value: The number.\n', () => '        amount: The number.\n') },
         expected: 'DOC',
     },
     {
-        id: 'python/vulture',
+        check: 'python/vulture',
         files: { 'planted/unused.py': '"""A module that imports what it never uses."""\n\nimport colorsys\n' },
         expected: "unused import 'colorsys'",
     },
     {
-        id: 'python/pyproject',
+        check: 'python/pyproject',
         files: { 'pyproject.toml': PROJECT.replace('version = "1.0.0"', () => 'version = 7') },
         expected: 'pyproject.toml',
     },
     {
-        id: 'integrity/dependency-ownership',
+        check: 'integrity/dependency-ownership',
         files: { 'requirements.txt': 'requests==2.32.0\n' },
         expected: 'a second owner of the dependencies',
     },
     {
-        id: 'integrity/dependency-ownership',
+        check: 'integrity/dependency-ownership',
         files: { 'scripts/setup.sh': '#!/usr/bin/env bash\npip install requests\n' },
         expected: 'installs versions nobody reviewed',
     },
     {
-        id: 'integrity/typecheck-membership',
+        check: 'integrity/typecheck-membership',
         files: {},
         policy: '[[tools.basedpyright.exclude]]\npaths = ["planted/gone.py"]\nreason = "A file that needed another dependency set."\n',
         expected: 'matches no tracked file',
@@ -88,15 +88,19 @@ describe('the python preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
-            const checkIds = new Set([...CASES.map((planted) => planted.id), 'python/import-linter', 'python/deptry']);
+            const checkIds = new Set([
+                ...CASES.map((planted) => planted.check),
+                'python/import-linter',
+                'python/deptry',
+            ]);
             for (const id of checkIds) {
                 const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout + outcome.stderr, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout + outcome.stderr, planted.check).toContain(planted.expected);
             }
         },
         PLANTED_TIMEOUT_MS * 6,

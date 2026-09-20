@@ -35,7 +35,7 @@ const TRANSLATIONS = '[tools.next]\ntranslations = {directory = "messages", base
 
 const CASES: PlantedCase[] = [
     {
-        id: 'integrity/route-segments',
+        check: 'integrity/route-segments',
         files: {
             'app/route.ts':
                 '// Answers the same address as the page.\n\n/**\n * Answers a request.\n * @returns the answer\n */\nexport function GET(): Response {\n    return new Response("ok");\n}\n',
@@ -43,7 +43,7 @@ const CASES: PlantedCase[] = [
         expected: 'holds a page and a route handler',
     },
     {
-        id: 'integrity/next-config',
+        check: 'integrity/next-config',
         files: {
             'next.config.mjs':
                 '// The framework configuration.\nconst config = { eslint: { ignoreDuringBuilds: true } };\n\nexport default config;\n',
@@ -51,12 +51,12 @@ const CASES: PlantedCase[] = [
         expected: 'ignoreDuringBuilds lets a build pass',
     },
     {
-        id: 'integrity/dependency-alignment',
+        check: 'integrity/dependency-alignment',
         files: { 'package.json': manifest('18.3.1') },
         expected: 'react is 19.1.1 and react-dom is 18.3.1',
     },
     {
-        id: 'nextjs/typecheck',
+        check: 'nextjs/typecheck',
         files: {
             'app/count.ts':
                 '// A planted file.\n\n/** A number that holds text. */\nexport const count: number = "three";\n',
@@ -64,20 +64,20 @@ const CASES: PlantedCase[] = [
         expected: 'TS2322',
     },
     {
-        id: 'nextjs/build',
+        check: 'nextjs/build',
         files: { 'app/page.tsx': PAGE.replace('return "home";', 'return missing;') },
         // Turbopack refuses the linked node_modules folder of a planted repository, so the fixture builds with webpack.
         policy: '[tools.next]\nbuild_in_gate = true\nbuild_flags = ["--webpack"]\n',
         expected: 'next build failed',
     },
     {
-        id: 'integrity/locales',
+        check: 'integrity/locales',
         files: { 'messages/de.json': '{\n    "home": { "title": "Start" }\n}\n' },
         policy: TRANSLATIONS,
         expected: 'The key home.greeting of en has no message here',
     },
     {
-        id: 'integrity/locales',
+        check: 'integrity/locales',
         files: { 'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name" }\n}\n' },
         policy: TRANSLATIONS,
         expected: 'home.greeting: The message does not parse',
@@ -110,10 +110,10 @@ describe('the nextjs and i18n presets', () => {
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
                 const clean = await runPlanted(fixture.path, { ...planted, files: {} }, environment);
-                expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             const written = await Bun.file(join(fixture.path, '.gspot/eslint.config.mjs')).text();
             expect(written).toContain("nextPlugin.configs['core-web-vitals']");

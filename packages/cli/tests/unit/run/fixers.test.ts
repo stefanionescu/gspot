@@ -13,7 +13,7 @@ import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync
 const policy = `version = 1
 presets = []
 [[check]]
-id = "fixture/correction"
+name = "fixture/correction"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
 fix_order = "codemod"
 fix_command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 3'])}

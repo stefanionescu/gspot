@@ -9,7 +9,7 @@ const FROZEN_NONE = 'none';
 const FROZEN_ALL = 'all';
 
 function report(input: EngineInput, migration: Migration, rule: string, text: string): Finding {
-    return { check: input.spec.id, file: migration.path, line: 1, rule, message: text, fixable: false };
+    return { check: input.spec.name, file: migration.path, line: 1, rule, message: text, fixable: false };
 }
 
 function committedText(input: EngineInput, path: string): string | undefined {

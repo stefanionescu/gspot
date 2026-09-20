@@ -25,17 +25,17 @@ const WRANGLER =
 
 const CASES: PlantedCase[] = [
     {
-        id: 'cloudflare/wrangler-config',
+        check: 'cloudflare/wrangler-config',
         files: { 'wrangler.jsonc': '{\n    "name": "planted"\n}\n' },
         expected: 'pins no compatibility_date',
     },
     {
-        id: 'cloudflare/headers-syntax',
+        check: 'cloudflare/headers-syntax',
         files: { _headers: '    X-Frame-Options: DENY\n/*\n    Referrer-Policy no-referrer\n' },
         expected: 'This header sits under no path',
     },
     {
-        id: 'cloudflare/redirects-syntax',
+        check: 'cloudflare/redirects-syntax',
         files: { _redirects: '/old /new 999\n' },
         expected: 'Cloudflare knows no redirect status 999',
     },
@@ -55,14 +55,14 @@ describe('the cloudflare preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['typos', 'ec', 'ast-grep']) };
             await install(fixture.path, INIT, environment);
-            for (const id of [...CASES.map((planted) => planted.id), 'cloudflare/env-types-fresh']) {
+            for (const id of [...CASES.map((planted) => planted.check), 'cloudflare/env-types-fresh']) {
                 const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
         },
         PLANTED_TIMEOUT_MS * 4,

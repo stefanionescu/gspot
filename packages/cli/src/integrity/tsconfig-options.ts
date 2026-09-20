@@ -68,7 +68,7 @@ function missingOptions(input: EngineInput, path: string): Finding[] {
     return requiredFor(input)
         .filter((option) => options[option] !== true)
         .map((option) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: path,
             rule: option,
             message: `${option} is not on in this tsconfig.`,
@@ -93,7 +93,7 @@ export function tsconfigOptions(input: EngineInput): Promise<Finding[]> {
         if (path !== scopeTsconfig) return [];
         return [
             {
-                check: input.spec.id,
+                check: input.spec.name,
                 file: path,
                 message:
                     'This scope has no tsconfig.json; run gspot apply to write the stub that extends the shipped base.',

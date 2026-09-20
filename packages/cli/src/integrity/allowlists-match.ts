@@ -61,7 +61,7 @@ export function allowlistsMatch(input: EngineInput): Promise<Finding[]> {
     const findings = policyPatterns(input)
         .filter((entry) => !candidates.some(pathMatcher([entry.pattern])))
         .map((entry) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: POLICY_FILE,
             line: 1,
             rule: 'unmatched-pattern',

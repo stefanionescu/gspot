@@ -16,7 +16,7 @@ function setting(input: EngineInput, table: string, key: string): string {
 }
 
 function finding(input: EngineInput, at: { file: string; line: number }, rule: string, text: string): Finding {
-    return { check: input.spec.id, file: at.file, line: at.line, rule, message: text, fixable: false };
+    return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
 }
 
 /**

@@ -29,17 +29,17 @@ const LONG_FILE = Array.from({ length: 301 }, (_, index) => `VALUE_${String(inde
 
 const CASES: PlantedCase[] = [
     {
-        id: 'python/file-length',
+        check: 'python/file-length',
         files: { 'planted/big.py': module(`${LONG_FILE}\n`) },
         expected: 'code lines is over the ceiling of 300',
     },
     {
-        id: 'python/function-length',
+        check: 'python/function-length',
         files: { 'planted/long.py': module(`def long_one() -> None:\n    """Hold many steps."""\n${LONG_BODY}\n`) },
         expected: 'over the ceiling of 60',
     },
     {
-        id: 'python/trivial-function',
+        check: 'python/trivial-function',
         files: {
             'planted/tiny.py': module(
                 'def tiny(value: int) -> int:\n    """Add one to a number."""\n    return value + 1\n\n\ndef caller() -> int:\n    """Call the tiny one, then do more."""\n    first = tiny(1)\n    second = first * 2\n    return second - 1\n',
@@ -48,7 +48,7 @@ const CASES: PlantedCase[] = [
         expected: 'tiny holds 1 statements and one place calls it',
     },
     {
-        id: 'python/call-through',
+        check: 'python/call-through',
         files: {
             'planted/forward.py': module(
                 'def forward(left: int, right: int) -> int:\n    """Forward to the builtin."""\n    return max(left, right)\n',
@@ -57,7 +57,7 @@ const CASES: PlantedCase[] = [
         expected: 'forward passes its parameters straight to max',
     },
     {
-        id: 'python/placeholder-docstring',
+        check: 'python/placeholder-docstring',
         files: {
             'planted/empty.py': module(
                 'def load_orders() -> None:\n    """Load orders."""\n    first = 1\n    second = first\n    third = second\n    print(third)\n',
@@ -66,7 +66,7 @@ const CASES: PlantedCase[] = [
         expected: 'says nothing the name does not',
     },
     {
-        id: 'python/private-prefix',
+        check: 'python/private-prefix',
         files: {
             'planted/leaky.py': module(
                 'def shown() -> int:\n    """Give one."""\n    return 1\n\n\ndef hidden() -> int:\n    """Give two."""\n    return 2\n\n\n__all__ = ["shown"]\n',
@@ -75,7 +75,7 @@ const CASES: PlantedCase[] = [
         expected: 'hidden is not in __all__',
     },
     {
-        id: 'python/private-before-public',
+        check: 'python/private-before-public',
         files: {
             'planted/order.py': module(
                 'def shown() -> int:\n    """Give one."""\n    return _part()\n\n\ndef _part() -> int:\n    """Give one part."""\n    return 1\n',
@@ -84,7 +84,7 @@ const CASES: PlantedCase[] = [
         expected: '_part is private and sits below a public function',
     },
     {
-        id: 'python/exports-at-bottom',
+        check: 'python/exports-at-bottom',
         files: {
             'planted/top.py': module(
                 '__all__ = ["shown"]\n\n\ndef shown() -> int:\n    """Give one."""\n    return 1\n',
@@ -93,7 +93,7 @@ const CASES: PlantedCase[] = [
         expected: '__all__ is the last statement of the module',
     },
     {
-        id: 'python/no-lazy-exports',
+        check: 'python/no-lazy-exports',
         files: {
             'planted/lazy.py': module(
                 'def __getattr__(name: str) -> int:\n    """Make names appear."""\n    return len(name)\n',
@@ -102,13 +102,13 @@ const CASES: PlantedCase[] = [
         expected: 'makes names appear at run time',
     },
     {
-        id: 'python/package-exports',
+        check: 'python/package-exports',
         files: { 'planted/__init__.py': module('__all__ = ["a", "b", "c"]\n') },
         policy: '[structure.python]\nmax_package_exports = 2\n',
         expected: 'exports 3 names, over the ceiling of 2',
     },
     {
-        id: 'python/import-cycles',
+        check: 'python/import-cycles',
         files: {
             'planted/left.py': module('from planted import right\n\nVALUE = right\n'),
             'planted/right.py': module('from planted import left\n\nVALUE = left\n'),
@@ -116,7 +116,7 @@ const CASES: PlantedCase[] = [
         expected: 'planted.left -> planted.right -> planted.left',
     },
     {
-        id: 'python/no-singletons',
+        check: 'python/no-singletons',
         files: { 'planted/shared.py': module('class Store:\n    """Holds things."""\n\n\nstore = Store()\n') },
         expected: 'store is built when the module is imported',
     },
@@ -135,11 +135,11 @@ describe('the Python structure checks', () => {
             const environment = { PATH: toolsPath(['ruff', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
-                expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
         },
         PLANTED_TIMEOUT_MS * 8,

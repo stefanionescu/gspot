@@ -6,7 +6,7 @@ import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/ha
 
 const ENTRY = String.raw`
 [[check]]
-id = "notes/no-fixme"
+name = "notes/no-fixme"
 command = ["grep", "-n", "-H", "FIXME", "{files}"]
 paths = ["notes/**"]
 stage = "commit"
@@ -31,7 +31,7 @@ describe('a [[check]] entry', () => {
 presets = []
 
 [[check]]
-id = "notes/state"
+name = "notes/state"
 command = ${JSON.stringify(command)}
 paths = ["selected.txt"]
 stage = "commit"

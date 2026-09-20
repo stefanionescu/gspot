@@ -18,7 +18,7 @@ name = "plutil"
 provider = "host"
 
 [[checks]]
-id = "xcode/plist"
+name = "xcode/plist"
 stage = "commit"
 platform = ["macos"]
 tool = "plutil"
@@ -31,7 +31,7 @@ why = "A property list that does not parse stops the build at the signing step, 
 help = "Correct the file at the line plutil names."
 
 [[checks]]
-id = "xcode/xcconfig"
+name = "xcode/xcconfig"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -43,7 +43,7 @@ why = "Xcode ignores a line it cannot read, so a typo turns a setting off withou
 help = "Write the line as a name, an equals sign, and a value."
 
 [[checks]]
-id = "xcode/xcstrings"
+name = "xcode/xcstrings"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -55,7 +55,7 @@ why = "A string with no translation shows its source language in the middle of a
 help = "Add the translation, or mark the string as not translated in the catalog."
 
 [[checks]]
-id = "xcode/asset-catalogues"
+name = "xcode/asset-catalogues"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -67,7 +67,7 @@ why = "An image set with no image draws nothing at run time, and an asset nobody
 help = "Add the image, or delete the asset. Set tools.xcode.orphan_assets to false when assets are named at run time."
 
 [[checks]]
-id = "xcode/test-plan"
+name = "xcode/test-plan"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -78,7 +78,7 @@ why = "A test target outside every plan never runs in CI, and its tests rot whil
 help = "Add the target to a test plan, and point the scheme at the plan."
 
 [[checks]]
-id = "xcode/orphan-sources"
+name = "xcode/orphan-sources"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -90,7 +90,7 @@ why = "A Swift file in no target is never compiled, so it breaks without anyone 
 help = "Add the file to a target or delete it, and remove the reference to a file that is gone."
 
 [[checks]]
-id = "xcode/symlinks"
+name = "xcode/symlinks"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -101,7 +101,7 @@ why = "Xcode, git, and each lint tool follow a symlink their own way, so one fil
 help = "Replace the symlink with the folder it points at, or ignore the path with a reason."
 
 [[checks]]
-id = "xcode/entitlements-policy"
+name = "xcode/entitlements-policy"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -113,7 +113,7 @@ why = "An entitlement is a capability the system grants the app, and a new one d
 help = "Remove the entitlement, or add it to tools.xcode.allowed_entitlements."
 
 [[checks]]
-id = "xcode/ats"
+name = "xcode/ats"
 stage = "commit"
 runs = "once"
 engine = "integrity"

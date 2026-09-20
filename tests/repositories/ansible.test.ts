@@ -29,7 +29,7 @@ const SHELLED = play(
 );
 
 const CASES: PlantedCase[] = [
-    { id: 'ansible/lint', files: { 'deploy/site.yml': SHELLED }, expected: 'command-instead-of-module' },
+    { check: 'ansible/lint', files: { 'deploy/site.yml': SHELLED }, expected: 'command-instead-of-module' },
 ];
 
 describe('the ansible preset', () => {
@@ -52,7 +52,7 @@ describe('the ansible preset', () => {
                     expect(outcome.stdout).toMatch(/skipped\s+ansible\/lint\s+\(platform\)/u);
                     continue;
                 }
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout).toContain(planted.expected);
                 expect(outcome.stdout).toContain('deploy/site.yml:');
             }

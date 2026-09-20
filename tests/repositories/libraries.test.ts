@@ -58,7 +58,7 @@ const LINT: [string, string, string][] = [
 
 const CASES: PlantedCase[] = [
     {
-        id: 'trpc/router-boundaries',
+        check: 'trpc/router-boundaries',
         files: {
             'src/client/page.ts': head(
                 "import { appRouter } from '../server/router.ts';\n\n/** The router, pulled into client code. */\nexport const leaked = appRouter;\n",
@@ -67,7 +67,7 @@ const CASES: PlantedCase[] = [
         expected: 'is server code. Import its types with import type',
     },
     {
-        id: 'drizzle/relations-complete',
+        check: 'drizzle/relations-complete',
         files: {
             'src/tables.ts': head(
                 "import { pgTable, uuid } from 'drizzle-orm/pg-core';\n\n/** The teams. */\nexport const teams = pgTable('teams', { id: uuid('id').primaryKey() });\n\n/** The members. */\nexport const members = pgTable('members', { id: uuid('id').primaryKey(), teamId: uuid('team_id').references(() => teams.id) });\n",
@@ -98,17 +98,17 @@ describe('the library presets', () => {
             for (const [rule, path, text] of LINT) {
                 const outcome = await runPlanted(
                     fixture.path,
-                    { id: 'typescript/eslint', files: { [path]: text }, expected: rule },
+                    { check: 'typescript/eslint', files: { [path]: text }, expected: rule },
                     environment,
                 );
                 expect(outcome.stdout, `${rule}: ${outcome.stdout}${outcome.stderr}`).toContain(rule);
             }
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
-                expect(clean.code, planted.id).toBe(0);
+                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                expect(clean.code, planted.check).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             const migrations = await run(
                 fixture.path,

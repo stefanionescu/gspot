@@ -88,7 +88,7 @@ export function readmeShape(input: EngineInput): Promise<Finding[]> {
         .flatMap((file) =>
             shapeProblems(readFileSync(join(input.root, file.path), 'utf8'), threshold, roots.has(file.path)).map(
                 ([line, rule, text]) => ({
-                    check: input.spec.id,
+                    check: input.spec.name,
                     file: file.path,
                     line,
                     rule,

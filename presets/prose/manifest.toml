@@ -23,7 +23,7 @@ template = "vale.ini.tmpl"
 target = ".gspot/vale.ini"
 
 [[checks]]
-id = "prose/vale"
+name = "prose/vale"
 stage = "commit"
 engine = "prose"
 analysis = "vale"
@@ -33,7 +33,7 @@ why = "Prose that hedges, markets or wanders is read by everyone who reads the c
 help = "Rewrite the sentence the alert names, add a real name to prose.vocabulary, or turn one rule off with a reason under prose.disabled."
 
 [[checks]]
-id = "prose/source-bans"
+name = "prose/source-bans"
 stage = "commit"
 engine = "prose"
 analysis = "source-bans"
@@ -43,7 +43,7 @@ why = "A directive in the text turns a rule off for everyone silently; a block c
 help = "Delete the directive and change the text, or disable the rule with a reason; write SQL comments with two dashes."
 
 [[checks]]
-id = "prose/messages"
+name = "prose/messages"
 stage = "commit"
 reported_by = "typescript/eslint"
 inspection = ["prose"]
@@ -52,7 +52,7 @@ why = "A message is prose a person reads under stress; an interpolated identifie
 help = "Capitalize the message, move the value into its own field, and keep the log line constant."
 
 [[checks]]
-id = "prose/doc-tags"
+name = "prose/doc-tags"
 stage = "commit"
 reported_by = "typescript/eslint"
 inspection = ["prose"]

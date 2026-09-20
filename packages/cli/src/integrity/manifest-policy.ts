@@ -29,7 +29,7 @@ function rangeFindings(input: EngineInput, path: string, manifest: PackageManife
         Object.entries(manifest[table] ?? {})
             .filter(([, version]) => !EXACT_VERSION.test(version) && !NON_REGISTRY_VERSION.test(version))
             .map(([name, version]) => ({
-                check: input.spec.id,
+                check: input.spec.name,
                 file: path,
                 line: 1,
                 rule: 'version-range',
@@ -55,7 +55,7 @@ function installerFindings(input: EngineInput, manifests: Map<string, PackageMan
     const root = manifests.get(MANIFEST);
     const wanted = root?.packageManager;
     const report: Reporter = (file, rule, text) => ({
-        check: input.spec.id,
+        check: input.spec.name,
         file,
         line: 1,
         rule,
@@ -91,7 +91,7 @@ function lockfileFindings(input: EngineInput): Finding[] {
         .toArray()
         .slice(1)
         .map((path) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: path,
             line: 1,
             rule: 'foreign-lockfile',

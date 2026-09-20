@@ -94,7 +94,7 @@ describe('the vue and svelte presets', () => {
                 for (const [rule, text] of shape.cases) {
                     const outcome = await runPlanted(
                         fixture.path,
-                        { id: shape.check, files: { [shape.planted]: text }, expected: rule },
+                        { check: shape.check, files: { [shape.planted]: text }, expected: rule },
                         environment,
                     );
                     expect(outcome.code, `${rule}: ${outcome.stdout}${outcome.stderr}`).toBe(1);

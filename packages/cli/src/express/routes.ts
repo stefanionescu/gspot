@@ -33,7 +33,7 @@ export function routesTested(input: EngineInput): Promise<Finding[]> {
     );
     return Promise.resolve(
         untested.map((path) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: path,
             line: 1,
             rule: 'untested-route',

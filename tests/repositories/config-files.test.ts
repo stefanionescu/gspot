@@ -51,28 +51,32 @@ if (content.includes('actions/checkout@0000000000000000000000000000000000000000'
 
 const CASES: PlantedCase[] = [
     {
-        id: 'config-files/toml-format',
+        check: 'config-files/toml-format',
         files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
         expected: 'settings/layout.toml',
     },
     {
-        id: 'config-files/actions',
+        check: 'config-files/actions',
         files: { '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo "\${{ nothing.here }}"\n` },
         expected: 'broken.yml',
     },
     {
-        id: 'config-files/actions-security',
+        check: 'config-files/actions-security',
         files: {
             '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - uses: actions/checkout@v4\n            - run: echo "\${{ github.event.pull_request.title }}"\n`,
         },
         expected: 'unpinned.yml',
     },
     {
-        id: 'config-files/dotenv',
+        check: 'config-files/dotenv',
         files: { '.env.example': 'PORT=3000\nport=3000\nPORT=4000\n' },
         expected: '.env.example',
     },
-    { id: 'config-files/xml', files: { 'settings/feed.xml': '<feed><entry></feed>\n' }, expected: 'settings/feed.xml' },
+    {
+        check: 'config-files/xml',
+        files: { 'settings/feed.xml': '<feed><entry></feed>\n' },
+        expected: 'settings/feed.xml',
+    },
 ];
 
 describe('the config-files preset', () => {
@@ -166,18 +170,20 @@ process.exit(2);
             await run(fixture.path, [...INIT, '--hooks', 'none'], environment);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
-                expect(outcome.stdout, planted.id).toMatch(new RegExp(String.raw`^root\s+${planted.id}\s+fail\s`, 'u'));
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
+                expect(outcome.stdout, planted.check).toMatch(
+                    new RegExp(String.raw`^root\s+${planted.check}\s+fail\s`, 'u'),
+                );
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             const jsonCheck = await run(fixture.path, ['check', 'config-files/json'], environment);
             expect(jsonCheck.stdout).toContain('its findings come from');
             const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
             const record = JSON.parse(checked.stdout) as {
-                checks: { id: string }[];
+                checks: { check: string }[];
             };
-            expect(record.checks.map((check) => check.id)).not.toContain('config-files/schema');
-            expect(record.checks.map((check) => check.id)).toContain('config-files/toml');
+            expect(record.checks.map((check) => check.check)).not.toContain('config-files/schema');
+            expect(record.checks.map((check) => check.check)).toContain('config-files/toml');
         },
         PLANTED_TIMEOUT_MS * 2,
     );
@@ -192,7 +198,7 @@ process.exit(2);
             const outcome = await runPlanted(
                 fixture.path,
                 {
-                    id: 'config-files/plist',
+                    check: 'config-files/plist',
                     files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
                     expected: 'Info.plist',
                 },

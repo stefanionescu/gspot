@@ -11,13 +11,13 @@ import { assertPinMatches } from '#cli/run/version-pin.ts';
 import { appendEntry, removeEntries } from '#cli/policy/write.ts';
 import { commitPolicy, requireReason } from '#cli/policy/commit-policy.ts';
 
-function knownCheck(id: string): void {
-    if (allChecks().has(id)) {
+function knownCheck(checkName: string): void {
+    if (allChecks().has(checkName)) {
         return;
     }
 
     const known = allChecks().keys().toArray();
-    throw new PolicyError([messages.unknownCheck(id, nearMatches(id, known))]);
+    throw new PolicyError([messages.unknownCheck(checkName, nearMatches(checkName, known))]);
 }
 
 function quoted(paths: string[]): string {

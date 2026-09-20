@@ -66,9 +66,9 @@ describe('the security preset', () => {
             } else expect(own.stdout).toContain('planted-no-double');
             const checked = await run(fixture.path, ['check', '--at', 'push', '--json'], environment);
             const atPush = JSON.parse(checked.stdout) as {
-                checks: { id: string }[];
+                checks: { check: string }[];
             };
-            const ids = atPush.checks.map((check) => check.id);
+            const ids = atPush.checks.map((check) => check.check);
             expect(ids).toContain('security/semgrep');
             expect(ids).not.toContain('security/codeql');
             expect(ids).not.toContain('security/semgrep-registry');

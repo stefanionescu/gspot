@@ -24,7 +24,7 @@ export async function firstBaseline(session: Session, check: string): Promise<Co
         isDryRun: false,
         noCache: true,
     });
-    const planned = outcome.planned.filter((entry) => entry.id === check);
+    const planned = outcome.planned.filter((entry) => entry.check === check);
     const [first] = planned;
     if (first === undefined) return refusal(`No selected preset runs a check called \`${check}\`.`);
     if (!isBaselineAllowed(first.spec.inspection))
@@ -32,7 +32,7 @@ export async function firstBaseline(session: Session, check: string): Promise<Co
             `The findings of ${check} enter no baseline: a fixer or an edit clears them. Run gspot check --fix.`,
         );
     const broken = outcome.record.checks.find(
-        (entry) => entry.id === check && (entry.status === 'error' || entry.status === 'missing'),
+        (entry) => entry.check === check && (entry.status === 'error' || entry.status === 'missing'),
     );
     if (broken !== undefined)
         return refusal(

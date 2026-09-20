@@ -31,7 +31,7 @@ function sheetFindings(
     if (importers.length === 0) return [];
     const known = new Set(defined.flatMap((entry) => [entry, camel(entry)]));
     const read = new Set(importers.flatMap((file) => file.read));
-    const base = { check: input.spec.id, line: 1, fixable: false };
+    const base = { check: input.spec.name, line: 1, fixable: false };
     const unused = defined
         .filter((entry) => !read.has(entry) && !read.has(camel(entry)))
         .map((entry) => ({

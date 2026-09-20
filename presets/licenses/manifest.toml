@@ -18,7 +18,7 @@ npm = "license-checker-rseidelsohn"
 mise = "npm:license-checker-rseidelsohn"
 
 [[checks]]
-id = "licenses/npm"
+name = "licenses/npm"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"

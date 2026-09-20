@@ -4,6 +4,8 @@ import type { CacheKeyInput } from '#types/run.ts';
 import type { CheckResult } from '#types/finding.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
+const CACHE_FORMAT = 2;
+
 function cacheDir(root: string): string {
     return join(root, '.gspot', 'cache');
 }
@@ -19,13 +21,13 @@ export function textHash(text: string): string {
 
 /**
  * The cache key for one check run.
- * @param input the check id, scope, tool version, configuration hash and file hashes
+ * @param input the check name, scope, tool version, configuration hash and file hashes
  * @returns the key
  */
 export function cacheKey(input: CacheKeyInput): string {
     const files = input.files.map((file) => `${file.path}:${file.hash}`).join('\n');
     return textHash(
-        `${input.id}\n${input.scope}\n${input.toolVersion}\n${input.configurationHash}\n${input.extra ?? ''}\n${files}`,
+        `${String(CACHE_FORMAT)}\n${input.check}\n${input.scope}\n${input.toolVersion}\n${input.configurationHash}\n${input.extra ?? ''}\n${files}`,
     );
 }
 

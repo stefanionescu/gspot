@@ -42,7 +42,7 @@ function diagnostics(input: EngineInput, output: string, levels: Set<string>, na
         const { rule, text } = ruleOf(groups['text'] ?? '', named);
         return [
             {
-                check: input.spec.id,
+                check: input.spec.name,
                 file: relative(input.root, groups['file'] ?? ''),
                 line: Number(groups['line']),
                 column: Number(groups['column']),
@@ -102,7 +102,7 @@ export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
         .split('\n')
         .filter((line) => line.includes('error'))
         .slice(-1);
-    return [{ check: input.spec.id, file: '', line: 1, rule: 'build', message: last.trim(), fixable: false }];
+    return [{ check: input.spec.name, file: '', line: 1, rule: 'build', message: last.trim(), fixable: false }];
 }
 
 /**

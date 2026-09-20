@@ -28,7 +28,7 @@ function knownPaths(input: EngineInput): Set<string> {
         for (let depth = 1; depth < segments.length; depth += 1) known.add(segments.slice(0, depth).join('/'));
     }
     // A check id is written like a path, and a document that names supabase/config means the check, not a file.
-    for (const manifest of input.session.manifests.values()) for (const check of manifest.checks) known.add(check.id);
+    for (const manifest of input.session.manifests.values()) for (const check of manifest.checks) known.add(check.name);
     return known;
 }
 
@@ -123,7 +123,7 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
     const paths = pathTokens(line)
         .filter((token) => isMissing(token, index))
         .map((token) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file,
             line: number,
             rule: 'missing-path',
@@ -134,7 +134,7 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
         .matchAll(RUN_TOKEN)
         .filter((match) => !index.tasks.has(match.groups?.['task'] ?? ''))
         .map((match) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file,
             line: number,
             rule: 'missing-task',

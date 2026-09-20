@@ -31,7 +31,7 @@ target = ".gspot/html-validate-built.json"
 header = false
 
 [[checks]]
-id = "html/html-validate"
+name = "html/html-validate"
 stage = "commit"
 command = ["html-validate", "--config", "{config:html-validate-templates}", "--formatter", "json", "{files}"]
 inspection = ["syntax", "style", "accessibility"]
@@ -41,7 +41,7 @@ why = "A browser repairs broken markup in its own way, and a screen reader reads
 help = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/html-validate --rule <name> --reason."
 
 [[checks]]
-id = "html/scripts"
+name = "html/scripts"
 stage = "commit"
 engine = "integrity"
 analysis = "html-scripts"
@@ -51,7 +51,7 @@ why = "A content security policy that allows inline script allows an injected on
 help = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
 
 [[checks]]
-id = "html/copy"
+name = "html/copy"
 stage = "commit"
 engine = "integrity"
 analysis = "html-copy"

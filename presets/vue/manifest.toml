@@ -32,7 +32,7 @@ target = ".gspot/eslint.config.mjs"
 fragment = true
 
 [[checks]]
-id = "vue/eslint"
+name = "vue/eslint"
 stage = "commit"
 runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{suppressions}", "--format", "json", "{files}"]

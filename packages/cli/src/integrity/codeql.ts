@@ -87,7 +87,7 @@ export async function codeql(input: EngineInput): Promise<Finding[]> {
     try {
         for (const language of languages) {
             const log = await scanned(input, language, suite, work);
-            findings.push(...sarifFindings(log, input.spec.id, accepted));
+            findings.push(...sarifFindings(log, input.spec.name, accepted));
         }
     } finally {
         rmSync(work, { recursive: true, force: true });

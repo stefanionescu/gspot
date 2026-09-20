@@ -60,11 +60,11 @@ function baselineHash(session: Session, planned: PlannedCheck): string {
 function keyFor(session: Session, planned: PlannedCheck, config: string): string | undefined {
     // Repository paths select a check, but do not declare everything its command reads.
     if (planned.manifest === undefined) return undefined;
-    if (NEVER_CACHED.has(planned.id) || planned.spec.requires !== undefined) return undefined;
+    if (NEVER_CACHED.has(planned.check) || planned.spec.requires !== undefined) return undefined;
     if (planned.spec.runs !== 'per-file-list' && planned.files.length === 0) return undefined;
     const files = planned.files.map((file) => ({ path: file.path, hash: fileHash(session.root, file.path) }));
     return cacheKey({
-        id: planned.id,
+        check: planned.check,
         scope: planned.scope.scope.path,
         toolVersion: toolVersionOf(session, planned),
         configurationHash: config,
@@ -77,7 +77,7 @@ function cachedResult(root: string, key: string, planned: PlannedCheck): CheckRe
     const cached = readCached(root, key);
     if (!cached) return undefined;
     const status = cached.status === 'ok' ? 'cache' : cached.status;
-    return { ...cached, status, id: planned.id, scope: planned.scope.scope.path };
+    return { ...cached, status, check: planned.check, scope: planned.scope.scope.path };
 }
 
 function freshResult(session: Session, planned: PlannedCheck, staged: Set<string> | undefined): Promise<CheckResult> {
@@ -101,7 +101,7 @@ async function runOne(
     staged?: Set<string>,
 ): Promise<CheckResult> {
     const base: CheckResult = {
-        id: planned.id,
+        check: planned.check,
         scope: planned.scope.scope.path,
         status: 'ok',
         files: planned.files.length,
@@ -169,7 +169,7 @@ function withoutIgnored(
     const inline = applyInlineIgnores(root, sifted.result.findings);
     const ignored = applyIgnores(
         inline,
-        filtering.ignores.filter((entry) => entry.check === sifted.check.id),
+        filtering.ignores.filter((entry) => entry.check === sifted.check.check),
     );
     mergeUses(uses, ignored.uses);
     return ignored.kept;
@@ -178,12 +178,12 @@ function withoutIgnored(
 // A baseline holds the count of a rule over the whole repository, so the findings of every scope are counted together.
 // Counted scope by scope, each scope grows up to the whole count and the gate still passes.
 function heldByCheck(ran: Sifted[], filtering: FilterInputs): Map<string, ReturnType<typeof applyBaselines>> {
-    const ids = new Set(ran.map((entry) => entry.check.id));
+    const ids = new Set(ran.map((entry) => entry.check.check));
     return new Map(
         ids.values().map((id): [string, ReturnType<typeof applyBaselines>] => [
             id,
             applyBaselines(
-                ran.filter((entry) => entry.check.id === id).flatMap((entry) => entry.remaining),
+                ran.filter((entry) => entry.check.check === id).flatMap((entry) => entry.remaining),
                 filtering.baselines.filter((baseline) => baseline.check === id),
                 filtering.staged,
             ),
@@ -206,7 +206,7 @@ function filterAll(
     for (const entry of ran) entry.remaining = withoutIgnored(root, entry, filtering, uses);
     const held = heldByCheck(ran, filtering);
     for (const { check, result, remaining } of ran) {
-        const kept = new Set(held.get(check.id)?.kept);
+        const kept = new Set(held.get(check.check)?.kept);
         result.findings = remaining.filter((finding) => kept.has(finding));
         result.baselined = remaining.length - result.findings.length;
         if (result.findings.length > 0) result.status = 'fail';
@@ -214,7 +214,7 @@ function filterAll(
     }
     for (const { check, result } of paired)
         if (FAILED_STATUSES.has(result.status))
-            result.reproduce = reproduceLine(result.id, result.scope, check.spec.stage);
+            result.reproduce = reproduceLine(result.check, result.scope, check.spec.stage);
     return held
         .values()
         .flatMap((outcome) => outcome.verdicts)
@@ -226,11 +226,11 @@ function isActive(check: PlannedCheck): boolean {
 }
 
 function skipRows(planned: PlannedCheck[]): RunRecord['skips'] {
-    return planned.flatMap((check) => (check.skip ? [{ check: check.id, source: check.skip.source }] : []));
+    return planned.flatMap((check) => (check.skip ? [{ check: check.check, source: check.skip.source }] : []));
 }
 
 function failedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
-    const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.id);
+    const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.check);
     const corrections = (fixes?.results ?? []).flatMap((result) => (result.status === 'failed' ? [result.check] : []));
     return [...new Set([...checks, ...corrections])];
 }

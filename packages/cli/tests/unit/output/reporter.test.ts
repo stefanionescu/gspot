@@ -11,7 +11,7 @@ const record: RunRecord = {
     root: '/r',
     checks: [
         {
-            id: 'bash/shellcheck',
+            check: 'bash/shellcheck',
             scope: '',
             status: 'fail',
             files: 3,
@@ -31,9 +31,9 @@ const record: RunRecord = {
                 },
             ],
         },
-        { id: 'bash/shfmt', scope: '', status: 'ok', files: 3, duration: 20, baselined: 0, findings: [] },
+        { check: 'bash/shfmt', scope: '', status: 'ok', files: 3, duration: 20, baselined: 0, findings: [] },
         {
-            id: 'formatting/prettier',
+            check: 'formatting/prettier',
             scope: 'api',
             status: 'missing',
             files: 1,

@@ -20,7 +20,7 @@ target = ".gspot/jscpd.json"
 header = false
 
 [[checks]]
-id = "duplication/jscpd"
+name = "duplication/jscpd"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"

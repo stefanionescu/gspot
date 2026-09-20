@@ -91,7 +91,7 @@ async function fileFindings(input: EngineInput, file: TrackedFile, language: str
     if (tree === null) return [];
     try {
         return problemsOf(tree.rootNode).map((problem) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: file.path,
             line: problem.line,
             rule: 'logic-in-config',

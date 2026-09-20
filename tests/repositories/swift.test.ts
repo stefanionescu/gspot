@@ -42,28 +42,32 @@ const reader = (name: string): string =>
     `import Foundation\n\n/// Reads one variable.\nfunc ${name}() -> String? {\n    ProcessInfo.processInfo.environment["HOME"]\n}\n`;
 
 const CASES: PlantedCase[] = [
-    { id: 'swift/swiftlint', files: { 'Sources/App/Cast.swift': CAST }, expected: 'force_cast' },
-    { id: 'swift/swiftformat', files: { 'Sources/App/Greeting.swift': SPACED }, expected: 'consecutiveSpaces' },
+    { check: 'swift/swiftlint', files: { 'Sources/App/Cast.swift': CAST }, expected: 'force_cast' },
+    { check: 'swift/swiftformat', files: { 'Sources/App/Greeting.swift': SPACED }, expected: 'consecutiveSpaces' },
     {
-        id: 'naming/identifiers',
+        check: 'naming/identifiers',
         files: { 'Sources/App/Greeting.swift': SNAKE },
         expected: 'swift function "make_greeting"',
     },
-    { id: 'swift/call-through', files: { 'Sources/App/Welcome.swift': FORWARD }, expected: 'straight to greeting' },
-    { id: 'swift/trivial-function', files: { 'Sources/App/Pair.swift': TINY }, expected: 'doubled holds 1 statement' },
-    { id: 'swift/duplicate-functions', files: { 'Sources/App/Mix.swift': COPIES }, expected: 'have the same body' },
+    { check: 'swift/call-through', files: { 'Sources/App/Welcome.swift': FORWARD }, expected: 'straight to greeting' },
     {
-        id: 'swift/private-before-public',
+        check: 'swift/trivial-function',
+        files: { 'Sources/App/Pair.swift': TINY },
+        expected: 'doubled holds 1 statement',
+    },
+    { check: 'swift/duplicate-functions', files: { 'Sources/App/Mix.swift': COPIES }, expected: 'have the same body' },
+    {
+        check: 'swift/private-before-public',
         files: { 'Sources/App/Limits.swift': BELOW },
         expected: 'localLimit is private',
     },
     {
-        id: 'swift/env-access-owner',
+        check: 'swift/env-access-owner',
         files: { 'Sources/App/Home.swift': reader('homeFolder'), 'Sources/App/Shell.swift': reader('shellFolder') },
         expected: '2 files read the process environment',
     },
     {
-        id: 'swift/env-access-owner',
+        check: 'swift/env-access-owner',
         files: { 'Sources/App/Home.swift': reader('homeFolder') },
         policy: '[architecture]\nroles = { env = "Sources/App/Environment.swift" }\n',
         expected: 'outside the environment owner',
@@ -105,33 +109,33 @@ describe('the swift preset', () => {
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
-                expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                if (process.platform === 'win32' && planted.id === 'swift/swiftlint') {
+                if (process.platform === 'win32' && planted.check === 'swift/swiftlint') {
                     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
                     expect(outcome.stdout).toContain('swiftlint has no Windows build');
                     continue;
                 }
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
-                expect(outcome.stdout, planted.id).toContain('Sources/App/');
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
+                expect(outcome.stdout, planted.check).toContain('Sources/App/');
             }
             // A switch is one statement and eleven lines, and a negated call says more than the call: neither is a finding.
             const quiet: PlantedCase[] = [
-                { id: 'swift/trivial-function', files: { 'Sources/App/Label.swift': SWITCHED }, expected: '' },
-                { id: 'swift/call-through', files: { 'Sources/App/Fresh.swift': NEGATED }, expected: '' },
+                { check: 'swift/trivial-function', files: { 'Sources/App/Label.swift': SWITCHED }, expected: '' },
+                { check: 'swift/call-through', files: { 'Sources/App/Fresh.swift': NEGATED }, expected: '' },
             ];
             for (const planted of quiet) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(0);
-                expect(outcome.stdout, planted.id).toContain('ok');
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(0);
+                expect(outcome.stdout, planted.check).toContain('ok');
             }
             const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
-                checks: { id: string }[];
+                checks: { check: string }[];
             };
-            const ids = atCommit.checks.map((check) => check.id);
+            const ids = atCommit.checks.map((check) => check.check);
             expect(ids).not.toContain('swift/build');
             expect(ids).not.toContain('swift/swiftlint-analyze');
             expect(ids).not.toContain('swift/periphery');
@@ -173,7 +177,7 @@ describe('the swift preset inside a scope', () => {
             }
             const outcome = await runPlanted(
                 fixture.path,
-                { id: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST }, expected: 'force_cast' },
+                { check: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST }, expected: 'force_cast' },
                 environment,
             );
             if (process.platform === 'win32') {
@@ -194,12 +198,12 @@ const LIBRARY =
     '/// Builds the greeting for a person.\npublic func greeting(for name: String) -> String {\n    "hello \\(name)"\n}\n';
 const BUILD_CASES: PlantedCase[] = [
     {
-        id: 'swift/build',
+        check: 'swift/build',
         files: { 'Sources/App/Count.swift': '/// A number that holds text.\npublic let count: Int = "three"\n' },
         expected: "cannot convert value of type 'String'",
     },
     {
-        id: 'swift/swiftlint-analyze',
+        check: 'swift/swiftlint-analyze',
         files: {
             'Sources/App/Pair.swift':
                 'import Foundation\n\n/// The size of a pair.\npublic func pairSize(of count: Int) -> Int {\n    count * 2\n}\n',
@@ -207,7 +211,7 @@ const BUILD_CASES: PlantedCase[] = [
         expected: 'unused_import',
     },
     {
-        id: 'swift/periphery',
+        check: 'swift/periphery',
         files: {
             'Sources/App/Pair.swift':
                 '/// The size of a pair.\npublic func pairSize(of count: Int) -> Int {\n    count * 2\n}\n\nprivate func neverCalled() -> Int {\n    count(of: 3)\n}\n\nprivate func count(of size: Int) -> Int {\n    size\n}\n',
@@ -229,17 +233,17 @@ describe('the swift preset over a package', () => {
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'periphery', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const planted of BUILD_CASES) {
-                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
-                expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 if (process.platform !== 'darwin') {
                     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
                     expect(outcome.stdout).toContain('runs on macos only');
                     continue;
                 }
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
-                expect(outcome.stdout, planted.id).toContain('Sources/App/');
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
+                expect(outcome.stdout, planted.check).toContain('Sources/App/');
             }
         },
         PLANTED_TIMEOUT_MS * 10,

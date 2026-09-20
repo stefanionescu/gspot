@@ -13,7 +13,7 @@ paths = ["**/__Snapshots__/**"]
 natures = ["source", "binary"]
 
 [[checks]]
-id = "xctest/disabled"
+name = "xctest/disabled"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -25,7 +25,7 @@ why = "A test turned off with no reason stays off, because nobody knows when it 
 help = "Say why the test is off and what turns it back on, or delete the test."
 
 [[checks]]
-id = "xctest/no-sleep"
+name = "xctest/no-sleep"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -37,7 +37,7 @@ why = "A sleep makes a test slow when it passes and flaky when the machine is sl
 help = "Wait on an expectation or a confirmation, or poll a condition with a timeout."
 
 [[checks]]
-id = "xctest/recording"
+name = "xctest/recording"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -49,7 +49,7 @@ why = "A recording test writes a new reference and passes, so it approves whatev
 help = "Take the recording flag out, and commit the references it wrote after looking at them."
 
 [[checks]]
-id = "xctest/reference-images"
+name = "xctest/reference-images"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -60,7 +60,7 @@ why = "References of a deleted test stay in the repository, and every clone pays
 help = "Delete the references of the test that is gone, or rename the folder after the test file."
 
 [[checks]]
-id = "xctest/coverage"
+name = "xctest/coverage"
 stage = "push"
 runs = "per-scope"
 requires = "build"

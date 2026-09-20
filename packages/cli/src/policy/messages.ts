@@ -244,14 +244,14 @@ export function versionMismatch(pinned: string, running: string): string {
 }
 
 /**
- * A check id nothing ships.
- * @param id the id as written
+ * A check name nothing ships.
+ * @param checkName the name as written
  * @param near the closest ids that exist
  * @returns the message
  */
-export function unknownCheck(id: string, near: string[]): string {
+export function unknownCheck(checkName: string, near: string[]): string {
     const hint = near.length > 0 ? ` Did you mean ${list(near)}?` : '';
-    return `There is no check called \`${id}\`.${hint}`;
+    return `There is no check called \`${checkName}\`.${hint}`;
 }
 
 /**
@@ -275,12 +275,12 @@ export function versionUnsupported(version: number): string {
 
 /**
  * A [[check]] entry missing one of its fields.
- * @param id the check id
+ * @param checkName the check name
  * @param field the missing field
  * @returns the message
  */
-export function checkEntryIncomplete(id: string, field: string): string {
-    return `The [[check]] entry \`${id}\` needs \`${field}\`. A check has an id, a command, paths and a stage.`;
+export function checkEntryIncomplete(checkName: string, field: string): string {
+    return `The [[check]] entry \`${checkName}\` needs \`${field}\`. A check has a name, a command, paths and a stage.`;
 }
 
 /**

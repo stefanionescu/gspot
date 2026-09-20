@@ -74,7 +74,7 @@ export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
     if (build.isBuilt) return [];
     return [
         {
-            check: input.spec.id,
+            check: input.spec.name,
             file: '',
             line: 1,
             rule: 'build',
@@ -103,7 +103,7 @@ export async function buildReproducible(input: EngineInput): Promise<Finding[]> 
             (path) => before.get(path) !== after.get(path),
         );
         return differences.slice(0, SHOWN_DIFFERENCES).map((path) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: path,
             line: 1,
             rule: 'not-reproducible',

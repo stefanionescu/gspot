@@ -24,7 +24,7 @@ version = "1.3.4"
 npm = "@vitest/eslint-plugin"
 
 [[checks]]
-id = "vitest/coverage"
+name = "vitest/coverage"
 stage = "push"
 runs = "per-scope"
 cwd = "scope"

@@ -63,7 +63,7 @@ function commandPage(command: Command): string {
 }
 
 function checkRow(check: CheckSpec): string[] {
-    return [`[\`${check.id}\`](/reference/rules/${check.id}/)`, check.stage, cell(check.summary)];
+    return [`[\`${check.name}\`](/reference/rules/${check.name}/)`, check.stage, cell(check.summary)];
 }
 
 function presetPage(manifest: Manifest): string {
@@ -101,12 +101,12 @@ function presetPage(manifest: Manifest): string {
 function rulePage(check: CheckSpec, preset: Manifest): string {
     const tool = check.tool ?? check.command?.[0];
     const lines = [
-        frontMatter(check.id, check.summary),
+        frontMatter(check.name, check.summary),
         `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Where it runs\n\n`,
         `- Preset: [the ${preset.preset.name} preset](/reference/presets/${preset.preset.name}/)\n- Stage: ${check.stage}\n`,
         tool === undefined ? '' : `- Tool: ${tool}\n`,
         check.engine === undefined ? '' : `- Engine: ${check.engine}\n`,
-        `\nTurn it off for a path with a reason: \`gspot ignore ${check.id} --paths <glob> --reason "<why>"\`.\n`,
+        `\nTurn it off for a path with a reason: \`gspot ignore ${check.name} --paths <glob> --reason "<why>"\`.\n`,
     ];
     return lines.join('');
 }
@@ -181,7 +181,7 @@ function pages(): Map<string, string> {
         .toSorted((a, b) => a.preset.name.localeCompare(b.preset.name));
     for (const manifest of manifests) out.set(`presets/${manifest.preset.name}.md`, presetPage(manifest));
     const checks = allChecks();
-    for (const { check, preset } of checks.values()) out.set(`rules/${check.id}.md`, rulePage(check, preset));
+    for (const { check, preset } of checks.values()) out.set(`rules/${check.name}.md`, rulePage(check, preset));
     out.set('settings.md', settingsPage(manifests));
     out.set('engines.md', enginesPage(checks));
     out.set('decisions.md', decisionsPage());

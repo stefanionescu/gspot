@@ -27,7 +27,7 @@ function presetHolder(raw: TomlTable, scope: string | undefined): TomlTable {
 // The checks a new preset brings, and the checks it changes: a preset that adds a fragment to a configuration
 // changes what every check that reads that configuration finds.
 function arrivedChecks(added: Manifest[], manifests: Map<string, Manifest>): Set<string> {
-    const own = added.flatMap((manifest) => manifest.checks.map((check) => check.id));
+    const own = added.flatMap((manifest) => manifest.checks.map((check) => check.name));
     const fragments = new Set(
         added.flatMap((manifest) =>
             manifest.configs
@@ -39,7 +39,7 @@ function arrivedChecks(added: Manifest[], manifests: Map<string, Manifest>): Set
         .values()
         .flatMap((manifest) => manifest.checks)
         .filter((check) => fragments.values().some((name) => (check.command ?? []).includes(`{config:${name}}`)))
-        .map((check) => check.id);
+        .map((check) => check.name);
     return new Set([...own, ...readers]);
 }
 

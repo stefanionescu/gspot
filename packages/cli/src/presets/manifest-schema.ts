@@ -78,7 +78,7 @@ const sentence = z.string().min(SENTENCE_MIN);
 const stringListTable = z.record(z.string(), z.array(z.string()));
 
 const checkSchema = z.strictObject({
-    id: z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/),
+    name: z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/),
     stage: z.enum(['commit', 'push', 'manual', 'message']),
     runs: z.enum(['per-file-list', 'per-scope', 'once']).default('per-file-list'),
     command: z.array(z.string()).optional(),

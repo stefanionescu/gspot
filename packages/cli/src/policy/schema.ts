@@ -152,7 +152,7 @@ const checkOutput = z.strictObject({
 
 const checkSchema = z
     .strictObject({
-        id: text,
+        name: text,
         command: textListNonEmpty,
         paths: textListNonEmpty,
         stage: z.enum(['commit', 'push', 'manual']),

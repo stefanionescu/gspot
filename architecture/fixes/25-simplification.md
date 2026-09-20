@@ -110,7 +110,18 @@ Preset definitions use `name` throughout their schema, manifests, selection, det
 generated-output consumers. Preset listing rows use `name`, while takeover-plan rows refer
 to a `preset`. The old manifest `id` field is rejected. The affected unit and planted init,
 profile, and explanation suites pass (85 tests, 306 assertions), together with type checking
-and all 272 reference-page comparisons. Check-definition and result identity remain open.
+and all 272 reference-page comparisons.
+
+Check definitions use `name`; planned checks, results, listings, and path explanations
+refer to checks through `check`. Repository configuration and report schemas reject the
+removed `id` fields. SARIF retains its external `ruleId` contract. Cache keys include a
+format version so records from the removed result contract cannot be reused. Parameter
+vocabulary and coverage naming remain open.
+
+**Local verification, September 20, 2026.** Identity migration passes 113 affected unit tests
+with 541 assertions and six planted repository-check and explanation tests with 27 assertions.
+Type checking, schema validation, and all 272 reference-page comparisons pass. Windows
+execution remains deferred.
 
 **What is wrong.** The names guide endorsed a writing action called `didWrite` while rejecting
 `didRunFixer`. It prescribed `name` for a finding's check reference, although ignores and

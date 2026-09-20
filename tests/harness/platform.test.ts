@@ -60,7 +60,7 @@ describe('the planted command deadline', () => {
                 runPlanted(
                     fixture.path,
                     {
-                        id: 'postgres/squawk',
+                        check: 'postgres/squawk',
                         files: { 'source.sql': 'bad sql', 'new.sql': 'bad sql' },
                         removed: ['removed.sql'],
                         policy: '# planted policy',

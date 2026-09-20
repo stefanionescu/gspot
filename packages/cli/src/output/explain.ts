@@ -59,8 +59,8 @@ function isSelected(session: Session, presetName: string): boolean {
     return session.scopes.some((scope) => scope.selected.some((manifest) => manifest.preset.name === presetName));
 }
 
-function checkExplanation(session: Session | undefined, id: string): Explanation | undefined {
-    const found = allChecks().get(id);
+function checkExplanation(session: Session | undefined, checkName: string): Explanation | undefined {
+    const found = allChecks().get(checkName);
     if (!found) return undefined;
     const { check, preset } = found;
     const toolPrefix = `tools.${toolOf(check) ?? '~'}.`;
@@ -69,15 +69,15 @@ function checkExplanation(session: Session | undefined, id: string): Explanation
         .map((setting) => setting.name);
     const rules = Object.values(preset.rule_files).flat();
     const lines = [
-        `${id}  (${preset.preset.name} preset, ${check.stage} stage)`,
+        `${checkName}  (${preset.preset.name} preset, ${check.stage} stage)`,
         '',
         `What it looks for: ${check.summary}`,
         `Why it matters: ${check.why}`,
         `What to do: ${check.help}`,
         '',
-        `Turn it off for some paths: gspot ignore ${id} --paths "<glob>" --reason "..."`,
+        `Turn it off for some paths: gspot ignore ${checkName} --paths "<glob>" --reason "..."`,
     ];
-    if (check.command) lines.push(`Turn one of its rules off: gspot ignore ${id} --rule <rule> --reason "..."`);
+    if (check.command) lines.push(`Turn one of its rules off: gspot ignore ${checkName} --rule <rule> --reason "..."`);
     if (settings.length > 0) lines.push(`Settings that change it: ${settings.join(', ')} (gspot set <key> <value>)`);
     if (rules.length > 0) lines.push(`Rule files that state it: ${rules.join(', ')}`);
     if (session)
@@ -89,9 +89,9 @@ function checkExplanation(session: Session | undefined, id: string): Explanation
     const { stage, summary, why, help } = check;
     return {
         kind: 'check',
-        subject: id,
+        subject: checkName,
         text: `${lines.join('\n')}\n`,
-        data: { id, preset: preset.preset.name, stage, summary, why, help, settings, rules },
+        data: { check: checkName, preset: preset.preset.name, stage, summary, why, help, settings, rules },
     };
 }
 
@@ -109,23 +109,23 @@ function toolSummary(session: Session | undefined, tool: string, rule: string): 
 function toolRuleExplanation(session: Session | undefined, tool: string, rule: string): Explanation | undefined {
     const check = allChecks()
         .values()
-        .find(({ check: spec }) => toolOf(spec) === tool || spec.id.endsWith(`/${tool}`))?.check;
+        .find(({ check: spec }) => toolOf(spec) === tool || spec.name.endsWith(`/${tool}`))?.check;
     if (!check) return undefined;
     const summary = toolSummary(session, tool, rule);
     const lines = [
-        `${tool}/${rule}  (run by ${check.id})`,
+        `${tool}/${rule}  (run by ${check.name})`,
         '',
         summary === undefined ? `The tool's documentation has the page for ${rule}.` : `The tool says: ${summary}`,
         '',
-        `Turn it off everywhere: gspot ignore ${check.id} --rule ${rule} --reason "..."`,
-        `Turn it off for some paths: gspot ignore ${check.id} --rule ${rule} --paths "<glob>" --reason "..."`,
+        `Turn it off everywhere: gspot ignore ${check.name} --rule ${rule} --reason "..."`,
+        `Turn it off for some paths: gspot ignore ${check.name} --rule ${rule} --paths "<glob>" --reason "..."`,
         `Change its options: gspot set tools.${tool}.rules.${rule} <options> --reason "..."`,
     ];
     return {
         kind: 'tool-rule',
         subject: `${tool}/${rule}`,
         text: `${lines.join('\n')}\n`,
-        data: { tool, rule, check: check.id, summary: summary ?? null },
+        data: { tool, rule, check: check.name, summary: summary ?? null },
     };
 }
 
@@ -137,14 +137,17 @@ function stageLines(row: ListingRow): string[] {
     return STAGES.flatMap((stage) =>
         listLine(
             `Checks at ${stage}`,
-            row.checks.filter((check) => check.stage === stage).map((check) => check.id),
+            row.checks.filter((check) => check.stage === stage).map((check) => check.check),
         ),
     );
 }
 
-function presetExplanation(id: string): Explanation | { error: string } {
-    const manifest = presetManifests().get(id);
-    if (!manifest) return { error: messages.unknownPreset(id, nearMatches(id, presetManifests().keys().toArray())) };
+function presetExplanation(presetName: string): Explanation | { error: string } {
+    const manifest = presetManifests().get(presetName);
+    if (!manifest)
+        return {
+            error: messages.unknownPreset(presetName, nearMatches(presetName, presetManifests().keys().toArray())),
+        };
     const row = toRow(manifest);
     const { detect, claims } = manifest;
     const lines = [
@@ -165,7 +168,7 @@ function presetExplanation(id: string): Explanation | { error: string } {
         ...listLine('Settings', row.settings),
         ...listLine('Rule files', row.rules),
     ];
-    return { kind: 'preset', subject: id, text: `${lines.join('\n')}\n`, data: row };
+    return { kind: 'preset', subject: presetName, text: `${lines.join('\n')}\n`, data: row };
 }
 
 function changeLine(spec: SettingSpec, key: string): string {
@@ -229,7 +232,7 @@ function explainDotted(session: Session | undefined, subject: string): Explanati
 /**
  * Explains whatever the argument names, or returns the near matches.
  * @param session the session, or undefined outside a repository
- * @param subject a check id, a tool/rule pair, a preset id, a setting key, or a file path
+ * @param subject a check name, a tool/rule pair, a preset name, a setting key, or a file path
  * @returns the explanation, or an error naming the closest matches
  */
 export function explain(session: Session | undefined, subject: string): Explanation | { error: string } {

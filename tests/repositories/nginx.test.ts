@@ -23,7 +23,7 @@ const server = (location: string): string =>
 const CLEAN = server('        location / {\n            return 204;\n        }\n');
 const FORGED = server('        location ~ /proxy/(.*) {\n            proxy_pass http://$1;\n        }\n');
 
-const CASES: PlantedCase[] = [{ id: 'nginx/gixy', files: { 'proxy/nginx.conf': FORGED }, expected: 'ssrf' }];
+const CASES: PlantedCase[] = [{ check: 'nginx/gixy', files: { 'proxy/nginx.conf': FORGED }, expected: 'ssrf' }];
 
 describe('the nginx preset', () => {
     test(
@@ -42,15 +42,15 @@ describe('the nginx preset', () => {
                     expect(outcome.stdout).toMatch(/skipped\s+nginx\/gixy\s+\(platform\)/u);
                     continue;
                 }
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
                 expect(outcome.stdout).toContain('proxy/nginx.conf:');
             }
             const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
-                checks: { id: string }[];
+                checks: { check: string }[];
             };
-            expect(atCommit.checks.map((check) => check.id)).not.toContain('nginx/config-test');
+            expect(atCommit.checks.map((check) => check.check)).not.toContain('nginx/config-test');
         },
         PLANTED_TIMEOUT_MS * 2,
     );

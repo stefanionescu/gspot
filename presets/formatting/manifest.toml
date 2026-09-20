@@ -35,7 +35,7 @@ template = "prettierignore.tmpl"
 target = ".prettierignore"
 
 [[checks]]
-id = "formatting/prettier"
+name = "formatting/prettier"
 stage = "commit"
 runs = "per-file-list"
 command = ["prettier", "--check", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
@@ -49,7 +49,7 @@ why = "Formatting by hand differs by editor; one formatter keeps diffs about the
 help = "Run gspot check --fix to format every file, or prettier --write on one file."
 
 [[checks]]
-id = "formatting/editorconfig-checker"
+name = "formatting/editorconfig-checker"
 stage = "commit"
 runs = "per-file-list"
 command = ["ec", "-no-color", "-disable-indent-size", "{files}"]

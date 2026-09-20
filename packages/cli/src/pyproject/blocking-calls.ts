@@ -63,7 +63,7 @@ export async function pythonBlockingCalls(input: EngineInput): Promise<Finding[]
         if (tree === null) continue;
         for (const call of blockingCalls(tree.rootNode))
             findings.push({
-                check: input.spec.id,
+                check: input.spec.name,
                 file: file.path,
                 line: call.line,
                 rule: 'blocking-call',

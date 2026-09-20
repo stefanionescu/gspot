@@ -17,7 +17,7 @@ cargo = "ast-grep"
 github = "ast-grep/ast-grep"
 
 [[checks]]
-id = "structure/single-file-folder"
+name = "structure/single-file-folder"
 stage = "commit"
 engine = "structure"
 analysis = "single-file-folder"
@@ -28,7 +28,7 @@ why = "A folder of one file adds a level to every path and promises siblings tha
 help = "Move the file up beside its neighbors, or allow the folder with a reason under structure.single_file_folder_allowed."
 
 [[checks]]
-id = "structure/prefix-collisions"
+name = "structure/prefix-collisions"
 stage = "commit"
 engine = "structure"
 analysis = "prefix-collisions"
@@ -40,7 +40,7 @@ why = "Files that share a prefix are one concept split by suffix; they belong in
 help = "Move the files into a folder named after the shared prefix, or allow the set with a reason."
 
 [[checks]]
-id = "structure/file-directory-collision"
+name = "structure/file-directory-collision"
 stage = "commit"
 engine = "structure"
 analysis = "file-directory-collision"
@@ -51,7 +51,7 @@ why = "An import of ./turn names both, and a reader cannot tell which one loads.
 help = "Rename the file or the folder so their stems differ."
 
 [[checks]]
-id = "structure/folder-names"
+name = "structure/folder-names"
 stage = "commit"
 engine = "structure"
 analysis = "folder-names"
@@ -62,7 +62,7 @@ why = "A folder with no owner collects everything nobody wanted to place, and gr
 help = "Name the folder after what it holds, or allow it with a reason under structure.folder_name_allowed."
 
 [[checks]]
-id = "integrity/baselines-current"
+name = "integrity/baselines-current"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -73,7 +73,7 @@ why = "A baseline for a check that is gone hides nothing and misleads the reader
 help = "Run gspot apply --baseline to remove the stale baseline or prune the suppressions."
 
 [[checks]]
-id = "integrity/config-purity"
+name = "integrity/config-purity"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -84,7 +84,7 @@ why = "A configuration module with logic in it is code nobody tests, hidden wher
 help = "Move the logic into a module under src and keep the literal in the config module, or take the folder out of the config role."
 
 [[checks]]
-id = "integrity/suppressions"
+name = "integrity/suppressions"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -95,7 +95,7 @@ why = "A suppression without a reason is a finding hidden for good; a census tha
 help = "Write the reason in the comment (after two dashes for eslint-disable and gspot-ignore, after a colon for ts-expect-error), or fix the finding and drop the suppression."
 
 [[checks]]
-id = "integrity/allowlists-match"
+name = "integrity/allowlists-match"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -106,7 +106,7 @@ why = "An ignore, declaration or allowance that matches nothing is a leftover th
 help = "Remove the entry, or fix its pattern."
 
 [[checks]]
-id = "integrity/task-policy"
+name = "integrity/task-policy"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -117,7 +117,7 @@ why = "A missing task or a hook nobody points at means the gate runs only when s
 help = "Run gspot apply; it rewrites the tasks and the hooks and sets core.hooksPath."
 
 [[checks]]
-id = "integrity/large-files"
+name = "integrity/large-files"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -128,7 +128,7 @@ why = "A large file in plain git history stays in every clone for good."
 help = "Track the file with git lfs, declare it with gspot declare <path> --reason, or raise limits.file_size_kb with a reason."
 
 [[checks]]
-id = "integrity/tracked-dependencies"
+name = "integrity/tracked-dependencies"
 stage = "commit"
 runs = "once"
 engine = "integrity"

@@ -32,7 +32,7 @@ header = false
 stub = {path = ".stylelintrc.json", body = "{\n    \"extends\": \"./.gspot/stylelint.json\"\n}\n"}
 
 [[checks]]
-id = "css/stylelint"
+name = "css/stylelint"
 stage = "commit"
 command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}", "--formatter", "unix", "--allow-empty-input", "{files}"]
 fix_command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}", "--fix", "--allow-empty-input", "{files}"]
@@ -44,7 +44,7 @@ why = "A browser skips a declaration it cannot read without a word, so a typo in
 help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule <name> --reason."
 
 [[checks]]
-id = "integrity/css-usage"
+name = "integrity/css-usage"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"

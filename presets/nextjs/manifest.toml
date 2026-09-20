@@ -25,7 +25,7 @@ target = ".gspot/eslint.config.mjs"
 fragment = true
 
 [[checks]]
-id = "nextjs/typecheck"
+name = "nextjs/typecheck"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -37,7 +37,7 @@ why = "A fresh clone holds no next-env.d.ts and no route types, so a plain tsc r
 help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
 
 [[checks]]
-id = "nextjs/build"
+name = "nextjs/build"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"
@@ -49,7 +49,7 @@ why = "Some mistakes show only at build time: a server import in a client file, 
 help = "Run next build and read the first error it prints."
 
 [[checks]]
-id = "integrity/route-segments"
+name = "integrity/route-segments"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -60,7 +60,7 @@ why = "One address is served by one file, and the framework refuses the build wh
 help = "Move the route handler into a segment of its own, such as an api folder."
 
 [[checks]]
-id = "integrity/next-config"
+name = "integrity/next-config"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -71,7 +71,7 @@ why = "A build that ignores lint and type errors ships them, and a key under env
 help = "Remove the switch, and read the secret on the server."
 
 [[checks]]
-id = "integrity/dependency-alignment"
+name = "integrity/dependency-alignment"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -82,7 +82,7 @@ why = "A lint package a version behind flags what the framework allows and allow
 help = "Move both packages to the same version."
 
 [[checks]]
-id = "integrity/locales"
+name = "integrity/locales"
 stage = "push"
 runs = "once"
 engine = "integrity"

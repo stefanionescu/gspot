@@ -20,7 +20,7 @@ export type PathExplanation = {
     natureSource?: string;
     tags: string[];
     presets: string[];
-    checks: { id: string; stage: string; preset: string }[];
+    checks: { check: string; stage: string; preset: string }[];
     baselines: { check: string; rule: string; count: number }[];
     ignores: { check: string; rule?: string; reason: string }[];
     unchecked?: string;
@@ -33,5 +33,5 @@ export type Choice<T extends string> = { value: T; label: string; hint?: string 
 /** The color functions `paint()` returns. */
 export type Painter = Record<'red' | 'green' | 'yellow' | 'dim' | 'bold' | 'cyan', (text: string) => string>;
 
-/** Column widths of the run report, from the longest scope and check id. */
-export type Columns = { scope: number; id: number };
+/** Column widths of the run report, from the longest scope and check name. */
+export type Columns = { scope: number; check: number };

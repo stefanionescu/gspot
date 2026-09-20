@@ -14,7 +14,7 @@ async function input(root: string): Promise<EngineInput> {
     const selected = session.scopes[0]!;
     const spec = selected.selected
         .flatMap((manifest) => manifest.checks)
-        .find((check) => check.id === 'integrity/manifest-policy')!;
+        .find((check) => check.name === 'integrity/manifest-policy')!;
     return { session, root, scope: selected.scope.path, view: selected.view, spec, files: session.repository.files };
 }
 

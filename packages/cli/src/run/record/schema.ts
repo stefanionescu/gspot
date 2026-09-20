@@ -15,7 +15,7 @@ const finding = z.strictObject({
 });
 
 const checkResult = z.strictObject({
-    id: z.string(),
+    check: z.string(),
     scope: z.string(),
     status: z.enum(['ok', 'fail', 'cache', 'missing', 'skipped', 'error']),
     files: z.number().int(),

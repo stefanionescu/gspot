@@ -25,7 +25,7 @@ target = ".gspot/eslint.config.mjs"
 fragment = true
 
 [[checks]]
-id = "drizzle/relations-complete"
+name = "drizzle/relations-complete"
 stage = "commit"
 engine = "integrity"
 analysis = "drizzle-relations"
@@ -36,7 +36,7 @@ why = "The query builder joins through relations, so a reference without one wor
 help = "Add a relations call for the table."
 
 [[checks]]
-id = "drizzle/migrations-fresh"
+name = "drizzle/migrations-fresh"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"

@@ -16,7 +16,7 @@ pypi = "pytest"
 version_regex = "(\\d+\\.\\d+\\.\\d+)"
 
 [[checks]]
-id = "pytest/coverage"
+name = "pytest/coverage"
 stage = "push"
 runs = "per-scope"
 cwd = "scope"

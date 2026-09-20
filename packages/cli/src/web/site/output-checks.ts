@@ -16,7 +16,7 @@ const BYTES_PER_KB = 1024;
 const SITEMAP_LOCATION = /<loc>\s*(?<url>[^<\s]+)\s*<\/loc>/gu;
 
 function finding(input: EngineInput, file: string, rule: string, text: string, line = 1): Finding {
-    return { check: input.spec.id, file, line, rule, message: text, fixable: false };
+    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
 }
 
 function tool(input: EngineInput, name: string): string {

@@ -52,7 +52,7 @@ export async function licensesNpm(input: EngineInput): Promise<Finding[]> {
         ((tool['exceptions'] as LicenseException[] | undefined) ?? []).map((entry) => [entry.package, entry]),
     );
     const finding = (rule: string, text: string): Finding => ({
-        check: input.spec.id,
+        check: input.spec.name,
         file: manifest,
         line: 1,
         rule,

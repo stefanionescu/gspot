@@ -51,7 +51,7 @@ export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
         if (parsed.error === undefined) continue;
         const { text, line, column } = parsed.error;
         findings.push({
-            check: input.spec.id,
+            check: input.spec.name,
             file: source.path,
             line,
             column,
@@ -74,7 +74,7 @@ export function sqlBlockComments(input: EngineInput): Promise<Finding[]> {
         if (found === -1) return [];
         return [
             {
-                check: input.spec.id,
+                check: input.spec.name,
                 file: source.path,
                 ...positionAt(source.text, found),
                 rule: 'block-comment',
@@ -100,7 +100,7 @@ export function sqlFileLength(input: EngineInput): Promise<Finding[]> {
         if (count <= ceiling) return [];
         const said = `${String(count)} code lines is over the ceiling of ${String(ceiling)}.`;
         return [
-            { check: input.spec.id, file: source.path, line: 1, rule: 'file-lines', message: said, fixable: false },
+            { check: input.spec.name, file: source.path, line: 1, rule: 'file-lines', message: said, fixable: false },
         ];
     });
     return Promise.resolve(findings);

@@ -73,14 +73,14 @@ function hasNoRunner(check: RawCheck): boolean {
 
 function checkProblems(check: RawCheck): string[] {
     const problems: (string | undefined)[] = [
-        hasNoRunner(check) ? `check ${check.id} has neither a command nor an engine.` : undefined,
+        hasNoRunner(check) ? `check ${check.name} has neither a command nor an engine.` : undefined,
         check.fix_command !== undefined && check.fix_order === undefined
-            ? `check ${check.id} has a fix_command and no fix_order.`
+            ? `check ${check.name} has a fix_command and no fix_order.`
             : undefined,
         check.requires !== undefined && check.stage === 'commit'
-            ? `check ${check.id} requires ${check.requires} and cannot run at the commit stage.`
+            ? `check ${check.name} requires ${check.requires} and cannot run at the commit stage.`
             : undefined,
-        isIdleManual(check) ? `check ${check.id} is manual with nothing that makes it slow.` : undefined,
+        isIdleManual(check) ? `check ${check.name} is manual with nothing that makes it slow.` : undefined,
     ];
     return problems.filter((problem) => problem !== undefined);
 }

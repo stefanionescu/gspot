@@ -35,8 +35,8 @@ describe('the bash planted repository', () => {
             expect(check.stdout).toContain('bash/shellcheck');
             expect(check.stdout).toContain('ok');
             const json = await run(fixture.path, ['check', 'bash/shfmt', '--json']);
-            const record = JSON.parse(json.stdout) as { checks: { id: string; status: string }[]; exitCode: number };
-            expect(record.checks[0]?.id).toBe('bash/shfmt');
+            const record = JSON.parse(json.stdout) as { checks: { check: string; status: string }[]; exitCode: number };
+            expect(record.checks[0]?.check).toBe('bash/shfmt');
             expect(record.exitCode).toBe(0);
             const drift = await run(fixture.path, ['apply', '--check']);
             expect(drift.code).toBe(0);

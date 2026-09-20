@@ -46,55 +46,55 @@ const ENTITLED = plist('    <key>com.apple.developer.healthkit</key>\n    <true/
 
 const CASES: PlantedCase[] = [
     {
-        id: 'xcode/plist',
+        check: 'xcode/plist',
         files: { 'App/Info.plist': '<plist><dict><key>broken</dict></plist>\n' },
         expected: 'App/Info.plist',
     },
     {
-        id: 'xcode/xcconfig',
+        check: 'xcode/xcconfig',
         files: { 'App/Base.xcconfig': 'SWIFT_VERSION = 5.9\nthis line means nothing\n' },
         expected: 'This line is no KEY = value setting',
     },
     {
-        id: 'xcode/xcstrings',
+        check: 'xcode/xcstrings',
         files: { 'App/Localizable.xcstrings': STRINGS_FILE('') },
         expected: '"bye" has no translation for de',
     },
     {
-        id: 'xcode/asset-catalogues',
+        check: 'xcode/asset-catalogues',
         files: {},
         removed: ['App/Assets.xcassets/Logo.imageset/logo.png'],
         expected: 'The image logo.png is not in the set',
     },
     {
-        id: 'xcode/asset-catalogues',
+        check: 'xcode/asset-catalogues',
         files: { 'App/Assets.xcassets/Unused.colorset/Contents.json': '{\n    "colors": []\n}\n' },
         expected: 'No source names the asset Unused',
     },
     {
-        id: 'xcode/test-plan',
+        check: 'xcode/test-plan',
         files: { 'App.xcodeproj/project.pbxproj': PROJECT.replace('name = AppTests;', () => 'name = OtherTests;') },
         expected: 'The test target OtherTests is in no test plan',
     },
     {
-        id: 'xcode/orphan-sources',
+        check: 'xcode/orphan-sources',
         files: { 'App/Extra.swift': 'let extra = 1\n' },
         expected: 'This Swift file is in no target',
     },
     {
-        id: 'xcode/orphan-sources',
+        check: 'xcode/orphan-sources',
         files: {},
         removed: ['App/Home.swift'],
         expected: 'The project names Home.swift, and the tree holds no such file',
     },
     {
-        id: 'xcode/entitlements-policy',
+        check: 'xcode/entitlements-policy',
         files: { 'App/App.entitlements': ENTITLED },
         policyEdit: ['[tools.xcode]\n', '[tools.xcode]\nallowed_entitlements = ["aps-environment"]\n'],
         expected: 'com.apple.developer.healthkit is not an allowed entitlement',
     },
     {
-        id: 'xcode/ats',
+        check: 'xcode/ats',
         files: {
             'App/Info.plist': plist(
                 '    <key>NSAppTransportSecurity</key>\n    <dict>\n        <key>NSAllowsArbitraryLoads</key>\n        <true/>\n    </dict>\n',
@@ -126,20 +126,20 @@ describe('the xcode preset', () => {
             const environment = { PATH: toolsPath(['typos', 'ec', 'taplo', 'yamllint']) };
             await install(fixture.path, INIT, environment);
             commitAll(fixture.path);
-            const checkIds = new Set(CASES.map((planted) => planted.id));
+            const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
                 const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                if (planted.id === 'xcode/plist' && process.platform !== 'darwin') {
+                if (planted.check === 'xcode/plist' && process.platform !== 'darwin') {
                     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
                     expect(outcome.stdout).toContain('runs on macos only');
                     continue;
                 }
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             symlinkSync('Home.swift', join(fixture.path, 'App/Linked.swift'));
             commitAll(fixture.path);

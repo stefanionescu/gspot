@@ -33,7 +33,7 @@ target = ".gspot/eslint.config.mjs"
 fragment = true
 
 [[checks]]
-id = "svelte/eslint"
+name = "svelte/eslint"
 stage = "commit"
 runs = "per-file-list"
 command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{suppressions}", "--format", "json", "{files}"]

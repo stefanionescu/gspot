@@ -28,7 +28,7 @@ template = "gixy.cfg.tmpl"
 target = ".gspot/gixy.cfg"
 
 [[checks]]
-id = "nginx/gixy"
+name = "nginx/gixy"
 stage = "commit"
 platform = ["macos", "linux"]
 command = ["gixy", "--config", "{config:gixy}", "--format", "json", "{file}"]
@@ -39,7 +39,7 @@ why = "These mistakes parse, serve traffic, and look like any other location blo
 help = "Change the block the way the rule's page says. Turn one rule off with gspot ignore nginx/gixy --rule <name> --reason."
 
 [[checks]]
-id = "nginx/config-test"
+name = "nginx/config-test"
 stage = "push"
 runs = "once"
 requires = "docker"

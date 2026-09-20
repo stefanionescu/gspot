@@ -30,35 +30,39 @@ const KEY = ['SUPABASE_SERVICE', 'ROLE_KEY'].join('_');
 
 const CASES: PlantedCase[] = [
     {
-        id: 'supabase/config',
+        check: 'supabase/config',
         files: { 'supabase/config.toml': `${CONFIG}\n[functions.missing]\nverify_jwt = true\n` },
         expected: '[functions.missing] configures a function that has no folder',
     },
-    { id: 'supabase/config', files: { 'supabase/config.toml': 'project_id = \n' }, expected: 'supabase/config.toml' },
     {
-        id: 'supabase/storage-policies',
+        check: 'supabase/config',
+        files: { 'supabase/config.toml': 'project_id = \n' },
+        expected: 'supabase/config.toml',
+    },
+    {
+        check: 'supabase/storage-policies',
         files: { 'supabase/config.toml': `${CONFIG}\n[storage.buckets.receipts]\npublic = false\n` },
         expected: 'The bucket receipts has no policy',
     },
     {
-        id: 'supabase/migration-names',
+        check: 'supabase/migration-names',
         files: { 'supabase/migrations/002-AddThing.sql': 'SELECT 1;\n' },
         expected: 'fourteen digits',
     },
     {
-        id: 'supabase/admin-key-containment',
+        check: 'supabase/admin-key-containment',
         files: { 'app/client.ts': `export const key = process.env.${KEY};\n` },
         expected: 'names the service role key',
     },
     {
-        id: 'supabase/deno-lint',
+        check: 'supabase/deno-lint',
         files: {
             'supabase/functions/greet/index.ts': 'var greeting = "hello";\nDeno.serve(() => new Response(greeting));\n',
         },
         expected: 'no-var',
     },
     {
-        id: 'supabase/deno-check',
+        check: 'supabase/deno-check',
         files: {
             'supabase/functions/greet/index.ts':
                 'const count: number = "one";\nDeno.serve(() => new Response(String(count)));\n',
@@ -79,21 +83,21 @@ describe('the supabase preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['deno', 'squawk', 'sqlfluff', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
-            const checkIds = new Set(CASES.map((planted) => planted.id));
+            const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
                 const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             const checked = await run(fixture.path, ['check', '--at', 'push', '--json'], environment);
             const atPush = JSON.parse(checked.stdout) as {
-                checks: { id: string }[];
+                checks: { check: string }[];
             };
-            expect(atPush.checks.map((check) => check.id)).toContain('supabase/types-fresh');
+            expect(atPush.checks.map((check) => check.check)).toContain('supabase/types-fresh');
         },
         PLANTED_TIMEOUT_MS * 5,
     );

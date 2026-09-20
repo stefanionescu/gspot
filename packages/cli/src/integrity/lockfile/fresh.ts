@@ -22,7 +22,7 @@ export async function lockfileFresh(input: EngineInput): Promise<Finding[]> {
         if (result.missing || result.code === 0) continue;
         const said = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
         findings.push({
-            check: input.spec.id,
+            check: input.spec.name,
             file: file.path,
             line: 1,
             rule: 'stale-lockfile',

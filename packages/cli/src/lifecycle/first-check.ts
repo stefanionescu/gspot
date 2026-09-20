@@ -11,7 +11,7 @@ import { writeBaselines, isBaselineAllowed } from '#cli/run/baselines.ts';
 
 function summaryOf(record: RunRecord): { failing: RunRecord['checks']; lines: string[] } {
     const failing = record.checks.filter((check) => check.status === 'missing' || check.status === 'error');
-    return { failing, lines: failing.map((check) => `${check.id}: ${check.note ?? check.status}`) };
+    return { failing, lines: failing.map((check) => `${check.check}: ${check.note ?? check.status}`) };
 }
 
 // Format, syntax and schema findings enter no baseline, so the gate fails on them until a fix run; init says so.
@@ -20,9 +20,9 @@ function unheldLines(first: FirstRun): string[] {
         ...first.baselines.map((file) => file.check),
         ...first.toolBaselines.map((entry) => entry.check),
     ]);
-    const unheld = first.record.checks.filter((check) => check.findings.length > 0 && !held.has(check.id));
+    const unheld = first.record.checks.filter((check) => check.findings.length > 0 && !held.has(check.check));
     if (unheld.length === 0) return ['every other check passes'];
-    const ids = [...new Set(unheld.map((check) => check.id))].toSorted((a, b) => a.localeCompare(b));
+    const ids = [...new Set(unheld.map((check) => check.check))].toSorted((a, b) => a.localeCompare(b));
     const count = unheld.reduce((sum, check) => sum + check.findings.length, 0);
     return [
         `not held: ${String(count)} findings of ${ids.join(', ')} enter no baseline, because a fixer or a one-line edit clears them.`,
@@ -39,13 +39,13 @@ async function writeToolBaselines(
     const written: ToolBaseline[] = [];
     for (const planned of outcome.planned) {
         const command = planned.spec.baseline_command;
-        if (command === undefined || only?.has(planned.id) === false) continue;
+        if (command === undefined || only?.has(planned.check) === false) continue;
         const result = outcome.record.checks.find(
-            (check) => check.id === planned.id && check.scope === planned.scope.scope.path,
+            (check) => check.check === planned.check && check.scope === planned.scope.scope.path,
         );
         if (result === undefined || result.findings.length === 0) continue;
         await runSideCommand(session, planned, command);
-        written.push({ check: planned.id, scope: planned.scope.scope.path, count: result.findings.length });
+        written.push({ check: planned.check, scope: planned.scope.scope.path, count: result.findings.length });
     }
     return written;
 }
@@ -75,11 +75,11 @@ export async function firstRun(root: string, only?: Set<string>): Promise<FirstR
             scope.selected.flatMap((manifest) =>
                 manifest.checks
                     .filter((check) => isBaselineAllowed(check.inspection) && check.baseline_command === undefined)
-                    .map((check) => check.id),
+                    .map((check) => check.name),
             ),
         ),
     );
-    const declared = new Set(session.policyFiles.policy.checks.map((entry) => entry.id));
+    const declared = new Set(session.policyFiles.policy.checks.map((entry) => entry.name));
     const baselines = writeBaselines(
         root,
         findings,

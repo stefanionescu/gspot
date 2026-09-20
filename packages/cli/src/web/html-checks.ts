@@ -124,7 +124,7 @@ async function findings(
         if (tree === null) continue;
         for (const problem of read(tree.rootNode))
             found.push({
-                check: input.spec.id,
+                check: input.spec.name,
                 file: path,
                 line: problem.node.startPosition.row + 1,
                 column: problem.node.startPosition.column + 1,

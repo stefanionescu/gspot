@@ -9,7 +9,7 @@ description = "tRPC routers: every procedure validates its input, and client cod
 dependencies = ["@trpc/server"]
 
 [[checks]]
-id = "trpc/router-boundaries"
+name = "trpc/router-boundaries"
 stage = "commit"
 engine = "integrity"
 analysis = "trpc-boundaries"

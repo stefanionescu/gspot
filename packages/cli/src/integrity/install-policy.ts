@@ -51,7 +51,7 @@ export function installPolicy(input: EngineInput): Promise<Finding[]> {
     const days = (tool['min_release_age_days'] as number | undefined) ?? DEFAULT_AGE_DAYS;
     const scanner = (tool['security_scanner'] as string | undefined) ?? '';
     const report: Reporter = (file, rule, text) => ({
-        check: input.spec.id,
+        check: input.spec.name,
         file,
         line: 1,
         rule,

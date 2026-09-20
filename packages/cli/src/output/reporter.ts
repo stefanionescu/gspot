@@ -84,7 +84,7 @@ function failureLines(check: CheckResult, options: ReportOptions, colors: Painte
 function checkLines(check: CheckResult, columns: Columns, options: ReportOptions, colors: Painter): string[] {
     const scope = scopeName(check.scope).padEnd(columns.scope);
     const status = statusWord(check, colors).padEnd(STATUS_WIDTH);
-    const lines = [`${scope}  ${check.id.padEnd(columns.id)}  ${status}  ${checkTail(check)}`.trimEnd()];
+    const lines = [`${scope}  ${check.check.padEnd(columns.check)}  ${status}  ${checkTail(check)}`.trimEnd()];
     if (options.verbose && check.command) {
         const command = `$ ${check.command.join(' ')}`;
         lines.push(`  ${colors.dim(command)}`);
@@ -155,7 +155,7 @@ export function runText(record: RunRecord, options: ReportOptions): string {
     const shown = record.checks.filter((check) => !isHidden(check));
     const columns: Columns = {
         scope: Math.max(SCOPE_WIDTH_MIN, ...record.checks.map((check) => scopeName(check.scope).length)),
-        id: Math.max(ID_WIDTH_MIN, ...record.checks.map((check) => check.id.length)),
+        check: Math.max(ID_WIDTH_MIN, ...record.checks.map((check) => check.check.length)),
     };
     const body = shown.flatMap((check) => checkLines(check, columns, options, colors));
     const tail = tailLines(record, options, colors);

@@ -20,7 +20,7 @@ export function largeFiles(input: EngineInput): Promise<Finding[]> {
             (file) => file.size > limitKb * KILOBYTE && !isDeclared(file.path) && !isUnderLfs(input.root, file.path),
         )
         .map((file) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: file.path,
             line: 1,
             rule: 'over-limit',

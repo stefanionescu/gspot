@@ -56,7 +56,7 @@ export async function requiredRules(input: EngineInput): Promise<Finding[]> {
         const off = await offRules(input, binary, sample, rules);
         findings.push(
             ...off.map((rule) => ({
-                check: input.spec.id,
+                check: input.spec.name,
                 file: ESLINT_FILE,
                 line: 1,
                 rule: 'rule-off',

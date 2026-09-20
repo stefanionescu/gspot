@@ -45,7 +45,7 @@ function configurationPath(session: Session, planned: PlannedCheck, name: string
     const target = allConfigs(session, planned).find(
         (config) => config.fragment !== true && configurationName(config.target) === name,
     );
-    if (!target) throw new Error(`Check ${planned.id} names {config:${name}} and no preset renders it.`);
+    if (!target) throw new Error(`Check ${planned.check} names {config:${name}} and no preset renders it.`);
     return targetInScope(planned.scope.scope.path, target);
 }
 
@@ -166,7 +166,8 @@ function isBroken(spec: CheckSpec, result: SpawnResult): boolean {
 function unexplainedFailure(spec: CheckSpec, tool: ToolPin, result: SpawnResult, file: string | undefined): Finding {
     const placeholder = `${tool.name} exited ${String(result.code)}`;
     const text = file === undefined ? tailLines(result, placeholder) : firstLine(result, placeholder);
-    return { check: spec.id, file: file?.replaceAll('\\', '/') ?? '', message: text, help: spec.help, fixable: false };
+    const { name, help } = spec;
+    return { check: name, file: file?.replaceAll('\\', '/') ?? '', message: text, help, fixable: false };
 }
 
 function markFailure(
@@ -323,7 +324,7 @@ export function substitute(session: Session, planned: PlannedCheck, command: str
 export async function runToolCheck(session: Session, planned: PlannedCheck): Promise<CheckResult> {
     const { spec, tool, scope } = planned;
     const base: CheckResult = {
-        id: spec.id,
+        check: spec.name,
         scope: scope.scope.path,
         status: 'ok',
         files: planned.files.length,

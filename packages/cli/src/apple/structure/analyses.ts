@@ -25,7 +25,7 @@ function analysis(read: SwiftReader): (input: EngineInput) => Promise<Finding[]>
         const problems = read({ sources, functions: sources.flatMap((source) => functionsOf(source)) }, input);
         for (const source of sources) source.tree.delete();
         return problems.map((entry) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: entry.file,
             line: entry.line,
             rule: entry.rule,

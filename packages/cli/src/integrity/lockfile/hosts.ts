@@ -20,7 +20,7 @@ function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Fin
                 if (said === undefined) return [];
                 return [
                     {
-                        check: input.spec.id,
+                        check: input.spec.name,
                         file: path,
                         line: index + 1,
                         rule: 'registry',

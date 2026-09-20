@@ -8,7 +8,7 @@ import type { BaselineReason, GitleaksFinding } from '#types/integrity.ts';
 const BASELINE = '.gspot/gitleaks-baseline.json';
 
 function finding(input: EngineInput, rule: string, text: string): Finding {
-    return { check: input.spec.id, file: BASELINE, line: 1, rule, message: text, fixable: false };
+    return { check: input.spec.name, file: BASELINE, line: 1, rule, message: text, fixable: false };
 }
 
 /**

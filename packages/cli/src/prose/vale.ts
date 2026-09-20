@@ -153,7 +153,7 @@ export async function valeFindings(input: EngineInput): Promise<Finding[]> {
         const alerts = await alertsFor(input.root, binary, group);
         findings.push(
             ...alerts.map((alert) => ({
-                check: input.spec.id,
+                check: input.spec.name,
                 file: alert.file,
                 line: alert.line,
                 column: alert.column,

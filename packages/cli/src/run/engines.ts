@@ -43,7 +43,7 @@ export async function runEngineCheck(
 ): Promise<CheckResult> {
     const { spec, scope } = planned;
     const base: CheckResult = {
-        id: spec.id,
+        check: spec.name,
         scope: scope.scope.path,
         status: 'ok',
         files: planned.files.length,

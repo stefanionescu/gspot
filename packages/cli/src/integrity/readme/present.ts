@@ -17,14 +17,14 @@ export function readmePresent(input: EngineInput): Promise<Finding[]> {
     const readme = input.scope === '' ? 'README.md' : `${input.scope}/README.md`;
     if (!existsSync(join(input.root, readme)))
         findings.push({
-            check: input.spec.id,
+            check: input.spec.name,
             file: readme,
             message: `The scope ${input.scope === '' ? 'root' : input.scope} has no README.md.`,
             fixable: false,
         });
     if (isLicenseRequired && input.scope === '' && LICENSE_NAMES.every((name) => !existsSync(join(input.root, name))))
         findings.push({
-            check: input.spec.id,
+            check: input.spec.name,
             file: 'LICENSE',
             message: 'The root has no LICENSE file.',
             fixable: false,

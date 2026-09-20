@@ -15,7 +15,7 @@ const PIP_INSTALL = /\bpip3? install\b/u;
 const INSTALL_HOLDERS = ['.sh', '.bash', '.yml', '.yaml', '.toml', 'Dockerfile'];
 
 function finding(input: EngineInput, at: { file: string; line: number }, rule: string, text: string): Finding {
-    return { check: input.spec.id, file: at.file, line: at.line, rule, message: text, fixable: false };
+    return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
 }
 
 function scopePath(input: EngineInput, path: string): string {

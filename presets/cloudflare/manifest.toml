@@ -25,7 +25,7 @@ target = ".gspot/semgrep/workers.yml"
 needs = "security"
 
 [[checks]]
-id = "cloudflare/wrangler-config"
+name = "cloudflare/wrangler-config"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -36,7 +36,7 @@ why = "Without a pinned date the runtime changes behavior under a deployed worke
 help = "Add the name and a compatibility_date in the form 2025-01-31."
 
 [[checks]]
-id = "cloudflare/headers-syntax"
+name = "cloudflare/headers-syntax"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -47,7 +47,7 @@ why = "Cloudflare skips a line it cannot read, so a typo silently drops a securi
 help = "Write each block as a path, then indented lines of a name, a colon, and a value."
 
 [[checks]]
-id = "cloudflare/redirects-syntax"
+name = "cloudflare/redirects-syntax"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -58,7 +58,7 @@ why = "A redirect Cloudflare cannot read is dropped, and the old address starts 
 help = "Write the rule as source, destination, status."
 
 [[checks]]
-id = "cloudflare/env-types-fresh"
+name = "cloudflare/env-types-fresh"
 stage = "push"
 runs = "once"
 engine = "integrity"

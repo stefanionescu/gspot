@@ -51,7 +51,7 @@ function fromRepoCheck(entry: RepositoryCheck): CheckSpec {
         ...definition,
         runs: 'per-file-list',
         inspection: [],
-        summary: entry.summary ?? `Runs the repository's own check ${entry.id}.`,
+        summary: entry.summary ?? `Runs the repository's own check ${entry.name}.`,
         why: 'The repository declared this command in gspot.toml as part of its gate.',
         help: entry.help ?? 'Read the command output; the repository owns this check.',
         claims: {
@@ -71,8 +71,8 @@ function isRepositoryWide(manifest: Manifest): boolean {
 
 function manifestEntries(manifest: Manifest, seenRepoChecks: Set<string>): PlanEntry[] {
     if (!isRepositoryWide(manifest)) return manifest.checks.map((spec) => ({ spec, manifest }));
-    const fresh = manifest.checks.filter((spec) => !seenRepoChecks.has(spec.id));
-    for (const spec of fresh) seenRepoChecks.add(spec.id);
+    const fresh = manifest.checks.filter((spec) => !seenRepoChecks.has(spec.name));
+    for (const spec of fresh) seenRepoChecks.add(spec.name);
     return fresh.map((spec) => ({ spec, manifest }));
 }
 
@@ -92,8 +92,8 @@ function isStageOk(spec: CheckSpec, options: PlanOptions): boolean {
 }
 
 function isWanted(spec: CheckSpec, options: PlanOptions): boolean {
-    if (options.only !== undefined && spec.id !== options.only) return false;
-    if (options.among?.has(spec.id) === false) return false;
+    if (options.only !== undefined && spec.name !== options.only) return false;
+    if (options.among?.has(spec.name) === false) return false;
     if (!isStageOk(spec, options)) return false;
     return spec.engine === undefined || hasEngine(spec.engine);
 }
@@ -174,8 +174,8 @@ function skipFor(
     if (spec.reported_by !== undefined) return { source: 'rules', note: `its findings come from ${spec.reported_by}` };
     const platformSkip = platformSkipFor(spec, tool, platform);
     if (platformSkip !== undefined) return platformSkip;
-    if (options.localSkips.includes(spec.id)) return { source: 'local', note: 'skipped by gspot.local.toml' };
-    if (options.skips.includes(spec.id)) return { source: 'flag', note: 'skipped by --skip' };
+    if (options.localSkips.includes(spec.name)) return { source: 'local', note: 'skipped by gspot.local.toml' };
+    if (options.skips.includes(spec.name)) return { source: 'flag', note: 'skipped by --skip' };
     return undefined;
 }
 
@@ -184,7 +184,7 @@ function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean):
     const { spec, manifest } = entry;
     const rootScope = session.scopes[0] ?? scope;
     const check: PlannedCheck = {
-        id: spec.id,
+        check: spec.name,
         scope: isWholeCheck ? rootScope : scope,
         spec,
         files: filesFor(context, entry, isWholeCheck),
@@ -210,11 +210,11 @@ function yielded(planned: PlannedCheck[], entries: PlanEntry[], options: PlanOpt
     const skipped = new Set([...options.skips, ...options.localSkips]);
     const takers = new Map(
         entries.flatMap(({ spec }): [string, string][] =>
-            spec.takes_over === undefined || skipped.has(spec.id) ? [] : [[spec.takes_over, spec.id]],
+            spec.takes_over === undefined || skipped.has(spec.name) ? [] : [[spec.takes_over, spec.name]],
         ),
     );
     return planned.map((check) => {
-        const taker = takers.get(check.id);
+        const taker = takers.get(check.check);
         if (taker === undefined || check.skip) return check;
         return { ...check, skip: { source: 'rules', note: `${taker} runs it here` } };
     });
@@ -226,8 +226,8 @@ function planScope(context: PlanContext, seenRepoChecks: Set<string>, wholeSeen:
     for (const entry of entries) {
         if (!isWanted(entry.spec, context.options)) continue;
         const isWholeCheck = entry.spec.runs === 'once';
-        if (isWholeCheck && wholeSeen.has(entry.spec.id)) continue;
-        if (isWholeCheck) wholeSeen.add(entry.spec.id);
+        if (isWholeCheck && wholeSeen.has(entry.spec.name)) continue;
+        if (isWholeCheck) wholeSeen.add(entry.spec.name);
         planned.push(planOne(context, entry, isWholeCheck));
     }
     return yielded(planned, entries, context.options);

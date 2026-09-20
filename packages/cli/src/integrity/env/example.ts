@@ -84,7 +84,7 @@ export function envExample(input: EngineInput): Promise<Finding[]> {
     const searched = inScope.filter((entry) => isSearched(entry));
     const findings = searched.flatMap((file) =>
         firstMissing(readsIn(input.root, file, patterns), known).map((read) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: file.path,
             line: read.line,
             rule: 'missing-key',

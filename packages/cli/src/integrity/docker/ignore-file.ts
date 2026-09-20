@@ -31,7 +31,7 @@ export function dockerignore(input: EngineInput): Promise<Finding[]> {
     const folders = new Map(dockerfiles.map((file) => [folderOf(file.path), file.path]));
     const findings = folders.entries().flatMap(([folder, dockerfile]): Finding[] => {
         const path = folder === '' ? '.dockerignore' : `${folder}/.dockerignore`;
-        const base = { check: input.spec.id, line: 1, fixable: false };
+        const base = { check: input.spec.name, line: 1, fixable: false };
         if (!existsSync(join(input.root, path)))
             return [{ ...base, file: dockerfile, rule: 'missing', message: `No ${path} sits beside this Dockerfile.` }];
         const missing = missingEntries(readFileSync(join(input.root, path), 'utf8'));

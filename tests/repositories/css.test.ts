@@ -31,17 +31,17 @@ const UNKNOWN_PROPERTY = ['col', 'our'].join('');
 
 const CASES: PlantedCase[] = [
     {
-        id: 'css/stylelint',
+        check: 'css/stylelint',
         files: { 'src/site.css': `a {\n    ${UNKNOWN_PROPERTY}: red;\n}\n` },
         expected: 'property-no-unknown',
     },
     {
-        id: 'integrity/css-usage',
+        check: 'integrity/css-usage',
         files: { 'src/card.module.css': `${SHEET}\n.card-footer {\n    margin: 0;\n}\n` },
         expected: 'No importer reads the class card-footer',
     },
     {
-        id: 'integrity/css-usage',
+        check: 'integrity/css-usage',
         files: { 'src/card.js': `${CODE}\nexport const extra = styles.cardBadge;\n` },
         expected: 'card.module.css defines no class cardBadge',
     },
@@ -64,11 +64,11 @@ describe('the css preset', () => {
             const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec'])}` };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
-                expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
         },
         PLANTED_TIMEOUT_MS * 4,

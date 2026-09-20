@@ -39,7 +39,7 @@ target = ".gspot/syncpack.json"
 header = false
 
 [[checks]]
-id = "dependencies/osv"
+name = "dependencies/osv"
 stage = "push"
 runs = "once"
 requires = "network"
@@ -51,7 +51,7 @@ why = "A dependency with a published advisory is an attack someone already wrote
 help = "Upgrade the package the finding names. When no fix exists, record the advisory with gspot allow osv <id> --reason, and a date to look again."
 
 [[checks]]
-id = "dependencies/syncpack"
+name = "dependencies/syncpack"
 stage = "push"
 runs = "once"
 command = ["syncpack", "lint", "--config", "{config:syncpack}"]
@@ -64,7 +64,7 @@ why = "Two versions of one dependency in a workspace mean two behaviors, and a b
 help = "Run syncpack fix-mismatches with the gspot configuration, or align the versions by hand."
 
 [[checks]]
-id = "integrity/manifest-policy"
+name = "integrity/manifest-policy"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -76,7 +76,7 @@ why = "A version range installs a different tree tomorrow, and two package manag
 help = "Pin the version the lockfile holds, name one packageManager, mark a workspace root private, and delete the lockfile of the manager the repository does not use."
 
 [[checks]]
-id = "integrity/lockfile-fresh"
+name = "integrity/lockfile-fresh"
 stage = "push"
 runs = "once"
 engine = "integrity"
@@ -87,7 +87,7 @@ why = "A lockfile that lags its manifest installs versions nobody reviewed the m
 help = "Run the install of the package manager once and commit the lockfile it writes."
 
 [[checks]]
-id = "integrity/install-policy"
+name = "integrity/install-policy"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -99,7 +99,7 @@ why = "Most malicious releases are pulled within days, so a package nobody insta
 help = "Set [install] minimumReleaseAge in bunfig.toml to the seconds the message names, and the scanner under [install.security]."
 
 [[checks]]
-id = "integrity/lockfile-hosts"
+name = "integrity/lockfile-hosts"
 stage = "commit"
 runs = "once"
 engine = "integrity"

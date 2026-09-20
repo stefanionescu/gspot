@@ -52,48 +52,48 @@ const FILES = {
 
 const CASES: PlantedCase[] = [
     {
-        id: 'static-site/build',
+        check: 'static-site/build',
         files: { 'build.js': "throw new Error('the build is broken');\n" },
         expected: 'did not build the site',
     },
     {
-        id: 'static-site/build-reproducible',
+        check: 'static-site/build-reproducible',
         files: { 'build.js': `${BUILD}await Bun.write('dist/stamp.txt', String(performance.now()));\n` },
         expected: 'Two builds of the same tree wrote this file differently',
     },
     {
-        id: 'static-site/html-validate-built',
+        check: 'static-site/html-validate-built',
         files: { 'about.html': page('        <h1 class="title">About</h1>\n        <img src="/assets/logo.svg" />\n') },
         expected: 'wcag/h37',
     },
     {
-        id: 'css/dead-selectors',
+        check: 'css/dead-selectors',
         files: { 'site.css': '.title {\n    color: #333;\n}\n\n.never-used {\n    margin: 0;\n}\n' },
         expected: 'No built page uses the selector .never-used',
     },
     {
-        id: 'static-site/links-internal',
+        check: 'static-site/links-internal',
         files: { 'about.html': page('        <h1 class="title">About</h1>\n        <a href="/gone.html">Gone</a>\n') },
         expected: 'gone.html answers 404',
     },
     {
-        id: 'static-site/size',
+        check: 'static-site/size',
         files: {},
         policy: '[tools.site]\nsize_limits = [{paths = ["**/*.html"], kb = 0}]\n',
         expected: 'kB compressed is over the ceiling of 0 kB',
     },
     {
-        id: 'static-site/sitemap',
+        check: 'static-site/sitemap',
         files: { 'sitemap.xml': SITEMAP('    <url><loc>https://planted.test/pricing.html</loc></url>\n') },
         expected: 'the build wrote no such page',
     },
     {
-        id: 'static-site/dead-assets',
+        check: 'static-site/dead-assets',
         files: { 'assets/unused.png': 'png' },
         expected: 'No page, stylesheet or script names this file',
     },
     {
-        id: 'static-site/svg',
+        check: 'static-site/svg',
         files: {
             'assets/logo.svg':
                 '<?xml version="1.0"?>\n<!-- Drawn in an editor. -->\n<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 8 8">\n    <path d="M 0.000 0.000 L 8.000 0.000 L 8.000 8.000 L 0.000 8.000 Z"/>\n</svg>\n',
@@ -101,12 +101,12 @@ const CASES: PlantedCase[] = [
         expected: 'bytes smaller',
     },
     {
-        id: 'static-site/webmanifest',
+        check: 'static-site/webmanifest',
         files: { 'site.webmanifest': '{\n    "icons": [{ "src": "/assets/gone.png" }]\n}\n' },
         expected: 'The icon /assets/gone.png does not exist',
     },
     {
-        id: 'integrity/security-headers',
+        check: 'integrity/security-headers',
         files: { _headers: '/*\n    Referrer-Policy: no-referrer\n' },
         expected: 'sets no valid x-content-type-options header',
     },
@@ -124,17 +124,17 @@ describe('the static-site preset', () => {
             };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
-                expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             const checked = await run(fixture.path, ['check', '--at', 'push', '--json'], environment);
             const atPush = JSON.parse(checked.stdout) as {
-                checks: { id: string }[];
+                checks: { check: string }[];
             };
-            expect(atPush.checks.map((check) => check.id)).not.toContain('static-site/links-external');
+            expect(atPush.checks.map((check) => check.check)).not.toContain('static-site/links-external');
         },
         PLANTED_TIMEOUT_MS * 10,
     );

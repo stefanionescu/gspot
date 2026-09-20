@@ -54,19 +54,19 @@ const HEALTH = 'export function health(_request, response) {\n    response.sendS
 
 const CASES: PlantedCase[] = [
     {
-        id: 'express/openapi-lint',
+        check: 'express/openapi-lint',
         files: { 'openapi.yaml': DOCUMENT.replace('            operationId: readHealth\n', '') },
         policy: POLICY,
         expected: 'operation-operationId',
     },
     {
-        id: 'express/openapi-fresh',
+        check: 'express/openapi-fresh',
         files: { 'write-document.js': WRITER(`${DOCUMENT}# later\n`) },
         policy: POLICY,
         expected: 'changes this document',
     },
     {
-        id: 'express/routes-tested',
+        check: 'express/routes-tested',
         files: { 'src/routes/orders.js': HEALTH },
         policy: POLICY,
         expected: 'No test file names orders',
@@ -90,10 +90,10 @@ describe('the express preset', () => {
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
                 const clean = await runPlanted(fixture.path, { ...planted, files: {} }, environment);
-                expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             const openapi = await run(fixture.path, ['check', 'express/openapi-lint', '--no-cache'], environment);
             expect(openapi.code).toBe(0);

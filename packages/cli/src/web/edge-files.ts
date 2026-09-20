@@ -17,7 +17,7 @@ const TYPES_TIMEOUT_MS = 300_000;
 const REDIRECT_PARTS = { least: 2, most: 3 };
 
 function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
-    return { check: input.spec.id, file, line, rule, message: text, fixable: false };
+    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
 }
 
 function named(input: EngineInput, name: string): string[] {

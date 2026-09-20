@@ -59,7 +59,7 @@ export function localeFiles(input: EngineInput): Promise<Finding[]> {
     const wanted =
         basePath === undefined ? new Map<string, string>() : (held.get(basePath) ?? new Map<string, string>());
     const at = (file: string, rule: string, text: string): Finding => ({
-        check: input.spec.id,
+        check: input.spec.name,
         file,
         line: 1,
         rule,

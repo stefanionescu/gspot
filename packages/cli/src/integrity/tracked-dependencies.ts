@@ -23,7 +23,7 @@ export function trackedDependencies(input: EngineInput): Promise<Finding[]> {
         if (folder !== undefined) counts.set(folder, (counts.get(folder) ?? 0) + 1);
     }
     const findings = [...counts].map(([folder, count]) => ({
-        check: input.spec.id,
+        check: input.spec.name,
         file: folder,
         line: 1,
         rule: 'tracked-folder',

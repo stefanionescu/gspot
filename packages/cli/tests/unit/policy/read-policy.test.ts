@@ -130,7 +130,7 @@ describe('readPolicy', () => {
 
 describe('repository correction contracts', () => {
     const check = `${minimal}[[check]]
-id = "fixture/correction"
+name = "fixture/correction"
 command = ["tool", "check"]
 paths = ["source.txt"]
 stage = "commit"

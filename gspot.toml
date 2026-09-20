@@ -102,7 +102,7 @@ prefix_collision_allowed = [{paths = ["packages/eslint-plugin/src/rules/**", "pa
 
 # The reference pages of the manual are written from the binary's own data; this says whether they still match.
 [[check]]
-id = "docs/generated"
+name = "docs/generated"
 command = ["bun", "docs/reference-pages.ts", "--check"]
 paths = ["docs/src/content/docs/reference/**", "presets/**", "architecture/14-decisions.md", "packages/cli/src/commands/**"]
 stage = "commit"
@@ -115,7 +115,7 @@ reason = "The Swift grammar has no npm package with a prebuilt WASM file, so the
 
 # The published JSON schemas are written from the zod schemas; this says whether they still match.
 [[check]]
-id = "schema/generated"
+name = "schema/generated"
 command = ["bun", "packages/cli/schemas.ts", "--check"]
 paths = ["schema/**", "docs/public/schema/**", "packages/cli/src/policy/schema.ts", "packages/cli/src/run/record/schema.ts"]
 stage = "commit"
@@ -127,7 +127,7 @@ produced_by = "bun packages/cli/schemas.ts"
 
 # The rule corpus is this repository's product; its lint is this repository's check and ships in no binary.
 [[check]]
-id = "rules/lint"
+name = "rules/lint"
 command = ["bun", "packages/cli/rules-lint/command.ts"]
 paths = ["rules/**", "packages/cli/rules-lint/**"]
 stage = "commit"

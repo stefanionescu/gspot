@@ -36,43 +36,43 @@ const LICENSE = 'MIT License\n\nCopyright (c) 2026 Alex Garcia\n';
 
 const CASES: PlantedCase[] = [
     {
-        id: 'markdown/markdownlint',
+        check: 'markdown/markdownlint',
         files: { 'docs/skipped.md': '# A page\n\n### A heading two levels down\n\nText under it.\n' },
         expected: 'MD001',
     },
     {
-        id: 'markdown/fences',
+        check: 'markdown/fences',
         files: { 'docs/fence.md': '# A page\n\n```json\n{ "open": \n```\n' },
         expected: 'docs/fence.md',
     },
     {
-        id: 'docs/links',
+        check: 'docs/links',
         files: { 'docs/linked.md': '# A page\n\nRead [the other page](missing-page.md) first.\n' },
         expected: 'missing-page.md',
     },
     {
-        id: 'integrity/docs-headings',
+        check: 'integrity/docs-headings',
         files: { 'docs/layout.md': '# A page\n\n## Project structure\n\nOne folder for each thing.\n' },
         expected: 'promises an inventory',
     },
     {
-        id: 'integrity/stale-paths',
+        check: 'integrity/stale-paths',
         files: { 'docs/stale.md': '# A page\n\nThe entry point is `docs/nowhere/start.md`.\n' },
         expected: 'docs/nowhere/start.md names no tracked file or folder',
     },
-    { id: 'docs/readme-present', files: {}, removed: ['LICENSE'], expected: 'The root has no LICENSE file' },
+    { check: 'docs/readme-present', files: {}, removed: ['LICENSE'], expected: 'The root has no LICENSE file' },
     {
-        id: 'docs/readme-shape',
+        check: 'docs/readme-shape',
         files: { 'README.md': '# planted\n\nText with no section at all.\n' },
         expected: 'README.md',
     },
     {
-        id: 'prose/vale',
+        check: 'prose/vale',
         files: { 'docs/selling.md': '# A page\n\nThis powerful cache easily makes the application much faster.\n' },
         expected: 'docs/selling.md',
     },
     {
-        id: 'prose/source-bans',
+        check: 'prose/source-bans',
         files: { 'docs/silenced.md': '# A page\n\n<!-- vale off -->\n\nText the prose check no longer reads.\n' },
         expected: 'A Vale directive turns a rule off in the text',
     },
@@ -127,14 +127,14 @@ describe.skipIf(!existsSync(join(STYLES, 'Google')))('the markdown, docs and pro
             expect(whole.code, whole.stdout).toBe(0);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             // A check id is written like a path. A document that names one means the check, whatever folders exist.
             const named = await runPlanted(
                 fixture.path,
                 {
-                    id: 'integrity/stale-paths',
+                    check: 'integrity/stale-paths',
                     files: { 'docs/checks.md': '# A page\n\nThe check `docs/links` reads every link.\n' },
                     expected: '',
                 },
@@ -151,9 +151,9 @@ describe.skipIf(!existsSync(join(STYLES, 'Google')))('the markdown, docs and pro
             expect(broken.stdout).toContain('error');
             const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
             const record = JSON.parse(checked.stdout) as {
-                checks: { id: string }[];
+                checks: { check: string }[];
             };
-            expect(record.checks.map((check) => check.id)).not.toContain('docs/links-external');
+            expect(record.checks.map((check) => check.check)).not.toContain('docs/links-external');
         },
         PLANTED_TIMEOUT_MS * 4,
     );

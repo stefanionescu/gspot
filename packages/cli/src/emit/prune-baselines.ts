@@ -14,7 +14,7 @@ async function pruneOne(session: Session, check: PlannedCheck): Promise<string |
     await runSideCommand(session, check, spec.prune_command);
     if (Object.keys(JSON.parse(readFileSync(file, 'utf8')) as object).length === 0) rmSync(file, { force: true });
     const where = scope.scope.path === '' ? '' : ` (${scope.scope.path})`;
-    return `${check.id}${where}`;
+    return `${check.check}${where}`;
 }
 
 /**

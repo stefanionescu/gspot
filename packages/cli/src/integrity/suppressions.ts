@@ -28,7 +28,7 @@ function commentOf(line: string, style: string): string | undefined {
 }
 
 function findingFor(input: EngineInput, file: string, line: number, form: SuppressionForm, text: string): Finding {
-    const base = { check: input.spec.id, file, line, fixable: false };
+    const base = { check: input.spec.name, file, line, fixable: false };
     if (form.isForbidden === true)
         return {
             ...base,

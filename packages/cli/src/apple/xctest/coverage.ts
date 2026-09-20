@@ -58,7 +58,7 @@ export async function testCoverage(input: EngineInput): Promise<Finding[]> {
         throw new Error(`The test run wrote no coverage report: ${tested.stderr.trim().split('\n').at(-1) ?? ''}`);
     const report = JSON.parse(viewed.stdout) as CoverageReport;
     return underFloor(report, floors).map((text) => ({
-        check: input.spec.id,
+        check: input.spec.name,
         file: '',
         line: 1,
         rule: 'coverage',

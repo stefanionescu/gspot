@@ -36,7 +36,7 @@ template = "semgrepignore.tmpl"
 target = ".semgrepignore"
 
 [[checks]]
-id = "security/semgrep"
+name = "security/semgrep"
 stage = "push"
 runs = "per-file-list"
 platform = ["macos", "linux"]
@@ -48,7 +48,7 @@ why = "An injection or a logged secret reads like ordinary code, and a pattern r
 help = "Change the code the way the message says. Turn one rule off for a path with gspot ignore security/semgrep --rule <id> --paths <glob> --reason."
 
 [[checks]]
-id = "security/semgrep-registry"
+name = "security/semgrep-registry"
 stage = "manual"
 runs = "per-file-list"
 requires = "network"
@@ -62,7 +62,7 @@ why = "The registry packs cover the common vulnerability classes, and their lice
 help = "Change the code the way the message says, or turn the rule off for a path with gspot ignore security/semgrep-registry --rule <id> --reason."
 
 [[checks]]
-id = "security/codeql"
+name = "security/codeql"
 stage = "manual"
 runs = "once"
 engine = "integrity"

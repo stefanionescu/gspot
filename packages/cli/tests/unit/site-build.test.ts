@@ -13,7 +13,7 @@ function input(root: string, paths: string[]): EngineInput {
     const view: Partial<MergedView> = { tool: () => ({ build: 'bun build.js' }) };
     const repository: Partial<Repository> = { files, scopes: [] };
     const session: Partial<Session> = { root, repository: repository as Repository };
-    const spec: Partial<CheckSpec> = { id: 'static-site/build-reproducible' };
+    const spec: Partial<CheckSpec> = { name: 'static-site/build-reproducible' };
     return { root, scope: '', files, view: view as MergedView, session: session as Session, spec: spec as CheckSpec };
 }
 

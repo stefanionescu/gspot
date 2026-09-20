@@ -21,7 +21,7 @@ target = ".gspot/commitlint.config.cjs"
 stub = {path = ".commitlintrc.json", body = "{\n    \"extends\": [\"./.gspot/commitlint.config.cjs\"]\n}\n"}
 
 [[checks]]
-id = "commits/commitlint"
+name = "commits/commitlint"
 stage = "message"
 runs = "per-file-list"
 command = ["commitlint", "--config", "{config:commitlint}", "--edit", "{message_file}"]
@@ -32,7 +32,7 @@ why = "A history of typed, scoped subjects is what release notes, blame and bise
 help = "Write <type>(<scope>): <subject>, with a type from the list and a subject under 72 characters, or change the list with gspot set tools.commitlint.types."
 
 [[checks]]
-id = "commits/range"
+name = "commits/range"
 stage = "push"
 runs = "per-scope"
 command = ["commitlint", "--config", "{config:commitlint}", "--from", "{merge_base}", "--to", "HEAD"]

@@ -32,22 +32,22 @@ const TEMPLATES = '[tools.html]\ntemplate_files = ["pages/**/*.html"]\n';
 
 const CASES: PlantedCase[] = [
     {
-        id: 'html/html-validate',
+        check: 'html/html-validate',
         files: { 'pages/home.html': page('        <h1>{{ heading }}</h1>\n        <img src="/logo.svg" />\n') },
         expected: 'wcag/h37',
     },
     {
-        id: 'html/scripts',
+        check: 'html/scripts',
         files: { 'pages/home.html': page('        <button type="button" onclick="go()">{{ label }}</button>\n') },
         expected: 'The onclick attribute is inline script',
     },
     {
-        id: 'html/scripts',
+        check: 'html/scripts',
         files: { 'pages/home.html': page('        <script>window.go = 1;</script>\n') },
         expected: 'An inline script runs only under a policy',
     },
     {
-        id: 'html/copy',
+        check: 'html/copy',
         files: { 'pages/home.html': page('        <h1>Welcome to the shop</h1>\n') },
         policy: TEMPLATES,
         expected: 'belongs in the content file',
@@ -69,10 +69,10 @@ describe('the html preset', () => {
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
                 const clean = await runPlanted(fixture.path, { ...planted, files: {} }, environment);
-                expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
         },
         PLANTED_TIMEOUT_MS * 4,

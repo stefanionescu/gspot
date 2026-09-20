@@ -50,17 +50,17 @@ const CIRCULAR = MODULE.replace(
 
 const CASES: PlantedCase[] = [
     {
-        id: 'typescript/eslint',
+        check: 'typescript/eslint',
         files: { 'src/greeting.controller.ts': REACHES_ROWS, 'src/greeting.repository.ts': REPOSITORY },
         expected: 'A controller reaches data through a service',
     },
     {
-        id: 'typescript/eslint',
+        check: 'typescript/eslint',
         files: { 'src/greeting.module.ts': CIRCULAR },
         expected: 'forwardRef papers over two modules',
     },
     {
-        id: 'integrity/tsconfig-options',
+        check: 'integrity/tsconfig-options',
         files: {
             'tsconfig.json': TSCONFIG.replace(
                 '"include"',
@@ -104,8 +104,8 @@ describe('the nestjs preset', () => {
             }
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
         },
         PLANTED_TIMEOUT_MS * 8,

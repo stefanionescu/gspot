@@ -90,7 +90,7 @@ target = ".gspot/v8r.yml"
 stub = {path = ".v8rrc.yml", copy = true}
 
 [[checks]]
-id = "config-files/json"
+name = "config-files/json"
 stage = "commit"
 runs = "per-file-list"
 reported_by = "formatting/prettier"
@@ -101,7 +101,7 @@ why = "A JSON file that does not parse breaks the tool that reads it at the wors
 help = "Run gspot check --fix, or fix the syntax error Prettier names."
 
 [[checks]]
-id = "config-files/toml"
+name = "config-files/toml"
 stage = "commit"
 runs = "per-file-list"
 command = ["taplo", "check", "--config", "{config:taplo}", "--colors", "never", "--no-schema", "{files}"]
@@ -113,7 +113,7 @@ why = "A TOML file that does not parse stops the tool that reads it at the worst
 help = "Fix the line taplo names."
 
 [[checks]]
-id = "config-files/toml-format"
+name = "config-files/toml-format"
 stage = "commit"
 runs = "per-file-list"
 command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
@@ -127,7 +127,7 @@ why = "One formatter keeps a diff about the values, not the spacing."
 help = "Run gspot check --fix."
 
 [[checks]]
-id = "config-files/yaml"
+name = "config-files/yaml"
 stage = "commit"
 runs = "per-file-list"
 command = ["yamllint", "-c", "{config:yamllint}", "-f", "parsable", "-s", "{files}"]
@@ -139,7 +139,7 @@ why = "A YAML file that parses to the wrong shape fails silently: a duplicated k
 help = "Fix the line yamllint names, or set the rule's options with gspot set tools.yamllint.rules."
 
 [[checks]]
-id = "config-files/schema"
+name = "config-files/schema"
 stage = "push"
 runs = "per-file-list"
 requires = "network"
@@ -152,7 +152,7 @@ why = "A key the schema refuses is a setting that never applies, and nobody find
 help = "Fix the key v8r names, or map the file to its schema under tools.v8r.schemas."
 
 [[checks]]
-id = "config-files/actions"
+name = "config-files/actions"
 stage = "commit"
 runs = "per-file-list"
 command = ["actionlint", "-no-color", "{files}"]
@@ -164,7 +164,7 @@ why = "A workflow error surfaces on the first push after the change, in CI, wher
 help = "Fix the line actionlint names."
 
 [[checks]]
-id = "config-files/actions-pins"
+name = "config-files/actions-pins"
 stage = "push"
 runs = "per-file-list"
 requires = "network"
@@ -177,7 +177,7 @@ why = "A nonexistent action commit prevents the workflow from starting."
 help = "Replace the invalid action pin with a verified commit and its matching version comment."
 
 [[checks]]
-id = "config-files/actions-security"
+name = "config-files/actions-security"
 stage = "commit"
 runs = "per-file-list"
 command = ["zizmor", "--offline", "--no-progress", "--format", "github", "{files}"]
@@ -189,7 +189,7 @@ why = "A workflow runs with the repository's credentials; an injectable expressi
 help = "Apply the fix zizmor names, or turn one audit off with gspot ignore config-files/actions-security --rule <audit> and a reason."
 
 [[checks]]
-id = "config-files/dotenv"
+name = "config-files/dotenv"
 stage = "commit"
 runs = "per-file-list"
 command = ["dotenv-linter", "check", "--plain", "--skip-updates", "{files}"]
@@ -203,7 +203,7 @@ why = "A tracked environment file is a template other people copy; a malformed l
 help = "Run gspot check --fix, or fix the line dotenv-linter names."
 
 [[checks]]
-id = "config-files/env-example"
+name = "config-files/env-example"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"
@@ -214,7 +214,7 @@ why = "A variable missing from the template is the one a new machine lacks on it
 help = "Add the key to the template (.env.example or the files under tools.dotenv.templates), or stop reading it."
 
 [[checks]]
-id = "config-files/plist"
+name = "config-files/plist"
 stage = "commit"
 runs = "per-file-list"
 platform = ["macos"]
@@ -227,7 +227,7 @@ why = "A broken plist fails the build or, worse, ships an app whose settings sil
 help = "Fix the element plutil names."
 
 [[checks]]
-id = "config-files/xml"
+name = "config-files/xml"
 stage = "commit"
 runs = "per-file-list"
 command = ["xmllint", "--noout", "{files}"]

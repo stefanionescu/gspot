@@ -138,8 +138,8 @@ function toolProblems(tool: string, table: ToolTable): string[] {
 function checkProblems(policy: Policy): string[] {
     const problems: string[] = [];
     for (const entry of policy.checks) {
-        if (entry.paths.length === 0) problems.push(messages.checkEntryIncomplete(entry.id, 'paths'));
-        problems.push(...selectorProblems(entry.paths, `[[check]] ${entry.id}`));
+        if (entry.paths.length === 0) problems.push(messages.checkEntryIncomplete(entry.name, 'paths'));
+        problems.push(...selectorProblems(entry.paths, `[[check]] ${entry.name}`));
     }
     return problems;
 }

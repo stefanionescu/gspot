@@ -9,9 +9,9 @@ import { fileName, readBaselines } from '#cli/run/baselines.ts';
 
 function checkIds(input: EngineInput): Set<string> {
     const fromManifests = input.session.scopes.flatMap((scope) =>
-        scope.selected.flatMap((manifest) => manifest.checks.map((check) => check.id)),
+        scope.selected.flatMap((manifest) => manifest.checks.map((check) => check.name)),
     );
-    const declared = input.session.policyFiles.policy.checks.map((entry) => entry.id);
+    const declared = input.session.policyFiles.policy.checks.map((entry) => entry.name);
     return new Set([...fromManifests, ...declared]);
 }
 
@@ -20,7 +20,7 @@ function countFindings(input: EngineInput): Finding[] {
     return readBaselines(input.root)
         .filter((baseline) => !known.has(baseline.check))
         .map((baseline) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: `.gspot/baselines/${fileName(baseline.check, baseline.rule)}`,
             line: 1,
             rule: 'unknown-check',
@@ -66,7 +66,7 @@ function stalePaths(input: EngineInput, file: SuppressionFile): Finding[] {
     return suppressedPaths(parsed, file.scope)
         .filter((entry) => !tracked.has(entry.replaceAll('\\', '/')))
         .map((entry) => ({
-            check: input.spec.id,
+            check: input.spec.name,
             file: file.path,
             line: 1,
             rule: 'stale-suppression',

@@ -69,7 +69,7 @@ describe('the secrets preset', () => {
             const baseline = await runPlanted(
                 fixture.path,
                 {
-                    id: 'integrity/gitleaks-baseline',
+                    check: 'integrity/gitleaks-baseline',
                     files: { '.gspot/gitleaks-baseline.json': BASELINE },
                     expected: 'has no reason',
                 },
@@ -82,9 +82,9 @@ describe('the secrets preset', () => {
             expect(baseline.stdout).not.toContain('names gone.md');
             const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
             const network = JSON.parse(checked.stdout) as {
-                checks: { id: string }[];
+                checks: { check: string }[];
             };
-            expect(network.checks.map((check) => check.id)).not.toContain('secrets/trufflehog');
+            expect(network.checks.map((check) => check.check)).not.toContain('secrets/trufflehog');
         },
         PLANTED_TIMEOUT_MS * 2,
     );

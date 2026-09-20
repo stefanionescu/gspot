@@ -18,7 +18,7 @@ const STRAY_HELP = 'Delete the file, or add the preset that renders it.';
  */
 export function generatedDrift(input: EngineInput): Promise<Finding[]> {
     const findings = computeDrift(input.session).map((entry) => ({
-        check: input.spec.id,
+        check: input.spec.name,
         file: entry.path,
         rule: entry.kind,
         message: MESSAGES[entry.kind] ?? MESSAGES['changed'] ?? '',

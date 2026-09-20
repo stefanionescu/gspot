@@ -179,7 +179,7 @@ const checks: Record<string, IntegrityCheck> = {
  * @returns the findings
  */
 export async function runIntegrity(input: EngineInput): Promise<Finding[]> {
-    const name = input.spec.analysis ?? input.spec.id.slice(input.spec.id.indexOf('/') + 1);
+    const name = input.spec.analysis ?? input.spec.name.slice(input.spec.name.indexOf('/') + 1);
     const check = checks[name];
     if (!check) throw new Error(`No integrity analysis is called ${name}.`);
     return check(input);

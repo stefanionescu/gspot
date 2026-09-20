@@ -28,22 +28,22 @@ const TESTS = 'AppTests/HomeTests.swift';
 
 const CASES: PlantedCase[] = [
     {
-        id: 'xctest/disabled',
+        check: 'xctest/disabled',
         files: { [TESTS]: suite('        throw XCTSkip()\n') },
         expected: 'turned off and says no reason',
     },
     {
-        id: 'xctest/no-sleep',
+        check: 'xctest/no-sleep',
         files: { [TESTS]: suite('        Thread.sleep(forTimeInterval: 2)\n') },
         expected: 'A test that sleeps',
     },
     {
-        id: 'xctest/recording',
+        check: 'xctest/recording',
         files: { [TESTS]: suite('        isRecording = true\n') },
         expected: 'Recording mode is on',
     },
     {
-        id: 'xctest/reference-images',
+        check: 'xctest/reference-images',
         files: { 'AppTests/__Snapshots__/GoneTests/testTitle.1.png': 'png' },
         expected: 'No test file AppTests/GoneTests.swift exists',
     },
@@ -64,17 +64,17 @@ describe('the xctest preset', () => {
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
-                expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
-                checks: { id: string }[];
+                checks: { check: string }[];
             };
-            expect(atCommit.checks.map((check) => check.id)).not.toContain('xctest/coverage');
+            expect(atCommit.checks.map((check) => check.check)).not.toContain('xctest/coverage');
         },
         PLANTED_TIMEOUT_MS * 5,
     );

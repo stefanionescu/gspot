@@ -34,11 +34,11 @@ const FOCUSED = TEST.replace("test('doubles", () => "test.only('doubles");
 
 const CASES: PlantedCase[] = [
     {
-        id: 'vitest/coverage',
+        check: 'vitest/coverage',
         files: { 'src/math.ts': UNTESTED },
         expected: 'Coverage for functions (50%) does not meet global threshold (80%)',
     },
-    { id: 'typescript/eslint', files: { 'src/math.test.ts': FOCUSED }, expected: 'vitest/no-focused-tests' },
+    { check: 'typescript/eslint', files: { 'src/math.test.ts': FOCUSED }, expected: 'vitest/no-focused-tests' },
 ];
 
 describe('the vitest preset', () => {
@@ -59,11 +59,11 @@ describe('the vitest preset', () => {
             };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
-                expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
+                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
         },
         PLANTED_TIMEOUT_MS * 5,

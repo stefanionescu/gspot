@@ -1634,7 +1634,7 @@
             "items": {
                 "type": "object",
                 "properties": {
-                    "id": {
+                    "name": {
                         "type": "string"
                     },
                     "command": {
@@ -1736,7 +1736,7 @@
                     }
                 },
                 "required": [
-                    "id",
+                    "name",
                     "command",
                     "paths",
                     "stage"

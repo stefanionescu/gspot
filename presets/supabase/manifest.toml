@@ -37,7 +37,7 @@ target = ".gspot/semgrep/supabase.yml"
 needs = "security"
 
 [[checks]]
-id = "supabase/config"
+name = "supabase/config"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -48,7 +48,7 @@ why = "The CLI reads this file at every deploy, and a function it configures wit
 help = "Correct the file at the place the message names, or remove the table of a function the repository does not hold."
 
 [[checks]]
-id = "supabase/migration-names"
+name = "supabase/migration-names"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -59,7 +59,7 @@ why = "The CLI orders and records migrations by this name, and it skips a file i
 help = "Create the migration with supabase migration new <name>, which writes the name."
 
 [[checks]]
-id = "supabase/storage-policies"
+name = "supabase/storage-policies"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -70,7 +70,7 @@ why = "A bucket with no policy is closed to everyone or, when it is public, open
 help = "Add a policy on storage.objects for the bucket in a migration."
 
 [[checks]]
-id = "supabase/admin-key-containment"
+name = "supabase/admin-key-containment"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -81,7 +81,7 @@ why = "The service role key bypasses row level security, so one client bundle th
 help = "Move the code to a server path, or add the path to tools.supabase.admin_key_paths when it never reaches a client."
 
 [[checks]]
-id = "supabase/deno-lint"
+name = "supabase/deno-lint"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -93,7 +93,7 @@ why = "Edge functions run under Deno, and its linter knows the runtime the Node 
 help = "Change the code the way the rule says; deno lint --rules explains each one."
 
 [[checks]]
-id = "supabase/deno-check"
+name = "supabase/deno-check"
 stage = "push"
 runs = "once"
 engine = "integrity"
@@ -105,7 +105,7 @@ why = "The project compiler does not resolve the import map of a function, so on
 help = "Fix the first error Deno prints; later ones are often the same mistake."
 
 [[checks]]
-id = "supabase/types-fresh"
+name = "supabase/types-fresh"
 stage = "push"
 runs = "once"
 engine = "integrity"

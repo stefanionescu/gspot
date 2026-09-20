@@ -69,7 +69,7 @@ const MISSPELLED = ['Te', 'h'].join('');
 
 const CASES: PlantedCase[] = [
     {
-        id: 'typescript/tsc',
+        check: 'typescript/tsc',
         files: {
             'src/orders/wrong.ts':
                 "// A wrong type.\n\n/** A count that is not a number. */\nexport const count: number = 'three';\n",
@@ -77,7 +77,7 @@ const CASES: PlantedCase[] = [
         expected: 'TS2322',
     },
     {
-        id: 'typescript/eslint',
+        check: 'typescript/eslint',
         files: {
             'src/orders/paused.ts':
                 '// A debugger statement left behind.\n\n/**\n * Doubles a value.\n * @param value the value\n * @returns twice the value\n */\nexport function twice(value: number): number {\n    debugger;\n    return value * 2;\n}\n',
@@ -85,7 +85,7 @@ const CASES: PlantedCase[] = [
         expected: 'no-debugger',
     },
     {
-        id: 'javascript/knip',
+        check: 'javascript/knip',
         files: {
             'src/orders/unused.ts':
                 '// Nothing imports this.\n\n/** A value nobody reads. */\nexport const unused = 1;\n',
@@ -93,7 +93,7 @@ const CASES: PlantedCase[] = [
         expected: 'src/orders/unused.ts',
     },
     {
-        id: 'naming/identifiers',
+        check: 'naming/identifiers',
         files: {
             'src/orders/names.ts':
                 '// A name with a banned word.\n\n/** A helper value. */\nexport const orderHelper = 1;\n',
@@ -101,7 +101,7 @@ const CASES: PlantedCase[] = [
         expected: '"helper" is banned',
     },
     {
-        id: 'naming/paths',
+        check: 'naming/paths',
         files: {
             'src/orders/order-utils.ts':
                 '// A file name with a banned word.\n\n/** A value. */\nexport const orderCount = 1;\n',
@@ -109,20 +109,20 @@ const CASES: PlantedCase[] = [
         expected: '"utils" is banned',
     },
     {
-        id: 'naming/policy-schema',
+        check: 'naming/policy-schema',
         files: {},
         policy: '[naming]\nallowed = [{name = "neverUsedName", reason = "A name nothing in this repository carries."}]\n',
         expected: 'which no identifier in this scope carries',
     },
     {
-        id: 'formatting/prettier',
+        check: 'formatting/prettier',
         files: {
             'src/orders/ugly.ts': '// Badly formatted.\n\n/** A value. */\nexport const   ugly   =   [1,2,\n3];\n',
         },
         expected: 'not formatted the way Prettier formats it',
     },
     {
-        id: 'formatting/editorconfig-checker',
+        check: 'formatting/editorconfig-checker',
         files: {
             'src/orders/trailing.ts':
                 '// Trailing spaces after this comment.   \n\n/** A value. */\nexport const orderCount = 1;\n',
@@ -130,14 +130,14 @@ const CASES: PlantedCase[] = [
         expected: 'src/orders/trailing.ts',
     },
     {
-        id: 'spelling/typos',
+        check: 'spelling/typos',
         files: {
             'src/orders/typo.ts': `// ${MISSPELLED} order of things.\n\n/** A value. */\nexport const orderCount = 1;\n`,
         },
         expected: 'The',
     },
     {
-        id: 'integrity/config-purity',
+        check: 'integrity/config-purity',
         files: {
             'config/limits.ts': '// The limits.\n\n/** The most lines. */\nexport const MAX_LINES = 10;\n',
             'config/logic.ts':
@@ -147,7 +147,7 @@ const CASES: PlantedCase[] = [
         expected: 'a configuration module holds literals only',
     },
     {
-        id: 'javascript/checkjs',
+        check: 'javascript/checkjs',
         files: {
             'src/orders/legacy.js':
                 '// A plain JavaScript file with a wrong call.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n\n/** A call with a string. */\nexport const wrong = twice("x");\n',
@@ -155,7 +155,7 @@ const CASES: PlantedCase[] = [
         expected: 'TS2345',
     },
     {
-        id: 'integrity/tsconfig-options',
+        check: 'integrity/tsconfig-options',
         files: {
             'tsconfig.json':
                 '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "compilerOptions": { "strict": false }\n}\n',
@@ -202,14 +202,14 @@ describe('the typescript preset', () => {
             expect(whole.code, whole.stdout).toBe(0);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
-                expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
-                expect(outcome.stdout, planted.id).toContain(planted.expected);
+                expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
+                expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             // typos forgets its exclude list for a file named on the command line unless it is told to keep it.
             const excluded = await runPlanted(
                 fixture.path,
                 {
-                    id: 'spelling/typos',
+                    check: 'spelling/typos',
                     files: { 'assets/mark.svg': `<svg><title>${MISSPELLED}</title></svg>\n` },
                     expected: '',
                 },
@@ -255,7 +255,7 @@ describe('the typescript preset', () => {
             const outcome = await runPlanted(
                 fixture.path,
                 {
-                    id: 'javascript/eslint',
+                    check: 'javascript/eslint',
                     files: { 'src/paused.js': clean.replace('    return', () => '    debugger;\n    return') },
                     expected: 'no-debugger',
                 },

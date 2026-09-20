@@ -2,13 +2,13 @@
 
 /**
  * The command that runs one check alone.
- * @param id the check id
+ * @param checkName the check name
  * @param scope the scope path, '' for the root
  * @param stage the stage, when it is not commit or push
  * @returns the command line
  */
-export function reproduceLine(id: string, scope: string, stage?: string): string {
-    const parts = ['gspot check', id];
+export function reproduceLine(checkName: string, scope: string, stage?: string): string {
+    const parts = ['gspot check', checkName];
     if (scope !== '') parts.push('--scope', scope);
     if (stage !== undefined && stage !== 'commit' && stage !== 'push') parts.push('--at', stage);
     return parts.join(' ');

@@ -52,7 +52,7 @@ function correctionTool(session: Session, plannedCheck: PlannedCheck): ToolPin |
 }
 
 async function runCorrection(plannedCheck: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
-    const check = plannedCheck.id;
+    const check = plannedCheck.check;
     const paths = plannedCheck.files.map((file) => file.path);
     const before = contentsOf(prepared.root, paths);
     for (const command of prepared.commands) {
@@ -99,7 +99,7 @@ export async function runFixer(
 ): Promise<FixResult> {
     const { spec } = plannedCheck;
     const tool = correctionTool(session, plannedCheck);
-    const check = plannedCheck.id;
+    const check = plannedCheck.check;
     if (spec.fix_command === undefined || isSkipped(plannedCheck)) return { check, status: 'skipped', changed: [] };
     if (tool === undefined) return { check, status: 'failed', changed: [], note: 'No correction tool is configured.' };
     const probe = probeTool(session.root, tool);

@@ -15,7 +15,7 @@ const PAIRS: [string, string][] = [
 ];
 
 function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
-    return { check: input.spec.id, file, line, rule, message: text, fixable: false };
+    return { check: input.spec.name, file, line, rule, message: text, fixable: false };
 }
 
 function paths(input: EngineInput): string[] {

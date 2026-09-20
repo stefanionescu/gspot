@@ -50,7 +50,7 @@ describe('parseManifest', () => {
     test('refuses a check with no stage or an empty summary', () => {
         expect(() =>
             parseManifest(
-                '[preset]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nid = "x/y"\ncommand = ["x"]\nsummary = ""\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n',
+                '[preset]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nname = "x/y"\ncommand = ["x"]\nsummary = ""\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n',
                 'presets/x',
             ),
         ).toThrow('not valid');
@@ -59,7 +59,7 @@ describe('parseManifest', () => {
     test('refuses a fix_command without a fix_order', () => {
         expect(() =>
             parseManifest(
-                '[preset]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nid = "x/y"\nstage = "commit"\ncommand = ["x"]\nfix_command = ["x", "--fix"]\nsummary = "A sentence long enough."\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n',
+                '[preset]\nname = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nname = "x/y"\nstage = "commit"\ncommand = ["x"]\nfix_command = ["x", "--fix"]\nsummary = "A sentence long enough."\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n',
                 'presets/x',
             ),
         ).toThrow('fix_order');
@@ -77,7 +77,7 @@ kind = "tool"
 title = "Fixture"
 description = "A correction contract fixture."
 [[checks]]
-id = "fixture/correction"
+name = "fixture/correction"
 stage = "commit"
 command = ["tool", "check"]
 summary = "Checks a fixture source file."

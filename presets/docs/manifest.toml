@@ -22,7 +22,7 @@ template = "lychee.toml.tmpl"
 target = ".gspot/lychee.toml"
 
 [[checks]]
-id = "docs/links"
+name = "docs/links"
 stage = "commit"
 runs = "per-file-list"
 command = ["lychee", "--config", "{config:lychee}", "--offline", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
@@ -34,7 +34,7 @@ why = "A dead link inside the repository is a promise the docs broke without any
 help = "Point the link at the file or heading that exists, or delete it."
 
 [[checks]]
-id = "docs/links-external"
+name = "docs/links-external"
 stage = "manual"
 runs = "per-file-list"
 requires = "network"
@@ -47,7 +47,7 @@ why = "An external link rots on its own schedule; this run says which ones did."
 help = "Update or remove the link, or exclude the URL pattern with a reason under tools.lychee.exclude."
 
 [[checks]]
-id = "integrity/docs-headings"
+name = "integrity/docs-headings"
 stage = "commit"
 engine = "integrity"
 analysis = "docs-headings"
@@ -57,7 +57,7 @@ why = "An inventory heading promises a map that goes stale; the reader wanted an
 help = "Replace the section with prose that explains, or delete it."
 
 [[checks]]
-id = "integrity/stale-paths"
+name = "integrity/stale-paths"
 stage = "commit"
 engine = "integrity"
 analysis = "stale-paths"
@@ -67,7 +67,7 @@ why = "A path in the docs that nothing tracks sends the reader to a file that is
 help = "Fix the path or the task name, or add the pattern with a reason under tools.docs.paths_allowed."
 
 [[checks]]
-id = "docs/readme-present"
+name = "docs/readme-present"
 stage = "commit"
 engine = "integrity"
 analysis = "readme-present"
@@ -77,7 +77,7 @@ why = "A scope with no README is a door with no sign."
 help = "Write the README; the docs rule files say what goes in it."
 
 [[checks]]
-id = "docs/readme-shape"
+name = "docs/readme-shape"
 stage = "commit"
 engine = "integrity"
 analysis = "readme-shape"

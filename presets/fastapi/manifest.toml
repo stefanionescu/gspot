@@ -25,7 +25,7 @@ target = ".gspot/semgrep/fastapi.yml"
 needs = "security"
 
 [[checks]]
-id = "fastapi/openapi-lint"
+name = "fastapi/openapi-lint"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -38,7 +38,7 @@ why = "Clients are written from this document, so an operation with no id become
 help = "Change the route metadata that writes the document, then export it again."
 
 [[checks]]
-id = "fastapi/openapi-fresh"
+name = "fastapi/openapi-fresh"
 stage = "push"
 runs = "once"
 engine = "integrity"
@@ -49,7 +49,7 @@ why = "A committed document that lags the routes describes a service that does n
 help = "Run the command and commit the document it writes."
 
 [[checks]]
-id = "fastapi/no-blocking-io-in-async"
+name = "fastapi/no-blocking-io-in-async"
 stage = "commit"
 engine = "integrity"
 analysis = "python-blocking-calls"
