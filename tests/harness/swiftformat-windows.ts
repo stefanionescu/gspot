@@ -30,7 +30,15 @@ async function installSwiftFormat(): Promise<void> {
         process.stdout.write(`${await output([destination, '--version'])}\n`);
         const source = join(staging, 'smoke.swift');
         await Bun.write(source, 'let value = 1\n');
-        await output([destination, '--lint', '--verbose', '--cache', 'ignore', source]);
+        let hasFailed = false;
+        for (const flags of [[], ['--verbose'], ['--cache', 'ignore'], ['--verbose', '--cache', 'ignore']]) {
+            const result = await run([destination, '--lint', ...flags, source], { cwd: staging });
+            process.stdout.write(
+                `SwiftFormat smoke ${JSON.stringify(flags)}: exit ${String(result.code)}\n${result.stdout}${result.stderr}`,
+            );
+            hasFailed ||= result.code !== 0;
+        }
+        if (hasFailed) throw new Error('SwiftFormat formatting smoke checks failed.');
     } finally {
         rmSync(staging, { recursive: true, force: true });
     }

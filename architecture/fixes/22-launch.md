@@ -113,6 +113,13 @@ The planted harness gives each CLI subprocess a two-minute deadline and reports 
 command, working directory, and captured output when that deadline expires. A boundary
 regression preserves both streams, and the outer test deadlines are unchanged.
 
+The minimal SwiftFormat smoke check passes on Windows with verbose mode and caching
+disabled. [SwiftFormat 0.61.1 source](https://github.com/nicklockwood/SwiftFormat/blob/0.61.1/Sources/CommandLine.swift)
+shows that verbose mode disables its internal concurrency. The setup probe checks the
+same file with each combination of verbose mode and caching, records every result,
+and fails if any combination fails. This distinguishes those modes before selecting
+a preset change.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.
