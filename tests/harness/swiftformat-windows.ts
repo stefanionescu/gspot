@@ -1,7 +1,9 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { run } from '#cli/platform/spawn.ts';
+import { openSession } from '#cli/run/session.ts';
 import { copyFileSync, mkdtempSync, rmSync } from 'node:fs';
+import { emitTarget, templateInputs } from '#cli/emit/templates.ts';
 
 async function output(command: string[]): Promise<string> {
     const result = await run(command, { cwd: process.cwd() });
@@ -29,10 +31,27 @@ async function installSwiftFormat(): Promise<void> {
         copyFileSync(join(extracted, executables[0]!), destination);
         process.stdout.write(`${await output([destination, '--version'])}\n`);
         const source = join(staging, 'smoke.swift');
-        await Bun.write(source, 'let value = 1\n');
-        let hasFailed = false;
+        await Bun.write(
+            source,
+            'import Foundation\n\nfunc greeting(for name: String) -> String {\n    "hello \\(name)"\n}\n',
+        );
+        const session = await openSession(process.cwd());
+        const config = join(staging, 'shipped.swiftformat');
+        const emptyConfig = join(staging, 'empty.swiftformat');
+        await Bun.write(
+            config,
+            emitTarget(
+                'presets/swift/swiftformat.tmpl',
+                '.gspot/swiftformat',
+                templateInputs(session, session.scopes[0]!),
+            ),
+        );
+        await Bun.write(emptyConfig, '');
+        const plain = await run([destination, '--lint', '--config', emptyConfig, source], { cwd: staging });
+        process.stdout.write(`SwiftFormat empty config: exit ${String(plain.code)}\n${plain.stdout}${plain.stderr}`);
+        let hasFailed = plain.code !== 0;
         for (const flags of [[], ['--verbose'], ['--cache', 'ignore'], ['--verbose', '--cache', 'ignore']]) {
-            const result = await run([destination, '--lint', ...flags, source], { cwd: staging });
+            const result = await run([destination, '--lint', '--config', config, ...flags, source], { cwd: staging });
             process.stdout.write(
                 `SwiftFormat smoke ${JSON.stringify(flags)}: exit ${String(result.code)}\n${result.stdout}${result.stderr}`,
             );

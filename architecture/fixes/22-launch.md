@@ -120,6 +120,11 @@ same file with each combination of verbose mode and caching, records every resul
 and fails if any combination fails. This distinguishes those modes before selecting
 a preset change.
 
+All four minimal-input mode combinations pass on Windows. The next smoke probe uses
+a function with a string interpolation. The probe compares an empty configuration with
+the shipped SwiftFormat template rendered through the normal template owner. It records
+each mode under that configuration. No preset workaround is accepted from the minimal probe alone.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.
