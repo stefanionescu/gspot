@@ -46,7 +46,7 @@ output = {format = "regex", pattern = "^\\[warn\\] (?<file>[^\\s].*[^\\s.])$", m
 tool_errors = "\\[error\\] (?:No parser|Cannot find|Invalid)"
 summary = "Checks that every file Prettier formats is already formatted that way."
 why = "Formatting by hand differs by editor; one formatter keeps diffs about the change and not the spacing."
-fix = "Run gspot check --fix to format every file, or prettier --write on one file."
+help = "Run gspot check --fix to format every file, or prettier --write on one file."
 
 [[checks]]
 id = "formatting/editorconfig-checker"
@@ -58,7 +58,7 @@ inspection = ["format"]
 output = {format = "grouped", file_pattern = "^(?<file>[^\\s].*):$", pattern = "^\\s+(?<line>\\d+)(?:-\\d+)?: (?<message>.*)$"}
 summary = "Checks line endings, final newlines and trailing whitespace in every file against .editorconfig."
 why = "These rules cover the files no formatter touches, so a stray tab or missing newline never lands in a diff. Indentation is the formatters' job and is not checked here."
-fix = "Fix the line the checker names; most editors apply .editorconfig on save."
+help = "Fix the line the checker names; most editors apply .editorconfig on save."
 
 [[settings]]
 name = "format.indent_style"

@@ -28,7 +28,7 @@ inspection = ["syntax"]
 output = {format = "regex", pattern = "^(?<file>.+?): (?!OK$)(?<message>.+)$"}
 summary = "Asks plutil whether every property list and entitlements file parses."
 why = "A property list that does not parse stops the build at the signing step, far from the edit that broke it."
-fix = "Correct the file at the line plutil names."
+help = "Correct the file at the line plutil names."
 
 [[checks]]
 id = "xcode/xcconfig"
@@ -40,7 +40,7 @@ claims = {extensions = [".xcconfig"]}
 inspection = ["syntax"]
 summary = "Checks that every line of a build settings file is a setting, an include, or a comment."
 why = "Xcode ignores a line it cannot read, so a typo turns a setting off without a word."
-fix = "Write the line as a name, an equals sign, and a value."
+help = "Write the line as a name, an equals sign, and a value."
 
 [[checks]]
 id = "xcode/xcstrings"
@@ -52,7 +52,7 @@ claims = {extensions = [".xcstrings"]}
 inspection = ["consistency"]
 summary = "Checks that every string catalog parses, and that every string has a translation for every locale the catalog uses."
 why = "A string with no translation shows its source language in the middle of a translated screen."
-fix = "Add the translation, or mark the string as not translated in the catalog."
+help = "Add the translation, or mark the string as not translated in the catalog."
 
 [[checks]]
 id = "xcode/asset-catalogues"
@@ -64,7 +64,7 @@ claims = {paths = ["**/*.xcassets/**"], extensions = [".swift"]}
 inspection = ["consistency"]
 summary = "Checks that every asset Contents.json parses, that every image set holds the images it names, and that some source names every asset."
 why = "An image set with no image draws nothing at run time, and an asset nobody names ships in the app for nothing."
-fix = "Add the image, or delete the asset. Set tools.xcode.orphan_assets to false when assets are named at run time."
+help = "Add the image, or delete the asset. Set tools.xcode.orphan_assets to false when assets are named at run time."
 
 [[checks]]
 id = "xcode/test-plan"
@@ -75,7 +75,7 @@ analysis = "xcode-test-plans"
 inspection = ["tests"]
 summary = "Checks that every shared scheme that runs tests names a test plan, and that every test target is in a plan."
 why = "A test target outside every plan never runs in CI, and its tests rot while they look present."
-fix = "Add the target to a test plan, and point the scheme at the plan."
+help = "Add the target to a test plan, and point the scheme at the plan."
 
 [[checks]]
 id = "xcode/orphan-sources"
@@ -87,7 +87,7 @@ claims = {extensions = [".swift"], paths = ["**/project.pbxproj"]}
 inspection = ["consistency"]
 summary = "Compares the Swift files in the tree with the files the project names: a file in no target, and a target file that is gone."
 why = "A Swift file in no target is never compiled, so it breaks without anyone seeing it."
-fix = "Add the file to a target or delete it, and remove the reference to a file that is gone."
+help = "Add the file to a target or delete it, and remove the reference to a file that is gone."
 
 [[checks]]
 id = "xcode/symlinks"
@@ -98,7 +98,7 @@ analysis = "xcode-symlinks"
 inspection = ["consistency"]
 summary = "Reports every tracked symlink beside or under an Xcode project, with where it points."
 why = "Xcode, git, and each lint tool follow a symlink their own way, so one file is checked twice or never."
-fix = "Replace the symlink with the folder it points at, or ignore the path with a reason."
+help = "Replace the symlink with the folder it points at, or ignore the path with a reason."
 
 [[checks]]
 id = "xcode/entitlements-policy"
@@ -110,7 +110,7 @@ claims = {extensions = [".entitlements"]}
 inspection = ["security"]
 summary = "Checks that every entitlement is on tools.xcode.allowed_entitlements, when the policy holds that list."
 why = "An entitlement is a capability the system grants the app, and a new one deserves a review of its own."
-fix = "Remove the entitlement, or add it to tools.xcode.allowed_entitlements."
+help = "Remove the entitlement, or add it to tools.xcode.allowed_entitlements."
 
 [[checks]]
 id = "xcode/ats"
@@ -122,7 +122,7 @@ claims = {extensions = [".plist"]}
 inspection = ["security"]
 summary = "Refuses a property list that allows arbitrary loads, which turns transport security off for every host."
 why = "With arbitrary loads the app speaks plain HTTP to anyone, and one forgotten debug setting ships it."
-fix = "Remove the key, and add an exception for the one host that needs it."
+help = "Remove the key, and add an exception for the one host that needs it."
 
 [[settings]]
 name = "tools.xcode.project"

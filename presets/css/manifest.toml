@@ -41,7 +41,7 @@ inspection = ["style", "syntax"]
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?<message>.*) \\((?<rule>[\\w/@-]+)\\) \\[\\w+\\]$"}
 summary = "Lints every stylesheet with the standard stylelint rules: unknown properties, overridden selectors, and invalid values."
 why = "A browser skips a declaration it cannot read without a word, so a typo in a property ships as a missing style."
-fix = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule <name> --reason."
+help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore css/stylelint --rule <name> --reason."
 
 [[checks]]
 id = "integrity/css-usage"
@@ -53,7 +53,7 @@ claims = {extensions = [".css", ".scss", ".pcss", ".ts", ".tsx", ".js", ".jsx"]}
 inspection = ["consistency"]
 summary = "For every CSS module, checks that the code uses each class it defines, and that each class the code reads is defined."
 why = "A class the code reads and the stylesheet lacks is undefined at run time, and the element silently loses its style."
-fix = "Delete the class nobody reads, or define the class the code reads."
+help = "Delete the class nobody reads, or define the class the code reads."
 
 [inspections]
 ".css" = ["format", "syntax", "style", "spelling"]

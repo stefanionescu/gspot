@@ -38,7 +38,7 @@ inspection = ["syntax", "style", "accessibility"]
 output = {format = "json", children = "messages", fields = {file = "filePath", line = "line", column = "column", rule = "ruleId", message = "message"}}
 summary = "Validates every HTML file: elements where they may sit, required attributes, text alternatives, and one style for void elements."
 why = "A browser repairs broken markup in its own way, and a screen reader reads what the repair left."
-fix = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/html-validate --rule <name> --reason."
+help = "Change the markup the way the rule page says. Turn one rule off with gspot ignore html/html-validate --rule <name> --reason."
 
 [[checks]]
 id = "html/scripts"
@@ -48,7 +48,7 @@ analysis = "html-scripts"
 inspection = ["security"]
 summary = "Refuses executable inline script, event handler attributes, javascript: links, and document.write in HTML files."
 why = "A content security policy that allows inline script allows an injected one too, so the policy only holds when the pages hold none."
-fix = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
+help = "Move the script into a file, and attach the handler from that file. Structured data of type application/ld+json stays inline."
 
 [[checks]]
 id = "html/copy"
@@ -58,7 +58,7 @@ analysis = "html-copy"
 inspection = ["structure"]
 summary = "In the template files named by tools.html.template_files, checks that text a person reads is a placeholder and never a literal."
 why = "Copy written into a template is copy no translator and no content file ever sees."
-fix = "Replace the text with a placeholder and put the words in the content file. Exclude a path under tools.html.copy_excluded with a reason."
+help = "Replace the text with a placeholder and put the words in the content file. Exclude a path under tools.html.copy_excluded with a reason."
 
 [[settings]]
 name = "tools.html.template_files"

@@ -40,3 +40,7 @@ describe('the JSON schema of gspot.toml', () => {
         expect(policySchema.safeParse({ version: 1, unknown: true }).success).toBe(false);
     });
 });
+
+test('the published schema requires ordering when a correction command is present', () => {
+    expect(policyJsonSchema()).toHaveProperty('properties.check.items.dependentRequired.fix_command', ['fix_order']);
+});

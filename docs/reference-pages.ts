@@ -102,7 +102,7 @@ function rulePage(check: CheckSpec, preset: Manifest): string {
     const tool = check.tool ?? check.command?.[0];
     const lines = [
         frontMatter(check.id, check.summary),
-        `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.fix}\n\n## Where it runs\n\n`,
+        `${check.summary}\n\n## Why\n\n${check.why}\n\n## What to do\n\n${check.help}\n\n## Where it runs\n\n`,
         `- Preset: [the ${preset.preset.id} preset](/reference/presets/${preset.preset.id}/)\n- Stage: ${check.stage}\n`,
         tool === undefined ? '' : `- Tool: ${tool}\n`,
         check.engine === undefined ? '' : `- Engine: ${check.engine}\n`,

@@ -48,7 +48,7 @@ inspection = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Checks that every TypeScript file type-checks with the strict compiler options."
 why = "A file that does not type-check can crash at run time in a way the editor already knew about."
-fix = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
+help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
 
 [[checks]]
 id = "typescript/eslint"
@@ -66,7 +66,7 @@ output = {format = "eslint-json"}
 tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:"
 summary = "Runs ESLint with the shipped rule set over every TypeScript file."
 why = "ESLint catches mistakes and slop the compiler accepts: unused code, unsafe casts, functions that only forward."
-fix = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
+help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[checks]]
 id = "integrity/tsconfig-options"
@@ -76,7 +76,7 @@ analysis = "tsconfig-options"
 inspection = ["types"]
 summary = "Checks that every tsconfig still turns on the strict options the preset requires."
 why = "One tsconfig that drops strict lets untyped code back in for that whole scope."
-fix = "Keep extends pointing at `.gspot/tsconfig.base.json` and do not override the strict options; run gspot apply to restore the stub."
+help = "Keep extends pointing at `.gspot/tsconfig.base.json` and do not override the strict options; run gspot apply to restore the stub."
 
 [[settings]]
 name = "tools.typescript.types"

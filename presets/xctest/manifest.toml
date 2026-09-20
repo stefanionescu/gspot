@@ -22,7 +22,7 @@ claims = {extensions = [".swift"]}
 inspection = ["tests"]
 summary = "Checks that every skipped or disabled test gives a reason beside it."
 why = "A test turned off with no reason stays off, because nobody knows when it is safe to turn on."
-fix = "Say why the test is off and what turns it back on, or delete the test."
+help = "Say why the test is off and what turns it back on, or delete the test."
 
 [[checks]]
 id = "xctest/no-sleep"
@@ -34,7 +34,7 @@ claims = {extensions = [".swift"]}
 inspection = ["tests"]
 summary = "Refuses sleep calls in test files outside tools.xctest.sleep_allowed."
 why = "A sleep makes a test slow when it passes and flaky when the machine is slower than the number."
-fix = "Wait on an expectation or a confirmation, or poll a condition with a timeout."
+help = "Wait on an expectation or a confirmation, or poll a condition with a timeout."
 
 [[checks]]
 id = "xctest/recording"
@@ -46,7 +46,7 @@ claims = {extensions = [".swift"]}
 inspection = ["tests"]
 summary = "Refuses a snapshot test left in a recording mode."
 why = "A recording test writes a new reference and passes, so it approves whatever the screen shows."
-fix = "Take the recording flag out, and commit the references it wrote after looking at them."
+help = "Take the recording flag out, and commit the references it wrote after looking at them."
 
 [[checks]]
 id = "xctest/reference-images"
@@ -57,7 +57,7 @@ analysis = "xctest-references"
 inspection = ["consistency"]
 summary = "Checks that every folder of snapshot references sits beside a test file of the same name."
 why = "References of a deleted test stay in the repository, and every clone pays for them."
-fix = "Delete the references of the test that is gone, or rename the folder after the test file."
+help = "Delete the references of the test that is gone, or rename the folder after the test file."
 
 [[checks]]
 id = "xctest/coverage"
@@ -71,7 +71,7 @@ claims = {extensions = [".swift"]}
 inspection = ["coverage"]
 summary = "Runs the tests with coverage and holds each target named in tools.xctest.coverage to its floor."
 why = "A floor keeps new code from arriving untested."
-fix = "Add tests for the target, or lower its floor with a reason."
+help = "Add tests for the target, or lower its floor with a reason."
 
 [[settings]]
 name = "tools.xctest.coverage"

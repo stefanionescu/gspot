@@ -151,7 +151,7 @@ output = {format = "eslint-json"}
 tool_errors = "^Oops! Something went wrong|Error: Cannot find module|ERR_MODULE_NOT_FOUND|ConfigError:"
 summary = "Runs ESLint with the shipped rule set over every JavaScript file."
 why = "ESLint catches mistakes and slop the runtime accepts: unused code, unsafe patterns, functions that only forward."
-fix = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
+help = "Run gspot check --fix for the rules that fix themselves, then read each remaining line; gspot explain <rule> says what it means."
 
 [[checks]]
 id = "javascript/checkjs"
@@ -164,7 +164,7 @@ inspection = ["types"]
 output = {format = "regex", pattern = "^(?<file>[^(]+)\\((?<line>\\d+),(?<column>\\d+)\\): error (?<rule>TS\\d+): (?<message>.*)$"}
 summary = "Type-checks plain JavaScript through its JSDoc comments."
 why = "A JavaScript file with a wrong call crashes at run time; the checker sees it first when the types are written down."
-fix = "Add or fix the JSDoc type the checker names; gspot explain tsc/TS2345 links the error page."
+help = "Add or fix the JSDoc type the checker names; gspot explain tsc/TS2345 links the error page."
 
 [[checks]]
 id = "javascript/knip"
@@ -176,7 +176,7 @@ inspection = ["dependencies"]
 output = {format = "regex", pattern = "^(?<file>[^:\\s]+)(?::\\s*(?<message>.*))?$"}
 summary = "Finds files, exports, and dependencies nothing uses."
 why = "Dead code is read, maintained, and shipped for nobody."
-fix = "Delete what knip names, or add a knip entry point with gspot set tools.knip.entry if the file is loaded in a way knip cannot see."
+help = "Delete what knip names, or add a knip entry point with gspot set tools.knip.entry if the file is loaded in a way knip cannot see."
 
 [[settings]]
 name = "tools.eslint.rules"
@@ -263,7 +263,7 @@ analysis = "required-rules"
 inspection = ["integrity"]
 summary = "Checks that the configuration ESLint resolves for a file still turns on every rule the presets require."
 why = "The configuration is put together from the blocks of many presets, and a later block can turn off a rule that an earlier one turned on."
-fix = "Run gspot apply to write the configuration again. A rule the repository decided against is recorded with gspot ignore, which carries a reason."
+help = "Run gspot apply to write the configuration again. A rule the repository decided against is recorded with gspot ignore, which carries a reason."
 
 [rule_files]
 language = ["language/JAVASCRIPT.md", "language/naming/JAVASCRIPT.md"]

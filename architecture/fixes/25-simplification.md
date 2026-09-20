@@ -95,6 +95,17 @@ The shared ESLint preset disables the type-based Boolean naming heuristic becaus
 
 Fixer outcomes follow the canonical `FixResult` and `FixReport` contract. The K-42 implementation record holds local execution and cleanup evidence; broader command batching remains open.
 
+Manifest advice and repository advice use `help`. Both correction definitions use
+`fix_command` and `fix_order`; the old `fix` fields are rejected. Repository validation and
+the published JSON schema require ordering when a correction command is present. The
+planner preserves the declared ordering and advice, and execution resolves the correction
+executable independently from the check executable. Identity and coverage migrations remain open.
+
+**Local verification, September 20, 2026.** The affected policy, preset, run, and output suites
+pass (111 tests, 529 assertions), as do the two planted repository-check tests. Type checking,
+published-schema validation, and all 272 reference-page comparisons pass. Windows execution
+remains deferred.
+
 **What is wrong.** The names guide endorsed a writing action called `didWrite` while rejecting
 `didRunFixer`. It prescribed `name` for a finding's check reference, although ignores and
 findings use `check`. The glossary retained runner surface, inspection, and project templates.

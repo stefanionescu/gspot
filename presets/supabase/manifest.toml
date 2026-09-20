@@ -45,7 +45,7 @@ analysis = "supabase-config"
 inspection = ["syntax"]
 summary = "Checks that the project file parses, and that every function it configures has a folder with an index file."
 why = "The CLI reads this file at every deploy, and a function it configures with no code fails there."
-fix = "Correct the file at the place the message names, or remove the table of a function the repository does not hold."
+help = "Correct the file at the place the message names, or remove the table of a function the repository does not hold."
 
 [[checks]]
 id = "supabase/migration-names"
@@ -56,7 +56,7 @@ analysis = "supabase-migration-names"
 inspection = ["naming"]
 summary = "Checks that every migration is named fourteen digits, an underscore, and snake case words."
 why = "The CLI orders and records migrations by this name, and it skips a file it cannot read a version from."
-fix = "Create the migration with supabase migration new <name>, which writes the name."
+help = "Create the migration with supabase migration new <name>, which writes the name."
 
 [[checks]]
 id = "supabase/storage-policies"
@@ -67,7 +67,7 @@ analysis = "supabase-storage"
 inspection = ["security"]
 summary = "Checks that every storage bucket in the project file has a policy on storage.objects that names it."
 why = "A bucket with no policy is closed to everyone or, when it is public, open to everyone, and neither is a decision anybody wrote down."
-fix = "Add a policy on storage.objects for the bucket in a migration."
+help = "Add a policy on storage.objects for the bucket in a migration."
 
 [[checks]]
 id = "supabase/admin-key-containment"
@@ -78,7 +78,7 @@ analysis = "supabase-admin-key"
 inspection = ["security"]
 summary = "Checks that the service role key is named only under tools.supabase.admin_key_paths."
 why = "The service role key bypasses row level security, so one client bundle that holds it gives every user the whole database."
-fix = "Move the code to a server path, or add the path to tools.supabase.admin_key_paths when it never reaches a client."
+help = "Move the code to a server path, or add the path to tools.supabase.admin_key_paths when it never reaches a client."
 
 [[checks]]
 id = "supabase/deno-lint"
@@ -90,7 +90,7 @@ tool = "deno"
 inspection = ["style"]
 summary = "Runs deno lint over every edge function, with the function's own deno.json."
 why = "Edge functions run under Deno, and its linter knows the runtime the Node rules do not."
-fix = "Change the code the way the rule says; deno lint --rules explains each one."
+help = "Change the code the way the rule says; deno lint --rules explains each one."
 
 [[checks]]
 id = "supabase/deno-check"
@@ -102,7 +102,7 @@ tool = "deno"
 inspection = ["types"]
 summary = "Type checks the entry file of every edge function with deno check."
 why = "The project compiler does not resolve the import map of a function, so only Deno sees its types."
-fix = "Fix the first error Deno prints; later ones are often the same mistake."
+help = "Fix the first error Deno prints; later ones are often the same mistake."
 
 [[checks]]
 id = "supabase/types-fresh"
@@ -114,7 +114,7 @@ tool = "supabase"
 inspection = ["consistency"]
 summary = "Compares tools.supabase.types_file with the types the CLI writes from the local database."
 why = "Stale types let code compile against a column the database dropped."
-fix = "Run supabase gen types typescript --local and write the output to the file."
+help = "Run supabase gen types typescript --local and write the output to the file."
 
 [[settings]]
 name = "tools.supabase.types_file"

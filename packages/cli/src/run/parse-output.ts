@@ -160,19 +160,19 @@ function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string)
             return [];
         }
         case 'json': {
-            return parseJson(spec.id, output, stdout, spec.fix);
+            return parseJson(spec.id, output, stdout, spec.help);
         }
         case 'eslint-json': {
-            return parseEslintJson(spec.id, stdout, spec.fix, root);
+            return parseEslintJson(spec.id, stdout, spec.help, root);
         }
         case 'lines': {
-            return parseLines(spec.id, text, spec.fix);
+            return parseLines(spec.id, text, spec.help);
         }
         case 'regex': {
-            return parseRegex(spec.id, output, text, spec.fix);
+            return parseRegex(spec.id, output, text, spec.help);
         }
         case 'grouped': {
-            return parseGrouped(spec.id, output, text, spec.fix);
+            return parseGrouped(spec.id, output, text, spec.help);
         }
     }
 }

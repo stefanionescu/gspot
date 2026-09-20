@@ -127,3 +127,31 @@ describe('readPolicy', () => {
         expect(() => readPolicy(fixture.path)).toThrow('Run `gspot init`');
     });
 });
+
+describe('repository correction contracts', () => {
+    const check = `${minimal}[[check]]
+id = "fixture/correction"
+command = ["tool", "check"]
+paths = ["source.txt"]
+stage = "commit"
+`;
+
+    test('keeps advice separate from the correction command and its ordering', () => {
+        const policy = parsePolicyText(
+            `${check}help = "Review the tool output."
+fix_command = ["tool", "correct"]
+fix_order = "imports"
+`,
+            'gspot.toml',
+        );
+        expect(policy.checks[0]?.help).toBe('Review the tool output.');
+        expect(policy.checks[0]?.fix_command).toEqual(['tool', 'correct']);
+        expect(policy.checks[0]?.fix_order).toBe('imports');
+    });
+
+    test('refuses the old correction field and incomplete executable corrections', () => {
+        expect(problems(`${check}fix = ["tool"]`)[0]).toContain('`fix`');
+        expect(problems(`${check}fix_command = ["tool"]`)[0]).toContain('fix_order');
+        expect(problems(`${check}fix_command = []\nfix_order = "format"`)).not.toEqual([]);
+    });
+});

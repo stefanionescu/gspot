@@ -33,4 +33,4 @@ claims = {extensions = [".yml", ".yaml", ".cfg", ".j2"]}
 inspection = ["style"]
 summary = "Runs ansible-lint in every folder that holds an ansible.cfg."
 why = "A playbook runs as root on production hosts, and a task that is not idempotent changes them on every run."
-fix = "Change the task the way the rule says. Turn one rule off with gspot ignore ansible/lint --rule <id> --reason."
+help = "Change the task the way the rule says. Turn one rule off with gspot ignore ansible/lint --rule <id> --reason."

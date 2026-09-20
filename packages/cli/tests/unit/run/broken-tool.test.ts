@@ -8,7 +8,7 @@ const base: Omit<CheckSpec, 'id' | 'output'> = {
     inspection: [],
     summary: '',
     why: '',
-    fix: '',
+    help: '',
 };
 const here = import.meta.dir;
 

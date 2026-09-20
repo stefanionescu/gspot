@@ -150,18 +150,26 @@ const checkOutput = z.strictObject({
     message: text.optional(),
 });
 
-const checkSchema = z.strictObject({
-    id: text,
-    command: textListNonEmpty,
-    paths: textListNonEmpty,
-    stage: z.enum(['commit', 'push', 'manual']),
-    fix: textList.optional(),
-    count_regex: text.optional(),
-    requires: z.enum(['build', 'docker', 'network']).optional(),
-    platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
-    summary: text.optional(),
-    output: checkOutput.optional(),
-});
+const checkSchema = z
+    .strictObject({
+        id: text,
+        command: textListNonEmpty,
+        paths: textListNonEmpty,
+        stage: z.enum(['commit', 'push', 'manual']),
+        help: text.optional(),
+        fix_command: textListNonEmpty.optional(),
+        fix_order: z.enum(['codemod', 'imports', 'manifest', 'format']).optional(),
+        count_regex: text.optional(),
+        requires: z.enum(['build', 'docker', 'network']).optional(),
+        platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
+        summary: text.optional(),
+        output: checkOutput.optional(),
+    })
+    .refine((check) => check.fix_command === undefined || check.fix_order !== undefined, {
+        message: 'A fix_command requires fix_order.',
+        path: ['fix_order'],
+    })
+    .meta({ dependentRequired: { fix_command: ['fix_order'] } });
 
 const hooksSchema = z.strictObject({ tool: z.enum(['gspot', 'lefthook', 'husky', 'none']).optional() });
 

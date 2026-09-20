@@ -73,7 +73,7 @@ function checkExplanation(session: Session | undefined, id: string): Explanation
         '',
         `What it looks for: ${check.summary}`,
         `Why it matters: ${check.why}`,
-        `What to do: ${check.fix}`,
+        `What to do: ${check.help}`,
         '',
         `Turn it off for some paths: gspot ignore ${id} --paths "<glob>" --reason "..."`,
     ];
@@ -86,12 +86,12 @@ function checkExplanation(session: Session | undefined, id: string): Explanation
                 ? 'Selected in this repository: yes'
                 : `Selected in this repository: no (gspot add ${preset.preset.id})`,
         );
-    const { stage, summary, why, fix } = check;
+    const { stage, summary, why, help } = check;
     return {
         kind: 'check',
         subject: id,
         text: `${lines.join('\n')}\n`,
-        data: { id, preset: preset.preset.id, stage, summary, why, fix, settings, rules },
+        data: { id, preset: preset.preset.id, stage, summary, why, help, settings, rules },
     };
 }
 

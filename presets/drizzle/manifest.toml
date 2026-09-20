@@ -33,7 +33,7 @@ claims = {extensions = [".ts"]}
 inspection = ["structure"]
 summary = "Checks that every table with a reference has a relations entry."
 why = "The query builder joins through relations, so a reference without one works in SQL and is missing in code."
-fix = "Add a relations call for the table."
+help = "Add a relations call for the table."
 
 [[checks]]
 id = "drizzle/migrations-fresh"
@@ -46,7 +46,7 @@ claims = {extensions = [".ts", ".sql"]}
 inspection = ["consistency"]
 summary = "Asks drizzle-kit to write migrations, and fails when it writes one."
 why = "A schema change with no migration works on the machine that pushed the schema and nowhere else."
-fix = "Run drizzle-kit generate and commit the migration."
+help = "Run drizzle-kit generate and commit the migration."
 
 [[settings]]
 name = "tools.drizzle.raw_sql_allowed"

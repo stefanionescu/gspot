@@ -51,7 +51,7 @@ inspection = ["syntax"]
 output = {format = "regex", pattern = "^(?<file>[^:]+): line (?<line>\\d+): (?<message>.*)$"}
 summary = "Checks that every shell script parses before anything else runs it."
 why = "A script with a syntax error stops at the broken line, sometimes after it has already done half its work."
-fix = "Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about."
+help = "Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about."
 
 [[checks]]
 id = "bash/shellcheck"
@@ -62,7 +62,7 @@ inspection = ["style", "security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
 summary = "Runs ShellCheck with every rule on, over every shell script, and the files they source."
 why = "ShellCheck catches the quoting, globbing and exit-status mistakes that make shell scripts fail on the one input nobody tested."
-fix = "Read the SC code in the finding; gspot explain shellcheck/SC2086 links to its page. Turn one code off with gspot ignore bash/shellcheck --rule SC2086 --reason."
+help = "Read the SC code in the finding; gspot explain shellcheck/SC2086 links to its page. Turn one code off with gspot ignore bash/shellcheck --rule SC2086 --reason."
 
 [[checks]]
 id = "bash/shfmt"
@@ -75,7 +75,7 @@ inspection = ["format"]
 output = {format = "regex", pattern = "^--- (?<file>[^\\s]+)\\.orig$", message = "This script is not formatted the way shfmt formats it."}
 summary = "Checks that every shell script is formatted the way shfmt formats it."
 why = "One formatter means diffs show what changed, not how someone's editor indents."
-fix = "Run gspot check --fix to format every script, or shfmt -w on one file."
+help = "Run gspot check --fix to format every script, or shfmt -w on one file."
 
 [[checks]]
 id = "structure/shell-interpreter"
@@ -86,7 +86,7 @@ inspection = ["structure"]
 searched = ["shellcheck", "shfmt", "bashate"]
 summary = "Checks the contract every Bash script keeps: the four-line header, strict mode, one main called last, readonly constants, declarative libraries, cleaned-up temporary files."
 why = "A script that skips strict mode or hides its runtime fails on the machine where it matters, silently."
-fix = "Open with the shebang, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail and shopt -s inherit_errexit first, and end an executable with a call to main."
+help = "Open with the shebang, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail and shopt -s inherit_errexit first, and end an executable with a call to main."
 
 [[checks]]
 id = "structure/doc-comment"
@@ -97,7 +97,7 @@ inspection = ["structure", "prose"]
 searched = ["shellcheck", "bashdoc", "shdoc"]
 summary = "Checks that every shell function announces itself in a comment above it that says more than its name."
 why = "A function with no summary makes the reader run it in their head; a vague summary is a summary nobody will trust."
-fix = "Write \"# name: what it does\" above the function; when it carries doc sections, keep Globals, Arguments, Outputs, Returns in that order."
+help = "Write \"# name: what it does\" above the function; when it carries doc sections, keep Globals, Arguments, Outputs, Returns in that order."
 
 [[checks]]
 id = "structure/duplicate-functions"
@@ -109,7 +109,7 @@ inspection = ["structure"]
 searched = ["jscpd", "shellcheck"]
 summary = "Finds shell functions with the same body in the same scope."
 why = "Two copies drift apart; the fix lands in one and the bug stays in the other."
-fix = "Keep one function and call it from both places."
+help = "Keep one function and call it from both places."
 
 [[checks]]
 id = "structure/unused-functions"
@@ -120,7 +120,7 @@ inspection = ["structure"]
 searched = ["shellcheck SC2329", "knip"]
 summary = "Finds shell functions no script in the scope calls."
 why = "Dead code is read and maintained for nobody."
-fix = "Delete the function, or mark a hook entry point with lint:allow-unused-function <name> and say why."
+help = "Delete the function, or mark a hook entry point with lint:allow-unused-function <name> and say why."
 
 [[checks]]
 id = "structure/dead-parameters"
@@ -131,7 +131,7 @@ inspection = ["structure"]
 searched = ["shellcheck"]
 summary = "Finds shell functions called with arguments they never read."
 why = "An argument the callee ignores is a promise the call site believes in."
-fix = "Read the argument in the function, or drop it from every call."
+help = "Read the argument in the function, or drop it from every call."
 
 [[checks]]
 id = "structure/private-prefix"
@@ -142,7 +142,7 @@ inspection = ["structure"]
 searched = ["shellcheck"]
 summary = "Checks that a shell function no other file calls starts with an underscore, and that an underscore function is not called from outside."
 why = "The underscore tells a reader what the file publishes without reading every caller."
-fix = "Rename the function with a leading underscore, or drop the underscore when another file calls it."
+help = "Rename the function with a leading underscore, or drop the underscore when another file calls it."
 
 [[checks]]
 id = "structure/private-before-public"
@@ -153,7 +153,7 @@ inspection = ["structure"]
 searched = ["shfmt", "shellcheck"]
 summary = "Checks that underscore functions come before the public ones and main comes last."
 why = "A file read top to bottom then explains its helpers before it uses them and ends where it starts."
-fix = "Move the private functions above the public ones and main to the end."
+help = "Move the private functions above the public ones and main to the end."
 
 [[checks]]
 id = "structure/trivial-function"
@@ -165,7 +165,7 @@ inspection = ["structure"]
 searched = ["shellcheck"]
 summary = "Finds a shell function used once whose body fits the trivial ceiling."
 why = "A name for two lines used once hides the two lines and adds a jump."
-fix = "Inline the body at its one call, or mark the function with lint:allow-trivial-function <name> and say why."
+help = "Inline the body at its one call, or mark the function with lint:allow-trivial-function <name> and say why."
 
 [[checks]]
 id = "structure/call-through"
@@ -176,7 +176,7 @@ inspection = ["structure"]
 searched = ["shellcheck"]
 summary = "Finds a shell function whose whole body forwards its arguments to one command."
 why = "A forwarding function is a second name for the command it wraps."
-fix = "Call the command directly, or allow the function with a reason under structure.call_through_allowed."
+help = "Call the command directly, or allow the function with a reason under structure.call_through_allowed."
 
 [[checks]]
 id = "structure/file-length"
@@ -188,7 +188,7 @@ inspection = ["structure"]
 searched = ["shellcheck", "shfmt"]
 summary = "Checks that no shell script has more code lines than the ceiling."
 why = "A long script holds more than one job; split it by the job."
-fix = "Split the script, or raise limits.bash.file_lines with a reason."
+help = "Split the script, or raise limits.bash.file_lines with a reason."
 
 [[checks]]
 id = "structure/function-length"
@@ -200,7 +200,7 @@ inspection = ["structure"]
 searched = ["shellcheck", "shfmt"]
 summary = "Checks that no shell function has more code lines than the ceiling."
 why = "A long function does more than its name says."
-fix = "Split the function, or raise limits.bash.function_lines with a reason."
+help = "Split the function, or raise limits.bash.function_lines with a reason."
 
 [[checks]]
 id = "structure/shell-script-policy"
@@ -211,7 +211,7 @@ inspection = ["structure"]
 searched = ["shellcheck", "semgrep"]
 summary = "Finds forwarding wrappers, compatibility aliases, and inline Node in shell scripts."
 why = "A wrapper is a second entry point that drifts from the first; inline Node is a second language nobody lints."
-fix = "Call the target script directly, delete the alias, and move the Node code into a .js file."
+help = "Call the target script directly, delete the alias, and move the Node code into a .js file."
 
 [[checks]]
 id = "structure/shell-embeds"
@@ -222,7 +222,7 @@ inspection = ["structure"]
 searched = ["shellcheck", "semgrep"]
 summary = "Finds inline Python, Node and generated-script heredocs in shell scripts."
 why = "Code inside a heredoc is checked by nothing."
-fix = "Move the embedded code into its own file and run that."
+help = "Move the embedded code into its own file and run that."
 
 [[checks]]
 id = "structure/shell-ssh-blocks"
@@ -233,7 +233,7 @@ inspection = ["structure"]
 searched = ["shellcheck"]
 summary = "Checks that multi-line ssh blocks are named, documented, and inside a function."
 why = "A remote command block with no name is the hardest thing in a script to test or reuse."
-fix = "Move the block into a named function and write \"# name - what it does\" above it."
+help = "Move the block into a named function and write \"# name - what it does\" above it."
 
 [[checks]]
 id = "structure/shell-config-defaults"
@@ -244,7 +244,7 @@ inspection = ["structure"]
 searched = ["shellcheck"]
 summary = "Finds variable defaults of the form name:-value outside the configuration owners."
 why = "A default set in three places is three settings with one name."
-fix = "Set the default in a configuration owner named under tools.bash.config_owners and read the variable everywhere else."
+help = "Set the default in a configuration owner named under tools.bash.config_owners and read the variable everywhere else."
 
 [[checks]]
 id = "structure/shell-config-guards"
@@ -255,7 +255,7 @@ inspection = ["structure"]
 searched = ["shellcheck"]
 summary = "Checks that every configuration owner opens with one include guard nobody else uses."
 why = "A configuration file sourced twice runs its side effects twice."
-fix = "Open the owner with [[ -n ${_CFG_NAME_READY:-} ]] && return 0 and then readonly _CFG_NAME_READY=1."
+help = "Open the owner with [[ -n ${_CFG_NAME_READY:-} ]] && return 0 and then readonly _CFG_NAME_READY=1."
 
 [[checks]]
 id = "structure/shell-boundaries"
@@ -266,7 +266,7 @@ inspection = ["structure"]
 searched = ["shellcheck source="]
 summary = "Checks that scripts under the architecture roots declare their boundary and source what they call."
 why = "A script that works only because another file was sourced first breaks when the order changes."
-fix = "Add a Boundary line to the header comment, annotate every source with # shellcheck source=, and source the file a function comes from."
+help = "Add a Boundary line to the header comment, annotate every source with # shellcheck source=, and source the file a function comes from."
 
 [[checks]]
 id = "structure/env-access-owner"
@@ -277,7 +277,7 @@ inspection = ["structure"]
 searched = ["shellcheck"]
 summary = "Checks that environment variables the owner declares are read elsewhere only through it."
 why = "When any script reads the environment, nobody can list what the program needs to run; one owner can."
-fix = "Read the variable in the owner named under architecture.roles.env and pass the value in."
+help = "Read the variable in the owner named under architecture.roles.env and pass the value in."
 
 [[checks]]
 id = "structure/shell-branches"
@@ -289,7 +289,7 @@ inspection = ["structure"]
 searched = ["shellcheck"]
 summary = "Counts the branches in each shell function against the ceiling."
 why = "A function with many branches is several functions with one name."
-fix = "Split the function by branch, or raise limits.bash.function_branches with a reason."
+help = "Split the function by branch, or raise limits.bash.function_branches with a reason."
 
 [[checks]]
 id = "structure/shell-nesting"
@@ -301,7 +301,7 @@ inspection = ["structure"]
 searched = ["shellcheck"]
 summary = "Measures how deep control flow nests in each shell function against the ceiling."
 why = "Deep nesting is the shape of code nobody can hold in their head."
-fix = "Return early or split the inner block into a function, or raise limits.bash.function_nesting with a reason."
+help = "Return early or split the inner block into a function, or raise limits.bash.function_nesting with a reason."
 
 [[checks]]
 id = "structure/shell-mutable-assignments"
@@ -313,7 +313,7 @@ inspection = ["structure"]
 searched = ["shellcheck"]
 summary = "Counts the variable assignments in each shell function against the ceiling."
 why = "A function that reassigns many variables is tracking state a reader cannot follow."
-fix = "Split the function, or raise limits.bash.mutable_assignments with a reason."
+help = "Split the function, or raise limits.bash.mutable_assignments with a reason."
 
 [[checks]]
 id = "structure/shell-safety"
@@ -324,7 +324,7 @@ inspection = ["structure", "security"]
 searched = ["shellcheck", "semgrep"]
 summary = "Finds discarded failures, broad process kills, recursive deletes outside their owners, unchecked cd, and sourced state files."
 why = "Each of these is a way a script destroys something it did not mean to and says nothing."
-fix = "Handle the failure, check the cd, and move the delete or kill into a script named under tools.bash.safety.owners."
+help = "Handle the failure, check the cd, and move the delete or kill into a script named under tools.bash.safety.owners."
 
 [[settings]]
 name = "tools.bash.doc_style"

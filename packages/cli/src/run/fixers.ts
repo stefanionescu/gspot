@@ -2,6 +2,7 @@
 import { join } from 'node:path';
 import { createTwoFilesPatch } from 'diff';
 import { readFileSync, rmSync } from 'node:fs';
+import type { ToolPin } from '#types/manifest.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { byFixOrder } from '#cli/run/concurrency.ts';
 import { scratchCopy } from '#cli/run/scratch-copy.ts';
@@ -37,6 +38,17 @@ function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string
 
 function isSkipped(plannedCheck: PlannedCheck): boolean {
     return plannedCheck.skip !== undefined || plannedCheck.files.length === 0;
+}
+
+function correctionTool(session: Session, plannedCheck: PlannedCheck): ToolPin | undefined {
+    const name = plannedCheck.spec.fix_command?.[0];
+    if (name === undefined) return undefined;
+    if (plannedCheck.tool?.name === name) return plannedCheck.tool;
+    const pinned = session.manifests
+        .values()
+        .flatMap((manifest) => manifest.tools)
+        .find((tool) => tool.name === name);
+    return pinned ?? { name, windows: true, installers: {} };
 }
 
 async function runCorrection(plannedCheck: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
@@ -85,7 +97,8 @@ export async function runFixer(
     plannedCheck: PlannedCheck,
     workingDirectory: string,
 ): Promise<FixResult> {
-    const { spec, tool } = plannedCheck;
+    const { spec } = plannedCheck;
+    const tool = correctionTool(session, plannedCheck);
     const check = plannedCheck.id;
     if (spec.fix_command === undefined || isSkipped(plannedCheck)) return { check, status: 'skipped', changed: [] };
     if (tool === undefined) return { check, status: 'failed', changed: [], note: 'No correction tool is configured.' };

@@ -17,7 +17,7 @@ claims = {extensions = [".ts", ".tsx"]}
 inspection = ["structure"]
 summary = "Checks that code outside the server paths imports from them as a type only."
 why = "A value import of the router pulls the server, its secrets, and its database client into the client bundle."
-fix = "Import the router type with import type, and call the server through the client."
+help = "Import the router type with import type, and call the server through the client."
 
 [[settings]]
 name = "tools.trpc.server_paths"

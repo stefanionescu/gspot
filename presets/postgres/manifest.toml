@@ -32,7 +32,7 @@ inspection = ["security"]
 output = {format = "json", line_base = 0, fields = {file = "file", line = "line", column = "column", rule = "rule_name", message = "message"}}
 summary = "Reads every migration for the change that locks a table, rewrites it, or breaks the running application."
 why = "A migration that takes an exclusive lock on a large table stops the application for as long as it runs."
-fix = "Follow the help squawk prints for the rule. Turn one rule off with gspot ignore postgres/squawk --rule <name> --reason."
+help = "Follow the help squawk prints for the rule. Turn one rule off with gspot ignore postgres/squawk --rule <name> --reason."
 
 [[checks]]
 id = "postgres/migration-order"
@@ -43,7 +43,7 @@ analysis = "postgres-order"
 inspection = ["consistency"]
 summary = "Checks that every migration has a version, that no two share one, and that a new migration sorts after the committed ones."
 why = "A migration that sorts before one already applied never runs on the databases that are ahead of it."
-fix = "Rename the new migration with a version later than the newest committed one."
+help = "Rename the new migration with a version later than the newest committed one."
 
 [[checks]]
 id = "postgres/migrations-frozen"
@@ -54,7 +54,7 @@ analysis = "postgres-frozen"
 inspection = ["consistency"]
 summary = "Checks that no migration at or before tools.squawk.frozen_through differs from its committed text."
 why = "A migration that ran never runs again, so an edit to it changes new databases only and the environments drift apart."
-fix = "Restore the file with git checkout, and write the change as a new migration."
+help = "Restore the file with git checkout, and write the change as a new migration."
 
 [[checks]]
 id = "postgres/rls-present"
@@ -65,7 +65,7 @@ analysis = "postgres-rls"
 inspection = ["security"]
 summary = "Checks that every table in a client schema enables row level security and has a policy in some migration."
 why = "A table in an exposed schema with no row security is readable and writable by every client that holds the public key."
-fix = "Enable row level security on the table, and add its policies in the same or a later migration."
+help = "Enable row level security on the table, and add its policies in the same or a later migration."
 
 [[checks]]
 id = "postgres/explicit-grants"
@@ -76,7 +76,7 @@ analysis = "postgres-grants"
 inspection = ["security"]
 summary = "Refuses a grant of every privilege in a migration."
 why = "Granting everything includes truncating the table, adding triggers, and every privilege a later Postgres adds, which nobody meant to give."
-fix = "Name the privileges the role needs, such as `SELECT` alone."
+help = "Name the privileges the role needs, such as `SELECT` alone."
 
 [[checks]]
 id = "postgres/security-definer-search-path"
@@ -87,7 +87,7 @@ analysis = "postgres-definer"
 inspection = ["security"]
 summary = "Checks that every SECURITY DEFINER function sets its search_path."
 why = "A definer function runs with its owner's rights, and a caller who controls the search path chooses the objects it touches."
-fix = "Give the function an empty `search_path` in its definition, and qualify every name inside it."
+help = "Give the function an empty `search_path` in its definition, and qualify every name inside it."
 
 [[checks]]
 id = "postgres/index-covers-foreign-key"
@@ -98,7 +98,7 @@ analysis = "postgres-foreign-keys"
 inspection = ["structure"]
 summary = "Checks that an index, a primary key, or a unique key leads with every foreign key column."
 why = "Deleting a parent row scans the whole child table when the foreign key has no index."
-fix = "Create an index that starts with the foreign key column."
+help = "Create an index that starts with the foreign key column."
 
 [[checks]]
 id = "postgres/migration-docs"
@@ -109,7 +109,7 @@ analysis = "postgres-docs"
 inspection = ["prose"]
 summary = "Checks the documented migration layout when tools.postgres.migration_docs asks for it: a boxed header, boxed sections, and a labeled block above each table and function."
 why = "A migration is read years later by someone deciding whether a table can go, and the purpose line is what they look for."
-fix = "Write the header, put each statement under its section, and label tables and functions with their purpose."
+help = "Write the header, put each statement under its section, and label tables and functions with their purpose."
 
 [[settings]]
 name = "tools.squawk.assume_in_transaction"

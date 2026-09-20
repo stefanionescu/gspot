@@ -28,7 +28,7 @@ analysis = "locale-files"
 inspection = ["consistency"]
 summary = "Checks the message files under tools.i18n.translations: each message parses, none is empty, no key holds a dot, and every locale holds every key of the base."
 why = "A key missing in one locale shows the key itself, or another language, in the middle of a translated screen."
-fix = "Correct the message, or add the missing key to the locale."
+help = "Correct the message, or add the missing key to the locale."
 
 [[settings]]
 name = "tools.i18n.translations"

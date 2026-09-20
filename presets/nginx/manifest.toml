@@ -36,7 +36,7 @@ inspection = ["security"]
 output = {format = "json", fields = {file = "path", line = "line", rule = "plugin", message = "summary"}}
 summary = "Reads every nginx file for the mistakes that open a server: request forgery, path traversal through alias, header injection, a disclosed version."
 why = "These mistakes parse, serve traffic, and look like any other location block until somebody uses them."
-fix = "Change the block the way the rule's page says. Turn one rule off with gspot ignore nginx/gixy --rule <name> --reason."
+help = "Change the block the way the rule's page says. Turn one rule off with gspot ignore nginx/gixy --rule <name> --reason."
 
 [[checks]]
 id = "nginx/config-test"
@@ -49,7 +49,7 @@ tool = "docker"
 inspection = ["syntax"]
 summary = "Runs nginx -t over every main configuration file inside the nginx image. It mounts a throwaway certificate and resolves the upstream names."
 why = "Only nginx knows whether nginx accepts the file, and the other place to learn it is the restart in production."
-fix = "Read the line nginx names. Set tools.nginx.image to the image the deployment runs."
+help = "Read the line nginx names. Set tools.nginx.image to the image the deployment runs."
 
 [[settings]]
 name = "tools.nginx.image"

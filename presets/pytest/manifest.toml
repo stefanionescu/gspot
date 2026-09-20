@@ -26,7 +26,7 @@ inspection = ["coverage"]
 output = {format = "regex", pattern = "^(?<message>(?:FAIL Required test coverage|FAILED |ERROR ).*)$"}
 summary = "Runs the test suite with coverage, and fails when a test fails or the covered share falls under the floor."
 why = "A floor keeps new code from arriving untested."
-fix = "Fix the failing test, or add tests for the code the report shows uncovered. Lower tools.pytest.coverage with a reason."
+help = "Fix the failing test, or add tests for the code the report shows uncovered. Lower tools.pytest.coverage with a reason."
 
 [[settings]]
 name = "tools.pytest.coverage"

@@ -36,7 +36,7 @@ exclude_setting = "tools.typos.exclude"
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*)$"}
 summary = "Finds misspelled words in code, comments, and documentation."
 why = "A typo in an identifier spreads to every caller; in prose it costs the reader a second look."
-fix = "Fix the spelling, or allow the word with gspot allow typos <word> when it is a real name."
+help = "Fix the spelling, or allow the word with gspot allow typos <word> when it is a real name."
 
 [[settings]]
 name = "tools.typos.words"

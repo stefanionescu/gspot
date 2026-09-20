@@ -36,7 +36,7 @@ exclude_setting = "tools.sqlfluff.exclude"
 output = {format = "json", children = "violations", fields = {file = "filepath", line = "start_line_no", column = "start_line_pos", rule = "code", message = "description"}}
 summary = "Lints every SQL file for layout, capitalization, aliasing, and ambiguous references, in the dialect the database preset names."
 why = "SQL that reads one way in every file lets a reviewer look at what the statement does."
-fix = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule <code> --reason."
+help = "Run gspot check --fix. Turn one rule off with gspot ignore sql/sqlfluff --rule <code> --reason."
 
 [[checks]]
 id = "sql/syntax"
@@ -47,7 +47,7 @@ exclude_setting = "tools.sqlfluff.exclude"
 inspection = ["syntax"]
 summary = "Parses every SQL file with the parser Postgres itself uses, when the dialect is postgres or ansi."
 why = "A migration that does not parse fails at deploy, halfway through a release."
-fix = "Correct the statement at the line and column the message names."
+help = "Correct the statement at the line and column the message names."
 
 [[checks]]
 id = "sql/block-comments"
@@ -57,7 +57,7 @@ analysis = "sql-block-comments"
 inspection = ["structure"]
 summary = "Refuses block comments in SQL, so every comment is a line comment."
 why = "The prose and spelling checks read line comments, and a block comment hides text and dead code from them."
-fix = "Rewrite the block as line comments that start with two dashes."
+help = "Rewrite the block as line comments that start with two dashes."
 
 [[checks]]
 id = "sql/file-length"
@@ -68,7 +68,7 @@ limit = "limits.sql.file_lines"
 inspection = ["structure"]
 summary = "Checks that no SQL file has more code lines than the ceiling."
 why = "A long SQL file holds more than one change, and one change is what a reviewer can hold."
-fix = "Split the file by the object it changes, or raise limits.sql.file_lines with a reason."
+help = "Split the file by the object it changes, or raise limits.sql.file_lines with a reason."
 
 [[settings]]
 name = "tools.sqlfluff.dialect"

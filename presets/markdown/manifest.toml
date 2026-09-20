@@ -37,7 +37,7 @@ inspection = ["style"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+)(?::(?<column>\\d+))?(?: error| warning)? (?<rule>MD\\d+)\\/(?<message>.*)$"}
 summary = "Checks every Markdown file against markdownlint with the shipped rule set."
 why = "Markdown that lints the same everywhere renders the same everywhere."
-fix = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."
+help = "Run gspot check --fix for the rules that fix themselves; read the rule name for the rest."
 
 [[checks]]
 id = "markdown/prettier"
@@ -46,7 +46,7 @@ reported_by = "formatting/prettier"
 inspection = ["format"]
 summary = "Checks that every Markdown file is formatted the way Prettier formats it."
 why = "One formatter keeps a diff about the words, not the table padding."
-fix = "Run gspot check --fix, or prettier --write on the file."
+help = "Run gspot check --fix, or prettier --write on the file."
 
 [[checks]]
 id = "markdown/fences"
@@ -56,7 +56,7 @@ analysis = "fences"
 inspection = ["syntax"]
 summary = "Checks that every fenced code block with a language tag parses in that language."
 why = "A code block that does not parse is documentation that lies about the code."
-fix = "Fix the code in the block, or tag the block text when it is not code."
+help = "Fix the code in the block, or tag the block text when it is not code."
 
 [[settings]]
 name = "tools.markdownlint.rules"

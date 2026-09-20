@@ -48,7 +48,7 @@ inspection = ["advisories"]
 output = {format = "json", items = "results", children = "packages.vulnerabilities", fields = {file = "source.path", rule = "id", message = "package.name package.version summary"}}
 summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
 why = "A dependency with a published advisory is an attack someone already wrote down."
-fix = "Upgrade the package the finding names. When no fix exists, record the advisory with gspot allow osv <id> --reason, and a date to look again."
+help = "Upgrade the package the finding names. When no fix exists, record the advisory with gspot allow osv <id> --reason, and a date to look again."
 
 [[checks]]
 id = "dependencies/syncpack"
@@ -61,7 +61,7 @@ inspection = ["consistency"]
 output = {format = "lines"}
 summary = "Checks that every workspace package resolves each dependency to one version."
 why = "Two versions of one dependency in a workspace mean two behaviors, and a bug that appears in one package only."
-fix = "Run syncpack fix-mismatches with the gspot configuration, or align the versions by hand."
+help = "Run syncpack fix-mismatches with the gspot configuration, or align the versions by hand."
 
 [[checks]]
 id = "integrity/manifest-policy"
@@ -73,7 +73,7 @@ claims = {filenames = ["package.json"]}
 inspection = ["consistency"]
 summary = "Checks every package.json: exact versions, one packageManager across the workspace, a private root, and one kind of lockfile."
 why = "A version range installs a different tree tomorrow, and two package managers produce two trees today."
-fix = "Pin the version the lockfile holds, name one packageManager, mark a workspace root private, and delete the lockfile of the manager the repository does not use."
+help = "Pin the version the lockfile holds, name one packageManager, mark a workspace root private, and delete the lockfile of the manager the repository does not use."
 
 [[checks]]
 id = "integrity/lockfile-fresh"
@@ -84,7 +84,7 @@ analysis = "lockfile-fresh"
 inspection = ["consistency"]
 summary = "Checks that every lockfile matches its manifest, by asking the package manager to install from it without changing it."
 why = "A lockfile that lags its manifest installs versions nobody reviewed the moment someone runs a plain install."
-fix = "Run the install of the package manager once and commit the lockfile it writes."
+help = "Run the install of the package manager once and commit the lockfile it writes."
 
 [[checks]]
 id = "integrity/install-policy"
@@ -96,7 +96,7 @@ claims = {filenames = ["bunfig.toml", "bun.lock", "bun.lockb", "package.json"]}
 inspection = ["consistency"]
 summary = "Checks that the install configuration waits out a minimum release age, and names the security scanner the policy asks for."
 why = "Most malicious releases are pulled within days, so a package nobody installs in its first week rarely harms anybody."
-fix = "Set [install] minimumReleaseAge in bunfig.toml to the seconds the message names, and the scanner under [install.security]."
+help = "Set [install] minimumReleaseAge in bunfig.toml to the seconds the message names, and the scanner under [install.security]."
 
 [[checks]]
 id = "integrity/lockfile-hosts"
@@ -107,7 +107,7 @@ analysis = "lockfile-hosts"
 inspection = ["consistency"]
 summary = "Checks that every URL in a lockfile is HTTPS and points at an allowed registry host."
 why = "A lockfile line that resolves from another host installs code nobody chose, and a review rarely reads lockfiles."
-fix = "Install the package from the registry again, or add the host to tools.dependencies.registry_hosts."
+help = "Install the package from the registry again, or add the host to tools.dependencies.registry_hosts."
 
 [[settings]]
 name = "tools.install.min_release_age_days"

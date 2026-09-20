@@ -166,7 +166,7 @@ function isBroken(spec: CheckSpec, result: SpawnResult): boolean {
 function unexplainedFailure(spec: CheckSpec, tool: ToolPin, result: SpawnResult, file: string | undefined): Finding {
     const placeholder = `${tool.name} exited ${String(result.code)}`;
     const text = file === undefined ? tailLines(result, placeholder) : firstLine(result, placeholder);
-    return { check: spec.id, file: file?.replaceAll('\\', '/') ?? '', message: text, help: spec.fix, fixable: false };
+    return { check: spec.id, file: file?.replaceAll('\\', '/') ?? '', message: text, help: spec.help, fixable: false };
 }
 
 function markFailure(

@@ -16,7 +16,7 @@ inspection = ["naming"]
 searched = ["eslint-plugin-unicorn prevent-abbreviations", "ls-lint", "ruff N", "swiftlint identifier_name"]
 summary = "Checks every identifier against the naming policy: banned terms, case, length, and word count."
 why = "Slop announces itself in the name: `enhancedHandler`, `ensureConfigIfNeeded` and `utils` are the sign of code that adds nothing."
-fix = "Rename after what the thing is or does. Allow one exact name with gspot allow naming <name> --reason, or adjust a ceiling with gspot set naming.<language>.max_words."
+help = "Rename after what the thing is or does. Allow one exact name with gspot allow naming <name> --reason, or adjust a ceiling with gspot set naming.<language>.max_words."
 
 [[checks]]
 id = "naming/paths"
@@ -27,7 +27,7 @@ inspection = ["naming"]
 searched = ["ls-lint", "eslint-plugin-unicorn filename-case"]
 summary = "Checks every file stem and folder name against the language's case rules and the banned terms."
 why = "A file named `enhanced-utils.ts` is a home for code nobody placed; the case rule keeps imports predictable."
-fix = "Rename the file or folder, or add a path rule under [[naming.rules]] with a reason."
+help = "Rename the file or folder, or add a path rule under [[naming.rules]] with a reason."
 
 [[checks]]
 id = "naming/policy-schema"
@@ -37,7 +37,7 @@ analysis = "policy-schema"
 inspection = ["naming"]
 summary = "Checks that the naming settings in gspot.toml are valid and that every allowed name and path rule matches something."
 why = "An allowed name that matches nothing is a leftover, and a path rule that matches nothing hides a typo."
-fix = "Remove the entry that matches nothing, or fix its name or path."
+help = "Remove the entry that matches nothing, or fix its name or path."
 
 [[settings]]
 name = "naming.banned_terms"

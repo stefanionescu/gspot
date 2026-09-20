@@ -74,7 +74,7 @@ inspection = ["style", "structure"]
 output = {format = "json", fields = {file = "file", line = "line", column = "character", rule = "rule_id", message = "reason"}}
 summary = "Lints every Swift file with the shipped SwiftLint rule set, with every warning an error."
 why = "A force unwrap, a retain cycle through a delegate, or a function nobody can hold in their head is cheapest to stop at the commit."
-fix = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore swift/swiftlint --rule <id> --reason."
+help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore swift/swiftlint --rule <id> --reason."
 
 [[checks]]
 id = "swift/swiftformat"
@@ -87,7 +87,7 @@ inspection = ["format"]
 output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?:error|warning): \\((?<rule>\\w+)\\) (?<message>.*)$"}
 summary = "Checks the layout of every Swift file against the shipped SwiftFormat rules."
 why = "One layout everywhere keeps a diff about the change and not about where a brace went."
-fix = "Run gspot check --fix."
+help = "Run gspot check --fix."
 
 [[checks]]
 id = "swift/build"
@@ -100,7 +100,7 @@ analysis = "swift-build"
 inspection = ["build"]
 summary = "Builds the package or the Xcode scheme, and keeps the compiler log for the analyzer."
 why = "Swift has no type check without a build, so the build is the type check."
-fix = "Fix the first compiler error; later ones are often the same mistake."
+help = "Fix the first compiler error; later ones are often the same mistake."
 
 [[checks]]
 id = "swift/swiftlint-analyze"
@@ -114,7 +114,7 @@ tool = "swiftlint"
 inspection = ["structure"]
 summary = "Runs the SwiftLint analyzer rules over the compiler log of the build: unused imports, unused declarations, captured variables."
 why = "These rules need the compiler's view of the code, which a file-by-file lint does not have."
-fix = "Remove what the rule names. Keep an import the analyzer misjudges under tools.swiftlint.keep_imports."
+help = "Remove what the rule names. Keep an import the analyzer misjudges under tools.swiftlint.keep_imports."
 
 [[checks]]
 id = "swift/periphery"
@@ -128,7 +128,7 @@ tool = "periphery"
 inspection = ["structure"]
 summary = "Scans the built project for declarations nothing uses."
 why = "Dead code is read, maintained, and migrated by people who cannot tell it is dead."
-fix = "Delete the declaration, or mark it with a periphery:ignore comment that says who uses it."
+help = "Delete the declaration, or mark it with a periphery:ignore comment that says who uses it."
 
 [[checks]]
 id = "swift/call-through"
@@ -140,7 +140,7 @@ claims = {extensions = [".swift"]}
 inspection = ["structure"]
 summary = "Finds functions that pass their parameters straight to one other call."
 why = "A function that only forwards adds a name to learn and a jump to make, and says nothing new."
-fix = "Call the inner function where the outer one is called, and delete the outer one."
+help = "Call the inner function where the outer one is called, and delete the outer one."
 
 [[checks]]
 id = "swift/trivial-function"
@@ -152,7 +152,7 @@ claims = {extensions = [".swift"]}
 inspection = ["structure"]
 summary = "Finds private functions of one or two statements that one place calls."
 why = "A tiny function with one caller makes the reader jump to read two lines."
-fix = "Write the body at its caller, or allow the name under structure.swift.trivial_allowed with a reason."
+help = "Write the body at its caller, or allow the name under structure.swift.trivial_allowed with a reason."
 
 [[checks]]
 id = "swift/duplicate-functions"
@@ -164,7 +164,7 @@ claims = {extensions = [".swift"]}
 inspection = ["structure"]
 summary = "Finds functions whose bodies match line for line."
 why = "Two copies of one body drift apart, and a fix made in one never reaches the other."
-fix = "Keep one of the functions and call it from both places."
+help = "Keep one of the functions and call it from both places."
 
 [[checks]]
 id = "swift/private-before-public"
@@ -176,7 +176,7 @@ claims = {extensions = [".swift"]}
 inspection = ["structure"]
 summary = "Checks that private and fileprivate top-level declarations sit above the ones other files see."
 why = "A file that opens with its own pieces and ends with what it offers reads in one direction."
-fix = "Move the file-local declarations above the first internal, public, or open one."
+help = "Move the file-local declarations above the first internal, public, or open one."
 
 [[checks]]
 id = "swift/env-access-owner"
@@ -188,7 +188,7 @@ claims = {extensions = [".swift"]}
 inspection = ["structure"]
 summary = "Checks that the process environment is read in one place."
 why = "A variable read in many files has many defaults and many spellings, and nobody can list what the app needs."
-fix = "Read the environment in the file that architecture.roles.env names, and pass the values in."
+help = "Read the environment in the file that architecture.roles.env names, and pass the values in."
 
 [[settings]]
 name = "structure.swift.trivial_allowed"

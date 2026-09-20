@@ -111,7 +111,7 @@ export type CheckSpec = {
     inspection: string[];
     summary: string;
     why: string;
-    fix: string;
+    help: string;
     searched?: string[];
 };
 

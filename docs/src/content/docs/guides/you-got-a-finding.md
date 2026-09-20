@@ -28,6 +28,10 @@ A missing tool or failed correction makes the command fail even if the checks pa
 Read the fixer diagnostic and review any partial edits before running it again. A successful
 correction counts as a change only when the selected files have different bytes.
 
+For repository `[[check]]` entries, `help` supplies advice. To add an executable correction,
+set `fix_command` to its argument list and `fix_order` to `codemod`, `imports`, `manifest`, or
+`format`. Corrections run in that order. The executable can differ from the check command.
+
 ## Ignore it with a reason
 
 ```bash

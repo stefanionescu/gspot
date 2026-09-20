@@ -25,7 +25,7 @@ inspection = ["structure"]
 searched = ["eslint-plugin-unicorn", "ls-lint", "knip"]
 summary = "Finds a folder that holds one code file and nothing else."
 why = "A folder of one file adds a level to every path and promises siblings that never arrive."
-fix = "Move the file up beside its neighbors, or allow the folder with a reason under structure.single_file_folder_allowed."
+help = "Move the file up beside its neighbors, or allow the folder with a reason under structure.single_file_folder_allowed."
 
 [[checks]]
 id = "structure/prefix-collisions"
@@ -37,7 +37,7 @@ inspection = ["structure"]
 searched = ["ls-lint", "eslint-plugin-unicorn"]
 summary = "Finds sibling files that share a name prefix, like asset-card, asset-list and asset-row in one folder."
 why = "Files that share a prefix are one concept split by suffix; they belong in a folder named after the prefix."
-fix = "Move the files into a folder named after the shared prefix, or allow the set with a reason."
+help = "Move the files into a folder named after the shared prefix, or allow the set with a reason."
 
 [[checks]]
 id = "structure/file-directory-collision"
@@ -48,7 +48,7 @@ inspection = ["structure"]
 searched = ["ls-lint"]
 summary = "Finds a file and a folder in the same place with the same stem, like turn.ts beside turn/."
 why = "An import of ./turn names both, and a reader cannot tell which one loads."
-fix = "Rename the file or the folder so their stems differ."
+help = "Rename the file or the folder so their stems differ."
 
 [[checks]]
 id = "structure/folder-names"
@@ -59,7 +59,7 @@ inspection = ["structure"]
 searched = ["ls-lint"]
 summary = "Finds a folder named after a container word like common, core, helpers or utils, or after a language."
 why = "A folder with no owner collects everything nobody wanted to place, and grows until nobody reads it."
-fix = "Name the folder after what it holds, or allow it with a reason under structure.folder_name_allowed."
+help = "Name the folder after what it holds, or allow it with a reason under structure.folder_name_allowed."
 
 [[checks]]
 id = "integrity/baselines-current"
@@ -70,7 +70,7 @@ analysis = "baselines-current"
 inspection = ["consistency"]
 summary = "Checks that every baseline names a check that still runs and that every file in a tool's suppressions file is still tracked."
 why = "A baseline for a check that is gone hides nothing and misleads the reader; a suppression for a deleted file is a count nobody lowered."
-fix = "Run gspot apply --baseline to remove the stale baseline or prune the suppressions."
+help = "Run gspot apply --baseline to remove the stale baseline or prune the suppressions."
 
 [[checks]]
 id = "integrity/config-purity"
@@ -81,7 +81,7 @@ analysis = "config-purity"
 inspection = ["structure"]
 summary = "Checks that every module under the config role holds literals only: no function, no control flow, no call, no value import from outside the config roots."
 why = "A configuration module with logic in it is code nobody tests, hidden where reviewers expect a table."
-fix = "Move the logic into a module under src and keep the literal in the config module, or take the folder out of the config role."
+help = "Move the logic into a module under src and keep the literal in the config module, or take the folder out of the config role."
 
 [[checks]]
 id = "integrity/suppressions"
@@ -92,7 +92,7 @@ analysis = "suppressions"
 inspection = ["structure"]
 summary = "Counts every inline suppression by form and reports each one that carries no reason; nosemgrep is refused outright."
 why = "A suppression without a reason is a finding hidden for good; a census that grows without a baseline update is debt nobody agreed to."
-fix = "Write the reason in the comment (after two dashes for eslint-disable and gspot-ignore, after a colon for ts-expect-error), or fix the finding and drop the suppression."
+help = "Write the reason in the comment (after two dashes for eslint-disable and gspot-ignore, after a colon for ts-expect-error), or fix the finding and drop the suppression."
 
 [[checks]]
 id = "integrity/allowlists-match"
@@ -103,7 +103,7 @@ analysis = "allowlists-match"
 inspection = ["consistency"]
 summary = "Checks that every path pattern in gspot.toml matches at least one tracked file."
 why = "An ignore, declaration or allowance that matches nothing is a leftover that misleads the next reader."
-fix = "Remove the entry, or fix its pattern."
+help = "Remove the entry, or fix its pattern."
 
 [[checks]]
 id = "integrity/task-policy"
@@ -114,7 +114,7 @@ analysis = "task-policy"
 inspection = ["consistency"]
 summary = "Checks that the runner surface holds every task gspot writes and that the installed hooks exist, call gspot and are pointed at by core.hooksPath."
 why = "A missing task or a hook nobody points at means the gate runs only when someone remembers to."
-fix = "Run gspot apply; it rewrites the tasks and the hooks and sets core.hooksPath."
+help = "Run gspot apply; it rewrites the tasks and the hooks and sets core.hooksPath."
 
 [[checks]]
 id = "integrity/large-files"
@@ -125,7 +125,7 @@ analysis = "large-files"
 inspection = ["consistency"]
 summary = "Checks that every tracked file over the size limit is stored through LFS or declared with a reason."
 why = "A large file in plain git history stays in every clone for good."
-fix = "Track the file with git lfs, declare it with gspot declare <path> --reason, or raise limits.file_size_kb with a reason."
+help = "Track the file with git lfs, declare it with gspot declare <path> --reason, or raise limits.file_size_kb with a reason."
 
 [[checks]]
 id = "integrity/tracked-dependencies"
@@ -136,7 +136,7 @@ analysis = "tracked-dependencies"
 inspection = ["consistency"]
 summary = "Checks that git tracks no file inside a folder a package manager fills, such as node_modules."
 why = "An installed dependency in git is copied into every clone, goes stale the day it lands, and hides from every check because it looks vendored."
-fix = "Run git rm -r --cached <folder>, and write the folder name with no leading slash in .gitignore so it matches at every depth."
+help = "Run git rm -r --cached <folder>, and write the folder name with no leading slash in .gitignore so it matches at every depth."
 
 [[settings]]
 name = "limits.file_lines"

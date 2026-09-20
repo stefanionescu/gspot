@@ -1,8 +1,8 @@
 import type { z } from 'zod';
 // The shape of gspot.toml after load: every reasoned key is normalized to { value, reason }.
 import type { CarriedLists } from '#types/lifecycle.ts';
-import type { OutputFormat, SettingSpec } from '#types/manifest.ts';
 import type { policySchema, scopeSchema } from '#cli/policy/schema.ts';
+import type { OutputFormat, SettingSpec, FixOrder } from '#types/manifest.ts';
 
 export type Reasoned<T> = { value: T; reason?: string };
 
@@ -109,7 +109,9 @@ export type RepositoryCheck = {
     command: string[];
     paths: string[];
     stage: 'commit' | 'push' | 'manual';
-    fix?: string[];
+    help?: string;
+    fix_command?: string[];
+    fix_order?: FixOrder;
     count_regex?: string;
     requires?: 'build' | 'docker' | 'network';
     platform?: string[];

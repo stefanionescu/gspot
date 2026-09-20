@@ -30,7 +30,7 @@ inspection = ["duplication"]
 exclude_setting = "tools.jscpd.ignore"
 summary = "Finds blocks of code copied between files. While the duplicated share stays at or under the ceiling it passes, and over it every copy is a finding that names both places."
 why = "A copied block is fixed in one place and stays broken in the other."
-fix = "Move the shared block into one function both callers use, or raise limits.duplication.threshold_percent with a reason."
+help = "Move the shared block into one function both callers use, or raise limits.duplication.threshold_percent with a reason."
 
 [[settings]]
 name = "limits.duplication.min_lines"

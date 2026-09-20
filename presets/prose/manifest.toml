@@ -30,7 +30,7 @@ analysis = "vale"
 inspection = ["prose"]
 summary = "Runs Vale over comments, and documentation with the gspot style, and the upstream packages; every alert is a finding."
 why = "Prose that hedges, markets or wanders is read by everyone who reads the code, and nothing else checks it."
-fix = "Rewrite the sentence the alert names, add a real name to prose.vocabulary, or turn one rule off with a reason under prose.disabled."
+help = "Rewrite the sentence the alert names, add a real name to prose.vocabulary, or turn one rule off with a reason under prose.disabled."
 
 [[checks]]
 id = "prose/source-bans"
@@ -40,7 +40,7 @@ analysis = "source-bans"
 inspection = ["prose"]
 summary = "Finds Vale directives inside Markdown and block comments in SQL, which take text away from the prose check."
 why = "A directive in the text turns a rule off for everyone silently; a block comment is invisible to Vale."
-fix = "Delete the directive and change the text, or disable the rule with a reason; write SQL comments with two dashes."
+help = "Delete the directive and change the text, or disable the rule with a reason; write SQL comments with two dashes."
 
 [[checks]]
 id = "prose/messages"
@@ -49,7 +49,7 @@ reported_by = "typescript/eslint"
 inspection = ["prose"]
 summary = "Checks the strings Vale cannot see: error messages start with a capital letter, client messages name no identifier, log messages are stable."
 why = "A message is prose a person reads under stress; an interpolated identifier in it leaks internals and breaks searching the logs."
-fix = "Capitalize the message, move the value into its own field, and keep the log line constant."
+help = "Capitalize the message, move the value into its own field, and keep the log line constant."
 
 [[checks]]
 id = "prose/doc-tags"
@@ -58,7 +58,7 @@ reported_by = "typescript/eslint"
 inspection = ["prose"]
 summary = "Checks that doc comments carry no types, which the language already states."
 why = "A type in a doc tag drifts from the signature and says nothing the reader cannot see."
-fix = "Delete the type from the tag and keep the description."
+help = "Delete the type from the tag and keep the description."
 
 [[settings]]
 name = "prose.vocabulary"

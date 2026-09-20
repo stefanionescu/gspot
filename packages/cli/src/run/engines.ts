@@ -66,7 +66,7 @@ export async function runEngineCheck(
         };
         if (staged) input.staged = staged;
         const findings = await engine(input);
-        for (const finding of findings) finding.help ??= spec.fix;
+        for (const finding of findings) finding.help ??= spec.help;
         return {
             ...base,
             status: findings.length > 0 ? 'fail' : 'ok',

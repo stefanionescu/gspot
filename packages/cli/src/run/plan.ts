@@ -46,33 +46,23 @@ function toolFor(spec: CheckSpec, manifest: Manifest | undefined, session: Sessi
 }
 
 function fromRepoCheck(entry: RepositoryCheck): CheckSpec {
-    const spec: CheckSpec = {
-        id: entry.id,
-        stage: entry.stage,
+    const { paths, ...definition } = entry;
+    return {
+        ...definition,
         runs: 'per-file-list',
-        command: entry.command,
         inspection: [],
         summary: entry.summary ?? `Runs the repository's own check ${entry.id}.`,
         why: 'The repository declared this command in gspot.toml as part of its gate.',
-        fix: 'Read the command output; the repository owns this check.',
+        help: entry.help ?? 'Read the command output; the repository owns this check.',
         claims: {
             extensions: [],
             filenames: [],
             tags: [],
-            paths: entry.paths,
+            paths,
             from_languages: false,
             natures: ['source', 'generated'],
         },
     };
-    if (entry.fix) {
-        spec.fix_command = entry.fix;
-        spec.fix_order = 'codemod';
-    }
-    if (entry.count_regex !== undefined) spec.count_regex = entry.count_regex;
-    if (entry.requires !== undefined) spec.requires = entry.requires;
-    if (entry.platform !== undefined) spec.platform = entry.platform;
-    if (entry.output !== undefined) spec.output = entry.output;
-    return spec;
 }
 
 function isRepositoryWide(manifest: Manifest): boolean {

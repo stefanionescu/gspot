@@ -34,7 +34,7 @@ inspection = ["coverage"]
 output = {format = "regex", pattern = "^ERROR: (?<message>Coverage for .*)$"}
 summary = "Runs the test suite with coverage, and fails when lines, branches, functions, or statements fall under their floors."
 why = "A floor keeps new code from arriving untested, which is when its behavior is cheapest to pin down."
-fix = "Add tests for the code the coverage report shows uncovered, or lower one floor under tools.vitest with a reason."
+help = "Add tests for the code the coverage report shows uncovered, or lower one floor under tools.vitest with a reason."
 
 [[settings]]
 name = "tools.vitest.coverage_file"

@@ -1659,11 +1659,24 @@
                             "manual"
                         ]
                     },
-                    "fix": {
+                    "help": {
+                        "type": "string"
+                    },
+                    "fix_command": {
+                        "minItems": 1,
                         "type": "array",
                         "items": {
                             "type": "string"
                         }
+                    },
+                    "fix_order": {
+                        "type": "string",
+                        "enum": [
+                            "codemod",
+                            "imports",
+                            "manifest",
+                            "format"
+                        ]
                     },
                     "count_regex": {
                         "type": "string"
@@ -1728,7 +1741,12 @@
                     "paths",
                     "stage"
                 ],
-                "additionalProperties": false
+                "additionalProperties": false,
+                "dependentRequired": {
+                    "fix_command": [
+                        "fix_order"
+                    ]
+                }
             }
         },
         "hooks": {

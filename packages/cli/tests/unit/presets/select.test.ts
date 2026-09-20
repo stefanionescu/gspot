@@ -50,7 +50,7 @@ describe('parseManifest', () => {
     test('refuses a check with no stage or an empty summary', () => {
         expect(() =>
             parseManifest(
-                '[preset]\nid = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nid = "x/y"\ncommand = ["x"]\nsummary = ""\nwhy = "A sentence long enough."\nfix = "A sentence long enough."\n',
+                '[preset]\nid = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nid = "x/y"\ncommand = ["x"]\nsummary = ""\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n',
                 'presets/x',
             ),
         ).toThrow('not valid');
@@ -59,7 +59,7 @@ describe('parseManifest', () => {
     test('refuses a fix_command without a fix_order', () => {
         expect(() =>
             parseManifest(
-                '[preset]\nid = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nid = "x/y"\nstage = "commit"\ncommand = ["x"]\nfix_command = ["x", "--fix"]\nsummary = "A sentence long enough."\nwhy = "A sentence long enough."\nfix = "A sentence long enough."\n',
+                '[preset]\nid = "x"\nkind = "tool"\ntitle = "x"\ndescription = "A preset for the tests, long enough."\n[[checks]]\nid = "x/y"\nstage = "commit"\ncommand = ["x"]\nfix_command = ["x", "--fix"]\nsummary = "A sentence long enough."\nwhy = "A sentence long enough."\nhelp = "A sentence long enough."\n',
                 'presets/x',
             ),
         ).toThrow('fix_order');
@@ -68,4 +68,25 @@ describe('parseManifest', () => {
     test('every shipped manifest loads and its folder equals its id', () => {
         for (const [id, entry] of presetManifests()) expect(entry.dir.endsWith(`/${id}`)).toBe(true);
     });
+});
+
+test('manifest advice uses help and rejects the old prose field', () => {
+    const source = `[preset]
+id = "fixture"
+kind = "tool"
+title = "Fixture"
+description = "A correction contract fixture."
+[[checks]]
+id = "fixture/correction"
+stage = "commit"
+command = ["tool", "check"]
+summary = "Checks a fixture source file."
+why = "The fixture must satisfy its contract."
+help = "Review the fixture source file."
+`;
+    expect(parseManifest(source, 'presets/fixture').checks[0]?.help).toBe('Review the fixture source file.');
+    expect(() => parseManifest(source.replace('help =', 'fix ='), 'presets/fixture')).toThrow('not valid');
+    expect(() => parseManifest(`${source}fix_command = []\nfix_order = "format"`, 'presets/fixture')).toThrow(
+        'not valid',
+    );
 });

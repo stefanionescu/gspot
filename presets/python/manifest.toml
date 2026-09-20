@@ -88,7 +88,7 @@ inspection = ["style", "structure", "security"]
 output = {format = "json", fields = {file = "filename", line = "location.row", column = "location.column", rule = "code", message = "message"}}
 summary = "Lints every Python file with the shipped Ruff families, the security family included."
 why = "Ruff holds the rules of a dozen older tools in one pass fast enough to run at every commit."
-fix = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore python/ruff --rule <code> --reason, and add --paths to limit it."
+help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore python/ruff --rule <code> --reason, and add --paths to limit it."
 
 [[checks]]
 id = "python/ruff-format"
@@ -101,7 +101,7 @@ inspection = ["format"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): unformatted: ", message = "This file is not formatted the way Ruff formats it."}
 summary = "Checks the layout of every Python file against the Ruff formatter."
 why = "One layout everywhere keeps a diff about the change."
-fix = "Run gspot check --fix."
+help = "Run gspot check --fix."
 
 [[checks]]
 id = "python/basedpyright"
@@ -116,7 +116,7 @@ inspection = ["types"]
 output = {format = "json", items = "generalDiagnostics", line_base = 0, fields = {file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message"}}
 summary = "Type checks the project with basedpyright in its strictest mode."
 why = "A type error found here is a crash that never reaches a user."
-fix = "Fix the type, or narrow it where the value arrives. Exclude a file that needs another dependency set under tools.basedpyright.exclude with a reason."
+help = "Fix the type, or narrow it where the value arrives. Exclude a file that needs another dependency set under tools.basedpyright.exclude with a reason."
 
 [[checks]]
 id = "python/import-linter"
@@ -130,7 +130,7 @@ claims = {extensions = [".py"], filenames = ["pyproject.toml"]}
 inspection = ["structure"]
 summary = "Runs the import contracts of the project, when pyproject.toml holds any."
 why = "A layer that imports the layer above it turns an architecture into a diagram nobody follows."
-fix = "Move the import to the side the contract allows, or change the contract with a reason in its name."
+help = "Move the import to the side the contract allows, or change the contract with a reason in its name."
 
 [[checks]]
 id = "python/pydoclint"
@@ -141,7 +141,7 @@ inspection = ["prose"]
 output = {format = "grouped", file_pattern = "^(?<file>\\S.*\\.py)$", pattern = "^\\s+(?<line>\\d+): (?<rule>DOC\\d+): (?<message>.*)$"}
 summary = "Checks that every docstring names the arguments, the return, and the exceptions its function really has."
 why = "A docstring that disagrees with the signature is worse than none, because people trust it."
-fix = "Bring the docstring in line with the signature."
+help = "Bring the docstring in line with the signature."
 
 [[checks]]
 id = "python/deptry"
@@ -154,7 +154,7 @@ inspection = ["consistency"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<rule>DEP\\d+) (?<message>.*)$"}
 summary = "Compares the imports of the project with the dependencies it declares: missing, unused, and transitive ones."
 why = "An import that works through somebody else's dependency breaks the day they drop it."
-fix = "Declare the dependency, or remove the one nothing imports. Turn one rule off with gspot ignore python/deptry --rule <code> --reason."
+help = "Declare the dependency, or remove the one nothing imports. Turn one rule off with gspot ignore python/deptry --rule <code> --reason."
 
 [[checks]]
 id = "python/vulture"
@@ -167,7 +167,7 @@ inspection = ["structure"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+): (?<message>.*)$"}
 summary = "Finds functions, classes, and variables nothing uses."
 why = "Dead code is read and maintained by people who cannot tell it is dead."
-fix = "Delete the code, or list a name a framework calls under tools.vulture.ignore_names."
+help = "Delete the code, or list a name a framework calls under tools.vulture.ignore_names."
 
 [[checks]]
 id = "python/pyproject"
@@ -179,7 +179,7 @@ inspection = ["schema"]
 output = {format = "lines"}
 summary = "Validates every pyproject.toml against the packaging schemas."
 why = "A key the build backend does not know is ignored without a word."
-fix = "Correct the key the message names."
+help = "Correct the key the message names."
 
 [[checks]]
 id = "integrity/dependency-ownership"
@@ -190,7 +190,7 @@ analysis = "python-dependency-ownership"
 inspection = ["consistency"]
 summary = "Checks that pyproject.toml owns every dependency: no hand-kept requirements file, and no pip install outside the allowed paths."
 why = "Two owners of the dependency list drift apart, and the image installs what the lockfile never saw."
-fix = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Allow a path under tools.dependencies.pip_install_allowed with a reason."
+help = "Export the requirements file from the lockfile and declare it generated, and replace pip install with the locked install. Allow a path under tools.dependencies.pip_install_allowed with a reason."
 
 [[checks]]
 id = "integrity/typecheck-membership"
@@ -201,7 +201,7 @@ analysis = "python-typecheck-membership"
 inspection = ["consistency"]
 summary = "Checks that every path the type check leaves out still matches a tracked file."
 why = "An exclusion that outlives its file hides the next file that takes the name."
-fix = "Remove the entry from tools.basedpyright.exclude."
+help = "Remove the entry from tools.basedpyright.exclude."
 
 [[checks]]
 id = "python/file-length"
@@ -213,7 +213,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "Checks that no Python file has more code lines than the ceiling."
 why = "A long module holds more than one job, and the second job is the one nobody finds."
-fix = "Split the module by the job, or raise limits.file_lines for python with a reason."
+help = "Split the module by the job, or raise limits.file_lines for python with a reason."
 
 [[checks]]
 id = "python/function-length"
@@ -225,7 +225,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "Checks that no Python function has more code lines than the ceiling."
 why = "A function that fills a screen does several things, and a reader has to hold all of them."
-fix = "Move one job of the function into a function of its own."
+help = "Move one job of the function into a function of its own."
 
 [[checks]]
 id = "python/trivial-function"
@@ -237,7 +237,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "Finds top-level functions of one or two statements that one place calls."
 why = "A tiny function with one caller makes the reader jump to read two lines."
-fix = "Inline the body at its caller, or allow the name under structure.python.trivial_allowed with a reason."
+help = "Inline the body at its caller, or allow the name under structure.python.trivial_allowed with a reason."
 
 [[checks]]
 id = "python/call-through"
@@ -249,7 +249,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "Finds functions that pass their parameters straight to one other call."
 why = "A function that only forwards adds a name to learn and nothing to read."
-fix = "Call the other function directly, and delete this one."
+help = "Call the other function directly, and delete this one."
 
 [[checks]]
 id = "python/placeholder-docstring"
@@ -261,7 +261,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "Finds docstrings that hold a placeholder word, or the name of the function again."
 why = "A docstring that says nothing passes the docstring rule and wastes the line."
-fix = "Say what the function does that its name does not, or for whom it exists."
+help = "Say what the function does that its name does not, or for whom it exists."
 
 [[checks]]
 id = "python/private-prefix"
@@ -273,7 +273,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "In a module with an export list, checks that every other definition starts with an underscore, and that the list holds no such name."
 why = "A name that is public by accident gets imported, and then it cannot change."
-fix = "Add the underscore, or list the name in the export list."
+help = "Add the underscore, or list the name in the export list."
 
 [[checks]]
 id = "python/private-before-public"
@@ -285,7 +285,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "Checks that private functions sit above the public functions of a module."
 why = "A reader who meets the parts first understands what is built from them."
-fix = "Move the private functions above the first public one."
+help = "Move the private functions above the first public one."
 
 [[checks]]
 id = "python/exports-at-bottom"
@@ -297,7 +297,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "Checks that the export list is the last statement of its module."
 why = "A reader looks for the public surface in one place."
-fix = "Move the export list to the end of the module."
+help = "Move the export list to the end of the module."
 
 [[checks]]
 id = "python/no-lazy-exports"
@@ -309,7 +309,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "Refuses a module-level attribute hook that makes names appear at run time."
 why = "A name that appears only at run time hides from the type checker, the editor, and the reader."
-fix = "Import the names and list them."
+help = "Import the names and list them."
 
 [[checks]]
 id = "python/package-exports"
@@ -321,7 +321,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "Checks that a package exports no more names than the ceiling."
 why = "A package that exports everything has no surface, so every change to it is a breaking one."
-fix = "Split the package, or export fewer names."
+help = "Split the package, or export fewer names."
 
 [[checks]]
 id = "python/import-cycles"
@@ -333,7 +333,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "Finds first-party modules that import each other in a circle."
 why = "A circle imports in one order and fails in another, and the order changes with an unrelated edit."
-fix = "Move what both sides need into a third module."
+help = "Move what both sides need into a third module."
 
 [[checks]]
 id = "python/no-singletons"
@@ -345,7 +345,7 @@ claims = {extensions = [".py"]}
 inspection = ["structure"]
 summary = "Finds objects built at import time and kept in a module variable."
 why = "Every importer shares the one instance, and no test gets a fresh one."
-fix = "Build the object where the program starts, and pass it in. Allow a name under structure.python.singletons_allowed with a reason."
+help = "Build the object where the program starts, and pass it in. Allow a name under structure.python.singletons_allowed with a reason."
 
 [[settings]]
 name = "structure.python.trivial_allowed"

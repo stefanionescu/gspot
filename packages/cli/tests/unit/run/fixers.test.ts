@@ -15,7 +15,8 @@ presets = []
 [[check]]
 id = "fixture/correction"
 command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
-fix = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 3'])}
+fix_order = "codemod"
+fix_command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 3'])}
 paths = ["source.txt"]
 stage = "commit"
 `;
@@ -78,12 +79,25 @@ describe('correction outcomes', () => {
         );
         const failed = await runFixer(
             session,
-            { ...planned, tool: { name: join(fixture.path, 'absent-tool'), installers: {}, windows: true } },
+            { ...planned, spec: { ...planned.spec, fix_command: [join(fixture.path, 'absent-tool')] } },
             fixture.path,
         );
         expect(skipped.status).toBe('skipped');
         expect(failed.status).toBe('failed');
         expect(readFileSync(join(fixture.path, 'source.txt'), 'utf8')).toBe('original');
+    });
+
+    test('runs the correction executable when it differs from the check executable', async () => {
+        await using fixture = await createFixture({ 'gspot.toml': policy, 'source.txt': 'original' });
+        const session = await openSession(fixture.path);
+        const planned = correction(session, "await Bun.write('source.txt', 'corrected')");
+        const result = await runFixer(
+            session,
+            { ...planned, tool: { name: join(fixture.path, 'absent-check-tool'), installers: {}, windows: true } },
+            fixture.path,
+        );
+        expect(result.status).toBe('changed');
+        expect(readFileSync(join(fixture.path, 'source.txt'), 'utf8')).toBe('corrected');
     });
 
     test('fails the run when a correction exits nonzero even though its check passes', async () => {
