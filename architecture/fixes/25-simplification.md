@@ -43,6 +43,8 @@ Delete the decision-log mirror and its URL-rewrite regexes; keep a clearly label
 
 ## K-305: Permissive script arguments can select a destructive action
 
+**Partial implementation.** The schema and reference entry points reject unknown options and unexpected positional arguments with exit status two before generating output. Tests preserve planted schemas and an authored reference page after malformed invocations. Help and version requests also leave those outputs unchanged. Build and publish argument validation remains open.
+
 **What is wrong.** `build.ts` ignores unknown options and a missing `--target`; `--out --target bun-linux-arm64` treats `--target` as the output path. `publish.ts` uses `argv.includes('--dry-run')`, so `--dryrun` does not prevent publication. The docs and schema scripts similarly treat a misspelled `--check` as write mode. These conclusions come from read-only argument probes and source tracing; no build, write mode, or publish was executed.
 
 **Target.** Every repository entry point validates arguments before filesystem or registry effects.

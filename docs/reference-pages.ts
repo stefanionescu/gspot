@@ -1,11 +1,12 @@
 import { join } from 'node:path';
-import type { Command } from 'commander';
 // Writes the reference pages from the binary's own data: commands from commander, presets and checks from the manifests, settings from the manifests, the decision log from the architecture. With --check it compares and writes nothing.
 import { fileURLToPath } from 'node:url';
 import { format, type Options } from 'prettier';
+import { Command, CommanderError } from 'commander';
 import { buildProgram } from '@gspot/cli/src/program.ts';
 import { allChecks } from '@gspot/cli/src/presets/listing.ts';
 import { presetManifests } from '@gspot/cli/src/presets/read-manifests.ts';
+import packageManifest from '@gspot/cli/package.json' with { type: 'json' };
 import type { CheckSpec, Manifest, SettingSpec } from '@gspot/cli/types/manifest.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
@@ -222,5 +223,21 @@ function write(wanted: Map<string, string>): number {
     return 0;
 }
 
-const wanted = await formatted(pages());
-process.exitCode = process.argv.includes('--check') ? check(wanted) : write(wanted);
+try {
+    const script = new Command('bun docs/reference-pages.ts')
+        .description('Generate the public reference pages')
+        .version(packageManifest.version)
+        .option('--check', 'Compare the generated files without writing')
+        .allowExcessArguments(false)
+        .showHelpAfterError()
+        .addHelpText('after', '\nExample: bun docs/reference-pages.ts --check')
+        .exitOverride()
+        .parse();
+    const isCheck = script.getOptionValue('check') === true;
+
+    const wanted = await formatted(pages());
+    process.exitCode = isCheck ? check(wanted) : write(wanted);
+} catch (error) {
+    if (!(error instanceof CommanderError)) throw error;
+    process.exitCode = error.exitCode === 0 ? 0 : 2;
+}
