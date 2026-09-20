@@ -253,7 +253,7 @@ function planScope(context: PlanContext, seenRepoChecks: Set<string>, wholeSeen:
 /**
  * Plans every check for the run.
  * @param session the session
- * @param options stage, scope, only, skips, and the staged or ref-relative file sets
+ * @param options stage, paths, only, skips, and the staged or ref-relative file sets
  * @returns the planned checks in scope order
  */
 export function planRun(session: Session, options: PlanOptions): PlannedCheck[] {
@@ -261,17 +261,15 @@ export function planRun(session: Session, options: PlanOptions): PlannedCheck[] 
     const wholeSeen = new Set<string>();
     const platform = PLATFORM_NAMES[process.platform] ?? process.platform;
     const narrow = narrowSet(options);
-    return session.scopes
-        .filter((scope) => options.scope === undefined || scope.scope.path === options.scope)
-        .flatMap((scope) => {
-            const context: PlanContext = {
-                session,
-                scope,
-                options,
-                platform,
-                narrow,
-                children: childScopes(session, scope),
-            };
-            return planScope(context, seenRepoChecks, wholeSeen);
-        });
+    return session.scopes.flatMap((scope) => {
+        const context: PlanContext = {
+            session,
+            scope,
+            options,
+            platform,
+            narrow,
+            children: childScopes(session, scope),
+        };
+        return planScope(context, seenRepoChecks, wholeSeen);
+    });
 }

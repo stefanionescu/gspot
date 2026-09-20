@@ -223,3 +223,31 @@ stage = "${name}"
     const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks.map((check) => [check.check, check.status])).toEqual([[`sandbox/${stage}`, 'ok']]);
 });
+
+test('a scope path selects its checks and its reproduction command repeats the same findings', async () => {
+    await using sandbox = await createSandbox({
+        'gspot.toml': `version = 1
+presets = []
+[[scope]]
+path = "api"
+presets = ["javascript", "naming"]
+[[scope]]
+path = "web"
+presets = ["javascript", "naming"]
+`,
+        'api/port.js': 'export const shellCommand = 1;\n',
+        'web/port.js': 'export const shellCommand = 2;\n',
+    });
+    const selected = await run(sandbox.path, ['check', 'api', '--only', 'naming/identifiers', '--json']);
+    expect(selected.code, selected.stdout + selected.stderr).toBe(1);
+    const report = JSON.parse(selected.stdout) as RunReport;
+    expect(report.checks.map((check) => check.scope)).toEqual(['api']);
+    const command = report.checks[0]?.reproduce;
+    expect(command).toBeDefined();
+    const repeated = await run(sandbox.path, [...command!.split(' ').slice(1), '--json']);
+    expect(repeated.code, repeated.stdout + repeated.stderr).toBe(1);
+    const repeatedReport = JSON.parse(repeated.stdout) as RunReport;
+    expect(repeatedReport.checks.flatMap((check) => check.findings)).toEqual(
+        report.checks.flatMap((check) => check.findings),
+    );
+});

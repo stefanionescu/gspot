@@ -92,7 +92,7 @@ function swiftJob(shape: WorkflowShape): string[] {
     const command = shape.isMise ? 'mise run gspot:check --' : 'gspot check';
     return [
         ...jobHead('swift', 'macos-latest', setupSteps(shape, 'macos')),
-        `      - run: ${command} --scope ${shape.swiftScope}`,
+        `      - run: ${command} ${shape.swiftScope}`,
     ];
 }
 

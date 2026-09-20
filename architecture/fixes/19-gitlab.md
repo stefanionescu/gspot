@@ -145,3 +145,8 @@ on `add`, `remove`, and `set`, where it names the scope a change is written to.
 file of the third. `gspot check api/src/a.ts --fix` changes that one file.
 
 **Done when.** Both pass.
+
+**Partial implementation.** Positional paths select file checks and trigger project checks
+with their complete inputs. Check selection, reproduction commands, and generated Swift
+jobs use this contract. The public scope flag remains on policy-editing commands.
+Project exclusion and project selection during initialization remain open.

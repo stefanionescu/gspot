@@ -31,7 +31,6 @@ export type CheckOptions = {
     fix: boolean;
     isDryRun: boolean;
     stage?: StageFilter;
-    scope?: string;
     skips: string[];
     messageFile?: string;
     quiet: boolean;
@@ -79,7 +78,6 @@ export type PlanOptions = {
     only?: string[];
     /** Root-relative paths selected by positional file and directory arguments. */
     paths?: string[];
-    scope?: string;
     skips: string[];
     localSkips: string[];
     messageFile?: string;

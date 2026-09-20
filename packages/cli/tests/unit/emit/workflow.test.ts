@@ -11,6 +11,6 @@ describe('workflow action pins', () => {
         });
         expect(generated.content).toContain('run: mise run gspot:check --\n');
         expect(generated.content).toContain('mise run gspot:check -- --stage manual');
-        expect(generated.content).toContain('mise run gspot:check -- --scope ios');
+        expect(generated.content).toContain('mise run gspot:check -- ios');
     });
 });

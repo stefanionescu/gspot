@@ -58,7 +58,6 @@ function runOptions(
         ...(changed === undefined ? {} : { changed: changed.paths, comparison: changed.reference }),
         ...(options.only === undefined ? {} : { only: options.only }),
         ...(options.paths.length === 0 ? {} : { paths: options.paths }),
-        ...(options.scope === undefined ? {} : { scope: options.scope }),
         ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
     };
 }

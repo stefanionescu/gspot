@@ -25,6 +25,5 @@ gspot check [options] [paths...]
 | `--fix`              | Run every fixer in order, then the checks again                                        |
 | `--dry-run`          | With --fix, print the diff of every fix and write nothing                              |
 | `--stage <stage>`    | One stage                                                                              |
-| `--scope <path>`     | One scope only                                                                         |
 | `--skip <checks...>` | Skip the named checks for this run                                                     |
 | `--no-cache`         | Run every check even when its inputs are unchanged                                     |

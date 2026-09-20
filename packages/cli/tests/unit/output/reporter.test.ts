@@ -40,7 +40,7 @@ const report: RunReport = {
             baselined: 0,
             findings: [],
             note: 'prettier is not installed. Run: mise install',
-            reproduce: 'gspot check --only formatting/prettier --scope api',
+            reproduce: 'gspot check api --only formatting/prettier',
         },
     ],
     baselines: [{ check: 'bash/shellcheck', rule: 'SC2154', count: 3, baseline: 5, held: true, paths: { 'a.sh': 3 } }],
