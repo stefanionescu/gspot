@@ -48,19 +48,19 @@ export function canAsk(): boolean {
  * A yes or no question.
  * @param question the question
  * @param flag the flag that answers it without a terminal
- * @param isDefaultYes the answer --yes takes, and the initial value in the terminal
- * @param isYes whether --yes was given
+ * @param defaultAnswer the answer --yes takes, and the initial value in the terminal
+ * @param useDefaults whether --yes was given
  * @returns the answer
  */
-export async function isConfirmed(
+export async function askConfirmation(
     question: string,
     flag: string,
-    isDefaultYes: boolean,
-    isYes: boolean,
+    defaultAnswer: boolean,
+    useDefaults: boolean,
 ): Promise<boolean> {
-    if (isYes) return isDefaultYes;
+    if (useDefaults) return defaultAnswer;
     if (!canAsk()) throw PromptError.noTerminal(question, flag);
-    const answer = await confirm({ message: question, initialValue: isDefaultYes });
+    const answer = await confirm({ message: question, initialValue: defaultAnswer });
     if (typeof answer !== 'boolean') throw PromptError.cancelled(question);
     return answer;
 }
@@ -71,7 +71,7 @@ export async function isConfirmed(
  * @param flag the flag that answers it without a terminal
  * @param choices the values with their labels
  * @param initial the choice --yes takes, and the initial value in the terminal
- * @param isYes whether --yes was given
+ * @param useDefaults whether --yes was given
  * @returns the chosen value
  */
 export async function askChoice<T extends string>(
@@ -79,9 +79,9 @@ export async function askChoice<T extends string>(
     flag: string,
     choices: Choice<T>[],
     initial: T,
-    isYes: boolean,
+    useDefaults: boolean,
 ): Promise<T> {
-    if (isYes) return initial;
+    if (useDefaults) return initial;
     if (!canAsk()) throw PromptError.noTerminal(question, flag);
     const options = choices.map((choice) => ({
         value: choice.value,
@@ -98,16 +98,16 @@ export async function askChoice<T extends string>(
  * @param question the question
  * @param choices the values with their labels
  * @param initial the values selected at the start
- * @param isYes whether --yes was given
+ * @param useDefaults whether --yes was given
  * @returns the values the person kept
  */
 export async function askMany<T extends string>(
     question: string,
     choices: Choice<T>[],
     initial: T[],
-    isYes: boolean,
+    useDefaults: boolean,
 ): Promise<T[]> {
-    if (isYes || !canAsk()) return initial;
+    if (useDefaults || !canAsk()) return initial;
     const options = choices.map((choice) => ({
         value: choice.value,
         label: choice.label,

@@ -111,6 +111,10 @@ Treat `ENOENT` as optional only where the caller's contract permits absence. A t
 
 ## K-308: The naming specification contradicts its own examples
 
+**Partial implementation.** Prompt actions use `askConfirmation` and `askRuleFiles`. The confirmation default is `defaultAnswer`, and prompt helpers use `useDefaults` for the behavior selected by `--yes`. Boundary tests cover both defaults, terminal refusal, explicit answers, and cancellation.
+
+The shared ESLint preset disables the type-based Boolean naming heuristic because Boolean types do not identify predicates. The naming guide distinguishes actions from stored answers and predicates. Definition and reference schemas and fixer results remain open.
+
 **What is wrong.** The names guide endorsed a writing action called `didWrite` while rejecting
 `didRunFixer`. It prescribed `name` for a finding's check reference, although ignores and
 findings use `check`. The glossary retained runner surface, inspection, and project templates.

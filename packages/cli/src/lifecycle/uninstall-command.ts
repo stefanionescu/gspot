@@ -4,9 +4,9 @@ import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
 import { hasHeader } from '#cli/emit/templates.ts';
 import type { PackageContent } from '#types/emit.ts';
-import { isConfirmed } from '#cli/output/prompts.ts';
 import { removeHooksPath } from '#cli/emit/hooks.ts';
 import { withoutLefthook } from '#cli/emit/lefthook.ts';
+import { askConfirmation } from '#cli/output/prompts.ts';
 import { withoutBlock } from '#cli/emit/managed-blocks.ts';
 import type { Session, CommandResult } from '#types/run.ts';
 import { head, findRoot } from '#cli/repository/tracked.ts';
@@ -137,7 +137,7 @@ export async function uninstallCommand(options: UninstallOptions): Promise<Comma
         return { text: `${text}--dry-run: nothing removed.\n`, json: { plan, isDryRun: true }, exitCode: 0 };
     process.stdout.write(text);
     // --yes is the answer to this one question, so it means yes; the terminal still starts on no.
-    const isGo = options.yes || (await isConfirmed('Remove these?', '--yes', false, false));
+    const isGo = options.yes || (await askConfirmation('Remove these?', '--yes', false, false));
     if (!isGo) return { text: 'Nothing removed.\n', json: { plan, applied: false }, exitCode: 0 };
     const edited = [...removePackagePins(session), removeLefthookCommands(session)].filter(
         (path) => path !== undefined,

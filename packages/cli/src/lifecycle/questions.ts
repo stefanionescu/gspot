@@ -5,7 +5,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import type { FormatSettings } from '#types/config.ts';
 import { shippedFormat } from '#cli/presets/listing.ts';
 import type { ExistingTooling } from '#types/repository.ts';
-import { askChoice, askMany, isConfirmed } from '#cli/output/prompts.ts';
+import { askChoice, askMany, askConfirmation } from '#cli/output/prompts.ts';
 import type { InitAnswers, InitOptions, InitSelection } from '#types/lifecycle.ts';
 
 const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
@@ -80,9 +80,9 @@ async function askCi(root: string, options: InitOptions, tooling: ExistingToolin
     return askChoice('Write a CI workflow?', '--ci', CI_CHOICES, ciDefault(root, tooling), options.yes);
 }
 
-async function isRulesWanted(options: InitOptions): Promise<boolean> {
+async function askRuleFiles(options: InitOptions): Promise<boolean> {
     if (options.rules !== undefined) return options.rules === 'yes';
-    return isConfirmed('Install agent rule files?', '--no-rules', true, options.yes);
+    return askConfirmation('Install agent rule files?', '--no-rules', true, options.yes);
 }
 
 async function askRunner(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['runner']> {
@@ -168,7 +168,7 @@ export async function askInitQuestions(
 ): Promise<InitAnswers> {
     const hooks = await askHooks(options, tooling);
     const ci = await askCi(root, options, tooling);
-    const isRules = await isRulesWanted(options);
+    const isRules = await askRuleFiles(options);
     const runner = await askRunner(options, tooling);
     const format = await askFormat(options, formatDiffers(root, tooling));
     return { hooks, ci, isRules, runner, ...(format ? { format } : {}) };

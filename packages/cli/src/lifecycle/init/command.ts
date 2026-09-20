@@ -8,11 +8,11 @@ import { openSession } from '#cli/run/session.ts';
 import { compact } from '#cli/policy/normalize.ts';
 import { readProfile } from '#cli/profile/read.ts';
 import * as messages from '#cli/policy/messages.ts';
-import { isConfirmed } from '#cli/output/prompts.ts';
 import { proposeText } from '#cli/policy/propose.ts';
 import { applyAll } from '#cli/emit/apply-command.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { initPlanText } from '#cli/output/plan-text.ts';
+import { askConfirmation } from '#cli/output/prompts.ts';
 import { detectionText } from '#cli/output/detection.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { unknownLanguages } from '#cli/presets/detect.ts';
@@ -202,7 +202,7 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
         if (!options.json) print('--dry-run: nothing written.\n');
         return { text: '', json: { root, plan, policy: policyText, isDryRun: true }, exitCode: 0 };
     }
-    const isGo = await isConfirmed('Continue?', '--yes', true, options.yes);
+    const isGo = await askConfirmation('Continue?', '--yes', true, options.yes);
     if (!isGo) return { text: 'Nothing written.\n', json: { root, plan, written: false }, exitCode: 0 };
     const written = await write(root, options, prepared);
     note('run gspot check to see the gate; gspot doctor for what it could not check');

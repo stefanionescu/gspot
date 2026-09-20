@@ -1,9 +1,9 @@
 // upgrade: report what a version changes, move the pin, re-render, baseline what arrives, install.
 import { openSession } from '#cli/run/session.ts';
 import type { CommandResult } from '#types/run.ts';
-import { isConfirmed } from '#cli/output/prompts.ts';
 import { applyAll } from '#cli/emit/apply-command.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { askConfirmation } from '#cli/output/prompts.ts';
 import { firstRun } from '#cli/lifecycle/first-check.ts';
 import type { UpgradeOptions } from '#types/lifecycle.ts';
 import { installTools } from '#cli/lifecycle/install-tools.ts';
@@ -83,7 +83,7 @@ export async function upgradeCommand(options: UpgradeOptions): Promise<CommandRe
     const lines = [...header, ...upgradeReportLines(report), ...actionLines(target, options.install)];
     if (options.isDryRun)
         return { text: `${lines.join('\n')}\n`, json: { pinned, target, report, isDryRun: true }, exitCode: 0 };
-    const isGo = await isConfirmed('Apply the upgrade?', '--yes', true, options.yes);
+    const isGo = await askConfirmation('Apply the upgrade?', '--yes', true, options.yes);
     if (!isGo) return { text: 'Nothing changed.\n', json: { pinned, target, applied: false }, exitCode: 0 };
     return applyUpgrade(root, options, pinned, target, lines);
 }
