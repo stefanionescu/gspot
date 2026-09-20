@@ -1,6 +1,6 @@
-import { join } from 'node:path';
 // Runs the development gspot and git in a planted repository.
 import { fileURLToPath } from 'node:url';
+import { delimiter, dirname, join } from 'node:path';
 import type { PlantedCase, SpawnOutcome } from '#types/run.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
@@ -95,9 +95,9 @@ export function toolsPath(names: string[]): string {
             stderr: 'pipe',
         });
         const found = result.stdout.toString().trim();
-        return found !== '' && result.exitCode === 0 ? [found.slice(0, found.lastIndexOf('/'))] : [];
+        return found !== '' && result.exitCode === 0 ? [dirname(found)] : [];
     });
-    return [...folders, environmentVariables()['PATH'] ?? ''].join(':');
+    return [...folders, environmentVariables()['PATH'] ?? ''].join(delimiter);
 }
 
 /**

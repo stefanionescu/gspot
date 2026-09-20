@@ -42,6 +42,10 @@ the plugin build. A raw file-URL pathname produces an invalid drive path. K-306 
 that conversion in scripts, source asset lookup, and the test harness. The next Windows
 run must verify setup and expose any remaining failures.
 
+The planted test harness uses the native path delimiter and directory extraction when
+building tool search paths. Its executable-resolution test exercises the resulting first
+search-path entry. This removes the hard-coded POSIX separators before Windows tests run.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.
