@@ -57,9 +57,9 @@ function conventionalConfigs(root: string, paths: Set<string>, scopes: ScopeEntr
 }
 
 function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTooling['hooks'][number] | undefined {
-    if (!hasFiles(root, dir)) return undefined;
+    if (hooksPath === dir || !hasFiles(root, dir)) return undefined;
     if (dir === '.husky') return { kind: 'husky', path: dir, files: listDir(root, dir) };
-    return hooksPath === dir ? undefined : { kind: 'githooks', path: dir, files: listDir(root, dir) };
+    return { kind: 'githooks', path: dir, files: listDir(root, dir) };
 }
 
 function hooksFound(root: string, paths: Set<string>): ExistingTooling['hooks'] {

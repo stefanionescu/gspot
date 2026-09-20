@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
+import { runBlocking } from '#cli/platform/spawn.ts';
 import { git, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
 
 const INIT = [
@@ -19,6 +20,31 @@ const INIT = [
 ];
 
 describe('takeover', () => {
+    test.each(['', 'hooks', '.husky'])(
+        'dry-run distinguishes source hooks from configured hooks at %s',
+        async (hooksPath) => {
+            await using fixture = await createFixture({
+                'hooks/use-thing.ts': 'export function useThing() { return true; }\n',
+                ...(hooksPath === '' ? {} : { [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' }),
+            });
+            expect(runBlocking(['git', 'init', '-q'], { cwd: fixture.path }).code).toBe(0);
+            if (hooksPath !== '')
+                expect(runBlocking(['git', 'config', 'core.hooksPath', hooksPath], { cwd: fixture.path }).code).toBe(0);
+            const result = await run(fixture.path, [...INIT, '--dry-run']);
+            expect(result.code).toBe(0);
+            const hooks = result.stdout.split('\n').find((line) => /^hooks\s/.test(line));
+            if (hooksPath === '') expect(hooks).toMatch(/^hooks\s+none$/);
+            else {
+                expect(hooks).toContain(`${hooksPath}/`);
+                expect(hooks).toContain('pre-commit');
+                expect(hooks?.split('(hand-written)')).toHaveLength(2);
+            }
+            expect(readFileSync(join(fixture.path, 'hooks/use-thing.ts'), 'utf8')).toContain('useThing');
+            expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
+        },
+        PLANTED_TIMEOUT_MS,
+    );
+
     test(
         'replaces owned files, carries their exception lists with a reason, and lists the lint folder',
         async () => {

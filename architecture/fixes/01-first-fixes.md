@@ -215,6 +215,11 @@ first, and that answer wins over any folder name.
 
 **Tests.** `takeover.test.ts` plants `hooks/use-thing.ts` and holds that the plan names no hooks.
 
+**Status: complete (locally verified).** Real init dry runs leave a source-only `hooks/`
+folder unclaimed. Explicit `core.hooksPath` values recognize `hooks/` and `.husky/`
+once, ahead of conventional folder detection. All four takeover tests pass with
+43 assertions on macOS, and TypeScript passes. Windows execution remains deferred.
+
 **Done when.** That case passes.
 
 ## K-45: the message run overwrites the report

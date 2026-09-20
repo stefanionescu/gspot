@@ -208,7 +208,7 @@ export const CONVENTIONAL_CONFIG_PATHS: Record<string, string[]> = {
     whitelizard: ['.whitelizard'],
 };
 
-export const HOOK_DIRECTORIES = ['.githooks', '.husky', '.git-hooks', 'hooks'];
+export const HOOK_DIRECTORIES = ['.githooks', '.husky', '.git-hooks'];
 
 export const LINT_FOLDER_NAMES = ['quality', 'lint', 'linting', '.qlty', 'code-quality'];
 

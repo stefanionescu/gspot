@@ -290,3 +290,8 @@ K-258 is complete locally: individual file arguments retain their position after
 placeholders expand. Docker Compose accepts an absent environment file and rejects an
 invalid service key. The 22 focused regressions pass with 258 assertions on macOS.
 The index contains 320 open named requirements; Windows execution remains deferred.
+
+K-37 is complete locally: init distinguishes a source hooks folder from explicitly
+configured Git hooks, and the configured path wins over conventional detection.
+Four takeover tests pass with 43 assertions, and TypeScript passes on macOS.
+The index contains 319 open named requirements; Windows execution remains deferred.
