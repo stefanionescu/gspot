@@ -3,17 +3,22 @@ import { globby } from 'globby';
 import { dirname, join, resolve } from 'node:path';
 import type { RawEntry } from '#types/repository.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { existsSync, lstatSync, readFileSync, statSync } from 'node:fs';
+import { existsSync, lstatSync, statSync, openSync, readSync, closeSync } from 'node:fs';
 
 const EXECUTABLE_BITS = 0o111;
 const HEAD_BYTES = 2048;
 const NOT_REPOSITORY_CODE = 128;
 
+function isMissingFile(error: unknown): boolean {
+    return error instanceof Error && 'code' in error && error.code === 'ENOENT';
+}
+
 function symlinkEntry(full: string, path: string): RawEntry | undefined {
     try {
         const target = statSync(full);
         return target.isDirectory() ? undefined : { path, size: target.size, executable: false, symlink: true };
-    } catch {
+    } catch (error) {
+        if (!isMissingFile(error)) throw error;
         return { path, size: 0, executable: false, symlink: true };
     }
 }
@@ -23,7 +28,8 @@ function entryFor(root: string, path: string): RawEntry | undefined {
     let stat;
     try {
         stat = lstatSync(full);
-    } catch {
+    } catch (error) {
+        if (!isMissingFile(error)) throw error;
         return undefined;
     }
     if (stat.isSymbolicLink()) return symlinkEntry(full, path);
@@ -37,7 +43,7 @@ function hasGitEntry(directory: string): boolean {
         lstatSync(join(directory, '.git'));
         return true;
     } catch (error) {
-        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+        if (!isMissingFile(error)) throw error;
     }
     const parent = dirname(directory);
     return parent !== directory && hasGitEntry(parent);
@@ -113,16 +119,36 @@ export async function trackedEntries(root: string): Promise<RawEntry[]> {
 }
 
 /**
- * The first bytes of a file as text, for shebang and banner checks.
+ * Reads a bounded prefix, closing the descriptor even when reading fails.
+ * @param root the repository root
+ * @param path the root-relative file
+ * @param bytes the maximum byte count
+ * @returns the bytes read
+ */
+export function readPrefix(root: string, path: string, bytes: number): Buffer {
+    const buffer = Buffer.alloc(bytes);
+    const descriptor = openSync(join(root, path), 'r');
+    let offset = 0;
+    try {
+        while (offset < bytes) {
+            const count = readSync(descriptor, buffer, { offset, length: bytes - offset, position: offset });
+            if (count === 0) break;
+            offset += count;
+        }
+        return buffer.subarray(0, offset);
+    } finally {
+        closeSync(descriptor);
+    }
+}
+
+/**
+ * The first bytes of required file content as text, for shebang and banner checks.
  * @param root the repository root
  * @param path the file, relative to the root
  * @param bytes how many bytes to read
- * @returns the text, '' when the file cannot be read
+ * @returns the text
+ * @throws when required content cannot be read
  */
 export function head(root: string, path: string, bytes = HEAD_BYTES): string {
-    try {
-        return readFileSync(join(root, path)).subarray(0, bytes).toString('utf8');
-    } catch {
-        return '';
-    }
+    return readPrefix(root, path, bytes).toString('utf8');
 }

@@ -69,7 +69,17 @@ Complete Windows acceptance remains part of K-263.
 
 ## K-307: Failure-to-empty helpers hide incomplete checks
 
-**Partial implementation.** The manifest-policy reader validates the fields it consumes and reports read or parse failures with the manifest path. Tests cover invalid JSON and invalid field shapes, denied reads, and repositories without package manifests. File listing and root discovery distinguish a confirmed non-Git directory from failed Git observation. Tests cover a corrupt index, incomplete Git metadata, a missing executable, and non-Git ignore handling. File metadata reads and takeover reader failures remain open.
+**Partial implementation.** The manifest-policy reader validates the fields it consumes and reports read or parse failures with the manifest path. Tests cover invalid JSON and invalid field shapes, denied reads, and repositories without package manifests. File listing and root discovery distinguish a confirmed non-Git directory from failed Git observation. Tests cover a corrupt index, incomplete Git metadata, a missing executable, and non-Git ignore handling. Takeover reader failures remain open.
+
+Required content reads report failures, and metadata reads permit absence only for missing
+paths. Header and content classification share a bounded prefix reader that closes its file
+descriptor after failed reads. Classification preserves dangling tracked symlinks without
+reading their absent targets. The current device/inode root regression is retained from the
+existing implementation rather than replaced with the stale parked assertion.
+
+The affected repository, doctor, emission, and uninstall suites pass locally (26 tests,
+88 assertions). Staged deletion triggers, other Git observations, and takeover parsing remain
+open. Windows execution remains platform verification deferred.
 
 Process launch failures distinguish `ENOENT` from permission errors. Both captured streams
 and child status are preserved through completion. Local real-process regressions cover the

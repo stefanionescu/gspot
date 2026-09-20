@@ -22,7 +22,13 @@ export async function readRepository(
     const files: TrackedFile[] = [];
     for (const entry of entries) {
         const tagged = tagEntry(root, entry);
-        const verdict = natureOf(root, entry.path, declares, tagged.binary, tagged.tags.includes('text'));
+        const verdict = natureOf(
+            root,
+            entry.path,
+            declares,
+            tagged.binary,
+            !entry.symlink && tagged.tags.includes('text'),
+        );
         const file: TrackedFile = {
             path: entry.path,
             nature: verdict.nature,

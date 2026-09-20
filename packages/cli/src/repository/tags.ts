@@ -1,6 +1,5 @@
 // File tags computed the way pre-commit's identify does: extension, filename, shebang, executable bit, content.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { readPrefix } from '#cli/repository/tracked.ts';
 import { shebangInterpreter } from '#cli/presets/detect.ts';
 import type { Tagged, RawEntry } from '#types/repository.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
@@ -8,14 +7,7 @@ import { BINARY_EXTENSIONS, LOCKFILE_NAMES } from '#config/patterns.ts';
 import { BINARY_SNIFF_BYTES, EXTENSION_TAGS, FILENAME_TAGS, SHEBANG_TAGS } from '#config/file-tags.ts';
 
 function sniff(root: string, path: string): { isBinary: boolean; firstLine: string } {
-    let buffer: Buffer;
-    try {
-        const file = Bun.file(join(root, path));
-        const size = Math.min(file.size, BINARY_SNIFF_BYTES);
-        buffer = Buffer.from(readFileSync(join(root, path)).subarray(0, size));
-    } catch {
-        return { isBinary: false, firstLine: '' };
-    }
+    const buffer = readPrefix(root, path, BINARY_SNIFF_BYTES);
     if (buffer.includes(0)) return { isBinary: true, firstLine: '' };
     const text = buffer.toString('utf8');
     const newline = text.indexOf('\n');
