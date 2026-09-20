@@ -2,6 +2,7 @@
 import type { Finding } from '#types/finding.ts';
 import { functionAt } from '#cli/structure/parser.ts';
 import { astGrepMatches } from '#cli/structure/ast-grep.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { AstGrepMatch, ShellIndex, StructureContext } from '#types/structure.ts';
 
 const RULES: Record<string, { limit: string; noun: string; isDepth: boolean }> = {
@@ -31,7 +32,7 @@ function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
  * @param analysis the check's analysis name, which is also the rule file's stem
  * @param context the check context
  * @param index the shell index
- * @returns the findings; none when ast-grep is not installed
+ * @returns the findings; a missing ast-grep raises MissingToolError
  */
 export function countFindings(analysis: string, context: StructureContext, index: ShellIndex): Finding[] {
     const rule = RULES[analysis];
@@ -42,7 +43,8 @@ export function countFindings(analysis: string, context: StructureContext, index
         `presets/bash/rules/${analysis}.yml`,
         index.files.map((file) => file.path),
     );
-    if (matches === undefined) return [];
+    if (matches === undefined)
+        throw new MissingToolError('The ast-grep tool is not installed. Run: mise install ast-grep');
     return index.files.flatMap((file) => {
         const inFile = matches.filter((match) => match.file === file.path);
         return file.functions.flatMap((entry) => {

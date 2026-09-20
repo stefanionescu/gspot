@@ -122,6 +122,15 @@ into the `missing` status through `platform/missing-tool.ts`. The file list goes
 
 **Tests.** A unit test runs the three checks with an empty `PATH` and holds `missing`.
 
+**Status: complete (locally verified).** All three engine checks report `missing`
+when executable discovery finds no ast-grep. File arguments use the shared batch
+budget, and every batch contributes its matches. Failed scans reject partial output.
+
+Six integration and CLI acceptance tests pass with 40 assertions, including 5,000
+spaced file arguments and real commands with no ast-grep on their search path.
+The shell acceptance suite also passes its clean and planted cases. TypeScript
+passes on macOS; Windows execution remains deferred.
+
 **Done when.** That test passes.
 
 ## K-157: a check that is off reports ok

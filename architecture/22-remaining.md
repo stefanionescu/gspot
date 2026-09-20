@@ -188,8 +188,8 @@ deployment, or app adoption is inferred from this documentation review.
 ## Every row, by fix file
 
 Each named row links to its owning acceptance section, including rows grouped under another
-ID. The September 20 reconciliation found exactly one owner for each named row. After K-37, K-61, K-99, K-104, K-116, K-129, K-195, K-258, and S-10
-closed, 319 named rows remain open.
+ID. The September 20 reconciliation found exactly one owner for each named row. After K-37, K-61, K-99, K-104, K-116, K-129, K-140, K-195, K-258, and S-10
+closed, 318 named rows remain open.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
 
@@ -224,7 +224,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-159](fixes/01-first-fixes.md#k-156-a-check-deletes-untracked-sql-files): Make `express/openapi-fresh` write back the text it read, and never run `git checkout`.
 - [ ] [K-257](fixes/01-first-fixes.md#k-257-a-full-disk-cuts-the-policy-in-half): Write every file through a temporary file and a rename, and let a failed cache write be one line on stderr.
 - [ ] [K-252](fixes/01-first-fixes.md#k-257-a-full-disk-cuts-the-policy-in-half): Report a run whose report cannot be written in one line on stderr, and keep its findings and its exit code.
-- [ ] [K-140](fixes/01-first-fixes.md#k-140-three-checks-pass-when-ast-grep-is-absent): Report `missing` when ast-grep is absent, and batch its file list.
 - [ ] [K-157](fixes/01-first-fixes.md#k-157-a-check-that-is-off-reports-ok): Let a check declare the setting it waits for, and report `skipped` with that name when it is unset.
 - [ ] [K-254](fixes/01-first-fixes.md#k-254-bash--n-over-files-bash-cannot-read): Run `bash -n` over Bash files alone, `zsh -n` over `.zsh` files, and `bats --count` over `.bats` files.
 - [ ] [K-45](fixes/01-first-fixes.md#k-45-the-message-run-overwrites-the-report): Write no report for a run of the `message` stage (D-105).

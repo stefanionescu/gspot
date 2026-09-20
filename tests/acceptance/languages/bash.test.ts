@@ -115,6 +115,16 @@ describe('the bash planted repository', () => {
             expect(check.code).toBe(1);
             expect(check.stdout).toContain('missing');
             expect(check.stdout).toContain('shellcheck 0.11.0 is not installed');
+            for (const name of ['shell-branches', 'shell-nesting', 'shell-mutable-assignments']) {
+                const missing = await run(fixture.path, ['check', `structure/${name}`, '--no-cache'], {
+                    PATH: bin,
+                    HOME: join(fixture.path, 'home'),
+                    MISE_DATA_DIR: join(fixture.path, 'home', 'mise'),
+                });
+                expect(missing.code).toBe(1);
+                expect(missing.stdout).toContain('missing');
+                expect(missing.stdout).toContain('mise install ast-grep');
+            }
         },
         PLANTED_TIMEOUT_MS,
     );

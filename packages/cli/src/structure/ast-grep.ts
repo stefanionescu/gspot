@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { mkdirSync, writeFileSync } from 'node:fs';
 import { readAsset } from '#cli/platform/assets.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { fileBatches } from '#cli/run/file-batches.ts';
 import type { AstGrepMatch } from '#types/structure.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 
@@ -24,13 +25,19 @@ function ruleFile(root: string, asset: string): string {
  * @returns the matches with zero-based lines, by file, or undefined
  */
 export function astGrepMatches(root: string, asset: string, files: string[]): AstGrepMatch[] | undefined {
+    if (files.length === 0) return [];
     const binary = locateTool(root, 'ast-grep');
-    if (binary === undefined || files.length === 0) return undefined;
+    if (binary === undefined) return undefined;
     const rule = ruleFile(root, asset);
-    const result = runBlocking([binary, 'scan', '--json=compact', '-r', rule, ...files], { cwd: root });
-    if (result.code !== 0 && result.stdout.trim() === '')
-        throw new Error(`The ast-grep run failed: ${result.stderr.trim()}`);
-    const parsed = JSON.parse(result.stdout === '' ? '[]' : result.stdout) as AstGrepMatch[];
+    const command = [binary, 'scan', '--json=compact', '-r', rule];
+    const parsed: AstGrepMatch[] = [];
+    for (const batch of fileBatches(files, command, process.platform)) {
+        const result = runBlocking([...command, ...batch], { cwd: root });
+        if (result.missing) return undefined;
+        if (result.code !== 0 && result.code !== 1) throw new Error(`The ast-grep run failed: ${result.stderr.trim()}`);
+        const matches = JSON.parse(result.stdout) as AstGrepMatch[];
+        parsed.push(...matches);
+    }
     return parsed.map((match) => ({
         ...match,
         file: match.file.startsWith(root) ? match.file.slice(root.length + 1) : match.file,
