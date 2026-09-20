@@ -9,7 +9,7 @@ describe('workflow action pins', () => {
             swiftScope: 'ios',
             isMise: true,
         });
-        expect(generated.content).toContain('mise run gspot:check -- --json');
+        expect(generated.content).toContain('run: mise run gspot:check --\n');
         expect(generated.content).toContain('mise run gspot:check -- --at manual');
         expect(generated.content).toContain('mise run gspot:check -- --scope ios');
     });

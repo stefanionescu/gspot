@@ -77,7 +77,7 @@ function checkJob(shape: WorkflowShape, platform: string): string[] {
     const command = shape.isMise ? 'mise run gspot:check --' : 'gspot check';
     return [
         ...jobHead(`check-${platform}`, RUNNERS[platform] ?? 'ubuntu-latest', setupSteps(shape, platform)),
-        `      - run: ${command} --json > gspot.json`,
+        `      - run: ${command}`,
         `      - run: ${command} --at manual`,
         "        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
         `      - uses: ${SARIF} # v3.25.0`,
