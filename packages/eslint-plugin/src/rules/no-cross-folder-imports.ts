@@ -15,20 +15,35 @@ function aliasFor(target: string, aliases: Record<string, string>): string | und
     return undefined;
 }
 
+// With no configured source roots, each repository top-level directory is a source root.
+function sourceRootFor(file: string, roots: string[]): string | undefined {
+    const candidates = roots.length === 0 ? [file.split('/', 1)[0] ?? ''] : roots.map((root) => posix.normalize(root));
+    return candidates
+        .filter((root) => root === '.' || file.startsWith(`${root}/`))
+        .toSorted((a, b) => b.length - a.length)[0];
+}
+
+function topFolder(file: string, root: string): string | undefined {
+    const prefix = root === '.' ? '' : `${root}/`;
+    if (!file.startsWith(prefix)) return undefined;
+    const path = file.slice(prefix.length);
+    return path.includes('/') ? path.split('/', 1)[0] : undefined;
+}
+
 export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross' | 'crossNoAlias'>({
     name: 'no-cross-folder-imports',
     meta: {
         type: 'problem',
         fixable: 'code',
         docs: {
-            summary: 'Finds a relative import that climbs out of its folder into a sibling folder.',
+            summary: 'Finds relative imports that leave their top-level folder under a source root.',
             why: 'A path of ../../ ties the importer to the tree shape; the alias names the folder and survives a move.',
-            fix: 'Import through the alias the rule names. gspot check --fix rewrites it when an alias exists.',
+            fix: 'Keep relative imports within a top-level folder. gspot check --fix uses a configured alias when one exists.',
         },
         schema: [optionsSchema({ scope: stringList, aliases: aliasMap })],
         messages: {
             cross: 'Import "{{alias}}" instead of climbing folders with "{{source}}".',
-            crossNoAlias: 'Do not climb folders with "{{source}}"; import through an alias.',
+            crossNoAlias: 'Relative import "{{source}}" leaves the "{{folder}}" folder.',
         },
     },
     defaultOptions: [{ scope: [], aliases: {} }],
@@ -37,21 +52,23 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross
         if (file === undefined) return {};
         const root = lintedRoot(context);
         const relative = relativeToRoot(root, file);
-        const scope = options.scope ?? [];
-        if (scope.length > 0 && scope.every((segment) => !relative.split('/').slice(0, -1).includes(segment)))
-            return {};
+        const sourceRoot = sourceRootFor(relative, options.scope ?? []);
+        if (sourceRoot === undefined) return {};
+        const folder = topFolder(relative, sourceRoot);
+        if (folder === undefined) return {};
         const aliases = options.aliases ?? {};
         const check = (node: TSESTree.Node | null | undefined): void => {
             const source = staticString(node);
             if (source === undefined) return;
-            if (!source.startsWith('../')) return;
+            if (!source.startsWith('./') && !source.startsWith('../')) return;
             const joinedPath = posix.join(posix.dirname(relative), source);
             const target = normalizePath(posix.normalize(joinedPath));
+            if (topFolder(target, sourceRoot) === folder) return;
             const alias = aliasFor(target, aliases);
             const literal = node as TSESTree.Literal;
             const quote = literal.raw.startsWith('"') ? '"' : "'";
             if (alias === undefined) {
-                context.report({ node: literal, messageId: 'crossNoAlias', data: { source } });
+                context.report({ node: literal, messageId: 'crossNoAlias', data: { source, folder } });
             } else {
                 context.report({
                     node: literal,

@@ -521,12 +521,17 @@ folder, and asks for an alias that a repository without `paths` does not have.
 
 **Logic.** The rule resolves the import against the file, takes the first segment under the
 source root for both paths, and compares. The message names the alias only where one exists.
+The rule option `scope` names source roots; without it, each top-level repository directory is a source root.
 
 **What goes.** The prefix test.
 
 **Tests.** Valid: `features/cart/a.ts` imports `../cart/b`. Invalid: it imports `../user/b`.
 
 **Done when.** Both cases pass.
+
+**Status: locally verified.** Fourteen rule cases cover imports within a feature and across its boundary.
+They exercise nested paths, configured source roots, and alias fixes.
+A finding without a configured alias names the crossed folder.
 
 ## K-192: a protocol name fails the case check
 

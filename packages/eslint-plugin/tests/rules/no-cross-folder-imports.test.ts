@@ -5,6 +5,14 @@ const aliases = { '@/': 'src/', '@config/': 'config/', '@tests/': 'tests/' };
 
 tester().run('no-cross-folder-imports', noCrossFolderImports, {
     valid: [
+        { code: "import { b } from '../cart/b';", filename: '/repo/features/cart/a.ts' },
+        { code: "import { b } from '../b';", filename: '/repo/features/cart/inner/a.ts' },
+        { code: "import { b } from './cart/b';", filename: '/repo/features/main.ts' },
+        {
+            code: "import { b } from '../cart/b';",
+            filename: '/repo/packages/shop/source/cart/a.ts',
+            options: [{ scope: ['packages/shop/source'] }],
+        },
         { code: "import { a } from './a.js';", filename: '/repo/src/turn/b.ts', options: [{ aliases }] },
         { code: "import { a } from '@/turn/a.js';", filename: '/repo/src/other/b.ts', options: [{ aliases }] },
         {
@@ -14,6 +22,28 @@ tester().run('no-cross-folder-imports', noCrossFolderImports, {
         },
     ],
     invalid: [
+        {
+            code: "import { b } from '../../tests/b';",
+            filename: '/repo/features/cart/a.ts',
+            options: [{ scope: ['.'] }],
+            errors: [{ messageId: 'crossNoAlias', data: { source: '../../tests/b', folder: 'features' } }],
+        },
+        {
+            code: "import { b } from '../user/b';",
+            filename: '/repo/features/cart/a.ts',
+            errors: [{ messageId: 'crossNoAlias', data: { source: '../user/b', folder: 'cart' } }],
+        },
+        {
+            code: "import { b } from './inner/../../user/b';",
+            filename: '/repo/features/cart/a.ts',
+            errors: [{ messageId: 'crossNoAlias' }],
+        },
+        {
+            code: "import { b } from '../../user/b';",
+            filename: '/repo/packages/shop/source/cart/inner/a.ts',
+            options: [{ scope: ['packages/shop/source'] }],
+            errors: [{ messageId: 'crossNoAlias' }],
+        },
         {
             code: "import { a } from '../turn/a.js';",
             filename: '/repo/src/other/b.ts',

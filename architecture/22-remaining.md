@@ -189,7 +189,7 @@ deployment, or app adoption is inferred from this documentation review.
 
 Each named row links to its owning acceptance section, including rows grouped under another
 ID. The September 20 reconciliation found exactly one owner for each named row.
-Twenty requirements are locally complete; 308 named rows remain open.
+Twenty-one requirements are locally complete; 307 named rows remain open.
 Completed evidence stays in each owning acceptance section.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
@@ -228,7 +228,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-108](fixes/01-first-fixes.md#k-108-a-missing-hooks-table): Make a missing `[hooks]` table mean gspot does nothing there, as `[ci]` and `[runner]` do (D-130).
 - [ ] [K-109](fixes/01-first-fixes.md#k-109-gspot-replaces-a-script-of-the-developer): Never inject a lifecycle script; replace an existing lint task only with explicit acceptance and recoverable originals.
 - [ ] [K-147](fixes/01-first-fixes.md#k-147-one-wrong-line-stops-every-command): Run `check` with the rest of the config when one line is wrong, and report that line as a finding.
-- [ ] [K-189](fixes/01-first-fixes.md#k-189-no-cross-folder-imports-reports-every-): The rule reports an import whose target leaves the top-level folder of the importer, which is what its summary says.
 - [ ] [K-206](fixes/01-first-fixes.md#k-206-two-pins-their-npm-package-never-had): An installer that numbers differently carries its own version beside its name, and a release test asks each registry for every pin.
 - [ ] [K-226](fixes/01-first-fixes.md#k-226-tsc--p-reads-nothing-in-a-project-with-references): The check builds the references (`tsc -b --noEmit`) where the file holds any.
 - [ ] [K-229](fixes/01-first-fixes.md#k-229-list-items-cut-in-mid-sentence): The items are restored from the reference repositories. The lint of the rule files reports a list item that stops with no sentence end.
