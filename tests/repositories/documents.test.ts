@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
-import { existsSync, mkdirSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
+import { existsSync, mkdirSync, readdirSync, symlinkSync, unlinkSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -145,7 +145,7 @@ describe.skipIf(!existsSync(join(STYLES, 'Google')))('the markdown, docs and pro
                 const skipped = run(fixture.path, ['check', id], environment);
                 expect(skipped.stdout, id).toContain('its findings come from');
             }
-            rmSync(join(fixture.path, '.gspot', 'vale', 'styles', 'config', 'dictionaries'));
+            unlinkSync(join(fixture.path, '.gspot', 'vale', 'styles', 'config', 'dictionaries'));
             const broken = run(fixture.path, ['check', 'prose/vale', '--no-cache'], environment);
             expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(1);
             expect(broken.stdout).toContain('error');

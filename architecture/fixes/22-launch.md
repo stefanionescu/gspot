@@ -214,3 +214,7 @@ The per-setting Windows probe isolates exit 5 to `--header strip`. Every other s
 passes separately. K-219 requires removing that destructive option and the SwiftLint
 header ban. The setup smoke check retains the complete shipped configuration and now
 includes a copyright header, so Windows must lint that combination successfully.
+
+The Windows document suite reaches its missing-dictionary scenario after the Vale path fix.
+It fails while removing a directory symlink with `rmSync`. The fixture uses `unlinkSync`
+to remove only that link and then exercises the expected Vale error.
