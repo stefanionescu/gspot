@@ -91,6 +91,13 @@ files but report unreadable or malformed package and TypeScript configuration. V
 and trailing commas in TypeScript configuration remain accepted. Other observation paths
 remain open.
 
+Generation, takeover, and compiler project selection use one parser for JSON with comments.
+The TypeScript options check validates its consumed fields and reports malformed or denied
+reads with their paths. Missing inherited configurations and inheritance cycles fail the
+observation. Repeated bases are reapplied in declaration order across independent branches.
+The 11 reader and inheritance regressions pass locally; package-based inheritance
+resolution and other readers remain open.
+
 Project detection and manifest policy share a validated package reader. Detection reports
 failed reads, malformed package JSON or Python TOML, and invalid consumed fields instead of
 dropping a manifest. Python workspace discovery reuses those parsed facts. npm workspace

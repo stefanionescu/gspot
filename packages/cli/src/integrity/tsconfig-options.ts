@@ -1,10 +1,11 @@
 // Are the required compiler options on in every tsconfig the scope's TypeScript files belong to?
+import { z } from 'zod';
+import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { dirname, join, resolve } from 'node:path';
-import { existsSync, readFileSync } from 'node:fs';
-import { parse as parseJsonc } from 'jsonc-parser';
 import type { Tsconfig } from '#types/integrity.ts';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
 
 const REQUIRED = [
     'strict',
@@ -24,9 +25,11 @@ const DECORATOR_OPTIONS = ['experimentalDecorators', 'emitDecoratorMetadata'];
 
 function readTsconfig(path: string): Tsconfig | undefined {
     try {
-        return (parseJsonc(readFileSync(path, 'utf8')) as Tsconfig | undefined) ?? {};
-    } catch {
-        return undefined;
+        return tsconfigSchema.parse(parseJsonc(readFileSync(path, 'utf8')));
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(`Cannot read TypeScript configuration ${path}: ${detail}`, { cause: error });
     }
 }
 
@@ -40,13 +43,18 @@ function baseFile(path: string, base: string): string {
     return target.endsWith('.json') ? target : `${target}.json`;
 }
 
-function resolvedOptions(path: string, seen = new Set<string>()): Record<string, unknown> {
-    if (seen.has(path) || !existsSync(path)) return {};
+function resolvedOptions(path: string, parsed: Tsconfig, seen = new Set<string>()): Record<string, unknown> {
+    if (seen.has(path)) throw new Error(`Circular TypeScript configuration inheritance at ${path}.`);
     seen.add(path);
-    const parsed = readTsconfig(path);
-    if (!parsed) return {};
     let options: Record<string, unknown> = {};
-    for (const base of basesOf(parsed)) options = { ...options, ...resolvedOptions(baseFile(path, base), seen) };
+    for (const base of basesOf(parsed)) {
+        const inheritedPath = baseFile(path, base);
+        const inherited = readTsconfig(inheritedPath);
+        if (inherited === undefined)
+            throw new Error(`Extended TypeScript configuration ${inheritedPath} does not exist.`);
+        options = { ...options, ...resolvedOptions(inheritedPath, inherited, seen) };
+    }
+    seen.delete(path);
     return { ...options, ...parsed.compilerOptions };
 }
 
@@ -63,8 +71,8 @@ function requiredFor(input: EngineInput): string[] {
     return [...REQUIRED.filter((option) => !DECORATOR_CLASHES.has(option)), ...DECORATOR_OPTIONS];
 }
 
-function missingOptions(input: EngineInput, path: string): Finding[] {
-    const options = resolvedOptions(join(input.root, path));
+function missingOptions(input: EngineInput, path: string, parsed: Tsconfig): Finding[] {
+    const options = resolvedOptions(join(input.root, path), parsed);
     return requiredFor(input)
         .filter((option) => options[option] !== true)
         .map((option) => ({
@@ -76,6 +84,14 @@ function missingOptions(input: EngineInput, path: string): Finding[] {
             fixable: false,
         }));
 }
+
+const configText = z.string();
+
+/** The TypeScript configuration fields used by the option check. */
+export const tsconfigSchema = z.object({
+    extends: z.union([configText, z.array(configText)]).optional(),
+    compilerOptions: z.record(configText, z.unknown()).optional(),
+});
 
 /**
  * One finding per required option a scope's tsconfig leaves off.
@@ -89,7 +105,8 @@ export function tsconfigOptions(input: EngineInput): Promise<Finding[]> {
         ...input.files.map((file) => file.path).filter((path) => isTsconfigName(path)),
     ]);
     const findings = [...candidates].flatMap((path) => {
-        if (existsSync(join(input.root, path))) return missingOptions(input, path);
+        const parsed = readTsconfig(join(input.root, path));
+        if (parsed !== undefined) return missingOptions(input, path, parsed);
         if (path !== scopeTsconfig) return [];
         return [
             {
