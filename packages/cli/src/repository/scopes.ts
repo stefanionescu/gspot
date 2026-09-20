@@ -1,8 +1,7 @@
 // Scopes: from [[scope]] in gspot.toml, or from workspace declarations at init.
 import { join } from 'node:path';
-import { parse as parseToml } from 'smol-toml';
+import { existsSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
-import { existsSync, readFileSync } from 'node:fs';
 import { getPackagesSync } from '@manypkg/get-packages';
 import { LINT_TOOL_PACKAGE_PREFIXES } from '#config/patterns.ts';
 import type { ManifestFacts, ScopeEntry } from '#types/repository.ts';
@@ -28,18 +27,6 @@ function npmScopes(root: string, byPath: Map<string, ManifestFacts>, lintOnly: s
             else scopes.push(workspaceEntry(rel));
         }
         return scopes;
-    } catch {
-        return [];
-    }
-}
-
-function tomlMembers(root: string, file: string, path: string[]): string[] {
-    const full = join(root, file);
-    if (!existsSync(full)) return [];
-    try {
-        let current: unknown = parseToml(readFileSync(full, 'utf8'));
-        for (const part of path) current = (current as Record<string, unknown> | undefined)?.[part];
-        return Array.isArray(current) ? current.filter((member): member is string => typeof member === 'string') : [];
     } catch {
         return [];
     }
@@ -77,7 +64,7 @@ export function workspaceScopes(root: string, facts: ManifestFacts[]): { scopes:
     const byPath = new Map(facts.map((fact) => [fact.path, fact]));
     const found = [
         ...npmScopes(root, byPath, lintOnly),
-        ...memberScopes(root, tomlMembers(root, 'pyproject.toml', ['tool', 'uv', 'workspace', 'members'])),
+        ...memberScopes(root, byPath.get('pyproject.toml')?.workspaces ?? []),
     ];
     const unique = new Map<string, ScopeEntry>();
     for (const scope of found) if (!unique.has(scope.path)) unique.set(scope.path, scope);

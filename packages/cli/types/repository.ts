@@ -1,3 +1,8 @@
+import type { z } from 'zod';
+import type { packageManifestSchema } from '#cli/repository/manifests.ts';
+
+export type PackageManifest = z.infer<typeof packageManifestSchema>;
+
 // What is in the tree: files, natures, tags, scopes, and the tooling init finds.
 
 export type Nature = 'source' | 'generated' | 'vendored' | 'binary';

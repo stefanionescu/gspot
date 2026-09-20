@@ -4,6 +4,7 @@ import { hookBody } from '#cli/emit/hooks.ts';
 import { createSandbox } from '@gspot/testing';
 import { chmodSync, existsSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
+import { treeContents } from '#tests/harness/contents.ts';
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
 import { commitAll, git, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
 
@@ -163,4 +164,20 @@ test('initialization flags control integrations and formatter carryover in the p
     expect(shippedPolicy.format).toEqual({});
     expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
     expect(await Bun.file(join(sandbox.path, '.prettierrc.json')).text()).toBe('{"semi":false,"tabWidth":8}\n');
+});
+
+test.each([
+    ['package.json', '{'],
+    ['package.json', '{"dependencies":{"typescript":7}}'],
+    ['package.json', '{"scripts":{"lint":false}}'],
+    ['package.json', '{"workspaces":[7]}'],
+    ['pyproject.toml', '[project'],
+    ['pyproject.toml', '[tool.uv.workspace]\nmembers = [7]\n'],
+])('init reports invalid %s content %s before writing', async (path, content) => {
+    await using sandbox = await createSandbox({ [path]: content, 'source.ts': 'export {};\n' });
+    const before = treeContents(sandbox.path);
+    const result = await run(sandbox.path, ['init', '--yes', '--no-hooks', ...QUIET]);
+    expect(result.code, result.stdout + result.stderr).not.toBe(0);
+    expect(result.stdout + result.stderr).toContain(path);
+    expect(treeContents(sandbox.path)).toEqual(before);
 });

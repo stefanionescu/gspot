@@ -85,6 +85,11 @@ reads and tool baseline hashes permit missing files but propagate other I/O fail
 regressions cover unreadable sources with and without caching, preserved prior reports,
 and absent versus unreadable optional inputs. Other observation paths remain open.
 
+Project detection and manifest policy share a validated package reader. Detection reports
+failed reads, malformed package JSON or Python TOML, and invalid consumed fields instead of
+dropping a manifest. Python workspace discovery reuses those parsed facts. npm workspace
+resolution and the remaining readers still require review.
+
 Required content reads report failures, and metadata reads permit absence only for missing
 paths. Header and content classification share a bounded prefix reader that closes its file
 descriptor after failed reads. Classification preserves dangling tracked symlinks without
