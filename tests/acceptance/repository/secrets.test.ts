@@ -76,7 +76,6 @@ describe('the secrets preset', () => {
                 {
                     check: 'integrity/gitleaks-baseline',
                     files: { '.gspot/gitleaks-baseline.json': BASELINE },
-                    expected: 'has no reason',
                 },
                 environment,
             );

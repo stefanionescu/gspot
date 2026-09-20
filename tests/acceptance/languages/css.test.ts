@@ -80,7 +80,6 @@ describe('the css preset', () => {
                         'src/panel.js':
                             "import styles from './panel.module.scss';\nexport const name = styles.panel;\n",
                     },
-                    expected: '',
                 },
                 environment,
             );

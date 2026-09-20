@@ -4,8 +4,9 @@ import { join } from 'node:path';
 // The Vale packages of this repository are linked in, so the prose check runs offline.
 import { fileURLToPath } from 'node:url';
 import { createSandbox } from '@gspot/testing';
+import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
-import type { PlantedCase } from '#tests/types/acceptance.ts';
+import type { FindingCase } from '#tests/types/acceptance.ts';
 import { mkdirSync, readdirSync, symlinkSync, unlinkSync } from 'node:fs';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
@@ -34,47 +35,52 @@ Open the guide and read it from the top.
 const GUIDE = '# The Guide\n\nThe worker retries the request three times. Each retry waits one second.\n';
 const LICENSE = 'MIT License\n\nCopyright (c) 2026 Alex Garcia\n';
 
-const CASES: PlantedCase[] = [
+const CASES: FindingCase[] = [
     {
         check: 'markdown/markdownlint',
         files: { 'docs/skipped.md': '# A page\n\n### A heading two levels down\n\nText under it.\n' },
-        expected: 'MD001',
+        expected: { file: 'docs/skipped.md', rule: 'MD001', line: 3 },
     },
     {
         check: 'markdown/fences',
         files: { 'docs/fence.md': '# A page\n\n```json\n{ "open": \n```\n' },
-        expected: 'docs/fence.md',
+        expected: { file: 'docs/fence.md', rule: 'json', line: 3 },
     },
     {
         check: 'docs/links',
         files: { 'docs/linked.md': '# A page\n\nRead [the other page](missing-page.md) first.\n' },
-        expected: 'missing-page.md',
+        expected: { file: 'docs/linked.md', rule: 'ERROR', line: 3, column: 6 },
     },
     {
         check: 'integrity/docs-headings',
         files: { 'docs/layout.md': '# A page\n\n## Project structure\n\nOne folder for each thing.\n' },
-        expected: 'promises an inventory',
+        expected: { file: 'docs/layout.md', rule: 'banned-heading', line: 3 },
     },
     {
         check: 'integrity/stale-paths',
         files: { 'docs/stale.md': '# A page\n\nThe entry point is `docs/nowhere/start.md`.\n' },
-        expected: 'docs/nowhere/start.md names no tracked file or folder',
+        expected: { file: 'docs/stale.md', rule: 'missing-path', line: 3 },
     },
-    { check: 'docs/readme-present', files: {}, removed: ['LICENSE'], expected: 'The root has no LICENSE file' },
+    {
+        check: 'docs/readme-present',
+        files: {},
+        removed: ['LICENSE'],
+        expected: { file: 'LICENSE', message: 'The root has no LICENSE file.' },
+    },
     {
         check: 'docs/readme-shape',
         files: { 'README.md': '# planted\n\nText with no section at all.\n' },
-        expected: 'README.md',
+        expected: { file: 'README.md', rule: 'start-section', line: 1 },
     },
     {
         check: 'prose/vale',
         files: { 'docs/selling.md': '# A page\n\nThis powerful cache easily makes the application much faster.\n' },
-        expected: 'docs/selling.md',
+        expected: { file: 'docs/selling.md', rule: 'gspot.marketing', line: 3, column: 6 },
     },
     {
         check: 'prose/source-bans',
         files: { 'docs/silenced.md': '# A page\n\n<!-- vale off -->\n\nText the prose check no longer reads.\n' },
-        expected: 'A Vale directive turns a rule off in the text',
+        expected: { file: 'docs/silenced.md', rule: 'vale-directive', line: 3 },
     },
 ];
 
@@ -126,7 +132,13 @@ describe('the markdown, docs and prose presets', () => {
             for (const planted of CASES) {
                 const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
-                expect(outcome.stdout, planted.check).toContain(planted.expected);
+                const report = JSON.parse(await Bun.file(join(sandbox.path, '.gspot/report.json')).text()) as RunReport;
+                const result = report.checks.find((entry) => entry.check === planted.check);
+                expect(result?.status, outcome.stdout).toBe('fail');
+                const finding = result?.findings.find(
+                    (entry) => entry.file === planted.expected.file && entry.rule === planted.expected.rule,
+                );
+                expect(finding).toMatchObject({ check: planted.check, ...planted.expected });
             }
             // A check id is written like a path. A document that names one means the check, whatever folders exist.
             const named = await runPlanted(
@@ -134,7 +146,6 @@ describe('the markdown, docs and prose presets', () => {
                 {
                     check: 'integrity/stale-paths',
                     files: { 'docs/checks.md': '# A page\n\nThe check `docs/links` reads every link.\n' },
-                    expected: '',
                 },
                 environment,
             );

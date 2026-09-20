@@ -2,8 +2,9 @@
 import { chmodSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { createSandbox } from '@gspot/testing';
+import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
-import type { PlantedCase } from '#tests/types/acceptance.ts';
+import type { FindingCase } from '#tests/types/acceptance.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 import {
@@ -38,33 +39,40 @@ if (content.includes('actions/checkout@0000000000000000000000000000000000000000'
 }
 `;
 
-const CASES: PlantedCase[] = [
+const CASES: FindingCase[] = [
     {
         check: 'config-files/toml-format',
         files: { 'settings/layout.toml': 'a    =     1\nb=2\n' },
-        expected: 'settings/layout.toml',
+        expected: {
+            file: 'settings/layout.toml',
+            message: 'The file is not formatted with the configured TOML settings.',
+        },
     },
     {
         check: 'config-files/actions',
         files: { '.github/workflows/broken.yml': `${WORKFLOW_HEAD}            - run: echo "\${{ nothing.here }}"\n` },
-        expected: 'broken.yml',
+        expected: { file: '.github/workflows/broken.yml', rule: 'expression', line: 9, column: 30 },
     },
     {
         check: 'config-files/actions-security',
         files: {
             '.github/workflows/unpinned.yml': `${WORKFLOW_HEAD}            - uses: actions/checkout@v4\n            - run: echo "\${{ github.event.pull_request.title }}"\n`,
         },
-        expected: 'unpinned.yml',
+        expected: { file: '.github/workflows/unpinned.yml', rule: 'template-injection', line: 10 },
     },
     {
         check: 'config-files/dotenv',
         files: { '.env.example': 'PORT=3000\nport=3000\nPORT=4000\n' },
-        expected: '.env.example',
+        expected: { file: '.env.example', rule: 'LowercaseKey', line: 2 },
     },
     {
         check: 'config-files/xml',
         files: { 'settings/feed.xml': '<feed><entry></feed>\n' },
-        expected: 'settings/feed.xml',
+        expected: {
+            file: 'settings/feed.xml',
+            line: 1,
+            message: 'parser error : Opening and ending tag mismatch: entry line 1 and feed',
+        },
     },
 ];
 
@@ -167,7 +175,13 @@ process.exit(2);
                 expect(outcome.stdout, planted.check).toMatch(
                     new RegExp(String.raw`^root\s+${planted.check}\s+fail\s`, 'u'),
                 );
-                expect(outcome.stdout, planted.check).toContain(planted.expected);
+                const report = JSON.parse(await Bun.file(join(sandbox.path, '.gspot/report.json')).text()) as RunReport;
+                const result = report.checks.find((entry) => entry.check === planted.check);
+                expect(result?.status, outcome.stdout).toBe('fail');
+                const finding = result?.findings.find(
+                    (entry) => entry.file === planted.expected.file && entry.rule === planted.expected.rule,
+                );
+                expect(finding).toMatchObject({ check: planted.check, ...planted.expected });
             }
             const jsonCheck = await run(sandbox.path, ['check', '--only', 'config-files/json'], environment);
             expect(jsonCheck.stdout).toContain('its findings come from');
@@ -193,7 +207,6 @@ process.exit(2);
                 {
                     check: 'config-files/plist',
                     files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
-                    expected: 'Info.plist',
                 },
                 environment,
             );

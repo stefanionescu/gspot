@@ -8,7 +8,6 @@ import { TOOL_ANALYSES } from '#cli/run/analyses.ts';
 import { runEngineCheck } from '#cli/run/engines.ts';
 import { reproduceLine } from '#cli/run/reproduce.ts';
 import { SUPPRESSION_FORMS } from '#config/markers.ts';
-import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { stageLimiter } from '#cli/run/concurrency.ts';
 import { writeReport } from '#cli/run/report/write.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
@@ -16,6 +15,7 @@ import { toolBaselineFile } from '#cli/run/scope-paths.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
 import { applyBaselines, readBaselines } from '#cli/run/baselines.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
+import { prepareCommand, runToolCheck } from '#cli/run/tool-runner.ts';
 import { textHash, cacheKey, fileHash, readCached, writeCached } from '#cli/run/cache.ts';
 
 import type {
@@ -40,7 +40,8 @@ function configurationHash(session: Session): string {
 
 function toolVersionOf(session: Session, planned: PlannedCheck): string {
     if (!planned.tool) return 'engine';
-    const probe = probeTool(session, planned.tool);
+    const { env } = prepareCommand(session, planned, planned.spec.command ?? []);
+    const probe = probeTool(session, { ...planned.tool, env });
     return `${planned.tool.name}@${probe.found ?? probe.state}`;
 }
 

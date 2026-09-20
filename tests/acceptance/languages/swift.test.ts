@@ -181,7 +181,7 @@ describe('the swift preset inside a scope', () => {
             }
             const outcome = await runPlanted(
                 sandbox.path,
-                { check: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST }, expected: 'force_cast' },
+                { check: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST } },
                 environment,
             );
             if (process.platform === 'win32') {

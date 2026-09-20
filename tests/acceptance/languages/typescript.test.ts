@@ -6,7 +6,7 @@ import { fileURLToPath } from 'node:url';
 import { createSandbox } from '@gspot/testing';
 import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
-import type { PlantedCase } from '#tests/types/acceptance.ts';
+import type { FindingCase } from '#tests/types/acceptance.ts';
 import { symlinkSync, writeFileSync, readdirSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
@@ -103,14 +103,14 @@ export const receipt = receiptLine(orderTotal([{ price: 2, quantity: 3 }], 'EUR'
 // Built from two halves, so the spelling fixer of this repository never corrects the planted typo.
 const MISSPELLED = ['Te', 'h'].join('');
 
-const CASES: PlantedCase[] = [
+const CASES: FindingCase[] = [
     {
         check: 'typescript/tsc',
         files: {
             'src/orders/wrong.ts':
                 "// A wrong type.\n\n/** A count that is not a number. */\nexport const count: number = 'three';\n",
         },
-        expected: 'TS2322',
+        expected: { file: 'src/orders/wrong.ts', rule: 'TS2322', line: 4, column: 14 },
     },
     {
         check: 'typescript/eslint',
@@ -118,7 +118,7 @@ const CASES: PlantedCase[] = [
             'src/orders/paused.ts':
                 '// A debugger statement left behind.\n\n/**\n * Doubles a value.\n * @param value the value\n * @returns twice the value\n */\nexport function twice(value: number): number {\n    debugger;\n    return value * 2;\n}\n',
         },
-        expected: 'no-debugger',
+        expected: { file: 'src/orders/paused.ts', rule: 'no-debugger', line: 9, column: 5 },
     },
     {
         check: 'typescript/eslint',
@@ -126,7 +126,7 @@ const CASES: PlantedCase[] = [
             'src/orders/forward.ts':
                 '// A second name for the receipt function.\nimport { receiptLine } from "./receipt.js";\nimport type { Total } from "#types/totals.js";\n\n/**\n * Formats a receipt.\n * @param total the total\n * @returns the receipt line\n */\nexport const forward = (total: Total): string => receiptLine(total);\n',
         },
-        expected: 'gspot/no-call-through',
+        expected: { file: 'src/orders/forward.ts', rule: 'gspot/no-call-through', line: 10, column: 24 },
     },
     {
         check: 'javascript/knip',
@@ -134,7 +134,7 @@ const CASES: PlantedCase[] = [
             'src/orders/unused.ts':
                 '// Nothing imports this.\n\n/** A value nobody reads. */\nexport const unused = 1;\n',
         },
-        expected: 'src/orders/unused.ts',
+        expected: { file: 'src/orders/unused.ts', message: 'src/orders/unused.ts' },
     },
     {
         check: 'naming/identifiers',
@@ -142,7 +142,7 @@ const CASES: PlantedCase[] = [
             'src/orders/names.ts':
                 '// A name with a banned word.\n\n/** A helper value. */\nexport const orderHelper = 1;\n',
         },
-        expected: '"helper" is banned',
+        expected: { file: 'src/orders/names.ts', rule: 'banned-term', line: 4, column: 14 },
     },
     {
         check: 'naming/paths',
@@ -150,20 +150,23 @@ const CASES: PlantedCase[] = [
             'src/orders/order-utils.ts':
                 '// A file name with a banned word.\n\n/** A value. */\nexport const orderCount = 1;\n',
         },
-        expected: '"utils" is banned',
+        expected: { file: 'src/orders/order-utils.ts', rule: 'banned-term', line: 1, column: 1 },
     },
     {
         check: 'naming/policy-schema',
         files: {},
         policy: '[naming]\nallowed = [{name = "neverUsedName", reason = "A name nothing in this repository carries."}]\n',
-        expected: 'which no identifier in this scope carries',
+        expected: {
+            file: 'gspot.toml',
+            message: 'naming.allowed names "neverUsedName", which no identifier in this scope carries.',
+        },
     },
     {
         check: 'formatting/prettier',
         files: {
             'src/orders/ugly.ts': '// Badly formatted.\n\n/** A value. */\nexport const   ugly   =   [1,2,\n3];\n',
         },
-        expected: 'not formatted the way Prettier formats it',
+        expected: { file: 'src/orders/ugly.ts', message: 'This file is not formatted the way Prettier formats it.' },
     },
     {
         check: 'formatting/editorconfig-checker',
@@ -171,14 +174,19 @@ const CASES: PlantedCase[] = [
             'src/orders/trailing.ts':
                 '// Trailing spaces after this comment.   \n\n/** A value. */\nexport const orderCount = 1;\n',
         },
-        expected: 'src/orders/trailing.ts',
+        expected: { file: 'src/orders/trailing.ts', line: 1, message: 'Trailing whitespace' },
     },
     {
         check: 'spelling/typos',
         files: {
             'src/orders/typo.ts': `// ${MISSPELLED} order of things.\n\n/** A value. */\nexport const orderCount = 1;\n`,
         },
-        expected: 'The',
+        expected: {
+            file: 'src/orders/typo.ts',
+            line: 1,
+            column: 4,
+            message: `error: \`${MISSPELLED}\` should be \`The\``,
+        },
     },
     {
         check: 'integrity/config-purity',
@@ -188,7 +196,7 @@ const CASES: PlantedCase[] = [
                 '// Logic where literals belong.\n\n/**\n * Doubles a value.\n * @param value the value\n * @returns twice the value\n */\nexport function twice(value: number): number {\n    return value * 2;\n}\n',
         },
         policyEdit: ['types_directory = "types"', 'types_directory = "types"\nroles = { config = "config" }'],
-        expected: 'a configuration module holds literals only',
+        expected: { file: 'config/logic.ts', rule: 'logic-in-config', line: 8 },
     },
     {
         check: 'javascript/checkjs',
@@ -196,7 +204,7 @@ const CASES: PlantedCase[] = [
             'src/orders/legacy.js':
                 '// A plain JavaScript file with a wrong call.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n\n/** A call with a string. */\nexport const wrong = twice("x");\n',
         },
-        expected: 'TS2345',
+        expected: { file: 'src/orders/legacy.js', rule: 'TS2345', line: 13, column: 28 },
     },
     {
         check: 'integrity/tsconfig-options',
@@ -204,7 +212,7 @@ const CASES: PlantedCase[] = [
             'tsconfig.json':
                 '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "compilerOptions": { "strict": false }\n}\n',
         },
-        expected: 'strict',
+        expected: { file: 'tsconfig.json', rule: 'strict' },
     },
 ];
 
@@ -244,7 +252,13 @@ describe('the typescript preset', () => {
             for (const planted of CASES) {
                 const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
-                expect(outcome.stdout, planted.check).toContain(planted.expected);
+                const report = JSON.parse(await Bun.file(join(sandbox.path, '.gspot/report.json')).text()) as RunReport;
+                const result = report.checks.find((entry) => entry.check === planted.check);
+                expect(result?.status, outcome.stdout).toBe('fail');
+                const finding = result?.findings.find(
+                    (entry) => entry.file === planted.expected.file && entry.rule === planted.expected.rule,
+                );
+                expect(finding).toMatchObject({ check: planted.check, ...planted.expected });
             }
             // typos forgets its exclude list for a file named on the command line unless it is told to keep it.
             const excluded = await runPlanted(
@@ -252,7 +266,6 @@ describe('the typescript preset', () => {
                 {
                     check: 'spelling/typos',
                     files: { 'assets/mark.svg': `<svg><title>${MISSPELLED}</title></svg>\n` },
-                    expected: '',
                 },
                 environment,
             );
@@ -295,7 +308,6 @@ describe('the typescript preset', () => {
                 {
                     check: 'javascript/eslint',
                     files: { 'src/paused.js': clean.replace('    return', () => '    debugger;\n    return') },
-                    expected: 'no-debugger',
                 },
                 environment,
             );

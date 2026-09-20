@@ -313,7 +313,7 @@ a root pointer for a tool with an include form. The managed blocks sit in `.giti
 ```text
 tests/
 ├── harness/                    planted.ts, contents.ts, worktree.ts, swiftformat.ts, and registry/
-├── config/                     shared init commands, project text, tool lists, and timeouts (D-113)
+├── types/                      test-owned contracts
 ├── integration/                shared harness and registry behavior
 ├── acceptance/                 command execution over developer projects
 │   ├── cli/                    initialization, checks, hooks, and lifecycle commands

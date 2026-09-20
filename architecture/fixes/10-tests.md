@@ -36,8 +36,7 @@ the tool lists are repeated across the test files.
 
 **Target.** A harness that fails early, with a message about the machine or about `init`.
 
-**Files.** `tests/harness/planted.ts`, new `tests/harness/engine-input.ts`, new `tests/config/`
-with `commands.ts`, `cases.ts`, `tools.ts`, and `timeouts.ts` (D-113).
+**Files.** `tests/harness/planted.ts` and the suites that exercise setup failures (D-113).
 
 **Logic.** `install` expects exit 0 when every tool of the install is on the `PATH` it was given.
 `toolsPath` throws and names the tool it cannot find and the command that installs it. `plant`
@@ -48,7 +47,8 @@ planted folder, and the four tests use it.
 
 **Tests.** A unit test of the harness: a crashing `init` fails `install`.
 
-**Done when.** It passes, and no test file holds the text `init --yes` outside `tests/config/`.
+**Done when.** Failed initialization and missing tools fail setup, and restoration preserves
+the original files after partial setup or execution failure.
 
 ## T-24: the tests install the way no developer does
 
@@ -65,7 +65,7 @@ in every test run.
 **Files.** New `tests/acceptance/cli/installs.test.ts`. `tests/release/pins.test.ts` gains the
 install of K-206.
 
-**Logic.** A table of six installs in `tests/config/commands.ts`: mise with GitHub CI, npm, pnpm,
+**Logic.** Exercise six installs in the owning suite: mise with GitHub CI, npm, pnpm,
 bun, no runner with GitLab CI, and the default with no flag. Each holds the files written, a
 passing `gspot check --staged`, and a commit through the hook. The release test installs
 `.gspot/package.json` of every npm preset with each package manager and runs one check there.
@@ -98,8 +98,8 @@ clone, a `[tool.ruff]` table, or a `lint` script.
 
 **Tests.** Thirteen cases, one for each item above.
 
-**Done when.** A table in `tests/config/cases.ts` maps each adoption finding to its case, and
-a unit test fails an `A-` id with no case.
+**Done when.** Each adoption defect has an executed regression whose finding or resulting
+files prove the correction. Record that evidence in the owning fix section.
 
 ## T-28: checks that no test makes fail
 
@@ -112,7 +112,7 @@ fails on every file (K-258). The library presets are proven by the rule names `n
 and `no-restricted-syntax`, which every selector prints. Several test folders are empty.
 
 **Status: partially implemented.** The source-text name guard is deleted. It did not prove
-that a check ran or found a defect. The executable planted-case ledger remains open.
+that a check ran or found a defect. Executed coverage of the remaining checks remains open.
 Deletion-only command and schema tests, duplicate process cases, and configuration
 inventory assertions are also removed. Real input, process, and storage failure cases remain.
 
@@ -125,19 +125,17 @@ error assertions use the existing assertion library instead of repeated catch bl
 **Target.** Every shipped check has one planted defect that makes it fail, with the message of
 its own rule.
 
-**Files.** `packages/cli/tests/unit/presets/every-check-tested.test.ts`, the test of each preset,
-`tests/acceptance/frameworks/libraries.test.ts`, `react.test.ts`, `handheld.test.ts`.
+**Files.** The acceptance suite that owns each preset or command behavior.
 
-**Logic.** The guard test passes for a check name only inside a planted case that expects exit 1
-and a finding of that check. A case is data: `{ check, plant, expects }` in the test file, and
-the guard reads that data, not the text of the file. A check that needs the network or Docker
-runs in the `manual` job of CI.
+**Logic.** Execute each planted defect and assert the failing check, its rule or diagnostic,
+and the affected location. A check that needs the network or Docker runs in the `manual` job
+of CI. No source-text guard or separate test inventory establishes this behavior.
 
 **What goes.** The empty test folders, and the loops that read no exit code.
 
-**Tests.** The guard test, which fails today for the thirteen.
+**Tests.** The planted cases for the checks described above.
 
-**Done when.** It passes with no exception list.
+**Done when.** The checks report their planted defects through the public command.
 
 ## T-29: expectations that any output holds
 
@@ -152,14 +150,22 @@ Two expectations look for the check name, which every run prints.
 **Files.** `config-files.test.ts`, `documents.test.ts`, `structure.test.ts`, `spelling` cases,
 and the others the two rows list.
 
-**Logic.** `expects` of a case takes `rule` or `message`, and the harness refuses an expectation
-that is a substring of the planted path.
+**Logic.** Assert the structured report's check, failing status, affected file, and rule or
+diagnostic. Include line and column where the tool supplies them.
 
 **What goes.** Twenty weak expectations.
 
-**Tests.** The harness check above.
+**Tests.** The owning command acceptance suites.
 
-**Done when.** The suite passes with it on.
+**Done when.** The cases identify their planted defects through structured findings.
+
+**Partially implemented, September 20, 2026.** TypeScript, structure, documents, and
+configuration cases now assert structured findings instead of isolated words or filenames
+in command output. Other language and framework suites still need review. The real v8r
+Unicode-path regression also exposed a version probe that read malformed authored config
+before the check selected its generated config. Check, correction, side-command, and
+cache-version probes now receive the resolved check environment. Executable failures still
+fail the probe.
 
 ## T-23: folders and analyses with no unit test
 

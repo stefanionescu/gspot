@@ -184,15 +184,16 @@ Nothing in the release path is code gspot wrote:
 | Rule files         | the repository check `rules/lint` reads front matter, links, size, the layer of each file, fences, and each good example (K-261)                                                 |
 | Self               | `gspot check` on gspot, with no `[[ignore]]` entry                                                                                                                               |
 
-`tests/config/` holds the init command lines, the test repository text, the tool lists, and the timeouts
-that test files share (D-113). The harness fails a test whose `init` exits with an error (T-27).
+Each suite owns its command inputs and expected behavior. Shared setup belongs in the harness
+when callers need the same behavior (D-113). The harness fails a test whose `init` exits with an error (T-27).
 
 Tests never call the network. Tools run in CI through mise pins, and a missing tool fails the
 run. A `--json` test holds the documented shape of the JSON output of every command, because
 agents drive gspot through it.
 
-`bun test --coverage` runs in CI and the summary is part of the run. A check name that no test
-names fails the unit test `every shipped check has a test`, which walks `presets/*/manifest.toml`.
+`bun test --coverage` runs in CI and the summary is part of the run. Check coverage requires
+executed cases that identify the check, planted defect, and finding location. Finding a check
+name in test source does not establish coverage.
 
 ## Self-lint
 

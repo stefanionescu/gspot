@@ -2,8 +2,9 @@
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { createSandbox } from '@gspot/testing';
+import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
-import type { PlantedCase } from '#tests/types/acceptance.ts';
+import type { FindingCase } from '#tests/types/acceptance.ts';
 import { commitAll, git, PLANTED_TIMEOUT_MS, run, runPlanted, script, toolsPath } from '#tests/harness/planted.ts';
 
 const INIT = ['init', '--yes', '--presets', 'bash', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
@@ -12,27 +13,31 @@ const KILOBYTE = 1024;
 const OVER_LIMIT_KB = 1100;
 const STALE_BASELINE = '{"check":"gone/check","rule":"all","count":1,"recorded":"2026-01-01","paths":{}}\n';
 
-const CASES: PlantedCase[] = [
-    { check: 'structure/single-file-folder', files: { 'tools/only/one.sh': CLEAN }, expected: 'holds only one.sh' },
+const CASES: FindingCase[] = [
+    {
+        check: 'structure/single-file-folder',
+        files: { 'tools/only/one.sh': CLEAN },
+        expected: { file: 'tools/only/one.sh', rule: 'lone-file', line: 1 },
+    },
     {
         check: 'structure/prefix-collisions',
         files: { 'jobs/asset-card.sh': CLEAN, 'jobs/asset-list.sh': CLEAN, 'jobs/asset-row.sh': CLEAN },
-        expected: 'share the prefix "asset"',
+        expected: { file: 'jobs/asset-card.sh', rule: 'shared-prefix', line: 1 },
     },
     {
         check: 'structure/file-directory-collision',
         files: { 'jobs/turn.sh': CLEAN, 'jobs/turn/first.sh': CLEAN, 'jobs/turn/second.sh': CLEAN },
-        expected: 'turn',
+        expected: { file: 'jobs/turn.sh', rule: 'stem-collision', line: 1 },
     },
     {
         check: 'structure/folder-names',
         files: { 'helpers/first.sh': CLEAN, 'helpers/second.sh': CLEAN },
-        expected: 'helpers',
+        expected: { file: 'helpers/first.sh', rule: 'container-name', line: 1 },
     },
     {
         check: 'integrity/baselines-current',
         files: { '.gspot/baselines/gone.check.all.json': STALE_BASELINE },
-        expected: 'names a check that does not run here',
+        expected: { file: '.gspot/baselines/gone.check.all.json', rule: 'unknown-check', line: 1 },
     },
     {
         check: 'integrity/suppressions',
@@ -42,23 +47,23 @@ const CASES: PlantedCase[] = [
                 () => '    # shellcheck disable=SC2086\n    echo "hello $1"',
             ),
         },
-        expected: 'carries no reason',
+        expected: { file: 'scripts/quiet.sh', rule: 'shellcheck-disable-no-reason', line: 10 },
     },
     {
         check: 'integrity/allowlists-match',
         files: {},
         policy: '[[ignore]]\ncheck = "bash/shellcheck"\nrule = "SC2086"\npaths = ["nowhere/**"]\nreason = "A pattern that matches no file here."\n',
-        expected: 'nowhere/** under [[ignore]] matches no tracked file or folder',
+        expected: { file: 'gspot.toml', rule: 'unmatched-pattern', line: 1 },
     },
     {
         check: 'integrity/large-files',
         files: { 'notes/big.txt': 'x'.repeat(OVER_LIMIT_KB * KILOBYTE) },
-        expected: 'is over the 1024 KB limit',
+        expected: { file: 'notes/big.txt', rule: 'over-limit', line: 1 },
     },
     {
         check: 'integrity/task-policy',
         files: { '.gspot/hooks/pre-commit': '#!/usr/bin/env bash\necho nothing\n' },
-        expected: 'The pre-commit hook is missing or does not call',
+        expected: { file: '.gspot/hooks/pre-commit', rule: 'missing-hook', line: 1 },
     },
 ];
 
@@ -75,7 +80,13 @@ describe('the structure preset', () => {
                 expect(clean.code, `${planted.check} on the clean repository: ${clean.stdout}`).toBe(0);
                 const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
-                expect(outcome.stdout, planted.check).toContain(planted.expected);
+                const report = JSON.parse(await Bun.file(join(sandbox.path, '.gspot/report.json')).text()) as RunReport;
+                const result = report.checks.find((entry) => entry.check === planted.check);
+                expect(result?.status, outcome.stdout).toBe('fail');
+                const finding = result?.findings.find(
+                    (entry) => entry.file === planted.expected.file && entry.rule === planted.expected.rule,
+                );
+                expect(finding).toMatchObject({ check: planted.check, ...planted.expected });
             }
         },
         PLANTED_TIMEOUT_MS * 2,

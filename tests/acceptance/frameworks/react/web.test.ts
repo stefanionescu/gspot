@@ -78,7 +78,7 @@ describe('the react preset', () => {
             for (const [rule, path, text] of LINT) {
                 const outcome = await runPlanted(
                     sandbox.path,
-                    { check: 'typescript/eslint', files: { [path]: text }, expected: rule },
+                    { check: 'typescript/eslint', files: { [path]: text } },
                     environment,
                 );
                 expect(outcome.stdout, `${rule}: ${outcome.stdout}${outcome.stderr}`).toContain(rule);

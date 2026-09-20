@@ -106,7 +106,6 @@ describe('the fastapi preset', () => {
                 {
                     check: 'fastapi/no-blocking-io-in-async',
                     files: { 'planted/health.py': ROUTE('    time.sleep(1)\n') },
-                    expected: 'time.sleep blocks the event loop',
                 },
                 environment,
             );

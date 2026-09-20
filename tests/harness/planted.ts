@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url';
 import { delimiter, dirname, join } from 'node:path';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import type { PlantedCase, SpawnOutcome } from '#tests/types/acceptance.ts';
+import type { PlantedInput, SpawnOutcome } from '#tests/types/acceptance.ts';
 import { chmodSync, mkdirSync, readFileSync, rmdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -61,7 +61,7 @@ function removeParents(parents: string[]): void {
     }
 }
 
-function plantFiles(cwd: string, planted: PlantedCase, policy: string): void {
+function plantFiles(cwd: string, planted: PlantedInput, policy: string): void {
     const { removed = [], executable = [] } = planted;
     for (const path of removed) rmSync(join(cwd, path));
     for (const [path, text] of Object.entries(planted.files)) {
@@ -74,7 +74,7 @@ function plantFiles(cwd: string, planted: PlantedCase, policy: string): void {
 }
 
 // Preserve bytes and permissions before the first mutation, including setup that fails partway through.
-function plant(cwd: string, planted: PlantedCase): () => void {
+function plant(cwd: string, planted: PlantedInput): () => void {
     const policyPath = join(cwd, 'gspot.toml');
     const policy = plantedPolicy(readFileSync(policyPath, 'utf8'), planted);
     const gone = planted.removed ?? [];
@@ -97,7 +97,7 @@ function plant(cwd: string, planted: PlantedCase): () => void {
     return restore;
 }
 
-function plantedPolicy(policy: string, planted: PlantedCase): string {
+function plantedPolicy(policy: string, planted: PlantedInput): string {
     const edited = planted.policyEdit === undefined ? policy : policy.replace(...planted.policyEdit);
     if (edited === policy && planted.policyEdit !== undefined)
         throw new Error(`The policy edit for ${planted.check} did not change the sandbox.`);
@@ -218,7 +218,7 @@ export function commitAll(cwd: string): void {
  */
 export async function runPlanted(
     cwd: string,
-    planted: PlantedCase,
+    planted: PlantedInput,
     environment: Record<string, string>,
 ): Promise<SpawnOutcome> {
     const restore = plant(cwd, planted);
