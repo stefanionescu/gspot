@@ -80,6 +80,11 @@ expected probe status when its documented help command uses a nonzero status.
 
 Formatter questions reuse the parsed takeover observation instead of performing a second read that hides errors. Full per-path formatter resolution remains open.
 
+Required input hashes and the suppression census propagate failed reads. Inline suppression
+reads and tool baseline hashes permit missing files but propagate other I/O failures. Local
+regressions cover unreadable sources with and without caching, preserved prior reports,
+and absent versus unreadable optional inputs. Other observation paths remain open.
+
 Required content reads report failures, and metadata reads permit absence only for missing
 paths. Header and content classification share a bounded prefix reader that closes its file
 descriptor after failed reads. Classification preserves dangling tracked symlinks without

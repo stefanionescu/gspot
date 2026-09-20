@@ -1,9 +1,9 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { writeFileSync } from 'node:fs';
 import { createSandbox } from '@gspot/testing';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { reportSchema } from '#cli/run/report/schema.ts';
 import { inlineIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
 
@@ -59,4 +59,19 @@ test('inline engine comments do not suppress external-tool findings', async () =
     });
     const finding = { check: 'structure/custom', file: 'a.sh', line: 2, message: 'External finding', fixable: false };
     expect(applyInlineIgnores(sandbox.path, [finding])).toEqual([finding]);
+});
+
+test('missing finding paths have no inline ignores but failed reads remain errors', async () => {
+    await using sandbox = await createSandbox({});
+    const finding = {
+        check: 'structure/custom',
+        engine: 'structure',
+        file: 'missing.ts',
+        line: 1,
+        message: 'Required source is missing.',
+        fixable: false,
+    };
+    expect(applyInlineIgnores(sandbox.path, [finding])).toEqual([finding]);
+    mkdirSync(join(sandbox.path, 'missing.ts'));
+    expect(() => applyInlineIgnores(sandbox.path, [finding])).toThrow();
 });

@@ -33,17 +33,13 @@ export function cacheKey(input: CacheKeyInput): string {
 }
 
 /**
- * The content hash of a file, or a marker when it cannot be read.
+ * The content hash of a required file.
  * @param root the repository root
  * @param path the file, relative to the root
- * @returns the digest, or `unreadable`
+ * @returns the digest
  */
 export function fileHash(root: string, path: string): string {
-    try {
-        return textHash(readFileSync(join(root, path)).toString('base64'));
-    } catch {
-        return 'unreadable';
-    }
+    return textHash(readFileSync(join(root, path)).toString('base64'));
 }
 
 /**

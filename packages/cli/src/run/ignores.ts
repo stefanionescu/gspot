@@ -33,8 +33,9 @@ function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
 function existingText(root: string, path: string): string {
     try {
         return readFileSync(join(root, path), 'utf8');
-    } catch {
-        return '';
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return '';
+        throw error;
     }
 }
 

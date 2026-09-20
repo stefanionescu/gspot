@@ -55,7 +55,13 @@ function generatedHash(session: Session): string {
 // The tool's own baseline is an input too: a suppression added or pruned changes the verdict.
 function baselineHash(session: Session, planned: PlannedCheck): string {
     const file = planned.spec.baseline_file;
-    return file === undefined ? '' : fileHash(session.root, toolBaselineFile(file, planned.scope.scope.path));
+    if (file === undefined) return '';
+    try {
+        return fileHash(session.root, toolBaselineFile(file, planned.scope.scope.path));
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return '';
+        throw error;
+    }
 }
 
 function keyFor(session: Session, planned: PlannedCheck, config: string): string | undefined {
@@ -123,12 +129,7 @@ async function runOne(
 function census(session: Session, files: { path: string }[]): Record<string, number> {
     const counts: Record<string, number> = {};
     for (const file of files) {
-        let text: string;
-        try {
-            text = readFileSync(join(session.root, file.path), 'utf8');
-        } catch {
-            continue;
-        }
+        const text = readFileSync(join(session.root, file.path), 'utf8');
         const forms = Object.entries(SUPPRESSION_FORMS);
         for (const [form, { marker }] of forms) {
             const count = text.matchAll(new RegExp(marker.source, 'gu')).toArray().length;

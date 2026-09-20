@@ -1,5 +1,6 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
+import { rejects } from 'node:assert/strict';
 import { createSandbox } from '@gspot/testing';
 import { expect, spyOn, test } from 'bun:test';
 import type { Stage } from '#types/manifest.ts';
@@ -93,4 +94,34 @@ test('the message stage preserves the prior report files', async () => {
     expect(outcome.report.exitCode).toBe(0);
     expect(fs.readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8')).toBe('previous JSON');
     expect(fs.readFileSync(join(sandbox.path, '.gspot/report.sarif'), 'utf8')).toBe('previous SARIF');
+});
+
+test.each([false, true])('unreadable selected sources reject a run with noCache=%s', async (noCache) => {
+    await using sandbox = await createSandbox({
+        'gspot.toml': 'version = 1\npresets = []\n',
+        'source.ts': 'export {};\n',
+    });
+    const session = await sessionFor(sandbox.path, 0);
+    const options = { stage: 'commit' as const, skips: [], localSkips: [], fix: false, isDryRun: false, noCache };
+    const original = await executeRun(session, options);
+    expect(original.report.exitCode).toBe(0);
+    const report = fs.readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8');
+    fs.rmSync(join(sandbox.path, 'source.ts'));
+    fs.mkdirSync(join(sandbox.path, 'source.ts'));
+    await rejects(executeRun(session, options), { code: 'EISDIR' });
+    expect(fs.readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8')).toBe(report);
+});
+
+test('an absent tool baseline is optional but an unreadable baseline rejects the run', async () => {
+    await using sandbox = await createSandbox({
+        'gspot.toml': 'version = 1\npresets = []\n',
+        'source.ts': 'export {};\n',
+    });
+    const session = await sessionFor(sandbox.path, 0);
+    session.scopes[0]!.selected[0]!.checks[0]!.baseline_file = 'tool-baseline.json';
+    const options = { stage: 'commit' as const, skips: [], localSkips: [], fix: false, isDryRun: false };
+    const outcome = await executeRun(session, options);
+    expect(outcome.report.exitCode).toBe(0);
+    fs.mkdirSync(join(sandbox.path, 'tool-baseline.json'));
+    await rejects(executeRun(session, options), { code: 'EISDIR' });
 });
