@@ -81,6 +81,7 @@ export type TemplateInputs = {
     extra: (name: string) => Record<string, unknown> | undefined;
     json: (value: unknown, indent?: number) => string;
     tomlString: (value: string) => string;
+    toml: (value: Record<string, unknown>) => string;
     has: (preset: string) => boolean;
     files: (extension: string) => string[];
     importAliases: (scope: string) => Record<string, string>;

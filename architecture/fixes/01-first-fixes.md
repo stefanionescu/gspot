@@ -669,6 +669,12 @@ comment styles from `config/markers.ts` and the markers from the selected manife
 
 **Done when.** Each output parses and round-trips, including the printable typos path.
 
+**Partially implemented.** The typos template serializes its complete configuration through
+the TOML writer. Word keys and exclusion paths retain quotes, backslashes, and Unicode.
+Reason comments encode line breaks so they cannot introduce settings. Repository and profile
+regressions parse the emitted configuration and verify the original values. Other templates,
+comment grammars, and shared input validation remain open.
+
 ## K-241: nine contradictions between rule files and checks
 
 **What is wrong.** Rule files say one thing and a pinned linter or a decision says another. One

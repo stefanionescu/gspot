@@ -1,16 +1,20 @@
-[default]
-locale = "<%= settings['tools.typos.locale'] ?? 'en-us' %>"
-extend-ignore-re = ["\\b[0-9a-f]{7,40}\\b", "\\b[A-Za-z0-9+/]{40,}={0,2}\\b"]
-
-[default.extend-words]
-<% for (const entry of (settings['tools.typos.words'] ?? [])) { const word = typeof entry === 'string' ? entry : entry.word; const reason = typeof entry === 'string' ? entry : entry.reason; %># <%= reason %>
-<%= word %> = "<%= word %>"
-<% } %>
-[files]
-extend-exclude = [
-    "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved",
-    "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css",
-    ".gspot/cache/", ".gspot/vale/", ".gspot/report.json", ".gspot/report.sarif", ".gspot/baselines/",<% for (const entry of (settings['tools.typos.exclude'] ?? [])) { for (const path of entry.paths) { %>
-    "<%= path %>",<% } } %><% for (const entry of policy.declares) { for (const path of entry.paths) { %>
-    "<%= path %>",<% } } %>
-]
+<% const words = settings['tools.typos.words'] ?? []; %><% for (const entry of words) { %># <%= json(typeof entry === 'string' ? entry : entry.word, 0) %>: <%= json(typeof entry === 'string' ? entry : entry.reason, 0) %>
+<% } %><%~ toml({
+    default: {
+        locale: settings['tools.typos.locale'] ?? 'en-us',
+        'extend-ignore-re': ['\\b[0-9a-f]{7,40}\\b', '\\b[A-Za-z0-9+/]{40,}={0,2}\\b'],
+        'extend-words': Object.fromEntries(words.map((entry) => {
+            const word = typeof entry === 'string' ? entry : entry.word;
+            return [word, word];
+        })),
+    },
+    files: {
+        'extend-exclude': [
+            '*.lock', 'bun.lockb', 'package-lock.json', 'pnpm-lock.yaml', 'yarn.lock', 'Package.resolved',
+            '*.pbxproj', '*.xcstrings', '*.svg', '*.min.js', '*.min.css',
+            '.gspot/cache/', '.gspot/vale/', '.gspot/report.json', '.gspot/report.sarif', '.gspot/baselines/',
+            ...(settings['tools.typos.exclude'] ?? []).flatMap((entry) => entry.paths),
+            ...policy.declares.flatMap((entry) => entry.paths),
+        ],
+    },
+}).trimEnd() %>
