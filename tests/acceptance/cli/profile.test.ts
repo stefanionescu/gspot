@@ -28,7 +28,7 @@ describe('profiles', () => {
     });
 
     test(
-        'profile save in one repository and init --from in another give the same tables',
+        'export carries pathless ignores into a second repository',
         async () => {
             await using first = await createFixture({ 'scripts/a.sh': script });
             commitAll(first.path);
@@ -66,11 +66,28 @@ describe('profiles', () => {
                 ],
                 TOOLS,
             );
-            const saved = await run(first.path, ['profile', 'save', 'house.profile.toml'], TOOLS);
+            const ignored = await run(
+                first.path,
+                [
+                    'ignore',
+                    'bash/shellcheck',
+                    '--rule',
+                    'SC2034',
+                    '--reason',
+                    'The shell exports these variables to another process.',
+                ],
+                TOOLS,
+            );
+            expect(ignored.code, ignored.stderr).toBe(0);
+            const saved = await run(first.path, ['export', 'house.profile.toml'], TOOLS);
             expect(saved.code).toBe(0);
-            expect(saved.stdout).toContain('left out  [[ignore]]: 1 entries');
+            expect(saved.stdout).toContain('left out  ignore[0]: names a repository path');
 
-            await using second = await createFixture({ 'tools/b.sh': script, 'index.ts': 'export const b = 1;\n' });
+            await using second = await createFixture({
+                'tools/b.sh': script,
+                'index.ts': 'export const b = 1;\n',
+                '.shellcheckrc': 'disable=SC2154\n',
+            });
             commitAll(second.path);
             const from = join(first.path, 'house.profile.toml');
             const init = await run(second.path, ['init', '--yes', '--from', from, '--no-install'], TOOLS);
@@ -80,7 +97,24 @@ describe('profiles', () => {
             expect(two['presets']).toEqual(one['presets']);
             expect(two['format']).toEqual({ indent_width: 2 });
             expect(two['hooks']).toEqual(one['hooks']);
-            expect(two['ignore']).toBeUndefined();
+            expect(two['ignore']).toEqual([
+                {
+                    check: 'bash/shellcheck',
+                    rule: 'SC2034',
+                    reason: 'The shell exports these variables to another process.',
+                },
+                expect.objectContaining({ check: 'bash/shellcheck', rule: 'SC2154' }),
+            ]);
+            await Bun.write(
+                join(second.path, 'tools/b.sh'),
+                '#!/usr/bin/env bash\nunused_variable=hello\nprintf \'%s\\n\' "${exported_env}"\n',
+            );
+            const checked = await run(second.path, ['check', 'bash/shellcheck', '--no-cache'], TOOLS);
+            expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+            await Bun.write(join(second.path, 'tools/b.sh'), '#!/usr/bin/env bash\necho $unquoted\n');
+            const reported = await run(second.path, ['check', 'bash/shellcheck', '--no-cache'], TOOLS);
+            expect(reported.code, reported.stdout + reported.stderr).toBe(1);
+            expect(reported.stdout).toContain('SC2086');
         },
         PLANTED_TIMEOUT_MS,
     );

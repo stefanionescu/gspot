@@ -10,11 +10,11 @@ import { registerApply } from '#cli/commands/apply.ts';
 import { registerCheck } from '#cli/commands/check.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { registerDoctor } from '#cli/commands/doctor.ts';
+import { registerExport } from '#cli/commands/export.ts';
 import { registerIgnore } from '#cli/commands/ignore.ts';
 import { registerRemove } from '#cli/commands/remove.ts';
 import { registerDeclare } from '#cli/commands/declare.ts';
 import { registerExplain } from '#cli/commands/explain.ts';
-import { registerProfile } from '#cli/commands/profile.ts';
 import { registerUpgrade } from '#cli/commands/upgrade.ts';
 import { installCompletion } from '#cli/output/completion.ts';
 import { registerUninstall } from '#cli/commands/uninstall.ts';
@@ -74,7 +74,7 @@ export function buildProgram(): Command {
     registerDoctor(program);
     registerUpgrade(program);
     registerUninstall(program);
-    registerProfile(program);
+    registerExport(program);
     installCompletion(program);
     return program;
 }

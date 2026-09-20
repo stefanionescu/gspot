@@ -109,8 +109,12 @@ export function proposeText(proposal: Proposal): string {
     const document = headTables(proposal);
     const tools = toolTables(proposal.carried, proposal.commitScopes, proposal.xcode);
     if (Object.keys(tools).length > 0) document['tools'] = tools;
-    if (proposal.carried.ignores.length > 0) document['ignore'] = ignoreTables(proposal.carried);
     mergeProfile(document, proposal.profileTables);
+    if (proposal.carried.ignores.length > 0)
+        document['ignore'] = [
+            ...((document['ignore'] as TomlTable[] | undefined) ?? []),
+            ...ignoreTables(proposal.carried),
+        ];
     document['hooks'] = { ...asTable(document['hooks']), tool: proposal.hooks };
     document['ci'] = { ...asTable(document['ci']), provider: proposal.ci };
     document['rules'] = { directory: '.gspot/rules', ...asTable(document['rules']), install: proposal.rules };

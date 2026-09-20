@@ -8,5 +8,5 @@ export type ProfileTables = z.infer<typeof profileSchema>;
 /** A validated profile: where it came from, the SHA-256 of its text, and its tables. */
 export type Profile = { source: string; digest: string; tables: ProfileTables };
 
-/** What profile save left out, and the text it wrote. */
-export type SavedProfile = { text: string; leftOut: string[] };
+/** What export left out, and the text it wrote. */
+export type ExportedProfile = { text: string; leftOut: string[] };

@@ -87,6 +87,12 @@ second repository with that rule off. A tool with every check ignored is absent 
 
 **Done when.** The three cases pass, and `gspot --help` matches the public command list in [02-cli.md](../02-cli.md).
 
+**Status: partially implemented.** `export` replaces `profile save` without an alias.
+Pathless ignores travel to the destination and merge with its carried ignores.
+A real ShellCheck run verifies both retained rules and an unrelated finding.
+Export reports omitted path entries individually.
+Levels, explicit extra checks, tool omission, and the remaining command removals stay open.
+
 ## K-287: one word for the name of a thing
 
 Closes K-287, K-288, and K-289.

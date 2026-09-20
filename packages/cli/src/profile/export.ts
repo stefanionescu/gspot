@@ -1,7 +1,7 @@
-// gspot profile save: the policy of this repository without anything that names a path.
+// gspot export: the policy of this repository without anything that names a path.
 import { basename } from 'node:path';
 import type { TomlTable } from '#types/config.ts';
-import type { SavedProfile } from '#types/profile.ts';
+import type { ExportedProfile } from '#types/profile.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
 import { REPOSITORY_TABLES } from '#cli/profile/schema.ts';
 
@@ -19,10 +19,14 @@ function hasPath(value: unknown): boolean {
 // Returns the value without the list entries that name a path, and records where each one was.
 function withoutPaths(value: unknown, where: string, leftOut: string[]): unknown {
     if (Array.isArray(value)) {
-        const kept = value.filter((item) => !hasPath(item));
-        if (kept.length < value.length)
-            leftOut.push(`${where}: ${String(value.length - kept.length)} entries that name a path`);
-        return kept.map((item, index) => withoutPaths(item, `${where}[${String(index)}]`, leftOut));
+        return value.flatMap((item, index) => {
+            const entry = `${where}[${String(index)}]`;
+            if (hasPath(item)) {
+                leftOut.push(`${entry}: names a repository path`);
+                return [];
+            }
+            return [withoutPaths(item, entry, leftOut)];
+        });
     }
     if (!isTable(value)) return value;
     const entries = Object.entries(value)
@@ -43,13 +47,13 @@ function withoutPaths(value: unknown, where: string, leftOut: string[]): unknown
  * @param file the file the profile is written to, which names it
  * @returns the profile text and what was left out
  */
-export function savedProfile(policyText: string, file: string): SavedProfile {
+export function exportedProfile(policyText: string, file: string): ExportedProfile {
     const raw = parseToml(policyText) as TomlTable;
     const leftOut: string[] = [];
     for (const table of REPOSITORY_TABLES) {
         const entries = raw[table];
-        if (Array.isArray(entries) && entries.length > 0)
-            leftOut.push(`[[${table}]]: ${String(entries.length)} entries`);
+        if (Array.isArray(entries))
+            for (const index of entries.keys()) leftOut.push(`${table}[${String(index)}]: belongs to this repository`);
         Reflect.deleteProperty(raw, table);
     }
     const { version, presets, ...rest } = withoutPaths(raw, '', leftOut) as TomlTable;
