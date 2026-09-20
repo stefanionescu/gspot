@@ -42,14 +42,20 @@ describe('the planted command deadline', () => {
         const probe = spyOn(Bun, 'spawnSync').mockReturnValueOnce({
             ...outcome,
             exitedDueToTimeout: true,
+            exitCode: 143,
+            signalCode: 'SIGTERM',
             stdout: Buffer.from('migration.sql:1: checking\n'),
             stderr: Buffer.from('waiting for tool\n'),
         });
+        const clock = spyOn(performance, 'now').mockReturnValueOnce(100).mockReturnValueOnce(120_100);
         try {
             expect(() => run(process.cwd(), ['check', 'postgres/squawk'])).toThrow(
-                `Command gspot check postgres/squawk timed out in ${process.cwd()}.\nmigration.sql:1: checking\nwaiting for tool\n`,
+                `Command gspot check postgres/squawk timed out in ${process.cwd()}.\n` +
+                    'Duration: 120000 ms; exit: 143; signal: SIGTERM.\n' +
+                    'stdout:\nmigration.sql:1: checking\n\nstderr:\nwaiting for tool\n',
             );
         } finally {
+            clock.mockRestore();
             probe.mockRestore();
         }
     });

@@ -56,6 +56,7 @@ export const script =
  * @returns the exit code and both streams
  */
 export function run(cwd: string, argv: string[], environment: Record<string, string> = {}): SpawnOutcome {
+    const started = performance.now();
     const result = Bun.spawnSync(['bun', gspot, ...argv], {
         cwd,
         env: { ...environmentVariables(), NO_COLOR: '1', CI: '1', ...environment },
@@ -65,7 +66,9 @@ export function run(cwd: string, argv: string[], environment: Record<string, str
     });
     if (result.exitedDueToTimeout === true)
         throw new Error(
-            `Command gspot ${argv.join(' ')} timed out in ${cwd}.\n${result.stdout.toString()}${result.stderr.toString()}`,
+            `Command gspot ${argv.join(' ')} timed out in ${cwd}.\n` +
+                `Duration: ${(performance.now() - started).toFixed(0)} ms; exit: ${String(result.exitCode)}; signal: ${String(result.signalCode)}.\n` +
+                `stdout:\n${result.stdout.toString()}\nstderr:\n${result.stderr.toString()}`,
         );
     return { code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() };
 }
