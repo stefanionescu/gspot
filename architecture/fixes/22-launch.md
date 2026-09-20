@@ -218,3 +218,10 @@ includes a copyright header, so Windows must lint that combination successfully.
 The Windows document suite reaches its missing-dictionary scenario after the Vale path fix.
 It fails while removing a directory symlink with `rmSync`. The fixture uses `unlinkSync`
 to remove only that link and then exercises the expected Vale error.
+
+All three CI test suites and binary builds pass at `2397e0a`. Windows runs 457 tests
+successfully with five platform or release skips. Its repository self-check exposes
+CRLF checkout differences, a command length limit, and a v8r file-pattern separator defect.
+The repository attributes require LF text checkouts to match its existing EditorConfig
+policy. A disposable Git checkout verifies that this overrides automatic CRLF conversion
+while preserving binary bytes. Runtime support for CRLF inputs remains separate work.
