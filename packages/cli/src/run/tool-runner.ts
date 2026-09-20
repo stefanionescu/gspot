@@ -114,8 +114,10 @@ function firstLine(result: SpawnResult, placeholder: string): string {
 }
 
 function tailLines(result: SpawnResult, placeholder: string): string {
-    const text = result.stderr.trim() === '' ? result.stdout.trim() : result.stderr.trim();
-    return (text === '' ? placeholder : text).split('\n').slice(0, TAIL_LINES).join('\n');
+    const output = [result.stderr, result.stdout]
+        .map((stream) => stream.trim().split('\n').slice(0, TAIL_LINES).join('\n'))
+        .filter((stream) => stream !== '');
+    return output.length === 0 ? placeholder : output.join('\n');
 }
 
 function missingResult(
@@ -290,7 +292,7 @@ async function runCommands(
         const isShipped = planned.manifest !== undefined;
         if (isBroken(spec, result) || (isShipped && isCrash(spec, result, parsed, [cwd, state.root]))) {
             const detail = tailLines(result, `${tool.name} exited ${String(result.code)}`);
-            const note = `${tool.name} broke: ${detail}`;
+            const note = `${tool.name} broke: exit ${String(result.code)}\n${detail}`;
             return { ...base, status: 'error', duration: performance.now() - started, note, command: argv };
         }
         collect(planned, tool, command, result, state);

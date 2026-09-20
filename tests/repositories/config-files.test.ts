@@ -77,7 +77,7 @@ const CASES: PlantedCase[] = [
 
 describe('the config-files preset', () => {
     test(
-        'a tool crash reports the cause after its informational output',
+        'a tool crash reports both output streams and its exit code',
         async () => {
             await using fixture = await createFixture({
                 'settings/layout.toml': 'a = 1\n',
@@ -87,7 +87,7 @@ if (process.argv.includes('--version')) {
     process.exit(0);
 }
 console.error('INFO taplo: loaded configuration');
-console.error('ERROR taplo: cannot read the formatting configuration');
+console.log('ERROR taplo: cannot read the formatting configuration');
 process.exit(2);
 `,
                 'bin/taplo.cmd': '@echo off\r\nbun "%~dp0taplo" %*\r\n',
@@ -100,7 +100,8 @@ process.exit(2);
             await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
             const result = run(fixture.path, ['check', 'config-files/toml-format', '--no-cache'], environment);
             expect(result.code, result.stderr + result.stdout).toBe(1);
-            expect(result.stdout).toContain('taplo broke:');
+            expect(result.stdout).toContain('taplo broke: exit 2');
+            expect(result.stdout).toContain('INFO taplo: loaded configuration');
             expect(result.stdout).toContain('cannot read the formatting configuration');
         },
         PLANTED_TIMEOUT_MS,

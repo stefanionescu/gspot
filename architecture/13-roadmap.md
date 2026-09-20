@@ -49,6 +49,13 @@ Function coverage is 40.66% and line coverage is 51.94%, below the final 80% flo
 Required release tests remain skipped, and the CodeQL configuration selects no languages.
 The complete implementation gate and Yap handoff remain open.
 
+The later [macOS job 106024677219](https://github.com/stefanionescu/gspot/actions/runs/35490574212/job/106024677219)
+records an intermittent Taplo failure: the formatter returns no parsed finding, and its
+visible stderr contains only informational lines. The cause remains unconfirmed.
+Crash reports retain the exit code and the first 20 lines of each output stream.
+A planted crash test checks that stdout diagnostics survive nonempty stderr. The strict
+formatter finding assertion remains in place.
+
 ### Preset deletion
 
 D-136 removes the Go, Rust, Ruby, and Django presets, leaving 48 manifests.
