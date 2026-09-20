@@ -1,7 +1,7 @@
-// Planted repositories for the vue and svelte presets: markup set from a string and a list with no key, in each framework.
-import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
+// Planted repositories for the vue and svelte presets: markup set from a string and a list with no key, in each framework.
+import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import type { ComponentShape } from '#types/run.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -84,7 +84,9 @@ describe('the vue and svelte presets', () => {
                 });
                 symlinkSync(MODULES, join(fixture.path, 'node_modules'));
                 commitAll(fixture.path);
-                const environment = { PATH: `${MODULES}/.bin:${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+                const environment = {
+                    PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+                };
                 await install(fixture.path, init(shape.presets), environment);
                 const clean = run(fixture.path, ['check', shape.check, '--no-cache'], environment);
                 expect(clean.code, clean.stdout + clean.stderr).toBe(0);

@@ -1,7 +1,7 @@
-// Planted repository for the react-native preset: an environment variable taken apart, an inline style, a list with no key, and a token in AsyncStorage.
-import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
+// Planted repository for the react-native preset: an environment variable taken apart, an inline style, a list with no key, and a token in AsyncStorage.
+import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
@@ -72,7 +72,9 @@ describe('the react-native preset', () => {
             });
             symlinkSync(MODULES, join(fixture.path, 'node_modules'));
             commitAll(fixture.path);
-            const environment = { PATH: `${MODULES}/.bin:${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+            const environment = {
+                PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+            };
             await install(fixture.path, INIT, environment);
             const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
             expect(policy).toContain('react-native');

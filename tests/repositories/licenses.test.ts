@@ -1,6 +1,6 @@
-// Planted repository for the licenses preset: a package under a license outside the list, and an exception that went stale.
-import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
+// Planted repository for the licenses preset: a package under a license outside the list, and an exception that went stale.
+import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
@@ -35,7 +35,7 @@ describe('the licenses preset', () => {
                 'node_modules/kind/package.json': installed('kind', 'MIT'),
             });
             commitAll(fixture.path);
-            const environment = { PATH: `${NPM_BIN}:${toolsPath(['typos', 'ec'])}` };
+            const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['typos', 'ec'])}` };
             await install(fixture.path, INIT, environment);
             expect(run(fixture.path, ['check', 'licenses/npm', '--no-cache'], environment).code).toBe(0);
             await Bun.write(

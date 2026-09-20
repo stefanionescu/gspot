@@ -1,7 +1,7 @@
-// Planted repository for the library presets: each ESLint addition fires on a small component, and the two file checks fire on theirs.
-import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
+// Planted repository for the library presets: each ESLint addition fires on a small component, and the two file checks fire on theirs.
+import { delimiter, join } from 'node:path';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -89,7 +89,9 @@ describe('the library presets', () => {
             });
             symlinkSync(MODULES, join(fixture.path, 'node_modules'));
             commitAll(fixture.path);
-            const environment = { PATH: `${MODULES}/.bin:${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+            const environment = {
+                PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+            };
             await install(fixture.path, INIT, environment);
             const clean = run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);

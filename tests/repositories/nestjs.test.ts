@@ -1,6 +1,6 @@
-// Planted repository for the nestjs preset: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, and a tsconfig with decorators off.
-import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
+// Planted repository for the nestjs preset: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, and a tsconfig with decorators off.
+import { delimiter, join } from 'node:path';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, symlinkSync } from 'node:fs';
@@ -85,7 +85,9 @@ describe('the nestjs preset', () => {
             });
             symlinkSync(MODULES, join(fixture.path, 'node_modules'));
             commitAll(fixture.path);
-            const environment = { PATH: `${MODULES}/.bin:${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+            const environment = {
+                PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+            };
             await install(fixture.path, INIT, environment);
             // Nothing the framework asks for is held in a baseline: the module passes as written, file names included.
             const held = run(fixture.path, ['check', '--at', 'commit', '--no-cache'], environment);

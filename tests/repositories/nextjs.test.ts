@@ -1,6 +1,6 @@
-// Planted repository for the nextjs and i18n presets: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
-import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
+// Planted repository for the nextjs and i18n presets: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
+import { delimiter, join } from 'node:path';
 import type { PlantedCase } from '#types/run.ts';
 import { chmodSync, symlinkSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
@@ -100,7 +100,9 @@ describe('the nextjs and i18n presets', () => {
             });
             symlinkSync(MODULES, join(fixture.path, 'node_modules'));
             commitAll(fixture.path);
-            const environment = { PATH: `${MODULES}/.bin:${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+            const environment = {
+                PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+            };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
                 const clean = await runPlanted(fixture.path, { ...planted, files: {} }, environment);

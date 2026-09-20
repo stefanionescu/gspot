@@ -1,7 +1,7 @@
-// Planted repository for the static-site preset: a small site with a build script, broken one way for each check.
-import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
+// Planted repository for the static-site preset: a small site with a build script, broken one way for each check.
+import { delimiter, join } from 'node:path';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -119,7 +119,9 @@ describe('the static-site preset', () => {
             await using fixture = await createFixture(FILES);
             symlinkSync(MODULES, join(fixture.path, 'node_modules'));
             commitAll(fixture.path);
-            const environment = { PATH: `${MODULES}/.bin:${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+            const environment = {
+                PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+            };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
                 const clean = run(fixture.path, ['check', planted.id, '--no-cache'], environment);

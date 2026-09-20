@@ -1,7 +1,7 @@
-// Planted repository for the react preset: a hook inside a condition, a list with no keys, and markup set from a string.
-import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
+// Planted repository for the react preset: a hook inside a condition, a list with no keys, and markup set from a string.
+import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
@@ -65,7 +65,9 @@ describe('the react preset', () => {
             });
             symlinkSync(MODULES, join(fixture.path, 'node_modules'));
             commitAll(fixture.path);
-            const environment = { PATH: `${MODULES}/.bin:${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+            const environment = {
+                PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+            };
             await install(fixture.path, INIT, environment);
             const written = await Bun.file(join(fixture.path, '.gspot/eslint.config.mjs')).text();
             expect(written).toContain("from 'eslint-plugin-react-hooks'");

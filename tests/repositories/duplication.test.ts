@@ -1,6 +1,6 @@
-// Planted repository for the duplication preset: one block copied into a second file.
-import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
+// Planted repository for the duplication preset: one block copied into a second file.
+import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
@@ -34,7 +34,7 @@ describe('the duplication preset', () => {
         async () => {
             await using fixture = await createFixture({ 'scripts/first.sh': copied('count_first') });
             commitAll(fixture.path);
-            const environment = { PATH: `${NPM_BIN}:${toolsPath(['shellcheck', 'shfmt', 'typos', 'ec'])}` };
+            const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['shellcheck', 'shfmt', 'typos', 'ec'])}` };
             await install(fixture.path, INIT, environment);
             const clean = run(fixture.path, ['check', 'duplication/jscpd', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);

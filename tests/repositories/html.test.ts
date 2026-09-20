@@ -1,7 +1,7 @@
-// Planted repository for the html preset: an image with no text alternative, an inline handler, and copy written into a template.
-import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
+// Planted repository for the html preset: an image with no text alternative, an inline handler, and copy written into a template.
+import { delimiter, join } from 'node:path';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -65,7 +65,7 @@ describe('the html preset', () => {
             });
             symlinkSync(MODULES, join(fixture.path, 'node_modules'));
             commitAll(fixture.path);
-            const environment = { PATH: `${MODULES}/.bin:${toolsPath(['typos', 'ec'])}` };
+            const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec'])}` };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
                 const clean = await runPlanted(fixture.path, { ...planted, files: {} }, environment);

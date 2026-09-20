@@ -67,6 +67,11 @@ Their tests require explicit platform skips on Windows and still exercise real f
 on supported hosts. The tests themselves run on every host, including scheduling assertions.
 The other failures remain under investigation; this is not full Windows acceptance.
 
+The dirty-initialization fixture cannot find Prettier on Windows because its added npm
+binary directory ends with a POSIX path delimiter. Sixteen repository fixtures repeat
+that construction. Each uses the native delimiter and joins the npm binary directory
+with native path operations. The harness already preserves the inherited search path.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.

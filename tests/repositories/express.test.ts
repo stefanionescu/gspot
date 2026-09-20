@@ -1,6 +1,6 @@
-// Planted repository for the express preset: an OpenAPI document with a hole, a stale document, and a route with no test.
-import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
+// Planted repository for the express preset: an OpenAPI document with a hole, a stale document, and a route with no test.
+import { delimiter, join } from 'node:path';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -86,7 +86,7 @@ describe('the express preset', () => {
                     "import { health } from './health.js';\n\nexport const subject = health;\n",
             });
             commitAll(fixture.path);
-            const environment = { PATH: `${NPM_BIN}:${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+            const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}` };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
                 const clean = await runPlanted(fixture.path, { ...planted, files: {} }, environment);

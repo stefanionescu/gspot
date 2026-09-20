@@ -1,7 +1,7 @@
-// A preset added after init: what it finds today is held, and only the checks it brings or changes run for that.
-import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
+// A preset added after init: what it finds today is held, and only the checks it brings or changes run for that.
+import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
@@ -38,7 +38,9 @@ describe('gspot add', () => {
             });
             symlinkSync(MODULES, join(fixture.path, 'node_modules'));
             commitAll(fixture.path);
-            const environment = { PATH: `${MODULES}/.bin:${toolsPath(['typos', 'ec', 'ast-grep'])}` };
+            const environment = {
+                PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
+            };
             await install(fixture.path, INIT, environment);
             const before = run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
             expect(before.code, before.stdout + before.stderr).toBe(0);
