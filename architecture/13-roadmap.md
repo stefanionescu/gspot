@@ -83,6 +83,13 @@ by forward-slash normalization before matching claimed files. The clone regressi
 covers absolute and relative paths, unclaimed copies, and the duplication ceiling.
 The planted Express and duplication tests retain their required findings.
 
+The [Windows job 106029092820](https://github.com/stefanionescu/gspot/actions/runs/35492253614/job/106029092820)
+confirms that npm installation repairs the commit hook and Markdown linter dependencies.
+The document suite then reaches Vale and exposes native backslashes in report paths.
+Vale alerts normalize their paths and line endings before becoming findings. Absolute
+paths are resolved against the repository root. The regression covers a native path
+with Unicode and CRLF output, and the real document suite retains its path assertions.
+
 ### Preset deletion
 
 D-136 removes the Go, Rust, Ruby, and Django presets, leaving 48 manifests.

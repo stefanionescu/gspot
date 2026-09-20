@@ -1,3 +1,4 @@
+import { join } from 'node:path';
 import { parseAlerts } from '#cli/prose/vale.ts';
 import { describe, expect, test } from 'bun:test';
 import { vocabularyText } from '#cli/prose/vocabulary.ts';
@@ -16,6 +17,13 @@ describe('vale output', () => {
                 check: 'Google.We',
                 message: 'Try not to use first-person plural.',
             },
+        ]);
+    });
+
+    test('native paths and CRLF output retain the location without carriage returns', () => {
+        const path = join('docs', 'café.md');
+        expect(parseAlerts(`${path}:3:10:gspot.marketing:Marketing word.\r\n`)).toEqual([
+            { file: 'docs/café.md', line: 3, column: 10, check: 'gspot.marketing', message: 'Marketing word.' },
         ]);
     });
 

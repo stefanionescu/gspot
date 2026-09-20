@@ -1,12 +1,13 @@
-import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
+import { toPosix } from '#cli/platform/paths.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import type { GeneratedFile } from '#types/emit.ts';
 import { routeGroups } from '#cli/prose/grammars.ts';
 // Vale, driven by gspot: the style files rendered from the limits, the packages synced at setup, every alert a finding.
 import type { SpawnResult } from '#types/platform.ts';
+import { isAbsolute, join, relative } from 'node:path';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import type { MergedView, Policy } from '#types/config.ts';
 import type { ProseRoute, ValeAlert } from '#types/prose.ts';
@@ -48,7 +49,7 @@ async function alertsFor(root: string, binary: string, group: ProseRoute[]): Pro
         assertValeRan(result);
         return parseAlerts(result.stdout).map((alert) => ({
             ...alert,
-            file: alert.file.startsWith(root) ? alert.file.slice(root.length + 1) : alert.file,
+            file: toPosix(isAbsolute(alert.file) ? relative(root, alert.file) : alert.file),
         }));
     }
     const text = readFileSync(join(root, first.path), 'utf8');
@@ -121,12 +122,12 @@ export async function installPackages(root: string): Promise<string | undefined>
  * @returns the alerts
  */
 export function parseAlerts(stdout: string): ValeAlert[] {
-    return stdout.split('\n').flatMap((line) => {
+    return stdout.split(/\r?\n/u).flatMap((line) => {
         const groups = VALE_LINE.exec(line)?.groups;
         if (groups === undefined) return [];
         return [
             {
-                file: groups['file'] ?? '',
+                file: toPosix(groups['file'] ?? ''),
                 line: Number(groups['line']),
                 column: Number(groups['column']),
                 check: groups['check'] ?? '',
