@@ -1,6 +1,8 @@
+import type { z } from 'zod';
 import type { EngineInput } from '#types/run.ts';
 // Type aliases of the integrity modules.
 import type { Finding } from '#types/finding.ts';
+import type { packageManifestSchema } from '#cli/integrity/manifest-policy.ts';
 
 export type IntegrityCheck = (input: EngineInput) => Promise<Finding[]>;
 
@@ -43,14 +45,7 @@ export type GitleaksFinding = { Fingerprint: string; File: string; RuleID: strin
 export type BaselineReason = { fingerprint: string; reason: string };
 
 /** The keys of a package.json the manifest policy reads. */
-export type PackageManifest = {
-    private?: boolean;
-    packageManager?: string;
-    workspaces?: unknown;
-    dependencies?: Record<string, string>;
-    devDependencies?: Record<string, string>;
-    optionalDependencies?: Record<string, string>;
-};
+export type PackageManifest = z.infer<typeof packageManifestSchema>;
 
 /** What the npm license checker prints: one entry for each installed package, by name and version. */
 export type LicenseReport = Record<string, { licenses?: string | string[] }>;

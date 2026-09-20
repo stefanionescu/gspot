@@ -1,3 +1,4 @@
+import { z } from 'zod';
 // Every package.json: exact versions, one packageManager across the workspace, a private root, one kind of lockfile.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
@@ -13,11 +14,13 @@ function isManifest(path: string): boolean {
     return path === MANIFEST || path.endsWith(`/${MANIFEST}`);
 }
 
-function readManifest(root: string, path: string): PackageManifest | undefined {
+function readManifest(root: string, path: string): PackageManifest {
     try {
-        return JSON.parse(readFileSync(join(root, path), 'utf8')) as PackageManifest;
-    } catch {
-        return undefined;
+        const content: unknown = JSON.parse(readFileSync(join(root, path), 'utf8'));
+        return packageManifestSchema.parse(content);
+    } catch (error) {
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(`Cannot read package manifest ${path}: ${detail}`, { cause: error });
     }
 }
 
@@ -97,6 +100,15 @@ function lockfileFindings(input: EngineInput): Finding[] {
         }));
 }
 
+export const packageManifestSchema = z.object({
+    private: z.boolean().optional(),
+    packageManager: z.string().optional(),
+    workspaces: z.unknown().optional(),
+    dependencies: z.record(z.string(), z.string()).optional(),
+    devDependencies: z.record(z.string(), z.string()).optional(),
+    optionalDependencies: z.record(z.string(), z.string()).optional(),
+});
+
 /**
  * The findings of the manifest policy over every tracked package.json.
  * @param input the engine input
@@ -108,8 +120,7 @@ export function manifestPolicy(input: EngineInput): Promise<Finding[]> {
     const manifests = new Map<string, PackageManifest>();
     for (const file of input.session.repository.files) {
         if (file.nature !== 'source' || !isManifest(file.path)) continue;
-        const manifest = readManifest(input.root, file.path);
-        if (manifest !== undefined) manifests.set(file.path, manifest);
+        manifests.set(file.path, readManifest(input.root, file.path));
     }
     const ranges = [...manifests].flatMap(([path, manifest]) =>
         isRangeAllowed(path) ? [] : rangeFindings(input, path, manifest),

@@ -33,6 +33,16 @@ function lockfileFrom(scheme: string): string {
 
 const CASES: PlantedCase[] = [
     {
+        id: 'integrity/manifest-policy',
+        files: { 'package.json': '{' },
+        expected: 'Cannot read package manifest package.json',
+    },
+    {
+        id: 'integrity/manifest-policy',
+        files: { 'package.json': '{"dependencies":{"example":false}}' },
+        expected: 'Cannot read package manifest package.json',
+    },
+    {
         id: 'integrity/install-policy',
         files: { 'bun.lock': '{}\n', 'bunfig.toml': '[install]\nminimumReleaseAge = 3600\n' },
         expected: 'the policy asks for 604800 seconds',
