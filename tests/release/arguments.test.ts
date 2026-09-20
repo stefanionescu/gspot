@@ -61,7 +61,7 @@ describe('read-only script arguments', () => {
 });
 
 describe('build script arguments', () => {
-    test('rejects malformed targets before writes and forwards valid repeated targets', async () => {
+    test('rejects malformed targets before writes and forwards multiple targets from one flag', async () => {
         await using sandbox = await createSandbox({
             'packages/cli/build.ts': readFileSync(join(ROOT, 'packages/cli/build.ts'), 'utf8'),
             'packages/cli/package.json': readFileSync(join(ROOT, 'packages/cli/package.json'), 'utf8'),
@@ -96,7 +96,7 @@ Bun.spawnSync = (argv) => {
             ['--target'],
             ['--targets', 'bun-linux-arm64'],
             ['--target', 'unknown'],
-            ['--target', 'bun-linux-arm64', '--target', 'unknown'],
+            ['--target', 'bun-linux-arm64', 'unknown'],
             ['--out'],
             ['--out', '--target', 'bun-linux-arm64'],
             ['--out', ''],
@@ -107,7 +107,7 @@ Bun.spawnSync = (argv) => {
             expect(outputs.map((path) => treeContents(join(sandbox.path, path)))).toEqual(before);
             expect(existsSync(join(sandbox.path, 'compiler.jsonl'))).toBe(false);
         }
-        const result = execute(['--target', 'bun-linux-arm64', '--target', 'bun-linux-x64']);
+        const result = execute(['--target', 'bun-linux-arm64', 'bun-linux-x64']);
         expect(result.exitCode, result.stderr.toString()).toBe(0);
         const commands = readFileSync(join(sandbox.path, 'compiler.jsonl'), 'utf8')
             .trim()

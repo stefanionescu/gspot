@@ -1,5 +1,4 @@
 // Builds one executable per target with grammars, presets, prose, rules and schema embedded.
-// Usage: bun packages/cli/build.ts [--target <bun-target>] [--out dist]; --target repeats.
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { GRAMMAR_SOURCES } from '#config/grammars.ts';
@@ -119,7 +118,7 @@ try {
     const script = new Command('bun packages/cli/build.ts')
         .description('Build the gspot executable for selected platforms')
         .version(packageManifest.version)
-        .option('--target <target>', 'Bun compile target (repeat for multiple platforms)', collectTargets, [])
+        .option('--target <targets...>', 'Bun compile targets', collectTargets, [])
         .option('--out <directory>', 'Directory for the executables', outputDirectory, join(root, 'dist'))
         .allowExcessArguments(false)
         .showHelpAfterError()
