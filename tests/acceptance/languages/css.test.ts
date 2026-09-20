@@ -70,6 +70,24 @@ describe('the css preset', () => {
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
+            const selectors = await runPlanted(
+                fixture.path,
+                {
+                    check: 'integrity/css-usage',
+                    files: {
+                        'src/card.module.css':
+                            '.card\\:active { content: ".unused"; }\n/* .fake {} */\n[data-name=".not-a-class"] .card-title { color: red; }\n',
+                        'src/card.js':
+                            "import styles from './card.module.css';\nexport const names = [styles['card:active'], styles.cardTitle];\n",
+                        'src/panel.module.scss': '// .fake {}\n.panel { $label: ".unused"; color: red; }\n',
+                        'src/panel.js':
+                            "import styles from './panel.module.scss';\nexport const name = styles.panel;\n",
+                    },
+                    expected: '',
+                },
+                environment,
+            );
+            expect(selectors.code, selectors.stdout + selectors.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 4,
     );

@@ -189,7 +189,7 @@ deployment, or app adoption is inferred from this documentation review.
 
 Each named row links to its owning acceptance section, including rows grouped under another
 ID. The September 20 reconciliation found exactly one owner for each named row.
-Twenty-five requirements are locally complete; 303 named rows remain open.
+Twenty-six requirements are locally complete; 302 named rows remain open.
 Completed evidence stays in each owning acceptance section.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
@@ -236,7 +236,7 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-238](fixes/01-first-fixes.md#k-238-values-are-interpolated-without-destination-escaping): Validate semantic values and serialize strings, keys, paths, and comments for each destination format; test printable quotes and backslashes as well as forbidden controls.
 - [ ] [K-241](fixes/01-first-fixes.md#k-241-nine-contradictions-between-rule-files-and-checks): Settle each of the nine contradictions in the rule file, on the side of the decision or the check. Test the rule names a rule file names against the templates.
 - [ ] [K-246](fixes/01-first-fixes.md#k-246-a-check-that-no-preset-ships): Ship `integrity/generated-drift` in the structure preset. Build `integrity/generated-fresh` with `[[generated]]`, or take its name out of every document.
-- [ ] [K-250](fixes/01-first-fixes.md#k-250-libraries-the-documents-name-and-nothing-installs): Make the two SPDX packages and the Markdown parser dependencies that do their job. Use or drop each other library the two documents name.
+- [x] [K-250](fixes/01-first-fixes.md#k-250-libraries-the-documents-name-and-nothing-installs): Make the two SPDX packages and the Markdown parser dependencies that do their job. Use or drop each other library the two documents name.
 - [ ] [K-251](fixes/01-first-fixes.md#k-251-two-commands-pass-flags-their-tool-lacks): Drop `--skip-updates` from the dotenv fixer, give v8r its config through `V8R_CONFIG_FILE`, and fail the contract test on a flag the pinned tool lacks.
 - [ ] [K-253](fixes/01-first-fixes.md#k-253-the-workflow-gspot-writes-breaks-the-rule-file-gspot-installs): Make the workflow gspot writes follow `GITHUB-ACTIONS.md`: a pinned runner image, a timeout, and a concurrency group. Name the tasks as D-116 decides.
 - [ ] [K-261](fixes/01-first-fixes.md#k-261-good-examples-that-fail-the-checks-beside-them): Correct every good example that fails a check, and make `rules/lint` run the linter of the preset over each fenced good example.

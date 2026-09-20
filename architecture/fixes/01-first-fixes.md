@@ -713,10 +713,15 @@ differs from what the policy writes.
 
 ## K-250: libraries the documents name and nothing installs
 
-**Status: partially implemented.** License matching uses the SPDX parser and satisfier.
+**Status: complete (locally verified).** License matching uses the SPDX parser and satisfier.
 Markdown headings, README structure, fenced code, and free-text exclusions use mdast.
-Mixed license expressions and Markdown syntax regressions are locally verified.
-CSS parsing and the remaining dependency-table cleanup are open.
+PostCSS and its SCSS and selector parsers read stylesheet rules and decoded class names.
+The library tables describe the installed owners and omit unused dependencies.
+
+Eight Markdown unit cases and the document, license, and CSS acceptance cases pass.
+They cover mixed license expressions, fenced and formatted headings, setext headings,
+README paragraphs, tilde fences, and escaped CSS classes. Type checking, schema checks,
+and the 274-page reference check pass.
 
 **What is wrong.** A license expression is cut at brackets, `OR`, and `AND` by hand in
 `integrity/licenses.ts` (`EXPRESSION_PARTS`), and `MIT OR (GPL-3.0-only AND ...)` is refused.
