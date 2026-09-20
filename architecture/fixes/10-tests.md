@@ -62,7 +62,7 @@ selection is never run. No test installs the pinned npm tools into an empty fold
 once. One install starts from a repository that has hooks and mise tasks. One default `init` runs
 in every test run.
 
-**Files.** New `tests/repositories/installs.test.ts`. `tests/release/pins.test.ts` gains the
+**Files.** New `tests/acceptance/cli/installs.test.ts`. `tests/release/pins.test.ts` gains the
 install of K-206.
 
 **Logic.** A table of six installs in `tests/config/commands.ts`: mise with GitHub CI, npm, pnpm,
@@ -115,6 +115,12 @@ and `no-restricted-syntax`, which every selector prints. Several test folders ar
 that a check ran or found a defect. The executable planted-case ledger remains open.
 Deletion-only command and schema tests, duplicate process cases, and configuration
 inventory assertions are also removed. Real input, process, and storage failure cases remain.
+
+The disabled-Boolean-rule test is removed: its unrelated `no-var` finding did not
+establish the naming contract. Swift build regressions sit with CLI integration tests,
+process regressions are named `spawn`, and shared harness tests are named `harness`.
+Emission tests are grouped by selection, serialization, and alias discovery. Swift
+error assertions use the existing assertion library instead of repeated catch blocks.
 
 **Target.** Every shipped check has one planted defect that makes it fail, with the message of
 its own rule.
@@ -175,10 +181,11 @@ disk. Each test holds the plain case, the edge of each limit, and one input that
 
 **What goes.** Nothing.
 
-**Tests.** A unit test walks `src/checks/` and `src/structure/analyses/` and fails a file with no
-test file of the same name.
+**Tests.** Exercise each retained analysis with a demonstrated defect and valid code
+that must pass. Group related cases by behavior; source filenames do not define test cases.
 
-**Done when.** It passes.
+**Done when.** The cases detect their intended defects and accept the valid inputs.
+A source-file inventory or matching test filename does not establish coverage.
 
 ## T-19: no test reads the shipped policy over ordinary code
 
@@ -192,8 +199,8 @@ is unmeasured.
 
 **Target.** The shipped defaults are measured on ordinary code.
 
-**Files.** New `tests/repositories/generated/`, with one folder for each generator, committed as
-its generator wrote it. New `tests/repositories/generated.test.ts`. New
+**Files.** New `tests/acceptance/generated/`, with one folder for each generator, committed as
+its generator wrote it. New `tests/acceptance/cli/generated.test.ts`. New
 `packages/cli/tests/unit/naming/shipped-policy.test.ts`.
 
 **Logic.** For each generated project and representative established multi-package project, run `init --yes` and `check`. Review each recommended finding for a demonstrated defect and false positives before accepting any message or count snapshot (K-301). Include valid API wrappers, framework adapters, and identifiers containing `generate` or `service`. A count alone is not an acceptance criterion. The naming test runs the shipped policy over one short file for each

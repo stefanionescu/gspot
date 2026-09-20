@@ -1,3 +1,4 @@
+import { rejects } from 'node:assert/strict';
 import { createSandbox } from '@gspot/testing';
 import { expect, spyOn, test } from 'bun:test';
 import * as spawn from '#cli/platform/spawn.ts';
@@ -51,13 +52,7 @@ test('analysis refuses an incomplete compiler log after a failed build', async (
         .mockResolvedValueOnce({ code: 7, stdout: '', stderr: '', missing: false, duration: 1 })
         .mockResolvedValue({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
-        let outcome: unknown;
-        try {
-            outcome = await swiftAnalyze(input);
-        } catch (error) {
-            outcome = error;
-        }
-        expect(outcome).toMatchObject({ message: expect.stringContaining('build exited 7') });
+        await rejects(swiftAnalyze(input), /build exited 7/u);
     } finally {
         run.mockRestore();
     }
@@ -70,14 +65,8 @@ test.each([0, 7])('a silent SwiftLint analyzer with exit %i retains its verdict'
         .mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 })
         .mockResolvedValue({ code, stdout: '', stderr: '', missing: false, duration: 1 });
     try {
-        let outcome: unknown;
-        try {
-            outcome = await swiftAnalyze(input);
-        } catch (error) {
-            outcome = error;
-        }
-        if (code === 0) expect(outcome).toEqual([]);
-        else expect(outcome).toMatchObject({ message: expect.stringContaining(`analyzer exited ${String(code)}`) });
+        if (code === 0) expect(await swiftAnalyze(input)).toEqual([]);
+        else await rejects(swiftAnalyze(input), new RegExp(`analyzer exited ${String(code)}`, 'u'));
     } finally {
         run.mockRestore();
     }
@@ -91,13 +80,7 @@ test.each(['build', 'analyzer'])('a timed-out Swift %s reports an error', async 
         run.mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 });
     run.mockResolvedValue({ code: 1, stdout: '', stderr: '', missing: false, duration: 1, isTimedOut: true });
     try {
-        let outcome: unknown;
-        try {
-            outcome = await swiftAnalyze(input);
-        } catch (error) {
-            outcome = error;
-        }
-        expect(outcome).toMatchObject({ message: expect.stringContaining('timed out') });
+        await rejects(swiftAnalyze(input), /timed out/u);
     } finally {
         run.mockRestore();
     }

@@ -62,7 +62,7 @@ const CASES: PlantedCase[] = [
     },
     {
         check: 'swift/env-access-owner',
-        files: { 'Sources/App/Home.swift': reader('homeFolder'), 'Sources/App/Shell.swift': reader('shellFolder') },
+        files: { 'Sources/App/Home.swift': reader('homeFolder'), 'Sources/App/User.swift': reader('userFolder') },
         expected: '2 files read the process environment',
     },
     {

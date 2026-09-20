@@ -8,26 +8,7 @@ import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { parserFor } from '#cli/naming/parsers.ts';
-import { templateInputs } from '#cli/emit/templates.ts';
 import { initCommand } from '#cli/lifecycle/init/command.ts';
-
-test.each([
-    ['cloudflare', 'workers'],
-    ['express', 'express'],
-    ['fastapi', 'fastapi'],
-    ['supabase', 'supabase'],
-])('%s security output follows the selected security preset', async (preset, name) => {
-    await using sandbox = await createSandbox({
-        'gspot.toml': `version = 1\npresets = ["${preset}"]\n`,
-    });
-    const target = `.gspot/semgrep/${name}.yml`;
-    const plainOutput = emitAll(await openSession(sandbox.path));
-    expect(plainOutput.files.map((file) => file.path)).not.toContain(target);
-    writeFileSync(join(sandbox.path, 'gspot.toml'), `version = 1\npresets = ["${preset}", "security"]\n`);
-    const securityOutput = emitAll(await openSession(sandbox.path));
-    const configuration = securityOutput.files.find((file) => file.path === target);
-    expect(configuration?.content).toContain('rules:');
-});
 
 test('typos output preserves quoted keys and paths without creating settings', async () => {
     const words = ['quoted"word', 'dotted.word', String.raw`back\slash`, 'café', "apostrophe'word"];
@@ -238,48 +219,6 @@ test('JSON option keys and YAML values keep their literal structure', async () =
         rules: { [key]: { level: 'warning' }, indentation: { spaces: 2 } },
     });
     expect(yaml.get('.gspot/trivy.yaml')).toMatchObject({ timeout: '10m', severity: ['HIGH', 'CRITICAL'] });
-});
-
-test.each(['package.json', 'tsconfig.json'])(
-    'generation reports malformed %s instead of dropping aliases',
-    async (path) => {
-        await using sandbox = await createSandbox({
-            'gspot.toml': 'version = 1\npresets = ["typescript"]\n',
-            [path]: '{}',
-        });
-        const session = await openSession(sandbox.path);
-        writeFileSync(join(sandbox.path, path), '{ "compilerOptions": { "paths": {} },');
-        expect(() => emitAll(session)).toThrow(`Cannot read configuration ${join(sandbox.path, path)}`);
-    },
-);
-
-test.each(['package.json', 'tsconfig.json'])(
-    'generation reports unreadable %s instead of dropping aliases',
-    async (path) => {
-        await using sandbox = await createSandbox({
-            'gspot.toml': 'version = 1\npresets = ["typescript"]\n',
-            [path]: null,
-        });
-        const session = await openSession(sandbox.path);
-        expect(() => emitAll(session)).toThrow(`Cannot read configuration ${join(sandbox.path, path)}`);
-    },
-);
-
-test('alias discovery accepts absent files and valid TypeScript comments and trailing commas', async () => {
-    await using sandbox = await createSandbox({
-        'gspot.toml': 'version = 1\npresets = ["typescript"]\n',
-    });
-    const session = await openSession(sandbox.path);
-    const inputs = templateInputs(session, session.scopes[0]!);
-    expect(inputs.importAliases('')).toEqual({});
-    writeFileSync(
-        join(sandbox.path, 'tsconfig.json'),
-        `{
-        // TypeScript permits comments and trailing commas.
-        "compilerOptions": { "paths": { "@app/*": ["./src/*"], }, },
-    }`,
-    );
-    expect(inputs.importAliases('')).toEqual({ '@app/': 'src/' });
 });
 
 test('runtime names remain data in generated JavaScript', async () => {

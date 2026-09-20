@@ -46,8 +46,9 @@ lose `--dry-run`, `add` and `remove` keep it (D-163), and `upgrade --check` beco
 `--runner`, which become `--no-ci`, `--no-hooks`, and `--no-runner` (D-130). The 21 test files
 that use a removed flag change in this commit (T-35).
 
-**Tests.** The completion test reads the command list from the program and holds 16 names
-(T-22). A unit test holds that `gspot why` exits 2 as an unknown command.
+**Tests.** Exercise completion for supported commands, values, and paths (T-22).
+Verify the replacement `explain` and `set` behavior. Do not add command-count or
+removed-command assertions.
 
 **Done when.** `gspot --help` matches the public command list in [02-cli.md](../02-cli.md), and none of the removed flags parses.
 
@@ -126,8 +127,8 @@ manifests declare `limits.line_length`, `limits.trivial_ast_nodes`, and
 `emit/managed-blocks.ts`, and the rows of those keys in [03-configuration.md](../03-configuration.md)
 and the nextjs preset page.
 
-**Tests.** The schema test gains one invalid test repository for a removed key. A unit test holds that
-every declared setting has a reader, by walking the manifests (K-100).
+**Tests.** Verify that retained settings affect their owning behavior (K-100).
+Do not add cases for deleted keys or infer coverage from reader names in source text.
 
 **Done when.** `gspot set architecture.package_roots x` exits 2 and names no such setting.
 

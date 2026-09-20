@@ -31,7 +31,7 @@ gspot/
 │   └── npm/                    the launcher and the platform package template
 ├── presets/                    one folder for each preset
 ├── rules/                      the rule files, by layer
-├── tests/                      the suites that need a repository or a registry
+├── tests/                      command acceptance, shared harness, and release suites
 ├── AGENTS.md                   one managed block
 ├── CLAUDE.md                   one managed block
 ├── CHANGELOG.md                written by changesets
@@ -66,7 +66,8 @@ packages/cli/
 ├── src/
 ├── types/
 └── tests/
-    ├── unit/                   mirrors src/
+    ├── unit/                   isolated logic, grouped by source owner
+    ├── integration/            CLI modules with real files, sessions, or processes
     └── snapshots/              one folder for each preset: every generated file of a fixed policy
 ```
 
@@ -308,16 +309,27 @@ a root pointer for a tool with an include form. The managed blocks sit in `.giti
 
 ```text
 tests/
-├── harness/                    planted.ts, registry.ts, worktree.ts, verdaccio.yaml, and the test-only types
-├── config/                     the init command lines, test repository text, tool lists, and timeouts tests share (D-113)
-├── repositories/
-│   ├── <preset>.test.ts        init as a developer runs it, then check: exit code, check lines, findings
-│   ├── samples/xcode/         a project that Xcode wrote, which the xcode tests plant (T-34)
-│   └── generated/              one project for each generator, committed as the generator wrote it (T-33)
-└── release/                    binary, publish, and install tests, the registry test of every pin, and the timing test
+├── harness/                    planted.ts, contents.ts, worktree.ts, swiftformat.ts, and registry/
+├── config/                     shared init commands, project text, tool lists, and timeouts (D-113)
+├── integration/                shared harness and registry behavior
+├── acceptance/                 command execution over developer projects
+│   ├── cli/                    initialization, checks, hooks, and lifecycle commands
+│   ├── languages/              language checks
+│   ├── frameworks/             framework checks
+│   ├── repository/             cross-language repository checks
+│   ├── samples/xcode/           project written by Xcode (T-34)
+│   └── generated/               projects written by generators (T-33)
+└── release/                    packaged binary, publication, installation, pins, and timing
 ```
 
 Unit tests sit under `packages/cli/tests/unit/` and `packages/eslint-plugin/tests/rules/`.
+CLI integration tests sit under `packages/cli/tests/integration/`, grouped by the behavior
+owner. They exercise modules together with files, sessions, or processes.
+
+Root acceptance tests run commands over developer projects.
+Root integration tests exercise the shared test
+harness and registry. Release tests install and execute package artifacts. Tests move when
+their execution boundary or owner changes, not merely because they mention the CLI.
 Snapshots sit under `packages/cli/tests/snapshots/<preset>/` (T-36).
 
 ## What is not in the tree
