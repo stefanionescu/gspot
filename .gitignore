@@ -37,6 +37,11 @@ bun-debug.log*
 /packages/cli/grammars/*.wasm
 !/packages/cli/grammars/swift.wasm
 
+# Build output of the workspace packages
+/packages/*/dist/
+/docs/dist/
+/docs/.astro/
+
 # >>> gspot managed >>>
 gspot.local.toml
 .gspot/cache/
@@ -53,11 +58,3 @@ gspot.local.toml
 .gspot/vale/styles/.vale-config/
 .gspot/vale/styles/config/dictionaries/
 # <<< gspot managed <<<
-
-# Build output of the workspace packages
-/packages/*/dist/
-/docs/dist/
-/docs/.astro/
-
-# Scratch scripts of the session
-/packages/cli/scratch/

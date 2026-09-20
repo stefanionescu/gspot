@@ -387,6 +387,11 @@ that says to run the script after a decision changes.
 
 ## K-259: leftovers in `.gitignore`
 
+**Partially implemented.** The scratch-directory ignore and TypeScript exclusion are
+removed. Authored entries precede the unchanged managed block. The root pytest cache is
+removed, and the existing pytest acceptance run uses its temporary project directory.
+The full-suite cache audit remains open for candidate acceptance.
+
 **What is wrong.** The file ignores `/packages/cli/scratch/`, a folder that is gone. A
 `.pytest_cache/` folder sits at the root, left by a test that ran pytest there. The managed block
 sits in the middle of the file.

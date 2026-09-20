@@ -30,6 +30,6 @@
         }
     },
     "include": ["packages/**/*.ts", "tests/**/*.ts"],
-    "exclude": ["node_modules", "dist", "**/node_modules", "packages/cli/build", "packages/cli/scratch"],
+    "exclude": ["node_modules", "dist", "**/node_modules", "packages/cli/build"],
     "extends": "./.gspot/tsconfig.base.json"
 }

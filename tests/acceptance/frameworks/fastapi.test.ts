@@ -10,7 +10,7 @@ const PROJECT = (dependency: string): string =>
 const MATH =
     '"""Arithmetic."""\n\n\ndef double(value: int) -> int:\n    """Double a number."""\n    return value * 2\n\n\ndef triple(value: int) -> int:\n    """Triple a number."""\n    return value * 3\n';
 const TESTS =
-    '"""Tests of the arithmetic."""\n\nfrom planted.math import double, triple\n\n\ndef test_double_and_triple() -> None:\n    """Both functions multiply."""\n    assert double(2) == 4\n    assert triple(2) == 6\n';
+    '"""Tests of the arithmetic."""\n\nfrom planted.math import double, triple\n\n\ndef test_multiplication() -> None:\n    """Both functions multiply."""\n    assert double(2) == 4\n    assert triple(2) == 6\n';
 const ROUTE = (body: string): string =>
     `"""The health route."""\n\nimport asyncio\nimport time\n\n\nasync def health() -> dict[str, str]:\n    """Say the service is up."""\n${body}    return {"status": "up"}\n\n\n__all__ = ["asyncio", "health", "time"]\n`;
 
@@ -22,6 +22,7 @@ describe('the pytest preset', () => {
                 'pyproject.toml': PROJECT('pytest'),
                 'planted/__init__.py': '"""The package."""\n',
                 'planted/math.py': MATH,
+                'tests/__init__.py': '"""Arithmetic tests."""\n',
                 'tests/test_math.py': TESTS,
             });
             commitAll(sandbox.path);
