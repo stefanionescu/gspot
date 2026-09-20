@@ -62,6 +62,7 @@ Invalid profiles fail before writes, and the removed subcommand is rejected.
 
 `doctor` uses local state and has no `--offline` flag or registry version lookup. Its unit
 test rejects registry access and verifies that local diagnostics still report the repository.
+The remaining version lookup is owned by `lifecycle/upgrade/newer-version.ts`.
 
 ## D-100: the lint files at the root of this repository
 

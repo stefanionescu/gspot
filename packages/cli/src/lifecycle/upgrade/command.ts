@@ -6,8 +6,8 @@ import { applyAll } from '#cli/emit/apply-command.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { firstRun } from '#cli/lifecycle/first-check.ts';
 import type { UpgradeOptions } from '#types/lifecycle.ts';
-import { newerVersion } from '#cli/doctor/newer-version.ts';
 import { installTools } from '#cli/lifecycle/install-tools.ts';
+import { newerVersion } from '#cli/lifecycle/upgrade/newer-version.ts';
 import { GSPOT_VERSION, pinnedVersion, writePin } from '#cli/run/version-pin.ts';
 import { upgradeReport, upgradeReportLines } from '#cli/lifecycle/upgrade/report.ts';
 
