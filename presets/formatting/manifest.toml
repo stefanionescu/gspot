@@ -16,7 +16,7 @@ npm = "prettier"
 name = "ec"
 version = "3.4.0"
 npm = "editorconfig-checker"
-mise = "editorconfig-checker"
+mise = "aqua:editorconfig-checker/editorconfig-checker"
 brew = "editorconfig-checker"
 github = "editorconfig-checker/editorconfig-checker"
 
