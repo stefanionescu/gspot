@@ -188,6 +188,14 @@ built command by replacing the marker. The manifest command gains `--no-env-reso
 planted repository holds a Compose file with `env_file`, a good one, and one with a bad key
 (T-28).
 
+**Status: complete (locally verified).** Command expansion retains typed file markers
+until variable-length arguments are resolved. The shared command-parts owner replaces
+each marker in place. The Compose command disables environment-file resolution.
+
+All 22 focused command, correction, and Docker acceptance tests pass on macOS, including
+a valid Compose file with an absent `.env` and an invalid service key. TypeScript,
+schema checks, and all 272 reference pages pass. Windows execution remains deferred.
+
 **Done when.** `docker/compose-config` passes on the good file and fails on the bad key.
 
 ## K-37: a folder named hooks

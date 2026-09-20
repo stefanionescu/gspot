@@ -121,6 +121,8 @@ export type EslintEntry = {
     severity: number;
 };
 
+export type CommandPart = string | { file: true };
+
 export type Substitutions = {
     files: string[];
     scope: string;

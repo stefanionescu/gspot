@@ -1,8 +1,11 @@
 import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
+import { planRun } from '#cli/run/plan.ts';
 import { run } from '#cli/platform/spawn.ts';
 import { describe, expect, test } from 'bun:test';
+import { openSession } from '#cli/run/session.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
+import { prepareCommand } from '#cli/run/tool-runner.ts';
 
 describe('file batches', () => {
     test('a list that fits is one batch, and a long list splits under the budget in order', () => {
@@ -59,4 +62,33 @@ test('Batched tool invocations preserve spaced Unicode file arguments', async ()
         received.push(...batch);
     }
     expect(received).toEqual(files);
+});
+
+test('per-file execution preserves expanded flags and arguments after the file', async () => {
+    const policy = `version = 1
+presets = []
+[[check]]
+name = "fixture/arguments"
+command = ${JSON.stringify([process.execPath, 'echo.cjs', '{existing:--config:settings.txt}', '{file}', 'config', '--quiet'])}
+paths = ["inputs/**"]
+stage = "commit"
+`;
+    await using fixture = await createFixture({
+        'gspot.toml': policy,
+        'settings.txt': '',
+        'inputs/café source.txt': '',
+        'echo.cjs': 'process.stdout.write(JSON.stringify(process.argv.slice(2)));',
+    });
+    const session = await openSession(fixture.path);
+    const planned = planRun(session, { stage: 'all', skips: [], localSkips: [] })[0]!;
+    const prepared = prepareCommand(session, planned, planned.spec.command!, undefined);
+    const result = await run(prepared.commands[0]!, { cwd: prepared.cwd });
+    expect(result.code, result.stderr).toBe(0);
+    expect(JSON.parse(result.stdout)).toEqual([
+        '--config',
+        join(fixture.path, 'settings.txt'),
+        'inputs/café source.txt',
+        'config',
+        '--quiet',
+    ]);
 });

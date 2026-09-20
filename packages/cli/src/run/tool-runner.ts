@@ -1,26 +1,17 @@
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
+import { mkdirSync } from 'node:fs';
 import { dirname, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { existsSync, mkdirSync } from 'node:fs';
 import { isCrash } from '#cli/run/broken-tool.ts';
-import { toPlatform } from '#cli/platform/paths.ts';
 import { pushBase } from '#cli/repository/staged.ts';
 import type { SpawnResult } from '#types/platform.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
 import { parseOutput } from '#cli/run/parse-output.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
+import type { ToolPin, CheckSpec } from '#types/manifest.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
-import { configurationName } from '#cli/presets/read-manifests.ts';
-import type { ToolPin, CheckSpec, ConfigurationTarget } from '#types/manifest.ts';
-import { isWorkspace, targetInScope, toolBaselineFile } from '#cli/run/scope-paths.ts';
-import { existingFileArguments, listArguments, settingsFilled } from '#cli/run/list-arguments.ts';
+import { baselinePath, substitute, perFileCommands } from '#cli/run/command-parts.ts';
 import type { ToolRunState, PreparedCommand, Substitutions, Session, PlannedCheck } from '#types/run.ts';
-
-const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
-
-const STUB_PLACEHOLDER = /\{stub:(?<name>[^}]+)\}/gu;
-
-const WORKSPACE_PREFIX = '{workspace:';
 
 const TAIL_LINES = 20;
 
@@ -31,70 +22,6 @@ const FILES_PLACEHOLDER = '{files}';
 const DEFAULT_TOOL_SECONDS = 600;
 
 const MILLISECONDS = 1000;
-
-function allConfigs(session: Session, planned: PlannedCheck): ConfigurationTarget[] {
-    const own = planned.manifest?.configs ?? [];
-    const every = session.manifests
-        .values()
-        .flatMap((manifest) => manifest.configs)
-        .toArray();
-    return [...own, ...every];
-}
-
-function configurationPath(session: Session, planned: PlannedCheck, name: string): string {
-    const target = allConfigs(session, planned).find(
-        (config) => config.fragment !== true && configurationName(config.target) === name,
-    );
-    if (!target) throw new Error(`Check ${planned.check} names {config:${name}} and no preset renders it.`);
-    return targetInScope(planned.scope.scope.path, target);
-}
-
-function stubPath(session: Session, planned: PlannedCheck, name: string, scope: string): string {
-    const target = allConfigs(session, planned).find((config) => config.stub?.path === name);
-    const path = target?.stub?.path ?? name;
-    return scope === '' ? path : `${scope}/${path}`;
-}
-
-// The tool's own baseline file, absolute, whether or not it exists yet. One file per repository: the tool runs from the root, so its paths are root-relative in every scope.
-function baselinePath(session: Session, planned: PlannedCheck): string | undefined {
-    const file = planned.spec.baseline_file;
-    return file === undefined ? undefined : join(session.root, toolBaselineFile(file, planned.scope.scope.path));
-}
-
-// `--suppressions-location` only when the file exists: ESLint refuses a missing one, and a repository with no findings has none.
-function suppressionsArguments(session: Session, planned: PlannedCheck): string[] {
-    const path = baselinePath(session, planned);
-    if (path === undefined || !existsSync(path)) return [];
-    return ['--suppressions-location', toPlatform(path), '--pass-on-unpruned-suppressions'];
-}
-
-function expandPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string[] {
-    const policyPart = listArguments(planned, part) ?? existingFileArguments(session.root, part);
-    return policyPart ?? plainPart(session, planned, part, sub);
-}
-
-function plainPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string[] {
-    if (part === '{files}') return sub.files;
-    if (part === '{suppressions}') return suppressionsArguments(session, planned);
-    if (part === '{file}') return [];
-    if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}'))
-        return isWorkspace(session.root, sub.scope) ? [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope] : [];
-    return [substituteOne(session, planned, part, sub)];
-}
-
-function substituteOne(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string {
-    return settingsFilled(planned, part)
-        .replaceAll(CONFIG_PLACEHOLDER, (_match, name: string) =>
-            toPlatform(join(session.root, configurationPath(session, planned, name))),
-        )
-        .replaceAll(STUB_PLACEHOLDER, (_match, name: string) => toPlatform(stubPath(session, planned, name, sub.scope)))
-        .replaceAll('{scope}', () => (sub.scope === '' ? '.' : sub.scope))
-        .replaceAll('{root}', () => sub.root)
-        .replaceAll('{indent}', () => String(sub.indent))
-        .replaceAll('{message_file}', () => sub.messageFile ?? '')
-        .replaceAll('{merge_base}', () => sub.mergeBase ?? '')
-        .replaceAll('{baseline}', () => toPlatform(baselinePath(session, planned) ?? ''));
-}
 
 // ESLint opens a crash with a greeting and its version, and the cause is the line after those.
 function isBanner(line: string): boolean {
@@ -138,12 +65,6 @@ function relativizer(session: Session, planned: PlannedCheck, cwd: string): (pat
     const scopePath = planned.scope.scope.path;
     if (scopePath === '' || cwd === session.root) return (path) => path;
     return (path) => path.slice(scopePath.length + 1);
-}
-
-function perFileCommands(argv: string[], command: string[], files: string[]): string[][] {
-    const slot = command.indexOf('{file}');
-    if (slot === -1) return [argv];
-    return files.map((file) => [...argv.slice(0, slot), file, ...argv.slice(slot + 1)]);
 }
 
 function prefixScope(findings: Finding[], scopePath: string): void {
@@ -215,10 +136,14 @@ function batchedCommands(
 ): string[][] {
     const fixed = substitute(session, planned, command, { ...sub, files: [] });
     if (toolPath !== undefined) fixed[0] = toolPath;
-    return fileBatches(sub.files, fixed, process.platform).map((files) => {
+    return fileBatches(
+        sub.files,
+        fixed.filter((part) => typeof part === 'string'),
+        process.platform,
+    ).flatMap((files) => {
         const argv = substitute(session, planned, command, { ...sub, files });
         if (toolPath !== undefined) argv[0] = toolPath;
-        return argv;
+        return perFileCommands(argv, files);
     });
 }
 
@@ -299,20 +224,8 @@ export function prepareCommand(
     if (toolPath !== undefined) argv[0] = toolPath;
     const commands = command.includes(FILES_PLACEHOLDER)
         ? batchedCommands(session, planned, command, sub, toolPath)
-        : perFileCommands(argv, command, files);
-    return { root: session.root, cwd, argv, commands };
-}
-
-/**
- * Expands the placeholders of a manifest command into argv. the files placeholder expands to every file, in the platform's form.
- * @param session the session
- * @param planned the check being run
- * @param command the command as the manifest wrote it
- * @param sub the values the placeholders take
- * @returns the argv to spawn
- */
-export function substitute(session: Session, planned: PlannedCheck, command: string[], sub: Substitutions): string[] {
-    return command.flatMap((part) => expandPart(session, planned, part, sub));
+        : perFileCommands(argv, files);
+    return { root: session.root, cwd, argv: argv.filter((part) => typeof part === 'string'), commands };
 }
 
 /**

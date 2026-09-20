@@ -65,7 +65,7 @@ name = "docker/compose-config"
 stage = "push"
 requires = "docker"
 tool = "docker"
-command = ["docker", "compose", "-f", "{file}", "config", "--quiet"]
+command = ["docker", "compose", "-f", "{file}", "config", "--quiet", "--no-env-resolution"]
 claims = {paths = ["**/docker-compose*.yml", "**/docker-compose*.yaml", "**/compose*.yml", "**/compose*.yaml"]}
 coverage = ["syntax"]
 output = {format = "lines"}

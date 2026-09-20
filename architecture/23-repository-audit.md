@@ -285,3 +285,8 @@ folders, and imports use `#cli/rules/*`. The duplicate Vale subprocess implement
 and configuration are deleted. Nine rule tests, all 98 corpus files, and the document
 acceptance suite pass. TypeScript and all 272 reference pages also pass locally.
 The index contains 321 open named requirements.
+
+K-258 is complete locally: individual file arguments retain their position after other
+placeholders expand. Docker Compose accepts an absent environment file and rejects an
+invalid service key. The 22 focused regressions pass with 258 assertions on macOS.
+The index contains 320 open named requirements; Windows execution remains deferred.

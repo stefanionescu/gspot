@@ -188,8 +188,8 @@ deployment, or app adoption is inferred from this documentation review.
 ## Every row, by fix file
 
 Each named row links to its owning acceptance section, including rows grouped under another
-ID. The September 20 reconciliation found exactly one owner for each named row. After K-61, K-99, K-104, K-116, K-129, K-195, and S-10
-closed, 321 named rows remain open.
+ID. The September 20 reconciliation found exactly one owner for each named row. After K-61, K-99, K-104, K-116, K-129, K-195, K-258, and S-10
+closed, 320 named rows remain open.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
 
@@ -227,7 +227,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-140](fixes/01-first-fixes.md#k-140-three-checks-pass-when-ast-grep-is-absent): Report `missing` when ast-grep is absent, and batch its file list.
 - [ ] [K-157](fixes/01-first-fixes.md#k-157-a-check-that-is-off-reports-ok): Let a check declare the setting it waits for, and report `skipped` with that name when it is unset.
 - [ ] [K-254](fixes/01-first-fixes.md#k-254-bash--n-over-files-bash-cannot-read): Run `bash -n` over Bash files alone, `zsh -n` over `.zsh` files, and `bats --count` over `.bats` files.
-- [ ] [K-258](fixes/01-first-fixes.md#k-258-the-compose-check-loses-a-word-of-its-command): Make `perFileCommands` put the file where `{file}` stands, pass `--no-env-resolution` to Compose, and test the check on a file with an `env_file`.
 - [ ] [K-37](fixes/01-first-fixes.md#k-37-a-folder-named-hooks): Take the bare name `hooks` out of `HOOK_DIRECTORIES`.
 - [ ] [K-45](fixes/01-first-fixes.md#k-45-the-message-run-overwrites-the-report): Write no report for a run of the `message` stage (D-105).
 - [ ] [K-108](fixes/01-first-fixes.md#k-108-a-missing-hooks-table): Make a missing `[hooks]` table mean gspot does nothing there, as `[ci]` and `[runner]` do (D-130).

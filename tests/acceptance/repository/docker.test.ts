@@ -24,6 +24,11 @@ const CARELESS = 'FROM node:latest\nCOPY . .\nCMD ["node", "index.js"]\n';
 const IGNORES = '.git\nnode_modules\n.env*\n';
 
 const CASES: PlantedCase[] = [
+    {
+        check: 'docker/compose-config',
+        files: { 'api/compose.yml': 'services:\n    api:\n        image: example/image\n        bogus: true\n' },
+        expected: 'bogus',
+    },
     { check: 'docker/hadolint', files: { 'api/Dockerfile': CARELESS }, expected: 'DL3007' },
     {
         check: 'docker/dockerignore',
@@ -45,7 +50,7 @@ describe('the docker preset', () => {
             await using fixture = await createFixture({
                 'api/Dockerfile': CLEAN,
                 'api/.dockerignore': IGNORES,
-                'api/compose.yml': 'services:\n    api:\n        build: .\n',
+                'api/compose.yml': 'services:\n    api:\n        build: .\n        env_file: .env\n',
                 'api/package.json': '{\n    "name": "planted",\n    "private": true\n}\n',
             });
             commitAll(fixture.path);
