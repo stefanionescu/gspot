@@ -15,3 +15,11 @@ golangci-lint = "2.13.2"
 
 [env]
 GSPOT_BIN = "bun {{config_root}}/packages/cli/src/main.ts"
+
+[tasks."gspot:setup"]
+description = "Install repository dependencies and prepare gspot"
+run = ["mise install", "bun install --frozen-lockfile", "bun packages/eslint-plugin/build.ts", "bun packages/cli/src/main.ts apply"]
+
+[tasks."gspot:check"]
+description = "Run gspot from repository source"
+run = "bun packages/cli/src/main.ts check"

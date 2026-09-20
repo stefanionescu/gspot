@@ -18,11 +18,9 @@ jobs:
                   fetch-depth: 0
                   persist-credentials: false
             - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
-            - run: bun install --frozen-lockfile
+            - run: mise run gspot:setup
             - run: bunx tsc --noEmit -p tsconfig.json
             - run: bun test --coverage
             - run: bun packages/cli/build.ts
-            - run: mise run gspot:setup
-              if: runner.os != 'Windows'
             - run: bun packages/cli/src/main.ts check
               if: runner.os != 'Windows'

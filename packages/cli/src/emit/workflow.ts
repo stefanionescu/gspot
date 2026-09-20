@@ -74,13 +74,14 @@ function jobHead(name: string, runner: string, setup: string[]): string[] {
 }
 
 function checkJob(shape: WorkflowShape, platform: string): string[] {
+    const command = shape.isMise ? 'mise run gspot:check --' : 'gspot check';
     return [
         ...jobHead(`check-${platform}`, RUNNERS[platform] ?? 'ubuntu-latest', setupSteps(shape, platform)),
-        '      - run: gspot check --json > gspot.json',
-        '      - run: gspot check --at manual',
+        `      - run: ${command} --json > gspot.json`,
+        `      - run: ${command} --at manual`,
         "        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
         `      - uses: ${SARIF} # v3.25.0`,
-        '        if: always()',
+        "        if: always() && hashFiles('.gspot/last.sarif') != ''",
         '        with:',
         '          sarif_file: .gspot/last.sarif',
     ];
@@ -88,9 +89,10 @@ function checkJob(shape: WorkflowShape, platform: string): string[] {
 
 function swiftJob(shape: WorkflowShape): string[] {
     if (shape.swiftScope === undefined || shape.platforms.includes('macos')) return [];
+    const command = shape.isMise ? 'mise run gspot:check --' : 'gspot check';
     return [
         ...jobHead('swift', 'macos-latest', setupSteps(shape, 'macos')),
-        `      - run: gspot check --scope ${shape.swiftScope}`,
+        `      - run: ${command} --scope ${shape.swiftScope}`,
     ];
 }
 
