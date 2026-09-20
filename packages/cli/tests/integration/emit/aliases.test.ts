@@ -15,7 +15,9 @@ test.each(['package.json', 'tsconfig.json'])(
         });
         const session = await openSession(sandbox.path);
         writeFileSync(join(sandbox.path, path), '{ "compilerOptions": { "paths": {} },');
-        expect(() => emitAll(session)).toThrow(`Cannot read configuration ${join(sandbox.path, path)}`);
+        expect(() => emitAll(session)).toThrow(
+            `${path === 'tsconfig.json' ? 'Cannot read TypeScript configuration' : 'Cannot read configuration'} ${join(sandbox.path, path)}`,
+        );
     },
 );
 
@@ -27,7 +29,9 @@ test.each(['package.json', 'tsconfig.json'])(
             [path]: null,
         });
         const session = await openSession(sandbox.path);
-        expect(() => emitAll(session)).toThrow(`Cannot read configuration ${join(sandbox.path, path)}`);
+        expect(() => emitAll(session)).toThrow(
+            `${path === 'tsconfig.json' ? 'Cannot read TypeScript configuration' : 'Cannot read configuration'} ${join(sandbox.path, path)}`,
+        );
     },
 );
 
@@ -46,4 +50,20 @@ test('alias discovery accepts absent files and valid TypeScript comments and tra
     }`,
     );
     expect(inputs.importAliases('')).toEqual({ '@app/': 'src/' });
+});
+
+test('inherited aliases resolve from the configuration that declares them', async () => {
+    await using sandbox = await createSandbox({
+        'gspot.toml': 'version = 1\npresets = ["typescript"]\n',
+        'tsconfig.json': '{"extends":"./configs/tsconfig.json"}',
+        'configs/tsconfig.json': '{"compilerOptions":{"paths":{"@app/*":["../src/*"]}}}',
+    });
+    const session = await openSession(sandbox.path);
+    const inputs = templateInputs(session, session.scopes[0]!);
+    expect(inputs.importAliases('')).toEqual({ '@app/': 'src/' });
+    writeFileSync(
+        join(sandbox.path, 'configs/tsconfig.json'),
+        '{"compilerOptions":{"baseUrl":"../app","paths":{"@app/*":["src/*"]}}}',
+    );
+    expect(inputs.importAliases('')).toEqual({ '@app/': 'app/src/' });
 });

@@ -47,7 +47,7 @@ test('a missing inherited configuration cannot be replaced by empty compiler opt
         'tsconfig.json': '{"extends":"./missing.json","compilerOptions":{"strict":true}}',
     });
     const input = await inputFor(sandbox.path);
-    expect(() => tsconfigOptions(input)).toThrow('missing.json does not exist');
+    expect(() => tsconfigOptions(input)).toThrow(`Cannot read file '${join(sandbox.path, 'missing.json')}'`);
 });
 
 test('circular configuration inheritance reports the cycle', async () => {
@@ -57,7 +57,7 @@ test('circular configuration inheritance reports the cycle', async () => {
         'base.json': '{"extends":"./tsconfig.json"}',
     });
     const input = await inputFor(sandbox.path);
-    expect(() => tsconfigOptions(input)).toThrow('Circular TypeScript configuration inheritance');
+    expect(() => tsconfigOptions(input)).toThrow('Circularity detected while resolving configuration');
 });
 
 test.each([
@@ -80,3 +80,35 @@ test('a scope without tsconfig.json reports the missing configuration', async ()
     const findings = await tsconfigOptions(await inputFor(sandbox.path));
     expect(findings).toMatchObject([{ file: 'tsconfig.json', message: expect.stringContaining('no tsconfig.json') }]);
 });
+
+test.each(['tsconfig.json', 'strict.json'])(
+    'nested configurations inherit an ancestor package through %s',
+    async (filename) => {
+        await using sandbox = await createSandbox({
+            'gspot.toml': POLICY,
+            'tsconfig.json': '{"extends":"./apps/web/tsconfig.json"}',
+            'apps/web/tsconfig.json': '{"extends":"@example/config"}',
+            'node_modules/@example/config/package.json': JSON.stringify({
+                name: '@example/config',
+                tsconfig: filename,
+            }),
+            [`node_modules/@example/config/${filename}`]: '{"compilerOptions":{"strict":true}}',
+        });
+        const input = await inputFor(sandbox.path);
+        const inherited = await tsconfigOptions(input);
+        expect(inherited.filter((finding) => finding.rule === 'strict')).toEqual([]);
+        fs.writeFileSync(
+            join(sandbox.path, 'apps/web/tsconfig.json'),
+            '{"extends":"@example/config","compilerOptions":{"strict":false}}',
+        );
+        const overridden = await tsconfigOptions(input);
+        expect(
+            overridden
+                .filter((finding) => finding.rule === 'strict')
+                .map(({ check, file, rule }) => ({ check, file, rule })),
+        ).toEqual([
+            { check: 'integrity/tsconfig-options', file: 'tsconfig.json', rule: 'strict' },
+            { check: 'integrity/tsconfig-options', file: 'apps/web/tsconfig.json', rule: 'strict' },
+        ]);
+    },
+);

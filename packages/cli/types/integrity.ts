@@ -1,8 +1,6 @@
-import type { z } from 'zod';
 import type { EngineInput } from '#types/run.ts';
 // Type aliases of the integrity modules.
 import type { Finding } from '#types/finding.ts';
-import type { tsconfigSchema } from '#cli/integrity/tsconfig-options.ts';
 
 export type IntegrityCheck = (input: EngineInput) => Promise<Finding[]>;
 
@@ -17,8 +15,6 @@ export type PathIndex = { known: Set<string>; tasks: Set<string>; isException: (
 
 /** One README shape problem: line, rule, message. */
 export type ShapeProblem = [number, string, string];
-
-export type Tsconfig = z.infer<typeof tsconfigSchema>;
 
 /** One environment variable read in code: the key and the line it is read on. */
 export type EnvRead = { key: string; line: number };

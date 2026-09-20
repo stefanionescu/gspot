@@ -7,6 +7,15 @@ builds or installs, and house rules that sat in shared presets. One rule decides
 
 ## K-74: the typescript preset edits the `tsconfig.json` of the developer
 
+**Partial local verification, September 20, 2026.** Compiler option checks, alias generation,
+and project-reference selection share TypeScript 5.9.3 configuration resolution. Nested
+configurations resolve packages from ancestor directories, including package entry points.
+Inherited aliases retain their declaring directory and base URL.
+
+All 30 focused configuration and generation tests and four TypeScript command acceptance
+cases pass. The CLI type check and macOS ARM64 compilation pass. Level selection and
+preservation of developer configurations remain open.
+
 **What is wrong.** The preset puts `extends` into the `tsconfig.json` of the developer and
 requires ten compiler options, among them `erasableSyntaxOnly` and `verbatimModuleSyntax`. That
 changes what their own `tsc` and their build accept.

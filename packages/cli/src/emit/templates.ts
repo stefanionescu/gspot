@@ -1,17 +1,17 @@
 // Render a preset template with the merged settings; prepend the generated-file header.
 import { Eta } from 'eta';
-import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { stringify as stringifyYaml } from 'yaml';
 import { jsonText } from '#cli/emit/json-format.ts';
 import { readAsset } from '#cli/platform/assets.ts';
-import { extensionOf } from '#cli/platform/paths.ts';
-import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { policyValue } from '#cli/policy/settings.ts';
+import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
+import { dirname, join, relative, resolve } from 'node:path';
+import { extensionOf, toPosix } from '#cli/platform/paths.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { GENERATED_HEADER_LINES, GENERATED_JSON_KEY } from '#config/markers.ts';
-import type { JsonFormat, PackageImports, TemplateInputs, TsconfigPaths } from '#types/emit.ts';
+import type { JsonFormat, PackageImports, TemplateInputs } from '#types/emit.ts';
 import { BLOCK_IGNORES, DISABLED_UPSTREAM_RULES, TOKEN_IGNORES, VALE_PACKAGES } from '#config/prose.ts';
 
 const JSON_INDENT = 4;
@@ -70,14 +70,17 @@ function packageAliases(root: string, prefix: string): Record<string, string> {
 
 function tsconfigAliases(root: string, prefix: string): Record<string, string> {
     const aliases: Record<string, string> = {};
-    const tsconfig = readJsonFile(join(root, prefix, 'tsconfig.json'), parseJsonc) as TsconfigPaths | undefined;
-    const paths = Object.entries(tsconfig?.compilerOptions?.paths ?? {});
+    const path = join(root, prefix, 'tsconfig.json');
+    const options = getTsconfig(path)?.options;
+    if (options === undefined) return aliases;
+    const paths = Object.entries(options.paths ?? {});
+    const inheritedBase = options['pathsBasePath'];
+    const base = options.baseUrl ?? (typeof inheritedBase === 'string' ? inheritedBase : dirname(path));
     for (const [pattern, targets] of paths) {
         const target = targets[0];
         if (target === undefined) continue;
-        const bare = target.startsWith('./') ? target.slice(2) : target;
-        const alias = bare.replace(TRAILING_STAR, '');
-        aliases[pattern.replace(TRAILING_STAR, '')] = `${prefix}${alias}`;
+        const alias = toPosix(relative(root, resolve(base, target))).replace(TRAILING_STAR, '');
+        aliases[pattern.replace(TRAILING_STAR, '')] = alias;
     }
     return aliases;
 }

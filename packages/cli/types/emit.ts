@@ -96,9 +96,6 @@ export type TemplateInputs = {
 /** The part of package.json the alias reader looks at. */
 export type PackageImports = { imports?: Record<string, unknown> };
 
-/** The part of tsconfig.json the alias reader looks at. */
-export type TsconfigPaths = { compilerOptions?: { paths?: Record<string, string[]> } };
-
 /** The part of package.json apply reads and writes. */
 export type PackageContent = { devDependencies?: Record<string, string>; scripts?: Record<string, string> };
 

@@ -1,22 +1,11 @@
 // Selects compiler project mode and confines build metadata to a disposable copy.
 import { join } from 'node:path';
-import { rmSync, readFileSync } from 'node:fs';
+import { rmSync } from 'node:fs';
 import type { CheckResult } from '#types/finding.ts';
-import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { scratchCopy } from '#cli/run/scratch-copy.ts';
+import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { Session, PlannedCheck } from '#types/run.ts';
-
-function hasReferences(path: string): boolean {
-    const config = parseJsonc(readFileSync(path, 'utf8'));
-    return (
-        typeof config === 'object' &&
-        config !== null &&
-        'references' in config &&
-        Array.isArray(config.references) &&
-        config.references.length > 0
-    );
-}
 
 /**
  * Checks ordinary projects and every project named by a solution configuration.
@@ -25,7 +14,8 @@ function hasReferences(path: string): boolean {
  * @returns compiler findings and the shared tool execution status
  */
 export async function checkTypescript(session: Session, planned: PlannedCheck): Promise<CheckResult> {
-    const references = hasReferences(join(session.root, planned.scope.scope.path, 'tsconfig.json'));
+    const config = getTsconfig(join(session.root, planned.scope.scope.path, 'tsconfig.json'));
+    const references = (config?.projectReferences?.length ?? 0) > 0;
     const command = references
         ? ['tsc', '-b', '--noEmit', '--pretty', 'false']
         : ['tsc', '--noEmit', '-p', 'tsconfig.json', '--pretty', 'false'];
