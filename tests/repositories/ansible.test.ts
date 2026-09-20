@@ -47,6 +47,11 @@ describe('the ansible preset', () => {
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
+                if (process.platform === 'win32') {
+                    expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
+                    expect(outcome.stdout).toMatch(/skipped\s+ansible\/lint\s+\(platform\)/u);
+                    continue;
+                }
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout).toContain(planted.expected);
                 expect(outcome.stdout).toContain('deploy/site.yml:');

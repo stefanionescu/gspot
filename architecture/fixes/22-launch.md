@@ -61,6 +61,12 @@ require an explicit unsupported-platform result on Windows for SwiftLint, while 
 finding assertions for SwiftFormat and the built-in Swift checks. Linux and macOS retain
 the SwiftLint finding assertions.
 
+Windows run `35490574212` completes 450 tests with 21 failures. Three failures expect
+findings from Ansible, Gixy, and Semgrep despite their existing Linux/macOS restrictions.
+Their tests require explicit platform skips on Windows and still exercise real findings
+on supported hosts. The tests themselves run on every host, including scheduling assertions.
+The other failures remain under investigation; this is not full Windows acceptance.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.

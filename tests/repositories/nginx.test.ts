@@ -37,6 +37,11 @@ describe('the nginx preset', () => {
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
+                if (process.platform === 'win32') {
+                    expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
+                    expect(outcome.stdout).toMatch(/skipped\s+nginx\/gixy\s+\(platform\)/u);
+                    continue;
+                }
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
                 expect(outcome.stdout).toContain('proxy/nginx.conf:');

@@ -40,9 +40,14 @@ describe('the security preset', () => {
             await Bun.write(join(fixture.path, 'src/run.ts'), EVALUATED);
             commitAll(fixture.path);
             const found = run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
-            expect(found.code, found.stdout + found.stderr).toBe(1);
-            expect(found.stdout).toContain('node-no-eval');
-            expect(found.stdout).toContain('src/run.ts:3');
+            if (process.platform === 'win32') {
+                expect(found.code, found.stdout + found.stderr).toBe(0);
+                expect(found.stdout).toMatch(/skipped\s+security\/semgrep\s+\(platform\)/u);
+            } else {
+                expect(found.code, found.stdout + found.stderr).toBe(1);
+                expect(found.stdout).toContain('node-no-eval');
+                expect(found.stdout).toContain('src/run.ts:3');
+            }
             await Bun.write(join(fixture.path, 'security/own.yml'), OWN_RULE);
             await Bun.write(
                 join(fixture.path, 'src/use.ts'),
@@ -55,7 +60,10 @@ describe('the security preset', () => {
             );
             commitAll(fixture.path);
             const own = run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
-            expect(own.stdout).toContain('planted-no-double');
+            if (process.platform === 'win32') {
+                expect(own.code, own.stdout + own.stderr).toBe(0);
+                expect(own.stdout).toMatch(/skipped\s+security\/semgrep\s+\(platform\)/u);
+            } else expect(own.stdout).toContain('planted-no-double');
             const atPush = JSON.parse(run(fixture.path, ['check', '--at', 'push', '--json'], environment).stdout) as {
                 checks: { id: string }[];
             };
