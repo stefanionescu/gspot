@@ -1,11 +1,12 @@
-// A verdaccio registry on a free port for the release tests, and the publish into it.
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
+// A verdaccio registry on a free port for the release tests, and the publish into it.
+import { fileURLToPath } from 'node:url';
 import type { Registry } from '#types/run.ts';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
-const root = new URL('../..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('../..', import.meta.url));
 const BASE_PORT = 4873;
 const PORT_SPREAD = 1000;
 const POLL_MS = 500;

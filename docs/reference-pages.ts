@@ -1,6 +1,7 @@
-// Writes the reference pages from the binary's own data: commands from commander, presets and checks from the manifests, settings from the manifests, the decision log from the architecture. With --check it compares and writes nothing.
 import { join } from 'node:path';
 import type { Command } from 'commander';
+// Writes the reference pages from the binary's own data: commands from commander, presets and checks from the manifests, settings from the manifests, the decision log from the architecture. With --check it compares and writes nothing.
+import { fileURLToPath } from 'node:url';
 import { format, type Options } from 'prettier';
 import { buildProgram } from '@gspot/cli/src/program.ts';
 import { allChecks } from '@gspot/cli/src/presets/listing.ts';
@@ -8,7 +9,7 @@ import { presetManifests } from '@gspot/cli/src/presets/read-manifests.ts';
 import type { CheckSpec, Manifest, SettingSpec } from '@gspot/cli/types/manifest.ts';
 import { existsSync, mkdirSync, readdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
-const ROOT = new URL('.', import.meta.url).pathname;
+const ROOT = fileURLToPath(new URL('.', import.meta.url));
 const REFERENCE = join(ROOT, 'src', 'content', 'docs', 'reference');
 const DECISIONS = join(ROOT, '..', 'architecture', '14-decisions.md');
 const PRETTIER = join(ROOT, '..', '.gspot', 'prettier.json');

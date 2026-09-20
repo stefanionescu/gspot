@@ -1,7 +1,9 @@
 // Runs the compiled binary of this platform in a planted repository: the embedded presets, rules and grammars, not the source tree.
-// Runs when GSPOT_RELEASE_TEST=1 (the release workflow sets it); it needs a built binary under dist/.
+
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+// Runs when GSPOT_RELEASE_TEST=1 (the release workflow sets it); it needs a built binary under dist/.
+import { fileURLToPath } from 'node:url';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
@@ -11,7 +13,7 @@ import { commitAll, PLANTED_TIMEOUT_MS, script, toolsPath } from '#tests/harness
 const PLATFORM = process.platform === 'win32' ? 'windows' : process.platform;
 const ARCHITECTURE = process.arch === 'arm64' ? 'arm64' : 'x64';
 const BINARY = join(
-    new URL('../..', import.meta.url).pathname,
+    fileURLToPath(new URL('../..', import.meta.url)),
     'dist',
     `gspot-${PLATFORM}-${ARCHITECTURE}${PLATFORM === 'windows' ? '.exe' : ''}`,
 );

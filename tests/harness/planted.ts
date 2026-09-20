@@ -1,9 +1,10 @@
-// Runs the development gspot and git in a planted repository.
 import { join } from 'node:path';
+// Runs the development gspot and git in a planted repository.
+import { fileURLToPath } from 'node:url';
 import type { PlantedCase, SpawnOutcome } from '#types/run.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
-const root = new URL('../..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('../..', import.meta.url));
 
 // Deletes the files a case removes, and returns what they held.
 async function takenOut(cwd: string, gone: string[]): Promise<Map<string, string>> {

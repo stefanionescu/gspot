@@ -1,11 +1,12 @@
 // Writes the two published JSON schemas from their zod sources, under schema/ and under the manual's public folder.
 // Usage: bun packages/cli/schemas.ts [--check]
+import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { recordJsonSchemaText } from '#cli/run/record/schema.ts';
 import { policyJsonSchemaText } from '#cli/policy/json-schema.ts';
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
-const here = dirname(new URL(import.meta.url).pathname);
+const here = dirname(fileURLToPath(new URL(import.meta.url)));
 const root = join(here, '..', '..');
 const FOLDERS = ['schema', join('docs', 'public', 'schema')];
 const FILES: [string, () => string][] = [

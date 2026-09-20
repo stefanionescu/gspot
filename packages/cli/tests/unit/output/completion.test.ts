@@ -1,7 +1,8 @@
 import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'bun:test';
 
-const gspot = join(new URL('../../../src/main.ts', import.meta.url).pathname);
+const gspot = join(fileURLToPath(new URL('../../../src/main.ts', import.meta.url)));
 
 describe('completion', () => {
     test('the bash and zsh scripts name every command', () => {

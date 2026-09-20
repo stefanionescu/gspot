@@ -75,6 +75,12 @@ K-205 removes the docs check mode; passing that removed option must error rather
 
 **Done when.** No repository script mistakes URL encoding for a local directory name.
 
+**Implementation evidence, September 20, 2026.** Fourteen source and test files use
+`fileURLToPath` for filesystem paths. The development-asset regression test reproduces
+an encoded-path failure before this change and passes after it. A checkout named
+`workspace % café` passes schema and reference validation, both package builds, and a
+source CLI explanation. Windows verification remains part of K-263.
+
 ## K-307: Failure-to-empty helpers hide incomplete checks
 
 **What is wrong.** `platform/spawn.ts` maps every failed Git command to `undefined`; `repository/tracked.ts` then falls back to a non-Git walk. `entryFor()` drops a path after any stat failure, and `head()` returns empty text after any read failure. `integrity/manifest-policy.ts` treats unreadable or malformed package JSON as absent. The takeover readers also catch read and parse errors, while a separate preflight reparses only selected suffixes.

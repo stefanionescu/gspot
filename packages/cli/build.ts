@@ -1,10 +1,11 @@
 // Builds one executable per target with grammars, presets, prose, rules and schema embedded.
 // Usage: bun packages/cli/build.ts [--target <bun-target>] [--out dist]; --target repeats.
+import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { GRAMMAR_SOURCES } from '#config/grammars.ts';
 import { existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync, copyFileSync } from 'node:fs';
 
-const here = dirname(new URL(import.meta.url).pathname);
+const here = dirname(fileURLToPath(new URL(import.meta.url)));
 const root = join(here, '..', '..');
 
 const TARGETS: Record<string, string> = {

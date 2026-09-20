@@ -1,9 +1,10 @@
 import { globby } from 'globby';
 import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'bun:test';
 import { allChecks } from '#cli/presets/listing.ts';
 
-const root = new URL('../../../../..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('../../../../..', import.meta.url));
 
 describe('the shipped checks', () => {
     test('every shipped check has a test that names it', async () => {
@@ -11,7 +12,7 @@ describe('the shipped checks', () => {
             cwd: root,
             absolute: true,
         });
-        const own = new URL(import.meta.url).pathname;
+        const own = fileURLToPath(new URL(import.meta.url));
         const text = files
             .filter((file) => file !== own)
             .map((file) => readFileSync(file, 'utf8'))

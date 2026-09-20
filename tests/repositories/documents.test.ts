@@ -1,13 +1,15 @@
 // Planted repository for the markdown, docs and prose presets: every check fires on its planted defect.
-// The Vale packages of this repository are linked in, so the prose check runs offline.
+
 import { join } from 'node:path';
+// The Vale packages of this repository are linked in, so the prose check runs offline.
+import { fileURLToPath } from 'node:url';
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
-const root = new URL('../..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('../..', import.meta.url));
 const STYLES = join(root, '.gspot', 'vale', 'styles');
 const OWN_STYLES = new Set(['gspot', 'config']);
 

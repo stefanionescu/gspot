@@ -1,0 +1,42 @@
+import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
+import { fileURLToPath } from 'node:url';
+import { createFixture } from 'fs-fixture';
+import { describe, expect, test } from 'bun:test';
+
+const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
+const CHECKOUT = 'workspace % café';
+const SOURCES = [
+    'packages/cli/package.json',
+    'packages/cli/config/grammars.ts',
+    'packages/cli/src/platform/assets.ts',
+    'packages/cli/src/platform/paths.ts',
+];
+const PRESET = '[preset]\nid = "bash"\n';
+const PROBE = `import { readAsset, listAssets } from './packages/cli/src/platform/assets.ts';
+console.log(JSON.stringify({ text: readAsset('presets/bash/manifest.toml'), files: listAssets('presets') }));
+`;
+
+describe('development assets', () => {
+    test('resolve a checkout containing spaces, percent signs, and Unicode', async () => {
+        const sources = Object.fromEntries(
+            SOURCES.map((path) => [`${CHECKOUT}/${path}`, readFileSync(join(ROOT, path), 'utf8')]),
+        );
+        await using fixture = await createFixture({
+            ...sources,
+            [`${CHECKOUT}/presets/bash/manifest.toml`]: PRESET,
+            [`${CHECKOUT}/probe.ts`]: PROBE,
+        });
+        const cwd = join(fixture.path, CHECKOUT);
+        const result = Bun.spawnSync([process.execPath, join(cwd, 'probe.ts')], {
+            cwd,
+            stdout: 'pipe',
+            stderr: 'pipe',
+        });
+        expect(result.exitCode, result.stderr.toString()).toBe(0);
+        expect(JSON.parse(result.stdout.toString())).toEqual({
+            text: PRESET,
+            files: ['presets/bash/manifest.toml'],
+        });
+    });
+});

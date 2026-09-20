@@ -1,8 +1,9 @@
+import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 // Builds the plugin to ESM and CommonJS under dist/, with a declaration file.
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
 
-const here = dirname(new URL(import.meta.url).pathname);
+const here = dirname(fileURLToPath(new URL(import.meta.url)));
 const distribution = join(here, 'dist');
 
 async function build(): Promise<void> {

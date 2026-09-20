@@ -1,5 +1,6 @@
 // Stamps the platform packages from the template, copies the binaries in, writes checksums, publishes everything at one version.
 
+import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 // Usage: bun packages/cli/publish.ts --tag v0.1.0 [--registry <url>] [--dry-run]
 import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync, chmodSync } from 'node:fs';
@@ -7,7 +8,7 @@ import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync, chmo
 const JSON_INDENT = 4;
 const EXECUTABLE_MODE = 0o755;
 const VERSION_SHAPE = /^\d+\.\d+\.\d+/u;
-const here = dirname(new URL(import.meta.url).pathname);
+const here = dirname(fileURLToPath(new URL(import.meta.url)));
 const root = join(here, '..', '..');
 
 const PLATFORMS: { os: string; cpu: string; binary: string }[] = [

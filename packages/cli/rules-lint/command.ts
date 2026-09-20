@@ -1,12 +1,14 @@
 // The corpus lint of this repository, run as the [[check]] rules/lint: every rule file under rules/ against the corpus rules.
-// Usage: bun packages/cli/rules-lint/command.ts
+
 import { globby } from 'globby';
 import { readFileSync } from 'node:fs';
+// Usage: bun packages/cli/rules-lint/command.ts
+import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import { isRulePath, lintRules } from '#rules-lint/lint.ts';
 
-const here = dirname(new URL(import.meta.url).pathname);
+const here = dirname(fileURLToPath(new URL(import.meta.url)));
 const root = join(here, '..', '..', '..');
 const rulesFolder = join(root, 'rules');
 

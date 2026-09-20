@@ -36,6 +36,12 @@ D-136 removes the Ruby dependency. SwiftLint installation is restricted to Linux
 The Windows test suite and self-check still require successful CI evidence. Unexecuted
 checks cannot count as findings or passes.
 
+[Windows job 106022412785](https://github.com/stefanionescu/gspot/actions/runs/35489701634/job/106022412785)
+passes tool installation at `fbfb142f032d4712eacef69526038d5fe5485358`, then fails in
+the plugin build. A raw file-URL pathname produces an invalid drive path. K-306 replaces
+that conversion in scripts, source asset lookup, and the test harness. The next Windows
+run must verify setup and expose any remaining failures.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.

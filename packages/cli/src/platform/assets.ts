@@ -1,4 +1,5 @@
 // Where the gspot data lives: the repository during development, embedded files in the binary.
+import { fileURLToPath } from 'node:url';
 import { toPosix } from '#cli/platform/paths.ts';
 import { dirname, join, relative } from 'node:path';
 import { GRAMMAR_SOURCES } from '#config/grammars.ts';
@@ -13,7 +14,7 @@ const state: { embedded: EmbeddedIndex | null | undefined; developmentRoot: stri
 };
 
 function findRepoRoot(): string {
-    let dir = dirname(new URL(import.meta.url).pathname);
+    let dir = dirname(fileURLToPath(new URL(import.meta.url)));
     for (let index = 0; index < ROOT_SEARCH_DEPTH; index += 1) {
         if (existsSync(join(dir, 'presets')) && existsSync(join(dir, 'packages'))) return dir;
         dir = dirname(dir);

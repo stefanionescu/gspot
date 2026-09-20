@@ -1,13 +1,15 @@
 // Planted repository for the typescript preset and what it brings: every check fires on its planted defect.
-// The fixture links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
+
 import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
+// The fixture links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
+import { fileURLToPath } from 'node:url';
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
-const root = new URL('../..', import.meta.url).pathname;
+const root = fileURLToPath(new URL('../..', import.meta.url));
 
 const PACKAGE = `{
     "name": "planted",
