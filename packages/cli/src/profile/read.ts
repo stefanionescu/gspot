@@ -1,5 +1,5 @@
 // Read a profile from a path, an https URL or github:owner/repo, validate it, and name every problem in one pass.
-import { join } from 'node:path';
+import { resolve } from 'node:path';
 import { textHash } from '#cli/run/cache.ts';
 import { parse as parseToml } from 'smol-toml';
 import type { Profile } from '#types/profile.ts';
@@ -32,7 +32,7 @@ async function profileText(source: string, cwd: string): Promise<string> {
     if (source.startsWith(GITHUB_PREFIX)) return fetched(githubUrl(source));
     if (source.startsWith('https://')) return fetched(source);
     if (source.startsWith('http://')) throw new ProfileError(['A profile is fetched over https, not http.']);
-    const path = source.startsWith('/') ? source : join(cwd, source);
+    const path = resolve(cwd, source);
     if (!existsSync(path)) throw new ProfileError([`There is no profile at ${source}.`]);
     return readFileSync(path, 'utf8');
 }

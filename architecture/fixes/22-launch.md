@@ -79,6 +79,11 @@ tools, using the existing pinned Node runtime. This is an explicit
 added to the application. An isolated installation rejects invalid commit messages and
 Markdown, and accepts a valid commit message. Windows acceptance still requires CI.
 
+Profile import treated only a leading slash as an absolute path. A Windows drive path
+was appended to the destination repository, so loading failed. Profile loading uses
+native path resolution. Its regression loads the same profile by a relative path and by
+an absolute path from another working directory. Test paths contain spaces and Unicode.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.
