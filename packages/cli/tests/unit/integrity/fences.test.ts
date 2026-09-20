@@ -75,4 +75,18 @@ describe('fences and paths', () => {
             [6, 'src/missing.ts names no tracked file or folder.'],
         ]);
     });
+    test.each([
+        ['package.json', '{broken'],
+        ['mise.toml', '[tasks'],
+    ])('malformed %s reports its read failure instead of a missing task', async (path, text) => {
+        await using fixture = await createFixture({ 'a.md': 'Run `bun run build`.\n', [path]: text });
+        expect(() => stalePaths(input(fixture.path, ['a.md']))).toThrow(`Cannot read task definitions from ${path}.`);
+    });
+
+    test('a directory at a task configuration path is an error, not absent configuration', async () => {
+        await using fixture = await createFixture({ 'a.md': 'Run `bun run build`.\n', 'package.json': {} });
+        expect(() => stalePaths(input(fixture.path, ['a.md']))).toThrow(
+            'Cannot read task definitions from package.json.',
+        );
+    });
 });

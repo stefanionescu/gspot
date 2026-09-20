@@ -37,8 +37,9 @@ function miseTasks(root: string, file: string): string[] {
     try {
         const parsed = parseToml(readFileSync(join(root, file), 'utf8')) as { tasks?: Record<string, unknown> };
         return Object.keys(parsed.tasks ?? {});
-    } catch {
-        return [];
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+        throw new Error(`Cannot read task definitions from ${file}.`, { cause: error });
     }
 }
 
@@ -48,8 +49,9 @@ function packageScripts(root: string): string[] {
             scripts?: Record<string, unknown>;
         };
         return Object.keys(manifest.scripts ?? {});
-    } catch {
-        return [];
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+        throw new Error('Cannot read task definitions from package.json.', { cause: error });
     }
 }
 
