@@ -2,7 +2,7 @@
 import { globby } from 'globby';
 import { dirname, join, resolve } from 'node:path';
 import type { RawEntry } from '#types/repository.ts';
-import { git, runBlocking } from '#cli/platform/spawn.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
 import { existsSync, lstatSync, readFileSync, statSync } from 'node:fs';
 
 const EXECUTABLE_BITS = 0o111;
@@ -85,8 +85,10 @@ export function isGitRepository(root: string): boolean {
  * @returns the root
  */
 export function findRoot(start: string): string {
-    const top = git(start, ['rev-parse', '--show-toplevel']);
-    if (top !== undefined && top.trim() !== '') return top.trim();
+    const top = runBlocking(['git', 'rev-parse', '--show-toplevel'], { cwd: start });
+    if (top.code === 0 && top.stdout.trim() !== '') return top.stdout.trim();
+    if (!isOutsideGit(start))
+        throw new Error(`Git root discovery failed in ${start} (exit ${String(top.code)}): ${top.stderr.trim()}`);
     let dir = start;
     for (;;) {
         if (existsSync(join(dir, 'gspot.toml'))) return dir;
