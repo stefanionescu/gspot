@@ -615,7 +615,6 @@ K-263, and takeover work; do not defer their safety fixes until after release.
 
 - [ ] K-303: The reference generator deletes more than it owns.
 - [ ] K-304: Generated reference pages are not automatically correct.
-- [ ] K-305: Permissive script arguments can select a destructive action.
 - [ ] K-306: File URLs are used as filesystem paths.
 - [ ] K-307: Failure-to-empty helpers hide incomplete checks.
 - [ ] K-308: Apply the canonical field, parameter, action, and coverage vocabulary; remove contradictory naming requirements.

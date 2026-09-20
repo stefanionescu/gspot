@@ -28,6 +28,24 @@ tests, and runs in the gate of this repository. [18-gaps.md](18-gaps.md) lists w
 | Adoption                              | Not started. The install in yap-swift-app showed that a developer would not keep gspot installed ([20-adoption.md](20-adoption.md)). No new preset starts before this phase is done.                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                           |
 | Phases 2 to 5, Phase 7                | Phase 2 done: `sql`, `postgres`, `supabase`, `docker`, `nginx`, `express`, `vitest`, `ansible`, `python`, `pytest`, `fastapi`. Phase 3 done: `css`, `html`, `static-site`, `cloudflare`, `nextjs`, `i18n`, `zod`, `trpc`, `tanstack-query`, `zustand`, `react-hook-form`, `drizzle`; the acceptance runs over yap-landing and slopshop end with no check in error. Phase 4 done: `swift`, `xcode`, `xctest`. Phase 5 done. 48 presets ship today, and `jest` makes 49. Phase 7 done: `react`, `react-native`, `nestjs`, `vue`, and `svelte`, all thinner than D-141 asks, each with a planted repository. The acceptance run on a public repository of each shape is owed. Owed across phases: the manual rewrite (G-10) and the deeper unit tests of apply, carry, plan, execute, and doctor. |
 
+### Repository script validation
+
+K-305 closes at `7464e27cb6a5ffb64e62311702421926b39bb687`. All six script argument tests
+execute and pass on Linux, macOS, and Windows. Invalid arguments preserve existing output
+and start no compiler or publisher process. Tests also cover repeated build targets and
+publication previews, including prerelease versions with build metadata. The compiler and
+publisher boundaries are replaced inside disposable fixtures, so these tests publish nothing.
+
+- [Linux job 106053638363](https://github.com/stefanionescu/gspot/actions/runs/35501385005/job/106053638363)
+  passes 475 tests with four skipped and no failures.
+- [macOS job 106053638281](https://github.com/stefanionescu/gspot/actions/runs/35501385005/job/106053638281)
+  passes 476 tests with three skipped and no failures.
+- [Windows job 106053638145](https://github.com/stefanionescu/gspot/actions/runs/35501385005/job/106053638145)
+  passes 474 tests with five skipped and no failures.
+
+The reference generator retains its check option until K-205 replaces its output workflow.
+Release-package cases and the coverage floor remain part of the complete implementation gate.
+
 ### Repository-owned agent preferences
 
 K-92 removes the delegation preference from generated instruction blocks. Tests cover

@@ -41,28 +41,6 @@ Delete the decision-log mirror and its URL-rewrite regexes; keep a clearly label
 
 **Done when.** Generated reference content matches the released public contract, and architecture remains the owner of design decisions.
 
-## K-305: Permissive script arguments can select a destructive action
-
-**Partial implementation.** The schema and reference entry points reject unknown options and unexpected positional arguments with exit status two before generating output. Tests preserve planted schemas and an authored reference page after malformed invocations. Help and version requests also leave those outputs unchanged.
-
-The executable build validates every target before collecting grammars or creating output. Publisher validation checks the release tag and registry before writing checksums or spawning npm. Isolated tests replace the compiler and publisher subprocesses, verify repeated targets and dry-run forwarding, and cover stable and prerelease versions with build metadata. The plugin build uses the standard argument parser to reject unsupported flags and positional arguments before removing output. Its fixture verifies complete file preservation after argument errors and information requests. Cross-platform verification of these script regressions remains open.
-
-**What is wrong.** `build.ts` ignores unknown options and a missing `--target`; `--out --target bun-linux-arm64` treats `--target` as the output path. `publish.ts` uses `argv.includes('--dry-run')`, so `--dryrun` does not prevent publication. The docs and schema scripts similarly treat a misspelled `--check` as write mode. These conclusions come from read-only argument probes and source tracing; no build, write mode, or publish was executed.
-
-**Target.** Every repository entry point validates arguments before filesystem or registry effects.
-
-**Files.** `packages/cli/build.ts`, `packages/cli/publish.ts`, `packages/cli/schemas.ts`, `docs/reference-pages.ts`, and script contract tests.
-
-**Logic.** Use the existing argument parser dependency or strict local parsing, not a new script framework. Reject unknown flags, missing values, unexpected positional arguments, invalid targets, and invalid versions. A flag is not another flag's value. Validate the entire invocation before collecting grammars, writing checksums, creating output, or spawning npm.
-
-K-205 removes the docs check mode; passing that removed option must error rather than write. Keep release preflight from K-164.
-
-**What goes.** The permissive build loop, publish flag lookup, and includes-only mode selection.
-
-**Tests.** Missing target, misspelled target, flag-as-value, unknown option, invalid tag, and misspelled dry-run/check all fail without writes or network effects. Valid repeated target options still work. A mock publisher proves no publish command starts after an argument error.
-
-**Done when.** No malformed invocation silently becomes a native build, a write, or a real publication.
-
 ## K-306: File URLs are used as filesystem paths
 
 **What is wrong.** The docs generator, build scripts, schema generator, publisher, asset reader, and test harness use `new URL(...).pathname`. For a checkout containing a space, pathname retains `%20`, while the actual filesystem path contains a space. The same conversion also needs platform-correct drive handling.
