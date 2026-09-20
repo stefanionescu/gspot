@@ -26,6 +26,38 @@ test.each([0, 7])('a silent Swift build with exit %i retains its verdict', async
     }
 });
 
+test('a later Swift session observes a failed build after an earlier successful build', async () => {
+    await using sandbox = await createSandbox({ 'gspot.toml': 'version = 1\npresets = ["swift"]\n' });
+    const first = await inputFor(sandbox.path, 'swift/build');
+    const second = await inputFor(sandbox.path, 'swift/build');
+    const run = spyOn(spawn, 'run')
+        .mockResolvedValueOnce({ code: 0, stdout: '', stderr: '', missing: false, duration: 1 })
+        .mockResolvedValue({
+            code: 1,
+            stdout: '',
+            stderr: `${sandbox.path}/Main.swift:4:2: error: Missing value`,
+            missing: false,
+            duration: 1,
+        });
+    try {
+        expect(await swiftBuild(first)).toEqual([]);
+        expect(await swiftBuild(first)).toEqual([]);
+        expect(await swiftBuild(second)).toEqual([
+            {
+                check: 'swift/build',
+                file: 'Main.swift',
+                line: 4,
+                column: 2,
+                rule: 'compiler',
+                message: 'Missing value',
+                fixable: false,
+            },
+        ]);
+    } finally {
+        run.mockRestore();
+    }
+});
+
 test('Swift compiler diagnostics retain their source location on a failed build', async () => {
     await using sandbox = await createSandbox({ 'gspot.toml': 'version = 1\npresets = ["swift"]\n' });
     const input = await inputFor(sandbox.path, 'swift/build');

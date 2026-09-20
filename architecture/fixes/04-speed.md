@@ -121,6 +121,11 @@ one call for each file.
 
 ## K-143: a clean Swift build on every run
 
+**Partial local verification, September 20, 2026.** Build observations belong to the command
+session. A regression opens two sessions in the same directory and verifies that the second
+reports compiler findings after the first succeeds. Repeated consumers in the first session
+share its result. Incremental compilation and the separate analyzer plan remain open.
+
 **What is wrong.** `ranBuild` in `apple/build.ts` runs `xcodebuild clean build-for-testing` into a
 derived data folder of its own, and deletes the scratch folder of a package first. The analyzer
 needs the log of a complete build, and `swift/build` pays for it too.

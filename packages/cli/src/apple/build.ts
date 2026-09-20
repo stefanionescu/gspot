@@ -1,9 +1,9 @@
 // The build of a Swift scope, the analyzer over its log, and Periphery over the project.
 import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { swiftBuildPlan } from '#cli/apple/plan.ts';
+import type { EngineInput, Session } from '#types/run.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { SwiftBuildPlan, SwiftBuildOutput } from '#types/swift.ts';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
@@ -13,7 +13,7 @@ const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>erro
 const RESPONSE_FILE = /@(?<path>\/\S+)/gu;
 const PRIVATE_PREFIX = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
 const RULE_SUFFIX = /^(?<text>.*\S)\s+\((?<rule>[a-z_]+)\)$/u;
-const built = new Map<string, Promise<SwiftBuildOutput>>();
+const builds = new WeakMap<Session, Map<string, Promise<SwiftBuildOutput>>>();
 
 // macOS reaches /tmp and /var through /private, and one tool names a file with the prefix while another leaves it out.
 function bare(path: string): string {
@@ -83,10 +83,12 @@ async function ranBuild(plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
     return { output, code: result.code };
 }
 
-// One build for each scope in a process: the analyzer reads the log the build check wrote.
-function buildOutput(plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
-    const running = built.get(plan.cwd) ?? ranBuild(plan);
-    built.set(plan.cwd, running);
+// Share the compiler log within a command; a later command must observe the current source.
+function buildOutput(session: Session, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
+    const scopes = builds.get(session) ?? new Map<string, Promise<SwiftBuildOutput>>();
+    builds.set(session, scopes);
+    const running = scopes.get(plan.cwd) ?? ranBuild(plan);
+    scopes.set(plan.cwd, running);
     return running;
 }
 
@@ -96,7 +98,7 @@ function buildOutput(plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
  * @returns the findings
  */
 export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
-    const { output, code } = await buildOutput(swiftBuildPlan(input));
+    const { output, code } = await buildOutput(input.session, swiftBuildPlan(input));
     const found = diagnostics(input, output, new Set(['error']), 'compiler');
     if (code === 0 || found.length > 0) return found;
     const detail = output.trim().split('\n').at(-1) ?? '';
@@ -111,7 +113,7 @@ export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
  */
 export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
     const plan = swiftBuildPlan(input);
-    const build = await buildOutput(plan);
+    const build = await buildOutput(input.session, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
     const config = join(input.root, '.gspot', input.scope, 'swiftlint.yml');
     const argv = ['swiftlint', 'analyze', '--strict', '--quiet', '--config', config, '--compiler-log-path', plan.log];
