@@ -1,18 +1,16 @@
 // --fix: every fixer in order, then the checks again; --dry-run through a scratch copy and a diff.
-import { tmpdir } from 'node:os';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { createTwoFilesPatch } from 'diff';
 import { run } from '#cli/platform/spawn.ts';
+import { readFileSync, rmSync } from 'node:fs';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { byFixOrder } from '#cli/run/concurrency.ts';
 import { substitute } from '#cli/run/tool-runner.ts';
+import { scratchCopy } from '#cli/run/scratch-copy.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import type { FixReport, Session, PlannedCheck } from '#types/run.ts';
-import { cpSync, existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync, symlinkSync } from 'node:fs';
 
 const DIFF_CONTEXT = 3;
-const SCRATCH_EXTRAS = ['gspot.toml', 'package.json', 'tsconfig.json', 'pyproject.toml'];
-const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
 
 function isFixable(check: PlannedCheck): boolean {
     return check.spec.fix_command !== undefined && check.skip === undefined && check.files.length > 0;
@@ -52,20 +50,6 @@ function contentsOf(root: string, paths: string[]): Map<string, string> {
         }
     }
     return map;
-}
-
-function scratchCopy(session: Session, paths: string[]): string {
-    const scratch = mkdtempSync(join(tmpdir(), 'gspot-fix-'));
-    const owned = session.repository.files.filter((file) => file.path.startsWith('.gspot/')).map((file) => file.path);
-    for (const path of [...paths, ...owned, ...SCRATCH_EXTRAS]) {
-        const source = join(session.root, path);
-        if (!existsSync(source)) continue;
-        mkdirSync(dirname(join(scratch, path)), { recursive: true });
-        cpSync(source, join(scratch, path));
-    }
-    for (const dir of SCRATCH_DIRECTORIES)
-        if (existsSync(join(session.root, dir))) symlinkSync(join(session.root, dir), join(scratch, dir), 'dir');
-    return scratch;
 }
 
 function diffOf(path: string, was: string, now: string): string {
