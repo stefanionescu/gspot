@@ -2,23 +2,10 @@
 import { parseSql } from '#cli/sql/parser.ts';
 import type { SqlFile, SqlNode, SqlStatement, SqlStatementView } from '#types/sql.ts';
 
-// The index of the first character after the blank lines and line comments that lead a statement.
-function firstKeyword(text: string, start: number): number {
-    let index = start;
-    while (index < text.length) {
-        if (text.startsWith('--', index)) {
-            const end = text.indexOf('\n', index);
-            index = end === -1 ? text.length : end + 1;
-        } else if (text.charAt(index).trim() === '') index += 1;
-        else break;
-    }
-    return index;
-}
-
-function located(text: string, bytes: Buffer, statement: SqlStatement): SqlStatementView {
+function located(bytes: Buffer, statement: SqlStatement): SqlStatementView {
     const [kind = ''] = Object.keys(statement.stmt);
     const start = bytes.subarray(0, statement.stmt_location ?? 0).toString('utf8').length;
-    return { kind, fields: (statement.stmt[kind] ?? {}) as SqlNode, start: firstKeyword(text, start) };
+    return { kind, fields: (statement.stmt[kind] ?? {}) as SqlNode, start };
 }
 
 /**
@@ -47,5 +34,5 @@ export async function sqlFile(text: string): Promise<SqlFile> {
         return { statements: [], error: { text: parsed.error.text, ...positionAt(text, offset) } };
     }
     const statements = parsed.tree.stmts ?? [];
-    return { statements: statements.map((statement) => located(text, bytes, statement)), error: undefined };
+    return { statements: statements.map((statement) => located(bytes, statement)), error: undefined };
 }

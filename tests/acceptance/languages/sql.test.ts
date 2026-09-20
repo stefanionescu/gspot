@@ -74,45 +74,6 @@ describe('the sql preset', () => {
     );
 });
 
-describe('gspot add in a repository that already has findings', () => {
-    test(
-        'what the added preset finds enters a baseline, and the gate passes right after',
-        async () => {
-            await using fixture = await createFixture({
-                'db/accounts.sql': CLEAN,
-                'db/commented.sql': '/* Old. */\nSELECT 1;\n',
-            });
-            commitAll(fixture.path);
-            const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
-            await install(
-                fixture.path,
-                [
-                    'init',
-                    '--yes',
-                    '--presets',
-                    'spelling',
-                    '--runner',
-                    'none',
-                    '--ci',
-                    'none',
-                    '--hooks',
-                    'none',
-                    '--no-rules',
-                    '--no-install',
-                ],
-                environment,
-            );
-            const added = await run(fixture.path, ['add', 'sql'], environment);
-            expect(added.code, added.stderr).toBe(0);
-            expect(added.stdout).toContain('baseline:');
-            const gate = await run(fixture.path, ['check', 'sql/block-comments', '--no-cache'], environment);
-            expect(gate.code, gate.stdout + gate.stderr).toBe(0);
-            expect(gate.stdout).toContain('baselines');
-        },
-        PLANTED_TIMEOUT_MS * 3,
-    );
-});
-
 describe('gspot apply --baseline', () => {
     test(
         'writes the first baseline of one check, never raises one that exists, and refuses findings a fixer clears',

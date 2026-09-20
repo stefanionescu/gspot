@@ -439,7 +439,7 @@ not block comments.
 **Target.** The SQL reader knows block comments once, and every SQL check gets the line of the
 statement.
 
-**Files.** `readers/sql/statements.ts`.
+**Files.** `packages/cli/src/sql/statements.ts`.
 
 **Logic.** The reader takes statement positions from `libpg-query`, which already skips both
 comment forms, and drops its own scan.
@@ -449,6 +449,11 @@ comment forms, and drops its own scan.
 **Tests.** A unit test with a block comment above `DROP TABLE` holds the line of `DROP`.
 
 **Done when.** That test passes.
+
+**Status: locally verified.** The embedded parser supplies statement positions after line and nested block comments.
+The SQL reader uses those byte offsets and converts UTF-8 prefixes to text positions.
+The parser regression verifies both statements after Unicode comments; SQL and Postgres acceptance checks pass.
+K-161 remains open for the block-comment rule level.
 
 ## K-181: the manifest key `needs` is dropped by the loader
 

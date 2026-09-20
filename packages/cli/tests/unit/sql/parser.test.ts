@@ -1,5 +1,6 @@
 import { parseSql } from '#cli/sql/parser.ts';
 import { describe, expect, test } from 'bun:test';
+import { sqlFile, positionAt } from '#cli/sql/statements.ts';
 
 describe('parseSql', () => {
     test('a statement parses into a tree with its kind', async () => {
@@ -12,4 +13,24 @@ describe('parseSql', () => {
         expect(parsed.error?.text).toContain('syntax error');
         expect(parsed.error?.offset).toBe(10);
     });
+});
+
+test('SQL statement positions skip nested comments and count Unicode prefixes correctly', async () => {
+    const text = [
+        '-- 前言',
+        '/* outer',
+        ' /* nested */',
+        '*/',
+        'DROP TABLE app.users;',
+        '-- Between statements.',
+        '/* next */',
+        ' SELECT 1;',
+    ].join('\n');
+    const parsed = await sqlFile(text);
+    expect(parsed.error).toBeUndefined();
+    expect(parsed.statements.map((statement) => statement.kind)).toEqual(['DropStmt', 'SelectStmt']);
+    expect(parsed.statements.map((statement) => positionAt(text, statement.start))).toEqual([
+        { line: 5, column: 1 },
+        { line: 8, column: 2 },
+    ]);
 });
