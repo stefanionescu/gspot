@@ -5,8 +5,8 @@ import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import type { TomlTable } from '#types/config.ts';
 import { CARRIED_REASON } from '#config/reasons.ts';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { ignoreFileEntries } from '#cli/lifecycle/ignore-files.ts';
-import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 import { CHECK_BY_TOOL, TYPOS_DEFAULT_EXCLUDES } from '#config/carry.ts';
 import type { CarryPush, CarriedLists, CarrySource } from '#types/lifecycle.ts';
 
@@ -34,26 +34,19 @@ function asText(value: unknown): string | undefined {
     return typeof value === 'string' ? value : undefined;
 }
 
-function parseJsoncTable(text: string): unknown {
-    const errors: ParseError[] = [];
-    const parsed: unknown = parseJsonc(text, errors, { allowTrailingComma: true });
-    if (errors.length > 0) throw new Error(`Invalid JSON configuration at offset ${String(errors[0]?.offset)}.`);
-    return parsed;
-}
-
 const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
     '.toml': (text) => parseToml(text),
     '.yaml': (text) => parseYaml(text) as unknown,
     '.yml': (text) => parseYaml(text) as unknown,
     '.json': (text) => JSON.parse(text) as unknown,
-    '.jsonc': parseJsoncTable,
+    '.jsonc': parseJsonc,
 };
 
 function parseSource(tool: string, path: string, text: string): unknown {
     if (tool === 'eslint' || /\.[cm]?[jt]s$/u.test(path))
         throw new Error('This configuration requires tool-specific evaluation.');
     if (tool === 'licenses') return JSON.parse(text) as unknown;
-    if (tool === 'pyright') return parseJsoncTable(text);
+    if (tool === 'pyright') return parseJsonc(text);
     const parse = STRUCTURED_PARSERS[extname(path)];
     if (parse !== undefined) return parse(text);
     if (['prettier', 'markdownlint', 'stylelint', 'yamllint'].includes(tool)) return parseYaml(text) as unknown;

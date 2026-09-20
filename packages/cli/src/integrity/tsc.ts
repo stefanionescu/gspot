@@ -2,15 +2,13 @@
 import { join } from 'node:path';
 import { rmSync, readFileSync } from 'node:fs';
 import type { CheckResult } from '#types/finding.ts';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { scratchCopy } from '#cli/run/scratch-copy.ts';
 import type { Session, PlannedCheck } from '#types/run.ts';
-import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
 function hasReferences(path: string): boolean {
-    const errors: ParseError[] = [];
-    const config: unknown = parseJsonc(readFileSync(path, 'utf8'), errors, { allowTrailingComma: true });
-    if (errors.length > 0) throw new Error('The TypeScript configuration is malformed.');
+    const config = parseJsonc(readFileSync(path, 'utf8'));
     return (
         typeof config === 'object' &&
         config !== null &&
