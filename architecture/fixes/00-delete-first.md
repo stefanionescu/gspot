@@ -145,6 +145,19 @@ schema validation, and all 272 reference-page comparisons pass locally.
 
 ## K-102: seven plugin rules
 
+**K-102 locally verified.** The forwarding-function rule covers named declarations,
+expressions, arrows, and methods. Its allow list also applies to those forms. Defaults,
+reordered arguments, and changes between rest and array arguments retain their behavior.
+
+The duplicate rule, option, types, and repeated tests are removed. The JavaScript template
+uses the retained rule. The statement ceiling remains a Bash setting.
+
+Local verification passes 33 rule, plugin, and planted TypeScript cases. The plugin build,
+TypeScript check, schema validation, and all 274 reference comparisons pass.
+
+K-187 and K-188 remain open for the other duplicate rules. Level selection and review of
+public boundaries remain open under K-301.
+
 Closes K-102, K-187, and K-188.
 
 **What is wrong.** `no-trivial-functions` repeats `no-call-through`, and its option changes

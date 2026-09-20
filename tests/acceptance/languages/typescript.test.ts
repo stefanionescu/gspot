@@ -86,6 +86,14 @@ const CASES: PlantedCase[] = [
         expected: 'no-debugger',
     },
     {
+        check: 'typescript/eslint',
+        files: {
+            'src/orders/forward.ts':
+                '// A second name for the receipt function.\nimport { receiptLine } from "./receipt.js";\nimport type { Total } from "#types/totals.js";\n\n/**\n * Formats a receipt.\n * @param total the total\n * @returns the receipt line\n */\nexport const forward = (total: Total): string => receiptLine(total);\n',
+        },
+        expected: 'gspot/no-call-through',
+    },
+    {
         check: 'javascript/knip',
         files: {
             'src/orders/unused.ts':

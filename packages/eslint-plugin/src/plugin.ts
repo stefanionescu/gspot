@@ -11,7 +11,6 @@ import { requireServerOnly } from '#plugin/rules/require-server-only.ts';
 import { noExportOnlyFiles } from '#plugin/rules/no-export-only-files.ts';
 import { maxBarrelReexports } from '#plugin/rules/max-barrel-reexports.ts';
 import { noPrefixCollisions } from '#plugin/rules/no-prefix-collisions.ts';
-import { noTrivialFunctions } from '#plugin/rules/no-trivial-functions.ts';
 import { noClientEnvironment } from '#plugin/rules/no-client-environment.ts';
 import { privateBeforePublic } from '#plugin/rules/private-before-public.ts';
 import { noSingleFileFolders } from '#plugin/rules/no-single-file-folders.ts';
@@ -49,7 +48,6 @@ const rules = {
     'tests-directory-contents': testsDirectoryContents,
     'no-harness-barrel-imports': noHarnessBarrelImports,
     'no-trivial-files': noTrivialFiles,
-    'no-trivial-functions': noTrivialFunctions,
     'private-before-public': privateBeforePublic,
     'registry-instance-only': registryInstanceOnly,
     'require-server-only': requireServerOnly,

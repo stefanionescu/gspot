@@ -64,7 +64,6 @@ const limits = {
     identicalFunctions: 3,
     barrelReexports: 20,
     prefixCollisions: 2,
-    trivialStatements: 2,
 };
 
 const sizeRules = {
@@ -129,7 +128,6 @@ const coreRules = {
 };
 
 const gspotRules = {
-    'gspot/no-trivial-functions': ['error', { maxStatements: limits.trivialStatements }],
     'gspot/no-call-through': ['error', { allow: [] }],
     'gspot/no-trivial-files': ['error', { entryFiles: [
     "**/build.ts",

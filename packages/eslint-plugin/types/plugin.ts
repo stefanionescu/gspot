@@ -53,7 +53,7 @@ export type ImportDirectionRole = 'types' | 'tests' | 'harness' | 'config' | 'en
 
 export type ImportDirectionMessages = 'typesOnlyTypes' | 'runtimeToTests' | 'testsToInternals' | 'configToRuntime';
 
-export type NoTrivialFunctionsFunction =
+export type NoCallThroughFunction =
     | TSESTree.FunctionDeclaration
     | TSESTree.FunctionExpression
     | TSESTree.ArrowFunctionExpression;

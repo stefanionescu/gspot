@@ -106,7 +106,6 @@ const limits = {
     identicalFunctions: <%= limitOf('identical_functions', 'typescript') %>,
     barrelReexports: <%= limitOf('barrel_reexports', 'typescript') %>,
     prefixCollisions: <%= limitOf('prefix_collisions') %>,
-    trivialStatements: <%= limitOf('trivial_statements') %>,
 };
 
 const sizeRules = {
@@ -185,7 +184,6 @@ const coreRules = {
 };
 
 const gspotRules = {
-    'gspot/no-trivial-functions': ['error', { maxStatements: limits.trivialStatements }],
     'gspot/no-call-through': ['error', { allow: <%= json(structure.call_through_allowed.map((entry) => `${entry.file}:${entry.name}`)) %> }],
     'gspot/no-trivial-files': ['error', { entryFiles: <%= json(entryFiles('')) %> }],
     'gspot/no-export-only-files': 'error',

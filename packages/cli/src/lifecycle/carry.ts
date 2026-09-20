@@ -35,9 +35,9 @@ function asText(value: unknown): string | undefined {
 }
 
 const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
-    '.toml': (text) => parseToml(text),
-    '.yaml': (text) => parseYaml(text) as unknown,
-    '.yml': (text) => parseYaml(text) as unknown,
+    '.toml': parseToml,
+    '.yaml': parseYaml,
+    '.yml': parseYaml,
     '.json': (text) => JSON.parse(text) as unknown,
     '.jsonc': parseJsonc,
 };
