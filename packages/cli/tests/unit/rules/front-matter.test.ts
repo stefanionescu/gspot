@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { frontMatterFindings, layerOfPath, parseFrontMatter } from '#rules-lint/front-matter.ts';
+import { frontMatterFindings, layerOfPath, parseFrontMatter } from '#cli/rules/front-matter.ts';
 
 describe('front matter', () => {
     test('parses the fields between the fences', () => {

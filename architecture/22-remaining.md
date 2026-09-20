@@ -188,8 +188,8 @@ deployment, or app adoption is inferred from this documentation review.
 ## Every row, by fix file
 
 Each named row links to its owning acceptance section, including rows grouped under another
-ID. The September 20 reconciliation found exactly one owner for each named row. After K-99, K-104, K-116, K-129, and K-195
-closed, 323 named rows remain open.
+ID. The September 20 reconciliation found exactly one owner for each named row. After K-61, K-99, K-104, K-116, K-129, K-195, and S-10
+closed, 321 named rows remain open.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
 
@@ -212,7 +212,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-240](fixes/00-delete-first.md#k-180-manifest-keys-a-pin-and-a-runner-that-do-nothing): Delete the runner value `uv` until a reference repository needs it.
 - [ ] [K-205](fixes/00-delete-first.md#k-205-generated-pages-that-git-tracks): The docs build runs `reference-pages.ts` first, the pages are git-ignored, and the `docs/generated` check goes.
 - [ ] [K-259](fixes/00-delete-first.md#k-259-leftovers-in-gitignore): Drop the scratch entry from `.gitignore`, run pytest of the tests in their own folder, and move the managed block to the end of the file.
-- [ ] [S-10](fixes/00-delete-first.md#s-10-the-vale-half-of-the-rules-lint): The Vale half of the rules lint goes, and the rule files are read by `prose/vale` like every other text.
 - [ ] [K-282](fixes/00-delete-first.md#k-282-the-order-works-against-itself): Delete a thing in the commit that builds what replaces it.
 - [ ] [K-290](fixes/00-delete-first.md#k-290-the-baseline-and-the-first-check): Delete the baseline, the first check of `init`, and every run that `add`, `upgrade`, and a level change start (D-165).
 
@@ -231,7 +230,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-258](fixes/01-first-fixes.md#k-258-the-compose-check-loses-a-word-of-its-command): Make `perFileCommands` put the file where `{file}` stands, pass `--no-env-resolution` to Compose, and test the check on a file with an `env_file`.
 - [ ] [K-37](fixes/01-first-fixes.md#k-37-a-folder-named-hooks): Take the bare name `hooks` out of `HOOK_DIRECTORIES`.
 - [ ] [K-45](fixes/01-first-fixes.md#k-45-the-message-run-overwrites-the-report): Write no report for a run of the `message` stage (D-105).
-- [ ] [K-61](fixes/01-first-fixes.md#k-61-the-rules-lint-folder): Rename `packages/cli/rules-lint` to `packages/cli/rules` and the alias to `#rules/*`.
 - [ ] [K-108](fixes/01-first-fixes.md#k-108-a-missing-hooks-table): Make a missing `[hooks]` table mean gspot does nothing there, as `[ci]` and `[runner]` do (D-130).
 - [ ] [K-109](fixes/01-first-fixes.md#k-109-gspot-replaces-a-script-of-the-developer): Never inject a lifecycle script; replace an existing lint task only with explicit acceptance and recoverable originals.
 - [ ] [K-114](fixes/01-first-fixes.md#k-114-gspot-ignore-works-for-four-id-prefixes-only): Let a `gspot-ignore` comment work for every check an engine runs. The test reads the engine of the check, not its name.

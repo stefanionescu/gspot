@@ -359,7 +359,7 @@ every Markdown file of `rules/`.
 check, `prose/vale`, for every text of the repository.
 
 **Files.** `packages/cli/rules-lint/` moves to `src/rules/` as `lint.ts`, `front-matter.ts`,
-`terms.ts`, and `lint-command.ts`. Deleted: `valeFindings` in `lint.ts`, and `prose/vale.ini`.
+`terms.ts`, and `command.ts`. Deleted: `valeFindings` in `lint.ts`, and `prose/vale.ini`.
 
 **Logic.** The `[[check]]` entry `rules/lint` of `gspot.toml` points at the new path and drops
 the words about prose from its summary.
@@ -368,6 +368,10 @@ the words about prose from its summary.
 
 **Tests.** A rule file with a broken link fails `rules/lint`, and one with a long sentence fails
 `prose/vale` only.
+
+**Status: complete (locally verified).** Corpus lint owns structural findings and runs no subprocess.
+The duplicate Vale configuration, options, and subprocess implementation are deleted.
+The existing prose engine owns Vale execution.
 
 **Done when.** `vale` is spawned from one file, `src/prose/vale.ts`.
 

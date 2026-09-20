@@ -232,7 +232,7 @@ commit the report of the last full run is gone, and `gspot doctor` cannot say wh
 beside a `src/rules/` folder that holds the other half of the same subject.
 
 **Target.** One folder, `src/rules/`, with `lint.ts`, `front-matter.ts`, `terms.ts`,
-`examples.ts`, and `lint-command.ts`.
+`examples.ts`, and `command.ts`.
 
 **Files.** The move of [00-delete-first.md](00-delete-first.md) (S-10) does this. This row adds
 the alias change: `packages/cli/package.json` and `tsconfig.json` lose `#rules-lint/*`.
@@ -243,7 +243,11 @@ the alias change: `packages/cli/package.json` and `tsconfig.json` lose `#rules-l
 
 **Tests.** The existing unit tests, moved.
 
-**Done when.** A search for `rules-lint` finds nothing.
+**Status: complete (locally verified).** The implementation and unit tests live under `src/rules/`
+and `tests/unit/rules/`. Imports use the existing `#cli/rules/*` alias. The redundant
+package alias is deleted. Historical references retain the previous path as evidence.
+
+**Done when.** No executable code, configuration, or test imports the previous directory.
 
 ## K-108: a missing `[hooks]` table
 

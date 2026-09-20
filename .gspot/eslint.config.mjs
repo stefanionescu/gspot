@@ -37,7 +37,7 @@ const SCRIPTS = [
     "packages/cli/build.ts",
     "packages/cli/publish.ts",
     "packages/cli/schemas.ts",
-    "packages/cli/rules-lint/command.ts",
+    "packages/cli/src/rules/command.ts",
     "packages/eslint-plugin/build.ts",
     "docs/reference-pages.ts"
 ];
@@ -415,8 +415,7 @@ const scopeAliasOverrides = [
                         "#cli/": "packages/cli/src/",
                         "#config/": "packages/cli/config/",
                         "#types/": "packages/cli/types/",
-                        "#package": "packages/cli/package.json",
-                        "#rules-lint/": "packages/cli/rules-lint/"
+                        "#package": "packages/cli/package.json"
                     }
                 }
             ],
@@ -451,8 +450,7 @@ const scopeAliasOverrides = [
                         "#cli/": "packages/cli/src/",
                         "#config/": "packages/cli/config/",
                         "#types/": "packages/cli/types/",
-                        "#package": "packages/cli/package.json",
-                        "#rules-lint/": "packages/cli/rules-lint/"
+                        "#package": "packages/cli/package.json"
                     },
                     "scope": "packages/cli"
                 }

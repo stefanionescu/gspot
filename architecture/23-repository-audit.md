@@ -279,3 +279,9 @@ unused settings are removed, but the retained-setting reader audit is still open
 K-116 is complete after a real repository command produced mapped, nested JSON findings.
 The shared output schema, parser regressions, and generated schema checks pass locally
 (23 tests, 123 assertions). The index contains 323 open named requirements.
+
+K-61 and S-10 are complete. Rule lint and its unit tests share the existing rules
+folders, and imports use `#cli/rules/*`. The duplicate Vale subprocess implementation
+and configuration are deleted. Nine rule tests, all 98 corpus files, and the document
+acceptance suite pass. TypeScript and all 272 reference pages also pass locally.
+The index contains 321 open named requirements.

@@ -1,7 +1,6 @@
-// Lints the rule corpus: front matter, links, size, layer boundary, fences, corruption, and Vale when it is installed.
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { frontMatterFindings, layerOfPath } from '#rules-lint/front-matter.ts';
-import type { RuleText, RuleFinding, RulesLintOptions, RulesLintReport, FenceWalk } from '#types/rules.ts';
+// Lints the rule corpus: front matter, links, size, layer boundary, fences, corruption.
+import { frontMatterFindings, layerOfPath } from '#cli/rules/front-matter.ts';
+import type { RuleText, RuleFinding, RulesLintReport, FenceWalk } from '#types/rules.ts';
 
 import {
     BOUNDARY_LAYERS,
@@ -11,14 +10,13 @@ import {
     INDEPENDENCE_TERMS,
     FENCE_LANGUAGES,
     RULE_FILE_LINE_CEILING,
-} from '#rules-lint/terms.ts';
+} from '#cli/rules/terms.ts';
 
 const RULE_LINK =
     /\]\((?:\.\.\/)*(?:general|language|runtime|framework|library|tool|platform|database|shared|repository)\/[^)]+\.md\)/u;
 const INLINE_CODE = /`[^`]*`/u;
 const INLINE_CODE_SPANS = /`[^`]*`/gu;
 const EM_DASH = '—';
-const VALE_FIELDS = 4;
 const layerNames = new Set(RULE_LAYERS);
 const fenceLanguages = new Set(FENCE_LANGUAGES);
 const boundaryLayers = new Set(BOUNDARY_LAYERS);
@@ -121,33 +119,13 @@ function sizeFindings(file: string, lines: string[]): RuleFinding[] {
     ];
 }
 
-function fileReport(file: RuleText, options: RulesLintOptions): RuleFinding[] {
+function fileReport(file: RuleText): RuleFinding[] {
     const lines = file.text.split('\n');
     return [
         ...frontMatterFindings(file.path, file.text),
         ...sizeFindings(file.path, lines),
         ...lineFindings(file.path, lines),
     ];
-}
-
-function valeLine(file: string, line: string): RuleFinding | undefined {
-    const [, number = '', column = '', ...rest] = line.split(':', VALE_FIELDS + 1);
-    if (rest.length === 0) return undefined;
-    return { file, line: Number(number), message: `${rest.join(':').trim()} (column ${column})` };
-}
-
-function valeFindings(files: RuleText[], vale: { binary: string; config: string }, root: string): RuleFinding[] {
-    return files.flatMap((file) => {
-        const result = runBlocking([vale.binary, '--config', vale.config, '--ext', '.md', '--output', 'line'], {
-            cwd: root,
-            stdin: file.text,
-        });
-        return result.stdout
-            .split('\n')
-            .filter((line) => line !== '')
-            .map((line) => valeLine(file.path, line))
-            .filter((finding) => finding !== undefined);
-    });
 }
 
 /**
@@ -161,14 +139,10 @@ export function isRulePath(path: string): boolean {
 }
 
 /**
- * Lints the corpus files. Vale runs when its binary and config are given.
+ * Lints the structure and content of the corpus files.
  * @param files the corpus files
- * @param options the known check ids and preset ids, and the Vale binary and config
- * @param root the directory Vale runs in
- * @returns the findings, the file count, and whether Vale ran
+ * @returns the findings and file count
  */
-export function lintRules(files: RuleText[], options: RulesLintOptions, root = process.cwd()): RulesLintReport {
-    const own = files.flatMap((file) => fileReport(file, options));
-    const vale = options.vale === undefined ? undefined : valeFindings(files, options.vale, root);
-    return { findings: [...own, ...(vale ?? [])], files: files.length, isValeRun: vale !== undefined };
+export function lintRules(files: RuleText[]): RulesLintReport {
+    return { findings: files.flatMap((file) => fileReport(file)), files: files.length };
 }

@@ -256,7 +256,6 @@ key, its test, and every mention in this folder and in the manual.
 | the plugin rules `no-single-file-folders` and `no-prefix-collisions`, which the structure engine owns (K-187)                                                                                                          | `packages/eslint-plugin/src/rules/`, the ESLint template                                  |
 | five plugin rules a pinned tool already covers: `import-direction`, `no-harness-barrel-imports`, `no-reexports-outside-index`, `no-duplicate-barrel-exports`, and the `interface` message of `types-placement` (K-188) | `packages/eslint-plugin/src/rules/`, the ESLint template                                  |
 | the manifest keys `executable` and `ubi` (K-180)                                                                                                                                                                       | `presets/manifest-schema.ts`, three files of `emit/` and `platform/`, the python manifest |
-| the Vale half of the rules lint and the second `vale.ini` (S-10)                                                                                                                                                       | `packages/cli/rules-lint/`, `prose/vale.ini`                                              |
 | the sentence about subagents in the managed block (K-92)                                                                                                                                                               | `rules/managed-block.ts`                                                                  |
 | the nine `copy = true` stubs (K-47)                                                                                                                                                                                    | seven manifests, `emit/targets.ts`                                                        |
 
@@ -265,7 +264,7 @@ The first seven fixes are small, and each gets a planted test:
 1. Takeover keeps `setup.cfg` and `tox.ini` (K-36).
 2. A folder named `hooks` is no hooks folder (K-37).
 3. A run of the `message` stage writes no record (K-45, D-105).
-4. `packages/cli/rules-lint` moves into `src/rules/` (K-61).
+4. Complete: rule lint and its tests share the existing rules folders (K-61, S-10).
 5. The nine `copy = true` stubs leave their manifests (K-47, D-100).
 6. gspot never replaces a `package.json` script the developer has (K-109).
 7. No check deletes or rewrites a file of the developer: `drizzle/migrations-fresh` runs in a copy, and `express/openapi-fresh` puts back the text it read (K-156, K-159).

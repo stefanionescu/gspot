@@ -1,7 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import { isRulePath, lintRules } from '#rules-lint/lint.ts';
-
-const OPTIONS = {};
+import { isRulePath, lintRules } from '#cli/rules/lint.ts';
 
 function file(path: string, body: string): { path: string; text: string } {
     return { path, text: `---\nlayer: code\npreset: naming\ntitle: T\n---\n\n# T\n\n${body}` };
@@ -15,9 +13,8 @@ describe('corpus lint', () => {
     });
 
     test('a clean file has no findings', () => {
-        const report = lintRules([file('general/code/A.md', '- Name things well.\n- Or not.\n')], OPTIONS);
+        const report = lintRules([file('general/code/A.md', '- Name things well.\n- Or not.\n')]);
         expect(report.findings).toEqual([]);
-        expect(report.isValeRun).toBe(false);
     });
 
     test('fences, links, em dashes, boundary words and corruption are reported', () => {
@@ -35,7 +32,7 @@ describe('corpus lint', () => {
             '```ts',
             'open',
         ].join('\n');
-        const report = lintRules([file('general/code/A.md', body)], OPTIONS);
+        const report = lintRules([file('general/code/A.md', body)]);
         const messages = report.findings.map((finding) => finding.message);
         expect(messages).toContain('fenced block without a language tag');
         expect(messages).toContain('link to another rule file');

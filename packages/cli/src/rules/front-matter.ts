@@ -1,5 +1,5 @@
 // The front matter of a corpus file: layer, preset and title, and whether they agree with the path and the H1.
-import { RULE_LAYERS } from '#rules-lint/terms.ts';
+import { RULE_LAYERS } from '#cli/rules/terms.ts';
 import type { RuleFinding, FrontMatter } from '#types/rules.ts';
 
 // A preset id, or none; the manifest may arrive in a later phase.

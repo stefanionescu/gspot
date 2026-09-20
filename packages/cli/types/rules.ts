@@ -11,13 +11,8 @@ export type RuleFinding = { file: string; line: number; message: string };
 /** A corpus file by its path relative to rules/. */
 export type RuleText = { path: string; text: string };
 
-/** What the corpus lint needs besides the files. */
-export type RulesLintOptions = {
-    vale?: { binary: string; config: string };
-};
-
 /** The corpus lint's result. */
-export type RulesLintReport = { findings: RuleFinding[]; files: number; isValeRun: boolean };
+export type RulesLintReport = { findings: RuleFinding[]; files: number };
 
 /** The state of a walk over a file's fenced blocks. */
 export type FenceWalk = {
