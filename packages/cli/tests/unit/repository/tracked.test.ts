@@ -1,8 +1,8 @@
-import { writeFileSync } from 'node:fs';
-import { join, resolve } from 'node:path';
+import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import { rejects } from 'node:assert/strict';
 import * as processes from '#cli/platform/spawn.ts';
+import { realpathSync, writeFileSync } from 'node:fs';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { findRoot, trackedEntries } from '#cli/repository/tracked.ts';
 
@@ -35,7 +35,7 @@ describe('repository file discovery', () => {
         const cwd = fixture.path;
         expect(processes.runBlocking(['git', 'init'], { cwd }).code).toBe(0);
         expect(processes.runBlocking(['git', 'add', 'source.ts'], { cwd }).code).toBe(0);
-        expect(resolve(findRoot(cwd))).toBe(resolve(cwd));
+        expect(realpathSync(findRoot(cwd))).toBe(realpathSync(cwd));
         const entries = await trackedEntries(cwd);
         expect(entries.map((entry) => entry.path)).toEqual(['source.ts']);
         writeFileSync(join(cwd, '.git', 'index'), 'corrupt index');
