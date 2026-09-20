@@ -62,6 +62,9 @@ manual-stage build/test behavior. Scan docs for stale target claims without dele
 positional files or folders. Project checks retain all inputs after a selected path triggers
 them. The `-C` directory controls relative path selection. Callers and generated command
 references use the same contract; the positional check-name form is removed.
+
+Stage selection uses `--stage`. Message-hook arguments stay executable but are hidden
+from public help, completion, and generated command references.
 Other command-surface and lifecycle contracts remain open.
 
 ## K-301: Recommended adoption findings need usefulness tests

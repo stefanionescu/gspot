@@ -10,7 +10,7 @@ describe('workflow action pins', () => {
             isMise: true,
         });
         expect(generated.content).toContain('run: mise run gspot:check --\n');
-        expect(generated.content).toContain('mise run gspot:check -- --at manual');
+        expect(generated.content).toContain('mise run gspot:check -- --stage manual');
         expect(generated.content).toContain('mise run gspot:check -- --scope ios');
     });
 });

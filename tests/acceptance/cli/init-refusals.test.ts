@@ -19,7 +19,7 @@ describe('init refusals', () => {
             expect(result.code).toBe(2);
             expect(result.stderr).toContain('Allowed choices are gspot, lefthook, husky, none');
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-            const invalidStage = await run(sandbox.path, ['check', '--at', 'later']);
+            const invalidStage = await run(sandbox.path, ['check', '--stage', 'later']);
             expect(invalidStage.code).toBe(2);
         },
         PLANTED_TIMEOUT_MS,

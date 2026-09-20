@@ -51,7 +51,7 @@ describe('the commits preset', () => {
             await Bun.write(draft, 'Fixed stuff.\n');
             const refused = await run(
                 sandbox.path,
-                ['check', '--only', 'commits/commitlint', '--at', 'message', '--message-file', draft],
+                ['check', '--only', 'commits/commitlint', '--stage', 'message', '--message-file', draft],
                 environment,
             );
             expect(refused.code).toBe(1);

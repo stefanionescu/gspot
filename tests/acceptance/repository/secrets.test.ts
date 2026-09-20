@@ -44,7 +44,7 @@ describe('the secrets preset', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['gitleaks']) };
             await install(sandbox.path, INIT, environment);
-            const clean = await run(sandbox.path, ['check', '--at', 'commit', '--no-cache'], environment);
+            const clean = await run(sandbox.path, ['check', '--stage', 'commit', '--no-cache'], environment);
             expect(clean.code).toBe(0);
 
             await Bun.write(join(sandbox.path, 'settings.py'), SETTINGS);
@@ -88,7 +88,7 @@ describe('the secrets preset', () => {
             expect(baseline.stdout).toContain('names old.py, which is gone');
             // An entry with a commit lives in history, where a deleted file still holds its value.
             expect(baseline.stdout).not.toContain('names gone.md');
-            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
             const network = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

@@ -118,7 +118,7 @@ describe('the dependencies preset', () => {
             );
             expect(stale.code, stale.stdout).toBe(1);
             expect(stale.stdout).toContain('refuses this lockfile');
-            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

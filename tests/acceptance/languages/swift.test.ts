@@ -137,7 +137,7 @@ describe('the swift preset', () => {
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(0);
                 expect(outcome.stdout, planted.check).toContain('ok');
             }
-            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

@@ -48,7 +48,9 @@ function cell(text: string): string {
 
 function commandPage(command: Command): string {
     const usage = `gspot ${command.name()} ${command.usage()}`.trim();
-    const options = command.options.map((option) => [`\`${option.flags}\``, cell(option.description)]);
+    const options = command.options
+        .filter((option) => !option.hidden)
+        .map((option) => [`\`${option.flags}\``, cell(option.description)]);
     const argumentRows = command.registeredArguments.map((argument) => [
         `\`${argument.name()}\``,
         cell(argument.description || (argument.required ? 'required' : 'optional')),

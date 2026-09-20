@@ -134,7 +134,7 @@ process.exit(2);
             await Bun.write(path, workflow);
             const result = await run(
                 sandbox.path,
-                ['check', '--only', 'config-files/actions-pins', '--at', 'push', '--no-cache'],
+                ['check', '--only', 'config-files/actions-pins', '--stage', 'push', '--no-cache'],
                 environment,
             );
             expect(result.code, result.stderr + result.stdout).toBe(1);
@@ -182,7 +182,7 @@ process.exit(2);
             }
             const jsonCheck = await run(sandbox.path, ['check', '--only', 'config-files/json'], environment);
             expect(jsonCheck.stdout).toContain('its findings come from');
-            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
             const record = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };
@@ -240,7 +240,7 @@ process.exit(2);
                 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n',
             );
             git(sandbox.path, ['add', '-A']);
-            const keys = await run(sandbox.path, ['check', '--only', 'config-files/env-example', '--at', 'push']);
+            const keys = await run(sandbox.path, ['check', '--only', 'config-files/env-example', '--stage', 'push']);
             expect(keys.code).toBe(1);
             expect(keys.stdout).toContain('HOST');
             expect(keys.stdout).not.toContain('PORT is read');
@@ -273,7 +273,7 @@ test(
         const path = join(sandbox.path, 'settings/café.json');
         await Bun.write(path, JSON.stringify({ count: 'invalid' }));
         expect(git(sandbox.path, ['add', 'settings/café.json']).code).toBe(0);
-        const command = ['check', '--only', 'config-files/schema', '--staged', '--at', 'push', '--no-cache'];
+        const command = ['check', '--only', 'config-files/schema', '--staged', '--stage', 'push', '--no-cache'];
         const invalid = await run(sandbox.path, command, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect(invalid.stdout).toContain('settings/café.json');

@@ -19,7 +19,7 @@ export async function acceptanceRun(repository: string): Promise<AcceptanceRun> 
     if (added.code !== 0) throw new Error(`The worktree of ${repository} was not created: ${added.stderr}`);
     try {
         const init = await run(worktree, ['init', '--yes', '--no-install', '--hooks', 'none', '--ci', 'none']);
-        const checked = await run(worktree, ['check', '--at', 'commit', '--json']);
+        const checked = await run(worktree, ['check', '--stage', 'commit', '--json']);
         const report = JSON.parse(checked.stdout) as RunReport;
         const statuses: Record<string, number> = {};
         for (const check of report.checks) statuses[check.status] = (statuses[check.status] ?? 0) + 1;

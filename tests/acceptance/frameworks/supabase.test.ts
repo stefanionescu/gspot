@@ -97,7 +97,7 @@ describe('the supabase preset', () => {
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
-            const checked = await run(sandbox.path, ['check', '--at', 'push', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--stage', 'push', '--json'], environment);
             const atPush = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

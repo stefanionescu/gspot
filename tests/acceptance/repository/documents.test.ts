@@ -150,7 +150,7 @@ describe('the markdown, docs and prose presets', () => {
             const broken = await run(sandbox.path, ['check', '--only', 'prose/vale', '--no-cache'], environment);
             expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(1);
             expect(broken.stdout).toContain('error');
-            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--stage', 'commit', '--json'], environment);
             const record = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

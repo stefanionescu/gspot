@@ -95,7 +95,7 @@ describe('the nestjs preset', () => {
             };
             await install(sandbox.path, INIT, environment);
             // Nothing the framework asks for is held in a baseline: the module passes as written, file names included.
-            const held = await run(sandbox.path, ['check', '--at', 'commit', '--no-cache'], environment);
+            const held = await run(sandbox.path, ['check', '--stage', 'commit', '--no-cache'], environment);
             expect(held.code, held.stdout + held.stderr).toBe(0);
             const eslintFile = join(sandbox.path, '.gspot/baselines/eslint.json');
             const eslintHeld = existsSync(eslintFile) ? await Bun.file(eslintFile).text() : '';

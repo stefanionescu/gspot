@@ -65,7 +65,7 @@ describe('the security preset', () => {
                 expect(own.code, own.stdout + own.stderr).toBe(0);
                 expect(own.stdout).toMatch(/skipped\s+security\/semgrep\s+\(platform\)/u);
             } else expect(own.stdout).toContain('planted-no-double');
-            const checked = await run(sandbox.path, ['check', '--at', 'push', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--stage', 'push', '--json'], environment);
             const atPush = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

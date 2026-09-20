@@ -203,3 +203,23 @@ format = "lines"
         'src/selected.ts',
     ]);
 });
+
+test.each(['commit', 'push', 'manual'])('--stage %s runs the checks assigned to that stage', async (stage) => {
+    const definitions = ['commit', 'push', 'manual'].map(
+        (name) => `
+[[check]]
+name = "sandbox/${name}"
+command = ${JSON.stringify([process.execPath, '-e', 'process.exitCode = 0'])}
+paths = ["source.txt"]
+stage = "${name}"
+`,
+    );
+    await using sandbox = await createSandbox({
+        'gspot.toml': `version = 1\npresets = []\n${definitions.join('\n')}`,
+        'source.txt': 'input',
+    });
+    const checked = await run(sandbox.path, ['check', '--stage', stage, '--json']);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+    const report = JSON.parse(checked.stdout) as RunReport;
+    expect(report.checks.map((check) => [check.check, check.status])).toEqual([[`sandbox/${stage}`, 'ok']]);
+});

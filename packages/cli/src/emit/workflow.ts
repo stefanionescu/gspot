@@ -78,7 +78,7 @@ function checkJob(shape: WorkflowShape, platform: string): string[] {
     return [
         ...jobHead(`check-${platform}`, RUNNERS[platform] ?? 'ubuntu-latest', setupSteps(shape, platform)),
         `      - run: ${command}`,
-        `      - run: ${command} --at manual`,
+        `      - run: ${command} --stage manual`,
         "        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
         `      - uses: ${SARIF} # v3.25.0`,
         "        if: always() && hashFiles('.gspot/report.sarif') != ''",
