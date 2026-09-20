@@ -205,7 +205,7 @@ Repository-level assertions. Each is small, reads git or a manifest, and answers
 | `secrets/gitleaks-baseline`       | Does every baseline fingerprint carry a reviewed reason?                                                                                                                                                                                                                                                                                                                                 |
 | `integrity/security-headers`      | Does `_headers` set the required security headers?                                                                                                                                                                                                                                                                                                                                       |
 
-Each integrity check is one function with one test fixture. New ones are added when a
+Each integrity check is one function with one test repository. New ones are added when a
 repository shows a class of drift nothing catches.
 
 Two jobs that looked like integrity checks are tools instead. Relative links and heading anchors in Markdown go to lychee (`--offline --include-fragments`). Workspace version alignment, including paired packages, goes to syncpack with a rendered configuration. gspot

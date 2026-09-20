@@ -75,8 +75,8 @@ Their tests require explicit platform skips on Windows and still exercise real f
 on supported hosts. The tests themselves run on every host, including scheduling assertions.
 The other failures remain under investigation; this is not full Windows acceptance.
 
-The dirty-initialization fixture cannot find Prettier on Windows because its added npm
-binary directory ends with a POSIX path delimiter. Sixteen repository fixtures repeat
+The dirty-initialization test repository cannot find Prettier on Windows because its added npm
+binary directory ends with a POSIX path delimiter. Sixteen repository test data repeat
 that construction. Each uses the native delimiter and joins the npm binary directory
 with native path operations. The harness already preserves the inherited search path.
 
@@ -98,10 +98,10 @@ Mise tool directory, and verifies its version. The helper removes its extraction
 on completion or failure and rejects unexpected script arguments. This supplies the
 Windows CI prerequisite. Product installer acceptance remains open.
 
-The linked Next.js fixture uses a temporary sibling of the checkout, so its dependencies
+The linked Next.js test repository uses a temporary sibling of the checkout, so its dependencies
 and generated application share a drive. The [Windows job 106028903542](https://github.com/stefanionescu/gspot/actions/runs/35492181462/job/106028903542)
-shows webpack prefixing a dependency on drive D with `./` from a fixture on drive C.
-The fixture still runs clean and failing builds. Other fixtures retain their system
+shows webpack prefixing a dependency on drive D with `./` from a test repository on drive C.
+The test repository still runs clean and failing builds. Other test data retain their system
 temporary directories, and layout acceptance remains open under K-306.
 
 The CI self-check step runs on Windows after the tests and native build succeed.
@@ -114,7 +114,7 @@ linting. Setup also runs a minimal formatting smoke check with the tool cache di
 A setup failure includes the exit code and both output streams. The cause of the lint
 failure remains unconfirmed, and the Swift acceptance tests remain required.
 
-The PostgreSQL fixture times out after five minutes in
+The PostgreSQL test repository times out after five minutes in
 [Windows job 106029693038](https://github.com/stefanionescu/gspot/actions/runs/35492486973/job/106029693038),
 then passes in 25.97 seconds in the next Windows job. Its cause remains unconfirmed.
 The planted harness gives each CLI subprocess a two-minute deadline and reports the
@@ -144,8 +144,8 @@ A failed Bun stream read terminates and awaits the child before reporting failur
 The focused process and planted-harness suites pass 37 tests with 309 assertions. This is
 local backend evidence, not a reproduction or explanation of the historical Windows shell,
 PostgreSQL, or secrets failures. Windows native-parent comparisons, isolated and suite-order
-fixture runs, coverage comparisons, and packaged execution remain platform verification
-deferred while CI is bypassed. The permission-bit fixture is POSIX-specific; Windows denied
+test repository runs, coverage comparisons, and packaged execution remain platform verification
+deferred while CI is bypassed. The permission-bit test repository is POSIX-specific; Windows denied
 launch still needs its platform reproducer.
 
 ## K-164: a release can ship broken and say nothing
@@ -239,7 +239,7 @@ header ban. The setup smoke check retains the complete shipped configuration and
 includes a copyright header, so Windows must lint that combination successfully.
 
 The Windows document suite reaches its missing-dictionary scenario after the Vale path fix.
-It fails while removing a directory symlink with `rmSync`. The fixture uses `unlinkSync`
+It fails while removing a directory symlink with `rmSync`. The test repository uses `unlinkSync`
 to remove only that link and then exercises the expected Vale error.
 
 All three CI test suites and binary builds pass at `2397e0a`. Windows runs 457 tests

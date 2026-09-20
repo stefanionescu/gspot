@@ -34,10 +34,10 @@ These rules cover XCTest, Swift Testing, and snapshot tests.
 
 - Test data makes the behavior under test obvious.
 - Prefer private builders or stubs with sensible defaults when model construction hides the point of the test.
-- Keep fixture helpers beside the tests that use them, unless many test files share them on purpose.
-- Keep a shared fixture API small, and name it by the naming rules of the language.
+- Keep test builders beside the tests that use them, unless many test files share them on purpose.
+- Keep a shared test setup API small, and name it by the naming rules of the language.
 - Allow key path customization helpers in test targets only, and only when they make a test easier to read.
-- Decode JSON fixtures only when the test is about decoding, mapping, or an external payload contract.
+- Decode JSON test data only when the test is about decoding, mapping, or an external payload contract.
 - Do not add a production default to make a test shorter.
 - Prefer stable identifiers, dates, clocks, and ordering.
 
@@ -53,7 +53,7 @@ private extension Message {
 }
 ```
 
-Fixture helpers belong in test code. A fixture API never becomes a second model layer.
+Test builders belong in test code. A test setup API never becomes a second model layer.
 
 ## Style
 
@@ -61,7 +61,7 @@ Fixture helpers belong in test code. A fixture API never becomes a second model 
 - In Swift Testing, prefer `try #require`.
 - Avoid `try!`, force unwraps, and force casts, unless the test proves a programmer error invariant.
 - Avoid `guard` in a test when an assertion helper states the failure more clearly.
-- Make test helpers and fixtures private unless they are shared on purpose.
+- Make test helpers and test data private unless they are shared on purpose.
 - Mark a test case class `final`.
 
 ## Tests that are off

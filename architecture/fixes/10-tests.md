@@ -15,16 +15,16 @@ Closes T-27, T-4, T-8, T-21, and T-9.
 
 **Partially implemented, September 20, 2026.** The harness rejects failed init
 runs even when a policy exists, missing required mise tools, and failed Git setup.
-An unmatched policy edit fails before any fixture mutation. Fixture PATH includes
+An unmatched policy edit fails before any test repository mutation. Sandbox PATH includes
 the checkout's installed npm executables, so required formatters actually run.
 
-Fixture restoration preserves binary bytes and file modes after execution errors
+Sandbox restoration preserves binary bytes and file modes after execution errors
 and partial setup. Native filesystem operations replace unchecked shell commands,
 and cleanup removes directories created by planting.
 
 The harness, typed-table, Docker, shell, and document acceptance suites pass locally.
 The restoration run passes 10 tests with 119 assertions, and TypeScript passes.
-Realistic isolated installs, shared fixture construction, and the caller audit
+Realistic isolated installs, shared test repository construction, and the caller audit
 remain open. Windows filesystem execution remains deferred.
 
 **What is wrong.** `install` in `tests/harness/planted.ts:137` reads only whether `gspot.toml`
@@ -37,7 +37,7 @@ the tool lists are repeated across the test files.
 **Target.** A harness that fails early, with a message about the machine or about `init`.
 
 **Files.** `tests/harness/planted.ts`, new `tests/harness/engine-input.ts`, new `tests/config/`
-with `commands.ts`, `fixtures.ts`, `tools.ts`, and `timeouts.ts` (D-113).
+with `commands.ts`, `cases.ts`, `tools.ts`, and `timeouts.ts` (D-113).
 
 **Logic.** `install` expects exit 0 when every tool of the install is on the `PATH` it was given.
 `toolsPath` throws and names the tool it cannot find and the command that installs it. `plant`
@@ -98,7 +98,7 @@ clone, a `[tool.ruff]` table, or a `lint` script.
 
 **Tests.** Thirteen cases, one for each item above.
 
-**Done when.** A table in `tests/config/fixtures.ts` maps each adoption finding to its case, and
+**Done when.** A table in `tests/config/cases.ts` maps each adoption finding to its case, and
 a unit test fails an `A-` id with no case.
 
 ## T-28: checks that no test makes fail
@@ -297,18 +297,18 @@ Closes T-31, T-11, and T-34.
 of the preset they test. The Xcode project of the xcode test is nine lines written by hand, so
 the reader never meets a `project.pbxproj` that Xcode wrote.
 
-**Target.** A repository test carries the name of its preset (D-128). The xcode fixture is a
+**Target.** A repository test carries the name of its preset (D-128). The xcode test repository is a
 project Xcode generated, with groups, build phases, and synchronized folders.
 
 **Files.** Renames: `handheld` to `react-native`, `components` to `vue` and `svelte`, `documents`
 to `docs` and `markdown`, `repository-check` to `declared-check`, `scope-languages` to `scope-presets` (D-113). New
-`tests/repositories/fixtures/xcode/`.
+`tests/repositories/samples/xcode/`.
 
-**Logic.** Renames and one tracked fixture.
+**Logic.** Renames and one tracked test repository.
 
 **What goes.** The hand-written project text.
 
-**Tests.** The xcode tests run on the fixture.
+**Tests.** The xcode tests run on the test repository.
 
 **Done when.** Every file under `tests/repositories/` is named after a preset name or after what
 it installs.

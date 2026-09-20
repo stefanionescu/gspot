@@ -1,6 +1,7 @@
 import { describe, expect, test } from 'bun:test';
 import { compileTerms } from '#cli/naming/match.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
+import { shippedPolicy } from '#cli/naming/policy.ts';
 import { nameProblems } from '#cli/naming/validate-name.ts';
 import type { EffectivePolicy, Identifier } from '#types/naming.ts';
 
@@ -10,7 +11,7 @@ function caseFor(language: string, category: string): string[] {
 }
 
 const policy: EffectivePolicy = {
-    terms: compileTerms(['enhanced', 'handler', 'fixture'], 'marketing group'),
+    terms: compileTerms(['enhanced', 'handler'], 'marketing group'),
     reserved: new Map([['config', ['configuration directory', 'configuration variable']]]),
     external: new Set(['requestAnimationFrame']),
     allowed: new Map([['enhancedThing', 'a reason']]),
@@ -116,4 +117,15 @@ describe('nameProblems', () => {
         expect(nameProblems(identifier('handleSubmit'), plain)[0]?.rule).toBe('callback-verb');
         expect(nameProblems(identifier('handleSubmit'), { policy, isReactFile: true, isTestFile: false })).toEqual([]);
     });
+});
+
+test('the shipped terminology ban applies inside tests', () => {
+    const terms = compileTerms(shippedPolicy().groups['terminology']!.terms, 'terminology group');
+    const context = { ...plain, policy: { ...policy, terms }, isTestFile: true };
+    for (const term of terms) {
+        const problems = nameProblems(identifier(term.term, 'variables', 'tests/names.test.ts'), context);
+        expect(problems.find((problem) => problem.rule === 'banned-term')).toMatchObject({
+            source: 'terminology group',
+        });
+    }
 });

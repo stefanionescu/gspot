@@ -1,6 +1,6 @@
-import { createFixture } from 'fs-fixture';
 // Planted repository for the duplication preset: one block copied into a second file.
 import { delimiter, join } from 'node:path';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
@@ -33,15 +33,15 @@ describe('the duplication preset', () => {
     test(
         'a block copied between two files is a finding on the file that holds it',
         async () => {
-            await using fixture = await createFixture({ 'scripts/first.sh': copied('count_first') });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'scripts/first.sh': copied('count_first') });
+            commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['shellcheck', 'shfmt', 'typos', 'ec'])}` };
-            await install(fixture.path, INIT, environment);
-            const clean = await run(fixture.path, ['check', '--only', 'duplication/jscpd', '--no-cache'], environment);
+            await install(sandbox.path, INIT, environment);
+            const clean = await run(sandbox.path, ['check', '--only', 'duplication/jscpd', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-            await Bun.write(`${fixture.path}/scripts/second.sh`, copied('count_second'));
-            commitAll(fixture.path);
-            const found = await run(fixture.path, ['check', '--only', 'duplication/jscpd', '--no-cache'], environment);
+            await Bun.write(`${sandbox.path}/scripts/second.sh`, copied('count_second'));
+            commitAll(sandbox.path);
+            const found = await run(sandbox.path, ['check', '--only', 'duplication/jscpd', '--no-cache'], environment);
             expect(found.code, found.stdout + found.stderr).toBe(1);
             expect(found.stdout).toContain('lines repeat scripts/');
             expect(found.stdout).toContain('over the ceiling of 4');

@@ -100,7 +100,7 @@ stderr line through the output owner. Both clean and failing runs keep their est
 findings and exit code. Both report formats are rendered before writing starts.
 
 The storage,
-report identity, and output suites pass locally with a real read-only directory fixture
+report identity, and output suites pass locally with a real read-only directory test repository
 (13 tests, 81 assertions). Atomic replacement, tracked-file writers, and the shared lifecycle
 boundary remain open. Windows permission behavior remains platform verification deferred.
 
@@ -507,8 +507,8 @@ keeps.
 
 **Status: locally verified.** The rule receives declared Knip entries through one template owner.
 Root declarations retain repository paths; scoped declarations use their declaring scope.
-Ten rule cases and the built-plugin Vite fixture pass.
-The fixture builds with Vite and verifies inherited paths, scoped globs, and exclusions through generated ESLint configuration.
+Ten rule cases and the built-plugin Vite test repository pass.
+The test repository builds with Vite and verifies inherited paths, scoped globs, and exclusions through generated ESLint configuration.
 
 ## K-189: `no-cross-folder-imports` reports every `../`
 
@@ -607,7 +607,7 @@ and the shared tool-analysis registry.
 **Done when.** That case passes.
 
 **Status: locally verified.** The compiler builds solution references in a disposable copy.
-Root and nested-scope fixtures report errors from both referenced projects and pass after correction.
+Root and nested-scope test data report errors from both referenced projects and pass after correction.
 They leave no build output in either project.
 Ordinary TypeScript projects retain project mode and pass the existing planted regressions.
 The nine focused tests, TypeScript check, schemas, and reference check passed.

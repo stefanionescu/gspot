@@ -1,4 +1,4 @@
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, run, script } from '#tests/harness/planted.ts';
 
@@ -18,23 +18,23 @@ reason = "The script deliberately splits a list of arguments."
 
 describe('explain', () => {
     test('a recognized name keeps its meaning and an explicit path selects a colliding file', async () => {
-        await using fixture = await createFixture({ 'gspot.toml': POLICY, bash: script, 'api/build.sh': script });
-        commitAll(fixture.path);
-        const preset = await run(fixture.path, ['explain', 'bash', '--json']);
+        await using sandbox = await createSandbox({ 'gspot.toml': POLICY, bash: script, 'api/build.sh': script });
+        commitAll(sandbox.path);
+        const preset = await run(sandbox.path, ['explain', 'bash', '--json']);
         expect(preset.code, preset.stdout + preset.stderr).toBe(0);
         expect(JSON.parse(preset.stdout)).toMatchObject({ kind: 'preset', subject: 'bash' });
-        const file = await run(fixture.path, ['explain', './bash', '--json']);
+        const file = await run(sandbox.path, ['explain', './bash', '--json']);
         expect(file.code, file.stdout + file.stderr).toBe(0);
         expect(JSON.parse(file.stdout)).toMatchObject({ kind: 'path', subject: 'bash', path: 'bash' });
     });
 
     test('a file path reports its scope, checks, and recorded ignores', async () => {
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             'gspot.toml': POLICY,
             'api/build.sh': script,
         });
-        commitAll(fixture.path);
-        const result = await run(fixture.path, ['explain', './api/build.sh', '--json']);
+        commitAll(sandbox.path);
+        const result = await run(sandbox.path, ['explain', './api/build.sh', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(JSON.parse(result.stdout)).toMatchObject({
             kind: 'path',
@@ -52,7 +52,7 @@ describe('explain', () => {
                 },
             ],
         });
-        const text = await run(fixture.path, ['explain', 'api/build.sh']);
+        const text = await run(sandbox.path, ['explain', 'api/build.sh']);
         expect(text.code, text.stdout + text.stderr).toBe(0);
         expect(text.stdout).toContain('api/build.sh  (scope api, source');
         expect(text.stdout).toContain('bash/shellcheck  commit');
@@ -60,21 +60,21 @@ describe('explain', () => {
     });
 
     test('a missing explicit path fails', async () => {
-        await using fixture = await createFixture({ 'gspot.toml': POLICY, 'api/build.sh': script });
-        commitAll(fixture.path);
-        const missing = await run(fixture.path, ['explain', './missing.sh']);
+        await using sandbox = await createSandbox({ 'gspot.toml': POLICY, 'api/build.sh': script });
+        commitAll(sandbox.path);
+        const missing = await run(sandbox.path, ['explain', './missing.sh']);
         expect(missing.code).toBe(2);
         expect(missing.stdout + missing.stderr).toContain('missing.sh is not a file git tracks or would track here');
     });
 
     test('preset and check explanations still resolve without a policy', async () => {
-        await using fixture = await createFixture({ 'README.md': '# Example\n' });
-        commitAll(fixture.path);
+        await using sandbox = await createSandbox({ 'README.md': '# Example\n' });
+        commitAll(sandbox.path);
         for (const [subject, kind] of [
             ['bash', 'preset'],
             ['bash/shellcheck', 'check'],
         ] as const) {
-            const result = await run(fixture.path, ['explain', subject, '--json']);
+            const result = await run(sandbox.path, ['explain', subject, '--json']);
             expect(result.code, result.stdout + result.stderr).toBe(0);
             expect(JSON.parse(result.stdout)).toMatchObject({ kind, subject });
         }

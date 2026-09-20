@@ -119,22 +119,22 @@ Rules:
 - Test cancellation or stale-result behavior for ViewModels that launch async
   tasks.
 
-### Test data and fixtures
+### Test data
 
 Rules:
 
 - Test data makes the behavior under test obvious.
 - Prefer private test builders, factory methods, or stubs with sensible defaults
   when model construction noise obscures the test.
-- Keep fixture helpers close to the tests unless they are shared intentionally
+- Keep test builders close to the tests unless they are shared intentionally
   across many test files.
-- Shared fixture APIs stay small.
+- Shared test setup APIs stay small.
 - Allow key-path customization helpers only in test targets and only when they
   improve readability.
-- Avoid decoding JSON fixtures for ordinary domain tests. Use JSON fixtures when
+- Avoid decoding JSON test data for ordinary domain tests. Use JSON test data when
   testing actual decoding/mapping or preserving an external payload contract.
 - Do not add production defaults just to make tests shorter.
-- Avoid force unwraps in fixture creation unless the fixture is proving a
+- Avoid force unwraps in test data creation unless the test is proving a
   programmer-error invariant.
 - Prefer stable IDs, dates, clocks, and deterministic ordering in tests.
 
@@ -173,8 +173,8 @@ private extension Message {
 }
 ```
 
-These helpers belong in test code unless production preview fixtures already
-have a clear owner. Test fixture APIs never become a parallel model layer.
+These helpers belong in test code unless production preview test data already
+have a clear owner. Test setup APIs never become a parallel model layer.
 
 ### Unit tests
 
@@ -205,7 +205,7 @@ Rules:
   specifically proving a programmer-error invariant.
 - Avoid guard statements in tests when assertion helpers express the failure more
   clearly.
-- Test helpers and fixtures are private unless shared intentionally.
+- Test helpers and test data are private unless shared intentionally.
 - Do not add protocols only to mock a concrete type if a lower boundary can be
   injected.
 

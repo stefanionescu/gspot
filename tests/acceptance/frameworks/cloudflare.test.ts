@@ -1,5 +1,5 @@
 // Planted repository for the cloudflare preset: a configuration with no date, a header under no path, and a redirect with a status Cloudflare does not know.
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -48,22 +48,22 @@ describe('the cloudflare preset', () => {
     test(
         'the configuration, headers and redirects checks fire on their planted defects, and the types check waits for a tracked file',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'wrangler.jsonc': WRANGLER,
                 _headers: '/*\n    X-Frame-Options: DENY\n',
                 _redirects: '# Old addresses.\n/old /new 301\n/docs/* https://docs.planted.test/:splat 302!\n',
                 'functions/hello.js':
                     '// Says hello.\n\n/**\n * Answers every request.\n * @returns {Response} the greeting\n */\nexport function onRequest() {\n    return new Response("hello");\n}\n',
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec', 'ast-grep']) };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             for (const id of [...CASES.map((planted) => planted.check), 'cloudflare/env-types-fresh']) {
-                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }

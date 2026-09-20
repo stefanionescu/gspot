@@ -378,7 +378,7 @@ adapters. Infer them from the concrete input model. Do not widen every form to `
 Form tests cover the changed interaction using the existing runner and accessible queries. Await
 asynchronous validation and submission results instead of adding sleeps.
 
-Do not add form-test frameworks, fixtures, wrappers, or broad browser checks as part of ordinary
+Do not add form-test frameworks, test data, wrappers, or broad browser checks as part of ordinary
 form implementation.
 
 See the official [form testing guidance](https://react-hook-form.com/advanced-usage#TestingForm).

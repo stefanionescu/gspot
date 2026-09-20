@@ -1,8 +1,8 @@
 // The baselines-current analysis: a count baseline for a check that is gone, and a suppression for a file that is gone.
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
 import type { Policy } from '#types/config.ts';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import type { CheckSpec, Manifest } from '#types/manifest.ts';
 import type { Repository, ScopeEntry } from '#types/repository.ts';
@@ -35,7 +35,7 @@ function input(root: string, checks: Partial<CheckSpec>[]): EngineInput {
 
 describe('baselines-current', () => {
     test('a baseline for a check that no longer runs and a suppression for a deleted file are reported', async () => {
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             '.gspot/baselines/old.check.rule.json': JSON.stringify({
                 check: 'old/check',
                 rule: 'rule',
@@ -48,9 +48,9 @@ describe('baselines-current', () => {
                 'src/gone.ts': {},
             }),
         });
-        mkdirSync(join(fixture.path, 'src'), { recursive: true });
+        mkdirSync(join(sandbox.path, 'src'), { recursive: true });
         const found = await baselinesCurrent(
-            input(fixture.path, [{ name: 'typescript/eslint', baseline_file: '.gspot/baselines/eslint.json' }]),
+            input(sandbox.path, [{ name: 'typescript/eslint', baseline_file: '.gspot/baselines/eslint.json' }]),
         );
         expect(found.map((finding) => [finding.rule, finding.message.split(' ', 1)[0]])).toEqual([
             ['unknown-check', 'The'],

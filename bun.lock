@@ -9,6 +9,7 @@
         "@eslint-community/eslint-plugin-eslint-comments": "4.8.0",
         "@eslint/js": "10.0.1",
         "@gspot/eslint-plugin": "0.1.0",
+        "@gspot/testing": "workspace:*",
         "@nestjs/common": "11.2.3",
         "@nestjs/core": "11.2.3",
         "@next/eslint-plugin-next": "16.3.5",
@@ -39,7 +40,6 @@
         "eslint-plugin-unicorn": "74.0.0",
         "eslint-plugin-vue": "10.11.0",
         "eslint-plugin-zod": "4.12.0",
-        "fs-fixture": "2.16.0",
         "globals": "17.12.0",
         "html-validate": "11.6.1",
         "jscpd": "5.2.0",
@@ -148,6 +148,10 @@
       "peerDependencies": {
         "eslint": ">=9.38.0",
       },
+    },
+    "packages/testing": {
+      "name": "@gspot/testing",
+      "version": "0.1.0",
     },
   },
   "overrides": {
@@ -423,6 +427,8 @@
     "@gspot/docs": ["@gspot/docs@workspace:docs"],
 
     "@gspot/eslint-plugin": ["@gspot/eslint-plugin@workspace:packages/eslint-plugin"],
+
+    "@gspot/testing": ["@gspot/testing@workspace:packages/testing"],
 
     "@html-validate/stylish": ["@html-validate/stylish@6.0.0", "", {}, "sha512-d1/lI3qIXhGVJF3+MmKEBn1dRX6U4Z+BDaOdDI3E6SXcO+OQ7hC/3mSo6BIjwQlcuV6NdDOKm6QCrzIQL1EezQ=="],
 
@@ -1617,8 +1623,6 @@
     "fresh": ["fresh@0.5.2", "", {}, "sha512-zJ2mQYM18rEFOudeV4GShTGIQ7RbzA7ozbU9I/XBpm7kqgMywgmylMwXHxZJmkVoYkna9d2pVXVXPdYTP9ej8Q=="],
 
     "fs-extra": ["fs-extra@10.1.0", "", { "dependencies": { "graceful-fs": "^4.2.0", "jsonfile": "^6.0.1", "universalify": "^2.0.0" } }, "sha512-oRXApq54ETRj4eMiFzGnHWGy+zo5raudjuxN0b8H7s/RU2oW0Wvsx9O0ACRN/kRq9E8Vu/ReskGB5o3ji+FzHQ=="],
-
-    "fs-fixture": ["fs-fixture@2.16.0", "", {}, "sha512-wLgUrK+xH81K9shOMrQATJKbZTCPDxtmlt8s9iyE7vy0/H5KSXgKm9UPFzz7D08VCAYFvqw6JNnlFmJ/ukVWnQ=="],
 
     "fs-minipass": ["fs-minipass@3.0.3", "", { "dependencies": { "minipass": "^7.0.3" } }, "sha512-XUBA9XClHbnJWSfBzjkm6RvPsyg3sryZt06BEQoXcF7EK/xpGaQYJgQKDJSUH5SGZ76Y7pFx1QBnXz09rU5Fbw=="],
 

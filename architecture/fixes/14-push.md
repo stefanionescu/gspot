@@ -84,7 +84,7 @@ retain deletions and both sides of renames. Failed observations report errors. A
 conservatively select project checks in their scope even when no readable inputs remain.
 Per-file tools receive only current files.
 
-Real execution fixtures cover deleting the last
+Real execution test data cover deleting the last
 file from an existing scope directory and moving it to another scope. Both affected project
 findings survive, and correction previews report restored paths without changing the source.
 
@@ -92,7 +92,7 @@ Local verification passes 56 run, Git observation, and planted repository tests 
 assertions. TypeScript and lint checks also pass.
 
 Reverse dependencies, exact committed snapshots, configuration-only impact, event-specific
-CI bases, and package-manager selection remain open. These local fixtures do not establish
+CI bases, and package-manager selection remain open. These local test data do not establish
 Windows or Linux platform acceptance during the CI bypass.
 
 ## K-295: two flags name one idea

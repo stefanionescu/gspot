@@ -21,7 +21,7 @@ tester().run('no-harness-barrel-imports', noHarnessBarrelImports, {
         },
         {
             code: "import { a } from '@tests/harness/index.js';",
-            filename: '/repo/tests/fixtures/b.ts',
+            filename: '/repo/tests/harness/nested/b.ts',
             options: [{ barrels }],
             errors: [{ messageId: 'barrel' }],
         },

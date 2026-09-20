@@ -1,5 +1,5 @@
 // Planted repository for the sql preset: a statement that does not parse, a block comment, a lowercase keyword, a camel-case column.
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -52,21 +52,21 @@ describe('the sql preset', () => {
     test(
         'every sql check fires on its planted defect',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'db/accounts.sql': CLEAN,
                 'db/report.sql': PSQL,
                 'db/.sqlfluffignore': '# Scripts for psql, which the linter cannot read\nreport.sql\n',
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
-                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
@@ -79,29 +79,29 @@ describe('gspot apply --baseline', () => {
     test(
         'writes the first baseline of one check, never raises one that exists, and refuses findings a fixer clears',
         async () => {
-            await using fixture = await createFixture({ 'db/accounts.sql': CLEAN });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'db/accounts.sql': CLEAN });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
-            await Bun.write(`${fixture.path}/db/commented.sql`, '/* Old. */\nSELECT 1;\n');
-            commitAll(fixture.path);
+            await install(sandbox.path, INIT, environment);
+            await Bun.write(`${sandbox.path}/db/commented.sql`, '/* Old. */\nSELECT 1;\n');
+            commitAll(sandbox.path);
             const before = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'sql/block-comments', '--no-cache'],
                 environment,
             );
             expect(before.code).toBe(1);
-            const first = await run(fixture.path, ['apply', '--baseline', 'sql/block-comments'], environment);
+            const first = await run(sandbox.path, ['apply', '--baseline', 'sql/block-comments'], environment);
             expect(first.stdout).toContain('baseline: 1 rules of sql/block-comments with 1 findings');
-            const held = await run(fixture.path, ['check', '--only', 'sql/block-comments', '--no-cache'], environment);
+            const held = await run(sandbox.path, ['check', '--only', 'sql/block-comments', '--no-cache'], environment);
             expect(held.code).toBe(0);
-            await Bun.write(`${fixture.path}/db/second.sql`, '/* Older. */\nSELECT 2;\n');
-            commitAll(fixture.path);
-            const again = await run(fixture.path, ['apply', '--baseline', 'sql/block-comments'], environment);
+            await Bun.write(`${sandbox.path}/db/second.sql`, '/* Older. */\nSELECT 2;\n');
+            commitAll(sandbox.path);
+            const again = await run(sandbox.path, ['apply', '--baseline', 'sql/block-comments'], environment);
             expect(again.stdout).toContain('has no finding without a baseline');
-            const after = await run(fixture.path, ['check', '--only', 'sql/block-comments', '--no-cache'], environment);
+            const after = await run(sandbox.path, ['check', '--only', 'sql/block-comments', '--no-cache'], environment);
             expect(after.code).toBe(1);
-            const layout = await run(fixture.path, ['apply', '--baseline', 'sql/sqlfluff'], environment);
+            const layout = await run(sandbox.path, ['apply', '--baseline', 'sql/sqlfluff'], environment);
             expect(layout.code).toBe(2);
             expect(layout.stdout + layout.stderr).toContain('enter no baseline');
         },

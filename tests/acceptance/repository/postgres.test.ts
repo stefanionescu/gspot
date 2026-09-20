@@ -1,5 +1,5 @@
 // Planted repository for the postgres preset: a locking migration, a repeated version, an edited migration, and a schema with holes.
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -107,18 +107,18 @@ describe('the postgres preset', () => {
     test(
         'every postgres check fires on its planted defect',
         async () => {
-            await using fixture = await createFixture({ [FIRST]: TEAMS });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ [FIRST]: TEAMS });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['squawk', 'sqlfluff', 'typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
-            commitAll(fixture.path);
+            await install(sandbox.path, INIT, environment);
+            commitAll(sandbox.path);
             const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
-                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }

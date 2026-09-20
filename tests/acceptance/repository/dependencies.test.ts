@@ -1,6 +1,6 @@
 // Planted repository for the dependencies preset: a version range, a second package manager, a public workspace root, a stale lockfile.
 import { join } from 'node:path';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -88,37 +88,37 @@ describe('the dependencies preset', () => {
     test(
         'the manifest policy and the lockfile check fire on their planted defects, and the advisory lookup waits for the network',
         async () => {
-            await using fixture = await createFixture({ 'package.json': CLEAN });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'package.json': CLEAN });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             const manifest = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'integrity/manifest-policy', '--no-cache'],
                 environment,
             );
             expect(manifest.code).toBe(0);
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             await Bun.write(
-                join(fixture.path, 'package.json'),
+                join(sandbox.path, 'package.json'),
                 RANGED.replace('^1.3.0', () => '1.3.0'),
             );
             await Bun.write(
-                join(fixture.path, 'bun.lock'),
+                join(sandbox.path, 'bun.lock'),
                 '{\n  "lockfileVersion": 1,\n  "workspaces": { "": { "name": "planted" } },\n  "packages": {}\n}\n',
             );
             const stale = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'integrity/lockfile-fresh', '--no-cache'],
                 environment,
             );
             expect(stale.code, stale.stdout).toBe(1);
             expect(stale.stdout).toContain('refuses this lockfile');
-            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

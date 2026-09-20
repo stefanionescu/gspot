@@ -1,10 +1,10 @@
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { expect, spyOn, test } from 'bun:test';
 import * as processes from '#cli/platform/spawn.ts';
 import { astGrepMatches } from '#cli/structure/ast-grep.ts';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
-    await using fixture = await createFixture({});
+    await using sandbox = await createSandbox({});
     const files = Array.from(
         { length: 5000 },
         (_, index) => `scripts/long path with spaces/source-${String(index)}.sh`,
@@ -23,7 +23,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
         };
     });
     try {
-        const matches = astGrepMatches(fixture.path, 'presets/bash/rules/shell-branches.yml', files);
+        const matches = astGrepMatches(sandbox.path, 'presets/bash/rules/shell-branches.yml', files);
         expect(received).toEqual(files);
         expect(matches?.map((match) => match.file)).toEqual(files);
         expect(processRun.mock.calls.length).toBeGreaterThan(1);
@@ -34,7 +34,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
 });
 
 test('ast-grep rejects a failed scan even when stdout contains partial JSON', async () => {
-    await using fixture = await createFixture({});
+    await using sandbox = await createSandbox({});
     const search = spyOn(Bun, 'which').mockReturnValue(process.execPath);
     const processRun = spyOn(processes, 'runBlocking').mockReturnValue({
         code: 2,
@@ -44,7 +44,7 @@ test('ast-grep rejects a failed scan even when stdout contains partial JSON', as
         stderr: 'cannot read source.sh',
     });
     try {
-        expect(() => astGrepMatches(fixture.path, 'presets/bash/rules/shell-branches.yml', ['source.sh'])).toThrow(
+        expect(() => astGrepMatches(sandbox.path, 'presets/bash/rules/shell-branches.yml', ['source.sh'])).toThrow(
             'cannot read source.sh',
         );
     } finally {

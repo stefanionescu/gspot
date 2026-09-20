@@ -66,7 +66,7 @@ Never write a test that asserts a parameter, config value, or return value equal
 ## Placement and names
 
 - Tests live under `tests/` or beside the unit they test. The directory is `tests/`, never `__tests__`, `test/`, or `spec/`.
-- Support code (builders, fakes, servers, database helpers) lives under `tests/support/`. No `fixtures/`, `mocks/`, `helpers/`, or `utils/` directory exists.
+- Support code (builders, fakes, servers, database helpers) lives under `tests/support/`. No `mocks/`, `helpers/`, or `utils/` directory exists.
 - Support code is not test code: it has no assertions and no `describe`, `it`, or `test` blocks.
 - File names follow the language: `<name>.test.ts`, never `.spec`; `test_<module>.py` mirroring the package path; `<Type>Tests.swift`; pgTAP files under `tests/` named for the table or function under test.
 - A test name is a sentence that states the scenario and the expected outcome. Never `test1`, `works`, `edge cases`, `happy path`.
@@ -81,7 +81,7 @@ Tests own the data they rely on. A test is understandable and repeatable without
 - Do not depend on previous tests.
 - Do not depend on a globally empty database.
 - Do not use count assertions that fail when unrelated data exists.
-- Avoid global mutable fixtures and file-level mutable IDs that one test writes and another reads.
+- Avoid global mutable test data and file-level mutable IDs that one test writes and another reads.
 - Separate metadata, context data, and the records being tested.
 - Create unrelated records when the behavior must prove it does not overreach.
 - Use unique queue names, event IDs, operation IDs, or correlation IDs for event-driven tests.

@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { expect, spyOn, test } from 'bun:test';
 import type { Stage } from '#types/manifest.ts';
 import { executeRun } from '#cli/run/execute.ts';
@@ -23,7 +23,7 @@ async function sessionFor(root: string, status: number, stage: Stage = 'commit')
                     why: 'Storage failures preserve the check result.',
                     help: 'Fix the planted finding.',
                     claims: manifest.claims,
-                    name: 'fixture/storage',
+                    name: 'sandbox/storage',
                     stage,
                     cwd: 'root',
                     command: [process.execPath, '-e', script],
@@ -37,11 +37,11 @@ async function sessionFor(root: string, status: number, stage: Stage = 'commit')
 
 for (const target of ['cache', 'report.json', 'report.sarif']) {
     test.each([0, 1])(`${target} write failure preserves check status %s and findings`, async (status) => {
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             'gspot.toml': 'version = 1\npresets = []\n',
             'source.ts': 'export {};\n',
         });
-        const session = await sessionFor(fixture.path, status);
+        const session = await sessionFor(sandbox.path, status);
         const write = fs.writeFileSync;
         const failure = Object.assign(new Error('Planted disk failure.\nSecond line.'), { code: 'ENOSPC' });
         const writes = spyOn(fs, 'writeFileSync').mockImplementation((path, ...args) => {
@@ -74,13 +74,13 @@ for (const target of ['cache', 'report.json', 'report.sarif']) {
 }
 
 test('the message stage preserves the prior report files', async () => {
-    await using fixture = await createFixture({
+    await using sandbox = await createSandbox({
         'gspot.toml': 'version = 1\npresets = []\n',
         'source.ts': 'export {};\n',
         '.gspot/report.json': 'previous JSON',
         '.gspot/report.sarif': 'previous SARIF',
     });
-    const session = await sessionFor(fixture.path, 0, 'message');
+    const session = await sessionFor(sandbox.path, 0, 'message');
     const outcome = await executeRun(session, {
         stage: 'message',
         skips: [],
@@ -91,6 +91,6 @@ test('the message stage preserves the prior report files', async () => {
     });
     expect(outcome.report.checks).toHaveLength(1);
     expect(outcome.report.exitCode).toBe(0);
-    expect(fs.readFileSync(join(fixture.path, '.gspot/report.json'), 'utf8')).toBe('previous JSON');
-    expect(fs.readFileSync(join(fixture.path, '.gspot/report.sarif'), 'utf8')).toBe('previous SARIF');
+    expect(fs.readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8')).toBe('previous JSON');
+    expect(fs.readFileSync(join(sandbox.path, '.gspot/report.sarif'), 'utf8')).toBe('previous SARIF');
 });

@@ -3,7 +3,7 @@
 import { join } from 'node:path';
 // The Vale packages of this repository are linked in, so the prose check runs offline.
 import { fileURLToPath } from 'node:url';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { mkdirSync, readdirSync, symlinkSync, unlinkSync } from 'node:fs';
@@ -93,19 +93,19 @@ describe('the markdown, docs and prose presets', () => {
     test(
         'every check passes on clean documents and fires on its planted defect',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'README.md': README,
                 'docs/guide.md': GUIDE,
                 'docs/second.md': GUIDE,
                 '.gitignore': 'node_modules/\n',
                 LICENSE,
             });
-            symlinkSync(join(root, 'node_modules'), join(fixture.path, 'node_modules'), 'dir');
-            commitAll(fixture.path);
-            linkValePackages(fixture.path);
+            symlinkSync(join(root, 'node_modules'), join(sandbox.path, 'node_modules'), 'dir');
+            commitAll(sandbox.path);
+            linkValePackages(sandbox.path);
             const environment = { PATH: toolsPath(['vale', 'lychee', 'markdownlint-cli2', 'typos', 'ec']) };
             await install(
-                fixture.path,
+                sandbox.path,
                 [
                     'init',
                     '--yes',
@@ -124,16 +124,16 @@ describe('the markdown, docs and prose presets', () => {
                 ],
                 environment,
             );
-            const whole = await run(fixture.path, ['check', '--no-cache'], environment);
+            const whole = await run(sandbox.path, ['check', '--no-cache'], environment);
             expect(whole.code, whole.stdout).toBe(0);
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             // A check id is written like a path. A document that names one means the check, whatever folders exist.
             const named = await runPlanted(
-                fixture.path,
+                sandbox.path,
                 {
                     check: 'integrity/stale-paths',
                     files: { 'docs/checks.md': '# A page\n\nThe check `docs/links` reads every link.\n' },
@@ -143,14 +143,14 @@ describe('the markdown, docs and prose presets', () => {
             );
             expect(named.code, named.stdout).toBe(0);
             for (const id of REPORTED_ELSEWHERE) {
-                const skipped = await run(fixture.path, ['check', '--only', id], environment);
+                const skipped = await run(sandbox.path, ['check', '--only', id], environment);
                 expect(skipped.stdout, id).toContain('its findings come from');
             }
-            unlinkSync(join(fixture.path, '.gspot', 'vale', 'styles', 'config', 'dictionaries'));
-            const broken = await run(fixture.path, ['check', '--only', 'prose/vale', '--no-cache'], environment);
+            unlinkSync(join(sandbox.path, '.gspot', 'vale', 'styles', 'config', 'dictionaries'));
+            const broken = await run(sandbox.path, ['check', '--only', 'prose/vale', '--no-cache'], environment);
             expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(1);
             expect(broken.stdout).toContain('error');
-            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
             const record = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

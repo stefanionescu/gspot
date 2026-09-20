@@ -34,7 +34,7 @@ K-305 closes at `7464e27cb6a5ffb64e62311702421926b39bb687`. All six script argum
 execute and pass on Linux, macOS, and Windows. Invalid arguments preserve existing output
 and start no compiler or publisher process. Tests also cover repeated build targets and
 publication previews, including prerelease versions with build metadata. The compiler and
-publisher boundaries are replaced inside disposable fixtures, so these tests publish nothing.
+publisher boundaries are replaced inside disposable test data, so these tests publish nothing.
 
 - [Linux job 106053638363](https://github.com/stefanionescu/gspot/actions/runs/35501385005/job/106053638363)
   passes 475 tests with four skipped and no failures.
@@ -102,7 +102,7 @@ grouped diagnostics, and paths with spaces and Unicode.
 
 The HTML validator is pinned at 11.6.1, the upstream release that fixes absolute Windows
 configuration paths. [The upstream changelog](https://html-validate.org/changelog/index.html)
-records that fix. The previous version joined the fixture directory to an already absolute
+records that fix. The previous version joined the test repository directory to an already absolute
 configuration path in the Windows HTML tests. Both HTML and static-site planted suites
 pass locally with the upgraded tool: two tests and 46 assertions. Windows confirmation
 remains part of K-263.
@@ -142,7 +142,7 @@ self-checks. The separate [normal and manual gspot workflow](https://github.com/
 
 The Windows run exercises the real command shim with spaced Unicode arguments. Its
 local-schema regression detects and fixes an invalid value in a nested Unicode path.
-The snapshot cases pass after the fixture helper disables automatic Git maintenance.
+The snapshot cases pass after the test repository helper disables automatic Git maintenance.
 
 K-219 closes at this revision. The source-header regression passes on all three platforms.
 SwiftFormat preserves the header during linting and spacing fixes. SwiftLint also accepts
@@ -200,7 +200,7 @@ SwiftLint installation is restricted to Linux and macOS. Windows acceptance rema
 | Naming engine with the TypeScript, JavaScript, and shell extractors                                                        | parity with the reference extractors on the frozen sources                                                     |
 | Structure engine: tree-sitter loading, ast-grep driver, directory analyses, shell analyses                                 | every shell check in the ledger fires on its planted defect                                                    |
 | Baselines                                                                                                                  | deleted by D-165                                                                                               |
-| Integrity: generated drift, stale paths, allowlists, suppressions, manifest policy, lockfile, docs links, tsconfig options | each has a fixture                                                                                             |
+| Integrity: generated drift, stale paths, allowlists, suppressions, manifest policy, lockfile, docs links, tsconfig options | each has a test repository                                                                                     |
 | `upgrade --dry-run` and `upgrade`, including the install step and `--to`                                                   | the report renders between two planted preset versions; the pin moves both ways                                |
 | Takeover: replace and carry exceptions (typos, gitleaks, osv, licenses, disabled rules as ignores)                         | a planted repository with the four files loses them and gains the entries                                      |
 | Full self-lint                                                                                                             | gspot's TypeScript passes under gspot with no ignores; `docs/` and every check `summary` pass the prose engine |
@@ -355,7 +355,7 @@ fix and renewed verification, not merely an open gap row.
 | sql, postgres, supabase presets: sqlfluff, squawk, migration docs, edge lint, Semgrep rules | planted Supabase repository passes                           |
 | docker, nginx presets                                                                       | compose config and nginx `-t` run through the daemon         |
 | express preset                                                                              | boundaries and HTTP rules                                    |
-| dependency ownership, typecheck membership, security-headers integrity checks               | fixtures                                                     |
+| dependency ownership, typecheck membership, security-headers integrity checks               | test data                                                    |
 
 Acceptance: the worktree harness on yap-text-inference, and on the two ComfyUI custom-node
 repositories for the Python half of the fifth shape. That shape has a root `__init__.py`, a `requirements.txt` exported from `pyproject.toml` and declared with `produced_by`, and dependency ranges because the node is a library.

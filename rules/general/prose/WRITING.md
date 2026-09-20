@@ -544,7 +544,7 @@ Verify claims against the sources that own them:
 - Configuration for supported values and defaults.
 - Migration state for database behavior.
 - User interface code or a current product build for labels and navigation.
-- Tests for demonstrated scenarios, without treating test fixtures as the
+- Tests for demonstrated scenarios, without treating test data as the
   public contract by themselves.
 - Provider documentation for external requirements.
 - Release configuration for version and platform support.

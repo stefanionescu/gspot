@@ -1,6 +1,6 @@
-import { createFixture } from 'fs-fixture';
 // Planted repository for the nextjs and i18n presets: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
 import { delimiter, join } from 'node:path';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { chmodSync, symlinkSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
@@ -70,7 +70,7 @@ const CASES: PlantedCase[] = [
     {
         check: 'nextjs/build',
         files: { 'app/page.tsx': PAGE.replace('return "home";', 'return missing;') },
-        // Turbopack refuses the linked node_modules folder of a planted repository, so the fixture builds with webpack.
+        // Turbopack refuses the linked node_modules folder of a planted repository, so the sandbox builds with webpack.
         policy: '[tools.next]\nbuild_in_gate = true\nbuild_flags = ["--webpack"]\n',
         expected: 'next build failed',
     },
@@ -92,8 +92,8 @@ describe('the nextjs and i18n presets', () => {
     test(
         'the file checks fire on their planted defects, and the one ESLint configuration holds the framework rules',
         async () => {
-            // Webpack requires the linked dependencies and the fixture to share a drive.
-            await using fixture = await createFixture(
+            // Webpack requires the linked dependencies and the sandbox to share a drive.
+            await using sandbox = await createSandbox(
                 {
                     '.gitignore': 'node_modules\n.next\n',
                     'package.json': manifest('19.1.1'),
@@ -104,52 +104,52 @@ describe('the nextjs and i18n presets', () => {
                     'messages/en.json': '{\n    "home": { "title": "Home", "greeting": "Hello {name}" }\n}\n',
                     'messages/de.json': '{\n    "home": { "title": "Start", "greeting": "Hallo {name}" }\n}\n',
                 },
-                { tempDir: join(MODULES, '../..') },
+                join(MODULES, '../..'),
             );
-            symlinkSync(MODULES, join(fixture.path, 'node_modules'));
-            commitAll(fixture.path);
+            symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+            commitAll(sandbox.path);
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
-            await install(fixture.path, INIT, environment);
-            const disabled = await run(fixture.path, ['check', '--only', 'nextjs/build', '--no-cache'], environment);
+            await install(sandbox.path, INIT, environment);
+            const disabled = await run(sandbox.path, ['check', '--only', 'nextjs/build', '--no-cache'], environment);
             expect(disabled.code, disabled.stdout + disabled.stderr).toBe(0);
             expect(disabled.stdout).toContain('skipped');
             expect(disabled.stdout).toContain('tools.next.build_in_gate');
             for (const planted of CASES) {
-                const clean = await runPlanted(fixture.path, { ...planted, files: {} }, environment);
+                const clean = await runPlanted(sandbox.path, { ...planted, files: {} }, environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
-            const written = await Bun.file(join(fixture.path, '.gspot/eslint.config.mjs')).text();
+            const written = await Bun.file(join(sandbox.path, '.gspot/eslint.config.mjs')).text();
             expect(written).toContain("nextPlugin.configs['core-web-vitals']");
             expect(written).toContain('i18next/no-literal-string');
             // A later block that turns a required rule off is what integrity/required-rules exists to see.
             const held = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'integrity/required-rules', '--no-cache'],
                 environment,
             );
             expect(held.code, held.stdout + held.stderr).toBe(0);
-            chmodSync(join(fixture.path, '.gspot/eslint.config.mjs'), OWNER_WRITES);
+            chmodSync(join(sandbox.path, '.gspot/eslint.config.mjs'), OWNER_WRITES);
             const loosened = written.replace("'react/no-danger': 'error'", "'react/no-danger': 'off'");
-            await Bun.write(join(fixture.path, '.gspot/eslint.config.mjs'), loosened);
+            await Bun.write(join(sandbox.path, '.gspot/eslint.config.mjs'), loosened);
             const seen = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'integrity/required-rules', '--no-cache'],
                 environment,
             );
             expect(seen.code, seen.stdout + seen.stderr).toBe(1);
             expect(seen.stdout).toContain('react/no-danger is off for app/layout.tsx');
-            await Bun.write(join(fixture.path, '.gspot/eslint.config.mjs'), written);
-            const yielded = await run(fixture.path, ['check', '--only', 'typescript/tsc', '--no-cache'], environment);
+            await Bun.write(join(sandbox.path, '.gspot/eslint.config.mjs'), written);
+            const yielded = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache'], environment);
             expect(yielded.stdout).toContain('nextjs/typecheck runs it here');
             // Text written into the markup is what the i18n rule exists for, and a rule that runs proves its plugin works.
             const literal = LAYOUT.replace('<body>{children}</body>', '<body>Welcome{children}</body>');
-            await Bun.write(join(fixture.path, 'app/layout.tsx'), literal);
-            const lint = await run(fixture.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
+            await Bun.write(join(sandbox.path, 'app/layout.tsx'), literal);
+            const lint = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(lint.stdout + lint.stderr).not.toContain('broke');
             expect(lint.stdout).toContain('i18next/no-literal-string');
         },

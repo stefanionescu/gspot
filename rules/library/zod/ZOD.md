@@ -164,7 +164,7 @@ the first request's user, tenant, or locale in a shared schema.
   stripped. Prefer a discriminator when it expresses the domain clearly.
 - Use `z.record(enumSchema, valueSchema)` for a complete set of enum keys and `z.partialRecord()`
   for sparse entries. Check mixed object/record intersections against the installed version;
-  pattern-key behavior changed in Zod 4.5. Cover accepted and rejected keys in contract fixtures.
+  pattern-key behavior changed in Zod 4.5. Cover accepted and rejected keys in contract test data.
 - Make refinements deterministic and free of writes. Return a failure or add an issue instead of
   throwing. Use `.refine()` for a single condition and `.superRefine()` for several related issues.
   Give cross-field failures the relevant field path so the UI can associate them with a control.
@@ -277,7 +277,7 @@ See [Zod compilation](https://zod.dev/compile) for supported schemas and fallbac
 ### Verify Zod upgrades
 
 Review affected contracts when upgrading, including a minor release with stricter validation. Use
-representative boundary fixtures for forms, endpoints, persistence, and provider payloads. For Zod
+representative boundary test data for forms, endpoints, persistence, and provider payloads. For Zod
 4.5, check:
 
 - Datetimes with omitted seconds, explicit offsets, or local values.

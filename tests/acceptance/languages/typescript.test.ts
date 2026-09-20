@@ -1,9 +1,9 @@
 // Planted repository for the typescript preset and what it brings: every check fires on its planted defect.
 
 import { join } from 'node:path';
-// The fixture links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
+// The sandbox links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
 import { fileURLToPath } from 'node:url';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
@@ -169,7 +169,7 @@ describe('the typescript preset', () => {
     test(
         'every check passes on a clean project and fires on its planted defect',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'package.json': PACKAGE,
                 '.gitignore': 'node_modules/\n',
                 'types/orders.ts': ORDERS_TYPES,
@@ -178,11 +178,11 @@ describe('the typescript preset', () => {
                 'src/orders/receipt.ts': RECEIPT,
                 'src/main.ts': MAIN,
             });
-            symlinkSync(join(root, 'node_modules'), join(fixture.path, 'node_modules'), 'dir');
-            commitAll(fixture.path);
+            symlinkSync(join(root, 'node_modules'), join(sandbox.path, 'node_modules'), 'dir');
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'ec', 'typos']) };
             await run(
-                fixture.path,
+                sandbox.path,
                 [
                     'init',
                     '--yes',
@@ -199,16 +199,16 @@ describe('the typescript preset', () => {
                 ],
                 environment,
             );
-            const whole = await run(fixture.path, ['check', '--no-cache'], environment);
+            const whole = await run(sandbox.path, ['check', '--no-cache'], environment);
             expect(whole.code, whole.stdout).toBe(0);
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             // typos forgets its exclude list for a file named on the command line unless it is told to keep it.
             const excluded = await runPlanted(
-                fixture.path,
+                sandbox.path,
                 {
                     check: 'spelling/typos',
                     files: { 'assets/mark.svg': `<svg><title>${MISSPELLED}</title></svg>\n` },
@@ -226,17 +226,17 @@ describe('the typescript preset', () => {
         async () => {
             const clean =
                 '// Doubles numbers.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n';
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'package.json': PACKAGE,
                 '.gitignore': 'node_modules/\n',
                 'src/main.js': clean,
                 'src/index.js': "// The entry point.\nexport { twice } from './main.js';\n",
             });
-            symlinkSync(join(root, 'node_modules'), join(fixture.path, 'node_modules'), 'dir');
-            commitAll(fixture.path);
+            symlinkSync(join(root, 'node_modules'), join(sandbox.path, 'node_modules'), 'dir');
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'ec', 'typos']) };
             await run(
-                fixture.path,
+                sandbox.path,
                 [
                     'init',
                     '--yes',
@@ -254,7 +254,7 @@ describe('the typescript preset', () => {
                 environment,
             );
             const outcome = await runPlanted(
-                fixture.path,
+                sandbox.path,
                 {
                     check: 'javascript/eslint',
                     files: { 'src/paused.js': clean.replace('    return', () => '    debugger;\n    return') },
@@ -288,7 +288,7 @@ for (const scope of ['', 'api/']) {
         async () => {
             const solution =
                 '{// The solution has no sources.\n"files":[],"references":[{"path":"./orders"},{"path":"./users"}],}';
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'gspot.toml': scope === '' ? POLICY : POLICY + '\n[[scope]]\npath = "api"\npresets = ["typescript"]\n',
                 '.gitignore': 'node_modules/\n.gspot/\n',
                 'tsconfig.json': scope === '' ? solution : '{"files":["root.ts"],"compilerOptions":{"types":[]}}',
@@ -299,9 +299,9 @@ for (const scope of ['', 'api/']) {
                 [`${scope}orders/order.ts`]: 'export const total: number = "wrong";',
                 [`${scope}users/user.ts`]: 'export const active: boolean = 42;',
             });
-            symlinkSync(join(root, 'node_modules'), join(fixture.path, 'node_modules'), 'dir');
-            commitAll(fixture.path);
-            const failed = await run(fixture.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
+            symlinkSync(join(root, 'node_modules'), join(sandbox.path, 'node_modules'), 'dir');
+            commitAll(sandbox.path);
+            const failed = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
             const report = JSON.parse(failed.stdout) as RunReport;
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
             const findings = report.checks.flatMap((check) => check.findings);
@@ -311,12 +311,12 @@ for (const scope of ['', 'api/']) {
                     .map((finding) => finding.file)
                     .toSorted((left, right) => left.localeCompare(right)),
             ).toEqual([`${scope}orders/order.ts`, `${scope}users/user.ts`]);
-            writeFileSync(join(fixture.path, `${scope}orders/order.ts`), 'export const total: number = 3;');
-            writeFileSync(join(fixture.path, `${scope}users/user.ts`), 'export const active: boolean = true;');
-            const clean = await run(fixture.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
+            writeFileSync(join(sandbox.path, `${scope}orders/order.ts`), 'export const total: number = 3;');
+            writeFileSync(join(sandbox.path, `${scope}users/user.ts`), 'export const active: boolean = true;');
+            const clean = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             const output = ['orders', 'users'].flatMap((folder) =>
-                readdirSync(join(fixture.path, scope, folder), { recursive: true }).map(String),
+                readdirSync(join(sandbox.path, scope, folder), { recursive: true }).map(String),
             );
             expect(output.filter((path) => /\.(?:tsbuildinfo|js|d\.ts)$/u.test(path))).toEqual([]);
         },

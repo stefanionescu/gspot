@@ -1,7 +1,7 @@
 // Planted repositories: a profile saved in one repository installs the same policy in another, and a bad one stops init.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { treeContents } from '#tests/harness/contents.ts';
 import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
@@ -14,23 +14,23 @@ async function tables(root: string): Promise<Record<string, unknown>> {
 
 describe('profiles', () => {
     test('init validates a profile in a dry run without changing the repository', async () => {
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             'scripts/a.sh': script,
             'team.profile.toml': 'version = 1\nprofile = "team"\nselection = "exact"\npresets = ["bash"]\n',
         });
-        commitAll(fixture.path);
-        const before = treeContents(fixture.path);
-        const result = await run(fixture.path, ['init', '--yes', '--from', 'team.profile.toml', '--dry-run'], TOOLS);
+        commitAll(sandbox.path);
+        const before = treeContents(sandbox.path);
+        const result = await run(sandbox.path, ['init', '--yes', '--from', 'team.profile.toml', '--dry-run'], TOOLS);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(result.stdout).toContain('profile    team');
         expect(result.stdout).toContain('--dry-run: nothing written');
-        expect(treeContents(fixture.path)).toEqual(before);
+        expect(treeContents(sandbox.path)).toEqual(before);
     });
 
     test(
         'export carries pathless ignores into a second repository',
         async () => {
-            await using first = await createFixture({ 'scripts/a.sh': script });
+            await using first = await createSandbox({ 'scripts/a.sh': script });
             commitAll(first.path);
             await run(
                 first.path,
@@ -83,7 +83,7 @@ describe('profiles', () => {
             expect(saved.code).toBe(0);
             expect(saved.stdout).toContain('left out  ignore[0]: names a repository path');
 
-            await using second = await createFixture({
+            await using second = await createSandbox({
                 'tools/b.sh': script,
                 'index.ts': 'export const b = 1;\n',
                 '.shellcheckrc': 'disable=SC2154\n',
@@ -122,20 +122,20 @@ describe('profiles', () => {
     test(
         'a profile with a wrong value, an unknown preset and a path stops init before anything is written',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'scripts/a.sh': script,
                 'bad.profile.toml':
                     'version = 1\nprofile = "bad"\nselection = "sometimes"\npresets = ["speling"]\n\n[[tools.typos.exclude]]\npaths = ["a/**"]\nreason = "A reason that says something."\n',
             });
-            commitAll(fixture.path);
-            const init = await run(fixture.path, ['init', '--yes', '--from', 'bad.profile.toml'], TOOLS);
+            commitAll(sandbox.path);
+            const init = await run(sandbox.path, ['init', '--yes', '--from', 'bad.profile.toml'], TOOLS);
             expect(init.code).toBe(2);
             expect(init.stderr).toContain('selection');
             expect(init.stderr).toContain('Did you mean `spelling`');
             expect(init.stderr).toContain('a profile carries no path');
-            expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
+            expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
             const preview = await run(
-                fixture.path,
+                sandbox.path,
                 ['init', '--yes', '--from', 'bad.profile.toml', '--dry-run'],
                 TOOLS,
             );
@@ -150,10 +150,10 @@ describe('policy edits', () => {
     test(
         'an item that carries its own reason needs no flag, and --reason fills an item that has none',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': script });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'scripts/a.sh': script });
+            commitAll(sandbox.path);
             await run(
-                fixture.path,
+                sandbox.path,
                 [
                     'init',
                     '--yes',
@@ -172,32 +172,32 @@ describe('policy edits', () => {
                 TOOLS,
             );
             const own = await run(
-                fixture.path,
+                sandbox.path,
                 ['set', 'tools.typos.exclude', '{"paths":["a/**"],"reason":"Text in another language lives here."}'],
                 TOOLS,
             );
             expect(own.code, own.stderr).toBe(0);
             const filled = await run(
-                fixture.path,
+                sandbox.path,
                 [
                     'set',
                     'tools.typos.exclude',
                     '{"paths":["b/**"]}',
                     '--reason',
-                    'Fixtures that hold typos on purpose.',
+                    'Sandboxs that hold typos on purpose.',
                 ],
                 TOOLS,
             );
             expect(filled.code, filled.stderr).toBe(0);
-            const policy = await tables(fixture.path);
+            const policy = await tables(sandbox.path);
             const written = policy['tools'] as {
                 typos: { exclude: { paths: string[]; reason: string }[] };
             };
             expect(written.typos.exclude.map((entry) => entry.reason)).toEqual([
                 'Text in another language lives here.',
-                'Fixtures that hold typos on purpose.',
+                'Sandboxs that hold typos on purpose.',
             ]);
-            const invalid = await run(fixture.path, ['set', 'tools.typos.exclude', '{"paths":["c/**"]}'], TOOLS);
+            const invalid = await run(sandbox.path, ['set', 'tools.typos.exclude', '{"paths":["c/**"]}'], TOOLS);
             expect(invalid.code).not.toBe(0);
         },
         PLANTED_TIMEOUT_MS,

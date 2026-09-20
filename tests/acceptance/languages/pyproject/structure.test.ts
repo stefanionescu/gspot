@@ -1,5 +1,5 @@
 // Planted repository for the Python structure checks: one module shaped wrong for each check.
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -129,18 +129,18 @@ describe('the Python structure checks', () => {
     test(
         'every check passes on a clean module and fires on its planted defect',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'pyproject.toml': PROJECT,
                 'planted/__init__.py': '"""The planted package."""\n',
                 'planted/prices.py': CLEAN,
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ruff', 'typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }

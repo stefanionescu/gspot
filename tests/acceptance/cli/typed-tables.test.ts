@@ -1,6 +1,6 @@
 // gspot set with a table for a value: the TOML form is read, text that reads as nothing is refused, and a quoted table in the policy is refused at load.
 import { join } from 'node:path';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
@@ -26,18 +26,18 @@ describe('gspot set', () => {
     test(
         'a list of tables typed the TOML way lands in the policy as tables',
         async () => {
-            await using fixture = await createFixture({ 'README.md': '# planted\n', LICENSE: 'MIT\n' });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'README.md': '# planted\n', LICENSE: 'MIT\n' });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
-            const written = await run(fixture.path, ['set', 'tools.docs.paths_allowed', TABLE], environment);
+            await install(sandbox.path, INIT, environment);
+            const written = await run(sandbox.path, ['set', 'tools.docs.paths_allowed', TABLE], environment);
             expect(written.code, written.stdout + written.stderr).toBe(0);
-            const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
+            const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
             expect(policy).toContain('patterns = ["REPORT.md"]');
             expect(policy).not.toContain('"[{patterns');
 
             const unreadable = await run(
-                fixture.path,
+                sandbox.path,
                 ['set', 'tools.docs.paths_allowed', '[{patterns = '],
                 environment,
             );
@@ -46,10 +46,10 @@ describe('gspot set', () => {
 
             // A person can still type the quotes by hand, and the policy refuses that when it loads.
             await Bun.write(
-                join(fixture.path, 'gspot.toml'),
+                join(sandbox.path, 'gspot.toml'),
                 `${policy}\n[tools.typos]\nexclude = ["{paths = [\\"a\\"], reason = \\"x\\"}"]\n`,
             );
-            const read = await run(fixture.path, ['check', '--only', 'docs/readme-present'], environment);
+            const read = await run(sandbox.path, ['check', '--only', 'docs/readme-present'], environment);
             expect(read.code).toBe(2);
             expect(read.stdout + read.stderr).toContain('holds a table written inside quotes');
         },

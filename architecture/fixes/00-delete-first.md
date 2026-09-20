@@ -121,7 +121,7 @@ manifests declare `limits.line_length`, `limits.trivial_ast_nodes`, and
 `emit/managed-blocks.ts`, and the rows of those keys in [03-configuration.md](../03-configuration.md)
 and the nextjs preset page.
 
-**Tests.** The schema test gains one invalid fixture for a removed key. A unit test holds that
+**Tests.** The schema test gains one invalid test repository for a removed key. A unit test holds that
 every declared setting has a reader, by walking the manifests (K-100).
 
 **Done when.** `gspot set architecture.package_roots x` exits 2 and names no such setting.
@@ -257,7 +257,7 @@ comment openers live once, in `config/markers.ts`.
 
 **What goes.** The skip branch and its note.
 
-**Tests.** A manifest fixture with `engine = "nope"` fails to load.
+**Tests.** A manifest test repository with `engine = "nope"` fails to load.
 
 **Done when.** The note text exists nowhere in the source.
 

@@ -1,5 +1,5 @@
 // Planted repository for the ansible preset: a task that shells out to systemctl.
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -36,17 +36,17 @@ describe('the ansible preset', () => {
     test(
         'ansible-lint runs where the ansible.cfg is, and its findings carry the folder',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'deploy/ansible.cfg': '[defaults]\ninventory = inventory\n',
                 'deploy/site.yml': CLEAN,
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ansible-lint', 'typos', 'ec', 'taplo', 'yamllint']) };
-            await install(fixture.path, INIT, environment);
-            const clean = await run(fixture.path, ['check', '--only', 'ansible/lint', '--no-cache'], environment);
+            await install(sandbox.path, INIT, environment);
+            const clean = await run(sandbox.path, ['check', '--only', 'ansible/lint', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 if (process.platform === 'win32') {
                     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
                     expect(outcome.stdout).toMatch(/skipped\s+ansible\/lint\s+\(platform\)/u);

@@ -120,11 +120,13 @@
             "removable": true,
             "terms": ["and", "or", "with", "when", "what", "whatever", "once", "plus"]
         },
+        "terminology": {
+            "removable": false,
+            "terms": ["fixture", "fixtures"]
+        },
         "test": {
             "removable": true,
             "terms": [
-                "fixture",
-                "fixtures",
                 "test case",
                 "testcase",
                 "under test",

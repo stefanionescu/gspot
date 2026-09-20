@@ -280,7 +280,7 @@ Rules:
 - Keep shared test types under the required test type roots.
 - Use the test runner's typed mock helpers rather than casting a mock to `any`.
 - Mock external boundaries, not internal implementation details.
-- Avoid `any` in tests. Use `unknown`, typed fixtures, or narrow mock helpers.
+- Avoid `any` in tests. Use `unknown`, typed test data, or narrow mock helpers.
 - Non-null assertions are allowed in test files only when the arrange step makes
   the value obviously present.
 - Documentation-only TypeScript guidance changes must not update tests.

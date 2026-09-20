@@ -1,7 +1,7 @@
 import { symlinkSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
 // Planted repository for the vitest preset: a function no test calls, and a focused test.
 import { delimiter, join } from 'node:path';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -47,23 +47,23 @@ describe('the vitest preset', () => {
     test(
         'coverage under the floor and a focused test are findings',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'package.json': PACKAGE,
                 '.gitignore': 'node_modules\ncoverage\n',
                 'tsconfig.json': '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "include": ["src"]\n}\n',
                 'src/math.ts': SOURCE,
                 'src/math.test.ts': TEST,
             });
-            symlinkSync(MODULES, join(fixture.path, 'node_modules'));
-            commitAll(fixture.path);
+            symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+            commitAll(sandbox.path);
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }

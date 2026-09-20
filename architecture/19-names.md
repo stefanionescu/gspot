@@ -157,8 +157,8 @@ report, `packageManager` of `package.json`, the members Emscripten and libpg-que
 
 Where the banned terms changed a name for the better, the name stays changed: `emit` for the
 banned `render`, `readPolicy` for the banned `load`, `ExposedSettings` for the
-banned `catalog`. A library that fixes a word keeps it: `createFixture` of `fs-fixture`,
-`__Snapshots__` of the snapshot library, `tmpdir` of Node.
+banned `catalog`. Required external spellings stay: `__Snapshots__` of the snapshot
+library and `tmpdir` of Node.
 
 ## Names that stay
 

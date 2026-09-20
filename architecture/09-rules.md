@@ -47,13 +47,13 @@ Use that revision as the source when carrying the relevant material into its own
 A heading comparison between the four source corpora and the merged corpus found general
 content with no counterpart. The repair pass restored each into the file named.
 
-| Restored                                                                                         | Into                                                                                                                    |
-| ------------------------------------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------- |
-| Docker: image stack ownership, build contexts, CUDA, models, Hugging Face downloads              | the rule files of yap-text-inference; layering and cache discipline was already in `tool/docker/DOCKER.md`              |
-| Swift: networking and API clients                                                                | `language/SWIFT.md` (the neutral rules), and the rule files of yap-swift-app (the layered version)                      |
-| General: verification and tests policy, once                                                     | `general/agent/WORKING.md`                                                                                              |
-| Static site: boundaries, build, routes, HTML, CSS and content naming, tests, and fixtures naming | `repository/static-site/STATIC-SITE.md`, `language/naming/HTML.md`, `language/naming/CSS.md`, `general/code/TESTING.md` |
-| The iOS and API architecture, Supabase deployment, inference vocabulary                          | the repository each came from                                                                                           |
+| Restored                                                                                          | Into                                                                                                                    |
+| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
+| Docker: image stack ownership, build contexts, CUDA, models, Hugging Face downloads               | the rule files of yap-text-inference; layering and cache discipline was already in `tool/docker/DOCKER.md`              |
+| Swift: networking and API clients                                                                 | `language/SWIFT.md` (the neutral rules), and the rule files of yap-swift-app (the layered version)                      |
+| General: verification and tests policy, once                                                      | `general/agent/WORKING.md`                                                                                              |
+| Static site: boundaries, build, routes, HTML, CSS and content naming, tests, and test data naming | `repository/static-site/STATIC-SITE.md`, `language/naming/HTML.md`, `language/naming/CSS.md`, `general/code/TESTING.md` |
+| The iOS and API architecture, Supabase deployment, inference vocabulary                           | the repository each came from                                                                                           |
 
 Both guards are clean as of 2026-09-18. The completeness check counted 7,616 source statements: 6,443 matched exactly or as duplicates, 255 at the fuzzy ratio, 354 listed in `DROPPED.md`, and 564 with a recorded reason. The reasons include the 48 statements the prose pass split into shorter ones. None was unresolved, and the check and its records were retired once that state was reached (D-70).
 

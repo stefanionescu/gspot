@@ -313,9 +313,9 @@ recommends i18n where `next-intl` is a dependency.
 
 **What goes.** `tools.next.translations`.
 
-**Tests.** A manifest fixture with a repeated name fails.
+**Tests.** A manifest test repository with a repeated name fails.
 
-**Done when.** That fixture fails, and the Next.js planted repository passes with i18n selected.
+**Done when.** That test repository fails, and the Next.js planted repository passes with i18n selected.
 
 ## G-13: two conventions for constants
 

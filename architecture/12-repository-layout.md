@@ -18,6 +18,7 @@ gspot/
 ├── packages/
 │   ├── cli/                    the binary: config/, src/, types/, grammars/, tests/
 │   ├── eslint-plugin/          @gspot/eslint-plugin
+│   ├── testing/                private @gspot/testing: sandbox.ts, cleanup.test.ts, package.json
 │   └── npm/                    the launcher package and the platform package template
 ├── presets/                    one folder for each preset: manifest.toml, templates, ast-grep rules, Semgrep packs
 ├── rules/                      the rule files, by layer
@@ -171,14 +172,14 @@ Nothing in the release path is code gspot wrote:
 | Failing case       | every shipped check has one planted case that makes it fail (T-17, T-28)                                                                                                         |
 | Platform           | the unit tests, the planted repositories, and `gspot check` run on Linux, macOS, and Windows in CI (K-263)                                                                       |
 | Completion         | every command and flag of the program appears in the completions for bash, zsh, fish, and PowerShell, read from the program and not from a list (T-22)                           |
-| Schema             | `gspot.schema.json` accepts every example config of this folder and of the guides, and refuses every invalid fixture (S-11)                                                      |
+| Schema             | `gspot.schema.json` accepts every example config of this folder and of the guides, and refuses every invalid test repository (S-11)                                              |
 | Tool contract      | every flag a manifest passes exists in the help text of the pinned tool (K-251)                                                                                                  |
 | Launcher           | the launcher and the platform packages are published to a `verdaccio` registry and installed from it with `--ignore-scripts`                                                     |
 | Time               | a staged check of ten files in a scope of 1,000 files ends within its stated limit, warm and cold (T-12)                                                                         |
 | Rule files         | the repository check `rules/lint` reads front matter, links, size, the layer of each file, fences, and each good example (K-261)                                                 |
 | Self               | `gspot check` on gspot, with no `[[ignore]]` entry                                                                                                                               |
 
-`tests/config/` holds the init command lines, the fixture text, the tool lists, and the timeouts
+`tests/config/` holds the init command lines, the test repository text, the tool lists, and the timeouts
 that test files share (D-113). The harness fails a test whose `init` exits with an error (T-27).
 
 Tests never call the network. Tools run in CI through mise pins, and a missing tool fails the

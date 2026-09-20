@@ -400,7 +400,7 @@ template engine with fewer tests and one more thing to document.
 
 No test file exists beside any reference `quality/` ESLint rule. The rule tests in
 `packages/eslint-plugin/tests/rules/` are written new from each rule's semantics and messages. The port is checked by running the reference plugin and the gspot plugin over one planted scope and comparing findings. Rejected: skipping the tests because the reference had none, which leaves
-twenty-six rules with no fixture.
+twenty-six rules with no test repository.
 
 ## D-65 The hook in this repository resolves the development binary through `GSPOT_BIN`
 
@@ -808,7 +808,7 @@ each language preset, whether names are checked.
 
 ## D-113 Tests keep their fixed values in one place, and test the path a person takes
 
-`tests/config/` holds the init command lines, the manifests, the fixture text, the tool lists and
+`tests/config/` holds the init command lines, the manifests, the test repository text, the tool lists and
 the timeouts. One planted test installs with defaults and the mise runner in a repository of two
 scopes. `toolsPath` fails with the name of the tool it cannot find. `repository-check.test.ts`
 becomes `declared-check.test.ts`, and `scope-languages.test.ts` becomes `scope-presets.test.ts`.

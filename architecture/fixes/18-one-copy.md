@@ -4,7 +4,7 @@ Row 23 of the build order. The rules gspot wrote itself exist once for each lang
 own constants, and they do not hold in every language alike. After this step an idea that stays
 is written once over the syntax tree, with one set of limits. The manifest of each language
 lists it under a name of its own (D-98). TypeScript keeps its ESLint rules, so an editor still
-shows them (D-02), and one fixture set holds both implementations to the same answers. This step also builds the checks the ledger promised and nobody wrote (K-248).
+shows them (D-02), and one test repository set holds both implementations to the same answers. This step also builds the checks the ledger promised and nobody wrote (K-248).
 
 ## K-87: three copies of one idea
 
@@ -53,8 +53,8 @@ row and one manifest entry.
 `structure/trivial-function`, `python/trivial-function`, and `swift/trivial-function`. The key
 `limits.sql.function_lines` gains its reader here.
 
-**Tests.** One fixture for each cell of the table that says yes: a short file with the defect and
-one without. The TypeScript fixtures run through the rule tester of ESLint, and the same cases in
+**Tests.** One test repository for each cell of the table that says yes: a short file with the defect and
+one without. The TypeScript test data run through the rule tester of ESLint, and the same cases in
 the other languages run through the shared analysis, from one table of cases.
 
 **Done when.** The unit test over the table passes, and the ledger test of K-248 passes.

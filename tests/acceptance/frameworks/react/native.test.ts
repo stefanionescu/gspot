@@ -1,7 +1,7 @@
 import { symlinkSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
 // Planted repository for the react-native preset: an environment variable taken apart, an inline style, a list with no key, and a token in AsyncStorage.
 import { delimiter, join } from 'node:path';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
@@ -68,32 +68,32 @@ describe('the react-native preset', () => {
     test(
         'the Expo rules and the React Native selectors fire on their planted files',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 '.gitignore': 'node_modules\n',
                 'package.json': PACKAGE,
                 'tsconfig.json': TSCONFIG,
                 'src/answer.ts': CLEAN,
             });
-            symlinkSync(MODULES, join(fixture.path, 'node_modules'));
-            commitAll(fixture.path);
+            symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+            commitAll(sandbox.path);
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
-            await install(fixture.path, INIT, environment);
-            const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
+            await install(sandbox.path, INIT, environment);
+            const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
             expect(policy).toContain('react-native');
-            const clean = await run(fixture.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
+            const clean = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const [expected, path, text] of LINT) {
                 const outcome = await runPlanted(
-                    fixture.path,
+                    sandbox.path,
                     { check: 'typescript/eslint', files: { [path]: text }, expected },
                     environment,
                 );
                 expect(outcome.stdout, `${expected}: ${outcome.stdout}${outcome.stderr}`).toContain(expected);
             }
             const required = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'integrity/required-rules', '--no-cache'],
                 environment,
             );

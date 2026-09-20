@@ -21,7 +21,7 @@ name. One term list serves identifiers, file names, and prose.
 | A container with no owner                                | `utils`, `helpers`, `common`, `core`, `misc`, `shared`         | `naming/identifiers`, `structure/folder-names`              |
 | A role word with no role                                 | `Manager`, `Handler`, `Service`, `Processor`, `Wrapper`        | `naming/identifiers` (roles group)                          |
 | A conjunction, meaning two jobs                          | `validateAndSave`, `fetchOrCreate`                             | `naming/identifiers` (conjunctions group, whole-part match) |
-| Test slop                                                | `testEdgeCases`, `fixtures/`, `underTest`                      | `naming/identifiers` (test group)                           |
+| Test slop                                                | `testEdgeCases`, `underTest`                                   | `naming/identifiers` (test group)                           |
 | A word repeated                                          | `userUserId`, `configConfig`                                   | `naming/identifiers` (duplicate-word ban)                   |
 | A name too long to read                                  | five words, forty characters                                   | `naming/identifiers` (word and length ceilings)             |
 | A file named like its sibling                            | `asset-card.ts`, `asset-list.ts`, `asset-row.ts` in one folder | `structure/prefix-collisions`, in every language            |
@@ -84,15 +84,15 @@ name. One term list serves identifiers, file names, and prose.
 
 ### Slop in tests
 
-| Pattern                                           | Check                                                                                                   |
-| ------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
-| A test with no assertion                          | `vitest/expect-expect`; Ruff `PT` family; SwiftLint `empty_xctest_method`                               |
-| An assertion inside a condition                   | `vitest/no-conditional-expect`                                                                          |
-| A focused or disabled test                        | `vitest/no-focused-tests`, `no-disabled-tests`; Ruff `PT`                                               |
-| A test named after an edge case, a fixture folder | naming test-slop group                                                                                  |
-| A non-test file beside tests                      | `gspot/tests-directory-contents`                                                                        |
-| A snapshot-only test suite                        | `vitest/prefer-strict-equal` and a count of `toMatchSnapshot` through a `no-restricted-syntax` selector |
-| Coverage below the threshold                      | `vitest/coverage`, `pytest/coverage` at push                                                            |
+| Pattern                                                   | Check                                                                                                   |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| A test with no assertion                                  | `vitest/expect-expect`; Ruff `PT` family; SwiftLint `empty_xctest_method`                               |
+| An assertion inside a condition                           | `vitest/no-conditional-expect`                                                                          |
+| A focused or disabled test                                | `vitest/no-focused-tests`, `no-disabled-tests`; Ruff `PT`                                               |
+| A test named after an edge case, a test repository folder | naming test-slop group                                                                                  |
+| A non-test file beside tests                              | `gspot/tests-directory-contents`                                                                        |
+| A snapshot-only test suite                                | `vitest/prefer-strict-equal` and a count of `toMatchSnapshot` through a `no-restricted-syntax` selector |
+| Coverage below the threshold                              | `vitest/coverage`, `pytest/coverage` at push                                                            |
 
 ### Slop in dependencies and configuration
 

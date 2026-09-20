@@ -1,7 +1,7 @@
-import { createFixture } from 'fs-fixture';
 // Planted repositories: what init refuses before it writes, and that every hook runs under the Bash macOS ships.
 import { delimiter, join } from 'node:path';
 import { hookBody } from '#cli/emit/hooks.ts';
+import { createSandbox } from '@gspot/testing';
 import { chmodSync, existsSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, git, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
@@ -13,13 +13,13 @@ describe('init refusals', () => {
     test(
         'a choice flag outside its list exits 2 and names the allowed values',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': script });
-            commitAll(fixture.path);
-            const result = await run(fixture.path, ['init', '--yes', '--hooks', 'foo']);
+            await using sandbox = await createSandbox({ 'scripts/a.sh': script });
+            commitAll(sandbox.path);
+            const result = await run(sandbox.path, ['init', '--yes', '--hooks', 'foo']);
             expect(result.code).toBe(2);
             expect(result.stderr).toContain('Allowed choices are gspot, lefthook, husky, none');
-            expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
-            const invalidStage = await run(fixture.path, ['check', '--at', 'later']);
+            expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
+            const invalidStage = await run(sandbox.path, ['check', '--at', 'later']);
             expect(invalidStage.code).toBe(2);
         },
         PLANTED_TIMEOUT_MS,
@@ -28,12 +28,12 @@ describe('init refusals', () => {
     test(
         'an unknown preset names the near match, and a required preset cannot be left out',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': script });
-            commitAll(fixture.path);
-            const unknown = await run(fixture.path, ['init', '--yes', '--presets', 'bassh', ...QUIET]);
+            await using sandbox = await createSandbox({ 'scripts/a.sh': script });
+            commitAll(sandbox.path);
+            const unknown = await run(sandbox.path, ['init', '--yes', '--presets', 'bassh', ...QUIET]);
             expect(unknown.code).toBe(2);
             expect(unknown.stderr).toContain('Did you mean `bash`');
-            const required = await run(fixture.path, [
+            const required = await run(sandbox.path, [
                 'init',
                 '--yes',
                 '--presets',
@@ -44,7 +44,7 @@ describe('init refusals', () => {
             ]);
             expect(required.code).toBe(2);
             expect(required.stderr).toContain('bash requires structure');
-            expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
+            expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
         },
         PLANTED_TIMEOUT_MS,
     );
@@ -52,14 +52,14 @@ describe('init refusals', () => {
     test(
         'uncommitted changes stop init until --allow-dirty is given',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': script });
-            commitAll(fixture.path);
-            await Bun.write(join(fixture.path, 'notes.txt'), 'draft\n');
-            const refused = await run(fixture.path, ['init', '--yes', '--presets', 'bash', ...QUIET]);
+            await using sandbox = await createSandbox({ 'scripts/a.sh': script });
+            commitAll(sandbox.path);
+            await Bun.write(join(sandbox.path, 'notes.txt'), 'draft\n');
+            const refused = await run(sandbox.path, ['init', '--yes', '--presets', 'bash', ...QUIET]);
             expect(refused.code).toBe(2);
             expect(refused.stderr).toContain('--allow-dirty');
-            expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
-            const allowed = await run(fixture.path, ['init', '--yes', '--presets', 'bash', '--allow-dirty', ...QUIET], {
+            expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
+            const allowed = await run(sandbox.path, ['init', '--yes', '--presets', 'bash', '--allow-dirty', ...QUIET], {
                 PATH: `${join(import.meta.dir, '../../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
             });
             expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
@@ -68,21 +68,21 @@ describe('init refusals', () => {
     );
 
     test.skipIf(!existsSync(SYSTEM_BASH))('every hook body runs under the system Bash', async () => {
-        await using fixture = await createFixture({ 'README.md': '# Hook test\n' });
-        commitAll(fixture.path);
+        await using sandbox = await createSandbox({ 'README.md': '# Hook test\n' });
+        commitAll(sandbox.path);
         const remote = 'https://example.com/planted.git';
-        expect(git(fixture.path, ['remote', 'add', 'origin', remote]).code).toBe(0);
+        expect(git(sandbox.path, ['remote', 'add', 'origin', remote]).code).toBe(0);
         const argumentsByHook = {
             'pre-commit': [],
             'pre-push': ['origin', remote],
             'commit-msg': ['message-file'],
         };
         for (const name of ['pre-commit', 'pre-push', 'commit-msg'] as const) {
-            const path = join(fixture.path, name);
+            const path = join(sandbox.path, name);
             await Bun.write(path, hookBody(name, 'none', '/bin/echo'));
             chmodSync(path, 0o755);
             const result = Bun.spawnSync([SYSTEM_BASH, path, ...argumentsByHook[name]], {
-                cwd: fixture.path,
+                cwd: sandbox.path,
                 env: { PATH: toolsPath([]), GSPOT_BIN: '' },
                 stdin: 'ignore',
                 stdout: 'pipe',
@@ -97,18 +97,18 @@ describe('init refusals', () => {
     test(
         'a recommended preset is installed unless --without names it',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': script });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'scripts/a.sh': script });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(
-                fixture.path,
+                sandbox.path,
                 ['init', '--yes', '--presets', 'bash', '--without', 'naming', ...QUIET],
                 environment,
             );
-            const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
+            const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
             expect(policy).toContain('"formatting"');
             expect(policy).not.toContain('"naming"');
-            const check = await run(fixture.path, ['check', '--only', 'naming/identifiers'], environment);
+            const check = await run(sandbox.path, ['check', '--only', 'naming/identifiers'], environment);
             expect(check.code).toBe(2);
             expect(check.stdout).toContain('No selected preset runs a check called `naming/identifiers`');
         },
@@ -118,12 +118,12 @@ describe('init refusals', () => {
     test(
         'one --scope flag writes both scopes with their presets',
         async () => {
-            await using fixture = await createFixture({ 'tools/a.sh': script, 'jobs/b.sh': script });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'tools/a.sh': script, 'jobs/b.sh': script });
+            commitAll(sandbox.path);
             const argv = ['init', '--yes', '--hooks', 'none', '--scope', 'tools=bash', 'jobs=bash', ...QUIET];
-            const init = await run(fixture.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
+            const init = await run(sandbox.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
             expect(init.stderr).not.toContain('did not run');
-            const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
+            const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
             expect(policy).toContain('path = "tools"');
             expect(policy).toContain('path = "jobs"');
         },

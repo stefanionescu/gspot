@@ -629,7 +629,7 @@ required token verification.
 
 ## Verify database behavior
 
-Do not add a verification pipeline, fixtures, or mandatory evidence records when adopting Drizzle.
+Do not add a verification pipeline, test data, or mandatory evidence records when adopting Drizzle.
 
 For database checks, use the affected schema and runtime role. Cover the behavior under change,
 such as an access predicate, transaction, or migration. Keep the database target explicit; do not

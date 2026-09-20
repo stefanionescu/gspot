@@ -17,6 +17,7 @@
         "postinstall": "cd docs && bunx astro sync"
     },
     "devDependencies": {
+        "@gspot/testing": "workspace:*",
         "@changesets/cli": "3.0.2",
         "@eslint-community/eslint-plugin-eslint-comments": "4.8.0",
         "@eslint/js": "10.0.1",
@@ -51,7 +52,6 @@
         "eslint-plugin-unicorn": "74.0.0",
         "eslint-plugin-vue": "10.11.0",
         "eslint-plugin-zod": "4.12.0",
-        "fs-fixture": "2.16.0",
         "globals": "17.12.0",
         "html-validate": "11.6.1",
         "jscpd": "5.2.0",

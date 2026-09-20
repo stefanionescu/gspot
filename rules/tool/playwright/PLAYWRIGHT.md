@@ -19,11 +19,11 @@ title: Playwright
 - A test never reads or writes production data. The base URL and credentials come from the
   configuration owner, per environment.
 
-## Fixtures and page objects
+## Test data and page objects
 
-- Shared setup is a fixture under `tests/support/`. A page object exposes intents
+- Shared setup lives under `tests/support/`. A page object exposes intents
   (`submitOrder()`), not selectors.
-- Authentication state is created once per worker through the storage-state fixture, never by
+- Authentication state is created once per worker through shared storage-state setup, never by
   logging in inside every test.
 
 ## Configuration

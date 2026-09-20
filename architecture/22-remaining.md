@@ -92,7 +92,7 @@ must refer to the same candidate revision:
 1. Verify apply is idempotent and install preserves tracked content in a disposable clean
    checkout. Build and check the manual there, including samples, links, reference contracts,
    and the asset acceptance requirements. Inspect unexpected tracked or untracked output.
-1. Exercise real commit and pre-push hooks in fixture repositories, including rejection cases
+1. Exercise real commit and pre-push hooks in test repository repositories, including rejection cases
    and existing-hook chaining. Do not create a dummy app commit to test the hooks of gspot itself.
 1. When CI is enabled, read successful jobs for that exact revision, not merely the workflow
    configuration or an older green badge. During the active bypass, defer this requirement
@@ -449,7 +449,7 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [T-25](fixes/10-tests.md#t-22-tests-that-read-a-list-written-by-hand): Read the version from the one version source in the two release tests.
 - [ ] [T-31](fixes/10-tests.md#t-31-test-files-named-after-folders-that-are-gone): With D-128 each test file carries the name of the preset it tests.
 - [ ] [T-11](fixes/10-tests.md#t-31-test-files-named-after-folders-that-are-gone): Rename `repository-check.test.ts` and `scope-languages.test.ts` (T-31).
-- [ ] [T-34](fixes/10-tests.md#t-31-test-files-named-after-folders-that-are-gone): The fixture is a project Xcode generated.
+- [ ] [T-34](fixes/10-tests.md#t-31-test-files-named-after-folders-that-are-gone): The test repository is a project Xcode generated.
 - [ ] [T-20](fixes/10-tests.md#t-20-tests-that-change-with-their-subject): Change the four tests that expect a defect, each in the commit that fixes its defect.
 - [ ] [T-35](fixes/10-tests.md#t-20-tests-that-change-with-their-subject): Each of these changes in the commit that changes its subject (D-129 to D-133, D-144, D-165).
 
@@ -577,7 +577,7 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 [21-manual.md](fixes/21-manual.md)
 
 - [ ] [G-10](fixes/21-manual.md#g-10-the-documentation-is-thin): Implement the README brief, task-based manual navigation, and playful terminal field notebook design in 21-documentation.md. Include image-generated Spot concepts and shared website/README assets. Verify release-matched examples, responsive and accessible rendering, and reader-task acceptance checks.
-- [ ] [K-202](fixes/21-manual.md#g-10-the-documentation-is-thin): Rewrite guides from verified fixtures before the app handoff and add app-derived evidence after adoption ([21-documentation.md](21-documentation.md)), and S-11 keeps them true.
+- [ ] [K-202](fixes/21-manual.md#g-10-the-documentation-is-thin): Rewrite guides from verified test data before the app handoff and add app-derived evidence after adoption ([21-documentation.md](21-documentation.md)), and S-11 keeps them true.
 - [ ] [S-19](fixes/21-manual.md#s-19-six-questions-no-guide-answers): Write the six guides a stranger needs, each from a run in `examples/`.
 
 ### Before Launch

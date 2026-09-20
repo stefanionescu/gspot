@@ -154,10 +154,10 @@ Rules:
 - Avoid names tied to private helper names.
 - Avoid test data names that hide the scenario.
 - Test helpers are named for the behavior they create.
-- Test fixtures never become global mystery data.
+- Test data never become global mystery data.
 - A test name is a sentence stating the scenario and the expected outcome. `edge cases`,
   `happy path`, `works`, `test1`, and `underTest` are banned.
-- Support code lives under `tests/support/`; `fixtures/`, `mocks/`, `helpers/`, and `utils/`
+- Support code lives under `tests/support/`; `mocks/`, `helpers/`, and `utils/`
   are banned directory names in test trees.
 - Test file names follow the language table in "Casing Across Languages."
 

@@ -1,7 +1,7 @@
 import { symlinkSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
 // Planted repositories for the vue and svelte presets: markup set from a string and a list with no key, in each framework.
 import { delimiter, join } from 'node:path';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import type { ComponentShape } from '#types/run.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -79,24 +79,24 @@ describe('the vue and svelte presets', () => {
         test(
             `${shape.check} reads a component file and fires on its planted defects`,
             async () => {
-                await using fixture = await createFixture({
+                await using sandbox = await createSandbox({
                     '.gitignore': 'node_modules\n',
                     'tsconfig.json': TSCONFIG,
                     'src/answer.ts': SOURCE,
                     ...shape.files,
                 });
-                symlinkSync(MODULES, join(fixture.path, 'node_modules'));
-                commitAll(fixture.path);
+                symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+                commitAll(sandbox.path);
                 const environment = {
                     PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
                 };
-                await install(fixture.path, init(shape.presets), environment);
-                const clean = await run(fixture.path, ['check', '--only', shape.check, '--no-cache'], environment);
+                await install(sandbox.path, init(shape.presets), environment);
+                const clean = await run(sandbox.path, ['check', '--only', shape.check, '--no-cache'], environment);
                 expect(clean.code, clean.stdout + clean.stderr).toBe(0);
                 expect(clean.stdout).toContain('1 file');
                 for (const [rule, text] of shape.cases) {
                     const outcome = await runPlanted(
-                        fixture.path,
+                        sandbox.path,
                         { check: shape.check, files: { [shape.planted]: text }, expected: rule },
                         environment,
                     );
@@ -104,13 +104,13 @@ describe('the vue and svelte presets', () => {
                     expect(outcome.stdout, rule).toContain(rule);
                 }
                 const code = await run(
-                    fixture.path,
+                    sandbox.path,
                     ['check', '--only', 'typescript/eslint', '--no-cache'],
                     environment,
                 );
                 expect(code.code, code.stdout + code.stderr).toBe(0);
                 const required = await run(
-                    fixture.path,
+                    sandbox.path,
                     ['check', '--only', 'integrity/required-rules', '--no-cache'],
                     environment,
                 );

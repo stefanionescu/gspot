@@ -1,5 +1,5 @@
 // Planted repository for the xctest preset: a skipped test with no reason, a sleep, a recording snapshot test, and references with no test.
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -54,24 +54,24 @@ describe('the xctest preset', () => {
     test(
         'every static xctest check fires on its planted defect, and a reason or a test file makes it pass',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 [TESTS]: CLEAN,
                 'AppTests/__Snapshots__/HomeTests/testTitle.1.png': 'png',
                 'AppTests/SkippedTests.swift': suite(
                     '        // Waits for the new design of the header, issue 12.\n        throw XCTSkip()\n',
                 ),
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
-            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

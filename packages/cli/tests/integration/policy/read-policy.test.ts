@@ -1,4 +1,4 @@
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { readPolicy, parseLocalText, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
 
@@ -88,10 +88,10 @@ describe('parsePolicyText', () => {
     });
 
     test('a scope must exist and scopes do not nest', async () => {
-        await using fixture = await createFixture({ api: { 'a.txt': '' }, 'api/inner': { 'b.txt': '' } });
+        await using sandbox = await createSandbox({ 'api/a.txt': '', 'api/inner/b.txt': '' });
         const found = problems(
             `${minimal}[[scope]]\npath = "api"\n[[scope]]\npath = "api/inner"\n[[scope]]\npath = "missing"\n`,
-            fixture.path,
+            sandbox.path,
         );
         expect(found.some((problem) => problem.includes('`missing` names a directory that does not exist'))).toBe(true);
         expect(found.some((problem) => problem.includes('`api/inner` is inside the scope `api`'))).toBe(true);
@@ -113,24 +113,24 @@ describe('parseLocalText', () => {
 
 describe('readPolicy', () => {
     test('reads gspot.toml and gspot.local.toml from a root', async () => {
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             'gspot.toml': minimal,
             'gspot.local.toml': 'skip = ["bash/shfmt"]\n',
         });
-        const files = readPolicy(fixture.path);
+        const files = readPolicy(sandbox.path);
         expect(files.policy.presets).toEqual(['bash']);
         expect(files.local.skip).toEqual(['bash/shfmt']);
     });
 
     test('a missing gspot.toml points at init', async () => {
-        await using fixture = await createFixture({});
-        expect(() => readPolicy(fixture.path)).toThrow('Run `gspot init`');
+        await using sandbox = await createSandbox({});
+        expect(() => readPolicy(sandbox.path)).toThrow('Run `gspot init`');
     });
 });
 
 describe('repository correction contracts', () => {
     const check = `${minimal}[[check]]
-name = "fixture/correction"
+name = "sandbox/correction"
 command = ["tool", "check"]
 paths = ["source.txt"]
 stage = "commit"

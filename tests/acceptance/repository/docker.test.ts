@@ -1,5 +1,5 @@
 // Planted repository for the docker preset: a careless Dockerfile, a missing ignore file, and a container that runs as root.
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -47,26 +47,26 @@ describe('the docker preset', () => {
     test(
         'every docker check fires on its planted defect',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'api/Dockerfile': CLEAN,
                 'api/.dockerignore': IGNORES,
                 'api/compose.yml': 'services:\n    api:\n        build: .\n        env_file: .env\n',
                 'api/package.json': '{\n    "name": "planted",\n    "private": true\n}\n',
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['hadolint', 'trivy', 'typos', 'ec', 'taplo', 'yamllint']) };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
-                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
-            const checked = await run(fixture.path, ['check', '--at', 'push', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--at', 'push', '--json'], environment);
             const atPush = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

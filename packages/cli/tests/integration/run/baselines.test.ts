@@ -1,4 +1,4 @@
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { Finding } from '#types/finding.ts';
 import { describe, expect, test } from 'bun:test';
 import type { BaselineVerdict } from '#types/report.ts';
@@ -55,34 +55,34 @@ describe('baselines', () => {
     });
 
     test('write, read and lower baseline files', async () => {
-        await using fixture = await createFixture({});
-        writeBaselines(fixture.path, [finding('a.ts'), finding('b.ts')], () => true);
-        expect(readBaselines(fixture.path)[0]?.count).toBe(2);
-        const lowered = lowerBaselines(fixture.path, [counted({ 'a.ts': 1 })], CHECKS, CHECKS);
+        await using sandbox = await createSandbox({});
+        writeBaselines(sandbox.path, [finding('a.ts'), finding('b.ts')], () => true);
+        expect(readBaselines(sandbox.path)[0]?.count).toBe(2);
+        const lowered = lowerBaselines(sandbox.path, [counted({ 'a.ts': 1 })], CHECKS, CHECKS);
         expect(lowered.lowered).toEqual(['c/x:r1']);
-        expect(readBaselines(fixture.path)[0]?.count).toBe(1);
-        const rose = lowerBaselines(fixture.path, [counted({ 'a.ts': 1, 'b.ts': 1, 'c.ts': 1 })], CHECKS, CHECKS);
+        expect(readBaselines(sandbox.path)[0]?.count).toBe(1);
+        const rose = lowerBaselines(sandbox.path, [counted({ 'a.ts': 1, 'b.ts': 1, 'c.ts': 1 })], CHECKS, CHECKS);
         expect(rose.rose).toEqual(['c/x:r1']);
-        const removed = lowerBaselines(fixture.path, [], new Set(['other/check']), new Set());
+        const removed = lowerBaselines(sandbox.path, [], new Set(['other/check']), new Set());
         expect(removed.removed).toEqual(['c/x:r1']);
     });
 
     test('a rule the run counted at zero loses its baseline, and a held count is no zero', async () => {
-        await using fixture = await createFixture({});
-        writeBaselines(fixture.path, [finding('a.ts'), finding('b.ts')], () => true);
-        const same = lowerBaselines(fixture.path, [counted({ 'a.ts': 1, 'b.ts': 1 })], CHECKS, CHECKS);
+        await using sandbox = await createSandbox({});
+        writeBaselines(sandbox.path, [finding('a.ts'), finding('b.ts')], () => true);
+        const same = lowerBaselines(sandbox.path, [counted({ 'a.ts': 1, 'b.ts': 1 })], CHECKS, CHECKS);
         expect(same).toEqual({ lowered: [], removed: [], rose: [], kept: [] });
-        const cleared = lowerBaselines(fixture.path, [counted({})], CHECKS, CHECKS);
+        const cleared = lowerBaselines(sandbox.path, [counted({})], CHECKS, CHECKS);
         expect(cleared.removed).toEqual(['c/x:r1']);
     });
 
     test('a check the last run did not read in full keeps its baseline, findings or none', async () => {
-        await using fixture = await createFixture({});
-        writeBaselines(fixture.path, [finding('a.ts'), finding('b.ts')], () => true);
-        const outcome = lowerBaselines(fixture.path, [], CHECKS, new Set());
+        await using sandbox = await createSandbox({});
+        writeBaselines(sandbox.path, [finding('a.ts'), finding('b.ts')], () => true);
+        const outcome = lowerBaselines(sandbox.path, [], CHECKS, new Set());
         expect(outcome.kept).toEqual(['c/x:r1']);
         expect(outcome.removed).toEqual([]);
-        expect(readBaselines(fixture.path)[0]?.count).toBe(2);
+        expect(readBaselines(sandbox.path)[0]?.count).toBe(2);
     });
 
     test('the findings of every scope count against one baseline together', () => {

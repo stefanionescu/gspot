@@ -21,12 +21,12 @@ with `testpaths` from claims and `addopts = "-q --strict-markers --strict-config
 
 ## Checks
 
-| Id                           | Stage  | Command                                                                                        |
-| ---------------------------- | ------ | ---------------------------------------------------------------------------------------------- |
-| `python/ruff`                | commit | with `PT001` to `PT027` on                                                                     |
-| `pytest/coverage`            | push   | `pytest --cov --cov-fail-under=<threshold>`                                                    |
-| `structure/trivial-function` | commit | `pytest.fixture` is an exempt decorator                                                        |
-| `naming/identifiers`         | commit | `test_` is a structural prefix for test functions; `fixtures` stays banned as a directory name |
+| Id                           | Stage  | Command                                                                                         |
+| ---------------------------- | ------ | ----------------------------------------------------------------------------------------------- |
+| `python/ruff`                | commit | with `PT001` to `PT027` on                                                                      |
+| `pytest/coverage`            | push   | `pytest --cov --cov-fail-under=<threshold>`                                                     |
+| `structure/trivial-function` | commit | setup decorators retain their required external names                                           |
+| `naming/identifiers`         | commit | `test_` is a structural prefix for test functions; test-data directories need descriptive names |
 
 ## Settings
 

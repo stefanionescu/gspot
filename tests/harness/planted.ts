@@ -82,7 +82,7 @@ function plant(cwd: string, planted: PlantedCase): () => void {
     const paths = [...new Set(['gspot.toml', ...gone, ...executables, ...Object.keys(planted.files)])];
     const originals = new Map(paths.map((path) => [path, originalFile(join(cwd, path))]));
     for (const path of gone)
-        if (originals.get(path) === undefined) throw new Error(`The fixture removal target ${path} is absent.`);
+        if (originals.get(path) === undefined) throw new Error(`The sandbox removal target ${path} is absent.`);
     const parents = absentParents(cwd, paths);
     const restore = (): void => {
         restoreFiles(cwd, originals);
@@ -100,7 +100,7 @@ function plant(cwd: string, planted: PlantedCase): () => void {
 function plantedPolicy(policy: string, planted: PlantedCase): string {
     const edited = planted.policyEdit === undefined ? policy : policy.replace(...planted.policyEdit);
     if (edited === policy && planted.policyEdit !== undefined)
-        throw new Error(`The policy edit for ${planted.check} did not change the fixture.`);
+        throw new Error(`The policy edit for ${planted.check} did not change the sandbox.`);
     return planted.policy === undefined ? edited : `${edited}\n${planted.policy}`;
 }
 
@@ -173,7 +173,7 @@ export function git(cwd: string, argv: string[], environment: Record<string, str
 }
 
 /**
- * A PATH with the required mise tools and this checkout's npm tools for an external fixture.
+ * A PATH with the required mise tools and this checkout's npm tools for an external sandbox.
  * @param names the tool names as mise knows them (`taplo`, `npm:v8r`)
  * @returns the PATH value
  */
@@ -205,7 +205,7 @@ export function commitAll(cwd: string): void {
         ['commit', '-qm', 'init'],
     ]) {
         const result = git(cwd, args);
-        if (result.code !== 0) throw new Error(`Fixture Git setup failed: ${result.stderr}${result.stdout}`);
+        if (result.code !== 0) throw new Error(`Sandbox Git setup failed: ${result.stderr}${result.stdout}`);
     }
 }
 
@@ -238,7 +238,7 @@ export async function runPlanted(
 export async function install(cwd: string, argv: string[], environment: Record<string, string> = {}): Promise<void> {
     const outcome = await run(cwd, argv, environment);
     if (outcome.code !== 0)
-        throw new Error(`Fixture init failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`);
+        throw new Error(`Sandbox init failed with status ${String(outcome.code)}: ${outcome.stderr}${outcome.stdout}`);
     if (await Bun.file(join(cwd, 'gspot.toml')).exists()) return;
     throw new Error(`The init command wrote no policy in the planted repository: ${outcome.stderr}${outcome.stdout}`);
 }

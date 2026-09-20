@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 // Runs when GSPOT_RELEASE_TEST=1 (the release workflow sets it); it needs a built binary under dist/.
 import { fileURLToPath } from 'node:url';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { environmentVariables, isReleaseTestWanted } from '#cli/platform/environment.ts';
@@ -36,10 +36,10 @@ describe.skipIf(!isReleaseTestWanted())('the compiled binary', () => {
         'prints the package version, installs from its embedded assets and checks a planted script',
         async () => {
             expect(existsSync(BINARY)).toBe(true);
-            await using fixture = await createFixture({ 'scripts/build.sh': script, 'README.md': '# planted\n' });
-            commitAll(fixture.path);
-            expect(binary(fixture.path, ['--version']).stdout.trim()).toBe(GSPOT_VERSION);
-            const init = binary(fixture.path, [
+            await using sandbox = await createSandbox({ 'scripts/build.sh': script, 'README.md': '# planted\n' });
+            commitAll(sandbox.path);
+            expect(binary(sandbox.path, ['--version']).stdout.trim()).toBe(GSPOT_VERSION);
+            const init = binary(sandbox.path, [
                 'init',
                 '--yes',
                 '--presets',
@@ -51,9 +51,9 @@ describe.skipIf(!isReleaseTestWanted())('the compiled binary', () => {
                 '--no-install',
             ]);
             expect(init.code).toBe(0);
-            expect(existsSync(join(fixture.path, '.gspot', 'rules', 'general', 'agent', 'WORKING.md'))).toBe(true);
-            expect(binary(fixture.path, ['check', '--only', 'bash/shellcheck']).code).toBe(0);
-            expect(binary(fixture.path, ['apply', '--check']).code).toBe(0);
+            expect(existsSync(join(sandbox.path, '.gspot', 'rules', 'general', 'agent', 'WORKING.md'))).toBe(true);
+            expect(binary(sandbox.path, ['check', '--only', 'bash/shellcheck']).code).toBe(0);
+            expect(binary(sandbox.path, ['apply', '--check']).code).toBe(0);
         },
         PLANTED_TIMEOUT_MS,
     );

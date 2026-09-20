@@ -1,6 +1,6 @@
 // Planted repository for the security preset: an eval the shipped pack finds, and a rule of the repository's own.
 import { join } from 'node:path';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
@@ -29,18 +29,18 @@ describe('the security preset', () => {
     test(
         'the shipped pack finds an eval, a repository rule runs beside it, and CodeQL waits to be asked',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'src/index.ts': CLEAN,
                 'package.json': '{\n    "name": "planted",\n    "private": true\n}\n',
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['semgrep', 'typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
-            const clean = await run(fixture.path, ['check', '--only', 'security/semgrep', '--no-cache'], environment);
+            await install(sandbox.path, INIT, environment);
+            const clean = await run(sandbox.path, ['check', '--only', 'security/semgrep', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
-            await Bun.write(join(fixture.path, 'src/run.ts'), EVALUATED);
-            commitAll(fixture.path);
-            const found = await run(fixture.path, ['check', '--only', 'security/semgrep', '--no-cache'], environment);
+            await Bun.write(join(sandbox.path, 'src/run.ts'), EVALUATED);
+            commitAll(sandbox.path);
+            const found = await run(sandbox.path, ['check', '--only', 'security/semgrep', '--no-cache'], environment);
             if (process.platform === 'win32') {
                 expect(found.code, found.stdout + found.stderr).toBe(0);
                 expect(found.stdout).toMatch(/skipped\s+security\/semgrep\s+\(platform\)/u);
@@ -49,23 +49,23 @@ describe('the security preset', () => {
                 expect(found.stdout).toContain('node-no-eval');
                 expect(found.stdout).toContain('src/run.ts:3');
             }
-            await Bun.write(join(fixture.path, 'security/own.yml'), OWN_RULE);
+            await Bun.write(join(sandbox.path, 'security/own.yml'), OWN_RULE);
             await Bun.write(
-                join(fixture.path, 'src/use.ts'),
+                join(sandbox.path, 'src/use.ts'),
                 "import { double } from './index.ts';\n\nexport const four = double(2);\n",
             );
-            const policy = join(fixture.path, 'gspot.toml');
+            const policy = join(sandbox.path, 'gspot.toml');
             await Bun.write(
                 policy,
                 `${await Bun.file(policy).text()}\n[tools.semgrep]\nrules = ["security/own.yml"]\n`,
             );
-            commitAll(fixture.path);
-            const own = await run(fixture.path, ['check', '--only', 'security/semgrep', '--no-cache'], environment);
+            commitAll(sandbox.path);
+            const own = await run(sandbox.path, ['check', '--only', 'security/semgrep', '--no-cache'], environment);
             if (process.platform === 'win32') {
                 expect(own.code, own.stdout + own.stderr).toBe(0);
                 expect(own.stdout).toMatch(/skipped\s+security\/semgrep\s+\(platform\)/u);
             } else expect(own.stdout).toContain('planted-no-double');
-            const checked = await run(fixture.path, ['check', '--at', 'push', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--at', 'push', '--json'], environment);
             const atPush = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
-import { createFixture } from 'fs-fixture';
 import { planRun } from '#cli/run/plan.ts';
 import { run } from '#cli/platform/spawn.ts';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { openSession } from '#cli/run/session.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
@@ -44,19 +44,19 @@ test('Unix batches count Unicode bytes and reject an argument that cannot fit', 
 });
 
 test('Batched tool invocations preserve spaced Unicode file arguments', async () => {
-    await using fixture = await createFixture({
+    await using sandbox = await createSandbox({
         'echo.cjs': 'process.stdout.write(JSON.stringify(process.argv.slice(2)));',
         'node_modules/.bin/echo.cmd': '@echo off\r\nnode "%~dp0..\\..\\echo.cjs" %*\r\n',
     });
     const fixed =
         process.platform === 'win32'
-            ? [join(fixture.path, 'node_modules/.bin/echo.cmd')]
-            : [process.execPath, join(fixture.path, 'echo.cjs')];
+            ? [join(sandbox.path, 'node_modules/.bin/echo.cmd')]
+            : [process.execPath, join(sandbox.path, 'echo.cjs')];
     const files = Array.from({ length: 300 }, (_, index) => `docs/café (draft & review)/page-${String(index)}.md`);
     const batches = fileBatches(files, fixed, 'win32');
     const received: string[] = [];
     for (const batch of batches) {
-        const result = await run([...fixed, ...batch], { cwd: fixture.path });
+        const result = await run([...fixed, ...batch], { cwd: sandbox.path });
         expect(result.code).toBe(0);
         expect(result.stdout).toBe(JSON.stringify(batch));
         received.push(...batch);
@@ -68,18 +68,18 @@ test('per-file execution preserves expanded flags and arguments after the file',
     const policy = `version = 1
 presets = []
 [[check]]
-name = "fixture/arguments"
+name = "sandbox/arguments"
 command = ${JSON.stringify([process.execPath, 'echo.cjs', '{existing:--config:settings.txt}', '{file}', 'config', '--quiet'])}
 paths = ["inputs/**"]
 stage = "commit"
 `;
-    await using fixture = await createFixture({
+    await using sandbox = await createSandbox({
         'gspot.toml': policy,
         'settings.txt': '',
         'inputs/café source.txt': '',
         'echo.cjs': 'process.stdout.write(JSON.stringify([process.env.TOOL_RELEASE, ...process.argv.slice(2)]));',
     });
-    const session = await openSession(fixture.path);
+    const session = await openSession(sandbox.path);
     const planned = planRun(session, { stage: 'all', skips: [], localSkips: [] })[0]!;
     planned.tool = { name: 'echo', windows: true, installers: {}, env: { TOOL_RELEASE: 'v3.4.0' } };
     const prepared = prepareCommand(session, planned, planned.spec.command!, undefined);
@@ -88,7 +88,7 @@ stage = "commit"
     expect(JSON.parse(result.stdout)).toEqual([
         'v3.4.0',
         '--config',
-        join(fixture.path, 'settings.txt'),
+        join(sandbox.path, 'settings.txt'),
         'inputs/café source.txt',
         'config',
         '--quiet',

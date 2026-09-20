@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { treeContents } from '#tests/harness/contents.ts';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
@@ -24,7 +24,7 @@ const INVALID = [['--checks'], ['unexpected'], ['--check', 'unexpected'], ['--ch
 describe('read-only script arguments', () => {
     test.each(ENTRIES)('%s rejects malformed invocations before changing files', async (entry) => {
         const sources = Object.fromEntries(SOURCES.map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]));
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             ...sources,
             'schema/gspot.schema.json': '{"sentinel": true}\n',
             'schema/report.schema.json': '{"sentinel": true}\n',
@@ -32,11 +32,11 @@ describe('read-only script arguments', () => {
             'docs/public/schema/report.schema.json': '{"sentinel": true}\n',
             'docs/src/content/docs/reference/sentinel.md': '# Authored reference\n',
         });
-        for (const path of LINKS) symlinkSync(join(ROOT, path), join(fixture.path, path), 'dir');
-        const before = OUTPUTS.map((path) => treeContents(join(fixture.path, path)));
+        for (const path of LINKS) symlinkSync(join(ROOT, path), join(sandbox.path, path), 'dir');
+        const before = OUTPUTS.map((path) => treeContents(join(sandbox.path, path)));
         for (const args of INVALID) {
-            const result = Bun.spawnSync([process.execPath, join(fixture.path, entry), ...args], {
-                cwd: fixture.path,
+            const result = Bun.spawnSync([process.execPath, join(sandbox.path, entry), ...args], {
+                cwd: sandbox.path,
                 env: { ...environmentVariables(), NO_COLOR: '1' },
                 stdout: 'pipe',
                 stderr: 'pipe',
@@ -44,25 +44,25 @@ describe('read-only script arguments', () => {
             });
             expect(result.exitCode, result.stdout.toString() + result.stderr.toString()).toBe(2);
             expect(result.stderr.toString()).toMatch(/unknown option|too many arguments/u);
-            expect(OUTPUTS.map((path) => treeContents(join(fixture.path, path)))).toEqual(before);
+            expect(OUTPUTS.map((path) => treeContents(join(sandbox.path, path)))).toEqual(before);
         }
         for (const flag of ['--help', '--version']) {
-            const result = Bun.spawnSync([process.execPath, join(fixture.path, entry), flag], {
-                cwd: fixture.path,
+            const result = Bun.spawnSync([process.execPath, join(sandbox.path, entry), flag], {
+                cwd: sandbox.path,
                 stdout: 'pipe',
                 stderr: 'pipe',
                 timeout: 10_000,
             });
             expect(result.exitCode, result.stderr.toString()).toBe(0);
             expect(result.stdout.toString().trim().length).toBeGreaterThan(0);
-            expect(OUTPUTS.map((path) => treeContents(join(fixture.path, path)))).toEqual(before);
+            expect(OUTPUTS.map((path) => treeContents(join(sandbox.path, path)))).toEqual(before);
         }
     });
 });
 
 describe('build script arguments', () => {
     test('rejects malformed targets before writes and forwards valid repeated targets', async () => {
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             'packages/cli/build.ts': readFileSync(join(ROOT, 'packages/cli/build.ts'), 'utf8'),
             'packages/cli/package.json': readFileSync(join(ROOT, 'packages/cli/package.json'), 'utf8'),
             'packages/cli/config/grammars.ts': readFileSync(join(ROOT, 'packages/cli/config/grammars.ts'), 'utf8'),
@@ -78,19 +78,19 @@ Bun.spawnSync = (argv) => {
 `,
         });
         for (const path of ['node_modules', 'packages/cli/node_modules'])
-            symlinkSync(join(ROOT, path), join(fixture.path, path), 'dir');
+            symlinkSync(join(ROOT, path), join(sandbox.path, path), 'dir');
         const outputs = ['packages/cli/grammars', 'packages/cli/build', 'dist'];
-        const before = outputs.map((path) => treeContents(join(fixture.path, path)));
+        const before = outputs.map((path) => treeContents(join(sandbox.path, path)));
         const execute = (args: string[]) =>
             Bun.spawnSync(
                 [
                     process.execPath,
                     '--preload',
-                    join(fixture.path, 'compiler.ts'),
-                    join(fixture.path, 'packages/cli/build.ts'),
+                    join(sandbox.path, 'compiler.ts'),
+                    join(sandbox.path, 'packages/cli/build.ts'),
                     ...args,
                 ],
-                { cwd: fixture.path, stdout: 'pipe', stderr: 'pipe', timeout: 10_000 },
+                { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe', timeout: 10_000 },
             );
         for (const args of [
             ['--target'],
@@ -104,12 +104,12 @@ Bun.spawnSync = (argv) => {
         ]) {
             const result = execute(args);
             expect(result.exitCode, result.stderr.toString()).toBe(2);
-            expect(outputs.map((path) => treeContents(join(fixture.path, path)))).toEqual(before);
-            expect(existsSync(join(fixture.path, 'compiler.jsonl'))).toBe(false);
+            expect(outputs.map((path) => treeContents(join(sandbox.path, path)))).toEqual(before);
+            expect(existsSync(join(sandbox.path, 'compiler.jsonl'))).toBe(false);
         }
         const result = execute(['--target', 'bun-linux-arm64', '--target', 'bun-linux-x64']);
         expect(result.exitCode, result.stderr.toString()).toBe(0);
-        const commands = readFileSync(join(fixture.path, 'compiler.jsonl'), 'utf8')
+        const commands = readFileSync(join(sandbox.path, 'compiler.jsonl'), 'utf8')
             .trim()
             .split('\n')
             .map((line) => JSON.parse(line) as string[]);
@@ -131,7 +131,7 @@ describe('publish script arguments', () => {
             const manifest = JSON.stringify({ ...sourceManifest, version });
             const tag = `v${version}`;
             const registry = 'http://127.0.0.1:4873';
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'packages/cli/publish.ts': readFileSync(join(ROOT, 'packages/cli/publish.ts'), 'utf8'),
                 'packages/cli/package.json': manifest,
                 ...Object.fromEntries(
@@ -155,25 +155,25 @@ describe('publish script arguments', () => {
                 'publisher.ts': String.raw`import { appendFileSync } from 'node:fs';
 import { join } from 'node:path';
 Bun.spawnSync = (argv) => {
-    if (!argv.includes('${registry}')) throw new Error('Only the fixture registry is allowed.');
+    if (!argv.includes('${registry}')) throw new Error('Only the sandbox registry is allowed.');
     appendFileSync(join(import.meta.dir, 'publisher.jsonl'), JSON.stringify(argv) + '\n');
     return { exitCode: 0 };
 };
 `,
             });
             for (const path of ['node_modules', 'packages/cli/node_modules'])
-                symlinkSync(join(ROOT, path), join(fixture.path, path), 'dir');
-            const before = treeContents(join(fixture.path, 'dist'));
+                symlinkSync(join(ROOT, path), join(sandbox.path, path), 'dir');
+            const before = treeContents(join(sandbox.path, 'dist'));
             const execute = (args: string[]) =>
                 Bun.spawnSync(
                     [
                         process.execPath,
                         '--preload',
-                        join(fixture.path, 'publisher.ts'),
-                        join(fixture.path, 'packages/cli/publish.ts'),
+                        join(sandbox.path, 'publisher.ts'),
+                        join(sandbox.path, 'packages/cli/publish.ts'),
                         ...args,
                     ],
-                    { cwd: fixture.path, stdout: 'pipe', stderr: 'pipe', timeout: 10_000 },
+                    { cwd: sandbox.path, stdout: 'pipe', stderr: 'pipe', timeout: 10_000 },
                 );
             for (const args of [
                 [],
@@ -191,12 +191,12 @@ Bun.spawnSync = (argv) => {
             ]) {
                 const result = execute(args);
                 expect(result.exitCode, result.stderr.toString()).toBe(2);
-                expect(treeContents(join(fixture.path, 'dist'))).toEqual(before);
-                expect(existsSync(join(fixture.path, 'publisher.jsonl'))).toBe(false);
+                expect(treeContents(join(sandbox.path, 'dist'))).toEqual(before);
+                expect(existsSync(join(sandbox.path, 'publisher.jsonl'))).toBe(false);
             }
             const result = execute(['--tag', tag, '--registry', registry, '--dry-run']);
             expect(result.exitCode, result.stderr.toString()).toBe(0);
-            const commands = readFileSync(join(fixture.path, 'publisher.jsonl'), 'utf8')
+            const commands = readFileSync(join(sandbox.path, 'publisher.jsonl'), 'utf8')
                 .trim()
                 .split('\n')
                 .map((line) => JSON.parse(line) as string[]);
@@ -212,7 +212,7 @@ Bun.spawnSync = (argv) => {
 
 describe('plugin build arguments', () => {
     test('preserves existing output after invalid arguments and information requests', async () => {
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             'packages/eslint-plugin/build.ts': readFileSync(join(ROOT, 'packages/eslint-plugin/build.ts'), 'utf8'),
             'packages/eslint-plugin/package.json': readFileSync(
                 join(ROOT, 'packages/eslint-plugin/package.json'),
@@ -220,10 +220,10 @@ describe('plugin build arguments', () => {
             ),
             'packages/eslint-plugin/dist/plugin.js': '// existing plugin\n',
         });
-        const before = treeContents(fixture.path);
+        const before = treeContents(sandbox.path);
         const execute = (args: string[]) =>
-            Bun.spawnSync([process.execPath, join(fixture.path, 'packages/eslint-plugin/build.ts'), ...args], {
-                cwd: fixture.path,
+            Bun.spawnSync([process.execPath, join(sandbox.path, 'packages/eslint-plugin/build.ts'), ...args], {
+                cwd: sandbox.path,
                 stdout: 'pipe',
                 stderr: 'pipe',
                 timeout: 10_000,
@@ -237,13 +237,13 @@ describe('plugin build arguments', () => {
         ]) {
             const result = execute(args);
             expect(result.exitCode, result.stderr.toString()).toBe(2);
-            expect(treeContents(fixture.path)).toEqual(before);
+            expect(treeContents(sandbox.path)).toEqual(before);
         }
         for (const flag of ['--help', '--version']) {
             const result = execute([flag]);
             expect(result.exitCode, result.stderr.toString()).toBe(0);
             expect(result.stdout.toString().trim().length).toBeGreaterThan(0);
-            expect(treeContents(fixture.path)).toEqual(before);
+            expect(treeContents(sandbox.path)).toEqual(before);
         }
     });
 });

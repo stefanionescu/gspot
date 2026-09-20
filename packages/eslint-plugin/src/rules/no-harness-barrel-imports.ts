@@ -10,13 +10,13 @@ export const noHarnessBarrelImports = createRule<HarnessBarrelImportsOptions, 'b
         type: 'problem',
         docs: {
             summary: 'Finds an import of the test-harness barrel from inside the harness code itself.',
-            why: 'Support modules that import their own barrel create cycles and load every fixture to use one.',
+            why: 'Support modules that import their own barrel create cycles and load every sandbox to use one.',
             fix: 'Import the specific harness module instead of the barrel.',
         },
         schema: [optionsSchema({ barrels: stringList, within: stringList })],
         messages: { barrel: 'Import the specific module instead of the harness barrel "{{source}}".' },
     },
-    defaultOptions: [{ barrels: [], within: ['**/tests/harness/**', '**/tests/fixtures/**'] }],
+    defaultOptions: [{ barrels: [], within: ['**/tests/harness/**'] }],
     create(context, [options]) {
         const file = lintedFile(context);
         if (file === undefined || !isAnyGlobMatch(relativeToRoot(lintedRoot(context), file), options.within ?? []))

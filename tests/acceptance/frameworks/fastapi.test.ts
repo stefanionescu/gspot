@@ -1,5 +1,5 @@
 // Planted repositories for the pytest and fastapi presets: coverage under the floor, a test name the prefix allows, a sleep inside an async route.
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -18,16 +18,16 @@ describe('the pytest preset', () => {
     test(
         'coverage under the floor fails, and a test function keeps its prefix',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'pyproject.toml': PROJECT('pytest'),
                 'planted/__init__.py': '"""The package."""\n',
                 'planted/math.py': MATH,
                 'tests/test_math.py': TESTS,
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ruff', 'pytest', 'typos', 'ec']) };
             await install(
-                fixture.path,
+                sandbox.path,
                 [
                     'init',
                     '--yes',
@@ -44,7 +44,7 @@ describe('the pytest preset', () => {
                 environment,
             );
             for (const id of ['pytest/coverage', 'naming/identifiers', 'python/ruff']) {
-                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             const untested: PlantedCase = {
@@ -58,7 +58,7 @@ describe('the pytest preset', () => {
                 policy: '[tools.pytest]\ncoverage = 95\n',
                 expected: 'Required test coverage of 95%',
             };
-            const outcome = await runPlanted(fixture.path, untested, environment);
+            const outcome = await runPlanted(sandbox.path, untested, environment);
             expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
             expect(outcome.stdout).toContain(untested.expected);
         },
@@ -70,15 +70,15 @@ describe('the fastapi preset', () => {
     test(
         'a sleep inside an async route is a finding, and the awaited one is not',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'pyproject.toml': PROJECT('fastapi'),
                 'planted/__init__.py': '"""The package."""\n',
                 'planted/health.py': ROUTE('    await asyncio.sleep(0)\n'),
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ruff', 'typos', 'ec']) };
             await install(
-                fixture.path,
+                sandbox.path,
                 [
                     'init',
                     '--yes',
@@ -97,11 +97,11 @@ describe('the fastapi preset', () => {
                 environment,
             );
             for (const id of ['fastapi/no-blocking-io-in-async', 'fastapi/openapi-lint', 'fastapi/openapi-fresh']) {
-                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             const blocked = await runPlanted(
-                fixture.path,
+                sandbox.path,
                 {
                     check: 'fastapi/no-blocking-io-in-async',
                     files: { 'planted/health.py': ROUTE('    time.sleep(1)\n') },

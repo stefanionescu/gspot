@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { dirname, join } from 'node:path';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { RunReport } from '#types/report.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { symlinkSync, writeFileSync, readdirSync } from 'node:fs';
@@ -49,12 +49,12 @@ async function trivialFiles(root: string): Promise<string[]> {
 test(
     'Vite startup files follow the declared entry points of their own scope',
     async () => {
-        await using fixture = await createFixture({
-            node_modules: {},
+        await using sandbox = await createSandbox({
+            node_modules: null,
             'gspot.toml': POLICY,
             '.gitignore': 'node_modules\n.gspot/\ndist/\n',
             'package.json':
-                '{"name":"entry-fixture","private":true,"type":"module","devDependencies":{"vite":"8.3.0"}}',
+                '{"name":"entry-sandbox","private":true,"type":"module","devDependencies":{"vite":"8.3.0"}}',
             'index.html': '<!doctype html><script type="module" src="/src/main.js"></script>',
             'src/start.js': 'export function start() { console.info("started"); }\n',
             'src/main.js': START,
@@ -64,33 +64,33 @@ test(
             'api/src/task.js': START,
         });
         for (const entry of readdirSync(MODULES))
-            symlinkSync(join(MODULES, entry), join(fixture.path, 'node_modules', entry));
-        symlinkSync(VITE, join(fixture.path, 'node_modules/vite'));
+            symlinkSync(join(MODULES, entry), join(sandbox.path, 'node_modules', entry));
+        symlinkSync(VITE, join(sandbox.path, 'node_modules/vite'));
         const build = await runProcess([process.execPath, join(VITE, 'bin/vite.js'), 'build'], {
-            cwd: fixture.path,
+            cwd: sandbox.path,
             timeoutMs: PLANTED_TIMEOUT_MS,
         });
         expect(build.code, build.stdout + build.stderr).toBe(0);
-        commitAll(fixture.path);
-        const initial = await run(fixture.path, ['apply']);
+        commitAll(sandbox.path);
+        const initial = await run(sandbox.path, ['apply']);
         expect(initial.code, initial.stdout + initial.stderr).toBe(0);
-        expect(await trivialFiles(fixture.path)).toEqual([
+        expect(await trivialFiles(sandbox.path)).toEqual([
             'api/src/main.js',
             'api/src/task.js',
             'src/main.js',
             'src/task.js',
         ]);
-        writeFileSync(join(fixture.path, 'gspot.toml'), POLICY.replace('entry = []', 'entry = ["api/src/main.js"]'));
-        const inherited = await run(fixture.path, ['apply']);
+        writeFileSync(join(sandbox.path, 'gspot.toml'), POLICY.replace('entry = []', 'entry = ["api/src/main.js"]'));
+        const inherited = await run(sandbox.path, ['apply']);
         expect(inherited.code, inherited.stdout + inherited.stderr).toBe(0);
-        expect(await trivialFiles(fixture.path)).toEqual(['api/src/task.js', 'src/main.js', 'src/task.js']);
+        expect(await trivialFiles(sandbox.path)).toEqual(['api/src/task.js', 'src/main.js', 'src/task.js']);
         writeFileSync(
-            join(fixture.path, 'gspot.toml'),
+            join(sandbox.path, 'gspot.toml'),
             POLICY.replaceAll('entry = []', 'entry = ["src/*.js", "!src/task.js"]'),
         );
-        const applied = await run(fixture.path, ['apply']);
+        const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-        expect(await trivialFiles(fixture.path)).toEqual(['api/src/task.js', 'src/task.js']);
+        expect(await trivialFiles(sandbox.path)).toEqual(['api/src/task.js', 'src/task.js']);
     },
     PLANTED_TIMEOUT_MS * 3,
 );

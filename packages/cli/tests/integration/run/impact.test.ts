@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { createFixture } from 'fs-fixture';
 import { planRun } from '#cli/run/plan.ts';
 import type { Session } from '#types/run.ts';
+import { createSandbox } from '@gspot/testing';
 import { applyFixers } from '#cli/run/fixers.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
@@ -11,7 +11,7 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { stagedFiles } from '#cli/repository/staged.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 
-const options = { stage: 'commit' as const, skips: [], localSkips: [], only: ['fixture/project'] };
+const options = { stage: 'commit' as const, skips: [], localSkips: [], only: ['sandbox/project'] };
 const policy = `version = 1
 presets = []
 [[scope]]
@@ -30,7 +30,7 @@ function git(root: string, ...argv: string[]): void {
 function projectChecks(session: Session): void {
     const manifest = session.manifests.get('typescript')!;
     const spec: CheckSpec = {
-        name: 'fixture/project',
+        name: 'sandbox/project',
         stage: 'commit',
         runs: 'per-scope',
         coverage: [],
@@ -44,32 +44,32 @@ function projectChecks(session: Session): void {
         fix_order: 'codemod' as const,
         fix_command: [process.execPath, '-e', "await Bun.write('{scope}/source.ts', 'restored')"],
     };
-    const fileCheck = { ...spec, name: 'fixture/files', runs: 'per-file-list' as const };
+    const fileCheck = { ...spec, name: 'sandbox/files', runs: 'per-file-list' as const };
     for (const scope of session.scopes) {
         if (scope.scope.path !== '') scope.selected = [{ ...manifest, tools: [], checks: [spec, fileCheck] }];
     }
 }
 
 test.each(['delete', 'rename'])('a last-file %s triggers the affected project through execution', async (operation) => {
-    await using fixture = await createFixture({
+    await using sandbox = await createSandbox({
         'gspot.toml': policy,
         'api/source.ts': 'export {};\n',
         'web/kept.ts': 'export {};\n',
     });
-    git(fixture.path, 'init');
-    git(fixture.path, 'add', '.');
-    git(fixture.path, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.com', 'commit', '-qm', 'Fixture');
-    if (operation === 'delete') git(fixture.path, 'rm', 'api/source.ts');
-    else git(fixture.path, 'mv', 'api/source.ts', 'web/source.ts');
-    mkdirSync(join(fixture.path, 'api'), { recursive: true });
-    const session = await openSession(fixture.path);
+    git(sandbox.path, 'init');
+    git(sandbox.path, 'add', '.');
+    git(sandbox.path, '-c', 'user.name=Sandbox', '-c', 'user.email=sandbox@example.com', 'commit', '-qm', 'Sandbox');
+    if (operation === 'delete') git(sandbox.path, 'rm', 'api/source.ts');
+    else git(sandbox.path, 'mv', 'api/source.ts', 'web/source.ts');
+    mkdirSync(join(sandbox.path, 'api'), { recursive: true });
+    const session = await openSession(sandbox.path);
     projectChecks(session);
-    const staged = stagedFiles(fixture.path).staged;
+    const staged = stagedFiles(sandbox.path).staged;
     const planned = planRun(session, { ...options, staged });
     const api = planned.find((check) => check.scope.scope.path === 'api')!;
     expect(api.files).toEqual([]);
     expect(api.triggerPaths).toContain('api/source.ts');
-    const fileChecks = planRun(session, { ...options, only: ['fixture/files'], staged });
+    const fileChecks = planRun(session, { ...options, only: ['sandbox/files'], staged });
     expect(fileChecks.flatMap((check) => check.triggerPaths)).toEqual([]);
     expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toEqual(
         operation === 'delete' ? [] : ['web/source.ts'],
@@ -84,20 +84,20 @@ test.each(['delete', 'rename'])('a last-file %s triggers the affected project th
     ).toBe(true);
     const preview = await applyFixers(session, [api], true);
     expect(preview.changed).toEqual(['api/source.ts']);
-    expect(existsSync(join(fixture.path, 'api/source.ts'))).toBe(false);
+    expect(existsSync(join(sandbox.path, 'api/source.ts'))).toBe(false);
     const applied = await applyFixers(session, [api], false);
     expect(applied.changed).toEqual(['api/source.ts']);
-    expect(readFileSync(join(fixture.path, 'api/source.ts'), 'utf8')).toBe('restored');
+    expect(readFileSync(join(sandbox.path, 'api/source.ts'), 'utf8')).toBe('restored');
 });
 
 test('a positional file trigger preserves project-wide input and findings', async () => {
-    await using fixture = await createFixture({
+    await using sandbox = await createSandbox({
         'gspot.toml': policy,
         'api/source.ts': 'export {};\n',
         'api/caller.ts': 'export {};\n',
         'web/source.ts': 'export {};\n',
     });
-    const session = await openSession(fixture.path);
+    const session = await openSession(sandbox.path);
     projectChecks(session);
     const planned = planRun(session, { ...options, paths: ['api/source.ts'] });
     const affected = planned.filter((check) => check.files.length > 0);

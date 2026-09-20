@@ -1,6 +1,6 @@
 // Planted repository for the secrets preset: a staged key, a pushed key, a tracked environment file and a baseline with no reason.
 import { join } from 'node:path';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 
 import {
@@ -40,17 +40,17 @@ describe('the secrets preset', () => {
     test(
         'a staged key, a pushed key, a tracked environment file and an unexplained baseline entry are each reported',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': script });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'scripts/a.sh': script });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['gitleaks']) };
-            await install(fixture.path, INIT, environment);
-            const clean = await run(fixture.path, ['check', '--at', 'commit', '--no-cache'], environment);
+            await install(sandbox.path, INIT, environment);
+            const clean = await run(sandbox.path, ['check', '--at', 'commit', '--no-cache'], environment);
             expect(clean.code).toBe(0);
 
-            await Bun.write(join(fixture.path, 'settings.py'), SETTINGS);
-            git(fixture.path, ['add', 'settings.py']);
+            await Bun.write(join(sandbox.path, 'settings.py'), SETTINGS);
+            git(sandbox.path, ['add', 'settings.py']);
             const staged = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'secrets/gitleaks-staged', '--no-cache'],
                 environment,
             );
@@ -59,15 +59,15 @@ describe('the secrets preset', () => {
             expect(staged.stdout).toContain('aws-access-token');
             expect(staged.stdout).not.toContain(KEY_ID);
 
-            git(fixture.path, ['commit', '-qm', 'feat: add settings', '--no-verify']);
-            const pushed = await run(fixture.path, ['check', '--only', 'secrets/gitleaks', '--no-cache'], environment);
+            git(sandbox.path, ['commit', '-qm', 'feat: add settings', '--no-verify']);
+            const pushed = await run(sandbox.path, ['check', '--only', 'secrets/gitleaks', '--no-cache'], environment);
             expect(pushed.code, pushed.stdout).toBe(1);
             expect(pushed.stdout).toContain('settings.py');
 
-            await Bun.write(join(fixture.path, '.env'), 'TOKEN=value\n');
-            git(fixture.path, ['add', '-f', '.env']);
+            await Bun.write(join(sandbox.path, '.env'), 'TOKEN=value\n');
+            git(sandbox.path, ['add', '-f', '.env']);
             const tracked = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'integrity/env-files', '--no-cache'],
                 environment,
             );
@@ -75,7 +75,7 @@ describe('the secrets preset', () => {
             expect(tracked.stdout).toContain('.env is tracked');
 
             const baseline = await runPlanted(
-                fixture.path,
+                sandbox.path,
                 {
                     check: 'integrity/gitleaks-baseline',
                     files: { '.gspot/gitleaks-baseline.json': BASELINE },
@@ -88,7 +88,7 @@ describe('the secrets preset', () => {
             expect(baseline.stdout).toContain('names old.py, which is gone');
             // An entry with a commit lives in history, where a deleted file still holds its value.
             expect(baseline.stdout).not.toContain('names gone.md');
-            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
             const network = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

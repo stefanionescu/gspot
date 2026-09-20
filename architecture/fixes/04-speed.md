@@ -86,7 +86,7 @@ for most tracked files when it opens.
 
 **Partially implemented, September 20, 2026.** Header and sniff reads use the same bounded
 prefix reader. Its byte limit and descriptor cleanup are tested. Sharing a single 4 KB buffer
-through the session and the 50 MB fixture acceptance remain open.
+through the session and the 50 MB test repository acceptance remain open.
 
 ## K-138: two full parses for the naming checks
 

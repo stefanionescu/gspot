@@ -66,7 +66,7 @@ Terms are whole identifier parts. One entry covers every separator and casing.
 | verbs        | yes       | `render`, `sync`, `synchronize`, `synchronise`, `materialize`, `materialise`, `coerce`, `scoped`, `bind`                                                                                                                                                                                               |
 | verbs-strict | yes       | `load`, `loaded`, `loader`, `loaders`, `loading`, `fetch`, `resolve`, `resolving`, `resolution`                                                                                                                                                                                                        |
 | conjunctions | yes       | `and`, `or`, `with`, `when`, `what`, `whatever`, `once`, `plus`                                                                                                                                                                                                                                        |
-| test         | yes       | `fixture`, `fixtures`, `test case`, `testcase`, `under test`, `undertest`, `edge case`, `edge cases`, `snapshot`, `snapshots` (scoped to non-test code)                                                                                                                                                |
+| test         | yes       | `test case`, `testcase`, `under test`, `undertest`, `edge case`, `edge cases`, `snapshot`, `snapshots` (scoped to non-test code)                                                                                                                                                                       |
 
 This is the union of the four reference policies plus `load bearing` (spelled out as `load-bearing`
 too, and `loadBearing` through part splitting) and `bind`. Project-specific terms in them (`runpsql`,
@@ -259,8 +259,10 @@ that language and its frameworks are written, and expects no finding (T-19).
 
 Extraction skips: generated files (by nature), lockfiles, the paths a preset excludes
 (`node_modules`, build output, `.git`, caches, `Generated/`, `vendor/`), and string contents.
-Three things in a file are not declarations and are not extracted. Declaration files (`.d.ts`) describe another module. Import bindings (`const { existsSync } = require('node:fs')`, `const { default: X } = await import(...)`) belong to the imported module. The keys and methods of object literals name what another party reads (an ESLint visitor, an option table). The `test` group applies
-in non-test code only: a file under `tests/` or named `*.test.*` or `*.spec.*` may say `fixture`.
+Three things in a file are not declarations and are not extracted. Declaration files (`.d.ts`) describe another module. Import bindings (`const { existsSync } = require('node:fs')`, `const { default: X } = await import(...)`) belong to the imported module. The keys and methods of object literals name what another party reads (an ESLint visitor, an option table).
+
+The `test` group applies
+in non-test code only. The terminology group applies to every file, including tests.
 
 ## Extension in `gspot.toml`
 

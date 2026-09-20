@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
 import { planRun } from '#cli/run/plan.ts';
+import { createSandbox } from '@gspot/testing';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { runEngineCheck } from '#cli/run/engines.ts';
@@ -17,7 +17,7 @@ const WAITING = new Map([
 ]);
 
 test('disabled settings produce skipped results and enabling a setting runs the check', async () => {
-    await using fixture = await createFixture({
+    await using sandbox = await createSandbox({
         'gspot.toml': POLICY,
         'Tests/ExampleTests.swift': 'import XCTest\nfinal class ExampleTests: XCTestCase {}\n',
         'App.entitlements':
@@ -33,7 +33,7 @@ test('disabled settings produce skipped results and enabling a setting runs the 
         isDryRun: false,
         noCache: true,
     };
-    const session = await openSession(fixture.path);
+    const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, options);
     expect(new Set(outcome.report.checks.map((check) => check.check))).toEqual(new Set(WAITING.keys()));
     for (const check of outcome.report.checks) {
@@ -41,10 +41,10 @@ test('disabled settings produce skipped results and enabling a setting runs the 
         expect(check.note).toContain(WAITING.get(check.check));
     }
     writeFileSync(
-        join(fixture.path, 'gspot.toml'),
+        join(sandbox.path, 'gspot.toml'),
         POLICY + '[tools.xcode]\nallowed_entitlements = ["com.apple.security.app-sandbox"]\n',
     );
-    const enabled = await executeRun(await openSession(fixture.path), {
+    const enabled = await executeRun(await openSession(sandbox.path), {
         ...options,
         only: ['xcode/entitlements-policy'],
     });
@@ -54,7 +54,7 @@ test('disabled settings produce skipped results and enabling a setting runs the 
 });
 
 test('a failed site build skips every output consumer and a new session rebuilds', async () => {
-    await using fixture = await createFixture({
+    await using sandbox = await createSandbox({
         'gspot.toml':
             'version = 1\npresets = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
         'build.js': 'console.error("Planted build failure"); process.exitCode = 1;',
@@ -69,7 +69,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
         'static-site/size',
         'static-site/sitemap',
     ]);
-    const session = await openSession(fixture.path);
+    const session = await openSession(sandbox.path);
     const planned = ['push', 'manual'].flatMap((stage) =>
         planRun(session, {
             stage: stage as 'push' | 'manual',
@@ -90,10 +90,10 @@ test('a failed site build skips every output consumer and a new session rebuilds
         }
     }
     writeFileSync(
-        join(fixture.path, 'build.js'),
+        join(sandbox.path, 'build.js'),
         'import {mkdirSync, writeFileSync} from "node:fs"; mkdirSync("dist"); writeFileSync("dist/index.html", "built");',
     );
-    const next = await openSession(fixture.path);
+    const next = await openSession(sandbox.path);
     const [build] = planRun(next, { stage: 'push', skips: [], localSkips: [], only: ['static-site/build'] });
     const rebuilt = await runEngineCheck(next, build!.spec.engine!, build!);
     expect(rebuilt.status).toBe('ok');

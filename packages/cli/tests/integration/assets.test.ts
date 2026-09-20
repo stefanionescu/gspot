@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
@@ -22,12 +22,12 @@ describe('development assets', () => {
         const sources = Object.fromEntries(
             SOURCES.map((path) => [`${CHECKOUT}/${path}`, readFileSync(join(ROOT, path), 'utf8')]),
         );
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             ...sources,
             [`${CHECKOUT}/presets/bash/manifest.toml`]: PRESET,
             [`${CHECKOUT}/probe.ts`]: PROBE,
         });
-        const cwd = join(fixture.path, CHECKOUT);
+        const cwd = join(sandbox.path, CHECKOUT);
         const result = Bun.spawnSync([process.execPath, join(cwd, 'probe.ts')], {
             cwd,
             stdout: 'pipe',

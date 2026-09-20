@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { EngineInput } from '#types/run.ts';
 import { openSession } from '#cli/run/session.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
@@ -22,16 +22,16 @@ describe('manifest policy observations', () => {
     test.each(['{', '[]', 'null', '{"dependencies":{"example":5}}', '{"packageManager":false}'])(
         'reports malformed manifest %s with its path',
         async (content) => {
-            await using fixture = await createFixture({ 'gspot.toml': POLICY, 'package.json': MANIFEST });
-            const inspected = await input(fixture.path);
-            fs.writeFileSync(join(fixture.path, 'package.json'), content);
+            await using sandbox = await createSandbox({ 'gspot.toml': POLICY, 'package.json': MANIFEST });
+            const inspected = await input(sandbox.path);
+            fs.writeFileSync(join(sandbox.path, 'package.json'), content);
             expect(() => manifestPolicy(inspected)).toThrow('Cannot read package manifest package.json');
         },
     );
 
     test('reports a denied read without discarding the manifest', async () => {
-        await using fixture = await createFixture({ 'gspot.toml': POLICY, 'package.json': MANIFEST });
-        const inspected = await input(fixture.path);
+        await using sandbox = await createSandbox({ 'gspot.toml': POLICY, 'package.json': MANIFEST });
+        const inspected = await input(sandbox.path);
         const denied = spyOn(fs, 'readFileSync').mockImplementation(() => {
             throw Object.assign(new Error('Permission denied'), { code: 'EACCES' });
         });
@@ -43,9 +43,9 @@ describe('manifest policy observations', () => {
     });
 
     test('accepts an absent optional manifest and a valid manifest', async () => {
-        await using fixture = await createFixture({ 'gspot.toml': POLICY, 'README.md': '# Example\n' });
-        expect(await manifestPolicy(await input(fixture.path))).toEqual([]);
-        fs.writeFileSync(join(fixture.path, 'package.json'), MANIFEST);
-        expect(await manifestPolicy(await input(fixture.path))).toEqual([]);
+        await using sandbox = await createSandbox({ 'gspot.toml': POLICY, 'README.md': '# Example\n' });
+        expect(await manifestPolicy(await input(sandbox.path))).toEqual([]);
+        fs.writeFileSync(join(sandbox.path, 'package.json'), MANIFEST);
+        expect(await manifestPolicy(await input(sandbox.path))).toEqual([]);
     });
 });

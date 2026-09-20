@@ -383,9 +383,9 @@ The branch operations, baseline verification, and candidate installation are spe
    committing was authorized. An authorized commit requires `gspot check --staged` as its
    last check and passing hooks, never `--no-verify`.
 
-Automated acceptance uses planted fixtures and explicitly authorized disposable repositories.
+Automated acceptance uses planted test data and explicitly authorized disposable repositories.
 It does not grant permission to install into every named real reference repository on a release.
-The real app migration is a separate deliverable, not a substitute for the fixture suite.
+The real app migration is a separate deliverable, not a substitute for the test repository suite.
 
 ## The yap-swift-app migration is a deliverable
 

@@ -103,7 +103,7 @@ Rules:
 - A force unwrap/cast requires a nearby invariant comment unless in tests or a
   clearly safe literal-only programmer-error case.
 - Avoid implicitly unwrapped optionals except Apple lifecycle cases such as
-  `@IBOutlet`, Objective-C interop nullability gaps, and test fixtures.
+  `@IBOutlet`, Objective-C interop nullability gaps, and test data.
 - Use `private` over `fileprivate` unless same-file cross-type access is
   required.
 - Avoid explicit `internal`.

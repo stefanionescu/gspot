@@ -79,7 +79,7 @@ definitions, generated JavaScript, or HTML. See
 - Inspect the composed configuration, including wrappers, imported fragments, and deployment
   substitutions. A browser-only environment lint rule cannot inspect build-time injection by itself.
 - Verify the browser output of a production build with harmless marker values when changing secret
-  boundaries. Do not use real credentials as test fixtures. If a credential was bundled into a
+  boundaries. Do not use real credentials as test data. If a credential was bundled into a
   delivered asset, removing the source reference alone does not revoke that credential.
 - Keep type and lint failures visible. Do not enable `ignoreBuildErrors` or a version-specific
   `ignoreDuringBuilds` escape hatch to make delivery pass.

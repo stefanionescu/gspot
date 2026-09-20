@@ -1,6 +1,6 @@
-import { createFixture } from 'fs-fixture';
 // Planted repository for the express preset: an OpenAPI document with a hole, a stale document, and a route with no test.
 import { delimiter, join } from 'node:path';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -83,7 +83,7 @@ describe('the express preset', () => {
     test(
         'the OpenAPI checks and the route test check fire on their planted defects',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'package.json': PACKAGE,
                 'openapi.yaml': DOCUMENT,
                 'write-document.js': WRITER(DOCUMENT),
@@ -91,18 +91,18 @@ describe('the express preset', () => {
                 'src/routes/health.test.js':
                     "import { health } from './health.js';\n\nexport const subject = health;\n",
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}` };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await runPlanted(fixture.path, { ...planted, files: {} }, environment);
+                const clean = await runPlanted(sandbox.path, { ...planted, files: {} }, environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
             const openapi = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'express/openapi-lint', '--no-cache'],
                 environment,
             );

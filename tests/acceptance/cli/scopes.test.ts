@@ -1,7 +1,7 @@
 import { symlinkSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
 // Planted repository: TypeScript selected in a scope only, with one ESLint configuration for the repository.
 import { delimiter, join } from 'node:path';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
@@ -13,7 +13,7 @@ describe('typescript in a scope', () => {
     test(
         'the shared ESLint configuration reads TypeScript although the root selects none',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'README.md': '# planted\n',
                 '.gitignore': 'node_modules\n',
                 'package.json':
@@ -24,8 +24,8 @@ describe('typescript in a scope', () => {
                     '{\n    "extends": "../.gspot/api/tsconfig.base.json",\n    "include": ["src"]\n}\n',
                 'api/src/port.ts': SOURCE,
             });
-            symlinkSync(MODULES, join(fixture.path, 'node_modules'));
-            commitAll(fixture.path);
+            symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+            commitAll(sandbox.path);
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
@@ -48,10 +48,10 @@ describe('typescript in a scope', () => {
                 '--no-rules',
                 '--no-install',
             ];
-            await install(fixture.path, argv, environment);
-            const lint = await run(fixture.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
+            await install(sandbox.path, argv, environment);
+            const lint = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(lint.stdout + lint.stderr).not.toContain('Parsing error');
-            const written = await Bun.file(join(fixture.path, '.gspot/eslint.config.mjs')).text();
+            const written = await Bun.file(join(sandbox.path, '.gspot/eslint.config.mjs')).text();
             expect(written).toContain('tseslint.configs.strictTypeChecked');
             expect(lint.stdout).toContain('typescript/eslint');
         },
@@ -61,12 +61,12 @@ describe('typescript in a scope', () => {
     test(
         'an ignore file inside a scope travels into the policy, and a one-word comment stays a reason the policy accepts',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'README.md': '# planted\n',
                 'db/accounts.sql': 'SELECT 1;\n',
                 'db/.sqlfluffignore': '# Templates\ntemplates/\n',
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
             const argv = [
                 'init',
@@ -88,11 +88,11 @@ describe('typescript in a scope', () => {
                 '--no-rules',
                 '--no-install',
             ];
-            await install(fixture.path, argv, environment);
-            const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
+            await install(sandbox.path, argv, environment);
+            const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
             expect(policy).toContain('db/**/templates/**');
             expect(policy).toContain('carried from db/.sqlfluffignore at init: Templates');
-            const syntax = await run(fixture.path, ['check', '--only', 'sql/syntax', '--no-cache'], environment);
+            const syntax = await run(sandbox.path, ['check', '--only', 'sql/syntax', '--no-cache'], environment);
             expect(syntax.code).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 3,

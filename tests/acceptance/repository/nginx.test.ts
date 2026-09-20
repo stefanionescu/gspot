@@ -1,5 +1,5 @@
 // Planted repository for the nginx preset: a proxy target the request chooses.
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -29,14 +29,14 @@ describe('the nginx preset', () => {
     test(
         'gixy finds the forged proxy target, and the container test waits for push',
         async () => {
-            await using fixture = await createFixture({ 'proxy/nginx.conf': CLEAN });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'proxy/nginx.conf': CLEAN });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['gixy', 'typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
-            const clean = await run(fixture.path, ['check', '--only', 'nginx/gixy', '--no-cache'], environment);
+            await install(sandbox.path, INIT, environment);
+            const clean = await run(sandbox.path, ['check', '--only', 'nginx/gixy', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 if (process.platform === 'win32') {
                     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
                     expect(outcome.stdout).toMatch(/skipped\s+nginx\/gixy\s+\(platform\)/u);
@@ -46,7 +46,7 @@ describe('the nginx preset', () => {
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
                 expect(outcome.stdout).toContain('proxy/nginx.conf:');
             }
-            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

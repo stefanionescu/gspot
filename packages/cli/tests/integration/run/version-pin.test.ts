@@ -1,19 +1,19 @@
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { assertPinMatches, pinnedVersion, writePin, GSPOT_VERSION } from '#cli/run/version-pin.ts';
 
 describe('the version pin', () => {
     test('is written, read, and refused when it differs', async () => {
-        await using fixture = await createFixture({});
-        expect(pinnedVersion(fixture.path)).toBeUndefined();
-        writePin(fixture.path);
-        expect(pinnedVersion(fixture.path)).toBe(GSPOT_VERSION);
+        await using sandbox = await createSandbox({});
+        expect(pinnedVersion(sandbox.path)).toBeUndefined();
+        writePin(sandbox.path);
+        expect(pinnedVersion(sandbox.path)).toBe(GSPOT_VERSION);
         expect(() => {
-            assertPinMatches(fixture.path);
+            assertPinMatches(sandbox.path);
         }).not.toThrow();
-        writePin(fixture.path, '9.9.9');
+        writePin(sandbox.path, '9.9.9');
         expect(() => {
-            assertPinMatches(fixture.path);
+            assertPinMatches(sandbox.path);
         }).toThrow('gspot upgrade --to');
     });
 });

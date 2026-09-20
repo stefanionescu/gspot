@@ -1,6 +1,6 @@
-import { createFixture } from 'fs-fixture';
 // Planted repository for the nestjs preset: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, and a tsconfig with decorators off.
 import { delimiter, join } from 'node:path';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, symlinkSync } from 'node:fs';
@@ -80,7 +80,7 @@ describe('the nestjs preset', () => {
     test(
         'a module written the Nest way lints and type-checks, and the boundary rules fire on their planted defects',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 '.gitignore': 'node_modules\n',
                 'package.json': PACKAGE,
                 'tsconfig.json': TSCONFIG,
@@ -88,27 +88,27 @@ describe('the nestjs preset', () => {
                 'src/greeting.controller.ts': CONTROLLER,
                 'src/greeting.module.ts': MODULE,
             });
-            symlinkSync(MODULES, join(fixture.path, 'node_modules'));
-            commitAll(fixture.path);
+            symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+            commitAll(sandbox.path);
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             // Nothing the framework asks for is held in a baseline: the module passes as written, file names included.
-            const held = await run(fixture.path, ['check', '--at', 'commit', '--no-cache'], environment);
+            const held = await run(sandbox.path, ['check', '--at', 'commit', '--no-cache'], environment);
             expect(held.code, held.stdout + held.stderr).toBe(0);
-            const eslintFile = join(fixture.path, '.gspot/baselines/eslint.json');
+            const eslintFile = join(sandbox.path, '.gspot/baselines/eslint.json');
             const eslintHeld = existsSync(eslintFile) ? await Bun.file(eslintFile).text() : '';
             expect(eslintHeld, eslintHeld).toBe('');
             expect(
-                existsSync(join(fixture.path, '.gspot/baselines/structure.prefix-collisions.shared-prefix.json')),
+                existsSync(join(sandbox.path, '.gspot/baselines/structure.prefix-collisions.shared-prefix.json')),
             ).toBe(false);
             for (const id of ['typescript/eslint', 'typescript/tsc', 'integrity/tsconfig-options']) {
-                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }

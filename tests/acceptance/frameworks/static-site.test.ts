@@ -1,7 +1,7 @@
 import { symlinkSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
 // Planted repository for the static-site preset: a small site with a build script, broken one way for each check.
 import { delimiter, join } from 'node:path';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -117,21 +117,21 @@ describe('the static-site preset', () => {
     test(
         'every check passes on a clean site and fires on its planted defect',
         async () => {
-            await using fixture = await createFixture(FILES);
-            symlinkSync(MODULES, join(fixture.path, 'node_modules'));
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox(FILES);
+            symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+            commitAll(sandbox.path);
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
-            const checked = await run(fixture.path, ['check', '--at', 'push', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--at', 'push', '--json'], environment);
             const atPush = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };

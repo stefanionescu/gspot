@@ -1,5 +1,5 @@
 // Planted repository for the python preset: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -83,25 +83,25 @@ describe('the python preset', () => {
     test(
         'every python check fires on its planted defect',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'pyproject.toml': PROJECT,
                 'planted/__init__.py': '"""The planted package."""\n',
                 [MODULE]: CLEAN,
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             const checkIds = new Set([
                 ...CASES.map((planted) => planted.check),
                 'python/import-linter',
                 'python/deptry',
             ]);
             for (const id of checkIds) {
-                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout + outcome.stderr, planted.check).toContain(planted.expected);
             }
@@ -113,7 +113,7 @@ describe('the python preset', () => {
         'a type error that init finds is held in a baseline of the scope, and the old excludes are carried',
         async () => {
             const typed = `${CLEAN}\n\nTOTAL: int = "three"\n`;
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'pyproject.toml': PROJECT,
                 'pyrightconfig.json':
                     '{\n    "typeCheckingMode": "basic",\n    "exclude": [".venv", "planted/skipped.py"]\n}\n',
@@ -121,22 +121,22 @@ describe('the python preset', () => {
                 'planted/skipped.py': '"""A file the old setup left out."""\n',
                 [MODULE]: typed,
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
             // The structure preset ships the check that reads a tool's own baseline file, so this install keeps it.
             const kept = INIT.map((part) => (part.startsWith('naming,') ? 'naming,spelling,dependencies' : part));
-            await install(fixture.path, kept, environment);
-            const stub = await Bun.file(`${fixture.path}/pyrightconfig.json`).text();
+            await install(sandbox.path, kept, environment);
+            const stub = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
             expect(stub).toContain('"extends": "./.gspot/basedpyrightconfig.json"');
             expect(stub).not.toContain('basic');
-            const policy = await Bun.file(`${fixture.path}/gspot.toml`).text();
+            const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
             expect(policy).toContain('planted/skipped.py');
             expect(policy).not.toContain('.venv');
-            expect(await Bun.file(`${fixture.path}/.gspot/baselines/basedpyright.root.json`).exists()).toBe(true);
-            const held = await run(fixture.path, ['check', '--only', 'python/basedpyright', '--no-cache'], environment);
+            expect(await Bun.file(`${sandbox.path}/.gspot/baselines/basedpyright.root.json`).exists()).toBe(true);
+            const held = await run(sandbox.path, ['check', '--only', 'python/basedpyright', '--no-cache'], environment);
             expect(held.code, held.stdout + held.stderr).toBe(0);
             const current = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'integrity/baselines-current', '--no-cache'],
                 environment,
             );

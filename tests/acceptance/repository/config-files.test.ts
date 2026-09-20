@@ -1,7 +1,7 @@
 // The config-files preset: TOML that does not parse, YAML with a duplicated key, and an environment key read after init that no template names.
 import { chmodSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
 import { delimiter, join } from 'node:path';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -83,7 +83,7 @@ describe('the config-files preset', () => {
     test(
         'a tool crash reports both output streams and its exit code',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'settings/layout.toml': 'a = 1\n',
                 'bin/taplo': `#!/usr/bin/env bun
 if (process.argv.includes('--version')) {
@@ -96,14 +96,14 @@ process.exit(2);
 `,
                 'bin/taplo.cmd': '@echo off\r\nbun "%~dp0taplo" %*\r\n',
             });
-            chmodSync(join(fixture.path, 'bin/taplo'), 0o755);
-            commitAll(fixture.path);
+            chmodSync(join(sandbox.path, 'bin/taplo'), 0o755);
+            commitAll(sandbox.path);
             const environment = {
-                PATH: `${join(fixture.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
+                PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
             };
-            await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
+            await install(sandbox.path, [...INIT, '--hooks', 'none'], environment);
             const result = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'config-files/toml-format', '--no-cache'],
                 environment,
             );
@@ -118,22 +118,22 @@ process.exit(2);
     test(
         'action pin verification reports a rejected commit and preserves the workflow',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'README.md': '# Action pins\n',
                 'bin/pinact': PINACT_STUB,
                 'bin/pinact.cmd': '@echo off\r\nbun "%~dp0pinact" %*\r\n',
             });
-            chmodSync(join(fixture.path, 'bin/pinact'), 0o755);
-            commitAll(fixture.path);
+            chmodSync(join(sandbox.path, 'bin/pinact'), 0o755);
+            commitAll(sandbox.path);
             const environment = {
-                PATH: `${join(fixture.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
+                PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
             };
-            await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
-            const path = join(fixture.path, '.github/workflows/broken.yml');
+            await install(sandbox.path, [...INIT, '--hooks', 'none'], environment);
+            const path = join(sandbox.path, '.github/workflows/broken.yml');
             const workflow = `${WORKFLOW_HEAD}            - uses: actions/checkout@0000000000000000000000000000000000000000\n`;
             await Bun.write(path, workflow);
             const result = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'config-files/actions-pins', '--at', 'push', '--no-cache'],
                 environment,
             );
@@ -147,13 +147,13 @@ process.exit(2);
     test(
         'GitHub initialization writes a workflow accepted by actionlint',
         async () => {
-            await using fixture = await createFixture({ 'README.md': '# Workflow test\n' });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'README.md': '# Workflow test\n' });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['actionlint']) };
-            await install(fixture.path, [...INIT, '--ci', 'github', '--hooks', 'none'], environment);
-            expect(await Bun.file(join(fixture.path, '.github/workflows/gspot.yml')).exists()).toBe(true);
+            await install(sandbox.path, [...INIT, '--ci', 'github', '--hooks', 'none'], environment);
+            expect(await Bun.file(join(sandbox.path, '.github/workflows/gspot.yml')).exists()).toBe(true);
             const result = Bun.spawnSync(['actionlint', '-no-color', '.github/workflows/gspot.yml'], {
-                cwd: fixture.path,
+                cwd: sandbox.path,
                 env: { ...environmentVariables(), ...environment },
                 stdout: 'pipe',
                 stderr: 'pipe',
@@ -166,23 +166,23 @@ process.exit(2);
     test(
         'each remaining check fires on its planted defect, and the two that others report say so',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
+            commitAll(sandbox.path);
             const environment = {
                 PATH: toolsPath(['taplo', 'yamllint', 'actionlint', 'zizmor', 'dotenv-linter', 'typos', 'ec']),
             };
-            await run(fixture.path, [...INIT, '--hooks', 'none'], environment);
+            await run(sandbox.path, [...INIT, '--hooks', 'none'], environment);
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.check).toMatch(
                     new RegExp(String.raw`^root\s+${planted.check}\s+fail\s`, 'u'),
                 );
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
-            const jsonCheck = await run(fixture.path, ['check', '--only', 'config-files/json'], environment);
+            const jsonCheck = await run(sandbox.path, ['check', '--only', 'config-files/json'], environment);
             expect(jsonCheck.stdout).toContain('its findings come from');
-            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
             const record = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };
@@ -195,12 +195,12 @@ process.exit(2);
     test.skipIf(process.platform !== 'darwin')(
         'config-files/plist reports a property list that does not parse',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['taplo', 'typos', 'ec']) };
-            await run(fixture.path, [...INIT, '--hooks', 'none'], environment);
+            await run(sandbox.path, [...INIT, '--hooks', 'none'], environment);
             const outcome = await runPlanted(
-                fixture.path,
+                sandbox.path,
                 {
                     check: 'config-files/plist',
                     files: { 'app/Info.plist': '<plist><dict><key>A</key></plist>\n' },
@@ -217,30 +217,30 @@ process.exit(2);
     test(
         'broken TOML, a duplicated YAML key and a missing environment key are reported',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'scripts/a.sh': script,
                 'settings.toml': 'a = 1\n[x\n',
                 'config.yaml': 'key: 1\nkey: 2\n',
                 '.env.example': 'PORT=3000\n',
             });
-            git(fixture.path, ['init', '-q']);
-            git(fixture.path, ['add', '-A']);
-            git(fixture.path, ['commit', '-qm', 'init']);
-            const initialized = await run(fixture.path, INIT);
+            git(sandbox.path, ['init', '-q']);
+            git(sandbox.path, ['add', '-A']);
+            git(sandbox.path, ['commit', '-qm', 'init']);
+            const initialized = await run(sandbox.path, INIT);
             expect(initialized.stdout).toContain('write');
             const environment = { PATH: toolsPath(['taplo', 'yamllint']) };
-            const toml = await run(fixture.path, ['check', '--only', 'config-files/toml'], environment);
+            const toml = await run(sandbox.path, ['check', '--only', 'config-files/toml'], environment);
             expect(toml.code).toBe(1);
             expect(toml.stdout).toContain('settings.toml:2');
-            const yaml = await run(fixture.path, ['check', '--only', 'config-files/yaml'], environment);
+            const yaml = await run(sandbox.path, ['check', '--only', 'config-files/yaml'], environment);
             expect(yaml.code).toBe(1);
             expect(yaml.stdout).toContain('key-duplicates');
             await Bun.write(
-                join(fixture.path, 'src', 'server.js'),
+                join(sandbox.path, 'src', 'server.js'),
                 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n',
             );
-            git(fixture.path, ['add', '-A']);
-            const keys = await run(fixture.path, ['check', '--only', 'config-files/env-example', '--at', 'push']);
+            git(sandbox.path, ['add', '-A']);
+            const keys = await run(sandbox.path, ['check', '--only', 'config-files/env-example', '--at', 'push']);
             expect(keys.code).toBe(1);
             expect(keys.stdout).toContain('HOST');
             expect(keys.stdout).not.toContain('PORT is read');
@@ -252,7 +252,7 @@ process.exit(2);
 test(
     'Schema validation finds nested Unicode paths through the real tool',
     async () => {
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             'README.md': '# Schema validation\n',
             'schema.json': JSON.stringify({
                 type: 'object',
@@ -260,28 +260,28 @@ test(
                 required: ['count'],
             }),
         });
-        commitAll(fixture.path);
+        commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['v8r']) };
-        await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
+        await install(sandbox.path, [...INIT, '--hooks', 'none'], environment);
         const mapping = JSON.stringify({ pattern: 'settings/café.json', schema: 'schema.json' });
-        const setting = await run(fixture.path, ['set', 'tools.v8r.schemas', mapping], environment);
+        const setting = await run(sandbox.path, ['set', 'tools.v8r.schemas', mapping], environment);
         expect(setting.code, setting.stdout + setting.stderr).toBe(0);
-        const applied = await run(fixture.path, ['apply'], environment);
+        const applied = await run(sandbox.path, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         // A conflicting authored config must not replace the generated configuration.
-        await Bun.write(join(fixture.path, '.v8rrc.yml'), 'invalid: [\n');
-        const path = join(fixture.path, 'settings/café.json');
+        await Bun.write(join(sandbox.path, '.v8rrc.yml'), 'invalid: [\n');
+        const path = join(sandbox.path, 'settings/café.json');
         await Bun.write(path, JSON.stringify({ count: 'invalid' }));
-        expect(git(fixture.path, ['add', 'settings/café.json']).code).toBe(0);
+        expect(git(sandbox.path, ['add', 'settings/café.json']).code).toBe(0);
         const command = ['check', '--only', 'config-files/schema', '--staged', '--at', 'push', '--no-cache'];
-        const invalid = await run(fixture.path, command, environment);
+        const invalid = await run(sandbox.path, command, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect(invalid.stdout).toContain('settings/café.json');
         expect(invalid.stdout).toContain('must be integer');
         expect(invalid.stdout).not.toContain('broke:');
         await Bun.write(path, JSON.stringify({ count: 1 }));
-        expect(git(fixture.path, ['add', 'settings/café.json']).code).toBe(0);
-        const valid = await run(fixture.path, command, environment);
+        expect(git(sandbox.path, ['add', 'settings/café.json']).code).toBe(0);
+        const valid = await run(sandbox.path, command, environment);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         expect(valid.stdout).toMatch(/config-files\/schema\s+ok\s/u);
     },
@@ -291,18 +291,18 @@ test(
 test(
     'The dotenv fixer corrects tracked environment files with the pinned tool',
     async () => {
-        await using fixture = await createFixture({ '.env.example': 'lowercase=value\n' });
-        commitAll(fixture.path);
+        await using sandbox = await createSandbox({ '.env.example': 'lowercase=value\n' });
+        commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['dotenv-linter']) };
-        await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
+        await install(sandbox.path, [...INIT, '--hooks', 'none'], environment);
         const fixed = await run(
-            fixture.path,
+            sandbox.path,
             ['check', '--only', 'config-files/dotenv', '--fix', '--no-cache'],
             environment,
         );
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-        expect(await Bun.file(join(fixture.path, '.env.example')).text()).toBe('LOWERCASE=value\n');
-        const checked = await run(fixture.path, ['check', '--only', 'config-files/dotenv', '--no-cache'], environment);
+        expect(await Bun.file(join(sandbox.path, '.env.example')).text()).toBe('LOWERCASE=value\n');
+        const checked = await run(sandbox.path, ['check', '--only', 'config-files/dotenv', '--no-cache'], environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS,

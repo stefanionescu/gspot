@@ -6,7 +6,7 @@ of [18-gaps.md](18-gaps.md). The site source already exists in `docs/`; the chan
 
 Every command and output example must be verified against the documented release. The adoption
 case study comes from the redone install in yap-swift-app (D-121). The introductory examples
-come from small, public fixtures in `examples/`, so readers can reproduce them without access
+come from small, public test data in `examples/`, so readers can reproduce them without access
 to that app. Content planning and theme work can precede the redo; publication of the case
 study and adoption claims cannot.
 
@@ -73,7 +73,7 @@ Use this ordered content brief when rewriting the root README:
 1. State prerelease status and material platform limits before setup. Do not claim gspot
    detects whether a human or an agent wrote code.
 1. A compact, selectable example of one finding: path, check name, explanation, and `help:`.
-   Copy it from a fixture run. Link to an optional recording on the site; do not make an
+   Copy it from a test repository run. Link to an optional recording on the site; do not make an
    autoplaying GIF or large banner the entire first screen.
 1. `## Install`: prerequisites and one complete recommended installation path. Link to the
    installation guide for alternatives. Show only published, verified mise, npm, or binary
@@ -199,7 +199,7 @@ Put release status beside the hero install command. If no release is installable
 link contributor setup instead of displaying an install command that cannot work.
 
 Do not require three statistics cards. Add an adoption case study only when it answers a real
-question and links reproducible evidence. Record the fixture or public revision, CLI version, command,
+question and links reproducible evidence. Record the test repository or public revision, CLI version, command,
 platform, tool availability, and cold or warm caches for timing. A check count is neither
 coverage nor correctness. No copied competitor benchmarks, invented endorsements, or claims
 that passing the gate proves code has no defects.
@@ -363,13 +363,13 @@ Functional controls and error semantics remain consistent even when decorative a
 
 ### Demonstration contract
 
-Capture the real CLI in a clean fixture at a documented revision with no personal paths or
+Capture the real CLI in a clean test repository at a documented revision with no personal paths or
 credentials. Show the actual check name and `help` text, not a shortened invented error.
 If the sequence uses automatic fixing, show which command performs it and the resulting
 change; do not imply every finding is fixable. Preserve warning and failure information.
 Show a separate successful check after correction, not a green website label implying success.
 
-Keep the reproduction commands, fixture, output transcript, and CLI version with the existing
+Keep the reproduction commands, test repository, output transcript, and CLI version with the existing
 documentation sample workflow. Use the same reviewed example on the README and site. Do not
 introduce a second reference generator or snapshot every volatile timing. Optional recordings
 load only on request; the initial page remains useful without them or JavaScript.
@@ -382,7 +382,7 @@ website backlog. Implement in this order:
 1. Run the concept exploration and image-generation workflow above. Select Spot's visual
    reference, produce the shared asset set, and review it across a landing composition,
    README opening, and manual header before treating the identity as finished.
-1. Verify the public command and terminology contract, then correct the sample fixtures and
+1. Verify the public command and terminology contract, then correct the sample test data and
    reference generator. Record the release each example demonstrates. No design polish can
    make a nonexistent command acceptable documentation.
 1. Rewrite the root and published package READMEs using the brief above. Revise existing
@@ -415,7 +415,7 @@ Acceptance is task-based as well as mechanical:
   page-transfer budget still applies, including the hero illustration.
 - A new reader can identify what gspot does, whether their platform is supported, and whether
   a release is available without opening source code.
-- A reader follows the documented fixture from installation through one finding and a clean
+- A reader follows the documented test repository from installation through one finding and a clean
   rerun. A teammate follows the clone/install path. A third task covers a scoped exception
   and finding recovery instructions.
 - Record where readers get stuck; do not use page count

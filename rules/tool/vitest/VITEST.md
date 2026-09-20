@@ -67,8 +67,8 @@ describe('POST /orders', () => {
 ```ts
 describe('POST /reports', () => {
     it('does not modify an unrelated report', async () => {
-        const ownedReport = await createReportFixture({ userId });
-        const unrelatedReport = await createReportFixture({ userId: otherUserId });
+        const ownedReport = await createReport({ userId });
+        const unrelatedReport = await createReport({ userId: otherUserId });
 
         await request(app)
             .post(API_ROUTE_REPORTS)
@@ -88,7 +88,7 @@ unique per-run suffix.
 
 ```ts
 const uniqueSuffix = `${Date.now()}-${crypto.randomUUID()}`;
-const order = await createOrderFixture({
+const order = await createOrder({
     name: `submit-order-owned-draft-${uniqueSuffix}`,
     userId,
 });
@@ -118,7 +118,7 @@ it('reads that order', async () => {
 
 // Good: each test creates the subject it needs.
 it('reads a created order', async () => {
-    const order = await createOrderFixture({ userId });
+    const order = await createOrder({ userId });
 
     await expectOrderExists(order.id);
 });

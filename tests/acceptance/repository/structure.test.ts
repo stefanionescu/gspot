@@ -1,7 +1,7 @@
 // Planted repository for the structure preset: each repository-shape check fires on its planted defect.
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, git, PLANTED_TIMEOUT_MS, run, runPlanted, script, toolsPath } from '#tests/harness/planted.ts';
@@ -66,14 +66,14 @@ describe('the structure preset', () => {
     test(
         'every repository-shape check passes on a clean repository and fires on its planted defect',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            await run(fixture.path, [...INIT, '--hooks', 'gspot'], environment);
+            await run(sandbox.path, [...INIT, '--hooks', 'gspot'], environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check} on the clean repository: ${clean.stdout}`).toBe(0);
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
@@ -84,17 +84,17 @@ describe('the structure preset', () => {
     test(
         'integrity/tracked-dependencies reports a dependency folder that git tracks',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            await run(fixture.path, [...INIT, '--hooks', 'none'], environment);
-            const clean = await run(fixture.path, ['check', '--only', 'integrity/tracked-dependencies'], environment);
+            await run(sandbox.path, [...INIT, '--hooks', 'none'], environment);
+            const clean = await run(sandbox.path, ['check', '--only', 'integrity/tracked-dependencies'], environment);
             expect(clean.code).toBe(0);
-            mkdirSync(join(fixture.path, 'web', 'node_modules', 'left-pad'), { recursive: true });
-            await Bun.write(join(fixture.path, 'web', 'node_modules', 'left-pad', 'index.js'), 'module.exports = 1;\n');
-            git(fixture.path, ['add', '-f', 'web/node_modules/left-pad/index.js']);
+            mkdirSync(join(sandbox.path, 'web', 'node_modules', 'left-pad'), { recursive: true });
+            await Bun.write(join(sandbox.path, 'web', 'node_modules', 'left-pad', 'index.js'), 'module.exports = 1;\n');
+            git(sandbox.path, ['add', '-f', 'web/node_modules/left-pad/index.js']);
             const check = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'integrity/tracked-dependencies', '--no-cache'],
                 environment,
             );

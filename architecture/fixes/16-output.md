@@ -101,6 +101,6 @@ sentence. The uninstall plan prints the hooks line only when the path will be un
 
 **What goes.** `RULE_LINE`.
 
-**Tests.** Unit tests for each message, and an upgrade fixture where SwiftLint gains a rule.
+**Tests.** Unit tests for each message, and an upgrade test repository where SwiftLint gains a rule.
 
 **Done when.** They pass.

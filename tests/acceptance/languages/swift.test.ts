@@ -1,7 +1,7 @@
 // Planted repository for the swift preset: a force cast, doubled spaces, and a snake case function.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -87,22 +87,22 @@ describe('the swift preset', () => {
         async () => {
             const header = '// Greeting.swift\n// Created by Alex Garcia.\n// Copyright 2026 Example Contributors.\n\n';
             const path = 'Sources/App/Greeting.swift';
-            await using fixture = await createFixture({ [path]: header + CLEAN });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ [path]: header + CLEAN });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             for (const check of ['swift/swiftlint', 'swift/swiftformat']) {
-                const result = await run(fixture.path, ['check', '--only', check, '--no-cache'], environment);
+                const result = await run(sandbox.path, ['check', '--only', check, '--no-cache'], environment);
                 expect(result.code, result.stdout + result.stderr).toBe(0);
             }
-            await fixture.writeFile(path, header + SPACED);
+            await Bun.write(join(sandbox.path, path), header + SPACED);
             const fixed = await run(
-                fixture.path,
+                sandbox.path,
                 ['check', '--only', 'swift/swiftformat', '--fix', '--no-cache'],
                 environment,
             );
             expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
-            expect(readFileSync(join(fixture.path, path), 'utf8')).toBe(header + CLEAN);
+            expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(header + CLEAN);
         },
         PLANTED_TIMEOUT_MS * 3,
     );
@@ -110,14 +110,14 @@ describe('the swift preset', () => {
     test(
         'SwiftLint, SwiftFormat and the naming engine fire on their planted defects, and the build waits for push',
         async () => {
-            await using fixture = await createFixture({ 'Sources/App/Greeting.swift': CLEAN });
-            commitAll(fixture.path);
+            await using sandbox = await createSandbox({ 'Sources/App/Greeting.swift': CLEAN });
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 if (process.platform === 'win32' && planted.check === 'swift/swiftlint') {
                     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
                     expect(outcome.stdout).toContain('swiftlint has no Windows build');
@@ -133,11 +133,11 @@ describe('the swift preset', () => {
                 { check: 'swift/call-through', files: { 'Sources/App/Fresh.swift': NEGATED }, expected: '' },
             ];
             for (const planted of quiet) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(0);
                 expect(outcome.stdout, planted.check).toContain('ok');
             }
-            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const checked = await run(sandbox.path, ['check', '--at', 'commit', '--json'], environment);
             const atCommit = JSON.parse(checked.stdout) as {
                 checks: { check: string }[];
             };
@@ -154,11 +154,11 @@ describe('the swift preset inside a scope', () => {
     test(
         'SwiftLint and SwiftFormat read the configuration of their scope, and the findings carry the scope path',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'ios/Sources/App/Greeting.swift': CLEAN,
                 'README.md': '# planted\n',
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
             const argv = [
                 'init',
@@ -180,13 +180,13 @@ describe('the swift preset inside a scope', () => {
                 '--no-rules',
                 '--no-install',
             ];
-            await install(fixture.path, argv, environment);
+            await install(sandbox.path, argv, environment);
             for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
-                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             const outcome = await runPlanted(
-                fixture.path,
+                sandbox.path,
                 { check: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST }, expected: 'force_cast' },
                 environment,
             );
@@ -234,18 +234,18 @@ describe('the swift preset over a package', () => {
     test(
         'the build, the analyzer and Periphery run on a Swift package and fire on their planted defects',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 '.gitignore': '.build\n',
                 'Package.swift': PACKAGE,
                 'Sources/App/Greeting.swift': LIBRARY,
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'periphery', 'typos', 'ec']) };
-            await install(fixture.path, INIT, environment);
+            await install(sandbox.path, INIT, environment);
             for (const planted of BUILD_CASES) {
-                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 if (process.platform !== 'darwin') {
                     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
                     expect(outcome.stdout).toContain('runs on macos only');

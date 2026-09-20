@@ -27,6 +27,7 @@ gspot/
 ├── packages/
 │   ├── cli/                    the binary
 │   ├── eslint-plugin/          @gspot/eslint-plugin
+│   ├── testing/                private @gspot/testing: sandbox.ts, cleanup.test.ts, package.json
 │   └── npm/                    the launcher and the platform package template
 ├── presets/                    one folder for each preset
 ├── rules/                      the rule files, by layer
@@ -308,10 +309,10 @@ a root pointer for a tool with an include form. The managed blocks sit in `.giti
 ```text
 tests/
 ├── harness/                    planted.ts, registry.ts, worktree.ts, verdaccio.yaml, and the test-only types
-├── config/                     the init command lines, fixture text, tool lists, and timeouts tests share (D-113)
+├── config/                     the init command lines, test repository text, tool lists, and timeouts tests share (D-113)
 ├── repositories/
 │   ├── <preset>.test.ts        init as a developer runs it, then check: exit code, check lines, findings
-│   ├── fixtures/xcode/         a project that Xcode wrote, which the xcode tests plant (T-34)
+│   ├── samples/xcode/         a project that Xcode wrote, which the xcode tests plant (T-34)
 │   └── generated/              one project for each generator, committed as the generator wrote it (T-33)
 └── release/                    binary, publish, and install tests, the registry test of every pin, and the timing test
 ```

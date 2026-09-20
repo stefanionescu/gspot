@@ -112,7 +112,7 @@ Rules:
 - Test representative error responses against the documented error envelope.
 - Test rejected invalid body, query, and params values at the HTTP boundary.
 - Keep contract tests focused on public shape, not private module structure.
-- Do not maintain separate hand-written Swagger fixtures.
+- Do not maintain separate hand-written Swagger test data.
 
 ```ts
 const response = await request(app)

@@ -84,9 +84,9 @@ selected preset has the setting.
 
 **What goes.** The second copy.
 
-**Tests.** A config fixture with `format = "json"` loads.
+**Tests.** A config test repository with `format = "json"` loads.
 
-**Done when.** That fixture loads.
+**Done when.** That test repository loads.
 
 **Complete, locally verified September 20, 2026.** Repository and preset checks use
 one output schema, and `OutputFormat` is derived from it. A planted repository check uses

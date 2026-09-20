@@ -1,7 +1,7 @@
 // Planted repository for the xcode preset: a project with a source in no target, a catalog with a hole, and a plist that opens the network.
 import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -109,7 +109,7 @@ describe('the xcode preset', () => {
     test(
         'every xcode check fires on its planted defect',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'App.xcodeproj/project.pbxproj': PROJECT,
                 'App.xcodeproj/xcshareddata/xcschemes/App.xcscheme':
                     '<Scheme>\n    <TestAction>\n        <TestPlans><TestPlanReference reference="container:App.xctestplan"/></TestPlans>\n    </TestAction>\n</Scheme>\n',
@@ -123,17 +123,17 @@ describe('the xcode preset', () => {
                 'App/Assets.xcassets/Logo.imageset/Contents.json': IMAGES,
                 'App/Assets.xcassets/Logo.imageset/logo.png': 'png',
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec', 'taplo', 'yamllint']) };
-            await install(fixture.path, INIT, environment);
-            commitAll(fixture.path);
+            await install(sandbox.path, INIT, environment);
+            commitAll(sandbox.path);
             const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
-                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 if (planted.check === 'xcode/plist' && process.platform !== 'darwin') {
                     expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
                     expect(outcome.stdout).toContain('runs on macos only');
@@ -142,9 +142,9 @@ describe('the xcode preset', () => {
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
-            symlinkSync('Home.swift', join(fixture.path, 'App/Linked.swift'));
-            commitAll(fixture.path);
-            const linked = await run(fixture.path, ['check', '--only', 'xcode/symlinks', '--no-cache'], environment);
+            symlinkSync('Home.swift', join(sandbox.path, 'App/Linked.swift'));
+            commitAll(sandbox.path);
+            const linked = await run(sandbox.path, ['check', '--only', 'xcode/symlinks', '--no-cache'], environment);
             expect(linked.code, linked.stdout).toBe(1);
             expect(linked.stdout).toContain('A symlink to Home.swift');
         },
@@ -156,12 +156,12 @@ describe('init in a repository with an Xcode project', () => {
     test(
         'writes the project and the first shared scheme into the scope that holds them',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'ios/App.xcodeproj/project.pbxproj': PROJECT,
                 'ios/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme': '<Scheme/>\n',
                 'ios/App/Home.swift': HOME,
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const argv = [
                 'init',
                 '--yes',
@@ -180,15 +180,15 @@ describe('init in a repository with an Xcode project', () => {
                 '--no-rules',
                 '--no-install',
             ];
-            await install(fixture.path, argv, {
+            await install(sandbox.path, argv, {
                 PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec', 'taplo', 'yamllint']),
             });
-            const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
+            const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
             expect(policy).toContain('project = "App.xcodeproj"');
             expect(policy).toContain('scheme = "App"');
             // A later write into the same scope must still patch the file init wrote.
             const later = await run(
-                fixture.path,
+                sandbox.path,
                 ['set', '--scope', 'ios', 'tools.xcode.destination', 'platform=macOS'],
                 {},
             );

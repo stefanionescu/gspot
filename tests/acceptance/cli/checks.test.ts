@@ -1,6 +1,6 @@
 // Planted repository: a [[check]] entry of the repository itself, with an output format that gives file and line.
 import { join } from 'node:path';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
@@ -26,7 +26,7 @@ describe('a [[check]] entry', () => {
             '-e',
             "process.exit((await Bun.file('state.txt').text()) === 'valid' ? 0 : 1)",
         ];
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             '.gitignore': '.gspot/\n',
             'gspot.toml': `version = 1
 presets = []
@@ -40,17 +40,17 @@ stage = "commit"
             'selected.txt': 'unchanged trigger',
             'state.txt': 'invalid',
         });
-        const failed = await run(fixture.path, ['check', '--only', 'notes/state']);
+        const failed = await run(sandbox.path, ['check', '--only', 'notes/state']);
         expect(failed.code).toBe(1);
         expect(failed.stdout).toContain('notes/state');
 
-        await Bun.write(join(fixture.path, 'state.txt'), 'valid');
-        const passed = await run(fixture.path, ['check', '--only', 'notes/state']);
+        await Bun.write(join(sandbox.path, 'state.txt'), 'valid');
+        const passed = await run(sandbox.path, ['check', '--only', 'notes/state']);
         expect(passed.code).toBe(0);
         expect(passed.stdout).toContain('notes/state');
 
-        await Bun.write(join(fixture.path, 'state.txt'), 'invalid');
-        const failedAgain = await run(fixture.path, ['check', '--only', 'notes/state']);
+        await Bun.write(join(sandbox.path, 'state.txt'), 'invalid');
+        const failedAgain = await run(sandbox.path, ['check', '--only', 'notes/state']);
         expect(failedAgain.code).toBe(1);
         expect(failedAgain.stdout).toContain('notes/state');
     });
@@ -58,14 +58,14 @@ stage = "commit"
     test(
         'runs the command of the repository and reports file and line through its output format',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'scripts/a.sh': script,
                 'notes/plan.txt': 'one\nFIXME later\n',
             });
-            commitAll(fixture.path);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(
-                fixture.path,
+                sandbox.path,
                 [
                     'init',
                     '--yes',
@@ -80,9 +80,9 @@ stage = "commit"
                 ],
                 environment,
             );
-            const policy = join(fixture.path, 'gspot.toml');
+            const policy = join(sandbox.path, 'gspot.toml');
             await Bun.write(policy, `${await Bun.file(policy).text()}${ENTRY}`);
-            const check = await run(fixture.path, ['check', '--only', 'notes/no-fixme'], environment);
+            const check = await run(sandbox.path, ['check', '--only', 'notes/no-fixme'], environment);
             expect(check.code).toBe(1);
             expect(check.stdout).toContain('notes/plan.txt:2');
             expect(check.stdout).toContain('FIXME later');
@@ -94,7 +94,7 @@ stage = "commit"
 test('a declared check maps nested JSON output into findings', async () => {
     const diagnostic = {
         files: [
-            { path: 'source.txt', messages: [{ row: 0, column: 2, code: 'fixture-rule', text: 'A planted defect.' }] },
+            { path: 'source.txt', messages: [{ row: 0, column: 2, code: 'sandbox-rule', text: 'A planted defect.' }] },
         ],
     };
     const command = [
@@ -102,12 +102,12 @@ test('a declared check maps nested JSON output into findings', async () => {
         '-e',
         `console.log(${JSON.stringify(JSON.stringify(diagnostic))}); process.exitCode = 1;`,
     ];
-    await using fixture = await createFixture({
+    await using sandbox = await createSandbox({
         'source.txt': 'defect',
         'gspot.toml': `version = 1
 presets = []
 [[check]]
-name = "fixture/json"
+name = "sandbox/json"
 command = ${JSON.stringify(command)}
 paths = ["source.txt"]
 stage = "commit"
@@ -124,16 +124,16 @@ rule = "code"
 message = "text"
 `,
     });
-    const result = await run(fixture.path, ['check', '--json']);
+    const result = await run(sandbox.path, ['check', '--json']);
     expect(result.code).toBe(1);
     const report = JSON.parse(result.stdout) as RunReport;
     expect(report.checks[0]?.findings).toMatchObject([
         {
-            check: 'fixture/json',
+            check: 'sandbox/json',
             file: 'source.txt',
             line: 1,
             column: 3,
-            rule: 'fixture-rule',
+            rule: 'sandbox-rule',
             message: 'A planted defect.',
         },
     ]);
@@ -150,7 +150,7 @@ test('file and folder arguments intersect check lists and respect -C', async () 
         .map(
             (name) => `
 [[check]]
-name = "fixture/${name}"
+name = "sandbox/${name}"
 command = ${JSON.stringify(command)}
 paths = ["src/**", "docs/**"]
 stage = "commit"
@@ -159,44 +159,44 @@ format = "lines"
 `,
         )
         .join('');
-    await using fixture = await createFixture({
+    await using sandbox = await createSandbox({
         'gspot.toml': `version = 1\npresets = []\n${entries}`,
         'src/selected.ts': 'selected',
         'src/other.ts': 'other',
         'docs/guide.md': '# Guide\n',
     });
-    const selected = await run(fixture.path, [
+    const selected = await run(sandbox.path, [
         'check',
         'src/selected.ts',
         'docs',
         '--only',
-        'fixture/one',
-        'fixture/two',
+        'sandbox/one',
+        'sandbox/two',
         '--json',
     ]);
     expect(selected.code, selected.stdout + selected.stderr).toBe(1);
     const report = JSON.parse(selected.stdout) as RunReport;
-    expect(report.checks.map((check) => check.check)).toEqual(['fixture/one', 'fixture/two']);
+    expect(report.checks.map((check) => check.check)).toEqual(['sandbox/one', 'sandbox/two']);
     for (const check of report.checks)
         expect(new Set(check.findings.map((finding) => finding.message))).toEqual(
             new Set(['docs/guide.md', 'src/selected.ts']),
         );
-    const skipped = await run(fixture.path, [
+    const skipped = await run(sandbox.path, [
         'check',
         'src/selected.ts',
         '--skip',
-        'fixture/one',
-        'fixture/two',
+        'sandbox/one',
+        'sandbox/two',
         '--json',
     ]);
     expect(skipped.code, skipped.stdout + skipped.stderr).toBe(1);
     const skippedReport = JSON.parse(skipped.stdout) as RunReport;
     expect(skippedReport.checks.map((check) => [check.check, check.status])).toEqual([
-        ['fixture/one', 'skipped'],
-        ['fixture/two', 'skipped'],
-        ['fixture/three', 'fail'],
+        ['sandbox/one', 'skipped'],
+        ['sandbox/two', 'skipped'],
+        ['sandbox/three', 'fail'],
     ]);
-    const relative = await run(fixture.path, ['-C', 'src', 'check', 'selected.ts', '--only', 'fixture/one', '--json']);
+    const relative = await run(sandbox.path, ['-C', 'src', 'check', 'selected.ts', '--only', 'sandbox/one', '--json']);
     expect(relative.code, relative.stdout + relative.stderr).toBe(1);
     const relativeReport = JSON.parse(relative.stdout) as RunReport;
     expect(relativeReport.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toEqual([

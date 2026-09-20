@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import type { MergedView } from '#types/config.ts';
 import type { CheckSpec } from '#types/manifest.ts';
@@ -26,8 +26,8 @@ writeFileSync('dist/index.html', hadOutput ? 'second' : 'first');
 
 describe('site build reproducibility', () => {
     test('the second build preserves the output shared with other checks', async () => {
-        await using fixture = await createFixture({ 'build.js': BUILD });
-        const request = input(fixture.path, ['build.js']);
+        await using sandbox = await createSandbox({ 'build.js': BUILD });
+        const request = input(sandbox.path, ['build.js']);
         const first = await siteBuild(request);
         const before = readFileSync(join(first.output, 'index.html'), 'utf8');
         expect(first.isBuilt).toBe(true);
@@ -36,13 +36,13 @@ describe('site build reproducibility', () => {
     });
 
     test('a failed second build reports an error instead of passing', async () => {
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             'local-input.txt': 'Only available in the working tree.',
             'build.js': `import { readFileSync } from 'node:fs';
 readFileSync('local-input.txt');
 ${BUILD}`,
         });
-        const request = input(fixture.path, ['build.js']);
+        const request = input(sandbox.path, ['build.js']);
         const first = await siteBuild(request);
         expect(first.isBuilt).toBe(true);
         let failure: unknown;
@@ -53,6 +53,6 @@ ${BUILD}`,
         }
         expect(failure).toBeInstanceOf(Error);
         expect(String(failure)).toContain('The second site build failed');
-        expect(readFileSync(join(fixture.path, 'dist/index.html'), 'utf8')).toBe('first');
+        expect(readFileSync(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('first');
     });
 });

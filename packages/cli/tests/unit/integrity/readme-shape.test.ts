@@ -1,4 +1,4 @@
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import type { MergedView } from '#types/config.ts';
 import type { CheckSpec } from '#types/manifest.ts';
@@ -27,32 +27,32 @@ function input(root: string, paths: string[], docs: Record<string, unknown> = {}
 
 describe('readme shape', () => {
     test('a README with one H1, an opening paragraph and a setup section passes', async () => {
-        await using fixture = await createFixture({ 'README.md': '# Thing\n\nWhat it is.\n\n## Setup\n\nRun it.\n' });
-        expect(await readmeShape(input(fixture.path, ['README.md']))).toEqual([]);
+        await using sandbox = await createSandbox({ 'README.md': '# Thing\n\nWhat it is.\n\n## Setup\n\nRun it.\n' });
+        expect(await readmeShape(input(sandbox.path, ['README.md']))).toEqual([]);
     });
 
     test('a README missing the pieces names each one', async () => {
-        await using fixture = await createFixture({ 'README.md': '# A\n# B\n## Table of contents\n\nx\n' });
-        const found = await readmeShape(input(fixture.path, ['README.md']));
+        await using sandbox = await createSandbox({ 'README.md': '# A\n# B\n## Table of contents\n\nx\n' });
+        const found = await readmeShape(input(sandbox.path, ['README.md']));
         expect(found.map((finding) => finding.rule)).toEqual(['one-h1', 'opening-paragraph', 'start-section']);
-        const headings = await docsHeadings(input(fixture.path, ['README.md']));
+        const headings = await docsHeadings(input(sandbox.path, ['README.md']));
         expect(headings.map((finding) => finding.line)).toEqual([3]);
     });
     test('setext and formatted headings count, while fenced headings do not', async () => {
-        await using fixture = await createFixture({
+        await using sandbox = await createSandbox({
             'README.md':
                 'Thing\n=====\n\nWhat it is.\n\nSetup\n-----\n\n~~~md\n# Example\n## Project structure\n~~~~\n',
             'guide.md': '~~~md\n# Project structure\n~~~\n\n**Project structure**\n---------------------\n',
         });
-        expect(await readmeShape(input(fixture.path, ['README.md']))).toEqual([]);
-        expect(await docsHeadings(input(fixture.path, ['README.md']))).toEqual([]);
-        const found = await docsHeadings(input(fixture.path, ['guide.md']));
+        expect(await readmeShape(input(sandbox.path, ['README.md']))).toEqual([]);
+        expect(await docsHeadings(input(sandbox.path, ['README.md']))).toEqual([]);
+        const found = await docsHeadings(input(sandbox.path, ['guide.md']));
         expect(found.map((finding) => [finding.line, finding.rule])).toEqual([[5, 'banned-heading']]);
     });
 
     test('a list before the setup section does not supply an opening paragraph', async () => {
-        await using fixture = await createFixture({ 'README.md': '# Thing\n\n- An item.\n\n## Setup\n' });
-        const found = await readmeShape(input(fixture.path, ['README.md']));
+        await using sandbox = await createSandbox({ 'README.md': '# Thing\n\n- An item.\n\n## Setup\n' });
+        const found = await readmeShape(input(sandbox.path, ['README.md']));
         expect(found.map((finding) => finding.rule)).toEqual(['opening-paragraph']);
     });
 });

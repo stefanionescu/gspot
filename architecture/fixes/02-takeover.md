@@ -120,9 +120,9 @@ normalization.
 
 **What goes.** Nothing.
 
-**Tests.** Unit tests with one fixture for each form, each naming `FastAPI` in another spelling.
+**Tests.** Unit tests with one test repository for each form, each naming `FastAPI` in another spelling.
 
-**Done when.** Each fixture proposes the fastapi preset.
+**Done when.** Each test repository proposes the fastapi preset.
 
 ## K-128: file tags for component files
 

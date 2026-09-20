@@ -1,6 +1,6 @@
 // Planted repository for the bash preset: every check of the preset fires on its planted defect and passes without it.
 import { join } from 'node:path';
-import { createFixture } from 'fs-fixture';
+import { createSandbox } from '@gspot/testing';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { chmodSync, writeFileSync } from 'node:fs';
@@ -234,14 +234,14 @@ describe('the bash preset', () => {
     test(
         'every check passes on a clean script and fires on its planted defect',
         async () => {
-            await using fixture = await createFixture({
+            await using sandbox = await createSandbox({
                 'scripts/build.sh': script.replace('main() {', () => '# main: runs the script.\nmain() {'),
             });
-            chmodSync(join(fixture.path, 'scripts/build.sh'), 0o755);
-            commitAll(fixture.path);
+            chmodSync(join(sandbox.path, 'scripts/build.sh'), 0o755);
+            commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(
-                fixture.path,
+                sandbox.path,
                 [
                     'init',
                     '--yes',
@@ -259,9 +259,9 @@ describe('the bash preset', () => {
                 environment,
             );
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
+                const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check} on the clean repository: ${clean.stdout}`).toBe(0);
-                const outcome = await runPlanted(fixture.path, planted, environment);
+                const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
@@ -280,17 +280,17 @@ test.each([
     const base = `#!/usr/bin/env bash\n#\n# Prints a greeting.\n# Runtime: Bash ${version}+, macOS and Linux.\nset -euo pipefail\n`;
     const inherited = 'shopt -s inherit_errexit\n';
     const source = (isEnabled: boolean): string => base + (isEnabled ? inherited : '') + MAIN;
-    await using fixture = await createFixture({
+    await using sandbox = await createSandbox({
         'gspot.toml': 'version = 1\npresets = ["bash"]\n',
         'greet.sh': source(isInherited),
     });
-    const path = join(fixture.path, 'greet.sh');
+    const path = join(sandbox.path, 'greet.sh');
     chmodSync(path, 0o755);
     const command = ['check', '--only', 'structure/shell-interpreter', '--no-cache'];
-    const clean = await run(fixture.path, command);
+    const clean = await run(sandbox.path, command);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     writeFileSync(path, source(!isInherited));
-    const broken = await run(fixture.path, command);
+    const broken = await run(sandbox.path, command);
     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
     expect(broken.stdout).toContain(isInherited ? 'strict-mode' : 'bash-version');
 });

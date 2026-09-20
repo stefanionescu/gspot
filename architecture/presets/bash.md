@@ -13,7 +13,7 @@ Kind: language. Requires: structure. Recommends: naming, formatting, spelling.
 ## Tools
 
 ShellCheck, shfmt, and the host commands Bash, Zsh, and Bats. The development
-fixture uses Bats 1.14.0. Windows execution remains deferred during the CI pause.
+test repository uses Bats 1.14.0. Windows execution remains deferred during the CI pause.
 
 ## Generated configuration
 
