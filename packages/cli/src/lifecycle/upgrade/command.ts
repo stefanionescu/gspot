@@ -44,7 +44,7 @@ async function applyUpgrade(
 ): Promise<CommandResult> {
     const session = await openSession(root);
     const synced = await applyAll(session);
-    const { tool: runner } = session.policyFiles.policy.runner;
+    const runner = session.policyFiles.policy.runner?.tool;
     const installNote = await installTools(root, runner, synced, options.install);
     writePin(root, target);
     const install = installNote === '' ? '' : `; ${installNote}`;

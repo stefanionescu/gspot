@@ -4,6 +4,7 @@ import { computeDrift } from '#cli/emit/drift.ts';
 import { openSession } from '#cli/run/session.ts';
 import { mergedPins } from '#cli/emit/kept-pins.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { installHooksPath } from '#cli/emit/hooks.ts';
 import { applyBlock } from '#cli/emit/managed-blocks.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import type { Session, CommandResult } from '#types/run.ts';
@@ -13,7 +14,6 @@ import { lowerFromLastRun } from '#cli/emit/lower-baselines.ts';
 import { markExecutable } from '#cli/platform/executable-bit.ts';
 import { hasPackages, installPackages } from '#cli/prose/vale.ts';
 import { isLefthookHeld, lefthookText } from '#cli/emit/lefthook.ts';
-import { installHooksPath, removeHooksPath } from '#cli/emit/hooks.ts';
 import { chmodSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 import type { ApplyReport, ApplyOptions, DriftEntry, PackageContent, RenderedSet } from '#types/emit.ts';
 
@@ -166,8 +166,7 @@ export async function applyAll(session: Session): Promise<ApplyReport> {
         report.removed.push(entry.path);
     }
     const { hasGit } = session.repository;
-    if (hasGit && session.policyFiles.policy.hooks.tool === 'gspot') installHooksPath(session.root);
-    else if (hasGit) removeHooksPath(session.root);
+    if (hasGit && session.policyFiles.policy.hooks?.tool === 'gspot') installHooksPath(session.root);
     await installProsePackages(session, report);
     return report;
 }

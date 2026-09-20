@@ -28,7 +28,8 @@ function taskNames(root: string, runner: string): { file: string; names: Set<str
 }
 
 function taskFindings(input: EngineInput): Finding[] {
-    const runner = input.session.policyFiles.policy.runner.tool;
+    const runner = input.session.policyFiles.policy.runner?.tool;
+    if (runner === undefined) return [];
     const required = REQUIRED_TASKS[runner];
     if (required === undefined) return [];
     const { file, names } = taskNames(input.root, runner);
@@ -40,7 +41,7 @@ function taskFindings(input: EngineInput): Finding[] {
 }
 
 function hookFindings(input: EngineInput): Finding[] {
-    if (input.session.policyFiles.policy.hooks.tool !== 'gspot') return [];
+    if (input.session.policyFiles.policy.hooks?.tool !== 'gspot') return [];
     const missing = HOOK_FILES.filter((name) => {
         const path = join(input.root, HOOKS_DIRECTORY, name);
         return !existsSync(path) || !readFileSync(path, 'utf8').includes('gspot');

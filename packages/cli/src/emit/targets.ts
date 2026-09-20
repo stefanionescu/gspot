@@ -110,22 +110,24 @@ function configurationFiles(
 
 function hookOutputs(session: Session, out: RenderedSet, binary: string | undefined): void {
     const { policy } = session.policyFiles;
-    switch (policy.hooks.tool) {
+    const runner = policy.runner?.tool;
+    switch (policy.hooks?.tool) {
         case 'gspot': {
-            out.files.push(...gspotHooks(policy.runner.tool, binary));
+            out.files.push(...gspotHooks(runner, binary));
             break;
         }
         case 'husky': {
-            for (const line of huskyLines(policy.runner.tool, binary))
+            for (const line of huskyLines(runner, binary))
                 out.blocks.push({ path: line.path, block: line.line, style: 'hash' });
             break;
         }
         case 'lefthook': {
-            const isDotted =
-                !existsSync(join(session.root, 'lefthook.yml')) && existsSync(join(session.root, '.lefthook.yml'));
+            const path =
+                ['lefthook.yml', '.lefthook.yml'].find((name) => existsSync(join(session.root, name))) ??
+                'lefthook.yml';
             out.lefthook = {
-                path: isDotted ? '.lefthook.yml' : 'lefthook.yml',
-                block: lefthookBlock(policy.runner.tool, binary),
+                path,
+                block: lefthookBlock(runner, binary),
             };
 
             break;
@@ -135,7 +137,8 @@ function hookOutputs(session: Session, out: RenderedSet, binary: string | undefi
 }
 
 function runnerOutputs(session: Session, out: RenderedSet): void {
-    const { tool: runner } = session.policyFiles.policy.runner;
+    const runner = session.policyFiles.policy.runner?.tool;
+    if (runner === undefined) return;
     const isRootPackage = hasRootPackage(session.root);
     if (runner === 'mise') out.files.push(miseTasks(everyManifest(session), session.version, isRootPackage));
     const isNpmRunner = NPM_RUNNERS.has(runner);
@@ -149,7 +152,7 @@ function runnerOutputs(session: Session, out: RenderedSet): void {
 
 function workflowOutput(session: Session, out: RenderedSet): void {
     const { policy } = session.policyFiles;
-    if (policy.ci.provider !== 'github') return;
+    if (policy.ci?.provider !== 'github') return;
     const swiftScope = session.scopes.find((selection) =>
         selection.selected.some((manifest) => manifest.preset.name === 'swift'),
     );
@@ -158,7 +161,7 @@ function workflowOutput(session: Session, out: RenderedSet): void {
             version: session.version,
             platforms: policy.ci.platforms,
             swiftScope: swiftScope?.scope.path,
-            isMise: policy.runner.tool === 'mise',
+            isMise: policy.runner?.tool === 'mise',
         }),
     );
 }

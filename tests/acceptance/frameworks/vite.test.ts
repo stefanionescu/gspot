@@ -11,12 +11,6 @@ const VITEST = dirname(Bun.resolveSync('vitest/package.json', import.meta.dir));
 const VITE = dirname(Bun.resolveSync('vite/package.json', VITEST));
 const POLICY = `version = 1
 presets = ["javascript"]
-[runner]
-tool = "none"
-[hooks]
-tool = "none"
-[ci]
-provider = "none"
 [rules]
 install = false
 [tools.knip]

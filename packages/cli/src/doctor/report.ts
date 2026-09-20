@@ -25,8 +25,8 @@ const CHANGE_SECTIONS: { key: ChangeKey; title: string }[] = [
     { key: 'changedOutsideGspot', title: 'changed outside gspot' },
 ];
 
-function hooksLine(tool: string): string {
-    if (tool === 'none') return 'none';
+function hooksLine(tool: string | undefined): string {
+    if (tool === undefined) return 'none';
     return `${tool === 'gspot' ? '.gspot/hooks' : tool}  installed`;
 }
 
@@ -149,8 +149,8 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
         tools,
         coverage: coverageReport(session),
         changes: changeReport(session),
-        hooks: hooksLine(policy.hooks.tool),
-        ci: policy.ci.provider === 'github' ? '.github/workflows/gspot.yml' : 'none',
+        hooks: hooksLine(policy.hooks?.tool),
+        ci: policy.ci?.provider === 'github' ? '.github/workflows/gspot.yml' : 'none',
         rules: { files: policy.rules.install ? selectRuleFiles(session).length : 0 },
         version: {
             running: session.version,

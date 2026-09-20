@@ -8,7 +8,7 @@ describe('hooks and stubs', () => {
         expect(body).toContain("gspot_command=('mise' 'exec' '--' 'gspot')");
         expect(body).toContain('check --staged');
         expect(body).not.toContain('check --staged "$@"');
-        expect(hookBody('pre-push', 'none', '/opt/gspot')).toContain('git lfs pre-push');
+        expect(hookBody('pre-push', undefined, '/opt/gspot')).toContain('git lfs pre-push');
         expect(hookBody('commit-msg', 'bun')).toContain("('bunx' 'gspot')");
     });
 

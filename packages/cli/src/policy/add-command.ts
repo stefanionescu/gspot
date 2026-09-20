@@ -66,7 +66,7 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
     const added = selectPresets(o.presets, manifests);
     const installed = await installTools(
         root,
-        session.policyFiles.policy.runner.tool,
+        session.policyFiles.policy.runner?.tool,
         owed(session, added, applied),
         true,
     );

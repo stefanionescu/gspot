@@ -75,7 +75,8 @@ function configurationNotOwned(session: Session, tooling: ExistingTooling, selec
 }
 
 function hookRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
-    const { tool } = session.policyFiles.policy.hooks;
+    const tool = session.policyFiles.policy.hooks?.tool;
+    if (tool === undefined) return [];
     return tooling.hooks.flatMap((hook) => {
         if (tool !== 'husky' && hook.kind === 'husky')
             return [{ path: `${hook.path}/`, note: 'hooks added by hand', command: 'gspot apply' }];

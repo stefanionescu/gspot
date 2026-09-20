@@ -42,7 +42,7 @@ describe('parsePolicyText', () => {
     });
 
     test('an unknown key names the keys that exist under that table', () => {
-        const found = problems(`${minimal}[hooks]\ntol = "gspot"\n`);
+        const found = problems(`${minimal}[hooks]\ntool = "gspot"\ntol = "gspot"\n`);
         expect(found).toHaveLength(1);
         expect(found[0]).toContain('`tol` is not a setting gspot knows under [hooks]');
         expect(found[0]).toContain('`tool`');

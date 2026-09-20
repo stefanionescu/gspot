@@ -65,22 +65,21 @@ export async function updatePackageJson(
  */
 export async function installTools(
     root: string,
-    runner: InitAnswers['runner'],
+    runner: InitAnswers['runner'] | undefined,
     synced: ApplyReport,
     isInstalling: boolean,
 ): Promise<string> {
-    if (runner === 'none') return '';
+    if (runner === undefined || runner === 'none') return '';
     if (!isInstalling) {
         const command = runner === 'mise' ? 'mise install' : `${runner} install`;
         return `install skipped; run: ${command}`;
     }
     const commands = installCommands(runner);
-    if (runner === 'mise') {
-        commands.unshift(['mise', 'trust', '.config/mise/conf.d/gspot.toml']);
-        if (synced.packages.length > 0) {
-            const detected = await detectPackageManager(root);
-            commands.push([detected?.name ?? 'npm', 'install']);
-        }
+    if (runner !== 'mise') return runInstall(root, commands);
+    commands.unshift(['mise', 'trust', '.config/mise/conf.d/gspot.toml']);
+    if (synced.packages.length > 0) {
+        const detected = await detectPackageManager(root);
+        commands.push([detected ? detected.name : 'npm', 'install']);
     }
     return runInstall(root, commands);
 }

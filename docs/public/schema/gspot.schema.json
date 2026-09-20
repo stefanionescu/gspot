@@ -1713,11 +1713,13 @@
                     "enum": [
                         "gspot",
                         "lefthook",
-                        "husky",
-                        "none"
+                        "husky"
                     ]
                 }
             },
+            "required": [
+                "tool"
+            ],
             "additionalProperties": false
         },
         "ci": {
@@ -1725,10 +1727,7 @@
             "properties": {
                 "provider": {
                     "type": "string",
-                    "enum": [
-                        "github",
-                        "none"
-                    ]
+                    "const": "github"
                 },
                 "platforms": {
                     "type": "array",
@@ -1742,6 +1741,9 @@
                     }
                 }
             },
+            "required": [
+                "provider"
+            ],
             "additionalProperties": false
         },
         "rules": {
@@ -1786,11 +1788,13 @@
                         "npm",
                         "bun",
                         "pnpm",
-                        "uv",
-                        "none"
+                        "uv"
                     ]
                 }
             },
+            "required": [
+                "tool"
+            ],
             "additionalProperties": false
         }
     },

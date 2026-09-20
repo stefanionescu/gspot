@@ -130,11 +130,11 @@ export type Policy = {
     ignores: IgnoreEntry[];
     declares: DeclareEntry[];
     checks: RepositoryCheck[];
-    hooks: { tool: 'gspot' | 'lefthook' | 'husky' | 'none' };
-    ci: { provider: 'github' | 'none'; platforms: string[] };
+    hooks?: { tool: 'gspot' | 'lefthook' | 'husky' };
+    ci?: { provider: 'github'; platforms: string[] };
     rules: { install: boolean; directory: string; project?: string; exclude: string[] };
     coverage: { strict: boolean };
-    runner: { tool: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none' };
+    runner?: { tool: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' };
     scopeTables: Record<string, Partial<Policy>>;
 };
 
@@ -236,7 +236,7 @@ export type RawLimits = NonNullable<RawPolicy['limits']>;
 export type RawNaming = NonNullable<RawPolicy['naming']>;
 
 /** The configured task runner. */
-export type RunnerTool = Policy['runner']['tool'];
+export type RunnerTool = NonNullable<Policy['runner']>['tool'];
 
 /** What resolving a value for one scope needs. */
 export type PolicyScopeLayer = { surface: ExposedSettings; policy: Policy; scope: string };

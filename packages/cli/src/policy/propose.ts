@@ -115,10 +115,13 @@ export function proposeText(proposal: Proposal): string {
             ...((document['ignore'] as TomlTable[] | undefined) ?? []),
             ...ignoreTables(proposal.carried),
         ];
-    document['hooks'] = { ...asTable(document['hooks']), tool: proposal.hooks };
-    document['ci'] = { ...asTable(document['ci']), provider: proposal.ci };
+    if (proposal.hooks === 'none') delete document['hooks'];
+    else document['hooks'] = { ...asTable(document['hooks']), tool: proposal.hooks };
+    if (proposal.ci === 'none') delete document['ci'];
+    else document['ci'] = { ...asTable(document['ci']), provider: proposal.ci };
     document['rules'] = { directory: '.gspot/rules', ...asTable(document['rules']), install: proposal.rules };
     document['coverage'] = { strict: false, ...asTable(document['coverage']) };
-    document['runner'] = { ...asTable(document['runner']), tool: proposal.runner };
+    if (proposal.runner === 'none') delete document['runner'];
+    else document['runner'] = { ...asTable(document['runner']), tool: proposal.runner };
     return `${PREFACE}${bodyText(document)}`;
 }

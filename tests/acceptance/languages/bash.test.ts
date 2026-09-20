@@ -10,7 +10,7 @@ describe('the bash planted repository', () => {
         'syntax checks use each file dialect and reject its broken syntax',
         async () => {
             await using sandbox = await createSandbox({
-                'gspot.toml': 'version = 1\npresets = ["bash"]\n[hooks]\ntool = "none"\n',
+                'gspot.toml': 'version = 1\npresets = ["bash"]\n',
                 'script.sh': 'echo example\n',
                 launcher: '#!/usr/bin/env -S bash -e\necho example\n',
                 'script.zsh': 'repeat 2 do print example; done\n',

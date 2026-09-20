@@ -155,7 +155,9 @@ test('initialization flags control integrations and formatter carryover in the p
     expect(kept.code, kept.stdout + kept.stderr).toBe(0);
     const keptProposal = JSON.parse(kept.stdout) as { policy: string };
     const keptPolicy = parsePolicyText(keptProposal.policy, 'gspot.toml');
-    expect([keptPolicy.hooks.tool, keptPolicy.ci.provider, keptPolicy.runner.tool]).toEqual(['none', 'none', 'none']);
+    expect(keptPolicy).not.toHaveProperty('hooks');
+    expect(keptPolicy).not.toHaveProperty('ci');
+    expect(keptPolicy).not.toHaveProperty('runner');
     expect(keptPolicy.format.semicolons).toBe(false);
     const shipped = await run(sandbox.path, [...command, '--format', 'shipped']);
     expect(shipped.code, shipped.stdout + shipped.stderr).toBe(0);

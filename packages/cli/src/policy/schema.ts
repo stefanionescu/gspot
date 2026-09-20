@@ -164,12 +164,12 @@ const checkSchema = z
     })
     .meta({ dependentRequired: { fix_command: ['fix_order'] } });
 
-const hooksSchema = z.strictObject({ tool: z.enum(['gspot', 'lefthook', 'husky', 'none']).optional() });
+const hooksSchema = z.strictObject({ tool: z.enum(['gspot', 'lefthook', 'husky']) });
 
 const ciPlatform = z.enum(['ubuntu', 'macos', 'windows']);
 
 const ciSchema = z.strictObject({
-    provider: z.enum(['github', 'none']).optional(),
+    provider: z.literal('github'),
     platforms: z.array(ciPlatform).optional(),
 });
 
@@ -182,7 +182,7 @@ const rulesSchema = z.strictObject({
 
 const coverageSchema = z.strictObject({ strict: flag.optional() });
 
-const runnerSchema = z.strictObject({ tool: z.enum(['mise', 'npm', 'bun', 'pnpm', 'uv', 'none']).optional() });
+const runnerSchema = z.strictObject({ tool: z.enum(['mise', 'npm', 'bun', 'pnpm', 'uv']) });
 
 const namingTable = namingLists.catchall(namingLanguage);
 

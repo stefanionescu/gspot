@@ -313,6 +313,16 @@ by `init` is explicit. The value `"none"` leaves the three enums.
 
 **Done when.** That test passes.
 
+**Locally verified.** The three integration tables are optional. Their tool or provider
+is required when the table is present, and disabled init choices omit the table.
+Apply leaves existing Git configuration, hook content, and package scripts unchanged
+when integrations are omitted, including existing files under `.gspot/hooks`.
+
+Profiles preserve omitted integrations during export and import. Explicit hook selection
+still generates its entry points. The CLI suites and affected command, profile, hook,
+Bash, TypeScript, and Vite acceptance cases pass locally. Schema and reference checks pass.
+Platform execution outside macOS remains deferred.
+
 ## K-109: gspot replaces a script of the developer
 
 **What is wrong.** `npmScripts` (`emit/runner-surface.ts:132`) returns `check`, `check:fix`,

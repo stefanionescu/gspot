@@ -189,7 +189,7 @@ deployment, or app adoption is inferred from this documentation review.
 
 Each named row links to its owning acceptance section, including rows grouped under another
 ID. The September 20 reconciliation found exactly one owner for each named row.
-Twenty-seven requirements are locally complete; 301 named rows remain open.
+Twenty-eight requirements are locally complete; 300 named rows remain open.
 Completed evidence stays in each owning acceptance section.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
@@ -225,7 +225,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-159](fixes/01-first-fixes.md#k-156-a-check-deletes-untracked-sql-files): Make `express/openapi-fresh` write back the text it read, and never run `git checkout`.
 - [ ] [K-257](fixes/01-first-fixes.md#k-257-a-full-disk-cuts-the-policy-in-half): Write every file through a temporary file and a rename, and let a failed cache write be one line on stderr.
 - [ ] [K-252](fixes/01-first-fixes.md#k-257-a-full-disk-cuts-the-policy-in-half): Report a run whose report cannot be written in one line on stderr, and keep its findings and its exit code.
-- [ ] [K-108](fixes/01-first-fixes.md#k-108-a-missing-hooks-table): Make a missing `[hooks]` table mean gspot does nothing there, as `[ci]` and `[runner]` do (D-130).
 - [ ] [K-109](fixes/01-first-fixes.md#k-109-gspot-replaces-a-script-of-the-developer): Never inject a lifecycle script; replace an existing lint task only with explicit acceptance and recoverable originals.
 - [ ] [K-147](fixes/01-first-fixes.md#k-147-one-wrong-line-stops-every-command): Run `check` with the rest of the config when one line is wrong, and report that line as a finding.
 - [x] [K-206](fixes/01-first-fixes.md#k-206-two-pins-their-npm-package-never-had): An installer that numbers differently carries its own version beside its name, and a release test asks each registry for every pin.

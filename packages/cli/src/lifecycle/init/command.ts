@@ -59,9 +59,9 @@ function profileAnswers(profile: Profile): Partial<InitOptions> {
     const install = tables.rules?.install;
     return compact({
         presets: presets.length === 0 ? ['none'] : presets,
-        hooks: tables.hooks?.tool,
-        ci: tables.ci?.provider,
-        runner: tables.runner?.tool,
+        hooks: tables.hooks === undefined ? 'none' : tables.hooks.tool,
+        ci: tables.ci === undefined ? 'none' : tables.ci.provider,
+        runner: tables.runner === undefined ? 'none' : tables.runner.tool,
         rules: install === undefined ? undefined : toChoice(install),
     });
 }

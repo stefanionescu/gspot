@@ -73,11 +73,13 @@ function trimTrailingSlashes(path: string): string {
 
 function normalizeScalars(raw: RawPolicy): Pick<Policy, 'hooks' | 'ci' | 'rules' | 'coverage' | 'runner'> {
     return {
-        hooks: defaulted<Policy['hooks']>(raw.hooks, { tool: 'gspot' }),
-        ci: defaulted<Policy['ci']>(raw.ci, { provider: 'none', platforms: ['ubuntu'] }),
+        ...(raw.hooks === undefined ? {} : { hooks: { tool: raw.hooks.tool } }),
+        ...(raw.ci === undefined
+            ? {}
+            : { ci: { provider: raw.ci.provider, platforms: raw.ci.platforms ?? ['ubuntu'] } }),
         rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
         coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
-        runner: defaulted<Policy['runner']>(raw.runner, { tool: 'none' }),
+        ...(raw.runner === undefined ? {} : { runner: { tool: raw.runner.tool } }),
     };
 }
 

@@ -27,6 +27,11 @@ on `PATH`. gspot writes no task to `pyproject.toml`.
 `--no-runner` writes no task-runner configuration. The hooks call the gspot binary by its absolute path, recorded
 at `init`. Every tool is yours to install; `gspot doctor` lists what is missing.
 
+Omit `[runner]` to leave task-runner configuration unmanaged. The same rule applies
+to `[hooks]` and `[ci]`: an absent table enables no integration. When a table is
+present, name its tool or provider explicitly. During initialization, use
+`--no-runner`, `--no-hooks`, and `--no-ci` to omit those tables.
+
 ## What you lose
 
 A tool version that differs between two machines. mise pins every tool; the other runners pin

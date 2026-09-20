@@ -2,6 +2,7 @@
 import { join } from 'node:path';
 import { createTwoFilesPatch } from 'diff';
 import type { Session } from '#types/run.ts';
+import type { Policy } from '#types/config.ts';
 import { head } from '#cli/repository/tracked.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { hasHeader } from '#cli/emit/templates.ts';
@@ -16,7 +17,9 @@ const NEVER_STRAY = new Set(['.gspot/version', '.gspot/report.json', '.gspot/rep
 const HEAD_BYTES = 600;
 const DIFF_CONTEXT = 2;
 
-function isStrayCandidate(path: string): boolean {
+function isStrayCandidate(path: string, policy: Policy): boolean {
+    if (path.startsWith('.gspot/rules/') && !policy.rules.install) return false;
+    if (path.startsWith('.gspot/hooks/') && policy.hooks === undefined) return false;
     return !(path.startsWith('.gspot/cache/') || path.startsWith('.gspot/baselines/') || NEVER_STRAY.has(path));
 }
 
@@ -84,8 +87,7 @@ function knownPaths(rendered: RenderedSet): Set<string> {
 }
 
 function isStray(session: Session, path: string, known: Set<string>, tags: string[]): boolean {
-    if (known.has(path) || !isStrayCandidate(path) || !tags.includes('text')) return false;
-    if (path.startsWith('.gspot/rules/') && !session.policyFiles.policy.rules.install) return false;
+    if (known.has(path) || !isStrayCandidate(path, session.policyFiles.policy) || !tags.includes('text')) return false;
     if (isValePackageFile(path)) return false;
     return path.startsWith('.gspot/') || hasHeader(head(session.root, path, HEAD_BYTES));
 }

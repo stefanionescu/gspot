@@ -265,12 +265,6 @@ describe('the typescript preset', () => {
 
 const POLICY = `version = 1
 presets = ["typescript"]
-[runner]
-tool = "none"
-[hooks]
-tool = "none"
-[ci]
-provider = "none"
 [rules]
 install = false
 `;
