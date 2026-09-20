@@ -6,14 +6,14 @@ import { fileURLToPath } from 'node:url';
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
-import { existsSync, mkdirSync, readdirSync, symlinkSync, unlinkSync } from 'node:fs';
-import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
+import { mkdirSync, readdirSync, symlinkSync, unlinkSync } from 'node:fs';
+import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const STYLES = join(root, '.gspot', 'vale', 'styles');
 const OWN_STYLES = new Set(['gspot', 'config']);
 
-const README = `# planted
+const README = `# Planted
 
 A planted repository that holds documents and nothing else.
 
@@ -31,7 +31,7 @@ git clone https://example.com/planted.git
 
 Open the guide and read it from the top.
 `;
-const GUIDE = '# The guide\n\nThe worker retries the request three times. Each retry waits one second.\n';
+const GUIDE = '# The Guide\n\nThe worker retries the request three times. Each retry waits one second.\n';
 const LICENSE = 'MIT License\n\nCopyright (c) 2026 Alex Garcia\n';
 
 const CASES: PlantedCase[] = [
@@ -89,7 +89,7 @@ function linkValePackages(target: string): void {
     symlinkSync(join(STYLES, 'config', 'dictionaries'), join(styles, 'config', 'dictionaries'));
 }
 
-describe.skipIf(!existsSync(join(STYLES, 'Google')))('the markdown, docs and prose presets', () => {
+describe('the markdown, docs and prose presets', () => {
     test(
         'every check passes on clean documents and fires on its planted defect',
         async () => {
@@ -104,7 +104,7 @@ describe.skipIf(!existsSync(join(STYLES, 'Google')))('the markdown, docs and pro
             commitAll(fixture.path);
             linkValePackages(fixture.path);
             const environment = { PATH: toolsPath(['vale', 'lychee', 'markdownlint-cli2', 'typos', 'ec']) };
-            await run(
+            await install(
                 fixture.path,
                 [
                     'init',

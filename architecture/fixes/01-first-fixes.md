@@ -713,6 +713,11 @@ differs from what the policy writes.
 
 ## K-250: libraries the documents name and nothing installs
 
+**Status: partially implemented.** License matching uses the SPDX parser and satisfier.
+Markdown headings, README structure, fenced code, and free-text exclusions use mdast.
+Mixed license expressions and Markdown syntax regressions are locally verified.
+CSS parsing and the remaining dependency-table cleanup are open.
+
 **What is wrong.** A license expression is cut at brackets, `OR`, and `AND` by hand in
 `integrity/licenses.ts` (`EXPRESSION_PARTS`), and `MIT OR (GPL-3.0-only AND ...)` is refused.
 Markdown headings are read by a line pattern, so a `#` inside a code fence is a heading.

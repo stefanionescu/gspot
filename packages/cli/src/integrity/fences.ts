@@ -1,49 +1,27 @@
-// Every fenced code block with a language tag parses in that language.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { parseAllDocuments } from 'yaml';
+// Every fenced code block with a language tag parses in that language.
+import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { parserFor } from '#cli/naming/parsers.ts';
 import type { GrammarName } from '#types/naming.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { FencedBlock, OpenFence } from '#types/integrity.ts';
+import type { FencedBlock } from '#types/integrity.ts';
+import { fromMarkdown } from 'mdast-util-from-markdown';
 import { ANGLE_PLACEHOLDER, ELLIPSIS_ARGUMENTS, ELLIPSIS_LINE, FENCE_PARSERS } from '#config/docs.ts';
 
-const FENCE = /^\s*(?<ticks>`{3,})\s*(?<language>[\w-]*)/u;
 const STRUCTURED_PARSERS = new Set(['json', 'toml', 'yaml']);
 const TREE_PARSERS = new Set(['typescript', 'javascript', 'python']);
 
-function fenceStep(
-    line: string,
-    index: number,
-    open: OpenFence | undefined,
-    out: FencedBlock[],
-): OpenFence | undefined {
-    if (open === undefined) {
-        const opening = FENCE.exec(line);
-        return opening === null
-            ? undefined
-            : {
-                  ticks: opening.groups?.['ticks'] ?? '```',
-                  language: opening.groups?.['language'] ?? '',
-                  line: index + 1,
-                  body: [],
-              };
-    }
-    if (line.trim() === open.ticks) {
-        out.push({ line: open.line, language: open.language, body: open.body.join('\n') });
-        return undefined;
-    }
-    open.body.push(line);
-    return open;
-}
-
 function fencesOf(text: string): FencedBlock[] {
     const out: FencedBlock[] = [];
-    let open: OpenFence | undefined;
-    for (const [index, line] of text.split('\n').entries()) open = fenceStep(line, index, open, out);
+    visit(fromMarkdown(text), 'code', (node) => {
+        if (node.lang !== undefined && node.lang !== null && node.lang !== '')
+            out.push({ line: node.position?.start.line ?? 1, language: node.lang, body: node.value });
+    });
     return out;
 }
 

@@ -55,4 +55,24 @@ describe('fences and paths', () => {
             'mise run gone names no task or script.',
         ]);
     });
+    test('tilde fences and unclosed examples still report invalid code', async () => {
+        await using fixture = await createFixture({
+            'a.md': '> ~~~json\n> {oops\n> ~~~~\n\n```json\n{oops\n',
+        });
+        const found = await fences(input(fixture.path, ['a.md']));
+        expect(found.map((finding) => [finding.line, finding.rule])).toEqual([
+            [1, 'json'],
+            [5, 'json'],
+        ]);
+    });
+
+    test('nested tilde text is excluded while shell paths remain checked', async () => {
+        await using fixture = await createFixture({
+            'a.md': '> ~~~text\n> src/example.ts\n> ~~~~\n\n~~~sh\ncat src/missing.ts\n~~~\n',
+        });
+        const found = await stalePaths(input(fixture.path, ['a.md']));
+        expect(found.map((finding) => [finding.line, finding.message])).toEqual([
+            [6, 'src/missing.ts names no tracked file or folder.'],
+        ]);
+    });
 });

@@ -1,19 +1,12 @@
-// A Markdown heading from the banned list: an inventory where an explanation belongs.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
+// A Markdown heading from the banned list: an inventory where an explanation belongs.
+import { visit } from 'unist-util-visit';
+import { toString } from 'mdast-util-to-string';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { BANNED_HEADINGS } from '#config/docs.ts';
-
-const HEADING = /^#{1,6} (?<text>.*)$/u;
-
-function headingText(line: string): string | undefined {
-    const text = HEADING.exec(line)?.groups?.['text'];
-    if (text === undefined) return undefined;
-    let trimmed = text.trimEnd();
-    while (trimmed.endsWith('#')) trimmed = trimmed.slice(0, -1);
-    return trimmed.trim().toLowerCase();
-}
+import { fromMarkdown } from 'mdast-util-from-markdown';
 
 /**
  * One finding per heading that matches the banned list or [tools.docs] banned_headings.
@@ -23,25 +16,22 @@ function headingText(line: string): string | undefined {
 export function docsHeadings(input: EngineInput): Promise<Finding[]> {
     const extra = (input.view.tool('docs')['banned_headings'] as string[] | undefined) ?? [];
     const banned = new Set([...BANNED_HEADINGS, ...extra.map((heading) => heading.toLowerCase())]);
-    const findings = input.files
-        .filter((file) => file.nature === 'source' && file.path.endsWith('.md'))
-        .flatMap((file) =>
-            readFileSync(join(input.root, file.path), 'utf8')
-                .split('\n')
-                .flatMap((line, index) => {
-                    const text = headingText(line);
-                    if (text === undefined || !banned.has(text)) return [];
-                    return [
-                        {
-                            check: input.spec.name,
-                            file: file.path,
-                            line: index + 1,
-                            rule: 'banned-heading',
-                            message: `The heading "${text}" promises an inventory; explain the thing instead.`,
-                            fixable: false,
-                        },
-                    ];
-                }),
-        );
+    const findings: Finding[] = [];
+    for (const file of input.files) {
+        if (file.nature !== 'source' || !file.path.endsWith('.md')) continue;
+        const tree = fromMarkdown(readFileSync(join(input.root, file.path), 'utf8'));
+        visit(tree, 'heading', (heading) => {
+            const text = toString(heading).trim().toLowerCase();
+            if (banned.has(text))
+                findings.push({
+                    check: input.spec.name,
+                    file: file.path,
+                    line: heading.position?.start.line ?? 1,
+                    rule: 'banned-heading',
+                    message: `The heading "${text}" promises an inventory; explain the thing instead.`,
+                    fixable: false,
+                });
+        });
+    }
     return Promise.resolve(findings);
 }

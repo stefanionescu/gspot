@@ -33,12 +33,14 @@ describe('the licenses preset', () => {
                 'package.json': ROOT,
                 '.gitignore': 'node_modules/\n',
                 'node_modules/kind/package.json': installed('kind', 'MIT'),
+                'node_modules/choice/package.json': installed('choice', 'MIT OR (GPL-3.0-only AND GPL-2.0-only)'),
+                'node_modules/combined/package.json': installed('combined', 'MIT AND (Apache-2.0 OR GPL-3.0-only)'),
             });
             commitAll(fixture.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['typos', 'ec'])}` };
             await install(fixture.path, INIT, environment);
             const clean = await run(fixture.path, ['check', 'licenses/npm', '--no-cache'], environment);
-            expect(clean.code).toBe(0);
+            expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             await Bun.write(
                 join(fixture.path, 'node_modules/strict/package.json'),
                 installed('strict', 'GPL-3.0-only'),
@@ -47,6 +49,17 @@ describe('the licenses preset', () => {
             expect(refused.code, refused.stdout + refused.stderr).toBe(1);
             expect(refused.stdout).toContain('strict@1.0.0 reports GPL-3.0-only');
             expect(refused.stdout).not.toContain('kind@1.0.0');
+            await Bun.write(
+                join(fixture.path, 'node_modules/strict/package.json'),
+                installed('strict', '(MIT OR Apache-2.0) AND GPL-3.0-only'),
+            );
+            const mixed = await run(fixture.path, ['check', 'licenses/npm', '--no-cache'], environment);
+            expect(mixed.code, mixed.stdout + mixed.stderr).toBe(1);
+            expect(mixed.stdout).toContain('strict@1.0.0 reports (MIT OR Apache-2.0) AND GPL-3.0-only');
+            await Bun.write(
+                join(fixture.path, 'node_modules/strict/package.json'),
+                installed('strict', 'GPL-3.0-only'),
+            );
             const policy = join(fixture.path, 'gspot.toml');
             const before = await Bun.file(policy).text();
             const exception = (license: string): string =>

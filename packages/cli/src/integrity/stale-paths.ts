@@ -1,11 +1,13 @@
-// Every path-shaped token in Markdown names a tracked file or folder, and every `mise run` or `bun run` names a task that exists.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
+// Every path-shaped token in Markdown names a tracked file or folder, and every `mise run` or `bun run` names a task that exists.
+import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import type { FenceState, PathIndex, ProseLine } from '#types/integrity.ts';
+import { fromMarkdown } from 'mdast-util-from-markdown';
+import type { PathIndex, ProseLine } from '#types/integrity.ts';
 
 import {
     FILE_EXTENSION,
@@ -16,7 +18,6 @@ import {
     TOKEN_SEPARATORS,
 } from '#config/docs.ts';
 
-const FENCE = /^\s*(?<ticks>`{3,})\s*(?<language>[\w-]*)/u;
 const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', '.config/mise/conf.d/gspot.toml'];
 const TRAILING_PUNCTUATION = '.,;:';
 
@@ -56,34 +57,13 @@ function tasksOf(root: string): Set<string> {
     return new Set([...MISE_FILES.flatMap((file) => miseTasks(root, file)), ...packageScripts(root)]);
 }
 
-function openingFence(line: string): FenceState | undefined {
-    const opening = FENCE.exec(line);
-    if (opening === null) return undefined;
-    return {
-        ticks: opening.groups?.['ticks'] ?? '```',
-        isFreeText: FREE_TEXT_FENCES.includes(opening.groups?.['language'] ?? ''),
-    };
-}
-
-// The fence state after a line: a new state when the line opens or closes a fence, null when nothing changes.
-function fenceChange(line: string, fence: FenceState | undefined): FenceState | undefined | null {
-    if (fence === undefined) return openingFence(line) ?? null;
-    return line.trim() === fence.ticks ? undefined : null;
-}
-
 function proseLines(text: string): ProseLine[] {
-    const out: ProseLine[] = [];
-    let fence: FenceState | undefined;
-    for (const [index, line] of text.split('\n').entries()) {
-        const change = fenceChange(line, fence);
-        if (change !== null) {
-            fence = change;
-            continue;
-        }
-        const isFreeText = fence?.isFreeText ?? false;
-        if (!isFreeText) out.push({ number: index + 1, line });
-    }
-    return out;
+    const ignored = new Set<number>();
+    visit(fromMarkdown(text), 'code', (node) => {
+        if (!FREE_TEXT_FENCES.includes(node.lang ?? '') || node.position === undefined) return;
+        for (let line = node.position.start.line; line <= node.position.end.line; line += 1) ignored.add(line);
+    });
+    return text.split('\n').flatMap((line, index) => (ignored.has(index + 1) ? [] : [{ number: index + 1, line }]));
 }
 
 function normalized(token: string): string {

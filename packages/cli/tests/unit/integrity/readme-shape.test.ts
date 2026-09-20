@@ -38,4 +38,21 @@ describe('readme shape', () => {
         const headings = await docsHeadings(input(fixture.path, ['README.md']));
         expect(headings.map((finding) => finding.line)).toEqual([3]);
     });
+    test('setext and formatted headings count, while fenced headings do not', async () => {
+        await using fixture = await createFixture({
+            'README.md':
+                'Thing\n=====\n\nWhat it is.\n\nSetup\n-----\n\n~~~md\n# Example\n## Project structure\n~~~~\n',
+            'guide.md': '~~~md\n# Project structure\n~~~\n\n**Project structure**\n---------------------\n',
+        });
+        expect(await readmeShape(input(fixture.path, ['README.md']))).toEqual([]);
+        expect(await docsHeadings(input(fixture.path, ['README.md']))).toEqual([]);
+        const found = await docsHeadings(input(fixture.path, ['guide.md']));
+        expect(found.map((finding) => [finding.line, finding.rule])).toEqual([[5, 'banned-heading']]);
+    });
+
+    test('a list before the setup section does not supply an opening paragraph', async () => {
+        await using fixture = await createFixture({ 'README.md': '# Thing\n\n- An item.\n\n## Setup\n' });
+        const found = await readmeShape(input(fixture.path, ['README.md']));
+        expect(found.map((finding) => finding.rule)).toEqual(['opening-paragraph']);
+    });
 });

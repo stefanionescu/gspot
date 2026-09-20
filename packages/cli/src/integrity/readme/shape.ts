@@ -1,48 +1,41 @@
-// The shape of a README: one H1, an opening paragraph, a Contents list when it is long, a section on getting started, no banned heading.
 import { join } from 'node:path';
+// The shape of a README: one H1, an opening paragraph, a Contents list when it is long, a section on getting started, no banned heading.
+import type { RootContent } from 'mdast';
+import { toString } from 'mdast-util-to-string';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import type { ShapeProblem } from '#types/integrity.ts';
+import { fromMarkdown } from 'mdast-util-from-markdown';
 import { CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#config/docs.ts';
 
-const TITLE = /^# /u;
-const SECTION = /^## (?<text>.+)$/u;
-const ANY_HEADING = /^#{1,6} /u;
-const FENCE = /^\s*(?<ticks>`{3,})/u;
-
-function outsideFences(lines: string[]): string[] {
-    let fence: string | undefined;
-    return lines.map((line) => {
-        const opening = FENCE.exec(line)?.groups?.['ticks'];
-        if (fence === undefined && opening !== undefined) fence = opening;
-        else if (fence !== undefined && line.trim() === fence) fence = undefined;
-        else if (fence === undefined) return line;
-        return '';
-    });
+function titleProblem(nodes: RootContent[]): ShapeProblem[] {
+    const titles = nodes.filter((node) => node.type === 'heading' && node.depth === 1);
+    return titles.length === 1
+        ? []
+        : [[titles[0]?.position?.start.line ?? 1, 'one-h1', 'A README has exactly one H1.']];
 }
 
-function titleProblem(lines: string[]): ShapeProblem[] {
-    const titleLines = lines.map((line, index) => (TITLE.test(line) ? index + 1 : -1)).filter((line) => line !== -1);
-    return titleLines.length === 1 ? [] : [[titleLines[0] ?? 1, 'one-h1', 'A README has exactly one H1.']];
+function openingProblem(nodes: RootContent[]): ShapeProblem[] {
+    const title = nodes.findIndex((node) => node.type === 'heading' && node.depth === 1);
+    const start = title === -1 ? 0 : title;
+    const section = nodes.findIndex((node, index) => index >= start && node.type === 'heading' && node.depth === 2);
+    const opening = nodes.slice(start, section === -1 ? nodes.length : section);
+    return opening.some((node) => node.type === 'paragraph')
+        ? []
+        : [
+              [
+                  nodes[start]?.position?.start.line ?? 1,
+                  'opening-paragraph',
+                  'A README opens with a paragraph before its first H2.',
+              ],
+          ];
 }
 
-function openingProblem(lines: string[]): ShapeProblem[] {
-    const firstTitle = lines.findIndex((line) => TITLE.test(line));
-    const start = firstTitle === -1 ? 0 : firstTitle;
-    const firstSection = lines.findIndex((line, index) => index >= start && SECTION.test(line));
-    const between = lines
-        .slice(start, firstSection === -1 ? lines.length : firstSection)
-        .filter((line) => line.trim() !== '' && !ANY_HEADING.test(line));
-    return between.length === 0
-        ? [[start + 1, 'opening-paragraph', 'A README opens with a paragraph before its first H2.']]
-        : [];
-}
-
-function sectionProblems(lines: string[], threshold: number, isScopeRoot: boolean): ShapeProblem[] {
-    const sections = lines
-        .map((line) => SECTION.exec(line)?.groups?.['text']?.trim().toLowerCase())
-        .filter((text): text is string => text !== undefined);
+function sectionProblems(nodes: RootContent[], threshold: number, isScopeRoot: boolean): ShapeProblem[] {
+    const sections = nodes
+        .filter((node) => node.type === 'heading' && node.depth === 2)
+        .map((node) => toString(node).trim().toLowerCase());
     const problems: ShapeProblem[] = [];
     if (sections.length > threshold && !sections.includes(CONTENTS_HEADING))
         problems.push([
@@ -60,8 +53,8 @@ function sectionProblems(lines: string[], threshold: number, isScopeRoot: boolea
 }
 
 function shapeProblems(text: string, threshold: number, isScopeRoot: boolean): ShapeProblem[] {
-    const lines = outsideFences(text.split('\n'));
-    return [...titleProblem(lines), ...openingProblem(lines), ...sectionProblems(lines, threshold, isScopeRoot)];
+    const nodes = fromMarkdown(text).children;
+    return [...titleProblem(nodes), ...openingProblem(nodes), ...sectionProblems(nodes, threshold, isScopeRoot)];
 }
 
 // The root README and every scope's README tell the reader how to start; a folder README only explains its folder.

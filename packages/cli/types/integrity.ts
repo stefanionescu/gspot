@@ -9,12 +9,6 @@ export type IntegrityCheck = (input: EngineInput) => Promise<Finding[]>;
 /** A fenced code block as the fences check reads it. */
 export type FencedBlock = { line: number; language: string; body: string };
 
-/** A fence being read, until its closing line. */
-export type OpenFence = { ticks: string; language: string; line: number; body: string[] };
-
-/** Where a Markdown reader is: inside a fence, and whether that fence holds free text. */
-export type FenceState = { ticks: string; isFreeText: boolean };
-
 /** One line of Markdown outside code, with its number. */
 export type ProseLine = { number: number; line: string };
 

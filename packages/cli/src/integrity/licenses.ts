@@ -1,21 +1,26 @@
 // The license every installed npm package reports, against the allowed list and the exceptions.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
+import satisfies from 'spdx-satisfies';
 import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
+import parseExpression from 'spdx-expression-parse';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { LicenseException, LicenseReport } from '#types/integrity.ts';
 
 const TOOL = 'license-checker-rseidelsohn';
-const EXPRESSION_PARTS = /[()]| OR | AND /u;
 const SCAN_TIMEOUT_MS = 300_000;
 
 // A license expression passes when every part of a conjunction, or one part of a choice, is allowed.
 function isAllowed(license: string, allow: Set<string>): boolean {
-    const parts = license.split(EXPRESSION_PARTS).filter((part) => part.trim() !== '');
-    return license.includes(' AND ') ? parts.every((part) => allow.has(part)) : parts.some((part) => allow.has(part));
+    try {
+        parseExpression(license);
+    } catch {
+        return false;
+    }
+    return satisfies(license, [...allow]);
 }
 
 function reported(entry: LicenseReport[string]): string {
