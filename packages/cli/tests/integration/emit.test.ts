@@ -79,3 +79,65 @@ test('profile spelling values use the same TOML emission path', async () => {
     expect(target).toBeDefined();
     expect(parse(target!.content)['default']).toMatchObject({ 'extend-words': { [word]: word } });
 });
+
+test('TOML tool configurations round-trip dynamic strings and option keys', async () => {
+    const text = String.raw`café "quoted" \value # comment`;
+    const path = 'docs/"draft"/**';
+    const reason = 'Reviewed upstream.\n[extend]\nuseDefault = false';
+    const option = 'custom."option"';
+    await using sandbox = await createSandbox({
+        'gspot.toml': stringify({
+            version: 1,
+            presets: ['secrets', 'dependencies', 'config-files', 'docs', 'python', 'postgres'],
+            format: { indent_style: 'tab' },
+            tools: {
+                gitleaks: { allow: [{ description: text, paths: [path], regexes: [text], reason }] },
+                osv: { ignore: [{ id: text, reason, review_by: '2026-09-20' }] },
+                taplo: { rules: { [option]: text, column_width: 88 } },
+                lychee: { exclude: [{ patterns: [text], reason }] },
+                squawk: { frozen_through: 'all' },
+            },
+            ignore: [{ check: 'python/ruff', rule: 'F401', paths: [path], reason }],
+        }),
+        'migrations/20260101_initial.sql': 'select 1;\n',
+    });
+    const output = emitAll(await openSession(sandbox.path));
+    const parsed = new Map(
+        output.files.filter((file) => file.path.endsWith('.toml')).map((file) => [file.path, parse(file.content)]),
+    );
+    expect(parsed.get('.gspot/gitleaks.toml')).toEqual({
+        extend: { useDefault: true },
+        allowlists: [{ description: text, paths: [path], regexes: [text] }],
+    });
+    expect(parsed.get('.gspot/osv-scanner.toml')).toMatchObject({
+        IgnoredVulns: [{ id: text, reason, ignoreUntil: new Date('2026-09-20T00:00:00.000Z') }],
+    });
+    expect(parsed.get('.gspot/taplo.toml')).toMatchObject({
+        formatting: { [option]: text, column_width: 88, indent_string: '\t' },
+    });
+    expect(parsed.get('.gspot/lychee.toml')).toMatchObject({ exclude: [text] });
+    expect(parsed.get('.gspot/ruff.toml')).toMatchObject({ lint: { 'per-file-ignores': { [path]: ['F401'] } } });
+    expect(parsed.get('.gspot/squawk.toml')).toMatchObject({ excluded_paths: ['migrations/20260101_initial.sql'] });
+});
+
+test('an OSV expiry cannot inject another TOML table', async () => {
+    await using sandbox = await createSandbox({
+        'gspot.toml': stringify({
+            version: 1,
+            presets: ['dependencies'],
+            tools: {
+                osv: {
+                    ignore: [
+                        {
+                            id: 'GHSA-example',
+                            reason: 'Reviewed upstream.',
+                            review_by: '2026-09-20\n[extra]\ninjected = true',
+                        },
+                    ],
+                },
+            },
+        }),
+    });
+    const session = await openSession(sandbox.path);
+    expect(() => emitAll(session)).toThrow();
+});

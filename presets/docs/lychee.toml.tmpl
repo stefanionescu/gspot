@@ -1,4 +1,6 @@
-offline = true
-include_fragments = "full"
-no_progress = true
-exclude = <%= json((settings['tools.lychee.exclude'] ?? []).flatMap((entry) => typeof entry === 'string' ? [entry] : (entry.patterns ?? []))) %>
+<%~ toml({
+    offline: true,
+    include_fragments: 'full',
+    no_progress: true,
+    exclude: (settings['tools.lychee.exclude'] ?? []).flatMap((entry) => typeof entry === 'string' ? [entry] : (entry.patterns ?? [])),
+}).trimEnd() %>

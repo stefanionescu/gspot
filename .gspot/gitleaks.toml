@@ -2,4 +2,3 @@
 # Change policy: gspot set / allow / ignore, or edit gspot.toml, then run: gspot apply
 [extend]
 useDefault = true
-

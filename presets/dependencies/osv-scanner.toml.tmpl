@@ -1,6 +1,7 @@
-<% for (const entry of (settings['tools.osv.ignore'] ?? [])) { %>
-[[IgnoredVulns]]
-id = <%= tomlString(entry.id) %>
-<% if (entry.review_by) { %>ignoreUntil = <%= entry.review_by %>
-<% } %>reason = <%= tomlString(entry.reason) %>
-<% } %>
+<% const entries = settings['tools.osv.ignore'] ?? []; %><%~ toml(entries.length === 0 ? {} : {
+    IgnoredVulns: entries.map((entry) => ({
+        id: entry.id,
+        ...(entry.review_by ? { ignoreUntil: new tomlDate(entry.review_by) } : {}),
+        reason: entry.reason,
+    })),
+}).trimEnd() %>

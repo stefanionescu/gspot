@@ -7,8 +7,8 @@ import { jsonText } from '#cli/emit/json-format.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { policyValue } from '#cli/policy/settings.ts';
-import { stringify as stringifyToml } from 'smol-toml';
 import type { ScopeSelection, Session } from '#types/run.ts';
+import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { GENERATED_HEADER_LINES, GENERATED_JSON_KEY } from '#config/markers.ts';
 import type { JsonFormat, PackageImports, TemplateInputs, TsconfigPaths } from '#types/emit.ts';
 import { BLOCK_IGNORES, DISABLED_UPSTREAM_RULES, TOKEN_IGNORES, VALE_PACKAGES } from '#config/prose.ts';
@@ -227,8 +227,8 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
         ignoresFor: view.ignoresFor,
         extra: view.extra,
         json: (value, indent = JSON_INDENT) => JSON.stringify(value, null, indent),
-        tomlString: (value) => JSON.stringify(value),
         toml: stringifyToml,
+        tomlDate: TomlDate,
         // A target written once for the repository asks about every scope; a target written for one scope asks about that scope.
         has: (preset) =>
             view.presets.includes(preset) ||

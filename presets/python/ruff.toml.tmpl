@@ -10,8 +10,7 @@ line-ending = "lf"
 docstring-code-format = true
 
 [lint]
-select = <%~ json([...families, "ANN401", "PLR2004", "PLR1702", "PLR0917"], 0) %>
-ignore = <%~ json(["COM812", "D203", "D213", ...off], 0) %>
+<%~ toml({ select: [...families, "ANN401", "PLR2004", "PLR1702", "PLR0917"], ignore: ["COM812", "D203", "D213", ...off] }).trimEnd() %>
 fixable = ["ALL"]
 unfixable = []
 preview = true
@@ -36,6 +35,6 @@ max-nested-blocks = <%= at('nested_blocks', 3) %>
 <% const testRules = has('pytest') ? ['S101', 'ARG', 'PLR2004'] : []; if (perFile.length > 0 || testRules.length > 0) { -%>
 
 [lint.per-file-ignores]
-<% const byPath = new Map(testRules.length > 0 ? [['**/tests/**', testRules], ['**/test_*.py', testRules], ['**/*_test.py', testRules], ['**/conftest.py', testRules]] : []); for (const entry of perFile) for (const path of entry.paths) byPath.set(path, [...(byPath.get(path) ?? []), entry.rule]); for (const [path, rules] of byPath) { -%>
-<%~ tomlString(path) %> = <%~ json(rules, 0) %>
-<% } } -%>
+<% const byPath = new Map(testRules.length > 0 ? [['**/tests/**', testRules], ['**/test_*.py', testRules], ['**/*_test.py', testRules], ['**/conftest.py', testRules]] : []); for (const entry of perFile) for (const path of entry.paths) byPath.set(path, [...(byPath.get(path) ?? []), entry.rule]); -%>
+<%~ toml(Object.fromEntries(byPath)).trimEnd() %>
+<% } -%>

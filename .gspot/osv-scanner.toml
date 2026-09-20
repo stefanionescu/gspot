@@ -3,4 +3,3 @@
 [[IgnoredVulns]]
 id = "GHSA-w5hq-g745-h8pq"
 reason = "uuid 9 arrives through gaxios under linkinator, a test tool. The flaw needs a caller that passes its own buffer, and gaxios passes none. Review when linkinator moves to uuid 11."
-

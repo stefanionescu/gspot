@@ -80,8 +80,8 @@ export type TemplateInputs = {
     ignoresFor: MergedView['ignoresFor'];
     extra: (name: string) => Record<string, unknown> | undefined;
     json: (value: unknown, indent?: number) => string;
-    tomlString: (value: string) => string;
     toml: (value: Record<string, unknown>) => string;
+    tomlDate: new (value: string) => Date;
     has: (preset: string) => boolean;
     files: (extension: string) => string[];
     importAliases: (scope: string) => Record<string, string>;
