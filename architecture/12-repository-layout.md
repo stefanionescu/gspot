@@ -23,7 +23,7 @@ gspot/
 ├── presets/                    grouped by manifest kind, then preset name
 ├── rules/                      the rule files, by layer
 ├── tests/                      planted repositories and the release suite
-├── gspot.schema.json  gspot.toml  mise.toml  package.json  bunfig.toml  tsconfig.json
+├── gspot.schema.json  report.schema.json  gspot.toml  mise.toml  package.json  bunfig.toml  tsconfig.json
 └── AGENTS.md  CLAUDE.md  CHANGELOG.md  CONTRIBUTING.md  LICENSE.md  NOTICE.md  README.md  SECURITY.md
 ```
 

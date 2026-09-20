@@ -3,9 +3,9 @@ import { expect, test } from 'bun:test';
 import { createSandbox } from '@gspot/testing';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
+import { sarifText } from '#cli/output/report.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import { sarifText } from '#cli/run/report/write.ts';
-import { reportSchema } from '#cli/run/report/schema.ts';
+import { reportSchema } from '#cli/run/report-schema.ts';
 
 const policy = `version = 1
 presets = []

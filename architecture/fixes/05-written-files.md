@@ -62,7 +62,7 @@ file under `.gspot/` that no template writes, so `apply` deletes it.
 
 **Target.** `init`, `apply`, `remove`, and `uninstall` share the ownership and recovery contract in [03-configuration.md](../03-configuration.md). Unowned files and developer-modified owned files survive. Uninstall never recursively removes `.gspot/`.
 
-**Files.** `emit/apply-command.ts`, `checks/integrity/generated-drift.ts`, `doctor/changes.ts`.
+**Files.** `emit/apply-command.ts`, `checks/checks/repository/generated-drift.ts`, `doctor/changes.ts`.
 
 **Logic.** Marks identify candidate managed files, but deletion also checks the recorded installed hash or a reproducible expected generated value for a fresh clone, path confinement, and completed recovery. Modified files are reported, not discarded. The path prefix test goes. The gitleaks baseline moves to the root of the
 repository as `.gitleaks-baseline.json`, a file the developer owns, and the secrets manifest

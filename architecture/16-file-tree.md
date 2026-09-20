@@ -26,7 +26,8 @@ gspot/
 ├── presets/                    executable policy and assets grouped by kind
 ├── rules/                      authored engineering instructions grouped by layer
 ├── tests/                      command acceptance, release acceptance, shared harness
-├── gspot.schema.json           generated public schema
+├── gspot.schema.json           generated configuration schema
+├── report.schema.json          generated run-report schema
 └── gspot.toml                  repository policy
 ```
 
@@ -46,6 +47,51 @@ shipped tool pins and rule policy. Algorithm constants stay with the algorithm. 
 that merely centralize unrelated literals, along with forwarding accessors.
 
 ### `src/`
+
+The source directories now follow this layout. Files directly under `checks/` cover domains
+that do not need a directory; existing multi-module domains have their own directories.
+
+```text
+src/
+├── checks/
+│   ├── dependencies/
+│   ├── docker/
+│   ├── docs/
+│   ├── express/
+│   ├── nginx/
+│   ├── postgres/schema/
+│   ├── python/
+│   ├── repository/
+│   ├── security/
+│   ├── static-site/
+│   ├── supabase/
+│   ├── swift/
+│   ├── typescript/
+│   ├── xcode/
+│   └── xctest/
+├── commands/
+├── doctor/
+├── emit/
+├── lifecycle/
+├── naming/
+├── output/
+├── platform/
+├── policy/
+├── presets/
+├── profile/
+├── prose/
+├── readers/sql/
+├── repository/
+├── rules/
+├── run/
+└── structure/
+    ├── analyses/
+    ├── python/
+    └── swift/
+```
+
+Directory moves preserve behavior and public check identifiers. Dispatch simplification,
+execution consolidation, and other implementation changes remain separate backlog work.
 
 #### `commands/`
 
@@ -185,9 +231,9 @@ Keep legitimate subprocess, registry, filesystem, restoration, and serialization
 
 ## What moves
 
-| Current responsibility                                                  | Target and deletion condition                                                                                                           |
+| Responsibility before cleanup                                           | Target and deletion condition                                                                                                           |
 | ----------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------- |
-| `integrity/`, `web/`, `apple/`, `pyproject/`, and SQL check collections | Domain-owned checks; move shared parsers and platform operations outside catalogs. Preserve every retained finding.                     |
+| `integrity/`, `web/`, `apple/`, `pyproject/`, and SQL check collections | Moved to domain checks, structure, and shared SQL readers. Findings and dispatch behavior are preserved.                                |
 | Adapter subprocess/reporting copies                                     | Shared runner contract after actual adapter execution tests pass; retain necessary preparation.                                         |
 | Dispatch-only engine and analysis layers                                | Resolve in planning and execute once; retain real context and preparation.                                                              |
 | Lifecycle ownership reconstructed from templates or paths               | One recorded ownership and recovery model after preservation and interruption tests pass.                                               |

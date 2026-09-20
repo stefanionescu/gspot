@@ -10,7 +10,7 @@ the one place where a number in this file comes from outside this repository.
 
 Closes K-149, K-155, and K-163.
 
-**What is wrong.** `trackedEnding` in `apple/xcode/files.ts` reads `session.repository.files`, and
+**What is wrong.** `trackedEnding` in `checks/xcode/files.ts` reads `session.repository.files`, and
 about forty check files do the same. A staged run of one file reads all of them. A repository
 with two Swift scopes reports the files of one under the other. `SUPABASE_CONFIG` in
 `config/supabase.ts` is a path from the root, so a project under `apps/backend/supabase/` is not
@@ -110,7 +110,7 @@ command from a setting is parsed with shell quoting rules, by one function in
 
 ## K-160: every SQL file is parsed as Postgres
 
-**What is wrong.** `POSTGRES_DIALECTS` in `sql/checks.ts` holds `postgres` and `ansi`, and `ansi`
+**What is wrong.** `POSTGRES_DIALECTS` in `checks/sql.ts` holds `postgres` and `ansi`, and `ansi`
 is the default. A repository of MySQL files that names no dialect gets Postgres syntax errors.
 
 **Target.** `sql/syntax` runs where the dialect is `postgres`. `init` proposes the dialect from

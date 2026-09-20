@@ -41,9 +41,9 @@ test over the manifests. The list of shared names is `setup.cfg`, `tox.ini`, `py
 
 Closes K-156 and K-159.
 
-**What is wrong.** `drizzleMigrations` in `web/library-checks.ts:128` runs `drizzle-kit generate`
+**What is wrong.** `drizzleMigrations` in `checks/libraries.ts:128` runs `drizzle-kit generate`
 in the working tree, then removes every untracked `.sql` file of the scope with `git clean`
-(line 137). A migration written by hand is deleted. `openapiFresh` in `express/openapi.ts:71`
+(line 137). A migration written by hand is deleted. `openapiFresh` in `checks/express/openapi.ts:71`
 runs `git checkout --` on the OpenAPI document, which drops uncommitted edits.
 
 **Target.** A check never writes into the tree, never runs `git clean`, and never runs
@@ -422,12 +422,12 @@ other checks run.
 
 ## K-172: a route is tested when a comment names it
 
-**What is wrong.** `express/routes.ts` passes a route when any test file holds the file stem
+**What is wrong.** `checks/express/routes.ts` passes a route when any test file holds the file stem
 anywhere in its text, and it reads every file of the repository.
 
 **Target.** A route counts as tested when a test file of the same scope imports it.
 
-**Files.** `packages/cli/src/express/routes.ts`, `packages/cli/src/structure/imports.ts`.
+**Files.** `packages/cli/src/checks/express/routes.ts`, `packages/cli/src/structure/imports.ts`.
 
 **Logic.** The check asks the import index of the scope, which the structure engine builds, for
 the importers of the route file, and keeps those the test claim matches.
@@ -450,13 +450,13 @@ Native Windows and Linux execution remains deferred.
 
 The level of `sql/block-comments` changes with K-161, in [07-levels.md](07-levels.md).
 
-**What is wrong.** `firstKeyword` in `sql/statements.ts` skips line comments and blank lines, and
+**What is wrong.** `firstKeyword` in `readers/sql/statements.ts` skips line comments and blank lines, and
 not block comments.
 
 **Target.** The SQL reader knows block comments once, and every SQL check gets the line of the
 statement.
 
-**Files.** `packages/cli/src/sql/statements.ts`.
+**Files.** `packages/cli/src/readers/sql/statements.ts`.
 
 **Logic.** The reader takes statement positions from `libpg-query`, which already skips both
 comment forms, and drops its own scan.
@@ -604,7 +604,7 @@ calls the network.
 
 **Target.** The check builds the references where the file holds any.
 
-**Files.** `presets/language/typescript/manifest.toml`, `packages/cli/src/integrity/tsc.ts`,
+**Files.** `presets/language/typescript/manifest.toml`, `packages/cli/src/checks/typescript/tsc.ts`,
 and the shared tool-analysis registry.
 
 **Logic.** The check reads `tsconfig.json` through `jsonc-parser`. With references it runs
@@ -645,14 +645,14 @@ changed. `lint.ts` reports a list item whose last line ends with a comma, with `
 Closes K-234 and K-110.
 
 **What is wrong.** `SUPPRESSION_FORMS` in `config/integrity.ts` holds the comment forms of some
-tools, and `integrity/suppressions.ts` reads `#` and `//` comments. A `-- noqa` in SQL, a
+tools, and `checks/repository/suppressions.ts` reads `#` and `//` comments. A `-- noqa` in SQL, a
 `stylelint-disable` in CSS, and an HTML or Markdown comment are never seen.
 
 **Target.** Each manifest declares the suppression comment of its tool, and the check reads every
 comment style.
 
 **Files.** `presets/manifest-schema.ts`, the manifests of every preset with a tool that has such
-a comment, `checks/integrity/suppressions.ts`, `config/suppressions.ts`.
+a comment, `checks/checks/repository/suppressions.ts`, `config/suppressions.ts`.
 
 **Logic.** A tool in a manifest takes `suppression = { marker, reason }`. The check takes the
 comment styles from `config/markers.ts` and the markers from the selected manifests.
@@ -724,7 +724,7 @@ is named in five documents and has no code. The CI job runs `gspot apply` to fin
 **Target.** `integrity/generated-drift` ships in the structure preset at the commit stage. The
 name `generated-fresh` leaves every document (D-134).
 
-**Files.** `presets/concern/structure/manifest.toml`, `checks/integrity/generated-drift.ts` (from
+**Files.** `presets/concern/structure/manifest.toml`, `checks/checks/repository/generated-drift.ts` (from
 `emit/drift.ts`), `emit/workflow.ts`.
 
 **Logic.** The workflow runs `gspot check`, and the drift check fails a generated file that
@@ -749,7 +749,7 @@ README paragraphs, tilde fences, and escaped CSS classes. Type checking, schema 
 and the 274-page reference check pass.
 
 **What is wrong.** A license expression is cut at brackets, `OR`, and `AND` by hand in
-`integrity/licenses.ts` (`EXPRESSION_PARTS`), and `MIT OR (GPL-3.0-only AND ...)` is refused.
+`checks/licenses.ts` (`EXPRESSION_PARTS`), and `MIT OR (GPL-3.0-only AND ...)` is refused.
 Markdown headings are read by a line pattern, so a `#` inside a code fence is a heading.
 
 **Target.** `spdx-expression-parse`, `spdx-satisfies`, `mdast-util-from-markdown`, and `postcss`

@@ -4,7 +4,7 @@ import { pathToFileURL } from 'node:url';
 import { createSandbox } from '@gspot/testing';
 import { run } from '#tests/harness/planted.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { reportSchema } from '#cli/run/report/schema.ts';
+import { reportSchema } from '#cli/run/report-schema.ts';
 
 function git(root: string, ...argv: string[]): string {
     const result = runBlocking(['git', ...argv], { cwd: root });

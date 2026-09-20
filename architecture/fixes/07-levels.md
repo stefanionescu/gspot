@@ -146,7 +146,7 @@ commits preset is proposed and not selected, as security and licenses are, and i
 what `tools.commitlint.scopes` names.
 
 **Files.** The manifests of html, sql, postgres, supabase, docs, and commits, `config/docs.ts`,
-`checks/docs/readme-shape.ts`, `checks/docs/headings.ts`.
+`checks/docs/readme/shape.ts`, `checks/docs/headings.ts`.
 
 **Logic.** One README contents rule stays: a README over six sections has a list of its sections
 near the top, under any heading. The banned heading list loses `Table of contents`.

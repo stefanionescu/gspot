@@ -3,8 +3,8 @@ import { runNaming } from '#cli/naming/engine.ts';
 // Dispatch to the built-in engines by `engine =` in the manifest.
 import type { CheckSpec } from '#types/manifest.ts';
 import type { CheckResult } from '#types/finding.ts';
+import { runIntegrity } from '#cli/checks/dispatch.ts';
 import { runStructure } from '#cli/structure/engine.ts';
-import { runIntegrity } from '#cli/integrity/dispatch.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 import type { EngineInput, Engine, Session, PlannedCheck } from '#types/run.ts';

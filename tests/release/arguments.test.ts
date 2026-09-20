@@ -17,7 +17,7 @@ const LINKS = [
 ];
 const SOURCES = [...ENTRIES, 'packages/cli/package.json', 'docs/package.json'];
 
-const OUTPUTS = ['schema', 'docs/public/schema', 'docs/src/content/docs/reference'];
+const OUTPUTS = ['gspot.schema.json', 'report.schema.json', 'docs/public/schema', 'docs/src/content/docs/reference'];
 
 const INVALID = [['--checks'], ['unexpected'], ['--check', 'unexpected'], ['--check=true']];
 
@@ -26,14 +26,18 @@ describe('read-only script arguments', () => {
         const sources = Object.fromEntries(SOURCES.map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]));
         await using sandbox = await createSandbox({
             ...sources,
-            'schema/gspot.schema.json': '{"sentinel": true}\n',
-            'schema/report.schema.json': '{"sentinel": true}\n',
+            'gspot.schema.json': '{"sentinel": true}\n',
+            'report.schema.json': '{"sentinel": true}\n',
             'docs/public/schema/gspot.schema.json': '{"sentinel": true}\n',
             'docs/public/schema/report.schema.json': '{"sentinel": true}\n',
             'docs/src/content/docs/reference/sentinel.md': '# Authored reference\n',
         });
         for (const path of LINKS) symlinkSync(join(ROOT, path), join(sandbox.path, path), 'dir');
-        const before = OUTPUTS.map((path) => treeContents(join(sandbox.path, path)));
+        const before = OUTPUTS.map((path) =>
+            path.endsWith('.json')
+                ? readFileSync(join(sandbox.path, path), 'utf8')
+                : treeContents(join(sandbox.path, path)),
+        );
         for (const args of INVALID) {
             const result = Bun.spawnSync([process.execPath, join(sandbox.path, entry), ...args], {
                 cwd: sandbox.path,
@@ -44,7 +48,13 @@ describe('read-only script arguments', () => {
             });
             expect(result.exitCode, result.stdout.toString() + result.stderr.toString()).toBe(2);
             expect(result.stderr.toString()).toMatch(/unknown option|too many arguments/u);
-            expect(OUTPUTS.map((path) => treeContents(join(sandbox.path, path)))).toEqual(before);
+            expect(
+                OUTPUTS.map((path) =>
+                    path.endsWith('.json')
+                        ? readFileSync(join(sandbox.path, path), 'utf8')
+                        : treeContents(join(sandbox.path, path)),
+                ),
+            ).toEqual(before);
         }
         for (const flag of ['--help', '--version']) {
             const result = Bun.spawnSync([process.execPath, join(sandbox.path, entry), flag], {
@@ -55,7 +65,13 @@ describe('read-only script arguments', () => {
             });
             expect(result.exitCode, result.stderr.toString()).toBe(0);
             expect(result.stdout.toString().trim().length).toBeGreaterThan(0);
-            expect(OUTPUTS.map((path) => treeContents(join(sandbox.path, path)))).toEqual(before);
+            expect(
+                OUTPUTS.map((path) =>
+                    path.endsWith('.json')
+                        ? readFileSync(join(sandbox.path, path), 'utf8')
+                        : treeContents(join(sandbox.path, path)),
+                ),
+            ).toEqual(before);
         }
     });
 });
@@ -80,7 +96,11 @@ Bun.spawnSync = (argv) => {
         for (const path of ['node_modules', 'packages/cli/node_modules'])
             symlinkSync(join(ROOT, path), join(sandbox.path, path), 'dir');
         const outputs = ['packages/cli/grammars', 'packages/cli/build', 'dist'];
-        const before = outputs.map((path) => treeContents(join(sandbox.path, path)));
+        const before = outputs.map((path) =>
+            path.endsWith('.json')
+                ? readFileSync(join(sandbox.path, path), 'utf8')
+                : treeContents(join(sandbox.path, path)),
+        );
         const execute = (args: string[]) =>
             Bun.spawnSync(
                 [
@@ -104,7 +124,13 @@ Bun.spawnSync = (argv) => {
         ]) {
             const result = execute(args);
             expect(result.exitCode, result.stderr.toString()).toBe(2);
-            expect(outputs.map((path) => treeContents(join(sandbox.path, path)))).toEqual(before);
+            expect(
+                outputs.map((path) =>
+                    path.endsWith('.json')
+                        ? readFileSync(join(sandbox.path, path), 'utf8')
+                        : treeContents(join(sandbox.path, path)),
+                ),
+            ).toEqual(before);
             expect(existsSync(join(sandbox.path, 'compiler.jsonl'))).toBe(false);
         }
         const result = execute(['--target', 'bun-linux-arm64', 'bun-linux-x64']);

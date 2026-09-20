@@ -451,7 +451,7 @@ reports what it finds today. An old repository adopts gspot through the files a 
 the level `recommended`, `gspot ignore`, and `git commit --no-verify`.
 
 **Files.** Deleted: `run/baselines.ts`, `lifecycle/first-check.ts`, `emit/first-baseline.ts`,
-`emit/lower-baselines.ts`, `emit/prune-baselines.ts`, `integrity/baselines-current.ts`, their
+`emit/lower-baselines.ts`, `emit/prune-baselines.ts`, `checks/repository/baselines-current.ts`, their
 unit tests, and `.gspot/baselines/` of this repository. Changed: `run/execute.ts`,
 `output/reporter.ts`, `policy/add-command.ts`, `lifecycle/upgrade/command.ts`,
 `presets/manifest-schema.ts`, and the manifests of javascript, typescript, and python.

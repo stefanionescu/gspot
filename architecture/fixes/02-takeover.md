@@ -180,15 +180,15 @@ site checks, and ast-grep batching remain open under K-42/K-158. Windows executi
 
 Closes K-76 and K-78.
 
-**What is wrong.** `miseTasks` in `integrity/stale-paths.ts:35` reads `[tasks]` tables of four
+**What is wrong.** `miseTasks` in `checks/docs/stale-paths.ts:35` reads `[tasks]` tables of four
 files (`MISE_FILES`). A task that is a file under `.mise/tasks/` reads as missing, so
-`mise run lint` in a README is a finding. `hookFindings` in `integrity/task-policy.ts` checks the
+`mise run lint` in a README is a finding. `hookFindings` in `checks/repository/task-policy.ts` checks the
 hooks only when `hooks.tool = "gspot"`.
 
 **Target.** One reader knows every task of a repository, and one check holds the gspot line of
 the hooks for every hook form.
 
-**Files.** New `readers/tasks.ts`, `checks/docs/stale-paths.ts`, `checks/integrity/task-policy.ts`,
+**Files.** New `readers/tasks.ts`, `checks/docs/stale-paths.ts`, `checks/checks/repository/task-policy.ts`,
 `config/paths.ts`.
 
 **Logic.** `readers/tasks.ts` returns the task names from mise tables, mise task files, and

@@ -17,7 +17,7 @@ const TARGETS: Record<string, string> = {
     'bun-windows-x64': 'gspot-windows-x64.exe',
 };
 
-const ASSET_FOLDERS = ['presets', 'rules', 'schema'];
+const ASSET_FOLDERS = ['presets', 'rules'];
 
 function walk(dir: string, out: string[] = []): string[] {
     if (!existsSync(dir)) return out;
@@ -58,7 +58,11 @@ function writeEntry(): string {
     const grammars = [...Object.keys(GRAMMAR_SOURCES), 'swift.wasm']
         .toSorted((a, b) => a.localeCompare(b))
         .map((name) => join(here, 'grammars', name));
-    const assets = [...ASSET_FOLDERS.flatMap((folder) => walk(join(root, folder))), ...grammars];
+    const assets = [
+        ...ASSET_FOLDERS.flatMap((folder) => walk(join(root, folder))),
+        ...['gspot.schema.json', 'report.schema.json'].map((name) => join(root, name)),
+        ...grammars,
+    ];
     const buildDir = join(here, 'build');
     const imports = assets.map((file, index) => {
         const source = JSON.stringify(relative(buildDir, file));

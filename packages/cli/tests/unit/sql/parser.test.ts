@@ -1,6 +1,6 @@
-import { parseSql } from '#cli/sql/parser.ts';
 import { describe, expect, test } from 'bun:test';
-import { sqlFile, positionAt } from '#cli/sql/statements.ts';
+import { parseSql } from '#cli/readers/sql/parser.ts';
+import { sqlFile, positionAt } from '#cli/readers/sql/statements.ts';
 
 describe('parseSql', () => {
     test('a statement parses into a tree with its kind', async () => {

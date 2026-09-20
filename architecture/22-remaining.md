@@ -140,6 +140,12 @@ for implemented responsibilities; do not scaffold future folders or require one 
 Change ownership with all callers, imports, assets, and build inputs in the same bounded move.
 Preserve public rule exports and enforcement across supported languages and frameworks.
 
+The directory move is complete. Domain checks live under `checks/`. Swift and Python source
+analyses live under `structure/`. Shared SQL parsing belongs to `readers/sql/`; report rendering
+belongs to `output/`. Imports, schema output paths, and build inputs follow the new locations.
+
+Execution and dispatch changes remain open; the move does not claim their acceptance.
+
 - [ ] **21. Observe the repository once per command.** Share files, scopes, metadata, and Git
       observations within a session. The next session observes changes. Remove repeated discovery
       and process-global caches that need test reset hooks; retain repeated Swift-session regression.
@@ -833,7 +839,7 @@ Counted in `packages/` on September 19, 2026. Each line names the row that owns 
 - [ ] The list of lint packages holds `supabase`, `concurrently`, `globals` and `husky`, which are
       no linters (K-237).
 - [ ] Test files are named around the banned folder words: `handheld`, `components`, `libraries`
-      and `pyproject/` (T-31). The source folders `apple/` and `pyproject/` wait for D-128.
+      and `pyproject/` (T-31). Their source implementations now live under domain checks and structure.
 - [ ] One check name uses the British spelling: `xcode/asset-catalogues` (K-228).
 - [ ] Seven tests skip themselves (S-7, T-8).
 - [ ] Three branches of work are parked: the stash `hooks-existing`, the second `vale.ini` under

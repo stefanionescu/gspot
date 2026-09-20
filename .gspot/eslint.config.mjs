@@ -574,7 +574,8 @@ export default [
     "**/coverage/**",
     ".gspot/**",
     "packages/cli/grammars/swift.wasm",
-    "schema/**",
+    "gspot.schema.json",
+    "report.schema.json",
     "docs/public/schema/**"
 ] },
     { files: CODE, ...eslint.configs.recommended },

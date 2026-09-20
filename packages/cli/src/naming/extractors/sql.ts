@@ -1,7 +1,7 @@
 // Identifiers a SQL file declares: schemas, tables, columns, functions, parameters, indexes, triggers and policies.
 import type { Identifier } from '#types/naming.ts';
-import { nodesOf, partsOf, textOf } from '#cli/sql/tree.ts';
-import { positionAt, sqlFile } from '#cli/sql/statements.ts';
+import { nodesOf, partsOf, textOf } from '#cli/readers/sql/tree.ts';
+import { positionAt, sqlFile } from '#cli/readers/sql/statements.ts';
 import type { SqlNamed, SqlNode, SqlStatementView } from '#types/sql.ts';
 
 function columns(elements: unknown): SqlNamed[] {

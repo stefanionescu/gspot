@@ -23,7 +23,8 @@
         ".gspot/**",
         "eslint.config.{js,mjs,cjs}",
         "packages/cli/grammars/swift.wasm",
-        "schema/**",
+        "gspot.schema.json",
+        "report.schema.json",
         "docs/public/schema/**"
     ],
     "ignoreDependencies": [

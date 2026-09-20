@@ -25,7 +25,8 @@
         "../**/.build/**",
         "../**/DerivedData/**",
         "../packages/cli/grammars/swift.wasm",
-        "../schema/**",
+        "../gspot.schema.json",
+        "../report.schema.json",
         "../docs/public/schema/**"
     ]
 }

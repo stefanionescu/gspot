@@ -44,7 +44,7 @@ export function knownKeysAt(path: (string | number)[]): string[] {
 }
 
 /**
- * The text written to schema/gspot.schema.json.
+ * The text written to gspot.schema.json.
  * @returns the JSON text
  */
 export function policyJsonSchemaText(): string {

@@ -4,7 +4,7 @@ import { createSandbox } from '@gspot/testing';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
-import { reportSchema } from '#cli/run/report/schema.ts';
+import { reportSchema } from '#cli/run/report-schema.ts';
 import { inlineIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
 
 test('inline gspot-ignore comments apply to the next line when alone and the same line otherwise', async () => {

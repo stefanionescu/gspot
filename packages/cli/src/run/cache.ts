@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import type { CacheKeyInput } from '#types/run.ts';
 import type { CheckResult } from '#types/finding.ts';
-import { reportSchema } from '#cli/run/report/schema.ts';
+import { reportSchema } from '#cli/run/report-schema.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 

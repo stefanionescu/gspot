@@ -126,7 +126,7 @@ session. A regression opens two sessions in the same directory and verifies that
 reports compiler findings after the first succeeds. Repeated consumers in the first session
 share its result. Incremental compilation and the separate analyzer plan remain open.
 
-**What is wrong.** `ranBuild` in `apple/build.ts` runs `xcodebuild clean build-for-testing` into a
+**What is wrong.** `ranBuild` in `checks/swift/build.ts` runs `xcodebuild clean build-for-testing` into a
 derived data folder of its own, and deletes the scratch folder of a package first. The analyzer
 needs the log of a complete build, and `swift/build` pays for it too.
 
@@ -148,7 +148,7 @@ under a third of the first.
 
 ## K-162: one git process for each migration
 
-**What is wrong.** `committedText` in `postgres/history.ts` starts one `git show` for every
+**What is wrong.** `committedText` in `checks/postgres/history.ts` starts one `git show` for every
 migration, and `postgres/migration-order` reads the first of them twice. A project with 300
 migrations starts 600 processes.
 

@@ -1,8 +1,8 @@
-import { sqlFile } from '#cli/sql/statements.ts';
 import { describe, expect, test } from 'bun:test';
 import type { Migration } from '#types/postgres.ts';
 import { DOC_SEPARATOR } from '#config/postgres.ts';
-import { docProblems } from '#cli/postgres/migration-docs.ts';
+import { sqlFile } from '#cli/readers/sql/statements.ts';
+import { docProblems } from '#cli/checks/postgres/migration-docs.ts';
 
 const SECTIONS = ['Schema', 'Tables', 'Indexes', 'Functions', 'Triggers', 'Extensions'];
 const NAME = '20240101000000_create_teams.sql';

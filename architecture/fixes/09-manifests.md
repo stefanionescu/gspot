@@ -10,10 +10,10 @@ selection, generation, execution, and findings. Cleanup status lives in 22-remai
 
 ## K-79: one file registers 130 analyses under names of their own
 
-**What is wrong.** `integrity/dispatch.ts` imports every language folder and maps 130 analysis
-names to functions. The folders are named after presets and package managers: `apple`, `cargo`,
-`golang`, `pyproject`, `web`. The name `integrity` holds the Swift build, the npm license scan,
-and the README shape. An analysis name repeats its check name in another spelling, such as
+**What is wrong.** `checks/dispatch.ts` imports every language folder and maps 130 analysis
+names to functions. The audit found folders named `apple`, `cargo`, `golang`, `pyproject`,
+and `web`, with Swift builds, npm license scans, and README checks routed through integrity.
+The directory move places those checks with their domains; dispatch simplification remains open. An analysis name repeats its check name in another spelling, such as
 `xctest-sleep` for `xctest/no-sleep`.
 
 **Target.** D-146. Checks belong to the domain they inspect. Shared parsers and platform
@@ -24,7 +24,7 @@ external-tool and built-in forms at loading. Remove redundant analysis aliases a
 after callers migrate. Keep real preparation and shared context. No one-file-per-check scheme,
 mirrored type tree, or required number of directories follows from this contract.
 
-**Deletion.** Split the responsibilities of `integrity/dispatch.ts`; delete its dispatch-only
+**Deletion.** Split the responsibilities of `checks/dispatch.ts`; delete its dispatch-only
 parts once the plan owns selection. Move actual checks and shared readers to their domain
 owners. Preserve public check meaning and findings; do not create forwarding files.
 
@@ -292,7 +292,7 @@ reference repositories.
 
 **What is wrong.** `integrity/locales` ships from the i18n preset with
 `tools.i18n.translations` and from the nextjs preset with `tools.next.translations`.
-`web/locales.ts:36` reads the nextjs key first, so a repository that sets both gets one of them
+`checks/i18n.ts:36` reads the nextjs key first, so a repository that sets both gets one of them
 with no word.
 
 **Target.** The i18n preset alone ships `i18n/locales` and its one setting. The nextjs preset

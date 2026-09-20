@@ -6,7 +6,7 @@ import type { MergedView } from '#types/config.ts';
 import type { CheckSpec } from '#types/manifest.ts';
 import type { Repository } from '#types/repository.ts';
 import type { EngineInput, Session } from '#types/run.ts';
-import { buildReproducible, siteBuild } from '#cli/web/site/build.ts';
+import { buildReproducible, siteBuild } from '#cli/checks/static-site/build.ts';
 
 function input(root: string, paths: string[]): EngineInput {
     const files = paths.map((path) => ({

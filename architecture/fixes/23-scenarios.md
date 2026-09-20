@@ -137,7 +137,7 @@ the lockfile of gspot, and nothing says what to do.
 **Target.** The generated files are outputs. After a merge of `gspot.toml`, `gspot apply` writes
 each of them again, and `gspot apply` resolves the lockfile in temporary storage and replaces it only on success. Review and commit those changes; `gspot install` then installs the recorded contents without writing tracked files.
 
-**Files.** `run/check-command.ts`, `checks/integrity/generated-drift.ts`, and the guide on
+**Files.** `run/check-command.ts`, `checks/checks/repository/generated-drift.ts`, and the guide on
 teams.
 
 **Logic.** A conflict marker in a file under `.gspot/` is one finding that names those two
