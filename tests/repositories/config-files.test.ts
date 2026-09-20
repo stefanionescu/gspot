@@ -1,6 +1,7 @@
 // The config-files preset: TOML that does not parse, YAML with a duplicated key, and an environment key read after init that no template names.
-import { join } from 'node:path';
+import { chmodSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
+import { delimiter, join } from 'node:path';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { environmentVariables } from '#cli/platform/environment.ts';
@@ -32,6 +33,22 @@ const INIT = [
 const WORKFLOW_HEAD =
     'name: planted\non: [push]\npermissions:\n    contents: read\njobs:\n    build:\n        runs-on: ubuntu-24.04\n        steps:\n';
 
+const PINACT_STUB = `#!/usr/bin/env bun
+const args = process.argv.slice(2);
+if (args.includes('--version')) {
+    console.log('pinact 5.0.0');
+    process.exit(0);
+}
+if (!args.includes('--verify')) process.exit(0);
+const file = Bun.file(args.at(-1));
+const content = await file.text();
+if (!args.includes('--check')) await Bun.write(file, 'rewritten by pinact');
+if (content.includes('actions/checkout@0000000000000000000000000000000000000000')) {
+    console.error('invalid action pin: broken.yml');
+    process.exit(3);
+}
+`;
+
 const CASES: PlantedCase[] = [
     {
         id: 'config-files/toml-format',
@@ -59,6 +76,35 @@ const CASES: PlantedCase[] = [
 ];
 
 describe('the config-files preset', () => {
+    test(
+        'action pin verification reports a rejected commit and preserves the workflow',
+        async () => {
+            await using fixture = await createFixture({
+                'README.md': '# Action pins\n',
+                'bin/pinact': PINACT_STUB,
+                'bin/pinact.cmd': '@echo off\r\nbun "%~dp0pinact" %*\r\n',
+            });
+            chmodSync(join(fixture.path, 'bin/pinact'), 0o755);
+            commitAll(fixture.path);
+            const environment = {
+                PATH: `${join(fixture.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
+            };
+            await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
+            const path = join(fixture.path, '.github/workflows/broken.yml');
+            const workflow = `${WORKFLOW_HEAD}            - uses: actions/checkout@0000000000000000000000000000000000000000\n`;
+            await Bun.write(path, workflow);
+            const result = run(
+                fixture.path,
+                ['check', 'config-files/actions-pins', '--at', 'push', '--no-cache'],
+                environment,
+            );
+            expect(result.code, result.stderr + result.stdout).toBe(1);
+            expect(result.stdout).toContain('invalid action pin: broken.yml');
+            expect(await Bun.file(path).text()).toBe(workflow);
+        },
+        PLANTED_TIMEOUT_MS,
+    );
+
     test(
         'GitHub initialization writes a workflow accepted by actionlint',
         async () => {
