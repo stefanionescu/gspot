@@ -2,8 +2,8 @@
 import { chmodSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { createSandbox } from '@gspot/testing';
-import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
+import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 import {

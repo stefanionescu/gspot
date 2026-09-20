@@ -1,9 +1,9 @@
 // Planted repository for the nextjs and i18n presets: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
 import { delimiter, join } from 'node:path';
 import { createSandbox } from '@gspot/testing';
-import type { PlantedCase } from '#types/run.ts';
 import { chmodSync, symlinkSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
+import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const OWNER_WRITES = 0o644;

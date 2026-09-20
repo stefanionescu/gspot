@@ -3,7 +3,7 @@ import { symlinkSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
-import type { ComponentShape } from '#types/run.ts';
+import type { ComponentShape } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');

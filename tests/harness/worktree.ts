@@ -4,8 +4,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { mkdtempSync, rmSync } from 'node:fs';
 import type { RunReport } from '#types/report.ts';
-import type { AcceptanceRun } from '#types/run.ts';
 import { git, run } from '#tests/harness/planted.ts';
+import type { AcceptanceRun } from '#tests/types/acceptance.ts';
 
 /**
  * Installs gspot in a detached worktree of a repository, runs every check, and removes the worktree.

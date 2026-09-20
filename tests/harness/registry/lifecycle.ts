@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
-import type { Registry } from '#types/run.ts';
+import type { Registry } from '#tests/types/registry.ts';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 

@@ -1,9 +1,9 @@
 // Planted repository for the bash preset: every check of the preset fires on its planted defect and passes without it.
 import { join } from 'node:path';
 import { createSandbox } from '@gspot/testing';
-import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { chmodSync, writeFileSync } from 'node:fs';
+import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, script, toolsPath } from '#tests/harness/planted.ts';
 
 const HEAD =

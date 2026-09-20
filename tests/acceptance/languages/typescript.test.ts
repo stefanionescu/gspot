@@ -4,9 +4,9 @@ import { join } from 'node:path';
 // The sandbox links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
 import { fileURLToPath } from 'node:url';
 import { createSandbox } from '@gspot/testing';
-import type { PlantedCase } from '#types/run.ts';
 import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
+import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { symlinkSync, writeFileSync, readdirSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 

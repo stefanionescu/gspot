@@ -1,7 +1,7 @@
 // Planted repository for the supabase preset: a function with no code, a bucket with no policy, a migration named by hand, a leaked key name.
 import { createSandbox } from '@gspot/testing';
-import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
+import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const INIT = [

@@ -2,8 +2,8 @@
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { createSandbox } from '@gspot/testing';
-import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
+import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, git, PLANTED_TIMEOUT_MS, run, runPlanted, script, toolsPath } from '#tests/harness/planted.ts';
 
 const INIT = ['init', '--yes', '--presets', 'bash', '--no-runner', '--no-ci', '--no-rules', '--no-install'];

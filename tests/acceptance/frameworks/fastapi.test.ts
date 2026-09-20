@@ -1,7 +1,7 @@
 // Planted repositories for the pytest and fastapi presets: coverage under the floor, a test name the prefix allows, a sleep inside an async route.
 import { createSandbox } from '@gspot/testing';
-import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
+import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const QUIET = ['--no-runner', '--no-ci', '--no-hooks', '--no-rules', '--no-install'];

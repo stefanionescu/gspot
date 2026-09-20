@@ -1,8 +1,8 @@
 // Planted repository for the express preset: an OpenAPI document with a hole, a stale document, and a route with no test.
 import { delimiter, join } from 'node:path';
 import { createSandbox } from '@gspot/testing';
-import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
+import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../node_modules/.bin');

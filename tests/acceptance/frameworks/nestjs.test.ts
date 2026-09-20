@@ -1,9 +1,9 @@
 // Planted repository for the nestjs preset: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, and a tsconfig with decorators off.
 import { delimiter, join } from 'node:path';
 import { createSandbox } from '@gspot/testing';
-import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, symlinkSync } from 'node:fs';
+import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');

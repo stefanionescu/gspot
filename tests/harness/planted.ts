@@ -2,8 +2,8 @@
 import { fileURLToPath } from 'node:url';
 import { delimiter, dirname, join } from 'node:path';
 import { run as runProcess } from '#cli/platform/spawn.ts';
-import type { PlantedCase, SpawnOutcome } from '#types/run.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import type { PlantedCase, SpawnOutcome } from '#tests/types/acceptance.ts';
 import { chmodSync, mkdirSync, readFileSync, rmdirSync, rmSync, statSync, writeFileSync } from 'node:fs';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
