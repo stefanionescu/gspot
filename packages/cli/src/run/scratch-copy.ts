@@ -15,7 +15,8 @@ const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
 export function scratchCopy(session: Session, paths: string[]): string {
     const scratch = mkdtempSync(join(tmpdir(), 'gspot-fix-'));
     const owned = session.repository.files.filter((file) => file.path.startsWith('.gspot/')).map((file) => file.path);
-    for (const path of [...paths, ...owned, ...SCRATCH_EXTRAS]) {
+    const copied = new Set([...paths, ...owned, ...SCRATCH_EXTRAS]);
+    for (const path of copied) {
         const source = join(session.root, path);
         if (!existsSync(source)) continue;
         mkdirSync(dirname(join(scratch, path)), { recursive: true });

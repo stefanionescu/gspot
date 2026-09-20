@@ -1,12 +1,12 @@
 // The build of a static site: run once for each scope in a process, because every output check reads the same folder.
 import { join } from 'node:path';
-import { tmpdir } from 'node:os';
 import { createHash } from 'node:crypto';
 import { run } from '#cli/platform/spawn.ts';
 import type { SiteBuild } from '#types/web.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
-import { cpSync, existsSync, mkdtempSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { scratchCopy } from '#cli/run/scratch-copy.ts';
+import { existsSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 
 const BUILD_TIMEOUT_MS = 1_800_000;
 const DEFAULT_OUTPUT = 'dist';
@@ -92,17 +92,17 @@ export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
 export async function buildReproducible(input: EngineInput): Promise<Finding[]> {
     const first = await siteBuild(input);
     if (!first.isBuilt) return [];
-    const kept = mkdtempSync(join(tmpdir(), 'gspot-site-'));
+    const before = digests(first.output);
+    const paths = input.session.repository.files.map((file) => file.path);
+    const scratch = scratchCopy(input.session, paths);
     try {
-        cpSync(first.output, kept, { recursive: true });
-        const second = await built(input);
-        if (!second.isBuilt) return [];
-        const before = digests(kept);
+        const second = await built({ ...input, root: scratch });
+        if (!second.isBuilt) throw new Error(`The second site build failed: ${second.command}: ${second.said}`);
         const after = digests(second.output);
-        const paths = [...new Set([...before.keys(), ...after.keys()])].filter(
+        const differences = [...new Set([...before.keys(), ...after.keys()])].filter(
             (path) => before.get(path) !== after.get(path),
         );
-        return paths.slice(0, SHOWN_DIFFERENCES).map((path) => ({
+        return differences.slice(0, SHOWN_DIFFERENCES).map((path) => ({
             check: input.spec.id,
             file: path,
             line: 1,
@@ -112,6 +112,6 @@ export async function buildReproducible(input: EngineInput): Promise<Finding[]> 
             fixable: false,
         }));
     } finally {
-        rmSync(kept, { recursive: true, force: true });
+        rmSync(scratch, { recursive: true, force: true });
     }
 }

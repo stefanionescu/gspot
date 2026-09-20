@@ -8,6 +8,11 @@ The order inside the step: the four rows that destroy work first (K-36, K-156,
 K-159, K-257). Then the rows where a check passes on work it never did (K-140, K-157, K-254, K-258).
 Then the rest, in the order below. K-47 sits in [00-delete-first.md](00-delete-first.md).
 
+The static-site reproducibility check runs its second build in a scratch copy. It preserves
+its first output for concurrent readers and reports a failed second build as an error.
+Regression tests cover both behaviors. The first build still runs in the working tree, and
+full scratch-path confinement and recovery remain open under K-298 and K-299.
+
 ## K-36: takeover deletes a file two tools read
 
 **What is wrong.** `config/patterns.ts:164` lists `setup.cfg` and `tox.ini` as sqlfluff files.
