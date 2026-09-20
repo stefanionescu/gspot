@@ -20,7 +20,7 @@ function ruleFile(root: string, asset: string): string {
 /**
  * Runs one rule asset over files. Returns undefined when ast-grep is not installed.
  * @param root the repository root
- * @param asset the rule's asset path, such as `presets/bash/rules/bash-branches.yml`
+ * @param asset the rule's asset path, such as `presets/language/bash/rules/bash-branches.yml`
  * @param files the files, relative to the root
  * @returns the matches with zero-based lines, by file, or undefined
  */

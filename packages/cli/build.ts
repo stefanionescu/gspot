@@ -18,7 +18,7 @@ const TARGETS: Record<string, string> = {
     'bun-windows-x64': 'gspot-windows-x64.exe',
 };
 
-const ASSET_FOLDERS = ['presets', 'rules', 'prose', 'schema'];
+const ASSET_FOLDERS = ['presets', 'rules', 'schema'];
 
 function walk(dir: string, out: string[] = []): string[] {
     if (!existsSync(dir)) return out;

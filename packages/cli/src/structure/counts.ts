@@ -40,7 +40,7 @@ export function countFindings(analysis: string, context: StructureContext, index
     if (rule === undefined || ceiling === undefined) return [];
     const matches = astGrepMatches(
         context.input.root,
-        `presets/bash/rules/${analysis}.yml`,
+        `presets/language/bash/rules/${analysis}.yml`,
         index.files.map((file) => file.path),
     );
     if (matches === undefined)

@@ -16,7 +16,7 @@ import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { vocabularyFor, vocabularyText } from '#cli/prose/vocabulary.ts';
 import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY, VALE_LINE, VALE_PACKAGES, VALE_STDIN } from '#config/prose.ts';
 
-const STYLE_ASSETS = 'prose/styles/gspot/';
+const STYLE_ASSETS = 'presets/concern/prose/styles/gspot/';
 
 const VALE_CONFIG = '.gspot/vale.ini';
 

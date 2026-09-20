@@ -31,4 +31,4 @@ capitalisation = "capitalisation"
 speling = "speling"
 
 [files]
-extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/cache/", ".gspot/vale/", ".gspot/report.json", ".gspot/report.sarif", ".gspot/baselines/", "prose/styles/gspot/us-english.yml", "packages/cli/grammars/swift.wasm", "schema/**", "docs/public/schema/**" ]
+extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/cache/", ".gspot/vale/", ".gspot/report.json", ".gspot/report.sarif", ".gspot/baselines/", "presets/concern/prose/styles/gspot/us-english.yml", "packages/cli/grammars/swift.wasm", "schema/**", "docs/public/schema/**" ]

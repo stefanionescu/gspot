@@ -6,6 +6,18 @@ has. [12-repository-layout.md](../12-repository-layout.md) holds the comparison.
 
 ## K-73: `prose/` and `schema/` at the top level
 
+**Partial local verification, September 20, 2026.** Presets are grouped by manifest kind.
+Discovery retains their actual directories and orders them by public name. Prose styles
+live in the prose preset.
+
+All 36 focused discovery, generation, asset, and
+structure cases pass. A compiled macOS ARM64 binary generates the grouped prose assets in a
+disposable repository. All 274 generated reference pages match.
+
+Prose policy and vocabulary ownership,
+schema consolidation, examples, and community files remain open. Other platform execution
+and CI evidence remain deferred.
+
 Closes K-73 and K-68.
 
 **What is wrong.** `prose/` is the source of one preset. `schema/` holds two generated files, and

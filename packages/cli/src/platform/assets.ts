@@ -58,7 +58,7 @@ export function isEmbedded(): boolean {
 }
 
 /**
- * Reads one asset by its repository-relative path (`presets/bash/manifest.toml`).
+ * Reads one asset by its repository-relative path (`presets/language/bash/manifest.toml`).
  * @param path the asset path
  * @returns the text
  */

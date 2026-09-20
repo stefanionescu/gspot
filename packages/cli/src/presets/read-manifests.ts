@@ -188,6 +188,6 @@ export function presetManifests(): Map<string, Manifest> {
         manifests.set(manifest.preset.name, manifest);
     }
     checkRequires(manifests);
-    state.cache = manifests;
-    return manifests;
+    state.cache = new Map([...manifests].toSorted(([first], [second]) => first.localeCompare(second)));
+    return state.cache;
 }

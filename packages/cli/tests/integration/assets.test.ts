@@ -14,7 +14,7 @@ const SOURCES = [
 ];
 const PRESET = '[preset]\nname = "bash"\n';
 const PROBE = `import { readAsset, listAssets } from './packages/cli/src/platform/assets.ts';
-console.log(JSON.stringify({ text: readAsset('presets/bash/manifest.toml'), files: listAssets('presets') }));
+console.log(JSON.stringify({ text: readAsset('presets/language/bash/manifest.toml'), files: listAssets('presets') }));
 `;
 
 describe('development assets', () => {
@@ -24,7 +24,7 @@ describe('development assets', () => {
         );
         await using sandbox = await createSandbox({
             ...sources,
-            [`${CHECKOUT}/presets/bash/manifest.toml`]: PRESET,
+            [`${CHECKOUT}/presets/language/bash/manifest.toml`]: PRESET,
             [`${CHECKOUT}/probe.ts`]: PROBE,
         });
         const cwd = join(sandbox.path, CHECKOUT);
@@ -36,7 +36,7 @@ describe('development assets', () => {
         expect(result.exitCode, result.stderr.toString()).toBe(0);
         expect(JSON.parse(result.stdout.toString())).toEqual({
             text: PRESET,
-            files: ['presets/bash/manifest.toml'],
+            files: ['presets/language/bash/manifest.toml'],
         });
     });
 });

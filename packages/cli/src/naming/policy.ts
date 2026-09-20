@@ -17,7 +17,7 @@ import type {
     Term,
 } from '#types/naming.ts';
 
-const POLICY_ASSET = 'presets/naming/policy.json';
+const POLICY_ASSET = 'presets/concern/naming/policy.json';
 const state: { shipped: ShippedPolicy | undefined } = { shipped: undefined };
 
 function toSet(names: string[] | undefined): Set<string> | undefined {
@@ -127,7 +127,7 @@ function shippedCase(table: ShippedLanguage | undefined, category: string, paren
 
 /**
  * The shipped policy, read once.
- * @returns the parsed presets/naming/policy.json
+ * @returns the parsed presets/concern/naming/policy.json
  */
 export function shippedPolicy(): ShippedPolicy {
     state.shipped ??= JSON.parse(readAsset(POLICY_ASSET)) as ShippedPolicy;
