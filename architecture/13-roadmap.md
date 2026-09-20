@@ -76,6 +76,13 @@ configuration path in the Windows HTML tests. Both HTML and static-site planted 
 pass locally with the upgraded tool: two tests and 46 assertions. Windows confirmation
 remains part of K-263.
 
+The [Windows job 106028903542](https://github.com/stefanionescu/gspot/actions/runs/35492181462/job/106028903542)
+finds two false passes in engine-specific output parsing. Spectral paths permit a drive
+letter before the line number. Clone report paths use native path resolution followed
+by forward-slash normalization before matching claimed files. The clone regression
+covers absolute and relative paths, unclaimed copies, and the duplication ceiling.
+The planted Express and duplication tests retain their required findings.
+
 ### Preset deletion
 
 D-136 removes the Go, Rust, Ruby, and Django presets, leaving 48 manifests.

@@ -1,9 +1,10 @@
-// Copied blocks through jscpd: every clone is a finding that names both places, once the duplicated share passes the ceiling.
-import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
+import { toPosix } from '#cli/platform/paths.ts';
+// Copied blocks through jscpd: every clone is a finding that names both places, once the duplicated share passes the ceiling.
+import { isAbsolute, join, relative } from 'node:path';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { ClonePlace, CloneReport } from '#types/integrity.ts';
@@ -13,8 +14,8 @@ const TOOL = 'jscpd';
 const SCAN_TIMEOUT_MS = 600_000;
 const DEFAULT_CEILING = 4;
 
-function relative(root: string, place: ClonePlace): string {
-    return place.name.startsWith(`${root}/`) ? place.name.slice(root.length + 1) : place.name;
+function relativePlace(root: string, place: ClonePlace): string {
+    return toPosix(isAbsolute(place.name) ? relative(root, place.name) : place.name);
 }
 
 /**
@@ -34,9 +35,9 @@ export function cloneFindings(
     const share = report.statistics?.total?.percentage ?? 0;
     if (share <= shape.ceiling) return [];
     return (report.duplicates ?? []).flatMap((clone): Finding[] => {
-        const file = relative(shape.root, clone.firstFile);
+        const file = relativePlace(shape.root, clone.firstFile);
         if (!shape.claimed.has(file)) return [];
-        const other = `${relative(shape.root, clone.secondFile)}:${String(clone.secondFile.start)}`;
+        const other = `${relativePlace(shape.root, clone.secondFile)}:${String(clone.secondFile.start)}`;
         return [
             {
                 check: shape.check,

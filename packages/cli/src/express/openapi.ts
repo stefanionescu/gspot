@@ -8,7 +8,7 @@ import { locateTool } from '#cli/platform/tool-probe.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 const TOOL_TIMEOUT_MS = 300_000;
-const SPECTRAL_LINE = /^(?<file>[^:]+):(?<line>\d+):\d+ (?:error|warning) (?<rule>\S+) "(?<text>.*)"/u;
+const SPECTRAL_LINE = /^(?<file>.+):(?<line>\d+):\d+ (?:error|warning) (?<rule>\S+) "(?<text>.*)"/u;
 
 function setting(input: EngineInput, table: string, key: string): string {
     const found = input.view.tool(table)[key];
