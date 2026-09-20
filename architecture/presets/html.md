@@ -4,11 +4,11 @@ Kind: language. Requires: formatting. Recommends: spelling.
 
 ## Detects and claims
 
-|                      |                                                                    |
-| -------------------- | ------------------------------------------------------------------ |
-| Detect               | `.html`, `.htm` in the tree outside build output                   |
-| Claims               | `.html`, `.htm`; inline `<script>` bodies are handed to javascript |
-| Required inspections | format, syntax, style, structure, spelling                         |
+|                         |                                                                    |
+| ----------------------- | ------------------------------------------------------------------ |
+| Detect                  | `.html`, `.htm` in the tree outside build output                   |
+| Claims                  | `.html`, `.htm`; inline `<script>` bodies are handed to javascript |
+| Required check coverage | format, syntax, style, structure, spelling                         |
 
 ## Tools
 

@@ -20,7 +20,7 @@ gspot list       [settings]
 gspot explain    <check> | <tool>/<rule> | <preset> | <setting> | <path>
 gspot doctor
 gspot ignore     <check> [--paths <glob>...] [--rule <rule>] [--reason <text>] [--remove]
-gspot set        <key> [<value>...] [--reason <text>] [--scope <path>] [--replace | --remove | --default]
+gspot set        <setting> [<value>...] [--reason <text>] [--scope <path>] [--replace | --remove | --default]
 gspot add        <preset>... [--scope <path>] [--dry-run]
 gspot remove     <preset> [--scope <path>] [--dry-run]
 gspot upgrade    [--dry-run] [--to <version>] [--yes] [--no-install]
@@ -57,13 +57,14 @@ The checklist is [clig.dev](https://clig.dev/). What it means here:
   line has it: `init`, `install`, `apply`, `add`, `remove`, `upgrade`, `uninstall`,
   and `check --fix`. `ignore` and `set` change one line of a tracked file, and `git diff` shows
   it (D-163).
-- One word names a thing: its name. A check, a preset, a rule, and a setting each have a name,
-  and no document says id or key (D-163).
+- One word names a thing: its name. A check, a preset, a rule, and a setting each have a name.
+  Domain identity uses `name`. Structural map keys and third-party identifiers retain their
+  actual terms (D-163).
 - A refusal is a `--no-` flag: `--no-ci`, `--no-hooks`, `--no-runner`, `--no-rules`,
   `--no-checks`, and `--no-install`. `--no-checks` installs the rule files and no check, and
   `--no-rules` installs the checks and no rule file (D-81). No flag takes the value `none` (D-130).
 - A command that deletes prints its plan and asks, and `--yes` answers.
-- Every finding ends with a `help:` line, taken from the `fix` text of its check.
+- Every finding ends with a `help:` line, taken from the `help` text of its check.
 - A flag means one thing everywhere: `--scope`, `--reason`, `--json`, `--yes`, `--remove`.
 
 The commands change one entry at a time, because that is the edit a person makes when a finding
@@ -143,7 +144,7 @@ change, after your yes
   mise.toml task lint              new body: gspot check
   .githooks/pre-commit             unchanged; it calls the task above
 
-delete (git keeps them: git show HEAD:<path>)
+replace (original bytes saved under .gspot/recovery/)
   .prettierrc.yaml                 one tool owns it; your tabs and 100 columns go into [format]
   ios/.swiftlint.yml               one tool owns it; 2 rules off and 1 rule on are carried
 
@@ -182,8 +183,11 @@ it writes there, under an npm runner (D-147).
 
 A rule is carried in both directions (D-150). A rule the old config turned off becomes an
 `[[ignore]]` with its paths. A rule it turned on, with its options, becomes an entry of
-`tools.<tool>.rules`. For ESLint, gspot asks ESLint for the final config of one file of each
-kind, and carries the difference from the config it writes. The plan lists every setting it did
+`tools.<tool>.rules`. For ESLint, gspot resolves the config for every governed source path, groups equal results,
+and carries differences with their path scope.
+
+Unsupported settings retain their original file and appear in the plan.
+The takeover contract is in [03-configuration.md](03-configuration.md). The plan lists every setting it did
 not carry. Every carried entry has the reason `carried from <file> at init`.
 
 Hooks a repository has keep running, tracked or local to one clone, and gspot never sets
@@ -206,22 +210,26 @@ exit 2 and nothing written, in these cases:
 `init` writes before it deletes (D-83):
 
 1. Validate every flag, the profile, and the proposed `gspot.toml` in memory.
-2. Write `gspot.toml`, `.gspot/`, and the managed blocks, each file through a temporary file and
-   a rename (D-152).
-3. Install the tools and run the first check.
-4. Delete the files takeover replaces.
+2. Validate path boundaries and save the exact bytes and permissions of every file or task
+   being replaced under `.gspot/recovery/` (D-175). Failure leaves the originals in place.
+3. Write the config, generated files, and managed blocks atomically. Resolve tool lockfiles
+   through `apply`; `--no-install` skips environment installation, not lockfile resolution.
+4. Run `gspot install`, unless `--no-install` was given. Run no check.
+5. Delete a replaced original only after its replacement and recovery entry are complete.
 
-A failure in step 2 or 3 leaves every old file in place, and the message says so.
+A failed resolution leaves existing lockfiles and old configurations in place. The setup report
+names incomplete steps and the command to retry. Missing tools do not undo completed setup
+(D-172); no old file is deleted without a usable generated replacement and recoverable bytes.
 
 ## `install`
 
 Sets up one clone (D-156). It installs the mise tools, the npm tools under `.gspot/node_modules`,
 the Python tools under `.gspot/.venv`, and the hooks of this clone. It writes no tracked file and
-is safe to run twice.
+is safe to run twice. It requires matching managed manifests and lockfiles and uses the immutable install commands in [03-configuration.md](03-configuration.md). Missing, stale, or conflicted locks fail with `Run: gspot apply, then gspot install`.
 
-`init`, `upgrade`, and the CI job call it. With a yes, `init` adds this one
-line to the setup entry the repository already has, such as a `setup` task or a `prepare`
-script (D-115). A clone that is not set up says so: `gspot check`, `gspot doctor`, and a missing
+`init`, `upgrade`, and the CI job call it. A teammate runs it explicitly after cloning.
+gspot never creates or changes `prepare`, `preinstall`, `install`, or `postinstall` package
+scripts, and does not inject itself into a setup task (D-115). A clone that is not set up says so: `gspot check`, `gspot doctor`, and a missing
 tool each print `Run: gspot install`. `check` never installs by itself.
 
 A missing tool never blocks the setup (D-172). `install` runs every step, lists what is left
@@ -238,18 +246,21 @@ Runs checks and prints findings. `gspot check` is the truth, and the hooks are t
 | `gspot check`                          | every check of the commit and push stages, over the whole repository           |
 | `gspot check --staged`                 | the commit stage over staged files, which is what the commit hook runs         |
 | `gspot check --changed`                | the commit and push stages over files that differ from the upstream branch     |
-| `gspot check --changed=<ref>`          | the same, from another ref, which the push hook and the CI job pass (D-169)    |
+| `gspot check --changed=<ref>`          | the same from an explicit ref; pre-push uses its own ref protocol (D-169)      |
 | `gspot check --stage manual`           | the checks that build, test, or scan a whole project, or that need the network |
 | `gspot check src/app.ts docs`          | those files and folders, as `eslint` and `ruff check` take paths               |
 | `gspot check api`                      | one project of a monorepo, because a scope is a folder                         |
 | `gspot check --only typescript/eslint` | one check; repeat the flag for more                                            |
 | `gspot check --fix`                    | every fixer in order, then the checks again                                    |
 | `gspot check --fix --dry-run`          | the diff of every fix, and no write                                            |
-| `gspot check --skip <id>`              | skips one check this run, printed and recorded                                 |
+| `gspot check --skip <check>`           | skips one check this run, printed and recorded                                 |
 
-A run with `--staged` or `--changed` reports findings in the files the change
-touches (D-168). A check that reads a whole project, such as a type checker, still reads it, and
-one line counts what it found in other files.
+A changed-file run narrows file-list checks, not the findings of a project-wide check (D-168).
+A project-wide check runs when a changed, deleted, or renamed path affects its inputs. Every
+finding from that check contributes to its exit code, including findings in unchanged callers
+and findings without a file. Tool failures and invalid configuration also fail the run.
+Existing project errors can therefore block a changed-file run; no baseline or hidden filter
+suppresses them. [10-hooks-ci-runners.md](10-hooks-ci-runners.md) defines revision selection.
 
 A check above the level of the repository is not planned. A check that waits for a setting
 prints `skipped` and names the setting. A check whose tool is absent prints `missing` and fails
@@ -263,11 +274,11 @@ older than 30 days are dropped.
 
 In a folder with no git, `gspot check` runs every check that needs no history. `--staged` and
 `--changed` exit 2 there with one sentence that says why. With no upstream,
-`--changed` uses the default branch and says which ref it took. In a shallow clone it names
+`--changed` uses a resolvable default branch and says which ref it took; if neither exists it exits 2 and asks for an explicit ref. In a shallow clone it names
 `git fetch --unshallow`.
 
 A wrong line in `gspot.toml` does not stop `check`. The run uses the rest of the config and
-reports the line as a finding of `integrity/policy`. A TOML syntax error is exit 2.
+reports the line as a finding of `integrity/policy`. A TOML syntax error or unsafe path is exit 2. Invalid security or execution settings are never partially executed.
 
 ### Output
 
@@ -295,6 +306,9 @@ Every run but the message run writes three files under `.gspot/`: `report.json`,
 `report.sarif`, and `report.codequality.json`, the form GitLab reads. A CI job keeps them as
 artifacts, so no flag and no redirect is needed.
 
+The pre-push hook calls `gspot check --push`, a hook-only option that consumes the Git ref
+updates on stdin and checks their committed content. It is hidden from ordinary help.
+
 The commit message hook calls `gspot check --stage message --message-file <path>`. That stage
 and that flag serve the hook alone, and `--help` leaves both out.
 
@@ -303,14 +317,19 @@ reason. `--json` prints the report as JSON (D-105). Columns are computed from th
 
 ## `apply`
 
-Writes every generated file from `gspot.toml`, and does nothing else. It takes no flag.
+Writes generated configuration and resolves the tool lockfiles from `gspot.toml`.
+`--dry-run` prints the proposed changes without writing project files. Dependency resolution
+uses a temporary environment and can require the network; failure never replaces a lockfile.
+A dry run prints unresolved operations when the resolver is unavailable and exits 2 rather
+than claiming a complete diff.
 
-- It writes `.gspot/<tool-file>` for each tool, `.gspot/package.json`, the mise file, the hooks
-  or the hook line, the CI job, the managed blocks, and the rule files.
-- It deletes a file only when the file carries the mark of gspot and the policy does not
-  write it. A file with no mark is never deleted (D-100).
-- It never writes `gspot.toml`, and never writes into a file of the developer outside a managed
-  block.
+- It writes `.gspot/<tool-file>` for each tool, `.gspot/package.json`, the mise file, approved tracked hook composition,
+  the CI job, the managed blocks, and the rule files.
+- It deletes obsolete managed output only under the boundary, ownership-hash, and recovery rules of [03-configuration.md](03-configuration.md). A mark alone is not permission to delete modified content.
+- It never writes `gspot.toml`. Shared-file edits are limited to managed blocks and the
+  accepted launcher and task entries listed in the ownership contract.
+- It retains matching lockfiles. It resolves missing, stale, or conflicted lockfiles, then
+  writes validated results atomically. It installs no tools or clone-local hooks; approved tracked hook configuration is an output.
 
 Drift is a check: `integrity/generated-drift` fails a generated file that differs from what the
 policy writes (D-152).
@@ -322,20 +341,20 @@ found in the repository and not selected, and the rest. Under each installed pre
 checks with their state: `on`, `off (level)`, `off (ignore)`, or `waits for <setting>`. Each
 preset of the second group ends with its `gspot add` line.
 
-`gspot list settings` prints every setting of the selection: the key, its value, and where the
+`gspot list settings` prints every setting of the selection: the setting name, its value, and where the
 value comes from.
 
 ## `explain`
 
 One verb that says what a thing is. It takes:
 
-| Argument                                 | Prints                                                                                               |
-| ---------------------------------------- | ---------------------------------------------------------------------------------------------------- |
-| a check name (`structure/call-through`)  | `summary`, `why`, and `fix`; its preset and level; its settings; the `ignore` line that turns it off |
-| a tool rule (`markdownlint/MD024`)       | the summary of the tool where it has one, the page of the rule, and the check that runs it           |
-| a preset name (`python`)                 | what it detects and claims, its tools, its checks by stage and level, its settings, its rule files   |
-| a setting name (`limits.function_lines`) | meaning, default, the value in every scope that holds it, and the `set` line that changes it         |
-| a path (`api/src/routes/turn.ts`)        | the presets that claim the file, and the checks that read it at each stage                           |
+| Argument                                 | Prints                                                                                                |
+| ---------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| a check name (`structure/call-through`)  | `summary`, `why`, and `help`; its preset and level; its settings; the `ignore` line that turns it off |
+| a tool rule (`markdownlint/MD024`)       | the summary of the tool where it has one, the page of the rule, and the check that runs it            |
+| a preset name (`python`)                 | what it detects and claims, its tools, its checks by stage and level, its settings, its rule files    |
+| a setting name (`limits.function_lines`) | meaning, default, the value in every scope that holds it, and the `set` line that changes it          |
+| a path (`api/src/routes/turn.ts`)        | the presets that claim the file, and the checks that read it at each stage                            |
 
 Every text `explain` prints is written for a person who does not code. The same text is the
 page of the manual.
@@ -375,7 +394,7 @@ last full run   2026-09-19
 
 The hooks line comes from git, not from the config. It names one of three states: the hooks
 run, the hooks exist and this clone does not run them, or none exist. The second state ends with
-the setup command of the repository (D-115). Exit 0 unless a tool is missing or outdated.
+`gspot install` (D-115). Exit 0 unless a tool is missing or outdated.
 
 ## `ignore`
 
@@ -413,7 +432,7 @@ does the reverse, files included.
 ## `set`
 
 `gspot set limits.function_lines 80 --reason "Route tables are one ordered list each."` writes one
-setting, by the dotted key `gspot list settings` prints. A reason is optional, unless the
+setting, by the dotted name `gspot list settings` prints. A reason is optional, unless the
 repository sets `require_reasons`. `--scope` targets a scope. An unknown key fails with the keys that exist
 under that table.
 
@@ -439,16 +458,32 @@ rules added, removed, or changed, for every tool whose config lists rules. It al
 with a new pin, rule files that changed, and presets now available for what the repository holds. It is the one
 command that asks the network for a newer gspot.
 
-`gspot upgrade` prints the same report as its plan, then asks. On a yes it moves the version
-pin, and runs `apply` and `install`. It runs no check.
-It never writes `gspot.toml` and never commits. `--to` moves to an exact version.
+`gspot upgrade` prints the same report as its plan, then asks. On a yes it validates and writes the migration and generated outputs, updates the version pin last, then runs `install`. It runs no check.
+It rewrites renamed configuration fields through the versioned migration table before target
+schema validation (D-159). It never commits. `--to` selects an exact version.
+
+The target
+binary runs the migration; `upgrade` is exempt from the normal version-pin refusal.
+If the target binary is not running, the command prints its install instruction and exits 2.
+The old config is parsed as TOML, migrated in memory, and validated before any write. The plan
+includes config rewrites, generated changes, and lockfile changes.
+
+The pin is written last after config, generated files, and locks succeed. Tool installation
+follows and can be retried independently. An interrupted file migration can be retried from
+its recovery entry. Downgrades require a supported reverse migration or restoring the previous
+complete config, generated files, locks, and pin together. Never feed a newer schema to an older
+binary silently.
 
 ## `uninstall`
 
-Removes what gspot wrote: `.gspot/`, the mise file, the managed blocks, the CI job, and the
-launcher line. It removes the hook line, or the hooks where gspot wrote them. A task body it
-replaced gets its old body back.
-It leaves `gspot.toml`. It removes its block from a hook file and leaves the rest of the file.
+Removes only recorded, unchanged gspot-owned outputs and its managed blocks (D-175).
+It restores replaced files and task bodies when the current value still matches the value
+gspot installed. A developer edit is preserved and reported for manual recovery.
+
+It never removes `.gspot/` recursively. Unmarked files, modified outputs, and recovery entries
+remain. Empty owned directories can be removed. The command leaves `gspot.toml` and prints
+the path of each retained recovery entry. A partially missing installation can still be removed
+from its ownership record without loading tool configurations.
 
 ## `export`
 
@@ -471,7 +506,7 @@ beside `--from` win over the profile.
   agent drives gspot without parsing columns.
 - `-C <dir>` runs as if started in that folder. Every command works from the repository root.
 - The repository pins a gspot version in `.gspot/version`. A binary of another version exits 2
-  on every command that reads the policy, and names the pinned version.
+  on every command that reads the policy except `upgrade` and recovery through `uninstall`, and names the pinned version.
   [11-toolchain.md](11-toolchain.md) has the install paths.
 - gspot runs natively on macOS, Linux, and Windows (D-31). A check whose tool has no Windows
   build is a platform skip there.

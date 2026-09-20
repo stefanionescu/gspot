@@ -4,11 +4,11 @@ Kind: language. Requires: structure. Recommends: naming, formatting, spelling.
 
 ## Detects and claims
 
-|                      |                                                                          |
-| -------------------- | ------------------------------------------------------------------------ |
-| Detect               | `.js`, `.jsx`, `.mjs`, `.cjs` in the tree; a `node` shebang              |
-| Claims               | `.js`, `.jsx`, `.mjs`, `.cjs`, extensionless files with a `node` shebang |
-| Required inspections | format, syntax, style, types, structure, naming, prose, spelling         |
+|                         |                                                                          |
+| ----------------------- | ------------------------------------------------------------------------ |
+| Detect                  | `.js`, `.jsx`, `.mjs`, `.cjs` in the tree; a `node` shebang              |
+| Claims                  | `.js`, `.jsx`, `.mjs`, `.cjs`, extensionless files with a `node` shebang |
+| Required check coverage | format, syntax, style, types, structure, naming, prose, spelling         |
 
 ## Tools
 

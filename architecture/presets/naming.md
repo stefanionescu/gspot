@@ -3,6 +3,9 @@
 Kind: concern. Requires: nothing. Recommended by every language preset (D-80). Runs the naming engine over every language
 with the shipped policy in [../08-naming-policy.md](../08-naming-policy.md).
 
+Banned terms and reserved-word restrictions are level `all`. The shipped policy permits
+`generate` and `service`. Case, length, digit, ordering, and layout preferences also run at `all`. Only demonstrated external-contract defects qualify for recommended naming checks.
+
 ## Claims
 
 Every file a language preset claims, plus every directory name, and file name in the tree

@@ -337,10 +337,9 @@ it. New `emit/tool-environment.ts` beside `emit/tool-packages.ts`. `platform/too
 `tests/harness/registry.ts`.
 
 **Logic.** `tool-environment.ts` writes `.gspot/pyproject.toml` from every tool with a `pypi`
-name, and `install` runs `uv sync --project .gspot`. The probe looks under `.gspot/.venv/bin`
+name, and `install` runs `uv sync --locked --project .gspot`. The probe looks under `.gspot/.venv/bin`
 after `.gspot/node_modules/.bin`. `init` and `upgrade` call the function, and `--no-install`
-skips it. With a yes, `init` adds the line `gspot install` to the setup entry the repository
-has (D-115).
+skips it. The developer runs `gspot install` explicitly; no setup or lifecycle script is injected (D-115). `apply` resolves lockfiles, while `install` uses only matching locked contents.
 
 `missing-tool.ts` prints `Run: gspot install` for a tool gspot can install, and the
 platform hint for a host tool. `check` prints the same line once when the hooks of the config do
@@ -371,9 +370,10 @@ under each of the four package managers.
 
 **Logic.** The function asks the package manager for the registry settings at the root, through
 `npm config list --json` and its matches. It passes them to the install as environment values,
-so no token is written to a file. It installs with the flag that keeps a project apart:
-`--ignore-workspace` for pnpm, and an empty `yarn.lock` with its own `.yarnrc.yml` for Yarn
-Berry. The lockfile under `.gspot/` belongs to the package manager the repository uses.
+so no token is written to a file.
+
+It installs with the flag that keeps a project apart:
+`--ignore-workspace` for pnpm, and a separate project with its own `.yarnrc.yml` and real resolved `yarn.lock` for Yarn Berry. Project isolation is prepared by `apply`, not by creating or rewriting a lock during `install`. The lockfile under `.gspot/` belongs to the selected managed package manager and its recorded version. Resolution and immutable installation follow [03-configuration.md](../03-configuration.md); registry credentials never enter logs, plans, tracked files, or recovery output.
 
 **What goes.** Nothing.
 

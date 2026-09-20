@@ -4,11 +4,11 @@ Kind: language. Requires: formatting. Recommends: spelling.
 
 ## Detects and claims
 
-|                      |                                                     |
-| -------------------- | --------------------------------------------------- |
-| Detect               | `.css`, `.scss`, `.pcss`, `.module.css` in the tree |
-| Claims               | the same                                            |
-| Required inspections | format, syntax, style, spelling                     |
+|                         |                                                     |
+| ----------------------- | --------------------------------------------------- |
+| Detect                  | `.css`, `.scss`, `.pcss`, `.module.css` in the tree |
+| Claims                  | the same                                            |
+| Required check coverage | format, syntax, style, spelling                     |
 
 ## Tools
 

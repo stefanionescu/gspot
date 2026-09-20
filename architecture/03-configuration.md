@@ -14,6 +14,7 @@ merge.
 | `.gspot/node_modules/`, `.gspot/.venv/`                 | gspot                         | no      | where those tools install                                                                                                         |
 | `.gspot/version`                                        | gspot                         | yes     | the gspot version this repository runs, one line                                                                                  |
 | `.gspot/rules/**`                                       | gspot                         | yes     | the installed rule files                                                                                                          |
+| `.gspot/recovery/**`, `.gspot/ownership.json`           | gspot, local recovery data    | no      | exact originals, installed hashes, and completed operations; retained through uninstall                                           |
 | `.gspot/cache/**`                                       | gspot                         | no      | verdicts keyed on their inputs, dropped after 30 days                                                                             |
 | `.gspot/report.json`, `report.sarif`                    | gspot                         | no      | the last run                                                                                                                      |
 | `.mise/conf.d/gspot-tools.toml`                         | gspot                         | yes     | tool pins under the mise runner (D-127)                                                                                           |
@@ -25,9 +26,10 @@ merge.
 | `.github/workflows/gspot.yml` or `.gitlab/ci/gspot.yml` | gspot                         | yes     | the CI job, when enabled (D-133)                                                                                                  |
 | `gspot.schema.json`                                     | gspot                         | no      | the JSON Schema of `gspot.toml`, published with each release                                                                      |
 
-gspot writes nothing else. It never writes a lint tool, a pin, or a script into `package.json`,
-and never a table into `pyproject.toml` (D-117, D-145). Under an npm runner it adds one line, the
-`gspot` launcher (D-147).
+The only shared-manifest writes are the `gspot` launcher and explicitly accepted lint task
+entries. gspot never writes tool dependencies or package lifecycle scripts into the developer's
+`package.json`, and never writes a table into their `pyproject.toml`.
+Existing lifecycle scripts remain byte-for-byte unchanged (D-175).
 
 Every generated file opens with a mark:
 
@@ -143,7 +145,7 @@ reason = "Upstream source, patched only by rebase."
 
 # A script the repository already runs. It joins the run like a preset check.
 [[check]]
-id      = "sql/migration-data"
+name      = "sql/migration-data"
 command = ["bunx", "tsx", "supabase/scripts/migrations.ts", "check"]
 paths   = ["supabase/migrations/**/*.sql"]       # when it runs
 inputs  = ["supabase/migrations/**/*.sql", "supabase/scripts/migrations.ts"]   # what it reads
@@ -152,8 +154,9 @@ stage   = "commit"
 # Absent table: gspot does nothing there (D-130).
 [hooks]
 tool       = "existing"           # gspot | husky | lefthook | pre-commit | simple-git-hooks | existing
-pre_commit = "mise task lint"     # where the gspot line lives, for "existing"
-push       = "changed"            # or "all" (D-123)
+pre_commit = "mise task lint"     # commit-hook invocation location, for "existing"
+pre_push   = "mise task lint:push" # push-hook invocation location, for "existing"
+push       = "changed"            # selection mode, not a hook location; or "all" (D-123)
 
 [ci]
 provider = "github"               # github | gitlab
@@ -176,12 +179,14 @@ strict = false                    # true: a source file no check reads fails the
 
 ### Rules for the file
 
-- Every setting has a command that writes it, and `gspot list settings` prints the key. A hand
+- Every setting has a command that writes it, and `gspot list settings` prints the setting name. A hand
   edit gives the same file and is validated on the next load.
 - A preset that does not exist fails to load, with the near matches. A setting no selected
   preset has fails to load, with the settings that exist under that table.
 - A wrong entry does not stop `gspot check`. The run uses the rest of the file and reports the
   entry as a finding of `integrity/policy`. The writing commands and `apply` refuse such a file.
+- Unsafe paths and invalid security or execution settings stop the run with exit 2. They are
+  never used for partial execution.
 - `exclude` lists folders and files that no check reads and `doctor` does not count. `init`
   fills it with each project the developer leaves out.
 - A `[[scope]]` path names a folder that exists. Scopes nest, and a file belongs to the deepest
@@ -190,16 +195,16 @@ strict = false                    # true: a source file no check reads fails the
   selector.
 - A `reason` is optional on an `[[ignore]]` and on a loosened setting (D-164). With
   `require_reasons = true` it is required, and `N/A`, `TBD`, `-`, and an empty string are refused.
-  A value that reaches a generated file is one line of printable text.
+  Text fields reject forbidden controls, and every generated value still requires destination-appropriate serialization.
 - `[limits.<language>]` and `[naming.<language>]` take the language preset names. A key there
   wins over the root key for the checks of that language.
 - A rule of any tool is turned off by an `[[ignore]]` with `rule`, and nowhere else (D-144).
   `[tools.<name>.rules]` holds rule options and rules turned on.
 - The `marketing` and `defensive` term groups cannot be removed as groups.
-- A `[[check]]` has `id`, `command`, `paths`, `stage`, and optionally `inputs`, `fix`, `output`,
+- A `[[check]]` has `name`, `command`, `paths`, `stage`, and optionally `inputs`, `help`, `fix_command`, `fix_order`, `output`,
   `requires`, and `platform`. It is cached only when it names `inputs` (D-155). Its `output` takes
-  every format a manifest check takes.
-- A key gspot does not know fails to load. An old name is an unknown key like any other (D-134).
+  every format a manifest check takes. `help` is explanatory text; `fix_command` is an argument vector and requires `fix_order`, as in a preset manifest.
+- A key gspot does not know fails normal validation. Before the first release an old name is unknown (D-134); after release only `upgrade` applies versioned migrations before target validation (D-159).
 
 ### Names of settings
 
@@ -227,7 +232,7 @@ person who knows ESLint writes `rules = { ... }`, and a person who knows Prettie
 A tool is turned off by ignoring its checks, and a tool whose every check is ignored whole is
 not installed (D-160). Every tool has `[tools.<name>.extra]`: a table written as it stands into the config of the
 tool, with a required `reason`, for an option the preset does not have yet. Every `extra` table
-prints on every run. A key in `extra` that the preset has fails to load and names it.
+prints with `--verbose`. A key in `extra` that the preset has fails to load and names it.
 
 A setting may be detected. `init` fills it from the repository, such as the build command, the
 output folder, the SQL dialect, or the Swift destination, and asks where it finds nothing.
@@ -284,9 +289,8 @@ fail at load with both presets named, and a root value settles it.
 gspot records no old findings, and installing it runs no check (D-165). `gspot check` reports
 what it finds today. An old repository adopts gspot through four things that need no record:
 
-- The hooks and the CI job check the files a change touches, so a file is judged when somebody
-  changes it.
-- The level `recommended` holds what finds a defect, and leaves taste out.
+- File-list checks run on changed files; affected whole-project checks keep all findings, including existing errors and errors in unchanged callers (D-168).
+- The level `recommended` holds defect checks. Banned-term checks run at `all`.
 - `gspot ignore` turns a check or a rule off. It works for the whole repository or for some paths.
 - `git commit --no-verify` passes a hook, and a failing run names it.
 
@@ -313,3 +317,86 @@ One syntax everywhere: globs from the root, `**` crosses folders, and `!` negate
 include. A folder name means everything under it. gspot never translates its own selectors into
 the ignore syntax of a tool: it passes file lists. Selectors use forward slashes on every
 platform.
+
+## Path and ownership boundaries
+
+Every scope, rule output, generated target, and deletion target is relative to the config root.
+Reject absolute paths, drive-relative paths, Universal Naming Convention (UNC) paths, parent traversal, and canonical paths
+outside that root. Validate existing ancestors of a new output before creating it. A source
+symlink that leaves the root is reported and not followed. Managed output paths cannot traverse
+symlinks, including a symlinked `.gspot/`.
+
+Validate again immediately before each mutation. Use no-follow, handle-relative operations
+where the platform supports them. Refuse a target whose ancestry cannot be kept safe.
+Revalidation alone is not a defense against a symlink-swap race.
+Tests cover case-insensitive filesystems, both path separators, spaces, and Windows drive forms.
+
+Git integration is the one separate boundary: hooks use the path Git resolves for that clone,
+including linked worktrees and `core.hooksPath`. The hook installer validates that resolved
+location independently. A config below the Git root does not authorize other writes above the
+config root. Tools can read dependencies outside the root where the repository declares them;
+that grants no write or deletion authority. This is not a sandbox for arbitrary repository
+commands.
+
+Before replacing a developer file or task, save its exact bytes, mode, original path, and hash
+under `.gspot/recovery/<operation>/`. Recovery directories and metadata are owner-only because originals can contain credentials; backup content never appears in reports or CI artifacts. Store the installed hash and ownership kind in
+`.gspot/ownership.json`. Recovery is local, untracked, and required even with Git or
+`--allow-dirty`. It is never treated as a cache or removed by cache eviction or uninstall.
+
+If recovery cannot be written, refuse that replacement. A second operation never overwrites an
+earlier original. In a fresh clone, tracked generated marks establish ownership but do not
+invent an original that the clone never had.
+
+`apply` and `remove` delete only marked outputs whose bytes still match the recorded installed hash.
+In a fresh clone without a record, reproduce the expected value from its pinned config before
+adopting the file into the ownership record. A mark alone never authorizes deleting modified
+content. Modified outputs are retained and reported until the user restores or moves them.
+
+Uninstall uses the same rule and removes only empty owned directories. Restoring an original
+requires an absent destination or an unchanged gspot-installed value. Otherwise, preserve both
+versions and print their paths. Interrupted operations resume from the ownership record;
+serialize mutations with one lock per config root, and refuse a concurrent writer.
+
+## Carrying configuration
+
+Resolve ESLint configuration through the repository's ESLint for every governed file, then
+group paths with equal resolved configurations. Extension-only sampling is insufficient.
+Path-specific enabled rules use `[[tools.eslint.overrides]]`, with `paths` and `rules`;
+disabled rules remain `[[ignore]]` entries. Base rules apply first, then matching overrides in declaration order, then ignores.
+
+Override paths are config-root selectors and remain scope-bounded; profiles exclude these path-specific entries. Report that the captured paths describe current
+files, not a reconstruction of arbitrary JavaScript selectors for future files.
+Retain the original config whenever a plugin, processor, selector, or option cannot be carried
+without loss. Never delete a config on the strength of a sampled result.
+
+Use [Prettier resolveConfig](https://prettier.io/docs/api) per governed path with EditorConfig
+enabled. Preserve path-specific differences through `[[format.overrides]]`, with `paths`
+and the same fields as `[format]`. Later matching overrides win. Preserve unsupported
+EditorConfig properties and sections by leaving the original file in place and reporting the
+difference. A root pointer must not overwrite a retained config. Test root, nested, test,
+server, and component paths that share an extension.
+
+Validate value types at input and serialize each value for its output language. Quote TOML
+keys and strings, serialize JSON and JavaScript data, and escape comments for their delimiter.
+One line of printable text is not a substitute for escaping. Reject control characters where
+the field contract prohibits them; accept legitimate quotes, backslashes, and Unicode through
+the proper serializer. Remote profiles use the same validation and emission path.
+
+## Tool lockfiles
+
+`apply` owns resolution and tracked tool lockfile changes. It resolves only when manifests and
+locks differ or a lock is absent or conflicted. Resolution happens in an isolated temporary
+project; validated lockfiles replace the originals atomically. A failed resolver leaves old
+locks in place and reports the unresolved tool set. `--dry-run` publishes none of those files.
+
+`install` requires matching manifests and locks. It uses `npm ci`,
+`pnpm install --frozen-lockfile`, `bun install --frozen-lockfile`,
+`yarn install --frozen-lockfile` for Yarn Classic, or `yarn install --immutable` for Berry.
+Python uses `uv sync --locked --project .gspot`; [uv documents locked synchronization](https://docs.astral.sh/uv/concepts/projects/sync/).
+Use the isolated-project and registry handling of K-267 for every command.
+Missing or stale locks fail setup with `Run: gspot apply, then gspot install`.
+
+`init`, `add`, `remove`, and `upgrade` call `apply` before `install`.
+A setting change calls `apply`; if dependencies change, its output names `gspot install`.
+After a merge, resolve `gspot.toml`, run `apply` to rebuild conflicted outputs and locks, then
+run `install`. No automatic package lifecycle script calls any of these commands.

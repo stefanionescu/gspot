@@ -17,8 +17,7 @@ where each draws its line against writing original analysis.
                too)       ast-grep CLI             selectors) lockfiles
 ```
 
-Every engine returns the same record: check name, file, line, column, rule, message, and whether
-a fixer exists. The reporter and the ignore filter never know which engine spoke.
+Every engine returns findings with the same fields: `check`, optional `file`, `line`, `column`, and `rule`, plus `message`, optional `help`, and `fixable`. `check` holds a check name. Fileless failures stay representable. The reporter and the ignore filter never know which engine spoke.
 
 ## 1. Tool runner
 
@@ -35,8 +34,8 @@ Runs external tools. Owns nothing about what they find.
   reported as "the tool broke" with the remediation text, never as a code finding.
 - **Result cache.** Each check's verdict is stored under `.gspot/cache/` keyed on the tool
   version, the generated configuration hash and the content hash of every file it read.
-  Unchanged inputs skip the run and print `cache`.
-- **Cache scope.** `--staged` therefore costs the staged files only. The cache is per machine and never tracked.
+  Unchanged inputs skip the run and print `unchanged`.
+- **Cache scope.** File-list checks can reuse unchanged inputs; a project-wide check still depends on all its project inputs. `--staged` does not make that cost proportional to the staged file count. The cache is per machine and never tracked.
 - **Platforms.** Commands are spawned without a shell. Paths are joined with `node:path` and
   passed to tools in the platform's form. On Windows, npm-installed tools are `.cmd` shims that
   a plain spawn cannot run; `cross-spawn` resolves them without a shell and without quoting by gspot.
@@ -113,12 +112,12 @@ For every language that is not JavaScript or TypeScript, and for repository-leve
 
 | Idea                                                                | Level       | Bash | Python | Swift | TypeScript | SQL |
 | ------------------------------------------------------------------- | ----------- | ---- | ------ | ----- | ---------- | --- |
-| File and function length                                            | recommended | yes  | yes    | yes   | yes        | yes |
-| Call-through                                                        | recommended | yes  | yes    | yes   | yes        | yes |
-| Duplicate functions                                                 | recommended | yes  | yes    | yes   | yes        | no  |
+| File and function length                                            | all         | yes  | yes    | yes   | yes        | yes |
+| Call-through                                                        | all         | yes  | yes    | yes   | yes        | yes |
+| Duplicate functions                                                 | all         | yes  | yes    | yes   | yes        | no  |
 | Unused functions, dead parameters                                   | recommended | yes  | yes    | yes   | yes        | no  |
 | Import cycles                                                       | recommended | no   | yes    | no    | yes        | no  |
-| Folder facts: one file, prefix, file beside folder                  | recommended | yes  | yes    | yes   | yes        | yes |
+| Folder facts: prefix, file beside folder                            | all         | yes  | yes    | yes   | yes        | yes |
 | Shell safety: strict mode, a trap for `mktemp`, a discarded failure | recommended | yes  | no     | no    | no         | no  |
 | Environment owner                                                   | all         | yes  | yes    | yes   | yes        | no  |
 | Import layout and boundaries                                        | all         | no   | yes    | no    | yes        | no  |
@@ -146,6 +145,11 @@ extractors per language, no emission into other tools.
 - **Validation** per identifier: case for its category, length ceiling, word ceiling, digits,
   duplicate words, banned terms, reserved terms, structural prefixes, path-scoped rules,
   external-name and contract-property exemptions.
+- **Levels:** house-style case, length, word-count, digit, ordering, banned-term, reserved-term, and folder-name rules run at `all`
+  only. Prose and tool-template copies follow the same level. `generate` and `service` are
+  permitted (D-174). Single-file-folder checks also run at `all`.
+- **Recommended findings:** a naming check must demonstrate an actual external-contract
+  violation, not a spelling preference.
 - **Matching:** split the identifier into parts at case boundaries, underscores and hyphens;
   match banned terms against whole parts, case-insensitively; multi-word terms match
   consecutive parts. `uncommon` does not match `common`.

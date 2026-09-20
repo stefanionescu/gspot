@@ -193,19 +193,18 @@ The self-lint is the first integration test to pass, not the last. It runs on ev
 starting with the shell scripts and hooks in Phase 0 and covering the TypeScript from
 Phase 1.
 
-The self-lint includes the prose. Every check `summary`, `why` and `fix`, every help string, every message template and every page under `docs/` runs through the prose engine with the `gspot` style. The Vale `Readability` package runs at a stated ceiling: Flesch reading ease 60 or above, the level of plain consumer writing. A message a person without a coding background
+The self-lint includes the prose. Every check `summary`, `why`, and `help`, every help string, every message template and every page under `docs/` runs through the prose engine with the `gspot` style. The Vale `Readability` package runs at a stated ceiling: Flesch reading ease 60 or above, the level of plain consumer writing. A message a person without a coding background
 cannot follow fails the gate the same way a long function does.
 
 ## Documentation
 
 `docs/` is the user manual. Two kinds of page:
 
-- **Generated**, from the same data the binary uses, so they cannot drift. The docs build runs `docs/reference-pages.ts` first, and git ignores the pages it writes (D-153).
+- **Generated**, from the same validated definitions the binary uses, with completeness tests because a generator can still omit or misstate a contract. The docs build runs `docs/reference-pages.ts` first, and git ignores the pages it writes (D-153).
     - the command reference, from commander;
     - the settings reference, from the schema (`gspot list settings` prints the same keys);
     - one page per preset, from its manifest;
-    - one page per check, from its `summary`, `why` and `fix` (`explain` prints the same text);
-    - the decision log, copied from `architecture/`.
+    - one page per check, from its `summary`, `why`, and `help` (`explain` prints the same text);
 - **Written by hand**, six guides, each a task in plain English. Each guide is under two pages and every step is one command.
     - _Install gspot_;
     - _Run it in a repository you already have_ (what `init` deletes, carries and leaves alone);

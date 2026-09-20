@@ -4,11 +4,11 @@ Kind: language. Requires: formatting. Recommends: naming, structure, spelling.
 
 ## Detects and claims
 
-|                      |                                                           |
-| -------------------- | --------------------------------------------------------- |
-| Detect               | `.sql`, `.pgsql`, `.psql` in the tree                     |
-| Claims               | `.sql`, `.pgsql`, `.psql`                                 |
-| Required inspections | format, syntax, style, structure, naming, prose, spelling |
+|                         |                                                           |
+| ----------------------- | --------------------------------------------------------- |
+| Detect                  | `.sql`, `.pgsql`, `.psql` in the tree                     |
+| Claims                  | `.sql`, `.pgsql`, `.psql`                                 |
+| Required check coverage | format, syntax, style, structure, naming, prose, spelling |
 
 ## Tools
 

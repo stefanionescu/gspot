@@ -233,9 +233,9 @@ plugin and the launcher from the local registry of the test harness, which `GSPO
 names. No tracked file holds a path of one machine. The branch still cannot merge before the
 first release.
 
-## A-13 Default strictness, outside the banned terms
+## A-13 default strictness
 
-The shipped banned terms stay as they are. The count that does not come from them:
+Banned-term checks belong to `all`; `generate` and `service` leave the shipped lists (D-174). The count that does not come from them:
 
 | Source                                      | Findings held |
 | ------------------------------------------- | ------------- |
@@ -310,7 +310,7 @@ No framework layer exists:
 
 Five of the six reference repositories share one setup. ComfyUI-Pixaroma has no hooks and no
 tasks, so gspot owns everything there. The sections A-16 to A-20 are what the other five show.
-Each design below changes how init plugs in. None adds a file or a setting.
+Each design below changes how init plugs in. Recovery and hook dispatchers may add explicitly planned local files under the contracts in [03-configuration.md](03-configuration.md) and [10-hooks-ci-runners.md](10-hooks-ci-runners.md).
 
 | What the developer has                                   | Where                                                                   | What gspot does today                                              |
 | -------------------------------------------------------- | ----------------------------------------------------------------------- | ------------------------------------------------------------------ |
@@ -344,9 +344,8 @@ sets it in its setup task. A person who clones a gspot repository has no hooks u
 **Design (D-115).**
 
 - gspot never sets `core.hooksPath` in a repository where a tracked file sets it.
-- `gspot install` sets up one clone: the tools and the hooks (D-156). With a yes, init adds that
-  one line to the setup entry the repository has: the setup task, the `prepare` script, or a
-  Makefile target. The plan shows the line.
+- `gspot install` sets up one clone: the tools and the hooks (D-175). The developer runs it
+  explicitly. gspot adds no setup task or package lifecycle script.
 - `gspot doctor` and `gspot check` say when the policy names hooks and this clone runs none, with
   the command that fixes it.
 
@@ -426,7 +425,7 @@ Each row names the decision that answers it. A row marked open has a gap row in
 | adds a language or a framework later                                      | `gspot check` names it; `gspot add` selects it; its checks are on from the next run                                      | D-125                               |
 | meets a finding                                                           | `gspot explain`, `gspot check --fix`, or `gspot ignore`                                                                  | D-131                               |
 | must commit past a failing hook                                           | `--no-verify`; the failure text names it, and the push and CI still check                                                | D-117, D-123                        |
-| clones the repository on a new machine                                    | `gspot install`, alone or through the setup entry; a clone that is not set up says so on every run                       | D-156                               |
+| clones the repository on a new machine                                    | `gspot install`, explicitly; a clone that is not set up says so on every run                                             | D-156                               |
 | upgrades gspot                                                            | `gspot upgrade` prints what changes; new rules are on from the next run                                                  | D-165                               |
 | works on GitLab, also self-hosted                                         | `--ci gitlab` writes `.gitlab/ci/gspot.yml` with a code quality report; the system is found by its file                  | D-133, K-277                        |
 | works on another CI system                                                | no file; the plan prints the three lines to paste, and one guide shows them                                              | K-278                               |
@@ -464,8 +463,7 @@ formatter, and documentation rules.
 init writes `level = "recommended"`, and `level = "all"` turns the rest on. The second level
 is not called `strict`: TypeScript and JavaScript already own that word.
 
-The banned terms of the naming policy are `recommended`
-and stay on.
+The banned terms of the naming policy run at `all` only (D-174).
 
 ## A-23 The init question is one list of 52
 

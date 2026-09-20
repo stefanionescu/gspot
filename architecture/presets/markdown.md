@@ -4,11 +4,11 @@ Kind: language. Requires: formatting. Recommends: docs, spelling.
 
 ## Detects and claims
 
-|                      |                                       |
-| -------------------- | ------------------------------------- |
-| Detect               | `.md`, `.mdx` in the tree             |
-| Claims               | `.md`, `.mdx`                         |
-| Required inspections | format, style, links, prose, spelling |
+|                         |                                       |
+| ----------------------- | ------------------------------------- |
+| Detect                  | `.md`, `.mdx` in the tree             |
+| Claims                  | `.md`, `.mdx`                         |
+| Required check coverage | format, style, links, prose, spelling |
 
 ## Tools
 

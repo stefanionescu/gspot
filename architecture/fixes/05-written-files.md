@@ -60,13 +60,11 @@ unless gspot wrote it in this run. `NEVER_STRAY` names three files. A hand-made
 `.gspot/gitleaks-baseline.json`, which the secrets preset asks the developer to make, is a text
 file under `.gspot/` that no template writes, so `apply` deletes it.
 
-**Target.** `apply` deletes a file only when the file carries the mark of gspot (D-100). A file
-with no mark is left alone and named by `gspot doctor` as not owned.
+**Target.** `init`, `apply`, `remove`, and `uninstall` share the ownership and recovery contract in [03-configuration.md](../03-configuration.md). Unowned files and developer-modified owned files survive. Uninstall never recursively removes `.gspot/`.
 
 **Files.** `emit/apply-command.ts`, `checks/integrity/generated-drift.ts`, `doctor/changes.ts`.
 
-**Logic.** `isStray` is `hasHeader(...)` for a text file and the `_gspot` key for a JSON file, and
-nothing else. The path prefix test goes. The gitleaks baseline moves to the root of the
+**Logic.** Marks identify candidate managed files, but deletion also checks the recorded installed hash or a reproducible expected generated value for a fresh clone, path confinement, and completed recovery. Modified files are reported, not discarded. The path prefix test goes. The gitleaks baseline moves to the root of the
 repository as `.gitleaks-baseline.json`, a file the developer owns, and the secrets manifest
 names that path.
 
@@ -74,7 +72,7 @@ names that path.
 mark is never a stray.
 
 **Tests.** A planted repository with a hand-made JSON file under `.gspot/` holds the file after
-`apply`, and a line for it in `doctor`.
+`apply`, `remove`, and `uninstall`, and a line for it in `doctor`. A modified marked file, a no-git takeover, an unborn repository, and a dirty task replacement all preserve the developer's bytes.
 
 **Done when.** That case passes.
 
@@ -91,10 +89,10 @@ developer.
 **Files.** `emit/managed-blocks.ts`, `emit/targets.ts`, the prose manifest, `commands/uninstall.ts`.
 
 **Logic.** The fixed lines are `.gspot/cache/`, `.gspot/node_modules/`,
-`.gspot/.venv/`, and `.gspot/report.*`. A manifest adds a line through a field named
+`.gspot/.venv/`, `.gspot/report.*`, `.gspot/recovery/`, and `.gspot/ownership.json`. A manifest adds a line through a field named
 `untracked`, and the prose manifest names the folder of each Vale package there. The block goes
 at the end of the file. In a folder with no git, `targets.ts` leaves the block out. `uninstall`
-removes the block, and deletes the file when the block was all it held.
+removes the block only when no retained recovery or local state still needs its ignore entries, and deletes the file only when the block was all it held.
 
 **What goes.** The hand-written list in `gitignoreBlock()`, and the line `.gspot/last.sarif`.
 

@@ -294,7 +294,7 @@ loosen both to loosen one.
 
 ## D-49 The repository pins its gspot version
 
-`.gspot/version` and the runner surface pin one gspot version per repository. A binary of another
+`.gspot/version` and the runner config pin one gspot version per repository. A binary of another
 version refuses `check`, `apply` and the writing commands with the two remedies. A global install
 exists to run `init`; after that, the hook, and the runner resolve the pin. Rejected: whatever
 version is on `PATH`, which makes two people on one repository run two rule sets and makes an
@@ -302,7 +302,7 @@ upgrade happen by accident.
 
 ## D-50 every check explains itself in plain English
 
-Each check carries `summary`, `why` and `fix`, written for a person who does not code, validated
+Each check carries `summary`, `why`, and `help`, written for a person who does not code, validated
 non-empty at load, printed by `explain` and the finding line, and rendered into `docs/`. The prose, help strings and docs of gspot itself pass the prose engine and a readability ceiling in its own gate.
 Rejected: messages alone plus the tool's website, which assume a reader who already knows what a
 barrel file or a call-through is.
@@ -512,13 +512,7 @@ which D-27 forbids.
 
 ## D-76 The suppressions flag appears only when the file exists
 
-Recorded 2026-09-18, with the ESLint suppression baselines (D-54). ESLint exits with an error
-when `--suppressions-location` names a file that does not exist, and a repository whose first
-run had no ESLint findings has none. The `{suppressions}` placeholder therefore expands to the
-flag, the path and `--pass-on-unpruned-suppressions` when the file exists and to nothing
-otherwise. Unpruned suppressions never fail a check: a count that fell is the baseline model,
-and `apply --baseline` prunes them. Rejected: writing an empty suppressions file at `init`,
-which puts a file in every repository for the few that need it.
+Replaced by D-165. The suppression placeholder and automatic ESLint baselines are removed.
 
 ## D-77 One binary compares the disk with its own render
 
@@ -572,12 +566,15 @@ command-line rules it has no use for.
 
 Replaced by D-121.
 
-## D-83 `init` validates, writes, runs, then deletes
+## D-83 `init` validates, saves recovery, writes, then deletes
 
-`init` checks every flag against its list and refuses a working tree with uncommitted changes
-unless `--allow-dirty` is given. It writes the new files, runs the install and the first check,
-and deletes the replaced files last. A failure before the last step leaves the old configuration in place.
-Rejected: a backup folder, which git already is.
+The sequence in [02-cli.md](02-cli.md) is authoritative. `init` runs no check. Before changing or
+deleting an existing file, it saves recoverable bytes and ownership metadata. Follow the contract
+in [03-configuration.md](03-configuration.md).
+
+Git is not a backup for untracked files, an unborn repository, or `--allow-dirty`. Deletion
+requires a usable replacement and a completed recovery record. This replaces the original
+first-check and Git-only recovery decision.
 
 ## D-84 The version has one source
 
@@ -675,19 +672,21 @@ Vitest configuration, because the repository owns its `vitest.config` and a seco
 
 ## D-97 The yap-swift-app migration changes the real repository
 
-The owner asked for the migration as part of the build. It runs on the branch `chore/gspot` of the
-real repository: the old lint folder, hooks, tasks, rule files, and pins go, gspot comes in, and
-`gspot check` runs over everything. Findings in the application code enter baselines and a
-report, and nobody fixes them here, because the app is not the subject. A gspot defect the run
-exposes is fixed in gspot. Rejected: a worktree run only, which proves the plan and leaves the
-old setup in place.
+The migration changes the real repository on `chore/gspot-adoption` after the implementation
+gate in D-121. Replace only verified obsolete tooling. Preserve unrelated files and recovery
+copies.
+
+Run the complete checks and record app findings without baselines (D-165). App-source
+fixes are outside this migration; every gspot defect it exposes is fixed in gspot before
+adoption completes. The exact branch and verification procedure is owned by
+[22-remaining.md](22-remaining.md). Rejected: a worktree-only deliverable that leaves the real
+repository's setup unchanged.
 
 ## D-98 A structure check carries the name of its language
 
 `structure/trivial-function` reads shell scripts, and one check name maps to one analysis. The
 same idea over Python is `python/trivial-function`, and over Swift `swift/trivial-function`. A
-repository that selects both presets runs both. Each has its own baseline and its own ignore
-entries. Rejected: one id with an analysis for each language behind it, which makes one baseline
+repository that selects both presets runs both. Each has its own ignore entries; baselines are removed by D-165. Rejected: one name with an analysis for each language behind it, which makes one baseline
 hold two languages and one `gspot ignore` silence both.
 
 Ruff owns what Ruff already checks. `import-layout` is `E402` and `PLC0415`, and `import-boundary`
@@ -701,13 +700,11 @@ every error twice. A check may therefore carry `takes_over = "<check name>"`: in
 plans both, the named check is skipped with the note `<taker> runs it here`. A taker that is
 itself skipped takes nothing.
 
-The framework command runs with `CI=1`, because Next.js otherwise installs the packages it misses
-with whatever package manager it finds. The `tsconfig.json` it rewrites is put back as committed.
-A check never installs anything and never leaves a tracked file changed.
+The framework command runs in an isolated snapshot with `CI=1` and missing-dependency installation disabled. Generated types and build changes stay in scratch space. A check never restores developer files from Git or installs missing packages (D-152).
 
 `integrity/required-rules` reads a `[required_rules]` table in each manifest: a file ending, and the
 ESLint rules that must be on for a file with that ending. The check asks ESLint for the resolved
-configuration of one tracked file per ending (`eslint --print-config`). A rule the policy turned
+configuration of every governed tracked file through ESLint, grouping equal results without assuming one extension means one configuration. A rule the policy turned
 off with a reason is a decision and is not reported. The first run of this check found that the
 React hooks rules were never on in the nextjs preset, which is the class of defect it exists for.
 
@@ -817,13 +814,9 @@ hooks of gspot where none exist. This amends D-101, which named the hook file on
 task that are not lint stay. Rejected: a block in the hook file in every case, because the task it
 calls still runs the old lint.
 
-## D-115 The setup entry of the repository installs the hooks
+## D-115 Setup is an explicit `gspot install`
 
-`core.hooksPath` belongs to one clone. gspot never sets it where a tracked file sets it. With a
-yes, `init` adds the one line `gspot install` to the setup entry the repository already has: a
-`setup` task, a `prepare` script, or a Makefile target (D-156). An added line is no replaced
-script. `gspot doctor` and `gspot check` report a clone whose config names hooks and that runs
-none.
+A teammate runs `gspot install` after cloning. gspot creates no package lifecycle script and appends to none: no `prepare`, `preinstall`, `install`, or `postinstall`. It injects no setup task or Makefile target either. Existing setup commands remain the developer's responsibility. Hook composition follows [10-hooks-ci-runners.md](10-hooks-ci-runners.md), and `doctor` reports missing clone-local setup.
 
 ## D-116 Existing command names keep working
 
@@ -849,13 +842,12 @@ answers what is wrong, and this answers what is there.
 
 Every check and every opt-in tool rule is in the level `recommended` or in the level `all`. init
 installs `recommended` and asks nothing about it. One key at the top of `gspot.toml` holds the
-choice: `level = "recommended"` or `level = "all"`. A profile may name it. The banned terms are
-`recommended`.
+choice: `level = "recommended"` or `level = "all"`. A profile may name it. The banned terms are `all`.
 
 This reverses the rejection in D-03, and answers its two worries. A stranger picks nothing,
 because `recommended` is what init writes. No useful rule sits behind the switch, because the
 rule for sorting is fixed. A check is `recommended` when it finds a defect, a security problem,
-dead code, or a name from the banned terms. A check that enforces a layout, an order, a header, or
+or dead code. A check that enforces a layout, an order, a header, or
 one way to write a thing that works is `all`.
 
 The second level is not called `strict`, because TypeScript (`"strict": true`) and JavaScript
@@ -869,15 +861,18 @@ of description and its number of checks, and found items start ticked.
 
 ## D-121 yap-swift-app first, and the owner is asked before any other repository
 
-The owner set this order on 2026-09-19, and amended the first form of this decision.
+The owner amended this order on 2026-09-20. No app branch is deleted before gspot is implemented,
+its tests and self-lint pass, and the exact candidate's CI is green. The full gate and branch
+commands are authoritative in [22-remaining.md](22-remaining.md).
 
-1. The branch `chore/gspot` of yap-swift-app is deleted, on that machine only. Nothing is pushed
-   to the app, and no other branch is touched.
-2. Every gap of [18-gaps.md](18-gaps.md) is fixed in this repository. This step ends when gspot
-   checks itself with no ignore entry (D-135), and its run on GitHub is green (K-204, S-12).
-3. gspot is installed in yap-swift-app from the source tree, on a new branch. The table that
-   opens [20-adoption.md](20-adoption.md) is measured again beside the first numbers, and every
-   file the install writes is read.
+1. Complete implementation, tests, self-lint at all with no ignores, manual-stage verification,
+   documentation implementation, and local release-package validation in gspot. Public release,
+   deployment, and app-derived evidence follow adoption; they do not form a circular prerequisite.
+2. Delete only the old local `chore/gspot` branch after the gate, then create
+   `chore/gspot-adoption` from the verified app baseline. Nothing is pushed to the app.
+3. Install the packaged candidate through the local registry (D-158), not source links. Measure
+   the adoption table again and inspect every written or removed file. Fix exposed gspot defects,
+   repeat verification, and update documentation with real evidence.
 4. The owner is asked. No install starts in yap-text-inference, slopshop, yap-landing, or any
    other repository before the owner says so, and each one after that is asked for again. Each
    is measured against its sheet in [17-migration.md](17-migration.md).
@@ -926,7 +921,7 @@ init in a repository with no source installs the presets that read no language: 
 formatting, spelling, secrets, and the rule files. `gspot check` names a language that has files
 and no preset, with the `gspot add` command. `preset-arrival.test.ts` covers the second half.
 
-## D-126 The first install never changes a build, and house style is strict
+## D-126 The first install never changes a build, and house style is `all`
 
 The `recommended` level of D-119 holds no check that changes what the tools of the developer accept.
 The typescript preset writes no `extends` into a `tsconfig.json` at that level, and
@@ -936,14 +931,14 @@ The typescript preset writes no `extends` into a `tsconfig.json` at that level, 
 - a README in each scope and the banned headings;
 - the shell script header;
 - the types folder and the folder with one file.
-  The banned terms stay
-  `recommended`. The sentence about subagents leaves the managed block: a repository says that in its own
-  part of `CLAUDE.md`.
+
+The banned terms are `all`; `generate` and `service` are not banned. The sentence about subagents leaves the managed block: a repository says that in its own
+part of `CLAUDE.md`.
 
 ## D-127 The mise file has one place
 
 mise loads a second file only from a `conf.d` folder, so a file of its own is how gspot adds pins
-and tasks and never edits `mise.toml`. The file is `.mise/conf.d/gspot-tools.toml` in every
+and new tasks. It edits an existing `mise.toml` task only when that exact replacement was accepted in the init plan (D-116), with recovery. The file is `.mise/conf.d/gspot-tools.toml` in every
 repository: mise reads that folder whether or not the repository had a `.mise` folder before. One
 constant holds the path. This amends D-106. Rejected: one place where `.mise/` exists and another
 where it does not, which is two paths to test for no gain.
@@ -961,10 +956,7 @@ renamed (D-136).
 ## D-129 One word for a run that writes nothing
 
 `--dry-run` means "show what happens and write nothing" on `init`, `upgrade`, `uninstall` and
-`check --fix`, and on no other command. `upgrade --check` takes that name. The six commands that
-edit one line of `gspot.toml` lose the flag, because the file is tracked and `git diff` shows the
-edit. Rejected: keeping it everywhere for symmetry, because no test and no guide ever used it on
-those commands.
+`check --fix`. D-163 extends it to `install`, `apply`, `add`, and `remove`; that is the current command surface. `upgrade --check` takes that name. Dry-run may use disposable scratch space for a complete plan, but changes no repository files, ownership records, hooks, pins, or installed tool environments.
 
 ## D-130 A refusal is a `--no-` flag, never the value `none`
 
@@ -1205,8 +1197,8 @@ the code does today, and which runs plugins on an ESLint they do not support.
 One file registered 130 analyses under names of their own, and the folders of `src/` were named
 after presets and package managers (K-79). A built-in check that is not structure, naming, or
 prose is now one file under `src/checks/`. The folder is the first part of the check name, and the
-file is the second part. `checks/registry.ts` maps the id to the function, and a unit test holds
-that map equal to the manifests. The manifest key `analysis` goes, because the id is the name.
+file is the second part. `checks/registry.ts` maps the name to the function, and a unit test holds
+that map equal to the manifests. The manifest key `analysis` goes, because the check name already selects the analysis.
 
 The family `integrity` keeps the checks over the policy and the files gspot writes. A check that
 reads documents, dependencies, licenses, or secrets takes the family of its preset:
@@ -1224,8 +1216,7 @@ D-128 still names the two folders `swift` and `python` under `checks/`.
 D-145 left one point open: a repository that runs gspot through npm, pnpm, yarn, or bun needs the
 `gspot` launcher in its `devDependencies`. The launcher is the tool the developer chose, and it
 is no lint tool, so gspot writes that one line at `init` and removes it at `uninstall`. It writes
-no other package, no `prepare` script, and no pin of a tool. The hooks are installed by the setup
-entry of the repository (D-115). Rejected: a global install only, which leaves a clone with no
+no other package, no `prepare` script, and no pin of a tool. The developer installs hooks explicitly with `gspot install` (D-115). Rejected: a global install only, which leaves a clone with no
 way to get the version the repository pins.
 
 ## D-148 The type check extends the config of the repository and never edits it
@@ -1237,14 +1228,14 @@ which extends the file of the repository and adds flags that only add errors: `s
 of the repository holds `references`, the check builds them as they are. Rejected: a shared base
 the developer extends, because a Vite, Vue, or Svelte app then stops resolving its imports.
 
-## D-149 An idea is written once, and each language lists it under its own id
+## D-149 An idea is written once, and each language lists it under its own name
 
 The trivial-function, call-through, and duplicate-function logic existed three times, with three
 sets of constants. The ideas did not hold in every language alike (K-87, K-235). One
 analysis holds each idea over the syntax tree, and a small table for each language names its
 node kinds.
 
-D-98 stands: the manifest of each language lists the idea under an id of its own, so
+D-98 stands: the manifest of each language lists the idea under a name of its own, so
 a baseline and an ignore hold one language. D-02 stands: TypeScript keeps its ESLint rules, and
 one table of cases holds both implementations to the same answers.
 The fix file of that row holds the table of what runs where. Rejected: moving
@@ -1273,7 +1264,7 @@ packages, and the off list with its reasons is data of the prose preset. This re
 
 One check ran `git clean`, one ran `git checkout`, and the site checks built into the real
 output folder (K-156, K-159, K-154). A check that needs to run a generator or a build works
-on a copy under `.gspot/cache/`, and compares. The push hook checks the files of the pushed commits, in place (K-70). Drift of generated files is a check,
+on a copy under `.gspot/cache/`, and compares. The push hook checks immutable snapshots of the pushed commits, not the working tree (K-70). Drift of generated files is a check,
 `integrity/generated-drift`, and `apply --check` is gone (K-246). Every file gspot writes goes to
 a temporary file in the same folder and is renamed, so a full disk leaves the old file whole
 (K-257).
@@ -1281,7 +1272,7 @@ a temporary file in the same folder and is renamed, so a full disk leaves the ol
 ## D-153 The reference pages of the manual are built, not tracked
 
 293 of the 309 tracked files under `docs/` were pages a script writes (K-205). The docs build
-writes them first, git ignores them, and the check `docs/generated` is gone. This replaces D-78.
+writes them first, git ignores them, and the check `docs/generated` is gone. Keep the single generator, remove the public decision-log copy, and require owned atomic output and public-contract coverage (K-303, K-304). Do not add a second architecture generator. This replaces D-78.
 The check `docs/samples` keeps the hand-written pages and this folder true: it loads every config
 sample and parses every `gspot` command a document shows (S-11).
 
@@ -1299,22 +1290,11 @@ A `[[check]]` was cached on the files its `paths` name, and its command read mor
 outlived its cause (K-69). `paths` says when the check runs. `inputs` says what it reads, and the
 cache key holds those files. A check with no `inputs` is never cached.
 
-## D-156 `gspot install` sets up one clone
+## D-156 `apply` resolves tools; `install` sets up one clone
 
-A teammate who clones a repository that uses gspot had no way to get the lint tools and the
-hooks. D-145 took the `prepare` script away, and `apply` only writes files (D-132). The command
-is `gspot install`, the word a developer already knows from `npm install`, `mise install`,
-`lefthook install`, and `pre-commit install`. It installs the mise tools, `.gspot/node_modules`,
-`.gspot/.venv`, and the hooks of this clone. It writes no tracked file, and it is safe to run
-twice.
+`apply` owns generated manifests and dependency lockfiles, resolving changed requirements in temporary storage before replacing a lockfile. `install` requires matching committed locks and installs their recorded versions without changing tracked files. It installs tools and composes local hooks; it never rewrites a conflicted lockfile.
 
-`init` and `upgrade` end by calling it, and `--no-install` skips it. The CI job of gspot runs it
-as its one setup step. A clone that is not set up never fails without a word: `gspot check`,
-`gspot doctor`, and a missing tool each print `Run: gspot install`.
-
-Rejected: `check` installs what it misses, because a lint run that downloads packages breaks
-offline and in CI and surprises the person who ran it. Also rejected: a guide with two commands
-to copy, which every team then wraps in a script of its own.
+A fresh clone runs `gspot install`. A changed or conflicted manifest or lock needs `gspot apply`, review and commit, then `gspot install`. Full lifecycle and dry-run behavior are in [02-cli.md](02-cli.md) and [03-configuration.md](03-configuration.md). No lifecycle or setup script is injected (D-115).
 
 ## D-157 Python tools install under `.gspot/` with uv
 
@@ -1334,12 +1314,11 @@ release, as `GSPOT_BIN` does (D-65). Rejected: a packed file under a `file:` pat
 path of one machine into a tracked file. Also rejected: a public prerelease, which cannot be
 undone and needs the npm name settled first (K-121).
 
-## D-159 After the first release, a rename ships with its rewrite
+## D-159 An upgrade migrates before validating the new schema
 
-D-134 rests on two facts: gspot has no release, and it has one install. From the first release
-on, `gspot upgrade` rewrites a renamed key of `gspot.toml`, and its plan lists each rewrite.
-The `version` key of the file moves only for a change `upgrade` cannot rewrite. A removed flag
-stays an unknown flag, and its message names what took its place for one major version.
+After the first release, a versioned rename ships with a migration. The target binary reads the old config as TOML, applies ordered migrations in memory, then validates the target schema. `upgrade --dry-run` shows config, generated-file, lockfile, and pin changes without writing them.
+
+A real upgrade preserves recovery first and updates the version pin only after the new config and generated files are valid. This is the explicit exception to refusing a mismatched pin. Unknown migrations fail without replacing originals. See [02-cli.md](02-cli.md) for failure and retry behavior.
 
 ## D-160 Every check and every rule turns off and on from the command line, one way each
 
@@ -1382,17 +1361,16 @@ Replaced by D-165.
 
 ## D-163 One word for the name of a thing, and `--dry-run` wherever many lines change
 
-The documents said check id, preset id, rule id, and setting key for one idea. Each is a name: a
+The documents said check name, preset name, rule name, and setting name for one idea. Each is a name: a
 check name, a preset name, a rule name, a setting name. Usage lines show the thing alone, as git
 shows `<branch>`: `gspot ignore <check>`, `gspot add <preset>`, `gspot set <setting> <value>`.
 The manifest key `id` of a preset and of a check becomes `name`, as a tool already has.
 
 `--dry-run` exists on every command that changes more than one line: `init`, `install`, `apply`,
-`baseline`, `add`, `remove`, `upgrade`, `uninstall`, and `check --fix`. This amends D-129. `ignore`
+`add`, `remove`, `upgrade`, `uninstall`, and `check --fix`. This amends D-129. `ignore`
 and `set` change one line of a tracked file, and `git diff` shows it.
 
-The findings of the baseline are listed by `gspot list baseline [<check>]`, beside
-`gspot list settings`. No command has a `--held` flag, and no global flag prints licenses: the
+`gspot list settings` lists setting names. Baselines remain deleted (D-165). No command has a `--held` flag, and no global flag prints licenses: the
 notice ships as a file beside the binary and in each package.
 
 ## D-164 A reason is optional, and a repository may require it
@@ -1409,7 +1387,7 @@ reason that says nothing, such as `N/A` or `TBD`, is refused. The same key decid
 ## D-165 gspot has no baseline, and installing it runs no check
 
 Decided by the owner on 2026-09-19. gspot manages the lint tools and the rules of a repository.
-It does not decide when a developer lints, and it blocks nobody.
+It does not run lint during installation. Hooks and CI can still block later changes on reported defects.
 
 - `gspot init` detects, writes the config, and installs the tools. It runs no check, so an
   install takes as long as the downloads take. The same holds for `gspot add`, `gspot upgrade`,
@@ -1417,9 +1395,9 @@ It does not decide when a developer lints, and it blocks nobody.
 - Nothing records old findings. `.gspot/baseline.json`, the baseline a tool keeps itself, the
   command `gspot baseline`, the check `integrity/baselines-current`, and the widening step are
   gone. `gspot check` reports what it finds today, and nothing else.
-- An old repository adopts gspot through what already exists. The hooks and the CI job check the
-  files a change touches (`--staged`, `--changed`). The level `recommended` keeps taste out.
-  `gspot ignore` turns a check or a rule off. `git commit --no-verify` and `git push --no-verify`
+- The hooks and the CI job check the
+  affected projects and changed file lists (`--staged`, `--changed`). D-168 keeps every finding of a whole-project tool, so old errors can still block adoption. The level `recommended` excludes house-style judgments.
+- `gspot ignore` turns a check or a rule off. `git commit --no-verify` and `git push --no-verify`
   pass a hook, and the failing run names them.
 - The developer decides when to run `gspot check` over the whole repository, and when to run
   `gspot check --fix`.
@@ -1441,42 +1419,17 @@ each project of a monorepo (D-108) and asks which to take. A project the develop
 goes into `exclude`, and `gspot set exclude --remove <path>` brings it back. Rejected: an
 `[[ignore]]` for each check of the folder, which is fifty entries for one wish.
 
-## D-167 gspot never takes a hook of a repository away
+## D-167 Hook composition must execute both hooks
 
-The first design wrote hooks into `.gspot/hooks/` and pointed `core.hooksPath` there. That setting
-turns every file under `.git/hooks/` off without a word: a hook a developer wrote for one clone,
-and the four hooks git-lfs installs. The rule is that gspot adds one line and takes nothing.
+Preserve the repository's hook manager and never set `core.hooksPath`. Use its native composition when supported. For unmanaged local hooks, preserve the original executable and install a marked dispatcher at the Git-resolved hook path. Never append after an arbitrary `exec` or `exit`.
 
-| The repository has                                         | Where the gspot line goes                              |
-| ---------------------------------------------------------- | ------------------------------------------------------ |
-| a hook tool: husky, lefthook, pre-commit, simple-git-hooks | the config of that tool, as one managed block (K-275)  |
-| tracked hooks that `core.hooksPath` points at              | the task the hook calls, or else the hook file (D-114) |
-| hooks under `.git/hooks/`, in this clone alone             | the end of that hook file, as one managed block        |
-| no hooks                                                   | a new `.git/hooks/pre-commit` and `pre-push`           |
+Replay buffered stdin independently to each hook, forward arguments and environment, and propagate failures. Uninstall restores only unchanged owned dispatchers. Tracked hooks require a supported reachable insertion or an explicit plan; unsupported forms remain intact with a setup error. [10-hooks-ci-runners.md](10-hooks-ci-runners.md) owns the detailed contract and tests.
 
-New hooks go under `.git/hooks/`, which is where `pre-commit install` and `lefthook install`
-write theirs. A tracked folder such as `.githooks/` saves no step, because `core.hooksPath` is a
-setting of one clone, and every clone sets it again. It also adds a folder to the repository.
+## D-168 Changed paths select checks, not whole-project findings
 
-gspot never sets `core.hooksPath`, and the folder `.gspot/hooks/` is gone. The first two rows
-are tracked, so `init` writes them once. The last two live in one clone, so `gspot install`
-writes them in each clone, as `lefthook install` and `pre-commit install` do. `gspot uninstall`
-removes its block and leaves the rest of the file. This amends D-101 and D-115.
+Changed-file filtering cannot establish that a change is safe: editing an export can cause an error in an unchanged caller. File-list tools may run on selected files. A whole-project tool runs for affected projects and retains every finding, including findings without a file, and every tool failure. Deleted and renamed paths, shared configuration, dependencies, and project references also trigger affected checks; uncertain impact runs the broader set.
 
-## D-168 A run over changed files reports findings in those files alone
-
-Some checks read a whole project: a type checker, a dead code tool, an import graph. With no
-baseline (D-165), such a check reports every old problem of the project on every push, and the
-developer passes the hook every time. In a run with `--staged` or `--changed`, a
-whole-project check still reads the whole project, because it has to. That is how these tools
-work, and no flag of theirs narrows it: whether an export is unused depends on every file that
-may import it. Such checks sit in the push stage, run for the project of a changed file alone,
-and are cached.
-
-gspot then keeps the
-findings in the files the change touches. The exit code comes from those alone. One line counts
-the rest: `214 more findings in files you did not change (gspot check)`. `gspot check` with no
-such flag reports everything.
+No baseline or hidden-findings count changes the exit status. Existing defects can therefore block a push. Adoption fixes or explicitly ignores them; it does not silently discard them. [10-hooks-ci-runners.md](10-hooks-ci-runners.md) owns revision selection and exact snapshots.
 
 ## D-169 One flag names the changed files
 
@@ -1485,7 +1438,7 @@ optional ref. `gspot check --changed` compares with the upstream branch, and
 `gspot check --changed=<ref>` compares with that ref. The value needs the equals sign, as
 `git diff --color=always` does, because a bare word after the flag is a path.
 
-The push hook and both CI jobs pass the base commit this way. `--since` goes, with no alias
+Interactive and CI changed runs use this flag with the revision semantics of [10-hooks-ci-runners.md](10-hooks-ci-runners.md). The push hook instead uses the internal `check --push` protocol, with all local/remote ref pairs from stdin. `--since` goes, with no alias
 (D-134). This amends D-123.
 
 ## D-170 The `.gitignore` block holds the paths of gspot alone
@@ -1495,6 +1448,8 @@ none. Where the file exists, the block goes at the end, and no other line is rea
 
 | Line                           | Why git never tracks it                |
 | ------------------------------ | -------------------------------------- |
+| `.gspot/recovery/`             | originals saved before replacement     |
+| `.gspot/ownership.json`        | clone-local ownership and restore data |
 | `.gspot/cache/`                | verdicts of past runs                  |
 | `.gspot/node_modules/`         | the installed npm tools                |
 | `.gspot/.venv/`                | the installed Python tools             |
@@ -1544,7 +1499,7 @@ The install is not all or nothing. Three installers do the work, and a rollback 
 good tools because one download failed. `mise install` and `npm install` behave the same way.
 `gspot doctor` shows the state of every tool at any time, so no clone is in an unknown state.
 
-`init` has written the config by then and exits 0. `gspot check` runs every check whose tool
+`init` has written the config by then and exits 0 for partial tool availability. It retains old tool configuration until usable replacements and recovery records exist; invalid config, unsafe paths, failed recovery, and unresolved required lock generation are setup errors, not successful partial installs. `gspot check` runs every check whose tool
 exists. A check whose tool is absent prints `missing` and fails the run, because a silent skip
 gives two verdicts on two machines.
 
@@ -1564,3 +1519,24 @@ was for is covered without it:
 
 One config file is what a developer expects, and an untracked second one gives two machines two
 verdicts. This replaces the local file of D-24 and amends D-103.
+
+## D-174 Public names and adoption defaults
+
+[19-names.md](19-names.md) owns the vocabulary: preset name, check name, rule name, and setting name. Domain definitions use `name`, not interchangeable `id` or `key`; references keep the entity field such as `Finding.check`. K-308 specifies parameter roles, action names, `help` versus `fix_command`, and check coverage. Third-party wire formats keep their required fields.
+
+[08-naming-policy.md](08-naming-policy.md) owns banned terms: only at `all`, with `generate` and `service` removed. Recommended findings require a demonstrated defect. A preferred abstraction or a house naming style does not qualify. Reference-project tests review the usefulness of findings, not only their count.
+
+## D-175 Boundaries, ownership, carryover, and serialization
+
+[03-configuration.md](03-configuration.md) owns these four contracts:
+
+- Confine managed outputs and deletions.
+- Save original content without relying on Git. Preserve unowned and modified files throughout the lifecycle.
+- Retain source configuration that cannot be represented.
+- Serialize for the destination format.
+
+Atomic rename is not a substitute for any of these guarantees.
+
+## D-176 Website source and deployment
+
+The website stays in `docs/` in this repository. [21-documentation.md](21-documentation.md) owns the release-aligned build, deployment, previews, domain cutover, and rollback contract. A site build alone is not a deployed website.

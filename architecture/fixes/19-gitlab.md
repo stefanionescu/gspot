@@ -71,7 +71,7 @@ so a rule a team turned off everywhere is lost in the next repository.
 `output/reporter.ts`, and the manifests of javascript and python.
 
 **Logic.** `isPlanned` in `levels.ts` plans a check whose level is within the level of the
-repository, or whose id is in `extra_checks`. `emit/tool-packages.ts` and `tool-environment.ts` leave out a tool
+repository, or whose name is in `extra_checks`. `emit/tool-packages.ts` and `tool-environment.ts` leave out a tool
 whose every check has an `[[ignore]]` with no rule and no paths.
 
 The `help:` line of a spelling finding prints `gspot set tools.typos.words <word>`. The profile
@@ -85,18 +85,18 @@ and nothing else.
 second repository with that rule off. A tool with every check ignored is absent from
 `.gspot/package.json`.
 
-**Done when.** The three cases pass, and `gspot --help` lists fifteen commands.
+**Done when.** The three cases pass, and `gspot --help` matches the public command list in [02-cli.md](../02-cli.md).
 
 ## K-287: one word for the name of a thing
 
 Closes K-287, K-288, and K-289.
 
-**What is wrong.** The help text and the messages say check id, preset id, rule id, and setting
+**What is wrong.** The help text and the messages say check name, preset name, rule name, and setting
 key for one idea. A manifest names a preset and a check by `id`, and a tool by `name`. Four
 commands rewrite many lines with no `--dry-run`. A reason
 is required on every ignore, so turning one rule off takes a sentence.
 
-**Target.** D-163 and D-164.
+**Target.** D-163, D-164, and the exact definition/reference mappings of [19-names.md](../19-names.md) (K-308).
 
 **Files.** `presets/manifest-schema.ts` and all 49 manifests (`id` becomes `name`),
 `commands/*.ts`, `output/messages.ts`, `policy/schema.ts`,
@@ -107,9 +107,9 @@ and `remove` take `--dry-run`, and each prints its plan and writes nothing,
 through the plan text `init` already has. `reason` is optional in the schema. `loosening.ts` and the
 refused reasons of `reasons.ts` apply only where `require_reasons = true`.
 
-**What goes.** The words id and key in everything a person reads, and the required reason.
+**What goes.** The use of id and key as synonyms for domain names, and the unconditional reason requirement. Structural map keys and mandated third-party fields keep their actual names.
 
-**Tests.** A unit test walks the help text and the messages and fails on `id` and `key`. A
+**Tests.** Contract tests verify name-based manifests, domain types, help and report fields; they allow real map keys, Git object IDs, SPDX identifiers and SARIF `ruleId`. A
 planted `gspot ignore` with no reason writes the entry. The same command with `require_reasons`
 on exits 2.
 

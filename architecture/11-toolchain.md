@@ -85,8 +85,9 @@ name     = "xcodebuild"
 provider = "host"                   # present or the check fails; gspot cannot install it
 ```
 
-One gspot version pins one version of every tool, so two repositories on one gspot version run
-the same tools. ESLint is pinned at the newest major that every shipped plugin supports (D-142).
+One gspot version pins one version of every managed tool. Locked dependencies and the package-manager version are
+also inputs to the installation. Host tools and the project's TypeScript retain their own
+versions; reports name them instead of promising byte-identical environments. ESLint is pinned at the newest major that every shipped plugin supports (D-142).
 A release test asks each registry for every pin, reads the ESLint range of every plugin, and
 fails a pin below what a reference repository runs.
 
@@ -101,7 +102,11 @@ fails a pin below what a reference repository runs.
 | any tool, with no mise            | nowhere; `doctor` prints the install command of the platform                                  |
 | a repository with no JavaScript   | the npm tools install with bun or npm, whichever the machine has, bun first (D-171)           |
 
-`gspot install` runs all of these for one clone (D-156). The lint tools of gspot are tools, not
+`gspot apply` resolves and writes tool lockfiles. `gspot install` installs their recorded contents
+without changing tracked files (D-156). A missing or conflicted lockfile requires `apply` first.
+No package lifecycle script or setup task runs gspot automatically.
+
+The lint tools of gspot are tools, not
 dependencies of the repository (D-145). gspot never writes
 one into `package.json`, and the ESLint of the developer, its config, and its plugins stay as
 they are. The generated ESLint config sits in `.gspot/`, so its imports resolve there. The type
@@ -148,8 +153,10 @@ Kept with a stated reason, where overlap looked possible:
 ## Verification
 
 `gspot doctor` finds every tool the selection needs, in this order: `.gspot/node_modules/.bin`,
-the `.venv/bin` of the scope, mise, and `PATH`. It never reads the `node_modules` of the
-repository for a lint tool. It runs the version command the manifest names and compares:
+the `.venv/bin` of the scope, the active `PATH`, and then mise shims. Paths activated by
+mise are part of `PATH`; a global shim must not replace that active toolchain. It never reads
+the `node_modules` of the repository for a lint tool. It runs the version command the
+manifest names and compares:
 
 | State    | Meaning                                                 | Effect on `check`                                    |
 | -------- | ------------------------------------------------------- | ---------------------------------------------------- |
@@ -187,24 +194,19 @@ presets available, not selected
   vitest  vitest in package.json          gspot add vitest
 
 action on upgrade
-  move the pin to 0.5.0, write .gspot/ again, install the tools
+  migrate config, write generated files and locks, move the pin to 0.5.0, install tools
 ```
 
 The rules section compares the rule lists of two configs as data, for every tool whose config
-lists rules. `gspot upgrade` moves the pin, runs `apply`, and installs the tools. It runs no
-check (D-165). It never edits
-`gspot.toml` and never commits. Before the first release, a removed setting is an unknown key (D-134). From the first release
-on, `upgrade` rewrites a renamed key and lists the rewrite in its plan (D-159).
+lists rules. `gspot upgrade` migrates old TOML before target-schema validation, writes config, generated outputs and locks with recovery, updates the pin last, then installs tools. It runs no check and never commits (D-159, D-165). [02-cli.md](02-cli.md) owns the sequence, dry-run and interruption behavior.
 
 ## Rollback
 
-`gspot upgrade --to 0.4.0` writes the files of the older version. Generated files and rule files
-are tracked, so `git revert` of the upgrade commit followed by `gspot apply`
-also brings the earlier state back.
+`gspot upgrade --to 0.4.0` requires a supported reverse migration. Otherwise, restore the previous config, generated files, lockfiles, and version pin together from the upgrade commit or recovery; run the matching older binary and `gspot install`. A rollback never silently discards settings unknown to the older schema.
 
 ## Network
 
 `upgrade` reaches the network to find a newer gspot and to read it. The install of tools reaches
-the registries. `apply` downloads the Vale packages at the level `all` alone. `check` and the
+the registries. `apply` may reach registries to resolve changed tool locks and downloads Vale packages at `all`. Immutable `install` only installs recorded dependency contents; it never regenerates locks. `check` and the
 hooks never reach the network, except for a check that declares `network`, which sits at `push`
 or `manual`.

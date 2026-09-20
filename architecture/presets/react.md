@@ -56,7 +56,7 @@ Nothing.
 
 ## Settings
 
-None. A rule the repository decides against is `gspot ignore typescript/eslint --rule <id>`.
+None. A rule the repository decides against is `gspot ignore typescript/eslint --rule <rule>`.
 
 ## Rule files
 

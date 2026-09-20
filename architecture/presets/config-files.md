@@ -5,11 +5,11 @@ language owns, so `.toml`, `.yaml` and `.json` files stop being spell-checked on
 
 ## Detects and claims
 
-|                      |                                                                                                                                                                                                                                                                                                         |
-| -------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Detect               | any repository                                                                                                                                                                                                                                                                                          |
-| Claims               | `.json`, `.jsonc`, `.json5`, `.yaml`, `.yml`, `.toml`, `.ini`, `.cfg`, `.properties`, `.env`, `.env.*` (tracked ones only), `.plist`, `.entitlements`, `.xcconfig`, `.xcstrings`, `.xml`, `.storyboard`, `.xib`, `.webmanifest`, `.nvmrc`, `.node-version`, `.python-version`, `_headers`, `_redirects` |
-| Required inspections | format, syntax, schema where a schema is known, style, spelling                                                                                                                                                                                                                                         |
+|                         |                                                                                                                                                                                                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Detect                  | any repository                                                                                                                                                                                                                                                                                          |
+| Claims                  | `.json`, `.jsonc`, `.json5`, `.yaml`, `.yml`, `.toml`, `.ini`, `.cfg`, `.properties`, `.env`, `.env.*` (tracked ones only), `.plist`, `.entitlements`, `.xcconfig`, `.xcstrings`, `.xml`, `.storyboard`, `.xib`, `.webmanifest`, `.nvmrc`, `.node-version`, `.python-version`, `_headers`, `_redirects` |
+| Required check coverage | format, syntax, schema where a schema is known, style, spelling                                                                                                                                                                                                                                         |
 
 ## Tools
 

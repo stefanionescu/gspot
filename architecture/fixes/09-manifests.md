@@ -26,7 +26,7 @@ parser that several checks share sits in `src/readers/`.
 New: `src/checks/registry.ts`. The same move happens under `tests/unit/` and `types/`.
 
 **Logic.** `registry.ts` is one map from a check name to a function with the signature
-`(input: EngineInput) => Promise<Finding[]>`. `run/engines.ts` looks the id of the planned check
+`(input: EngineInput) => Promise<Finding[]>`. `run/engines.ts` looks the name of the planned check
 up in it. The manifest key `analysis` goes.
 
 The family `integrity` keeps the checks over the
@@ -39,8 +39,8 @@ a file.
 **What goes.** `integrity/dispatch.ts`, the key `analysis` in 130 manifest entries, and the four
 folder names that told a reader nothing.
 
-**Tests.** A unit test holds the keys of the registry equal to the ids of every manifest check
-with `engine = "builtin"`, the one engine name for every check under `src/checks/`. The planted tests change their expected ids in the same commit.
+**Tests.** A unit test holds the keys of the registry equal to the names of every manifest check
+with `engine = "builtin"`, the one engine name for every check under `src/checks/`. The planted tests change their expected names in the same commit.
 
 **Done when.** `ls packages/cli/src` prints the 17 folders of the file tree.
 
@@ -313,7 +313,7 @@ recommends i18n where `next-intl` is a dependency.
 
 **What goes.** `tools.next.translations`.
 
-**Tests.** A manifest fixture with a repeated id fails.
+**Tests.** A manifest fixture with a repeated name fails.
 
 **Done when.** That fixture fails, and the Next.js planted repository passes with i18n selected.
 

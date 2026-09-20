@@ -1,6 +1,7 @@
 # gspot Checks Itself
 
-Row 24 of the build order, and the last. gspot runs gspot with no `[[ignore]]` entry, and still
+This is the self-verification workstream of the pre-adoption gate in
+[22-remaining.md](../22-remaining.md), not the last feature to implement. gspot runs gspot with no `[[ignore]]` entry, and still
 leaves parts of itself unread: its templates, its documents, its manual, and its tests in any
 hook. This step closes those, after the renames, so the gate of this repository means what it
 says.
@@ -79,18 +80,16 @@ places.
 check. The pages that repeat a manifest are written from it.
 
 **Files.** `gspot.toml`, `checks/docs/stale-paths.ts`, new `checks/docs/samples.ts`,
-`docs/reference-pages.ts`, new `architecture/presets.ts`.
+`docs/reference-pages.ts`, and the public-reference contract tests (K-304).
 
 **Logic.** The three folder exemptions go. One setting, `tools.docs.foreign_repositories`, names
 the other repositories this folder writes about, and a path under one of those names is skipped.
 `docs/samples` loads every `toml` block that holds `version = 1` through the config reader, and
 parses every `gspot` line of a `bash` block with the program. It also reads each check name and
 setting name in code ticks against the manifests, and every `gspot` command inside a `summary`,
-a `why`, and a `fix` of a manifest.
+a `why`, and a `help` of a manifest.
 
-`architecture/presets.ts` writes the tables of
-each preset page and the tree blocks of `16-file-tree.md` from the manifests and the disk, and
-the hand-written text of a page stays. The build of the manual runs as a `[[check]]` at the
+Do not add `architecture/presets.ts`. Generate implemented reference facts once in the public manual. Architecture pages state intended behavior and link to that reference where current detail is needed. Target-only names are checked against their explicit implementation gap, not falsely required to exist in today's code. Delete redundant current-state inventories instead of adding another generator to maintain them. The build of the manual runs as a `[[check]]` at the
 `manual` stage, and the link exemption goes.
 
 **What goes.** Three exemptions, one link exemption, and the tables of 49 preset pages as text
@@ -98,7 +97,7 @@ written by hand.
 
 **Tests.** A document that names a removed flag fails `docs/samples`.
 
-**Done when.** It passes on `architecture/` and `docs/` with no exemption.
+**Done when.** Public examples match shipped behavior; architecture distinguishes planned names with tracked gaps. No broad folder exemption hides broken links or untracked promises.
 
 ## S-15: `01-product.md` promises what no test holds
 

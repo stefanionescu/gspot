@@ -20,7 +20,7 @@ the commit that closes its row.
 ## The files
 
 - [00-delete-first.md](00-delete-first.md): the four presets, the removed commands and flags, and every key, field, and rule nothing uses.
-- [01-first-fixes.md](01-first-fixes.md): CI, the checks that destroy work, the checks that pass when they did not run, and the other wrong answers.
+- [01-first-fixes.md](01-first-fixes.md): the checks that destroy work, the checks that pass when they did not run, and the other wrong answers.
 - [02-takeover.md](02-takeover.md): what `init` reads, what it proposes, and what it carries.
 - [03-hooks.md](03-hooks.md): the hook of the repository, the command names of the team, and lint tables in a shared manifest.
 - [04-speed.md](04-speed.md): cache keys, one parse for a scope, one session for `init`, and an incremental Swift build.
@@ -43,3 +43,7 @@ the commit that closes its row.
 - [21-manual.md](21-manual.md): the README, the guides, and the site.
 - [22-launch.md](22-launch.md): Windows, and a release that fails before it ships something broken.
 - [23-scenarios.md](23-scenarios.md): root pointers, no git, git edge cases, line ends, merges, more hook tools, both CI jobs, other CI systems, and other agent files.
+
+- [24-contracts.md](24-contracts.md): path boundaries, lifecycle recovery, contract consistency, useful adoption defaults, and site deployment. Safety work is a prerequisite of its affected step; deployment follows release.
+
+- [25-simplification.md](25-simplification.md): keep necessary build work, remove unsafe generation and silent failure handling, validate script arguments, fix file-URL paths, and unify domain names and action/result contracts.

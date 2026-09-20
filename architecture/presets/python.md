@@ -4,11 +4,11 @@ Kind: language. Requires: formatting. Recommends: structure, naming, spelling, d
 
 ## Detects and claims
 
-|                      |                                                                              |
-| -------------------- | ---------------------------------------------------------------------------- |
-| Detect               | `.py` in the tree; `pyproject.toml`; `requirements*.txt`; a `python` shebang |
-| Claims               | `.py`, `.pyi`, `pyproject.toml`, extensionless files with a `python` shebang |
-| Required inspections | format, syntax, style, types, structure, naming, prose, spelling             |
+|                         |                                                                              |
+| ----------------------- | ---------------------------------------------------------------------------- |
+| Detect                  | `.py` in the tree; `pyproject.toml`; `requirements*.txt`; a `python` shebang |
+| Claims                  | `.py`, `.pyi`, `pyproject.toml`, extensionless files with a `python` shebang |
+| Required check coverage | format, syntax, style, types, structure, naming, prose, spelling             |
 
 ## Tools
 

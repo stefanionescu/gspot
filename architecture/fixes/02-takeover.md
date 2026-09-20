@@ -19,24 +19,29 @@ becomes an ignore for all. `takeover.test.ts` expects `no-var` to vanish.
 
 **Target.** Takeover carries a rule in both directions, with the paths it held for. A rule turned
 off becomes an `[[ignore]]` with `rule` and `paths`. A rule turned on, with its options, becomes
-an entry of `tools.<tool>.rules`. The plan lists, for each replaced file, every setting that was
+an entry of `tools.<tool>.rules`, or a path-specific override when applicability differs. The plan lists, for each replaced file, every setting that was
 not carried.
 
 **Files.** `lifecycle/carry.ts`, new `lifecycle/carry-eslint.ts`, `output/plan-text.ts`,
 `types/lifecycle.ts`.
 
-**Logic.** A flat ESLint config is a module, so gspot loads it through ESLint itself:
-`eslint --print-config <file>` for one file of each claimed extension, from the ESLint the
-repository has. The result is compared with the config gspot writes, and the difference is what
-is carried. An `.eslintrc` file is read the same way. `disabledFromRulesTable` stays for
+**Logic.** A flat ESLint config is a module, so gspot loads it through ESLint itself.
+Resolve the config for every governed file using the repository's installed ESLint. Group equal
+configurations and preserve path-specific differences in `[[tools.eslint.overrides]]`.
+
+Compare against proposed output for those same paths. An extension is not a configuration class.
+Preserve enabled rules, options, disabled rules, and ignores.
+
+Unsupported plugins, processors, dynamic selectors, or options keep the original file active.
+A warning alone is not permission to delete it. New-file applicability and ordering follow
+[03-configuration.md](../03-configuration.md). An `.eslintrc` file is read the same way. `disabledFromRulesTable` stays for
 markdownlint and stylelint, whose files are plain JSON.
 
 **What goes.** The line pattern of `disabledEslint`, and the test expectation that a rule
 vanishes (T-35).
 
 **Tests.** `takeover.test.ts` plants a config with `no-var: error`, a rule off for `tests/**`, and
-a plugin gspot does not ship. It holds the two carried entries and the plugin in the not-carried
-list.
+a plugin gspot does not ship. It holds separate source, test, and package overrides; the unsupported plugin keeps its original configuration active and out of the deletion plan.
 
 **Done when.** That case passes, and the plan of yap-swift-app lists no silent loss.
 
@@ -81,19 +86,23 @@ no question, and the next `check --fix` rewrites every file.
 
 **Target.** `init` learns the format the repository has, and proposes it (D-126).
 
-**Files.** New `lifecycle/init/format.ts`, from the format half of `questions.ts`.
+**Files.** New `lifecycle/init/format.ts`, from the format half of `questions.ts`. Consolidate read and parse outcomes under K-307 rather than keeping a suffix preflight and a second reader that swallows errors.
 
-**Logic.** Prettier answers for itself: `prettier --find-config-path` and
-`prettier --config <path> --print-config` cover every Prettier form. Without Prettier, the reader
-takes `indent_style`, `indent_size`, and `max_line_length` from `.editorconfig`, then from
-`biome.json`. The result fills `[format]` of the proposed `gspot.toml`.
+**Logic.** Use the Prettier `resolveConfig(file, { editorconfig: true })` API for every governed file.
+No CLI print-config option exists. Preserve Prettier overrides and EditorConfig section
+precedence in `[format]` and `[[format.overrides]]` as specified in
+[03-configuration.md](../03-configuration.md). If Prettier is absent, parse the supported settings
+from EditorConfig sections and Biome.
+
+Unsupported properties, future-path selectors, or executable configuration remain active.
+Do not replace them with a global approximation. The plan names retained files and why.
 
 **What goes.** The `.json` suffix test.
 
 **Tests.** `takeover.test.ts` plants each of the five forms with tabs, and holds
 `indent_style = "tab"` in the written config.
 
-**Done when.** The five cases pass.
+**Done when.** The five forms, per-folder overrides, two same-extension files with different settings, and unsupported EditorConfig sections preserve their behavior.
 
 ## K-126: dependencies from one Python form
 
@@ -148,14 +157,14 @@ fails is a line of the fix report.
 `checks/static-site/dead-selectors.ts`.
 
 **Logic.** `command-parts.ts` returns a list of commands for a file list, and the fixer, the
-checks, and ast-grep all take their commands from it.
+checks, and ast-grep all take their commands from it. Rename the executing function to `runFixer`; return a `FixResult` instead of mutating a caller-owned failure list. Its `plannedCheck` and `workingDirectory` parameters follow [19-names.md](../19-names.md). A successful invocation without byte changes is unchanged, not changed.
 
 **What goes.** The second way to build a command, in `fixers.ts`.
 
 **Tests.** A unit test with 20,000 long paths holds more than one command, and a planted fixer
 that exits 3 holds its line in the report.
 
-**Done when.** Both pass.
+**Done when.** Both pass, and the result distinguishes changed, unchanged, skipped, and failed execution.
 
 ## K-76: mise tasks that are files
 

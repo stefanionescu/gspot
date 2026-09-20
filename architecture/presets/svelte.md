@@ -57,7 +57,7 @@ The ESLint rules run in the one ESLint check (D-137). `javascript/required-rules
 
 ## Settings
 
-None. A rule the repository decides against is `gspot ignore typescript/eslint --rule <id>`.
+None. A rule the repository decides against is `gspot ignore typescript/eslint --rule <rule>`.
 
 ## Rule files
 

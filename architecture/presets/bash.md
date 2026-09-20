@@ -4,11 +4,11 @@ Kind: language. Requires: structure. Recommends: naming, formatting, spelling.
 
 ## Detects and claims
 
-|                      |                                                                                                            |
-| -------------------- | ---------------------------------------------------------------------------------------------------------- |
-| Detect               | `.sh`, `.bash` in the tree; a `bash`, `sh`, `zsh` shebang                                                  |
-| Claims               | `.sh`, `.bash`, `.zsh`, `.bats`, extensionless files with a shell shebang, including hooks, and task files |
-| Required inspections | format, syntax, style, structure, naming, prose, spelling                                                  |
+|                         |                                                                                                            |
+| ----------------------- | ---------------------------------------------------------------------------------------------------------- |
+| Detect                  | `.sh`, `.bash` in the tree; a `bash`, `sh`, `zsh` shebang                                                  |
+| Claims                  | `.sh`, `.bash`, `.zsh`, `.bats`, extensionless files with a shell shebang, including hooks, and task files |
+| Required check coverage | format, syntax, style, structure, naming, prose, spelling                                                  |
 
 ## Tools
 

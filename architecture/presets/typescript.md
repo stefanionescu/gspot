@@ -4,11 +4,11 @@ Kind: language. Requires: javascript, structure. Recommends: naming, formatting,
 
 ## Detects and claims
 
-|                      |                                                                                          |
-| -------------------- | ---------------------------------------------------------------------------------------- |
-| Detect               | `.ts`, `.tsx`, `.mts`, `.cts` in the tree; `tsconfig.json`; `typescript` in dependencies |
-| Claims               | `.ts`, `.tsx`, `.mts`, `.cts`, `.d.ts`, `tsconfig.json`, `tsconfig.*.json`               |
-| Required inspections | format, syntax, style, types, structure, naming, prose, spelling                         |
+|                         |                                                                                          |
+| ----------------------- | ---------------------------------------------------------------------------------------- |
+| Detect                  | `.ts`, `.tsx`, `.mts`, `.cts` in the tree; `tsconfig.json`; `typescript` in dependencies |
+| Claims                  | `.ts`, `.tsx`, `.mts`, `.cts`, `.d.ts`, `tsconfig.json`, `tsconfig.*.json`               |
+| Required check coverage | format, syntax, style, types, structure, naming, prose, spelling                         |
 
 ## Tools
 
@@ -24,13 +24,13 @@ Kind: language. Requires: javascript, structure. Recommends: naming, formatting,
 
 ## Checks
 
-| Id                            | Stage  | Command                                                                                                                                          |
-| ----------------------------- | ------ | ------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `typescript/tsc`              | push   | `tsc --noEmit -p .gspot/tsconfig.check.json` for each scope, or `tsc -b --noEmit` where the config holds references (D-148, K-226)               |
-| `typescript/eslint`           | commit | `eslint --max-warnings 0 --no-warn-ignored --config .gspot/eslint.config.mjs {files}`; fix: `--fix`, order codemod                               |
-| `javascript/knip`             | push   | `knip --config .gspot/knip.json`, once over the whole tree; javascript owns the check and typescript requires javascript                         |
-| `typescript/tsconfig-options` | commit | engine                                                                                                                                           |
-| `javascript/required-rules`   | push   | `eslint --print-config` for one file per ending, compared with the `[required_rules]` of every selected manifest (D-99); shipped by `javascript` |
+| Id                            | Stage  | Command                                                                                                                                                                          |
+| ----------------------------- | ------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `typescript/tsc`              | push   | `tsc --noEmit -p .gspot/tsconfig.check.json` for each scope, or `tsc -b --noEmit` where the config holds references (D-148, K-226)                                               |
+| `typescript/eslint`           | commit | `eslint --max-warnings 0 --no-warn-ignored --config .gspot/eslint.config.mjs {files}`; fix: `--fix`, order codemod                                                               |
+| `javascript/knip`             | push   | `knip --config .gspot/knip.json`, once over the whole tree; javascript owns the check and typescript requires javascript                                                         |
+| `typescript/tsconfig-options` | commit | engine                                                                                                                                                                           |
+| `javascript/required-rules`   | push   | ESLint-resolved configuration for every governed file, grouped by equal results, compared with the `[required_rules]` of every selected manifest (D-99); shipped by `javascript` |
 
 ## The types directory
 

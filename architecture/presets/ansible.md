@@ -19,7 +19,7 @@ ansible-lint. It has no Windows build, so the check is a platform skip there.
 | -------------- | ------ | ------------------------------------------------------------------------------------------------------- |
 | `ansible/lint` | commit | `ansible-lint --offline -f pep8` in every folder that holds an `ansible.cfg`; findings carry the folder |
 
-A rule turned off is `gspot ignore ansible/lint --rule <id> --reason`, passed as `--skip-list`.
+A rule turned off is `gspot ignore ansible/lint --rule <rule> --reason`, passed as `--skip-list`.
 
 ## Why a preset
 

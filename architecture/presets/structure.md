@@ -17,9 +17,9 @@ keep their ESLint rules, such as `gspot/no-call-through`, so an editor shows the
 
 | Idea                                    | Level       | Bash | Python | Swift | TypeScript | SQL |
 | --------------------------------------- | ----------- | ---- | ------ | ----- | ---------- | --- |
-| File and function length                | recommended | yes  | yes    | yes   | yes        | yes |
-| Call-through                            | recommended | yes  | yes    | yes   | yes        | yes |
-| Duplicate functions                     | recommended | yes  | yes    | yes   | yes        | no  |
+| File and function length                | all         | yes  | yes    | yes   | yes        | yes |
+| Call-through                            | all         | yes  | yes    | yes   | yes        | yes |
+| Duplicate functions                     | all         | yes  | yes    | yes   | yes        | no  |
 | Unused functions, dead parameters       | recommended | yes  | yes    | yes   | yes        | no  |
 | Import cycles                           | recommended | no   | yes    | no    | yes        | no  |
 | Environment owner                       | all         | yes  | yes    | yes   | yes        | no  |

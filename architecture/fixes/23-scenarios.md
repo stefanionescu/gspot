@@ -18,28 +18,28 @@ for each tool. Without a pointer an editor formats on save by other rules than t
 
 **Target.** This table, held in the manifests by a `pointer` key, and tested for each row:
 
-| Tool                                                                                        | Root pointer                                                      | Form                              |
-| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------- |
-| Prettier                                                                                    | `prettier.config.mjs`                                             | re-export                         |
-| commitlint                                                                                  | `commitlint.config.mjs`                                           | re-export                         |
-| ESLint                                                                                      | none where the developer keeps a config; else `eslint.config.mjs` | re-export                         |
-| stylelint                                                                                   | `.stylelintrc.json`                                               | `extends`                         |
-| markdownlint-cli2                                                                           | `.markdownlint-cli2.jsonc`                                        | `config.extends`                  |
-| yamllint                                                                                    | `.yamllint.yml`                                                   | `extends`                         |
-| Ruff                                                                                        | `ruff.toml`                                                       | `extend`                          |
-| basedpyright                                                                                | `pyrightconfig.json`                                              | `extends`                         |
-| SwiftLint                                                                                   | `.swiftlint.yml`                                                  | `parent_config`                   |
-| gitleaks                                                                                    | `.gitleaks.toml`                                                  | `[extend] path`                   |
-| EditorConfig                                                                                | `.editorconfig`, the file itself                                  | written from `[format]`           |
-| ShellCheck, shfmt, SwiftFormat, sqlfluff, hadolint, typos, taplo, osv-scanner, v8r, Semgrep | none                                                              | the check passes the path by flag |
+| Tool                                                                                        | Root pointer                                                      | Form                                                |
+| ------------------------------------------------------------------------------------------- | ----------------------------------------------------------------- | --------------------------------------------------- |
+| Prettier                                                                                    | `prettier.config.mjs`                                             | re-export                                           |
+| commitlint                                                                                  | `commitlint.config.mjs`                                           | re-export                                           |
+| ESLint                                                                                      | none where the developer keeps a config; else `eslint.config.mjs` | re-export                                           |
+| stylelint                                                                                   | `.stylelintrc.json`                                               | `extends`                                           |
+| markdownlint-cli2                                                                           | `.markdownlint-cli2.jsonc`                                        | `config.extends`                                    |
+| yamllint                                                                                    | `.yamllint.yml`                                                   | `extends`                                           |
+| Ruff                                                                                        | `ruff.toml`                                                       | `extend`                                            |
+| basedpyright                                                                                | `pyrightconfig.json`                                              | `extends`                                           |
+| SwiftLint                                                                                   | `.swiftlint.yml`                                                  | `parent_config`                                     |
+| gitleaks                                                                                    | `.gitleaks.toml`                                                  | `[extend] path`                                     |
+| EditorConfig                                                                                | `.editorconfig`, the file itself                                  | written from format and overrides, only if lossless |
+| ShellCheck, shfmt, SwiftFormat, sqlfluff, hadolint, typos, taplo, osv-scanner, v8r, Semgrep | none                                                              | the check passes the path by flag                   |
 
 **Files.** `presets/manifest-schema.ts`, the manifests of the twelve tools, `emit/pointers.ts`,
 [03-configuration.md](../03-configuration.md).
 
 **Logic.** A config in a manifest takes `pointer = { path, form }`. `pointers.ts` writes one
 small file for each, with the mark. A pointer is never written over a file the developer keeps.
-An existing `.editorconfig` is taken over like a Prettier file: `--format keep` carries its
-values into `[format]`, and gspot writes the file from there.
+
+An existing `.editorconfig` is replaced only if its sections and values can be carried without loss into `[format]` and `[[format.overrides]]`. Otherwise, keep it active and do not overwrite it with a pointer. Prettier overrides follow the same rule in [03-configuration.md](../03-configuration.md). Saved recovery precedes any accepted replacement.
 
 It leaves the shared-file list of
 K-36. The guide on editors names, for each tool with no pointer, the editor setting that reads
@@ -87,23 +87,22 @@ submodules, linked worktrees, and a config below the git root.
 
 **Target.** One stated behavior for each:
 
-| Case                            | Behavior                                                                          |
-| ------------------------------- | --------------------------------------------------------------------------------- |
-| no commit yet                   | `init` and `check` work; `--staged` compares with the empty tree                  |
-| no remote, or no upstream       | `--changed` uses the default branch of the repository, and says which ref it took |
-| first push of a branch          | the push hook checks the commits that no remote branch holds                      |
-| a deleted branch                | the push hook passes and runs nothing                                             |
-| a shallow clone                 | `--changed` says the history is cut, and names `git fetch --unshallow`            |
-| submodules                      | not read; `init` and `doctor` say so once, with the path of each                  |
-| a linked worktree               | shares the hooks of its repository; `check` there says `Run: gspot install` once  |
-| `gspot.toml` below the git root | checks run from the config root; the hook at the git root changes folder first    |
+| Case                            | Behavior                                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| no commit yet                   | `init` and `check` work; `--staged` compares with the empty tree                               |
+| no remote, or no upstream       | `--changed` uses a resolvable default branch, or exits 2 asking for an explicit ref            |
+| first push of a branch          | compare against fetched remote reachability; with no usable base, check the entire pushed tree |
+| a deleted branch                | the push hook passes and runs nothing                                                          |
+| a shallow clone                 | `--changed` says the history is cut, and names `git fetch --unshallow`                         |
+| submodules                      | not read; `init` and `doctor` say so once, with the path of each                               |
+| a linked worktree               | shares the hooks of its repository; `check` there says `Run: gspot install` once               |
+| `gspot.toml` below the git root | checks run from the config root; the hook at the git root changes folder first                 |
 
 **Files.** `repository/staged.ts`, `run/session.ts`, `emit/hooks.ts`,
 `repository/tracked.ts`.
 
 **Logic.** `session.ts` holds two roots: the config root and the git root. Every path in the
-report is relative to the config root. The hook line is `cd <config root> && gspot check ...`
-where the two differ.
+report is relative to the config root. The hook resolves the config's repository-relative location from Git at runtime, with quoted arguments, rather than embedding a machine-specific absolute path. A push snapshot resolves the same relative config location inside the snapshot. Ref selection and snapshot semantics are owned by [10-hooks-ci-runners.md](../10-hooks-ci-runners.md).
 
 **What goes.** The assumption that both roots are one.
 
@@ -136,7 +135,7 @@ passing drift check.
 the lockfile of gspot, and nothing says what to do.
 
 **Target.** The generated files are outputs. After a merge of `gspot.toml`, `gspot apply` writes
-each of them again, and `gspot install` writes the lockfile again.
+each of them again, and `gspot apply` resolves the lockfile in temporary storage and replaces it only on success. Review and commit those changes; `gspot install` then installs the recorded contents without writing tracked files.
 
 **Files.** `run/check-command.ts`, `checks/integrity/generated-drift.ts`, and the guide on
 teams.
@@ -188,10 +187,11 @@ runs of the default branch, and caches nothing under `.gspot/`.
 **Files.** `emit/workflow.ts`, [10-hooks-ci-runners.md](../10-hooks-ci-runners.md).
 
 **Logic.** `permissions` is `contents: read` for the workflow, and the upload step adds
-`security-events: write` in a job of its own. That job runs only on a push to the repository
-itself, and `[ci] sarif = false` turns it off. `on` gains `merge_group`. `cancel-in-progress` is
-true for pull requests alone. One setup step, `gspot install`, follows a cache keyed on
-`.gspot/bun.lock`, `.gspot/uv.lock`, and the mise file.
+`security-events: write` in a job of its own. That job uses `always() && !cancelled()` in addition to an event guard, so failed checks do not suppress their own report upload. It runs only on a push to the repository itself, and `[ci] sarif = false` turns it off. `on` gains `merge_group`. `cancel-in-progress` is
+true for pull requests alone.
+
+One setup step, `gspot install`, follows a cache keyed on
+all actual managed lockfiles, tool pins, package-manager version, OS, and architecture. Select the base and target for each event, including `merge_group.base_sha` and `head_sha`; absent or zero bases require a full target-tree run. Upload stage-specific report artifacts after each check even on failure, including after the manual stage; never overwrite another stage's report.
 
 **What goes.** The `mise install` step.
 
@@ -211,7 +211,7 @@ name.
 
 **Logic.** Every run but the message run writes three files under `.gspot/`: `report.json`,
 `report.sarif`, and `report.codequality.json` in the CodeClimate form. The job sets `GIT_DEPTH: 0` and runs `gspot install`. Its `rules` select merge request
-pipelines and the default branch, and it declares the code quality artifact. The CI
+pipelines and the default branch, and it declares `.gspot/report.codequality.json` as the code quality artifact with `when: always`. Select the merge-request diff base or push-before SHA; missing or zero bases run the full target tree. The CI
 system is found by `.gitlab-ci.yml` or `.github/workflows/`, never by the host name.
 
 **What goes.** The host name test of D-133, which its text keeps as a second signal only for a

@@ -4,11 +4,11 @@ Kind: tool. Requires: nothing.
 
 ## Detects and claims
 
-|                      |                                                        |
-| -------------------- | ------------------------------------------------------ |
-| Detect               | `nginx.conf`, `*.conf` under a directory named `nginx` |
-| Claims               | the same                                               |
-| Required inspections | syntax, security                                       |
+|                         |                                                        |
+| ----------------------- | ------------------------------------------------------ |
+| Detect                  | `nginx.conf`, `*.conf` under a directory named `nginx` |
+| Claims                  | the same                                               |
+| Required check coverage | syntax, security                                       |
 
 ## Tools
 

@@ -1,4 +1,4 @@
-# Hooks, the Setup Entry, and Shared Manifests
+# Hooks, Explicit Setup, and Shared Manifests
 
 Rows 2 and 2b of the build order. gspot installed its own hooks folder, its own task names, and
 its own `prepare` script, over what a repository had. After this step gspot goes where the hook
@@ -21,7 +21,7 @@ apply, also where a tracked setup task sets another folder.
 (D-114). The task the hook calls comes first, then the hook file, then the hooks of gspot where
 none exist. gspot
 never sets `core.hooksPath` (D-167). `doctor` says when a clone runs no hooks, with
-the setup command of the repository (D-115).
+the explicit command `gspot install` (D-115).
 
 **Files.** `repository/existing-tooling.ts`, new `repository/hook-calls.ts`, `emit/hooks.ts`,
 `emit/hook-managers.ts`, `emit/apply-command.ts`, `doctor/report.ts`, `policy/schema.ts`.
@@ -29,7 +29,9 @@ the setup command of the repository (D-115).
 **Logic.** `hook-calls.ts` parses a hook file for `mise run <task>`, `npm run <script>`,
 `npx lefthook`, and `husky`, and returns the target. `[hooks]` holds `tool` (`gspot`, `husky`,
 `lefthook`, or `existing`) and, for `existing`, `pre_commit` and `pre_push` with the file or task
-that carries the line. The line is one managed block. Lines of the task that are no lint stay.
+that carries the line. Supported tracked task insertion must be reachable and preserve control flow.
+
+Unsupported hook scripts stay intact with a setup error. Use the composition contract in [10-hooks-ci-runners.md](../10-hooks-ci-runners.md), not textual append. Lines of the task that are no lint stay.
 
 **What goes.** The unconditional `git config core.hooksPath` of `applyAll`, and
 `emit/lefthook.ts` as a file of its own.
@@ -51,8 +53,7 @@ developer accepts it. gspot writes a `gspot:*` task only where the name is free 
 **Files.** `emit/runner-tasks.ts`, `lifecycle/init/plan.ts`, `policy/schema.ts`, `readers/tasks.ts`.
 
 **Logic.** `[runner] tasks` maps each gspot task to the name it lives under. `runner-tasks.ts`
-writes that map, and `uninstall` puts back the body it replaced, which the policy holds in
-`[runner] replaced`.
+writes that map after saving the original body and installed-body hash in local recovery and ownership records. `uninstall` restores the original only if the task is still the installed value; later developer edits stay intact with recovery instructions. A fresh clone without the original backup cannot invent a previous body.
 
 **What goes.** The fixed list of five names.
 
@@ -76,7 +77,7 @@ javascript, formatting, and commits manifests.
 **Logic.** A takeover row takes `table = "tool.ruff"` or `key = "eslintConfig"` with
 `shared = true`. `carryFrom` reads the table through the same reader as a file of that tool.
 
-**What goes.** Nothing is written into either manifest, ever, but the launcher line (D-147).
+**What goes.** No lint table or tool dependency is edited in a shared manifest. The only permitted changes are the launcher and explicitly accepted task entries (D-116, D-147), with recovery.
 
 **Tests.** A planted `pyproject.toml` with `[tool.ruff] ignore = ["E501"]` holds the carried
 ignore, the unchanged file, and the plan line.
@@ -102,31 +103,25 @@ set.
 
 **Done when.** That case passes.
 
-## K-292: gspot turns the local hooks of a developer off
+## K-292: local hooks must keep executing
 
-**What is wrong.** `apply` writes `.gspot/hooks/` and points `core.hooksPath` at it. Git then runs
-no file under `.git/hooks/`: a hook one developer wrote for one clone, and the four hooks git-lfs
-installs. Only `pre-push` of git-lfs is called on, and nothing says the others stopped.
+**What is wrong.** Replacing `core.hooksPath` disables existing local hooks. Appending to a hook ending in `exec` or `exit` makes gspot unreachable; a hook such as Git LFS can consume pre-push stdin.
 
-**Target.** D-167. gspot adds one line and takes nothing away. It never sets `core.hooksPath`.
+**Target.** D-167 and [10-hooks-ci-runners.md](../10-hooks-ci-runners.md): supported composition actually runs both hooks and preserves failure semantics.
 
-**Files.** `emit/hooks.ts`, `emit/apply-command.ts`, `lifecycle/install-tools.ts`,
-`lifecycle/uninstall-command.ts`, `doctor/report.ts`. Deleted: the folder `.gspot/hooks/`.
+**Files.** `emit/hooks.ts`, `emit/hook-managers.ts`, `emit/apply-command.ts`, `lifecycle/install-tools.ts`, `lifecycle/uninstall-command.ts`, `doctor/report.ts`.
 
-**Logic.** `init` decides where the line lives, in the order of the table of D-167, and writes the
-tracked forms once. `gspot install` writes the local forms in each clone. For a hook file that
-exists under `.git/hooks/`, it adds its managed block at the end, after what the file already
-runs. For no file, it writes a new one that holds the block alone.
+**Logic.** Resolve the hook location through Git. Include worktrees and configured paths.
+Prefer native hook-manager composition. For unmanaged local hooks, preserve the executable in
+a collision-checked sibling and write a marked dispatcher. Run the original as a child, then
+gspot only on success.
 
-`uninstall` removes the block,
-and deletes a file that held nothing else. `doctor` reads the hook that git will run, by asking
-`git rev-parse --git-path hooks`, and says whether the gspot block is in it.
+Forward arguments, working directory, environment, and exit status. Replay the same buffered
+stdin to each child. Record ownership and recovery before replacement. Reinstallation must
+not nest dispatchers. Restore only an unchanged owned dispatcher on uninstall.
 
-**What goes.** Every `git config core.hooksPath` call, and the `git lfs pre-push` line of the
-hook gspot wrote.
+**What goes.** Unconditional `core.hooksPath` changes, append-only composition, and the special-case Git LFS call.
 
-**Tests.** A planted clone with a hand-written `.git/hooks/pre-commit` and git-lfs installed
-holds, after `gspot install`, both hooks unchanged above the gspot block, and an unset
-`core.hooksPath`.
+**Tests.** Assert observable execution of both hooks for originals ending in `exec` and `exit 0`; assert failure propagation for nonzero exits. Git LFS and gspot each receive the complete multi-ref stdin. Cover reinstall, custom hooks paths, linked worktrees, non-shell executables, collisions, and developer edits before uninstall.
 
-**Done when.** That case passes.
+**Done when.** Both hook behaviors run exactly once when successful, and failures or unsupported composition never silently disable either.

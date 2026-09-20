@@ -24,14 +24,14 @@ set to the file under `.gspot/` (K-256).
 
 ## Checks
 
-| Id                        | Stage       | Command                                                                                                                                                                                                      |
-| ------------------------- | ----------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `xctest/disabled`         | commit      | engine: `XCTSkip`, `.disabled(`, `@available(*, unavailable)` on a test, and a `skippedTests` entry in a test plan each carry a reason on the same line or the line above, and the count enters the baseline |
-| `xctest/no-sleep`         | commit      | engine: no `sleep(`, `usleep(`, `Thread.sleep` or `Task.sleep` in a claimed file outside `[tools.xctest] sleep_allowed`                                                                                      |
-| `xctest/recording`        | commit      | engine: no `isRecording = true`, `record: true`, `record: .all` or `withSnapshotTesting(record:` set to a recording mode in a tracked file                                                                   |
-| `xctest/reference-images` | commit      | engine: every file under `__Snapshots__/<TestClass>/` names a test class that exists; every reference image is tracked, under LFS when it passes `limits.file_size_kb`                                       |
-| `xctest/coverage`         | push, build | `xcodebuild test -enableCodeCoverage YES`, then `xcrun xccov view --report --json`; line coverage at or above `[tools.xctest] coverage` for each target it names                                             |
-| `xcode/test-plan`         | commit      | from the xcode preset                                                                                                                                                                                        |
+| Id                        | Stage       | Command                                                                                                                                                                                                               |
+| ------------------------- | ----------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `xctest/disabled`         | commit      | engine: `XCTSkip`, `.disabled(`, `@available(*, unavailable)` on a test, and a `skippedTests` entry in a test plan each carry a reason on the same line or the line above; report findings without a baseline (D-165) |
+| `xctest/no-sleep`         | commit      | engine: no `sleep(`, `usleep(`, `Thread.sleep` or `Task.sleep` in a claimed file outside `[tools.xctest] sleep_allowed`                                                                                               |
+| `xctest/recording`        | commit      | engine: no `isRecording = true`, `record: true`, `record: .all` or `withSnapshotTesting(record:` set to a recording mode in a tracked file                                                                            |
+| `xctest/reference-images` | commit      | engine: every file under `__Snapshots__/<TestClass>/` names a test class that exists; every reference image is tracked, under LFS when it passes `limits.file_size_kb`                                                |
+| `xctest/coverage`         | push, build | `xcodebuild test -enableCodeCoverage YES`, then `xcrun xccov view --report --json`; line coverage at or above `[tools.xctest] coverage` for each target it names                                                      |
+| `xcode/test-plan`         | commit      | from the xcode preset                                                                                                                                                                                                 |
 
 ## Settings
 

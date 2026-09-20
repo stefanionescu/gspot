@@ -231,7 +231,7 @@ what it carries from them. Beside the manifest sit its templates, named after th
 write, and its rule packs.
 
 ```text
-presets/<id>/
+presets/<preset>/
 ├── manifest.toml
 ├── <target-file>.tmpl          one for each file the preset writes
 ├── <target-file>.fragment.tmpl a section of a file another preset owns

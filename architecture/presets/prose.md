@@ -34,7 +34,7 @@ style and vocabulary are tracked.
 
 ## Settings
 
-`prose.vocabulary` (accept list) and `limits.docs.*`. A Vale rule is turned off through `gspot ignore prose/vale --rule <id>`, as every rule is.
+`prose.vocabulary` (accept list) and `limits.docs.*`. A Vale rule is turned off through `gspot ignore prose/vale --rule <rule>`, as every rule is.
 
 ## Rule files
 

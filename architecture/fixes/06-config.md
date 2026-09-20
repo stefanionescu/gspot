@@ -95,7 +95,7 @@ Closes K-215, K-224, and K-228.
 **What is wrong.** A list a check skips ends in `_allowed`, `_excluded`, `allow`, or `exceptions`.
 A folder is `_dir` or `_directory`, and a list of globs is `_glob`, `_paths`, or `_files`. A Vale
 rule is turned off under `prose.disabled`, and every other rule through `[[ignore]]`. Two checks
-have an off switch of their own, `tools.docs.readme_shape` and `tools.xcode.orphan_assets`. The id
+have an off switch of their own, `tools.docs.readme_shape` and `tools.xcode.orphan_assets`. The name
 `xcode/asset-catalogues` uses the British spelling.
 
 Templates still name paths that D-127 moves, and the baseline folder that D-165 deletes.

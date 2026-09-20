@@ -3,7 +3,7 @@
 Row 23 of the build order. The rules gspot wrote itself exist once for each language, with their
 own constants, and they do not hold in every language alike. After this step an idea that stays
 is written once over the syntax tree, with one set of limits. The manifest of each language
-lists it under an id of its own (D-98). TypeScript keeps its ESLint rules, so an editor still
+lists it under a name of its own (D-98). TypeScript keeps its ESLint rules, so an editor still
 shows them (D-02), and one fixture set holds both implementations to the same answers. This step also builds the checks the ledger promised and nobody wrote (K-248).
 
 ## K-87: three copies of one idea
@@ -41,7 +41,7 @@ under `structure/languages/` that names the node kinds of a function, a call, a 
 import, and an export. The folders `apple/structure/` and `pyproject/structure/` fold into it.
 `presets/structure/manifest.toml` holds the limits once.
 
-**Logic.** An analysis asks the language table for nodes and never names a language. The id
+**Logic.** An analysis asks the language table for nodes and never names a language. The name
 stays with the language: `structure/call-through` for shell, `python/call-through`,
 `swift/call-through`, and `sql/call-through`, so a baseline and an ignore hold one language
 (D-98). TypeScript keeps `gspot/no-call-through` and its sibling rules in the plugin (D-02), and

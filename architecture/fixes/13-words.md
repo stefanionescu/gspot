@@ -31,7 +31,7 @@ and every template helper named `render`.
 **Target.** The words of [19-names.md](../19-names.md). `[runner] surface` becomes `[runner] tool`.
 The run record becomes the report: `.gspot/report.json` and `report.schema.json`.
 
-`[inspection] strict` becomes `[coverage] strict`. `[[declare]]` becomes `[[generated]]` with `by`,
+`[inspection] strict` becomes `[coverage] strict`. `[[declare]]` becomes `[[generated]]` with `paths`,
 and `[[vendored]]`. Policy becomes config in text a person reads.
 
 **Files.** `policy/schema.ts`, `run/record/` (which becomes `run/report/`), `commands/*.ts` help text,
@@ -42,10 +42,9 @@ code change only where the table says so.
 
 **What goes.** The nine words in text a person reads.
 
-**Tests.** The Vale style `gspot` gains the nine words as banned terms for `docs/` and for the
-message files, so `prose/vale` holds the rule.
+**Tests.** Contract tests compare domain terminology in help, reports, schemas, and generated reference against [19-names.md](../19-names.md). Do not ban words globally. A real map key, third-party identifier, historical rename, or task-runner description is not a terminology defect.
 
-**Done when.** `prose/vale` passes with that list on.
+**Done when.** Public names and their implementation mappings match the canonical vocabulary, without false positives on external contracts or historical evidence.
 
 ## K-67: the `layer:` key of a rule file
 

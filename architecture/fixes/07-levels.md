@@ -4,8 +4,8 @@ Row 11 of the build order, which the Swift preset started and which holds for ev
 default install turned on the strictest setting of each tool and the house style of one owner.
 The first run gave thousands of findings, and all of them went into a baseline nobody reads.
 
-D-119 decides two levels. `recommended` holds what finds a defect, a security problem, dead code, or a banned
-name. `all` adds what enforces a layout, an order, a header, or one way to write a thing that
+D-119 decides two levels. `recommended` holds what finds a defect, a security problem, or dead code. Banned-term checks, including folder and prose term bans, run at `all`. The shipped lists omit
+`generate` and `service` (D-174). `all` adds what enforces a layout, an order, a header, or one way to write a thing that
 works. `init` installs `recommended` and asks nothing.
 
 No code holds a level today: the manifest schema has no such key, and `[inspection] strict`
@@ -112,8 +112,7 @@ ban a lazy export, cap the exported names, and allow five names for an object bu
 `python/pydoclint` passes `--style google`, and `pytest/coverage` needs `pytest-cov`, which no
 manifest names.
 
-**Target.** `recommended` holds file length, function length, import cycles, a call-through, and
-a placeholder docstring. The seven are `all`, and so are pydoclint and vulture. The ownership check is
+**Target.** `recommended` holds import-cycle defects. File and function length, call-through, placeholder prose, the seven conventions, pydoclint, and vulture are `all`. A thin wrapper is not a defect merely because it delegates (K-301). The ownership check is
 planned where the scope holds `uv.lock`, `poetry.lock`, or `pdm.lock`.
 
 **Files.** `presets/python/manifest.toml`, `presets/pytest/manifest.toml`,
@@ -165,13 +164,13 @@ Supabase holds no row level security finding.
 of their rules off, each with a reason about the text of this repository. The off list and a
 vocabulary of 68 product names live in `config/prose.ts` and ship to every project.
 
-**Target.** `recommended` runs the `gspot` style alone, which is what `WRITING.md` tells an
+**Target.** `recommended` runs only demonstrated defect rules of the `gspot` style, excluding banned terms and house-style judgments. `all` runs the complete style, which is what `WRITING.md` tells an
 agent. `all` adds the packages. The off list and the vocabulary are data of the prose preset.
 
 **Files.** `presets/prose/manifest.toml`, `presets/prose/vale.ini.tmpl`,
 `presets/prose/vocabularies/gspot/accept.txt`, `prose/vocabulary.ts`. Deleted: `config/prose.ts`.
 
-**Logic.** `vale.ini.tmpl` lists `BasedOnStyles = gspot` at `recommended`. At `all` it adds the
+**Logic.** `vale.ini.tmpl` lists `BasedOnStyles = gspot` at `recommended` with every term-ban and house-style rule disabled by level. At `all` it enables those rules and adds the
 packages and the off list, which the manifest holds as a setting with its reasons. `apply`
 downloads a Vale package only at `all`, so a `recommended` install needs no network.
 
@@ -196,7 +195,7 @@ only add errors, as [17-recommended.md](17-recommended.md) builds it (K-74).
 
 **Files.** `presets/typescript/tsconfig.check.json.tmpl`, `presets/javascript/jsconfig.json.tmpl`.
 
-**Logic.** The generated file holds `strict` at `recommended`, and three more flags at `all`. `javascript/checkjs`
+**Logic.** The generated file holds `strict` at `recommended`, and four more flags at `all`. `javascript/checkjs`
 reads the `jsconfig.json` of the repository for resolution.
 
 **What goes.** Six options, and the two `has(...)` branches (K-197).

@@ -52,34 +52,41 @@ build it.
 
 One word, one meaning, everywhere in this folder, and in the code.
 
-| Term                | Meaning                                                                                                                                                                                                              |
-| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| preset              | A named bundle of tools, configuration, checks, settings and rule files for one language, framework, platform, tool, library, database, or repository concern. The unit a person selects.                            |
-| check               | One command or one built-in analysis that produces findings over a set of files. The unit that runs and the unit a person turns off.                                                                                 |
-| finding             | One location and one message from one check.                                                                                                                                                                         |
-| engine              | Code inside gspot that produces findings without an external tool, or that drives one.                                                                                                                               |
-| policy              | The repository's selection and settings, held in `gspot.toml`.                                                                                                                                                       |
-| ignore              | An entry in `gspot.toml` that turns a check off for named paths, with a reason.                                                                                                                                      |
-| scope               | A subtree of the repository with its own preset selection.                                                                                                                                                           |
-| stage               | When a check runs: `commit`, `push` or `manual`.                                                                                                                                                                     |
-| rule file           | A Markdown file an agent reads before editing.                                                                                                                                                                       |
-| layer               | The level a rule file belongs to: general, language, framework, library, tool, platform, database, project.                                                                                                          |
-| generated file      | A file gspot writes and rewrites. It carries a header saying so and a person never edits it.                                                                                                                         |
-| file set            | The files git tracks or would track (`git ls-files --cached --others --exclude-standard`), minus what natures, and ignores remove. Every check receives a list drawn from it.                                        |
-| owned tool          | A tool whose configuration gspot writes.                                                                                                                                                                             |
-| drift               | A difference between two things that are meant to agree: a generated file and its render, a lockfile and its manifest, a document, and the tree it describes.                                                        |
-| private declaration | A declaration a file keeps to itself: a `_` name in Python or Bash, a non-exported declaration in TypeScript or JavaScript, a `private` or `fileprivate` one in Swift. Private declarations come first in a file.    |
-| install policy      | The package manager's own supply-chain settings: minimum release age, security scanner, lockfile agreement.                                                                                                          |
-| project template    | A rule file gspot copies into the project layer once and never upgrades.                                                                                                                                             |
-| slop                | Code, names or prose that add nothing: wrappers, hedges, marketing words, defensive guards for impossible states, restated comments.                                                                                 |
-| version pin         | The gspot version a repository runs, in `.gspot/version` and the runner surface. A binary of another version refuses to check or apply.                                                                              |
-| takeover            | What `init` does to a tool's existing configuration: deletes it, writes gspot's, carries the exception lists.                                                                                                        |
-| exposed settings    | Every setting name the selected presets expose, with its direction and shipped default.                                                                                                                              |
-| runner surface      | Where the pinned tools and the gspot tasks are written: mise, npm, bun, pnpm, uv, or none.                                                                                                                           |
-| inspection          | One kind of look a file receives: format, syntax, style, types, structure, naming, prose, spelling, schema. `[coverage] strict` fails a source file that no check reads. The word coverage means test coverage only. |
-| concern             | The preset kind for something that spans languages: structure, naming, secrets, security, dependencies, licenses, commits, docs.                                                                                     |
-| allowed list        | A list of entries, each with a reason, that a gspot check skips. Its key ends in `_allowed`. A tool's own option keeps the tool's word.                                                                              |
-| profile             | A policy with no path in it, carried between repositories.                                                                                                                                                           |
+| Term           | Meaning                                                                                                                   |
+| -------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| preset         | A named bundle of tools, config, checks, settings, and agent rule files.                                                  |
+| check          | One external command or built-in analysis that produces findings.                                                         |
+| rule           | A named diagnostic within a check, such as an ESLint rule. Not an agent instruction file.                                 |
+| finding        | A message from a check, optionally with a file location and tool rule name.                                               |
+| result         | The status and findings of one check execution.                                                                           |
+| report         | Results of the complete run, including failures, skips, and metadata.                                                     |
+| engine         | The implementation that executes a class of checks.                                                                       |
+| config         | The repository's choices in `gspot.toml`. Internal `Policy` names are implementation names, not public synonyms.          |
+| ignore         | A tracked exception for a check or one of its rules, optionally restricted by paths. Reasons follow `require_reasons`.    |
+| scope          | A config-relative subtree with its own preset selection and settings.                                                     |
+| stage          | When a check runs: commit, push, manual, or the hook-only message stage.                                                  |
+| level          | Which checks are enabled by default: recommended or all. Not a stage.                                                     |
+| rule file      | Markdown instructions an agent reads. Use the full phrase to distinguish it from a diagnostic rule.                       |
+| rule category  | The folder category of agent rule files. It is not a level or a front-matter `layer` field.                               |
+| generated file | Output derived from another input, whether generated by gspot or by the project.                                          |
+| managed output | A gspot-written output governed by the ownership and recovery contract. A path under `.gspot/` alone proves no ownership. |
+| file kind      | Source, generated, vendored, or binary.                                                                                   |
+| file set       | Files selected from the relevant working tree, index, or committed snapshot, with exclusions and check claims applied.    |
+| owned tool     | A tool whose generated config gspot maintains; ownership does not imply exclusive ownership of every developer file.      |
+| drift          | A difference between actual output and the expected output from its inputs.                                               |
+| fixer          | An executable operation that corrects source or formatting. Advice is `help`, not a fixer.                                |
+| runner         | How the repository invokes gspot tasks: mise, npm, pnpm, yarn, or bun. An absent runner table means no integration.       |
+| check coverage | The kinds of checks a file receives, such as syntax, types, or spelling.                                                  |
+| test coverage  | Code exercised by tests. Distinct from check coverage.                                                                    |
+| version pin    | The gspot version selected by the repository. Upgrade and recovery exceptions follow the CLI contract.                    |
+| takeover       | Accepted replacement of existing tooling, with configuration carryover and saved originals.                               |
+| setting        | One named configuration choice with a type, scope, and default.                                                           |
+| allowed list   | Entries a specific check permits through a setting ending in `_allowed`. It is not a second ignore mechanism.             |
+| profile        | Portable config without repository-specific paths.                                                                        |
+| concern        | The manifest preset kind for checks that span languages; public prose says what the preset checks.                        |
+
+[19-names.md](19-names.md) owns exact field and parameter spellings. File ownership and
+recovery are defined in [03-configuration.md](03-configuration.md), not inferred from a name.
 
 ## How this folder is maintained
 
@@ -88,3 +95,22 @@ One word, one meaning, everywhere in this folder, and in the code.
 - A number that summarizes a list lives beside the list, or not at all.
 - No document links to a file that does not exist. A link check runs over this folder in the gate of this repository.
 - Paths from the reference repositories appear only in the source column of the ledger.
+
+## Contract owners
+
+These documents specify the target, not a claim that the implementation already conforms.
+When a contract changes, update its owner, decision, fix acceptance tests, and remaining-work row
+together. Historical evidence in the gap log describes the defect, not a competing target.
+
+| Contract                                                             | Owner                                            |
+| -------------------------------------------------------------------- | ------------------------------------------------ |
+| Commands, dry-run, init and upgrade sequence                         | [02-cli.md](02-cli.md)                           |
+| Paths, recovery, ownership, carryover, serialization, and tool locks | [03-configuration.md](03-configuration.md)       |
+| Banned terms and naming defaults                                     | [08-naming-policy.md](08-naming-policy.md)       |
+| Revision selection, hooks and CI                                     | [10-hooks-ci-runners.md](10-hooks-ci-runners.md) |
+| Public and internal domain vocabulary                                | [19-names.md](19-names.md)                       |
+| Website source, released docs and deployment                         | [21-documentation.md](21-documentation.md)       |
+| Implementation verification and app branch handoff                   | [22-remaining.md](22-remaining.md)               |
+
+The September 20 review is tracked in [24-contracts.md](fixes/24-contracts.md), with the
+existing subject fixes amended in place. [22-remaining.md](22-remaining.md) remains the work index.

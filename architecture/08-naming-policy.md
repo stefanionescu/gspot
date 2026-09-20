@@ -1,7 +1,11 @@
 # Naming Policy
 
 This document decides the shipped naming policy: its schema, its term lists, its matching rules,
-and how a repository extends it. The policy is data. The naming engine in
+and how a repository extends it. Banned-term matching is a house-style check at level `all`, including reserved terms and
+banned folder words. It does not run at `recommended`. `generate` and `service` are permitted
+and absent from the shipped banned lists. A repository can explicitly add either at `all`.
+
+Case, name-length, word-count, digit, ordering, and layout preferences also belong to `all`; recommended naming checks are limited to demonstrated external-contract defects. The same level applies to term bans in prose and tool templates. The policy is data. The naming engine in
 [05-engines.md](05-engines.md) executes it.
 
 ## Why a term list
@@ -10,8 +14,10 @@ The rules an agent breaks most are judgments a linter cannot make: prefer duplic
 wrong abstraction, add no defensive logic for impossible states, keep one implementation per
 concept. The term list is the mechanisable shadow of those rules. A speculative guard is named
 `ensureConfigIfNeeded`. A parallel implementation is named `enhancedHandler`. A concept with no
-owner lands in `utils/common.ts`. Banning the name blocks the construct at the one point a
-machine can see it.
+owner lands in `utils/common.ts`.
+
+A banned-name finding asks for a house-style change. A spelling alone does not prove that
+the declaration is redundant or that its abstraction is wrong.
 
 ## Schema
 
@@ -54,10 +60,10 @@ Terms are whole identifier parts. One entry covers every separator and casing.
 | Group        | Removable | Terms                                                                                                                                                                                                                                                                                                  |
 | ------------ | --------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
 | containers   | yes       | `core`, `common`, `generic`, `misc`, `stuff`, `thing`, `things`, `details`, `info`, `object`, `data` (reserved), `catalog`, `catalogue`, `corpus`, `taxonomy`, `tmp`, `temp`                                                                                                                           |
-| roles        | yes       | `helper`, `helpers`, `util`, `utils`, `manager`, `handler`, `processor`, `service`, `wrapper`, `shim`, `shims`, `support`                                                                                                                                                                              |
+| roles        | yes       | `helper`, `helpers`, `util`, `utils`, `manager`, `handler`, `processor`, `wrapper`, `shim`, `shims`, `support`                                                                                                                                                                                         |
 | marketing    | no        | `advanced`, `enhanced`, `improved`, `intelligent`, `smart`, `modern`, `robust`, `seamless`, `ultimate`, `comprehensive`, `optimized`, `reusable`, `custom`, `final`, `latest`, `old`, `new`, `legacy`, `plus`, `combined`, `v2` (through the digit ban)                                                |
 | defensive    | no        | `ensure`, `maybe`, `likely`, `should`, `if needed`, `ifneeded`, `if available`, `ifavailable`, `if changed`, `ifchanged`, `if possible`, `ifpossible`, `or throw`, `orthrow`, `waitfor`, `with retries`, `transient`, `belt and suspenders`, `fallback`, `load bearing`, `load-bearing`, `loadbearing` |
-| verbs        | yes       | `render`, `generate`, `sync`, `synchronize`, `synchronise`, `materialize`, `materialise`, `coerce`, `scoped`, `bind`                                                                                                                                                                                   |
+| verbs        | yes       | `render`, `sync`, `synchronize`, `synchronise`, `materialize`, `materialise`, `coerce`, `scoped`, `bind`                                                                                                                                                                                               |
 | verbs-strict | yes       | `load`, `loaded`, `loader`, `loaders`, `loading`, `fetch`, `resolve`, `resolving`, `resolution`                                                                                                                                                                                                        |
 | conjunctions | yes       | `and`, `or`, `with`, `when`, `what`, `whatever`, `once`, `plus`                                                                                                                                                                                                                                        |
 | test         | yes       | `fixture`, `fixtures`, `test case`, `testcase`, `under test`, `undertest`, `edge case`, `edge cases`, `snapshot`, `snapshots` (scoped to non-test code)                                                                                                                                                |
@@ -72,7 +78,7 @@ calling `handler.bind(this)` does not, because a call is not a declaration. The 
 
 ### Private names
 
-Two rules connect naming to visibility, both in the structure engine and both on by default:
+Two rules connect naming to visibility, both in the structure engine and both at level `all`:
 
 - `structure/private-prefix`.
     - Python: a top-level function, class or constant not listed in `__all__` starts with `_`, and a name in `__all__` never does; a method called from no other module starts with `_`.
@@ -168,10 +174,14 @@ A run of capitals is one part (`HTTPClient` splits to `http`, `client`; `userID`
 `id`). A platform name keeps its spelling and is listed under `external` (`XMLHttpRequest`,
 `URLSession`).
 
-Predicates: TypeScript, JavaScript, Swift and Python boolean names start with `is`, `has`, `can`,
-`did` or `will`; SQL boolean columns are the bare predicate (`enabled`, `retryable`) and an `is_`
-prefix is a finding. The check reads the name and the literal or annotation beside it, and no
-type checker.
+Predicate functions use state names such as `isFixable`, `hasHeader`, and `canAsk`.
+Functions that write, execute, or prompt use action verbs even when they return a boolean.
+Do not infer a predicate from the return type alone. Stored booleans and options describe their
+meaning, such as `defaultAnswer`, `useDefaults`, or `didChange`; they do not all need an `is`
+prefix. SQL boolean columns remain bare predicates such as `enabled` and `retryable`.
+
+These house-style checks run at `all`. The action and parameter contract in
+[19-names.md](19-names.md) also applies to the naming rules and lint configuration of gspot itself.
 
 `handle` as a leading verb is a `verbs` finding in the shared policy. A preset whose framework
 uses the word allows it in its own rules: react for an event prop (`handleSubmit`), express and

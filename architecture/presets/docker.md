@@ -4,11 +4,11 @@ Kind: tool. Requires: config-files. Recommends: spelling.
 
 ## Detects and claims
 
-|                      |                                                                                       |
-| -------------------- | ------------------------------------------------------------------------------------- |
-| Detect               | `Dockerfile*`, `*.dockerfile`, `docker-compose*.yml`, `compose*.yml`, `.dockerignore` |
-| Claims               | the same                                                                              |
-| Required inspections | syntax, style, security, spelling                                                     |
+|                         |                                                                                       |
+| ----------------------- | ------------------------------------------------------------------------------------- |
+| Detect                  | `Dockerfile*`, `*.dockerfile`, `docker-compose*.yml`, `compose*.yml`, `.dockerignore` |
+| Claims                  | the same                                                                              |
+| Required check coverage | syntax, style, security, spelling                                                     |
 
 ## Tools
 

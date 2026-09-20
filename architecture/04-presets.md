@@ -24,7 +24,7 @@ runs, settings it exposes, and rule files it installs. It contributes nothing it
 ## Kinds
 
 Seven kinds. The kind names the folder under `presets/` in this documentation and a `kind` field in
-the manifest. Preset names are bare names; the kind is not part of the id.
+the manifest. Preset names are bare names; the kind is not part of the name.
 
 | Kind      | Selected by                                    | Claims files by                           | Examples                                                                                                                               |
 | --------- | ---------------------------------------------- | ----------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------- |
@@ -40,7 +40,7 @@ the manifest. Preset names are bare names; the kind is not part of the id.
 
 ```toml
 [preset]
-id         = "typescript"
+name         = "typescript"
 kind       = "language"
 title      = "TypeScript"
 requires   = ["javascript", "structure"]
@@ -84,16 +84,16 @@ template = "tsconfig.check.json.tmpl"  # extends the tsconfig.json of the reposi
 target   = ".gspot/tsconfig.check.json"
 
 [[checks]]
-id      = "typescript/tsc"
+name      = "typescript/tsc"
 level   = "recommended"
 stage   = "push"
 runs    = "per-scope"                  # per-file-list | per-scope | once
 summary = "Checks that every TypeScript file type-checks."
 why     = "A file that does not type-check can crash at run time in a way the editor already knew about."
-fix     = "Read the first error tsc prints and fix that file. Later errors are often the same mistake."
+help     = "Read the first error tsc prints and fix that file. Later errors are often the same mistake."
 
 [[checks]]
-id          = "typescript/eslint"
+name          = "typescript/eslint"
 level       = "recommended"
 stage       = "commit"
 runs        = "per-file-list"
@@ -102,7 +102,7 @@ fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order   = "codemod"                # codemod | imports | manifest | format
 summary     = "Runs ESLint with the shipped rule set over every TypeScript file."
 why         = "ESLint catches mistakes the compiler accepts: unused code, unsafe casts, functions that only forward."
-fix         = "Run gspot check --fix for the rules that fix themselves, then read each line that is left."
+help         = "Run gspot check --fix for the rules that fix themselves, then read each line that is left."
 
 [[settings]]
 name      = "tools.eslint.rules"
@@ -120,7 +120,7 @@ detect    = { folders = ["types", "src/types"] }   # init fills it from what the
 categories = ["types"]
 case       = "PascalCase"
 
-[inspections]
+[coverage]
 ".ts" = ["format", "syntax", "style", "types"]
 
 [rule_files]
@@ -132,7 +132,7 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 
 ### Field rules
 
-- `id` is a bare kebab-case name and matches the folder name.
+- `name` is a bare kebab-case name and matches the folder name.
 - `requires` pulls presets in, and a person cannot drop them. It holds what the preset cannot
   work without: `typescript` requires `javascript`, because its configuration is a fragment of
   the JavaScript one. A required preset that is missing fails to load.
@@ -153,13 +153,13 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
   note.
 - `takes_over` names a check whose work this check does itself. In a scope that plans both,
   the named check is skipped with the note `<taker> runs it here` (D-99).
-- `[inspections]` lists, for each extension, the inspection kinds a file of that extension must
+- `[coverage]` lists, for each extension, the check kinds a file of that extension must
   receive. `doctor` reports a file that misses one as partly checked.
 - `[rule_files]` lists the corpus files the preset installs, by layer.
 - `[required_rules]` lists, for a file ending, the ESLint rules that must be on for a file with
   that ending. `javascript/required-rules` reads it (D-99).
 - A check name is `<family>/<name>`. The family is the engine or the tool family that produces the
-  finding (`structure`, `naming`, `integrity`, `prose`, `security`, or the preset's own id), not
+  finding (`structure`, `naming`, `integrity`, `prose`, `security`, or the preset's own name), not
   always the preset. `gspot explain <check>` prints the preset that ships it.
 - `detect` proposes the preset at `init` and in `doctor`. Detection never selects.
 - `claims` decides which files the preset's checks receive. A `filenames` claim matches at any
@@ -172,7 +172,7 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - Every check is in a stage. [10-hooks-ci-runners.md](10-hooks-ci-runners.md) says what puts a
   check at `commit`, `push`, or `manual`.
 - Every check carries `summary` (what it looks for, one sentence), `why` (what goes wrong
-  without it) and `fix` (what to do), written for a person who does not code. The loader refuses an empty one.
+  without it) and `help` (what to do), written for a person who does not code. The loader refuses an empty one.
 - `explain`, the finding line and the generated page under `docs/rules/` print
   them; nothing else describes a check.
 - `runs = "per-file-list"` receives the claimed file list as `{files}`. `runs = "per-scope"` runs once from the scope root and reports its own inputs. Its cache key and file count cover every
@@ -193,9 +193,9 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - A `[rule_files]` entry may carry `when`, a detection table, so a file installs where its
   subject is found (D-154).
 - A manifest that repeats the check name of another manifest fails to load.
-- A check with `fix_command` names its `fix_order`. `fix` is the prose that tells a person what to do; `fix_command` is what `check --fix` runs.
+- A check with `fix_command` names its `fix_order`. Repository-defined checks use those same fields. `help` is the prose that tells a person what to do; `fix_command` is what `check --fix` runs.
 - A check whose exit code does not reflect findings declares `count_regex`.
-- `[inspections]` names, per extension, the inspection kinds a file needs to count as fully
+- `[coverage]` names, per extension, the check kinds a file needs to count as fully
   checked. `doctor` reports files that fall short. Kinds: `format`, `syntax`, `schema`, `style`,
   `types`, `structure`, `naming`, `prose`, `spelling`, `security`, `dependencies`,
   `duplication`, `links`, `freshness`.
@@ -207,28 +207,28 @@ A check can name a gspot engine instead of a command:
 
 ```toml
 [[checks]]
-id      = "structure/call-through"
+name      = "structure/call-through"
 stage   = "commit"
 engine  = "structure"
 rules   = "rules/call-through"       # a directory of ast-grep YAML, one file per grammar
 limit   = "limits.trivial_statements"
 summary = "Finds a function that only passes its arguments on to one other function."
 why     = "The extra name adds a hop to read and nothing to the program."
-fix     = "Call the inner function directly and delete the wrapper, or give the wrapper real work."
+help     = "Call the inner function directly and delete the wrapper, or give the wrapper real work."
 
 [[checks]]
-id      = "naming/identifiers"
+name      = "naming/identifiers"
 stage   = "commit"
 engine  = "naming"
 
 [[checks]]
-id      = "docs/stale-paths"
+name      = "docs/stale-paths"
 stage   = "commit"
 engine  = "builtin"
 ```
 
 A built-in check that is not structure, naming, or prose is one file under `src/checks/`, named
-after its id: `docs/stale-paths` is `checks/docs/stale-paths.ts` (D-146). The id is the key, and
+after its name: `docs/stale-paths` is `checks/docs/stale-paths.ts` (D-146). The check name is the lookup key, and
 no manifest names an analysis. Each built-in check is listed in [05-engines.md](05-engines.md) with what it searched before
 being written.
 

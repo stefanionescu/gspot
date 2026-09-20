@@ -2,7 +2,7 @@
 
 Row 14 of the build order. The suite is large and proves less than its size says. A failed
 `init` passes, and 59 of 60 installs use a runner no developer uses. A check counts as tested
-when its id stands in a skip list, and many cases expect a word that any output holds. Every defect
+when its name stands in a skip list, and many cases expect a word that any output holds. Every defect
 of the first fix file lived where no test looked. This step makes the suite install as a
 developer installs, fail every check once, and expect the sentence of each finding.
 
@@ -91,10 +91,10 @@ a unit test fails an `A-` id with no case.
 
 Closes T-28, T-17, T-14, T-30, and G-2.
 
-**What is wrong.** The guard test `every shipped check has a test` passes when the id of a check
+**What is wrong.** The guard test `every shipped check has a test` passes when the name of a check
 stands in quotes anywhere in any test file, a `--skip` list included. Thirteen checks appear only
 in a stage listing or run only on a clean repository, among them `docker/compose-config`, which
-fails on every file (K-258). The library presets are proven by the ids `no-restricted-imports`
+fails on every file (K-258). The library presets are proven by the rule names `no-restricted-imports`
 and `no-restricted-syntax`, which every selector prints. Several test folders are empty.
 
 **Target.** Every shipped check has one planted defect that makes it fail, with the message of
@@ -177,16 +177,14 @@ is unmeasured.
 its generator wrote it. New `tests/repositories/generated.test.ts`. New
 `packages/cli/tests/unit/naming/shipped-policy.test.ts`.
 
-**Logic.** For each generated project the test runs `init --yes` and `check`, and holds the
-number of findings at `recommended` as the expected value, by check. A rise is a failure that the
-commit has to explain. The naming test runs the shipped policy over one short file for each
+**Logic.** For each generated project and representative established multi-package project, run `init --yes` and `check`. Review each recommended finding for a demonstrated defect and false positives before accepting any message or count snapshot (K-301). Include valid API wrappers, framework adapters, and identifiers containing `generate` or `service`. A count alone is not an acceptance criterion. The naming test runs the shipped policy over one short file for each
 language and framework, and expects no finding.
 
 **What goes.** Nothing.
 
 **Tests.** These are the tests.
 
-**Done when.** Each generated project holds under 50 findings at `recommended`, none about style.
+**Done when.** Each recommended finding has a reviewed defect rationale, with no unexplained house-style finding; banned-term cases fail only at `all`.
 
 ## K-28: the ESLint template has 411 lines and its test has 21
 
@@ -273,11 +271,11 @@ in the bash and the zsh script. The release tests read `version` of
 Closes T-31, T-11, and T-34.
 
 **What is wrong.** `golang.test.ts`, `handheld.test.ts`, `components.test.ts`,
-`documents.test.ts`, `repository-check.test.ts`, and `scope-languages.test.ts` do not carry the id
+`documents.test.ts`, `repository-check.test.ts`, and `scope-languages.test.ts` do not carry the name
 of the preset they test. The Xcode project of the xcode test is nine lines written by hand, so
 the reader never meets a `project.pbxproj` that Xcode wrote.
 
-**Target.** A repository test carries the id of its preset (D-128). The xcode fixture is a
+**Target.** A repository test carries the name of its preset (D-128). The xcode fixture is a
 project Xcode generated, with groups, build phases, and synchronized folders.
 
 **Files.** Renames: `handheld` to `react-native`, `components` to `vue` and `svelte`, `documents`

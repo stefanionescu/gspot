@@ -28,15 +28,19 @@ passes on the next run with the cache on.
 **What is wrong.** `emit/hooks.ts` writes a pre-push hook that runs `gspot check` over the whole
 tree. Uncommitted work in unrelated files refuses a push of clean commits.
 
-**Target.** The hook checks the files of the commits being pushed, and nothing else.
+**Target.** The hook verifies the exact committed trees being pushed. HEAD and uncommitted work
+do not change the result. Whole-project findings follow D-168.
 
 **Files.** `emit/hooks.ts`, `run/check-command.ts`, `repository/staged.ts`.
 
-**Logic.** Git gives the hook the local and the remote id on stdin. The hook passes them as
-`gspot check --changed=<remote id>`, which reads the files that differ, in place. A first push has
-a zero remote id, and the hook then takes the commits no remote branch holds (K-272). Where a
-pushed file also has uncommitted changes, the output says so, as staged mode does. No worktree
-and no stash: a second checkout has none of the installed dependencies a type checker needs.
+**Logic.** The dispatcher invokes internal `gspot check --push`, buffering all stdin ref rows.
+Each supplies local and remote object IDs. Compare the actual endpoints and check a temporary
+committed snapshot with matching config and dependency locks.
+
+Follow [10-hooks-ci-runners.md](../10-hooks-ci-runners.md) for multiple refs, new refs, tags,
+force pushes, deletion-only pushes, missing objects, and a local ref other than HEAD.
+Never read working-tree bytes as proof of a pushed commit. Reuse installed dependencies only
+when their lock and manifest identity matches.
 
 **What goes.** The full run on push.
 
@@ -55,28 +59,19 @@ every old problem of a project on every push, whatever the push changed. The CI 
 install under `.gspot/` named no package manager for a repository whose projects use different
 ones.
 
-**Target.** D-168. A run over changed files reports findings in those files alone, and one line
-counts the rest. CI compares with the commit before the change.
+**Target.** D-168. Changed paths select file-list tools and affected projects, never filter the findings of a whole-project tool. Existing project errors may block adoption; the plan must say so.
 
-**Files.** `run/execute.ts`, `output/reporter.ts`, `emit/workflow.ts`, `emit/gitlab.ts`,
-`lifecycle/install-tools.ts`.
+**Files.** `run/execute.ts`, `run/plan.ts`, `repository/staged.ts`, `output/reporter.ts`, `emit/workflow.ts`, `emit/gitlab.ts`, `lifecycle/install-tools.ts`.
 
-**Logic.** `execute.ts` knows the changed file list of a run with `--staged` or
-`--changed`. After a whole-project check it keeps the findings whose file is on that list, and the
-exit code comes from those. The reporter prints one line with the count of the others and the
-command that shows them.
+**Logic.** Preserve deleted paths and both sides of renames for impact selection. Configuration, locks, and shared project references trigger dependent projects. Keep every whole-project finding, fileless finding, and failed tool status. Unknown impact selects the broader set.
 
-The GitHub job passes the base of the pull request, or the commit before
-the push, as `--changed=<commit>`. The GitLab job passes `CI_MERGE_REQUEST_DIFF_BASE_SHA`, or
-`CI_COMMIT_BEFORE_SHA`. The install under `.gspot/` takes the package manager of the root, then
-of the first JavaScript project, then what D-171 names.
+CI uses event-specific base and target objects, including merge queues and zero-base fallback, from [10-hooks-ci-runners.md](../10-hooks-ci-runners.md). Managed tools use the package manager chosen by D-171 and immutable locks.
 
-**What goes.** The bare `gspot check --changed` in both CI jobs.
+**What goes.** Findings filtered by reported file path, and bare upstream comparison in CI.
 
-**Tests.** A planted TypeScript project with an old type error in `a.ts` pushes a change to `b.ts`
-and passes, with the one line about `a.ts`. A unit test of each CI file holds the `--changed=` value.
+**Tests.** Changing an export in `a.ts` must fail on a new error in unchanged `b.ts`. Cover deleted exports, renames, config-only changes, dependency changes, fileless failures, missing tools, old project errors, and every CI event. A clean commit with broken uncommitted work passes when its committed snapshot is clean.
 
-**Done when.** Both pass.
+**Done when.** No regression is hidden solely because its reported file was unchanged; the documented adoption tradeoff is visible.
 
 ## K-295: two flags name one idea
 
@@ -91,8 +86,7 @@ gone, with no alias.
 
 **Logic.** The parser reads the value only after an equals sign, so `gspot check --changed api`
 checks the folder `api`. With no value the ref is `@{upstream}`, then the default branch
-(K-272). The push hook writes `--changed=<remote id>`, and both CI jobs write
-`--changed=<base commit>`.
+(K-272). The push hook uses internal `--push`; CI uses explicit event-specific base and target snapshots. Missing upstream and default refs give a setup error instead of an empty successful run.
 
 **What goes.** The option `--since`, its help text, and its branch in `check-command.ts`.
 

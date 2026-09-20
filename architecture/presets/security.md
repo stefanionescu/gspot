@@ -36,7 +36,7 @@ it is a `push` check from day one.
 
 ## Settings
 
-`tools.semgrep.rules`, `tools.semgrep.registry`, `tools.semgrep.ignore` (paths; a rule turned off is `gspot ignore security/semgrep --rule <id>`), `tools.codeql.languages`,
+`tools.semgrep.rules`, `tools.semgrep.registry`, `tools.semgrep.ignore` (paths; a rule turned off is `gspot ignore security/semgrep --rule <rule>`), `tools.codeql.languages`,
 `tools.codeql.suite`, `tools.codeql.false_positives` (rule, path, reason).
 
 ## Rule files

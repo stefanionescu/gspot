@@ -6,7 +6,7 @@ names the tool. A unit test reads every check name of this document and fails on
 holds (K-248).
 
 Every landing has a level (D-119). A rule that finds a defect, a security problem, dead code, or
-a banned name is `recommended`. A rule that enforces a layout, an order, a header, or one way to
+a banned name is `all`. A rule that enforces a layout, an order, a header, or one way to
 write a thing that works is `all`. A reference repository that migrates sets `level = "all"`, so
 it keeps every rule it had. A rule that names a function or a folder of one repository moves
 into that repository, under `tools.semgrep.rules` or its own rule files (K-218).

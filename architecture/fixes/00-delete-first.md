@@ -80,7 +80,7 @@ that use a removed flag change in this commit (T-35).
 **Tests.** The completion test reads the command list from the program and holds 16 names
 (T-22). A unit test holds that `gspot why` exits 2 as an unknown command.
 
-**Done when.** `gspot --help` lists 16 commands, and none of these flags parses.
+**Done when.** `gspot --help` matches the public command list in [02-cli.md](../02-cli.md), and none of the removed flags parses.
 
 ## D-100: the lint files at the root of this repository
 
@@ -184,7 +184,7 @@ Closes K-102, K-187, and K-188.
 nothing. `no-single-file-folders` and `no-prefix-collisions` repeat two structure checks. Five
 rules repeat a pinned tool: `import-direction`, `no-harness-barrel-imports`,
 `no-reexports-outside-index`, `no-duplicate-barrel-exports`, and the `interface` message of
-`types-placement`. One fact is two findings under two ids, with two allow lists.
+`types-placement`. One fact is two findings under two names, with two allow lists.
 
 **Target.** The plugin holds 19 rules, and one fact has one finding.
 
@@ -329,14 +329,14 @@ them again, and the check `docs/generated` exists only to catch a forgotten run.
 **Files.** `docs/package.json` (the build script), `.gitignore`, `gspot.toml` (the
 `docs/generated` check goes), and `docs/reference-pages.ts` loses `--check`.
 
-**Logic.** `build` runs `bun reference-pages.ts && astro build`.
+**Logic.** `build` runs `bun reference-pages.ts && astro build`. Keep this generator; K-303 and K-304 in [25-simplification.md](25-simplification.md) define safe output ownership and complete public reference content. Remove the public decision-log mirror rather than copying target design into release documentation.
 
 **What goes.** 293 tracked files, the `[[check]]` entry, and the step of the contribution guide
 that says to run the script after a decision changes.
 
 **Tests.** The docs job of CI builds the site from a clean checkout.
 
-**Done when.** `git ls-files docs | wc -l` prints fewer than 20.
+**Done when.** Git tracks no generated reference pages, a clean build produces the complete public reference, and authored guides survive generation. A total file-count ceiling is not a correctness test.
 
 ## K-259: leftovers in `.gitignore`
 

@@ -4,11 +4,11 @@ Kind: language. Requires: formatting. Recommends: structure, naming, spelling.
 
 ## Detects and claims
 
-|                      |                                                                  |
-| -------------------- | ---------------------------------------------------------------- |
-| Detect               | `.swift` in the tree; `Package.swift`; `*.xcodeproj`             |
-| Claims               | `.swift`, `Package.swift`, `Package.resolved`                    |
-| Required inspections | format, syntax, style, types, structure, naming, prose, spelling |
+|                         |                                                                  |
+| ----------------------- | ---------------------------------------------------------------- |
+| Detect                  | `.swift` in the tree; `Package.swift`; `*.xcodeproj`             |
+| Claims                  | `.swift`, `Package.swift`, `Package.resolved`                    |
+| Required check coverage | format, syntax, style, types, structure, naming, prose, spelling |
 
 ## Tools
 
@@ -45,7 +45,7 @@ and are part of the level `all`.
 
 The preset renders these lists. They are the measured set of the reference repository, so the
 acceptance run compares like with like. A person turns one rule off with
-`gspot ignore swift/swiftlint --rule <id>` and a reason.
+`gspot ignore swift/swiftlint --rule <rule>` and a reason.
 
 SwiftLint opt-in rules, 87:
 
@@ -184,7 +184,7 @@ sources in a response file, which the analyzer does not open, so gspot writes th
 the log. The log also names files the way SwiftLint does under `/tmp` and `/var` on macOS. An
 analyzer finding carries the id of its SwiftLint rule, such as `unused_import`.
 
-The structure checks read the Swift grammar and carry the language in their ids (D-98):
+The structure checks read the Swift grammar and carry the language in their names (D-98):
 `swift/call-through`, `swift/trivial-function`, `swift/duplicate-functions`,
 `swift/private-before-public`, and `swift/env-access-owner`. A function with an attribute or
 `override` is tied to a caller the file does not show, so the first two leave it alone.
@@ -194,7 +194,7 @@ owner, and reads in two or more files are all findings.
 
 ## Settings
 
-`tools.swiftlint.keep_imports`, `tools.swiftformat.swift_version` (a rule turned off is `gspot ignore swift/swiftlint --rule <id>`, rendered into `disabled_rules`), `tools.swiftformat.options`,
+`tools.swiftlint.keep_imports`, `tools.swiftformat.swift_version` (a rule turned off is `gspot ignore swift/swiftlint --rule <rule>`, rendered into `disabled_rules`), `tools.swiftformat.options`,
 `tools.periphery.retain`, `tools.xcodebuild.scheme`, `tools.xcodebuild.destination`.
 
 ## Rule files

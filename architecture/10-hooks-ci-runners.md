@@ -10,12 +10,11 @@ This document decides where checks run: git hooks, the CI job, and the tasks of 
 | ---------------------------- | ------------------------------------------------------------------------------ |
 | `gspot check`                | every check of the commit and push stages, over the whole repository           |
 | the commit hook              | staged files, and the whole-project checks of a project a staged file sits in  |
-| the push hook                | the commits being pushed, by the same rule, against the upstream branch        |
+| the push hook                | the exact pushed trees, selected from every local/remote ref pair              |
 | `gspot check --stage manual` | the checks that build, test, or scan a whole project, or that need credentials |
 | CI                           | what the change touches, or everything with `[ci] run = "all"`                 |
 
-Checking only what a change touches is how an old repository adopts gspot, because gspot records
-no old findings (D-165). A file is judged when somebody changes it. A
+File-list checks narrow adoption noise, but affected whole-project checks report all findings (D-168). Existing errors can still block a change; gspot records no baseline (D-165). A
 full run alone sees the world change, such as a new advisory, and `gspot doctor` prints the date
 of the last full run. `[hooks] push = "all"` is for a team that wants the full run on push
 (D-123).
@@ -39,30 +38,63 @@ A check requires nothing, or one of `build`, `docker`, `database`, and `network`
 puts the check in `push` at least. A `docker` requirement with no daemon fails, with no silent
 pass. A check that waits for a setting prints `skipped` and names the setting.
 
-## Staged mode
+## Revision selection and changed files
 
-`gspot check --staged`:
+A file-list check receives the changed source paths. A project-wide check runs when any changed,
+renamed, or deleted path affects its inputs. Inputs include config and lockfiles.
+Follow reverse project references for dependent scopes. When impact is uncertain, run the
+broader set.
 
-1. Reads `git diff --cached --name-only --diff-filter=ACMRT`.
-2. Runs the commit-stage checks over the staged files that each check claims.
-3. Runs a commit-stage project check when a staged file is in its scope, or when `gspot.toml` or
-   a generated file is staged.
-4. Fails when a `.env*` file is staged, unless it is a template.
+Once triggered, the check reports all findings. These include errors in unchanged callers
+and findings without locations.
+Missing tools, failed parsers, and tool crashes remain failures. A cache stores the complete
+result and includes the full project inputs and revision identity. It never stores a
+path-filtered verdict.
 
-Staged mode reads the working-tree content of each staged path, not the staged blob. No stash
-happens. When a staged file also has unstaged changes, the output says
-`checked working tree; N files have unstaged changes`.
+`gspot check --staged` reads the index. It includes staged deletions and both sides of renames.
+Checks run over an isolated snapshot of the index. Unstaged edits neither repair nor break the
+commit verdict. An unborn branch compares with the empty tree. No stash or working-tree
+checkout occurs.
+
+Hooks never run fixers.
+
+Interactive `gspot check --changed[=<ref>]` compares the working tree with the merge base of
+the resolved ref and HEAD, includes tracked working changes, and labels that content source.
+If neither an upstream nor a default branch can be identified, request an explicit ref and exit 2.
+It is a local check, not a statement about a different branch being pushed.
 
 ## The push hook
 
-The push hook checks the files of the commits being pushed. Git gives it the local and the remote
-id, and the hook runs `gspot check --changed=<remote id>` over the files that differ, in place. A file with uncommitted
-work outside that list is not read, so it never refuses a push. Where a pushed file also has
-uncommitted changes, the output says so, as staged mode does.
+The hook calls the hidden `gspot check --push` entry point. It reads every
+`local-ref local-object remote-ref remote-object` row from stdin, as specified by
+[Git pre-push](https://git-scm.com/docs/githooks#_pre_push). Both object IDs belong to the
+contract; never substitute HEAD for the local object. Buffer the input once for hook chaining.
 
-A run over changed files reports findings in those files alone (D-168). A type checker still
-reads its whole project, and gspot keeps the findings of the files the change touches. One line
-counts the rest.
+For an existing remote ref, compare its old object directly with the pushed local object.
+For a new ref, identify commits reachable from that local object but from no fetched ref of
+the destination remote. Select the union of paths changed by those commits. If no usable
+fetched reachability exists, check the full local tree.
+
+A deleted ref runs no source check. Resolve tags to commits. Report non-commit objects as not
+applicable. Process multiple refs independently and deduplicate identical local trees and
+input sets.
+
+Missing required objects cause a clear setup failure. Never substitute HEAD or treat the
+missing diff as empty. `[hooks] push = "all"` checks every pushed local tree in full, not the working tree.
+
+Check the exact local commit in an isolated snapshot. Never stash or mutate the real working
+tree. Resolve configuration from that snapshot and validate its version pin. Reuse
+installed tool environments only when their manifests and locks match; otherwise fail with
+the command to prepare the required version. Repository dependencies must also match the
+snapshot or the check reports missing setup. Do not silently check against another tree's
+dependencies.
+
+Supported tool commands direct all output into scratch space. Arbitrary custom
+commands remain trusted repository code, not sandboxed code.
+
+A project-wide check sees all its snapshot inputs and all its findings affect the verdict.
+Existing errors can block a push. The supported choices are to fix them, configure an ignore,
+or bypass the local hook; CI still judges the submitted tree. No finding baseline is created.
 
 ## Hooks
 
@@ -70,26 +102,26 @@ gspot goes where the hook already points (D-114). `init` reads what each hook ca
 the gspot line in a fixed order. The task the hook calls comes first, then the hook file, then
 hooks of its own where none exist.
 
-| `[hooks] tool`     | gspot writes                                                                            | Proposed when                     |
-| ------------------ | --------------------------------------------------------------------------------------- | --------------------------------- |
-| `existing`         | one managed block in the task or the hook file that git already runs                    | the repository has hooks          |
-| `husky`            | one line in each `.husky/` hook                                                         | `.husky/` exists                  |
-| `lefthook`         | a `gspot` block in `lefthook.yml`                                                       | `lefthook.yml` exists             |
-| `pre-commit`       | one `repo: local` hook in `.pre-commit-config.yaml`, as a managed block                 | that file exists                  |
-| `simple-git-hooks` | the gspot line in its key of `package.json`, after a yes                                | that key exists                   |
-| `gspot`            | one managed block in `.git/hooks/pre-commit` and `pre-push`, written by `gspot install` | no hook tool and no tracked hooks |
-| no table           | nothing                                                                                 | the person passes `--no-hooks`    |
+| `[hooks] tool`     | gspot writes                                                                             | Proposed when                     |
+| ------------------ | ---------------------------------------------------------------------------------------- | --------------------------------- |
+| `existing`         | one managed block in the task or the hook file that git already runs                     | the repository has hooks          |
+| `husky`            | one line in each `.husky/` hook                                                          | `.husky/` exists                  |
+| `lefthook`         | a `gspot` block in `lefthook.yml`                                                        | `lefthook.yml` exists             |
+| `pre-commit`       | one `repo: local` hook in `.pre-commit-config.yaml`, as a managed block                  | that file exists                  |
+| `simple-git-hooks` | the gspot line in its key of `package.json`, after a yes                                 | that key exists                   |
+| `gspot`            | a dispatcher or new hook in the Git-resolved hooks directory, written by `gspot install` | no hook tool and no tracked hooks |
+| no table           | nothing                                                                                  | the person passes `--no-hooks`    |
 
-A repository with hooks keeps them, and lines of a task that are no lint stay (D-101). gspot
+A repository with hooks keeps their behavior, arguments, input, and failure status (D-167). gspot
 never sets `core.hooksPath`, because that setting turns every hook under `.git/hooks/` off: a
 hook one developer wrote for one clone, and the hooks git-lfs installs (D-167). Where such a
-local hook exists, `gspot install` adds its block at the end of that file. Where a
+local hook exists, `gspot install` installs the chain described below. Where a
 husky hook calls lint-staged, the gspot line goes into the hook, and the plan lists the
 lint-staged entries that run a tool gspot runs too. A
 folder named `hooks` is no sign of git hooks: gspot asks `git config core.hooksPath` first.
 
 A hook under `.git/hooks/` belongs to one clone. `gspot install` writes the gspot block of a clone, and
-the setup entry of the repository calls it (D-115, D-156), and `doctor` asks git whether the hooks run in this clone. It names one of three
+the developer runs it explicitly after cloning (D-115), and `doctor` asks git whether the hooks run in this clone. It names one of three
 states, and ends with the setup command where the hooks exist and do not run.
 
 The block gspot writes runs under the Bash 3.2 that macOS ships (D-85). In a new hook file it is
@@ -109,19 +141,45 @@ main() {
 main "$@"
 ```
 
-`init` writes how the binary is found into the line: `mise exec -- gspot` under mise, `bunx gspot`
-or `npx gspot` under an npm runner, and the absolute path otherwise. Each finds the version the
-repository pins. A hook that cannot find gspot prints the install command and fails. The line
+`init` writes how the binary is found into the line:
+
+- Under mise, use `mise exec -- gspot`.
+- Under an npm runner, use `bunx gspot` or a package-manager local-exec form that cannot
+  download a missing package.
+- Otherwise, use a PATH-resolved pinned binary.
+
+Each finds the version the repository pins. A hook that cannot find gspot prints the install command and fails. The line
 asks the developer for no environment variable. The line itself sets `GSPOT_HOOK`, which tells
 the reporter to end a failing run with two
 lines: the command that reproduces it, and `git commit --no-verify` as the way past it.
 
 On Windows, git runs
 hooks through the Bash that Git for Windows installs, and gspot marks them executable through
-`git update-index --chmod=+x`.
+`git update-index --chmod=+x` for tracked hooks; clone-local hooks use filesystem executable permissions.
 
 One skip exists: `--skip` for one run, and it prints. No file and no environment variable turns
 a check off on one machine (D-173). A hook never runs `--fix`.
+
+### Hook chaining
+
+Prefer a hook manager's supported composition mechanism. A recognized tracked task can receive
+a managed gspot invocation only where its control flow reaches it and its non-lint behavior
+remains intact. A hook body is not assumed to be shell merely because it is executable.
+
+For an unmanaged local hook, preserve the original as an executable sibling in the Git-resolved
+hooks directory and install a marked dispatcher. Run the original as a subprocess, then gspot,
+with the same arguments, working directory, and environment. A nonzero original status stops
+the chain and is preserved. A successful `exec` or `exit` in the original cannot skip gspot.
+
+For pre-push, replay the buffered stdin independently to both commands. Install twice produces
+one chain, never a chain of dispatchers. Recovery stores the original path, bytes, mode, and
+installed dispatcher hash. Reject an existing sibling collision rather than overwrite it.
+
+Do not move an unknown tracked hook behind the developer's back. The init plan must describe
+the dispatcher and retained original; an unsupported hook manager or unapproved replacement
+leaves the hook intact and reports the explicit installation step. Git LFS, non-shell hooks,
+spaces in paths, linked worktrees, and `core.hooksPath` are integration cases.
+Uninstall restores only an unchanged dispatcher and leaves edited originals intact.
 
 ## Tasks of the runner
 
@@ -136,9 +194,11 @@ Every task calls gspot, and the order of checks lives in gspot.
 Existing command names keep working (D-116). Where a `lint`, `format`, or `check` task exists,
 the plan proposes a new body that calls gspot, and the developer accepts it. gspot writes a
 `gspot:check` and a `gspot:fix` task only where the name is free. `[runner] tasks` holds the
-names, and `uninstall` puts back the body it replaced. gspot never writes a `prepare` script.
+names. Uninstall restores an old body only when its replacement is unchanged; otherwise it
+preserves the developer edit and reports the recovery copy. gspot never creates or edits a
+package lifecycle script, including `prepare`, and never injects a setup task.
 
-The mise file has one place in every repository (D-127). gspot never edits `mise.toml`. `init`
+The mise file has one place in every repository (D-127). gspot changes an existing task in `mise.toml` only when that exact replacement was accepted in the init plan. `init`
 runs `mise trust` on its file before the install. The file pins gspot itself through the `github`
 backend of mise, which is what `mise exec` and the hook find. A pin the repository already holds
 for a tool is kept, and `doctor` reports a version below the floor of the preset.
@@ -153,49 +213,33 @@ A repository with no JavaScript takes bun or npm, whichever the machine has (D-1
 then the host of its remote (D-133). A repository whose CI already runs a lint job is told so
 and gets no second job.
 
-For GitHub, gspot writes `.github/workflows/gspot.yml`:
+For GitHub, gspot writes `.github/workflows/gspot.yml`. The emitter supplies real, verified
+action commit pins. The workflow contract is:
 
-```yaml
-name: gspot
-on:
-    push:
-    pull_request:
-    merge_group:
-permissions:
-    contents: read
-concurrency:
-    group: gspot-${{ github.ref }}
-    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
-jobs:
-    check:
-        runs-on: ubuntu-24.04
-        timeout-minutes: 20
-        steps:
-            - uses: actions/checkout@<pinned sha>
-              with: { fetch-depth: 0, persist-credentials: false }
-            - uses: jdx/mise-action@<pinned sha>
-            - uses: actions/cache@<pinned sha>
-              with:
-                  path: |
-                      .gspot/node_modules
-                      .gspot/.venv
-                  key: gspot-${{ runner.os }}-${{ hashFiles('.gspot/*.lock', '.mise/conf.d/gspot-tools.toml') }}
-            - run: gspot install
-            - run: gspot check --changed=${{ github.event.pull_request.base.sha || github.event.before }}
-              # or plain gspot check, with [ci] run = "all"
-            - uses: actions/upload-artifact@<pinned sha>
-              if: always()
-              with: { name: gspot-report, path: .gspot/report.* }
-            - run: gspot check --stage manual
-              if: github.event_name == 'push' && github.ref_name == github.event.repository.default_branch
-    code-scanning:
-        if: github.event_name == 'push' # never on a pull request from a fork
-        needs: check
-        permissions: { contents: read, security-events: write }
-        runs-on: ubuntu-24.04
-        timeout-minutes: 5
-        steps: [download the report, github/codeql-action/upload-sarif@<pinned sha>]
-```
+- Trigger on `pull_request`, `merge_group`, and `push`.
+- Select the base from `pull_request.base.sha`, `merge_group.base_sha`, or `before`,
+  respectively. An absent or all-zero base means a full check of the checked-out target tree.
+  Missing history is fetched explicitly or fails; it never produces an empty successful run.
+- Check the pull-request merge tree, merge-group tree, or pushed commit, respectively.
+  Pass a validated base through an environment variable, not interpolated shell code.
+- Run `gspot install` from tracked locks, then the commit and push checks.
+- Run manual checks in a separate job on default-branch pushes. That job has its own setup
+  and report artifact, so it cannot overwrite the first job's report.
+- Upload each job's reports after its check, including a failed check, with an always-run
+  artifact step. Artifact names include stage and platform.
+- Run code scanning after success or failure of the producing jobs, with a failure-aware
+  job condition such as `always() && !cancelled()`, limited to pushes in the repository.
+- Download only artifacts that exist and upload each SARIF with a distinct stage/platform
+  category. An absent report is reported, not presented as an empty successful scan.
+- Keep workflow permissions at `contents: read`. Only the code-scanning job receives
+  `security-events: write`. `[ci] sarif = false` omits that job.
+- Cache installations by operating system, architecture, package-manager version, all selected
+  lockfiles, and tool pins. Cache hits do not replace locked-install validation.
+- Cancel superseded pull-request runs only. Use a pinned runner image and explicit timeout.
+
+The dependency conditions follow [GitHub job behavior](https://docs.github.com/en/actions/how-tos/write-workflows/choose-what-workflows-do/use-jobs).
+Workflow tests cover failed checks with reports, missing reports, forks, merge queues,
+first pushes, and separate manual artifacts.
 
 The job follows `GITHUB-ACTIONS.md`, the rule file gspot installs. It has least permissions, a
 pinned runner image, a timeout, and a concurrency group that cancels pull request runs alone.
@@ -209,7 +253,7 @@ files is the check `integrity/generated-drift` inside `gspot check`, so the job 
 
 For GitLab, gspot writes `.gitlab/ci/gspot.yml` with one job, and the plan shows the line that
 includes it. gspot never edits `.gitlab-ci.yml`. The job sets `GIT_DEPTH: 0`, runs for merge
-requests and the default branch, and declares `gl-code-quality-report.json`. GitLab reads the
+requests and the default branch, and declares `.gspot/report.codequality.json`. GitLab reads the
 CodeClimate format there, and every run writes `.gspot/report.codequality.json` beside the JSON and the SARIF.
 
 The CI system is found by its files, `.github/workflows/` or `.gitlab-ci.yml`, and never by a

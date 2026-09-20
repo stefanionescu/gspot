@@ -8,23 +8,154 @@ that closes its row.
 
 ## The order
 
-The order is fixed by D-121.
+The order is fixed by D-121. K-298 through K-301 are prerequisites of the affected lifecycle, hook, naming, and adoption steps, not work deferred until after launch. K-302 follows the release and manual.
 
-1. Delete the branch `chore/gspot` of yap-swift-app on this machine. Push nothing there.
-2. Make CI run for the first time: K-204 alone, from [01-first-fixes.md](fixes/01-first-fixes.md).
-   Nothing counts as done before that run is green.
-3. Delete what nothing uses: [00-delete-first.md](fixes/00-delete-first.md). A thing with a
+1. Leave yap-swift-app unchanged while implementing and verifying gspot.
+2. Delete what nothing uses: [00-delete-first.md](fixes/00-delete-first.md). A thing with a
    replacement is deleted in the commit that builds the replacement (K-282).
-4. Close the other wrong answers of [01-first-fixes.md](fixes/01-first-fixes.md).
-5. Do the rows of the Adoption phase in the order of the fix files, from
+3. Close the other wrong answers of [01-first-fixes.md](fixes/01-first-fixes.md).
+4. Do the rows of the Adoption phase in the order of the fix files, from
    [02-takeover.md](fixes/02-takeover.md) to [20-self-check.md](fixes/20-self-check.md), and then
    [23-scenarios.md](fixes/23-scenarios.md).
-6. Redo the install in yap-swift-app from the local registry (D-158), on a new branch, and
-   measure it ([11-layouts.md](fixes/11-layouts.md)). Push nothing there. Each failure becomes
-   a row. Ask the owner before any other repository.
-7. Write the README, the manual, and the site: [21-manual.md](fixes/21-manual.md).
-8. Close the rows of [22-launch.md](fixes/22-launch.md). Then comes the first release of the
-   binary and the plugin.
+5. Complete the launch-code and documentation implementation, including the visual assets,
+   before the app handoff. Public publication, production deployment, and app-derived evidence
+   are later gates, not reasons to defer code fixes. Pass the implementation gate below.
+6. Follow the app handoff below: delete only the old local `chore/gspot` branch, create
+   `chore/gspot-adoption`, install the packaged candidate from the local registry (D-158), and
+   measure it. Push nothing there. Ask the owner before any other real repository.
+7. Incorporate the app evidence into the manual and case study. Fix every gspot defect exposed
+   by adoption, rerun the affected tests and the complete implementation gate, and repeat the
+   app acceptance. Then complete public-release prerequisites in [22-launch.md](fixes/22-launch.md)
+   and production deployment in [21-documentation.md](21-documentation.md).
+
+### Implementation gate before touching the app
+
+This is the authoritative handoff gate for D-121. Fix-file numbers are subject grouping, not
+permission to postpone dependencies.
+
+Apply K-298 and K-299 before destructive lifecycle work.
+Apply K-300 and K-308 before changing schemas and callers. Apply K-301 before accepting
+recommended output. Apply K-303 through K-307 before relying on generation, packaging, or harness results.
+
+Integrate
+scenario tests from file 23 with their owning features. Complete file 22's code and package
+validation before the handoff; only registry ownership, actual public publication, deployment,
+and adoption-derived measurements remain external or post-adoption gates.
+
+The implementation turn must supply the concrete per-step patches required by the repository
+planning guide before applying each bounded change. These architecture contracts are not a
+prewritten patch for the entire codebase. Missing implementation details must be resolved
+against the owner contract, not silently treated as permission to choose a different product.
+
+Record the source revision, candidate version, artifact hashes, command exit statuses, and CI
+run URL as evidence for this gate. All results must refer to the same candidate revision:
+
+1. Close the applicable fix acceptance criteria, including unit, integration, planted-repository,
+   lifecycle recovery, snapshot, hook, documentation, and release-package tests. Run the full
+   implemented test suite and its coverage floors. Required tests must not be skipped.
+1. Build all supported release targets and validate the launcher, platform packages, plugin,
+   embedded resources, notices, schema, and sample install from the local registry. Exercise
+   supported-platform checks in CI; a local macOS pass is not Windows or Linux evidence.
+1. Run the candidate binary on gspot itself, with `level = "all"`, strict check coverage,
+   no ignore entries, no local skip file, and no temporary rule disabling. Run
+   `gspot check --no-cache`, `gspot check --stage manual --no-cache`, and `gspot doctor`.
+1. Every required check must execute and pass. A missing tool, setup error, or skipped required
+   check is not a clean result. Any fixes invalidate the previous result until rerun.
+1. Verify apply is idempotent and install preserves tracked content in a disposable clean
+   checkout. Build and check the manual there, including samples, links, reference contracts,
+   and the asset acceptance requirements. Inspect unexpected tracked or untracked output.
+1. Exercise real commit and pre-push hooks in fixture repositories, including rejection cases
+   and existing-hook chaining. Do not create a dummy app commit to test the hooks of gspot itself.
+1. Read the successful CI jobs for that exact revision, not merely the workflow configuration
+   or an older green badge. If CI access or an environment is unavailable, report the gate as
+   blocked and keep the app branch intact.
+1. Repository pushes and commits still require the authority applicable to that implementation
+   turn. This review authorizes neither.
+1. As the last check before any authorized gspot commit, run `gspot check --staged`. A staged
+   pass complements, and never replaces, the full candidate checks above.
+
+### App handoff and branch replacement
+
+The user authorizes deletion of the old local `chore/gspot` branch only after the gate above.
+No second approval for that exact deletion is needed once its identity and gate are verified.
+This is not authority to delete other branches, remote refs, uncommitted work, or ignored files.
+
+Read-only inspection on September 20, 2026 found a clean checkout on `chore/gspot`, tip
+`ca2594d1f`, and local `master` at `aa4358be4`, with `origin/HEAD` pointing to `origin/master`.
+Four commits exist on the old branch beyond local `master`. These are observations, not frozen
+execution inputs. Re-read status, branch tips, default-branch tracking, and worktrees when the
+handoff begins. Inspect any changed branch history before deletion; do not discard new work
+under the old authorization without establishing that it belongs to the obsolete migration.
+
+Run read-only preflight from `/Users/dr_stone/Documents/work/yap-swift-app`:
+
+```shell
+git status --short --branch
+git branch -vv
+git worktree list
+git symbolic-ref refs/remotes/origin/HEAD
+git rev-parse chore/gspot master
+git log --oneline master..chore/gspot
+```
+
+Proceed only with a clean tracked and untracked worktree and no other worktree using the old
+branch. Do not use reset, clean, stash, or an automatic pull to manufacture that condition.
+Record the full old tip and chosen base in the handoff report before deleting the ref. The
+chosen base is local `master`, after checking that it is the intended app baseline and recording
+its relation to the already available `origin/master`; do not silently change it to another ref.
+If `chore/gspot-adoption` already exists, inspect and report it rather than overwriting it.
+
+After these checks and the implementation gate, the exact local branch operations are:
+
+```shell
+git switch master
+git branch -D chore/gspot
+git switch -c chore/gspot-adoption master
+```
+
+The old branch's unmerged commits are deliberately discarded from its branch ref. The recorded
+tip and local reflog can assist recovery while objects remain, but are not a permanent backup.
+No remote deletion or push is part of this procedure. If interrupted, inspect current refs and
+resume from the observed state; do not blindly repeat the deletion sequence.
+
+Install the verified candidate launcher, platform package, and plugin through the isolated
+local registry of D-158, never `file:../gspot` or a workspace import. Record the registry setup
+command and artifact identity in the implementation handoff before using it. Keep credentials
+and registry routing local to the process. Verify that generated configs and lockfiles contain
+no machine-local dependency path, registry URL, or credential. A fresh install must resolve the
+same candidate through the configured registry without changing tracked files.
+
+Run `gspot init` and read the plan before accepting takeover. Read every resulting written or
+removed file. Run `gspot check --no-cache`, `gspot check --stage manual --no-cache`, and
+`gspot doctor`; record timings, findings, tool versions, retained files, and recovery behavior
+in `GSPOT-MIGRATION.md`. Validate the hooks without pushing to the app remote. Keep app source
+findings separate from gspot defects. Do not introduce baselines or ignores to manufacture green.
+
+All gspot tests and self-lint must pass before this handoff. The existing app is not promised to
+pass without app-source fixes, which remain outside this migration. Report those findings
+honestly. A gspot crash, false positive, wrong location, missing required tool, lost policy,
+unsafe mutation, or failed recovery blocks adoption completion. Fix it in gspot, rerun the gate,
+and retry. Do not declare completion with such a defect merely added to the backlog.
+
+Leave the app diff on `chore/gspot-adoption`, with no push. Commit only when authorized and after
+its staged checks pass. Do not bypass hooks to create migration commits. Request direction if
+app findings prevent a commit. Keep the validated migration uncommitted and leave its report available.
+
+### Review status
+
+The September 20, 2026 integrity review makes this architecture ready to start implementation
+as a target specification. It does not claim that the code is complete or that every future
+adoption finding is predictable. The implementation gate and app acceptance above remain
+mandatory.
+
+The review verified 100 Markdown documents and their local file links. It checked
+coverage of all 328 gap rows in the fix documents and this checklist. It also checked the seven
+required fields of each fix section. These checks establish structural consistency, not runtime correctness.
+
+External launch prerequisites remain explicit: registry ownership and publishing credentials,
+CI access, supported-platform execution, and site hosting/domain access. An unavailable external
+prerequisite blocks its gate, not the unrelated implementation work. No green test, release,
+deployment, or app adoption is inferred from this documentation review.
 
 ## Every row, by fix file
 
@@ -58,14 +189,13 @@ exactly one fix file fails it.
 - [ ] K-205: The docs build runs `reference-pages.ts` first, the pages are git-ignored, and the `docs/generated` check goes.
 - [ ] K-259: Drop the scratch entry from `.gitignore`, run pytest of the tests in their own folder, and move the managed block to the end of the file.
 - [ ] S-10: The Vale half of the rules lint goes, and the rule files are read by `prose/vale` like every other text.
-- [ ] K-282: Close K-204 alone first, and delete a thing in the commit that builds what replaces it.
+- [ ] K-282: Delete a thing in the commit that builds what replaces it.
 - [ ] K-290: Delete the baseline, the first check of `init`, and every run that `add`, `upgrade`, and a level change start (D-165).
 
 ### The First Fixes
 
 [01-first-fixes.md](fixes/01-first-fixes.md)
 
-- [ ] K-204: Write the real hash of `actions/checkout` into the one constant and the three workflows. Add `pinact run --verify` to the config-files preset.
 - [ ] K-36: Take `setup.cfg` and `tox.ini` off the sqlfluff path list, and never delete a file more than one tool reads (D-109).
 - [ ] K-156: Run `drizzle-kit generate` over a copy in the cache and compare; never write into the tree, never run `git clean`.
 - [ ] K-159: Make `express/openapi-fresh` write back the text it read, and never run `git checkout`.
@@ -79,8 +209,8 @@ exactly one fix file fails it.
 - [ ] K-45: Write no report for a run of the `message` stage (D-105).
 - [ ] K-61: Rename `packages/cli/rules-lint` to `packages/cli/rules` and the alias to `#rules/*`.
 - [ ] K-108: Make a missing `[hooks]` table mean gspot does nothing there, as `[ci]` and `[runner]` do (D-130).
-- [ ] K-109: Never replace a `package.json` script the developer has, `prepare` included.
-- [ ] K-114: Let a `gspot-ignore` comment work for every check an engine runs. The test reads the engine of the check, not its id.
+- [ ] K-109: Never inject a lifecycle script; replace an existing lint task only with explicit acceptance and recoverable originals.
+- [ ] K-114: Let a `gspot-ignore` comment work for every check an engine runs. The test reads the engine of the check, not its name.
 - [ ] K-134: Require `inherit_errexit` only where the header declares Bash 4.4, and list it among the Bash 4 features.
 - [ ] K-147: Run `check` with the rest of the config when one line is wrong, and report that line as a finding.
 - [ ] K-172: A route counts as tested when a test file of the same scope imports it.
@@ -94,7 +224,7 @@ exactly one fix file fails it.
 - [ ] K-229: The items are restored from the reference repositories. The lint of the rule files reports a list item that stops with no sentence end.
 - [ ] K-234: Let each manifest declare the suppression comment of its tool, and read that list for every comment style. Delete the table in `config/integrity.ts` (K-110).
 - [ ] K-110: Keep one list of suppression forms (K-234).
-- [ ] K-238: Refuse a line break in a `reason`, a `description`, a rule name, and a word, once, in the config schema; then no template has to escape.
+- [ ] K-238: Validate semantic values and serialize strings, keys, paths, and comments for each destination format; test printable quotes and backslashes as well as forbidden controls.
 - [ ] K-241: Settle each of the nine contradictions in the rule file, on the side of the decision or the check. Test the rule names a rule file names against the templates.
 - [ ] K-246: Ship `integrity/generated-drift` in the structure preset. Build `integrity/generated-fresh` with `[[generated]]`, or take its name out of every document.
 - [ ] K-250: Make the two SPDX packages and the Markdown parser dependencies that do their job. Use or drop each other library the two documents name.
@@ -106,7 +236,7 @@ exactly one fix file fails it.
 
 [02-takeover.md](fixes/02-takeover.md)
 
-- [ ] K-193: Carry a rule in both directions: off as an `[[ignore]]`, on as `tools.<tool>.rules`, each with its paths. List every setting that was not carried.
+- [ ] K-193: Resolve every governed file, preserve path-specific rules through overrides and ignores, and retain original configuration whenever behavior cannot be carried without loss.
 - [ ] K-41: Read disabled ESLint rules from the rules table of the old config alone (K-193).
 - [ ] K-182: A language that has a project file is proposed from that file, as D-108 proposes a scope: `pyproject.toml`, `package.json`, or `Package.swift`.
 - [ ] K-214: Init says that the folder is no git repository, and a preset whose checks all need git is not proposed there.
@@ -120,7 +250,7 @@ exactly one fix file fails it.
 - [ ] K-78: Check the gspot line of the hooks for every value of `hooks.tool`.
 - [ ] K-237: The list holds the packages of tools a preset pins, read from the manifests, and nothing else.
 
-### Hooks, the Setup Entry, and Shared Manifests
+### Hooks, Explicit Setup, and Shared Manifests
 
 [03-hooks.md](fixes/03-hooks.md)
 
@@ -129,7 +259,7 @@ exactly one fix file fails it.
 - [ ] K-58: Propose new bodies for the `lint` and `format` names a repository has, and write `gspot:*` only where none exists (D-116).
 - [ ] K-59: Read lint tables of `pyproject.toml` and lint keys of `package.json`, carry them, and list them under remove by hand (D-117).
 - [ ] K-60: End a failing hook run with `git commit --no-verify` and the command that reproduces it.
-- [ ] K-292: Never set `core.hooksPath`, delete `.gspot/hooks/`, and let `gspot install` write one block into the hook files of the clone (D-167).
+- [ ] K-292: Never set `core.hooksPath`; compose hooks with reachable dispatch, argument forwarding, independent stdin replay, failure propagation, and ownership-aware restoration (D-167).
 
 ### Slow Checks and the Cache
 
@@ -154,7 +284,7 @@ exactly one fix file fails it.
 
 - [ ] A-5: End `init` by naming the fix run, and delete `gspot.local.toml` with everything that reads it (D-173).
 - [ ] K-72: Add one managed block to `.gitattributes`: `.gspot/** linguist-generated`.
-- [ ] K-118: Check in the redo of the app whether `apply` spares the hand-made gitleaks baseline, and make `apply` delete only files it wrote.
+- [ ] K-118: Apply one ownership contract across apply, remove, and uninstall; preserve unmarked files and modified managed outputs, including the hand-made gitleaks baseline.
 - [ ] K-296: Build the `.gitignore` block from the manifests, and create the file where none exists (D-170).
 
 ### The Config Text and Scopes
@@ -167,7 +297,7 @@ exactly one fix file fails it.
 - [ ] K-116: Accept the `json` output format in a `[[check]]` of the repository.
 - [ ] K-215: D-144, with the table in [19-names.md](19-names.md) and a test over the manifests.
 - [ ] K-224: Each changes in the commit of its rename.
-- [ ] K-228: The two switches go, and the id becomes `xcode/asset-catalogs`.
+- [ ] K-228: The two switches go, and the name becomes `xcode/asset-catalogs`.
 - [ ] K-222: The YAML block leaves the EditorConfig template, so one value holds for every tool.
 - [ ] K-48: Propose a scope for every folder with a project file, and keep scope files under `.gspot/<scope>/` (D-108).
 
@@ -239,8 +369,8 @@ exactly one fix file fails it.
 - [ ] K-14: Move every owner row and check row of takeover into the manifest of its preset (K-39).
 - [ ] K-107: Replace the hand-written fields of `CarriedLists` with a map keyed by tool, filled from the manifests (K-39).
 - [ ] K-13: Delete `gspot allow gitleaks`, `osv` and `licenses` with the trim of D-131.
-- [ ] K-38: Move each tool name, baseline file name, flag, banner and check name the core holds into the manifest of its preset.
-- [ ] K-17: Take the preset names `swift`, `prose`, `typescript` and `commits` out of the core; a manifest key says what the core asked the id for.
+- [ ] K-38: Move each tool name, flag, banner and check name the core holds into the manifest of its preset.
+- [ ] K-17: Take the preset names `swift`, `prose`, `typescript` and `commits` out of the core; a manifest key says what the core inferred from the name.
 - [ ] K-85: Move the four version flags into `version_command` of their manifests, and hint the install of the runner the repository uses.
 - [ ] K-113: Give a manifest a key for the page of a rule, and delete `TOOL_RULE_SOURCES`.
 - [ ] K-177: The message comes from the install hint.
@@ -304,13 +434,13 @@ exactly one fix file fails it.
 - [ ] T-15: Add cases to `require-server-only` and `tests-directory-contents`.
 - [ ] T-16: Add edge cases to the 18 unit test files that hold one input each.
 - [ ] T-19: One test for each language runs the shipped policy over a short file written the way that language and its frameworks are written, and expects no finding.
-- [ ] T-33: One planted repository for each generator, committed as its generator wrote it, with the number of findings at `recommended` held as the expected value.
+- [ ] T-33: Generated and established reference projects get a usefulness review of each recommended finding before message/count snapshots; no unexplained house-style finding is accepted (K-301).
 - [ ] K-28: Test the ESLint template by resolving the config for one file of each file class and comparing rule lists.
 - [ ] T-36: Add one test for each preset that compares every generated file of a fixed policy with a tracked copy.
 - [ ] T-12: Add a timed test with a ceiling over a planted repository of 5,000 files.
 - [ ] T-22: The test reads the commands from the program, and looks for each in both scripts.
 - [ ] T-25: Read the version from the one version source in the two release tests.
-- [ ] T-31: With D-128 each test file carries the id of the preset it tests.
+- [ ] T-31: With D-128 each test file carries the name of the preset it tests.
 - [ ] T-11: Rename `repository-check.test.ts` and `scope-languages.test.ts` (T-31).
 - [ ] T-34: The fixture is a project Xcode generated.
 - [ ] T-20: Change the four tests that expect a defect, each in the commit that fixes its defect.
@@ -355,7 +485,7 @@ exactly one fix file fails it.
 
 - [ ] K-69: Cache a `[[check]]` only on the inputs it names, or never.
 - [ ] K-70: Make the pre-push hook check the commits being pushed, not the working tree.
-- [ ] K-293: In a run over changed files, keep the findings in those files and count the rest in one line (D-168).
+- [ ] K-293: Select affected projects from changed, deleted, and renamed paths; preserve all their findings and tool failures (D-168).
 - [ ] K-294: Pass the base commit as `--changed=<commit>` in both CI jobs, and name the package manager the install under `.gspot/` takes.
 - [ ] K-295: Give `--changed` an optional ref, and delete `--since` (D-169).
 
@@ -428,40 +558,40 @@ exactly one fix file fails it.
 - [ ] S-5: Run the build of the manual as a `[[check]]` at the manual stage, and delete the link exemption.
 - [ ] S-11: Load every `toml` block of the manual through the config reader, and parse every `gspot` line of a `bash` block with the program.
 - [ ] S-13: Change each document in the commit that builds its decision, and write `17-migration.md` again from the redo of the app.
-- [ ] S-14: Write the preset pages, the ledger ids, the file tree, and the manifest key table by script. Fail the check of S-4 on a name the code lacks.
+- [ ] S-14: Generate implemented reference facts once in the manual; do not add `architecture/presets.ts`. Keep target architecture authored, distinguish planned names through tracked gaps, and remove duplicate current-state inventories (K-304).
 - [ ] S-16: Correct the false sentences of `02`, `03`, `11`, and `19` with S-13, fix the empty list in the unexposed-setting message, and load every example config through the reader (S-11).
 - [ ] S-17: Change each false sentence of `04` to `12` in the commit that builds or drops what it says.
 - [ ] S-18: Write each preset page and the file tree from the manifests and the disk with S-14, and change the other sentences with S-13.
-- [ ] K-225: Each text changes in the commit of its subject, and the check of S-11 also parses every `gspot` command inside a `summary`, `why` and `fix`.
+- [ ] K-225: Each text changes in the commit of its subject, and the check of S-11 also parses every `gspot` command inside a `summary`, `why`, and `help`.
 - [ ] S-15: Write `01-product.md` again after the Adoption phase, from what the product does, with the test that holds each promise.
 
 ### The README, the Manual, and the Site
 
 [21-manual.md](fixes/21-manual.md)
 
-- [ ] G-10: Write the README, the guides, and the landing page that 21-documentation.md lists, from real output.
-- [ ] K-202: The guides are rewritten after the redo of the app, from real output ([21-documentation.md](21-documentation.md)), and S-11 keeps them true.
+- [ ] G-10: Implement the README brief, task-based manual navigation, and playful terminal field notebook design in 21-documentation.md. Include image-generated Spot concepts and shared website/README assets. Verify release-matched examples, responsive and accessible rendering, and reader-task acceptance checks.
+- [ ] K-202: Rewrite guides from verified fixtures before the app handoff and add app-derived evidence after adoption ([21-documentation.md](21-documentation.md)), and S-11 keeps them true.
 - [ ] S-19: Write the six guides a stranger needs, each from a run in `examples/`.
 
 ### Before Launch
 
 [22-launch.md](fixes/22-launch.md)
 
-- [ ] K-263: After K-204, run the unit tests, the planted repositories, and `gspot check` in the Windows job, and record each failure as a row.
+- [ ] K-263: Run the unit tests, the planted repositories, and `gspot check` in the Windows job, and record each failure as a row.
 - [ ] K-164: Both scripts stop at the first missing file, and the publish step verifies every package before it publishes the first.
 - [ ] K-145: Ship `LICENSE.md` in the `files` of the launcher, the plugin, and each platform package.
 - [ ] K-121: Confirm this project owns the npm name `gspot` before any command asks the registry about it.
 - [ ] K-244: Name Homebrew in an install hint only for a tool with no pin, give a `github` installer its tag form, and ask all four registries in the release test.
 - [ ] K-245: Write one notice file at build from the license of every bundled dependency and grammar, and embed it. Give the Swift grammar a build script that names its source commit.
 - [ ] K-280: Add the two musl targets, sign the macOS binaries, and say in the install guide what each system shows.
-- [ ] K-281: Rewrite renamed keys in `gspot upgrade` from one table, from the first release on (D-159).
+- [ ] K-281: Migrate old TOML before validating the target schema, preserve recovery, and update the pin last (D-159).
 
 ### Every Place a Developer Comes From
 
 [23-scenarios.md](fixes/23-scenarios.md)
 
 - [ ] K-269: Hold a `pointer` form for each tool in its manifest, and write the table of root pointers.
-- [ ] K-270: Take `.editorconfig` over like a Prettier file, and carry its values into `[format]`.
+- [ ] K-270: Preserve EditorConfig sections and Prettier overrides in format overrides; retain files with behavior that cannot be carried.
 - [ ] K-271: State what each git flag answers with no git, add a `gitleaks dir` check, and name other version control as this same mode.
 - [ ] K-272: Give each of the eight git cases one stated behavior and one planted case.
 - [ ] K-273: Add `.gspot/** text eol=lf` to the managed `.gitattributes` block.
@@ -471,6 +601,28 @@ exactly one fix file fails it.
 - [ ] K-277: Write the CodeClimate report, set the clone depth, and find GitLab by its file.
 - [ ] K-278: Print the three CI lines under `--no-ci`, and show them for four systems in one guide.
 - [ ] K-279: Write the index of rule files into every agent file the repository holds (`[rules] agents`).
+
+### Cross-cutting Contracts
+
+[24-contracts.md](fixes/24-contracts.md)
+
+- [ ] K-298: Managed paths can escape their root.
+- [ ] K-299: Recovery and uninstall disagree about ownership.
+- [ ] K-300: Target documents give incompatible instructions.
+- [ ] K-301: Recommended adoption findings need usefulness tests.
+- [ ] K-302: The website has source but no deployment contract.
+
+### Scripts, Names, and Failure Handling
+
+[25-simplification.md](fixes/25-simplification.md). Integrate these with K-205, K-164,
+K-263, and takeover work; do not defer their safety fixes until after release.
+
+- [ ] K-303: The reference generator deletes more than it owns.
+- [ ] K-304: Generated reference pages are not automatically correct.
+- [ ] K-305: Permissive script arguments can select a destructive action.
+- [ ] K-306: File URLs are used as filesystem paths.
+- [ ] K-307: Failure-to-empty helpers hide incomplete checks.
+- [ ] K-308: Apply the canonical field, parameter, action, and coverage vocabulary; remove contradictory naming requirements.
 
 ## Names, workarounds, and leftovers to clean
 

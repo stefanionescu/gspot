@@ -1,7 +1,9 @@
 # Before Launch
 
-The last step before the first release. Each row here can ship a broken or an unlawful package,
-and none of them shows on a laptop.
+Implement and test these code and packaging fixes before the app handoff.
+Follow [22-remaining.md](../22-remaining.md). Actual public publication and registry ownership are
+release gates after adoption, not prerequisites for testing through the local registry.
+Each row here can ship a broken or an unlawful package, and local testing alone is insufficient.
 
 ## K-263: gspot has never run on Windows
 
@@ -20,9 +22,19 @@ of [18-gaps.md](../18-gaps.md), with its fix, before the launch.
 
 **What goes.** The two conditions.
 
-**Tests.** The job.
+**Tests.** The job, including a checkout path with spaces and Unicode. K-306 replaces raw file-URL pathname conversion in scripts and the harness.
 
 **Done when.** It is green.
+
+**Observed after the checkout repair, September 20, 2026.**
+[Windows job 106008873358](https://github.com/stefanionescu/gspot/actions/runs/35484718384/job/106008873358)
+reaches tool installation and fails on two dependencies. SwiftLint 0.63.2 has no Windows
+artifact. RuboCop 1.91.0 fails to build a native gem extension. The setup step now runs
+on Windows, but the job has not reached the test suite.
+
+Remove the Ruby dependency with its
+authorized preset deletion. Resolve SwiftLint platform selection without treating unexecuted
+checks as findings or passes.
 
 ## K-164: a release can ship broken and say nothing
 
@@ -43,7 +55,7 @@ tracked with no record of its source.
 `packages/eslint-plugin/package.json`, `platform/install-hints.ts`, new
 `packages/cli/grammars/swift.build.ts`, `NOTICE.md`.
 
-**Logic.** Both scripts throw at the first missing file. `publish.ts` verifies every package
+**Logic.** K-305 validates all script arguments before any writes or registry operations. Both scripts throw at the first missing file. `publish.ts` verifies every package
 with `npm pack --dry-run` before it publishes the first, and each `files` list names
 `LICENSE.md` and `NOTICE.md`. `build.ts` writes `NOTICE.md` from the license field and file of
 every bundled dependency and grammar. The file ships beside each binary of the release and in
@@ -95,11 +107,12 @@ each rewrite.
 `policy/write.ts`.
 
 **Logic.** `renames.ts` holds one table: the version, the old key, and the new key. `upgrade`
-applies the rows between the pinned version and its own through the one writer. The table is
-empty at the first release.
+reads old TOML without first applying the new schema, applies ordered rows in memory, then validates the migrated target. It plans config, generated files, locks, and version pin together; preserves originals; and changes the pin last.
+
+It is allowed to run across a pin mismatch. Failure and retry follow [02-cli.md](../02-cli.md). The table is empty at the first release.
 
 **What goes.** Nothing before the release. D-134 holds until then.
 
-**Tests.** A unit test with one row in the table.
+**Tests.** An old name rejected by the new schema still migrates. Cover dry-run, unknown migration, pin mismatch, lock-resolution failure, interruption before pin update, and safe retry with original recovery retained.
 
 **Done when.** It passes.

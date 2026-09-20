@@ -18,8 +18,8 @@ errors.
 **Files.** New `presets/typescript/tsconfig.check.json.tmpl`. Deleted: `tsconfig.base.json.tmpl`
 and the merge stub of the manifest. `checks/typescript/tsc.ts`, `checks/typescript/tsconfig-options.ts`.
 
-**Logic.** At `recommended` the generated file adds `strict` and `noFallthroughCasesInSwitch`. At
-`all` it adds `noUncheckedIndexedAccess`, `noImplicitOverride`, and `exactOptionalPropertyTypes`.
+**Logic.** At `recommended` the generated file adds `strict` only. At
+`all` it adds `noFallthroughCasesInSwitch`, `noUncheckedIndexedAccess`, `noImplicitOverride`, and `exactOptionalPropertyTypes`.
 Where the file of the repository holds `references`, the check builds them as they are (K-226).
 `typescript/tsconfig-options` moves to `all`, and reads the options of the repository without
 asking for an `extends`.

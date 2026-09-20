@@ -1,35 +1,12 @@
 # The First Fixes
 
 These rows give a wrong answer, lose a file of the developer, or stop every run. They close
-before any design work, and the first of them makes CI pass, so every later commit has a gate
-that means something. Each fix gets a planted test, because most of these defects lived where no
-test looked.
+before any design work. Each fix gets a planted test, because most of these defects lived
+where no test looked. The [CI evidence](../13-roadmap.md#ci-repair) records the completed repair.
 
-The order inside the step: K-204 first. Then the four rows that destroy work (K-36, K-156,
+The order inside the step: the four rows that destroy work first (K-36, K-156,
 K-159, K-257). Then the rows where a check passes on work it never did (K-140, K-157, K-254, K-258).
 Then the rest, in the order below. K-47 sits in [00-delete-first.md](00-delete-first.md).
-
-## K-204: CI has never passed
-
-**What is wrong.** All runs on GitHub fail at `Set up job`. The pinned commit of
-`actions/checkout` does not exist: its first 27 characters match v4.3.1 and the rest is made up.
-`emit/workflow.ts` (`CHECKOUT`) writes the same hash into every repository that installs gspot.
-
-**Target.** Every pinned action is a commit that exists, and a check asks GitHub for each one.
-
-**Files.** `packages/cli/src/emit/workflow.ts`, `.github/workflows/ci.yml`, `gspot.yml`,
-`release.yml`, and `presets/config-files/manifest.toml`.
-
-**Logic.** `CHECKOUT` holds `34e114876b0b11c390a56381ad16ebd13914f8d5`. The config-files preset
-gains the tool `pinact` and the check `config-files/actions-pins`, which runs
-`pinact run --verify` at the push stage, because it calls the network.
-
-**What goes.** Nothing.
-
-**Tests.** A planted repository with `--ci github` holds that the written workflow passes
-`actionlint`, and a unit test holds that the three workflows of gspot name the constant's hash.
-
-**Done when.** The run of this commit on GitHub is green on Linux and macOS.
 
 ## K-36: takeover deletes a file two tools read
 
@@ -282,7 +259,7 @@ holds husky or a build. `uninstall` cannot bring the old value back.
 
 **Target.** gspot writes a script only where the name is free, and never writes `prepare`. Where
 `lint`, `format`, or `check` exists, the plan proposes a new body and the developer accepts it
-(D-116). The hooks install through the setup entry the repository already has (D-115).
+(D-116). The developer runs `gspot install` explicitly; no setup or lifecycle script is injected (D-115).
 
 **Files.** `emit/runner-tasks.ts`, `emit/apply-command.ts`, `lifecycle/init/plan.ts`.
 
@@ -551,24 +528,21 @@ comment styles from `config/markers.ts` and the markers from the selected manife
 
 **Done when.** The four cases fail the check.
 
-## K-238: a reason with a line break writes into a generated file
+## K-238: values are interpolated without destination escaping
 
-**What is wrong.** `text` in `policy/schema.ts` accepts a line break. A `reason` reaches
-`.gspot/trivyignore`, the gitleaks file, `vale.ini`, the shellcheck file, the typos file, and
-`.gspot/eslint.config.mjs`, where it becomes JavaScript. A profile carries it.
+**What is wrong.** Reasons reach comments and JavaScript; paths reach TOML strings. A printable path such as `docs/"draft"/**` already breaks the typos template. Rejecting control characters alone does not fix this.
 
-**Target.** A value that reaches a generated file is one line of printable text.
+**Target.** Every emitted string, key, path, and comment uses destination-appropriate serialization under [03-configuration.md](../03-configuration.md).
 
-**Files.** `policy/schema.ts`, `policy/messages.ts`.
+**Files.** `policy/schema.ts`, `policy/messages.ts`, `emit/templates.ts`, and every affected preset template, including `presets/spelling/typos.toml.tmpl`.
 
-**Logic.** `text` refuses control characters, once, for `reason`, `description`, a rule name, and a
-vocabulary word. No template escapes anything.
+**Logic.** Validate the semantic value, then encode it for TOML, JSON, JavaScript, shell arguments, or the relevant comment grammar. Use format writers where available. Never interpolate raw values into executable source or rely on a shared printable-text validator as escaping. Profiles use the same validators and writers.
 
-**What goes.** Nothing.
+**What goes.** Raw interpolation and the claim that no template needs escaping.
 
-**Tests.** A schema fixture with a line break in a reason fails to load.
+**Tests.** Parse every generated format after inputs containing quotes, backslashes, comment delimiters, Unicode, and rejected controls. Assert the parsed value equals the intended value and no additional setting or statement appears. Run the same cases through a profile.
 
-**Done when.** That fixture fails, and the profile reader uses the same schema.
+**Done when.** Each output parses and round-trips, including the printable typos path.
 
 ## K-241: nine contradictions between rule files and checks
 

@@ -68,8 +68,7 @@ style, and types. An ending that gets only the general ones is named.
 
 **Files.** `doctor/coverage.ts`, `output/list.ts`, `presets/manifest-schema.ts`.
 
-**Logic.** A check already declares `inspection` in its manifest. `coverage.ts` groups the
-claimed endings by the inspections of the checks that read them, and prints one line for an
+**Logic.** Rename the check's `inspection` list to `coverage` and the manifest's `[inspections]` table to `[coverage]` (K-308). `coverage.ts` groups the claimed endings by the check kinds supplied by their checks, and prints one line for an
 ending with none of the four.
 
 **What goes.** Nothing.
