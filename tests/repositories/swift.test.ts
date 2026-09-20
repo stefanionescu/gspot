@@ -1,4 +1,6 @@
 // Planted repository for the swift preset: a force cast, doubled spaces, and a snake case function.
+import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
@@ -74,6 +76,27 @@ const NEGATED =
     'import Foundation\n\n/// Whether a name is new.\nfunc isNew(_ name: String) -> Bool {\n    !["a", "b"].contains(name)\n}\n';
 
 describe('the swift preset', () => {
+    test(
+        'Swift checks preserve source headers during linting and formatting',
+        async () => {
+            const header = '// Greeting.swift\n// Created by Alex Garcia.\n// Copyright 2026 Example Contributors.\n\n';
+            const path = 'Sources/App/Greeting.swift';
+            await using fixture = await createFixture({ [path]: header + CLEAN });
+            commitAll(fixture.path);
+            const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
+            await install(fixture.path, INIT, environment);
+            for (const check of ['swift/swiftlint', 'swift/swiftformat']) {
+                const result = run(fixture.path, ['check', check, '--no-cache'], environment);
+                expect(result.code, result.stdout + result.stderr).toBe(0);
+            }
+            await fixture.writeFile(path, header + SPACED);
+            const fixed = run(fixture.path, ['check', 'swift/swiftformat', '--fix', '--no-cache'], environment);
+            expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+            expect(readFileSync(join(fixture.path, path), 'utf8')).toBe(header + CLEAN);
+        },
+        PLANTED_TIMEOUT_MS * 3,
+    );
+
     test(
         'SwiftLint, SwiftFormat and the naming engine fire on their planted defects, and the build waits for push',
         async () => {

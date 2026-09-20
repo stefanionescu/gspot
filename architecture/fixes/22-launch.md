@@ -209,3 +209,8 @@ It is allowed to run across a pin mismatch. Failure and retry follow [02-cli.md]
 The shipped configuration reproduces exit 5 on Windows with every cache and verbosity
 combination. The same function passes with an empty configuration. Setup probes each
 rendered setting separately to identify the failing option before changing formatter policy.
+
+The per-setting Windows probe isolates exit 5 to `--header strip`. Every other setting
+passes separately. K-219 requires removing that destructive option and the SwiftLint
+header ban. The setup smoke check retains the complete shipped configuration and now
+includes a copyright header, so Windows must lint that combination successfully.

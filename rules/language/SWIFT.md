@@ -18,7 +18,6 @@ Rules:
   spacing, semicolon policy, and brace placement.
 - Do not add manual formatting exceptions to work around local tooling.
 - Use `// MARK: - Section` only for meaningful groups in larger files.
-- Do not add file header comments. Let source control own history.
 - File comments are optional and appear only when the file groups
   multiple related abstractions and the grouping needs explanation.
 - Use type inference when the right-hand side makes the type obvious.

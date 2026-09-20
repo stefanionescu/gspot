@@ -2,8 +2,8 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { run } from '#cli/platform/spawn.ts';
 import { openSession } from '#cli/run/session.ts';
+import { copyFileSync, mkdtempSync, rmSync } from 'node:fs';
 import { emitTarget, templateInputs } from '#cli/emit/templates.ts';
-import { copyFileSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 
 async function output(command: string[]): Promise<string> {
     const result = await run(command, { cwd: process.cwd() });
@@ -33,11 +33,10 @@ async function installSwiftFormat(): Promise<void> {
         const source = join(staging, 'smoke.swift');
         await Bun.write(
             source,
-            'import Foundation\n\nfunc greeting(for name: String) -> String {\n    "hello \\(name)"\n}\n',
+            '// Copyright 2026 Example Contributors.\n\nimport Foundation\n\nfunc greeting(for name: String) -> String {\n    "hello \\(name)"\n}\n',
         );
         const session = await openSession(process.cwd());
         const config = join(staging, 'shipped.swiftformat');
-        const emptyConfig = join(staging, 'empty.swiftformat');
         await Bun.write(
             config,
             emitTarget(
@@ -46,27 +45,11 @@ async function installSwiftFormat(): Promise<void> {
                 templateInputs(session, session.scopes[0]!),
             ),
         );
-        await Bun.write(emptyConfig, '');
-        const plain = await run([destination, '--lint', '--config', emptyConfig, source], { cwd: staging });
-        process.stdout.write(`SwiftFormat empty config: exit ${String(plain.code)}\n${plain.stdout}${plain.stderr}`);
-        let hasFailed = plain.code !== 0;
-        const settings = readFileSync(config, 'utf8')
-            .split('\n')
-            .filter((line) => line.startsWith('--'));
-        for (const setting of settings) {
-            await Bun.write(emptyConfig, `${setting}\n`);
-            const result = await run([destination, '--lint', '--config', emptyConfig, source], { cwd: staging });
-            process.stdout.write(
-                `SwiftFormat setting ${setting}: exit ${String(result.code)}\n${result.stdout}${result.stderr}`,
-            );
-            hasFailed ||= result.code !== 0 && result.code !== 1;
-        }
         const configured = await run([destination, '--lint', '--config', config, source], { cwd: staging });
         process.stdout.write(
             `SwiftFormat shipped config: exit ${String(configured.code)}\n${configured.stdout}${configured.stderr}`,
         );
-        hasFailed ||= configured.code !== 0;
-        if (hasFailed) throw new Error('SwiftFormat formatting smoke checks failed.');
+        if (configured.code !== 0) throw new Error('SwiftFormat formatting smoke checks failed.');
     } finally {
         rmSync(staging, { recursive: true, force: true });
     }

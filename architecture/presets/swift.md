@@ -16,11 +16,11 @@ swiftlint, swiftformat, periphery, xcodebuild (host), swift (host).
 
 ## Generated configuration
 
-| Target                 | Stub                                  | Holds                                                                                                                                                                                                                                                                                                                          |
-| ---------------------- | ------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| `.gspot/swiftlint.yml` | `.swiftlint.yml` with `parent_config` | the 87 opt-in rules, 4 analyzer rules, limits from `[limits]`, `identifier_name` and `type_name` off, `missing_docs` on open and public, `explicit_acl`, `explicit_top_level_acl`, `private_over_fileprivate`, `file_name_no_space`, `file_header`, custom rules for `///` and banned-term regexes as a second line of defense |
-| `.gspot/swiftformat`   | `.swiftformat`                        | the enabled and disabled rule lists, options from `[format]`                                                                                                                                                                                                                                                                   |
-| `.gspot/periphery.yml` | none                                  | project, schemes, retain options                                                                                                                                                                                                                                                                                               |
+| Target                 | Stub                                  | Holds                                                                                                                                                                                                                                                                                                           |
+| ---------------------- | ------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `.gspot/swiftlint.yml` | `.swiftlint.yml` with `parent_config` | the 87 opt-in rules, 4 analyzer rules, limits from `[limits]`, `identifier_name` and `type_name` off, `missing_docs` on open and public, `explicit_acl`, `explicit_top_level_acl`, `private_over_fileprivate`, `file_name_no_space`, custom rules for `///` and banned-term regexes as a second line of defense |
+| `.gspot/swiftformat`   | `.swiftformat`                        | the enabled and disabled rule lists, options from `[format]`                                                                                                                                                                                                                                                    |
+| `.gspot/periphery.yml` | none                                  | project, schemes, retain options                                                                                                                                                                                                                                                                                |
 
 ## Checks
 
@@ -143,7 +143,6 @@ SwiftFormat options. `--indent`, `--maxwidth` and `--linebreaks` come from `[for
 --linebreaks lf
 --importgrouping length,alpha
 --self init-only
---header strip
 --swiftversion 5.9
 ```
 

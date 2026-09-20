@@ -228,6 +228,11 @@ own validator, with no finding.
 
 ## K-219: the Swift templates forbid every file header
 
+**Implementation.** Both templates preserve source headers. The Swift rule guide
+permits them. A planted regression checks linting and verifies that formatting fixes spacing
+without changing an Xcode-style header or copyright notice. The Windows setup smoke check
+uses the rendered configuration and a source header.
+
 **What is wrong.** `swiftlint.yml.tmpl` sets `file_header` with the forbidden pattern `.`, so the
 header Xcode writes is a finding in every file. `swiftformat.tmpl` sets `--header strip`, so
 `gspot check --fix` deletes a license line.
