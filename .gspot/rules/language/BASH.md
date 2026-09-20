@@ -179,8 +179,15 @@ that the same as a broken shebang.
 ## Runtime compatibility
 
 macOS ships Bash 3.2 by default. The header's `Runtime:` line is the contract. A file
-declaring `Bash 3.2+` may not use Bash 4+ and Bash 5+ features. A file declaring `Bash 4.0+` may use
-them, and fails before any other work when the running Bash is older. The features that Bash 3.2 lacks are:
+declaring `Bash 3.2+` uses only features available in that version. A newer minimum
+version permits features available at that minimum; Bash 4.0 does not imply
+support for all Bash 4 or Bash 5 features. Reject an older runtime before other work.
+
+Executable scripts enable `set -euo pipefail` before their first command. Scripts
+declaring Bash 4.4+ also enable `shopt -s inherit_errexit`. Do not use
+that option with an earlier declared minimum.
+
+Bash 3.2 lacks these features:
 
 - associative arrays;
 - `readarray` and `mapfile`;

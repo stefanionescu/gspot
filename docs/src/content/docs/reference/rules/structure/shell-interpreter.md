@@ -11,7 +11,7 @@ A script that skips strict mode or hides its runtime fails on the machine where 
 
 ## What to do
 
-Open with the shebang, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail and shopt -s inherit_errexit first, and end an executable with a call to main.
+Open with the shebang, a bare #, one line saying what the script does, and the Runtime line. Run set -euo pipefail first; add shopt -s inherit_errexit when the declared minimum is Bash 4.4+. End an executable with a call to main.
 
 ## Where it runs
 

@@ -379,6 +379,12 @@ and a second constant holds what Bash 4.4 adds.
 
 **Tests.** Two planted scripts, one for each header, each valid under its own rule.
 
+**Status: complete (locally verified).** Feature checks compare the declared
+major and minor versions. Five real CLI cases cover Bash 3.2, 4.0, 4.3, 4.4, and 5.0
+with valid strict mode and a missing or unsupported option. The Bash acceptance
+suites pass their clean and planted cases. Rule text and check diagnostics
+state the same version boundary; unavailable platform execution remains deferred.
+
 **Done when.** Both pass.
 
 ## K-147: one wrong line stops every command

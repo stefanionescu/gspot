@@ -112,7 +112,7 @@ export const gspot = join(root, 'packages', 'cli', 'src', 'main.ts');
 
 /** A clean bash script every planted repository starts from. */
 export const script =
-    '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.0+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\nmain() {\n    echo "hello $1"\n}\n\nmain "$@"\n';
+    '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\nmain() {\n    echo "hello $1"\n}\n\nmain "$@"\n';
 
 /**
  * Runs gspot in a directory with color off and CI set.

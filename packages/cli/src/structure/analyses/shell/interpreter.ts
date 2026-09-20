@@ -1,12 +1,13 @@
 // The interpreter contract of a Bash script: the header, strict mode, the entry point, the library shape, the directory constants, mktemp cleanup.
+import semver from 'semver';
 import type { Finding } from '#types/finding.ts';
 import { functionAt } from '#cli/structure/parser.ts';
 import type { Analysis, CodeLine, ShellFile, ShellReport, StructureContext } from '#types/structure.ts';
 import { codeLines, isDirectoryConstant, withoutComment, withoutDeclaration } from '#cli/structure/code-lines.ts';
 
 import {
-    BASH_FOUR,
-    BASH_FOUR_FEATURES,
+    BASH_FEATURES,
+    INHERITED_ERREXIT,
     BASH_SHEBANGS,
     DIRECTORY_CONSTANT_PIECES,
     HEADER_LINES,
@@ -42,22 +43,23 @@ function isPlatformNamed(runtime: RegExpExecArray | null, platforms: string): bo
     return named === 'Linux' || named === platforms;
 }
 
-function runtimeVersion(file: ShellFile, platforms: string, report: ShellReport): number | undefined {
+function runtimeVersion(file: ShellFile, platforms: string, report: ShellReport): string | undefined {
     const runtime = RUNTIME_HEADER.exec(file.lines[HEADER_LINES - 1] ?? '');
     if (runtime === null || !isPlatformNamed(runtime, platforms)) {
         report(HEADER_LINES, 'runtime-header', `Line 4 is "# Runtime: Bash N.N+, ${platforms}." (or "Linux").`);
         return undefined;
     }
-    return Number(runtime.groups?.['major'] ?? '0');
+    const version = runtime.groups as Record<'major' | 'minor', string>;
+    return `${version.major}.${version.minor}.0`;
 }
 
-function versionProblems(file: ShellFile, major: number | undefined, report: ShellReport): void {
-    if (major === undefined || major >= BASH_FOUR) return;
+function versionProblems(file: ShellFile, version: string | undefined, report: ShellReport): void {
+    if (version === undefined) return;
     for (const [index, line] of file.lines.entries()) {
         const code = withoutComment(line);
-        const feature = BASH_FOUR_FEATURES.find(([pattern]) => pattern.test(code));
+        const feature = BASH_FEATURES.find(([pattern, , minimum]) => semver.lt(version, minimum) && pattern.test(code));
         if (feature !== undefined)
-            report(index + 1, 'bash-version', `${feature[1]}, but the header declares Bash ${String(major)}.`);
+            report(index + 1, 'bash-version', `${feature[1]}, but the header declares Bash ${version}.`);
     }
 }
 
@@ -94,10 +96,13 @@ function readonlyProblems(file: ShellFile, code: CodeLine[], report: ShellReport
     }
 }
 
-function strictModeProblems(code: CodeLine[], report: ShellReport): void {
+function strictModeProblems(code: CodeLine[], version: string | undefined, report: ShellReport): void {
     const first = code.findIndex((line) => !line.code.startsWith('set ') && !line.code.startsWith('shopt '));
     const before = new Set(code.slice(0, first === -1 ? code.length : first).map((line) => line.code));
-    const missing = STRICT_MODE.filter((statement) => !before.has(statement));
+    const required = [...STRICT_MODE];
+    if (version !== undefined && semver.gte(version, INHERITED_ERREXIT.version))
+        required.push(INHERITED_ERREXIT.statement);
+    const missing = required.filter((statement) => !before.has(statement));
     if (missing.length > 0)
         report(code[0]?.number ?? 1, 'strict-mode', `${missing.join(' and ')} come before the first command.`);
 }
@@ -141,7 +146,6 @@ function libraryProblems(file: ShellFile, code: CodeLine[], isConfigOwner: boole
 function roleProblems(file: ShellFile, code: CodeLine[], isConfigOwner: boolean, report: ShellReport): void {
     const last = code.at(-1);
     if (file.isExecutable) {
-        strictModeProblems(code, report);
         entryProblems(file, code, report);
     } else if (last?.code === MAIN_CALL)
         report(
@@ -171,10 +175,12 @@ function fileProblems(
     };
     shebangProblem(file, report);
     headerProblem(file, report);
-    versionProblems(file, runtimeVersion(file, platforms, report), report);
+    const version = runtimeVersion(file, platforms, report);
+    versionProblems(file, version, report);
     const code = codeLines(file.lines).filter((line) => !line.code.startsWith('#!'));
     directoryProblems(code, report);
     readonlyProblems(file, code, report);
+    if (file.isExecutable) strictModeProblems(code, version, report);
     roleProblems(file, code, isConfigOwner, report);
     cleanupProblems(code, report);
     return findings;

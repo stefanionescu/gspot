@@ -1,11 +1,13 @@
 // Planted repository for the bash preset: every check of the preset fires on its planted defect and passes without it.
+import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
+import { chmodSync, writeFileSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, script, toolsPath } from '#tests/harness/planted.ts';
 
 const HEAD =
-    '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.0+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n';
+    '#!/usr/bin/env bash\n#\n# Builds the thing.\n# Runtime: Bash 4.4+, macOS and Linux.\nset -euo pipefail\nshopt -s inherit_errexit\n\n';
 const MAIN = '# main: runs the script.\nmain() {\n    echo "hello $1"\n}\n\nmain "$@"\n';
 const LONG_BODY = Array.from({ length: 70 }, (_, index) => `    echo "line ${String(index)}"`).join('\n');
 const LONG_FILE = Array.from({ length: 320 }, (_, index) => `readonly VALUE_${String(index)}=${String(index)}`).join(
@@ -235,6 +237,7 @@ describe('the bash preset', () => {
             await using fixture = await createFixture({
                 'scripts/build.sh': script.replace('main() {', () => '# main: runs the script.\nmain() {'),
             });
+            chmodSync(join(fixture.path, 'scripts/build.sh'), 0o755);
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(
@@ -265,4 +268,29 @@ describe('the bash preset', () => {
         },
         PLANTED_TIMEOUT_MS * 4,
     );
+});
+
+test.each([
+    ['3.2', false],
+    ['4.0', false],
+    ['4.3', false],
+    ['4.4', true],
+    ['5.0', true],
+] as const)('Bash %s requires only the strict-mode options its version supports', async (version, isInherited) => {
+    const base = `#!/usr/bin/env bash\n#\n# Prints a greeting.\n# Runtime: Bash ${version}+, macOS and Linux.\nset -euo pipefail\n`;
+    const inherited = 'shopt -s inherit_errexit\n';
+    const source = (isEnabled: boolean): string => base + (isEnabled ? inherited : '') + MAIN;
+    await using fixture = await createFixture({
+        'gspot.toml': 'version = 1\npresets = ["bash"]\n',
+        'greet.sh': source(isInherited),
+    });
+    const path = join(fixture.path, 'greet.sh');
+    chmodSync(path, 0o755);
+    const command = ['check', 'structure/shell-interpreter', '--no-cache'];
+    const clean = await run(fixture.path, command);
+    expect(clean.code, clean.stdout + clean.stderr).toBe(0);
+    writeFileSync(path, source(!isInherited));
+    const broken = await run(fixture.path, command);
+    expect(broken.code, broken.stdout + broken.stderr).toBe(1);
+    expect(broken.stdout).toContain(isInherited ? 'strict-mode' : 'bash-version');
 });

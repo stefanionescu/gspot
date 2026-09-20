@@ -12,16 +12,18 @@ export const RUNTIME_HEADER = /^# Runtime: Bash (?<major>\d+)\.(?<minor>\d+)\+, 
 /** How many header lines the contract asks for. */
 export const HEADER_LINES = 4;
 
-/** Features that need Bash 4, and what to say about them. */
-export const BASH_FOUR_FEATURES: [RegExp, string][] = [
-    [/\b(?:mapfile|readarray)\b/u, 'mapfile and readarray need Bash 4'],
-    [/\bdeclare\s+-A\b/u, 'associative arrays need Bash 4'],
-    [/\$\{[^}\n]+(?:,,|\^\^)\}/u, 'case-conversion expansion needs Bash 4'],
-    [/\b(?:coproc|wait\s+-n)\b/u, 'coproc and wait -n need Bash 4'],
+/** Features and their minimum Bash versions. */
+export const BASH_FEATURES: [RegExp, string, string][] = [
+    [/\b(?:mapfile|readarray)\b/u, 'mapfile and readarray need Bash 4.0', '4.0.0'],
+    [/\bdeclare\s+-A\b/u, 'associative arrays need Bash 4.0', '4.0.0'],
+    [/\$\{[^}\n]+(?:,,|\^\^)\}/u, 'case-conversion expansion needs Bash 4.0', '4.0.0'],
+    [/\bcoproc\b/u, 'coproc needs Bash 4.0', '4.0.0'],
+    [/\bwait\s+-n\b/u, 'wait -n needs Bash 4.3', '4.3.0'],
+    [/\binherit_errexit\b/u, 'inherit_errexit needs Bash 4.4', '4.4.0'],
 ];
 
-/** The Bash version those features need. */
-export const BASH_FOUR = 4;
+/** The inherited errexit option and the Bash version that introduced it. */
+export const INHERITED_ERREXIT = { statement: 'shopt -s inherit_errexit', version: '4.4.0' };
 
 /** The start of a computed directory constant, and the three signs that mark one. */
 export const DIRECTORY_CONSTANT_START = /^[A-Z_][A-Z0-9_]*=/u;
@@ -47,8 +49,8 @@ export const BOUNDARY_HEADER_WINDOW = 8;
 /** The line every executable ends with. */
 export const MAIN_CALL = 'main "$@"';
 
-/** The two lines an executable runs before anything else. */
-export const STRICT_MODE = ['set -euo pipefail', 'shopt -s inherit_errexit'];
+/** Strict mode supported by every declared Bash version. */
+export const STRICT_MODE = ['set -euo pipefail'];
 
 /** The comment markers a script may carry. */
 export const MARKERS = {
