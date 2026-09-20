@@ -191,3 +191,13 @@ describe('policy edits', () => {
         PLANTED_TIMEOUT_MS,
     );
 });
+
+test('set rejects an unused architecture key without modifying the config', async () => {
+    const policy = 'version = 1\npresets = ["structure", "secrets"]\n';
+    await using fixture = await createFixture({ 'gspot.toml': policy });
+    const result = await run(fixture.path, ['set', 'architecture.package_roots', 'src']);
+    expect(result.code).toBe(2);
+    expect(result.stderr + result.stdout).toContain('architecture.package_roots');
+    const written = await Bun.file(join(fixture.path, 'gspot.toml')).text();
+    expect(written).toBe(policy);
+});

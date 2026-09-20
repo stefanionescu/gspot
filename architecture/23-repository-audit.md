@@ -271,3 +271,7 @@ repository root are removed. Selection and report-contract tests pass, and TypeS
 reference verification, and Knip complete locally. Knip reports configuration hints but no
 unused-code findings. Together with the earlier K-195 deletion, these closures leave 325
 named requirements open. The original 328-row review remains historical evidence.
+
+K-99 is also complete after root and scoped schema rejection tests and a CLI no-write
+regression. The index contains 324 open named requirements. K-100 remains partial: its three
+unused settings are removed, but the retained-setting reader audit is still open.

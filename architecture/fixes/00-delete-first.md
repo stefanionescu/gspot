@@ -126,6 +126,17 @@ every declared setting has a reader, by walking the manifests (K-100).
 
 **Done when.** `gspot set architecture.package_roots x` exits 2 and names no such setting.
 
+**Partial implementation, September 20, 2026.** The five unused architecture keys and
+`[editor]` are rejected at schema validation. Their types, defaults, and unused import-entry
+schema are removed. The three unused manifest settings are absent and fail selected-setting
+validation. K-100 remains open for the acceptance check that every declared setting has a
+reader.
+
+**K-99 complete, September 20, 2026.** All six unused configuration keys are rejected, and
+`gspot set architecture.package_roots src` exits 2 without changing the config. Focused policy,
+repository-shape, and planted profile tests pass (56 tests, 145 assertions). TypeScript,
+schema validation, and all 272 reference-page comparisons pass locally.
+
 ## K-102: seven plugin rules
 
 Closes K-102, K-187, and K-188.

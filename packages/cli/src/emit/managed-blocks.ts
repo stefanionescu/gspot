@@ -1,4 +1,4 @@
-// Marker blocks in the agent instruction files, .gitignore, .vscode/*.json and lefthook.yml; text outside the markers is never read or moved.
+// Marker blocks in the agent instruction files, .gitignore, and lefthook.yml; text outside the markers is never read or moved.
 import { join } from 'node:path';
 import type { BlockStyle } from '#types/emit.ts';
 import { existsSync, readFileSync } from 'node:fs';

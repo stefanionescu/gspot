@@ -21,7 +21,6 @@ describe('the JSON schema of gspot.toml', () => {
             'hooks',
             'ci',
             'rules',
-            'editor',
             'coverage',
             'runner',
         ])

@@ -289,21 +289,6 @@ default = 2
 summary = "A function with this many statements or fewer, used once, is reported as trivial."
 
 [[settings]]
-name = "limits.trivial_ast_nodes"
-kind = "number"
-direction = "ceiling"
-default = 10
-languages = ["python"]
-summary = "A function with this many syntax nodes or fewer, used once, is reported as trivial."
-
-[[settings]]
-name = "limits.line_length"
-kind = "number"
-direction = "ceiling"
-default = 120
-summary = "The most characters on one line."
-
-[[settings]]
 name = "limits.tool_seconds"
 kind = "number"
 direction = "ceiling"

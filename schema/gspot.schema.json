@@ -491,53 +491,6 @@
                                     },
                                     "additionalProperties": {}
                                 }
-                            },
-                            "package_roots": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            },
-                            "route_directories": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            },
-                            "shared_directories": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            },
-                            "feature_contracts": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            },
-                            "imports_allowed": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "from": {
-                                            "type": "string"
-                                        },
-                                        "to": {
-                                            "type": "string"
-                                        },
-                                        "reason": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "from",
-                                        "to",
-                                        "reason"
-                                    ],
-                                    "additionalProperties": false
-                                }
                             }
                         },
                         "additionalProperties": false
@@ -1249,53 +1202,6 @@
                         },
                         "additionalProperties": {}
                     }
-                },
-                "package_roots": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "route_directories": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "shared_directories": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "feature_contracts": {
-                    "type": "array",
-                    "items": {
-                        "type": "string"
-                    }
-                },
-                "imports_allowed": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "from": {
-                                "type": "string"
-                            },
-                            "to": {
-                                "type": "string"
-                            },
-                            "reason": {
-                                "type": "string"
-                            }
-                        },
-                        "required": [
-                            "from",
-                            "to",
-                            "reason"
-                        ],
-                        "additionalProperties": false
-                    }
                 }
             },
             "additionalProperties": false
@@ -1805,15 +1711,6 @@
                     "items": {
                         "type": "string"
                     }
-                }
-            },
-            "additionalProperties": false
-        },
-        "editor": {
-            "type": "object",
-            "properties": {
-                "vscode": {
-                    "type": "boolean"
                 }
             },
             "additionalProperties": false

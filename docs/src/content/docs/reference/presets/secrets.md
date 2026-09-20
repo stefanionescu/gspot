@@ -30,7 +30,6 @@ Kind: concern. Selected by default.
 
 - `tools.gitleaks.allow`: Values gitleaks skips because they are public by design: a description, paths, regexes, and the reason.
 - `tools.gitleaks.baseline_reasons`: The reason for each reviewed historical finding in the gitleaks baseline, by fingerprint.
-- `tools.trufflehog.verified_only`: Whether trufflehog reports only the secrets it verified against their provider.
 
 ## Rule files
 

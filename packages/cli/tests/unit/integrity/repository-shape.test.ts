@@ -51,7 +51,7 @@ const policy: Partial<Policy> = {
     },
     naming: naming as NamingSettings,
     tools: { docs: { paths_allowed: [{ patterns: ['docs/**'], reason: 'A test reason.' }] } },
-    architecture: { elements: [], edges_allowed: [], roles: { config: 'config' }, contracts: [], imports_allowed: [] },
+    architecture: { elements: [], edges_allowed: [], roles: { config: 'config' }, contracts: [] },
 };
 
 describe('the repository-shape analyses', () => {

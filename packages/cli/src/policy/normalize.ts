@@ -71,12 +71,11 @@ function trimTrailingSlashes(path: string): string {
     return path.slice(0, end);
 }
 
-function normalizeScalars(raw: RawPolicy): Pick<Policy, 'hooks' | 'ci' | 'rules' | 'editor' | 'coverage' | 'runner'> {
+function normalizeScalars(raw: RawPolicy): Pick<Policy, 'hooks' | 'ci' | 'rules' | 'coverage' | 'runner'> {
     return {
         hooks: defaulted<Policy['hooks']>(raw.hooks, { tool: 'gspot' }),
         ci: defaulted<Policy['ci']>(raw.ci, { provider: 'none', platforms: ['ubuntu'] }),
         rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
-        editor: defaulted<Policy['editor']>(raw.editor, { vscode: false }),
         coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
         runner: defaulted<Policy['runner']>(raw.runner, { tool: 'none' }),
     };
@@ -164,7 +163,7 @@ export function normalizeNaming(raw: RawNaming | undefined): NamingSettings {
  * @returns the architecture configuration
  */
 export function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['architecture'] {
-    const filled = defaulted(raw, { elements: [], edges_allowed: [], roles: {}, contracts: [], imports_allowed: [] });
+    const filled = defaulted(raw, { elements: [], edges_allowed: [], roles: {}, contracts: [] });
     return compact({ ...filled, edges_allowed: compactAll(filled.edges_allowed) });
 }
 

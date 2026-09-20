@@ -188,8 +188,8 @@ deployment, or app adoption is inferred from this documentation review.
 ## Every row, by fix file
 
 Each named row links to its owning acceptance section, including rows grouped under another
-ID. The September 20 reconciliation found exactly one owner for each named row. After K-104, K-129, and K-195
-closed, 325 named rows remain open.
+ID. The September 20 reconciliation found exactly one owner for each named row. After K-99, K-104, K-129, and K-195
+closed, 324 named rows remain open.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
 
@@ -200,7 +200,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [D-129](fixes/00-delete-first.md#d-129-commands-and-flags-that-leave): Delete `gspot declare`, six of the seven lists of `gspot allow`, `uninstall --keep-hooks`, and `apply --check`. File explanations are implemented by `explain <path>`.
 - [ ] [D-100](fixes/00-delete-first.md#d-100-the-lint-files-at-the-root-of-this-repository): Delete the twelve lint stubs at the root of this repository.
 - [ ] [K-47](fixes/00-delete-first.md#d-100-the-lint-files-at-the-root-of-this-repository): Delete the nine `copy = true` stubs and `copyStubContent` (D-100).
-- [ ] [K-99](fixes/00-delete-first.md#k-99-keys-and-settings-with-no-reader): Delete the five `architecture.*` keys nothing reads, and `[editor] vscode`.
 - [ ] [K-100](fixes/00-delete-first.md#k-99-keys-and-settings-with-no-reader): Delete `limits.line_length`, `limits.trivial_ast_nodes` and `tools.trufflehog.verified_only`.
 - [ ] [K-102](fixes/00-delete-first.md#k-102-seven-plugin-rules): Delete `no-trivial-functions` and its option; `no-call-through` covers every function form (see K-235 for the other languages).
 - [ ] [K-187](fixes/00-delete-first.md#k-102-seven-plugin-rules): Delete the plugin rules `no-single-file-folders` and `no-prefix-collisions`; the structure engine owns facts about folders.

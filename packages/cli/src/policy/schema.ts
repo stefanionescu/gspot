@@ -75,8 +75,6 @@ const element = z.strictObject({ name: text, paths: textList });
 
 const allowedEdge = z.strictObject({ from: text, to: textList, reason: text.optional() });
 
-const allowedImport = z.strictObject({ from: text, to: text, reason: text });
-
 const roleGlobs = z.union([text, textList]);
 
 const architectureSchema = z.strictObject({
@@ -85,11 +83,6 @@ const architectureSchema = z.strictObject({
     edges_allowed: z.array(allowedEdge).optional(),
     roles: z.record(text, roleGlobs).optional(),
     contracts: z.array(anyTable).optional(),
-    package_roots: textList.optional(),
-    route_directories: textList.optional(),
-    shared_directories: textList.optional(),
-    feature_contracts: textList.optional(),
-    imports_allowed: z.array(allowedImport).optional(),
 });
 
 const reasonedPaths = z.strictObject({ paths: textListNonEmpty, reason: text });
@@ -187,8 +180,6 @@ const rulesSchema = z.strictObject({
     exclude: textList.optional(),
 });
 
-const editorSchema = z.strictObject({ vscode: flag.optional() });
-
 const coverageSchema = z.strictObject({ strict: flag.optional() });
 
 const runnerSchema = z.strictObject({ tool: z.enum(['mise', 'npm', 'bun', 'pnpm', 'uv', 'none']).optional() });
@@ -220,7 +211,6 @@ export const policySchema = z.strictObject({
     hooks: hooksSchema.optional(),
     ci: ciSchema.optional(),
     rules: rulesSchema.optional(),
-    editor: editorSchema.optional(),
     coverage: coverageSchema.optional(),
     runner: runnerSchema.optional(),
 });

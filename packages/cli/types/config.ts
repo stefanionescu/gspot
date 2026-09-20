@@ -56,11 +56,6 @@ export type ArchitectureSettings = {
     edges_allowed: ArchitectureAllow[];
     roles: Record<string, string | string[]>;
     contracts: Record<string, unknown>[];
-    package_roots?: string[];
-    route_directories?: string[];
-    shared_directories?: string[];
-    feature_contracts?: string[];
-    imports_allowed: { from: string; to: string; reason: string }[];
 };
 
 export type StructureSettings = {
@@ -138,7 +133,6 @@ export type Policy = {
     hooks: { tool: 'gspot' | 'lefthook' | 'husky' | 'none' };
     ci: { provider: 'github' | 'none'; platforms: string[] };
     rules: { install: boolean; directory: string; project?: string; exclude: string[] };
-    editor: { vscode: boolean };
     coverage: { strict: boolean };
     runner: { tool: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none' };
     scopeTables: Record<string, Partial<Policy>>;
