@@ -1,13 +1,15 @@
 // Stamps the platform packages from the template, copies the binaries in, writes checksums, publishes everything at one version.
 
+import { valid } from 'semver';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
+import packageManifest from '#package' with { type: 'json' };
+import { Command, CommanderError, InvalidArgumentError } from 'commander';
 // Usage: bun packages/cli/publish.ts --tag v0.1.0 [--registry <url>] [--dry-run]
 import { copyFileSync, mkdirSync, readFileSync, readdirSync, writeFileSync, chmodSync } from 'node:fs';
 
 const JSON_INDENT = 4;
 const EXECUTABLE_MODE = 0o755;
-const VERSION_SHAPE = /^\d+\.\d+\.\d+/u;
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 const root = join(here, '..', '..');
 
@@ -99,19 +101,43 @@ function writeChecksums(distribution: string): void {
     writeFileSync(join(distribution, 'checksums.txt'), `${lines.join('\n')}\n`);
 }
 
-{
-    const argv = process.argv.slice(2);
-    const flag = (name: string) => (argv.includes(name) ? argv[argv.indexOf(name) + 1] : undefined);
-    const tag = flag('--tag') ?? '';
-    const version = tag.replace(/^v/, '');
-    if (!VERSION_SHAPE.test(version)) throw new Error('--tag v<version> is required');
-    const built = (JSON.parse(readFileSync(join(here, 'package.json'), 'utf8')) as { version: string }).version;
-    if (built !== version)
-        throw new Error(
-            `The tag says ${version} and packages/cli/package.json says ${built}; the binary carries ${built}.`,
+function releaseVersion(tag: string): string {
+    const version = tag.slice(1);
+    if (!tag.startsWith('v') || version.startsWith('v') || version.trim() !== version || valid(version) === null)
+        throw new InvalidArgumentError('Use v followed by a complete semantic version, such as v0.1.0.');
+    if (version !== packageManifest.version)
+        throw new InvalidArgumentError(
+            `The tag must match packages/cli/package.json version ${packageManifest.version}.`,
         );
-    const registry = flag('--registry');
-    const isDryRun = argv.includes('--dry-run');
+    return version;
+}
+
+function registryUrl(value: string): string {
+    let url: URL;
+    try {
+        url = new URL(value);
+    } catch {
+        throw new InvalidArgumentError('The registry must be an HTTP or HTTPS URL.');
+    }
+    if (!['http:', 'https:'].includes(url.protocol))
+        throw new InvalidArgumentError('The registry must be an HTTP or HTTPS URL.');
+    return value;
+}
+
+try {
+    const script = new Command('bun packages/cli/publish.ts')
+        .description('Prepare and publish the gspot release packages')
+        .version(packageManifest.version)
+        .requiredOption('--tag <tag>', 'Release tag matching the package version', releaseVersion)
+        .option('--registry <url>', 'npm registry URL', registryUrl)
+        .option('--dry-run', 'Ask npm to report publication without uploading packages')
+        .allowExcessArguments(false)
+        .showHelpAfterError()
+        .addHelpText('after', `\nExample: bun packages/cli/publish.ts --tag v${packageManifest.version} --dry-run`)
+        .exitOverride()
+        .parse();
+    const { tag: version, registry, dryRun } = script.opts<{ tag: string; registry?: string; dryRun?: boolean }>();
+    const isDryRun = dryRun === true;
     const distribution = join(root, 'dist');
     writeChecksums(distribution);
     const directories = stampPackages(version, distribution);
@@ -127,4 +153,7 @@ function writeChecksums(distribution: string): void {
         const result = Bun.spawnSync(command, { cwd: dir, stdout: 'inherit', stderr: 'inherit' });
         if (result.exitCode !== 0) throw new Error(`Publish failed in ${dir}`);
     }
+} catch (error) {
+    if (!(error instanceof CommanderError)) throw error;
+    process.exitCode = error.exitCode === 0 ? 0 : 2;
 }

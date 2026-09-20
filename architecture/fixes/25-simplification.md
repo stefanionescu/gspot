@@ -43,7 +43,9 @@ Delete the decision-log mirror and its URL-rewrite regexes; keep a clearly label
 
 ## K-305: Permissive script arguments can select a destructive action
 
-**Partial implementation.** The schema and reference entry points reject unknown options and unexpected positional arguments with exit status two before generating output. Tests preserve planted schemas and an authored reference page after malformed invocations. Help and version requests also leave those outputs unchanged. Build and publish argument validation remains open.
+**Partial implementation.** The schema and reference entry points reject unknown options and unexpected positional arguments with exit status two before generating output. Tests preserve planted schemas and an authored reference page after malformed invocations. Help and version requests also leave those outputs unchanged.
+
+The executable build validates every target before collecting grammars or creating output. Publisher validation checks the release tag and registry before writing checksums or spawning npm. Isolated tests replace the compiler and publisher subprocesses, verify repeated targets and dry-run forwarding, and cover stable and prerelease versions with build metadata. The plugin build entry point still needs argument validation.
 
 **What is wrong.** `build.ts` ignores unknown options and a missing `--target`; `--out --target bun-linux-arm64` treats `--target` as the output path. `publish.ts` uses `argv.includes('--dry-run')`, so `--dryrun` does not prevent publication. The docs and schema scripts similarly treat a misspelled `--check` as write mode. These conclusions come from read-only argument probes and source tracing; no build, write mode, or publish was executed.
 

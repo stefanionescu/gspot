@@ -3,6 +3,8 @@
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
 import { GRAMMAR_SOURCES } from '#config/grammars.ts';
+import packageManifest from '#package' with { type: 'json' };
+import { Command, CommanderError, InvalidArgumentError } from 'commander';
 import { existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync, copyFileSync } from 'node:fs';
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
@@ -102,19 +104,34 @@ function build(targets: string[], out: string): void {
     }
 }
 
-function parseArguments(argv: string[]): { targets: string[]; out: string } {
-    const targets: string[] = [];
-    let out = join(root, 'dist');
-    for (const [index, argument] of argv.entries()) {
-        const value = argv[index + 1];
-        if (value === undefined) continue;
-        if (argument === '--target') targets.push(value);
-        else if (argument === '--out') out = value;
-    }
-    return { targets, out };
+function collectTargets(value: string, previous: string[]): string[] {
+    if (TARGETS[value] === undefined)
+        throw new InvalidArgumentError(`Unknown target ${value}. Choose ${Object.keys(TARGETS).join(', ')}.`);
+    return [...previous, value];
 }
 
-const { targets, out } = parseArguments(process.argv.slice(2));
-const platform = process.platform === 'win32' ? 'windows' : process.platform;
-const current = `bun-${platform}-${process.arch === 'arm64' ? 'arm64' : 'x64'}`;
-build(targets.length > 0 ? targets : [current], out);
+function outputDirectory(value: string): string {
+    if (value.trim() === '') throw new InvalidArgumentError('The output directory must not be empty.');
+    return value;
+}
+
+try {
+    const script = new Command('bun packages/cli/build.ts')
+        .description('Build the gspot executable for selected platforms')
+        .version(packageManifest.version)
+        .option('--target <target>', 'Bun compile target (repeat for multiple platforms)', collectTargets, [])
+        .option('--out <directory>', 'Directory for the executables', outputDirectory, join(root, 'dist'))
+        .allowExcessArguments(false)
+        .showHelpAfterError()
+        .addHelpText('after', '\nExample: bun packages/cli/build.ts --target bun-linux-arm64 --out dist')
+        .exitOverride()
+        .parse();
+    const options = script.opts<{ target: string[]; out: string }>();
+    const platform = process.platform === 'win32' ? 'windows' : process.platform;
+    const current = `bun-${platform}-${process.arch === 'arm64' ? 'arm64' : 'x64'}`;
+    const targets = options.target.length > 0 ? options.target : collectTargets(current, []);
+    build(targets, options.out);
+} catch (error) {
+    if (!(error instanceof CommanderError)) throw error;
+    process.exitCode = error.exitCode === 0 ? 0 : 2;
+}
