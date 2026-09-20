@@ -166,6 +166,7 @@ process.exit(2);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
+                expect(outcome.stdout, planted.id).toMatch(new RegExp(String.raw`^root\s+${planted.id}\s+fail\s`, 'u'));
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
             }
             expect(run(fixture.path, ['check', 'config-files/json'], environment).stdout).toContain(
