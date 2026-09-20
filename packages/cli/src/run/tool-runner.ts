@@ -28,13 +28,6 @@ const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
 
 const FILES_PLACEHOLDER = '{files}';
 
-// Under the argument limit of every platform: Linux and macOS allow far more, Windows allows 32,767 characters.
-const WINDOWS_COMMAND_BYTES = 30_000;
-
-const UNIX_COMMAND_BYTES = 100_000;
-
-const COMMAND_BYTES = process.platform === 'win32' ? WINDOWS_COMMAND_BYTES : UNIX_COMMAND_BYTES;
-
 const DEFAULT_TOOL_SECONDS = 600;
 
 const MILLISECONDS = 1000;
@@ -219,8 +212,9 @@ function batchedCommands(
     sub: Substitutions,
     toolPath: string | undefined,
 ): string[][] {
-    const fixed = substitute(session, planned, command, { ...sub, files: [] }).join(' ').length;
-    return fileBatches(sub.files, COMMAND_BYTES - fixed).map((files) => {
+    const fixed = substitute(session, planned, command, { ...sub, files: [] });
+    if (toolPath !== undefined) fixed[0] = toolPath;
+    return fileBatches(sub.files, fixed, process.platform).map((files) => {
         const argv = substitute(session, planned, command, { ...sub, files });
         if (toolPath !== undefined) argv[0] = toolPath;
         return argv;

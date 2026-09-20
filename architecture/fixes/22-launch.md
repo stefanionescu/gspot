@@ -225,3 +225,12 @@ CRLF checkout differences, a command length limit, and a v8r file-pattern separa
 The repository attributes require LF text checkouts to match its existing EditorConfig
 policy. A disposable Git checkout verifies that this overrides automatic CRLF conversion
 while preserving binary bytes. Runtime support for CRLF inputs remains separate work.
+
+The Windows Markdownlint failure at `2397e0a` exceeds the command limit of its npm
+wrapper. File batching reserves the resolved executable and fixed arguments before
+adding paths. Windows batches account for quoting and double escaping within a
+7,000-character budget. Unix batches count UTF-8 bytes. Regression tests cover
+5,000 paths, Unicode, oversized arguments, and subprocess argument preservation.
+
+The subprocess test exercises a `.cmd` shim on Windows. Side commands and fixers
+still need the batching work owned by the execution fixes.
