@@ -7,16 +7,52 @@ import { fileBatches } from '#cli/run/file-batches.ts';
 describe('spawning a tool', () => {
     test('a run past its timeout is stopped and says so', async () => {
         await using fixture = await createFixture({});
-        const result = await run(['sleep', '5'], { cwd: fixture.path, timeoutMs: 200 });
+        const result = await run([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
+            cwd: fixture.path,
+            timeoutMs: 200,
+        });
         expect(result.isTimedOut).toBe(true);
         expect(result.duration).toBeLessThan(3000);
     });
 
     test('a run inside its timeout reports no timeout', async () => {
         await using fixture = await createFixture({});
-        const result = await run(['true'], { cwd: fixture.path, timeoutMs: 5000 });
+        const result = await run([process.execPath, '-e', 'process.exitCode = 0'], {
+            cwd: fixture.path,
+            timeoutMs: 5000,
+        });
         expect(result.isTimedOut).toBe(false);
         expect(result.code).toBe(0);
+    });
+});
+
+describe('subprocess completion', () => {
+    test('drains output larger than pipe buffers before returning the child status', async () => {
+        await using fixture = await createFixture({
+            'output.js': `const text = 'é'.repeat(1024 * 1024);
+process.stdout.write(text);
+process.stderr.write(text);
+process.exitCode = Number(process.argv[2]);`,
+        });
+        const expected = 'é'.repeat(1024 * 1024);
+        for (const status of [0, 7]) {
+            const result = await run([process.execPath, join(fixture.path, 'output.js'), String(status)], {
+                cwd: fixture.path,
+                timeoutMs: 5000,
+            });
+            expect(result.isTimedOut).toBe(false);
+            expect(result.code).toBe(status);
+            expect(result.stdout).toBe(expected);
+            expect(result.stderr).toBe(expected);
+        }
+    });
+
+    test('reports a missing executable as a failed launch', async () => {
+        await using fixture = await createFixture({});
+        const result = await run([join(fixture.path, 'missing-executable')], { cwd: fixture.path });
+        expect(result.missing).toBe(true);
+        expect(result.code).not.toBe(0);
+        expect(result.stderr).not.toBe('');
     });
 });
 

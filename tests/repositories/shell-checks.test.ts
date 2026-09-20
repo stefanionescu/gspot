@@ -237,7 +237,7 @@ describe('the bash preset', () => {
             });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            run(
+            await run(
                 fixture.path,
                 [
                     'init',
@@ -256,7 +256,7 @@ describe('the bash preset', () => {
                 environment,
             );
             for (const planted of CASES) {
-                const clean = run(fixture.path, ['check', planted.id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
                 expect(clean.code, `${planted.id} on the clean repository: ${clean.stdout}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);

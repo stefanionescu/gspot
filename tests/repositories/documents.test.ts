@@ -104,7 +104,7 @@ describe.skipIf(!existsSync(join(STYLES, 'Google')))('the markdown, docs and pro
             commitAll(fixture.path);
             linkValePackages(fixture.path);
             const environment = { PATH: toolsPath(['vale', 'lychee', 'markdownlint-cli2', 'typos', 'ec']) };
-            run(
+            await run(
                 fixture.path,
                 [
                     'init',
@@ -123,7 +123,7 @@ describe.skipIf(!existsSync(join(STYLES, 'Google')))('the markdown, docs and pro
                 ],
                 environment,
             );
-            const whole = run(fixture.path, ['check', '--no-cache'], environment);
+            const whole = await run(fixture.path, ['check', '--no-cache'], environment);
             expect(whole.code, whole.stdout).toBe(0);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
@@ -142,14 +142,15 @@ describe.skipIf(!existsSync(join(STYLES, 'Google')))('the markdown, docs and pro
             );
             expect(named.code, named.stdout).toBe(0);
             for (const id of REPORTED_ELSEWHERE) {
-                const skipped = run(fixture.path, ['check', id], environment);
+                const skipped = await run(fixture.path, ['check', id], environment);
                 expect(skipped.stdout, id).toContain('its findings come from');
             }
             unlinkSync(join(fixture.path, '.gspot', 'vale', 'styles', 'config', 'dictionaries'));
-            const broken = run(fixture.path, ['check', 'prose/vale', '--no-cache'], environment);
+            const broken = await run(fixture.path, ['check', 'prose/vale', '--no-cache'], environment);
             expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(1);
             expect(broken.stdout).toContain('error');
-            const record = JSON.parse(run(fixture.path, ['check', '--at', 'commit', '--json'], environment).stdout) as {
+            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const record = JSON.parse(checked.stdout) as {
                 checks: { id: string }[];
             };
             expect(record.checks.map((check) => check.id)).not.toContain('docs/links-external');

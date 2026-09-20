@@ -16,29 +16,31 @@ describe('upgrade', () => {
             git(fixture.path, ['init', '-q']);
             git(fixture.path, ['add', '-A']);
             git(fixture.path, ['commit', '-qm', 'init']);
-            expect(run(fixture.path, INIT).stdout).toContain('write');
+            const initialized = await run(fixture.path, INIT);
+            expect(initialized.stdout).toContain('write');
             const current = readFileSync(join(fixture.path, '.gspot', 'version'), 'utf8').trim();
             writeFileSync(join(fixture.path, '.gspot', 'version'), '0.0.1\n');
             chmodSync(join(fixture.path, '.gspot', 'shellcheckrc'), 0o644);
             appendFileSync(join(fixture.path, '.gspot', 'shellcheckrc'), '# an older render\n');
             const before = treeContents(fixture.path);
-            const report = run(fixture.path, ['upgrade', '--dry-run']);
+            const report = await run(fixture.path, ['upgrade', '--dry-run']);
             expect(report.code).toBe(0);
             expect(report.stdout).toContain(`gspot 0.0.1 -> ${current}`);
             expect(report.stdout).toContain('~ .gspot/shellcheckrc');
             expect(treeContents(fixture.path)).toEqual(before);
-            const removed = run(fixture.path, ['upgrade', '--check']);
+            const removed = await run(fixture.path, ['upgrade', '--check']);
             expect(removed.code).toBe(2);
             expect(removed.stderr).toContain("unknown option '--check'");
-            const other = run(fixture.path, ['upgrade', '--to', '9.9.9', '--dry-run']);
+            const other = await run(fixture.path, ['upgrade', '--to', '9.9.9', '--dry-run']);
             expect(other.code).toBe(2);
             expect(other.stdout).toContain('Install gspot 9.9.9');
             expect(treeContents(fixture.path)).toEqual(before);
-            const applied = run(fixture.path, ['upgrade', '--yes', '--no-install']);
+            const applied = await run(fixture.path, ['upgrade', '--yes', '--no-install']);
             expect(applied.code).toBe(0);
             expect(readFileSync(join(fixture.path, '.gspot', 'version'), 'utf8').trim()).toBe(current);
             expect(readFileSync(join(fixture.path, '.gspot', 'shellcheckrc'), 'utf8')).not.toContain('an older render');
-            expect(run(fixture.path, ['apply', '--check']).code).toBe(0);
+            const drift = await run(fixture.path, ['apply', '--check']);
+            expect(drift.code).toBe(0);
         },
         PLANTED_TIMEOUT_MS,
     );

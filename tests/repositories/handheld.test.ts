@@ -78,7 +78,7 @@ describe('the react-native preset', () => {
             await install(fixture.path, INIT, environment);
             const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
             expect(policy).toContain('react-native');
-            const clean = run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
+            const clean = await run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const [expected, path, text] of LINT) {
                 const outcome = await runPlanted(
@@ -88,7 +88,7 @@ describe('the react-native preset', () => {
                 );
                 expect(outcome.stdout, `${expected}: ${outcome.stdout}${outcome.stderr}`).toContain(expected);
             }
-            const required = run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
+            const required = await run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
             expect(required.code, required.stdout + required.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 6,

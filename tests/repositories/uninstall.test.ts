@@ -17,7 +17,7 @@ describe('uninstall', () => {
             });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            run(
+            await run(
                 fixture.path,
                 [
                     'init',
@@ -40,7 +40,7 @@ describe('uninstall', () => {
             };
             expect(installed.scripts['check']).toBe('gspot check');
             expect(readFileSync(join(fixture.path, 'lefthook.yml'), 'utf8')).toContain('gspot');
-            const removed = run(fixture.path, ['uninstall', '--yes'], environment);
+            const removed = await run(fixture.path, ['uninstall', '--yes'], environment);
             expect(removed.code).toBe(0);
             const manifest = JSON.parse(readFileSync(join(fixture.path, 'package.json'), 'utf8')) as {
                 scripts: Record<string, string>;

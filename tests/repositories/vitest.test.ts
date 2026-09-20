@@ -59,7 +59,7 @@ describe('the vitest preset', () => {
             };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = run(fixture.path, ['check', planted.id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
                 expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);

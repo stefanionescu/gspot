@@ -1,6 +1,7 @@
 // Runs the development gspot and git in a planted repository.
 import { fileURLToPath } from 'node:url';
 import { delimiter, dirname, join } from 'node:path';
+import { run as runProcess } from '#cli/platform/spawn.ts';
 import type { PlantedCase, SpawnOutcome } from '#types/run.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
@@ -55,22 +56,24 @@ export const script =
  * @param environment extra variables
  * @returns the exit code and both streams
  */
-export function run(cwd: string, argv: string[], environment: Record<string, string> = {}): SpawnOutcome {
-    const started = performance.now();
-    const result = Bun.spawnSync(['bun', gspot, ...argv], {
+export async function run(
+    cwd: string,
+    argv: string[],
+    environment: Record<string, string> = {},
+): Promise<SpawnOutcome> {
+    const result = await runProcess([process.execPath, gspot, ...argv], {
         cwd,
-        env: { ...environmentVariables(), NO_COLOR: '1', CI: '1', ...environment },
-        stdout: 'pipe',
-        stderr: 'pipe',
-        timeout: PLANTED_TIMEOUT_MS * 2,
+        env: { NO_COLOR: '1', CI: '1', ...environment },
+        timeoutMs: PLANTED_TIMEOUT_MS * 2,
     });
-    if (result.exitedDueToTimeout === true)
+    if (result.isTimedOut === true)
         throw new Error(
             `Command gspot ${argv.join(' ')} timed out in ${cwd}.\n` +
-                `Duration: ${(performance.now() - started).toFixed(0)} ms; exit: ${String(result.exitCode)}; signal: ${String(result.signalCode)}.\n` +
-                `stdout:\n${result.stdout.toString()}\nstderr:\n${result.stderr.toString()}`,
+                `Duration: ${result.duration.toFixed(0)} ms; exit: ${String(result.code)}.\n` +
+                `stdout:\n${result.stdout}\nstderr:\n${result.stderr}`,
         );
-    return { code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() };
+    if (result.missing) throw new Error(`Could not launch gspot: ${result.stderr}`);
+    return { code: result.code, stdout: result.stdout, stderr: result.stderr };
 }
 
 /**
@@ -145,9 +148,11 @@ export async function runPlanted(
     environment: Record<string, string>,
 ): Promise<SpawnOutcome> {
     const restore = await plant(cwd, planted);
-    const outcome = run(cwd, ['check', planted.id, '--no-cache'], environment);
-    await restore();
-    return outcome;
+    try {
+        return await run(cwd, ['check', planted.id, '--no-cache'], environment);
+    } finally {
+        await restore();
+    }
 }
 
 /**
@@ -158,7 +163,7 @@ export async function runPlanted(
  * @param environment extra variables, such as the PATH of the tools
  */
 export async function install(cwd: string, argv: string[], environment: Record<string, string> = {}): Promise<void> {
-    const outcome = run(cwd, argv, environment);
+    const outcome = await run(cwd, argv, environment);
     if (await Bun.file(join(cwd, 'gspot.toml')).exists()) return;
     throw new Error(`The init command wrote no policy in the planted repository: ${outcome.stderr}${outcome.stdout}`);
 }

@@ -128,7 +128,7 @@ describe('the xcode preset', () => {
             commitAll(fixture.path);
             const checkIds = new Set(CASES.map((planted) => planted.id));
             for (const id of checkIds) {
-                const clean = run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
@@ -143,7 +143,7 @@ describe('the xcode preset', () => {
             }
             symlinkSync('Home.swift', join(fixture.path, 'App/Linked.swift'));
             commitAll(fixture.path);
-            const linked = run(fixture.path, ['check', 'xcode/symlinks', '--no-cache'], environment);
+            const linked = await run(fixture.path, ['check', 'xcode/symlinks', '--no-cache'], environment);
             expect(linked.code, linked.stdout).toBe(1);
             expect(linked.stdout).toContain('A symlink to Home.swift');
         },
@@ -184,7 +184,11 @@ describe('init in a repository with an Xcode project', () => {
             expect(policy).toContain('project = "App.xcodeproj"');
             expect(policy).toContain('scheme = "App"');
             // A later write into the same scope must still patch the file init wrote.
-            const later = run(fixture.path, ['set', '--scope', 'ios', 'tools.xcode.destination', 'platform=macOS'], {});
+            const later = await run(
+                fixture.path,
+                ['set', '--scope', 'ios', 'tools.xcode.destination', 'platform=macOS'],
+                {},
+            );
             expect(later.code, later.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 3,

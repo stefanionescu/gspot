@@ -35,11 +35,11 @@ describe('the security preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['semgrep', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
-            const clean = run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
+            const clean = await run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             await Bun.write(join(fixture.path, 'src/run.ts'), EVALUATED);
             commitAll(fixture.path);
-            const found = run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
+            const found = await run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
             if (process.platform === 'win32') {
                 expect(found.code, found.stdout + found.stderr).toBe(0);
                 expect(found.stdout).toMatch(/skipped\s+security\/semgrep\s+\(platform\)/u);
@@ -59,12 +59,13 @@ describe('the security preset', () => {
                 `${await Bun.file(policy).text()}\n[tools.semgrep]\nrules = ["security/own.yml"]\n`,
             );
             commitAll(fixture.path);
-            const own = run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
+            const own = await run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
             if (process.platform === 'win32') {
                 expect(own.code, own.stdout + own.stderr).toBe(0);
                 expect(own.stdout).toMatch(/skipped\s+security\/semgrep\s+\(platform\)/u);
             } else expect(own.stdout).toContain('planted-no-double');
-            const atPush = JSON.parse(run(fixture.path, ['check', '--at', 'push', '--json'], environment).stdout) as {
+            const checked = await run(fixture.path, ['check', '--at', 'push', '--json'], environment);
+            const atPush = JSON.parse(checked.stdout) as {
                 checks: { id: string }[];
             };
             const ids = atPush.checks.map((check) => check.id);

@@ -180,7 +180,7 @@ describe('the typescript preset', () => {
             symlinkSync(join(root, 'node_modules'), join(fixture.path, 'node_modules'), 'dir');
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ast-grep', 'ec', 'typos']) };
-            run(
+            await run(
                 fixture.path,
                 [
                     'init',
@@ -198,7 +198,7 @@ describe('the typescript preset', () => {
                 ],
                 environment,
             );
-            const whole = run(fixture.path, ['check', '--no-cache'], environment);
+            const whole = await run(fixture.path, ['check', '--no-cache'], environment);
             expect(whole.code, whole.stdout).toBe(0);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
@@ -234,7 +234,7 @@ describe('the typescript preset', () => {
             symlinkSync(join(root, 'node_modules'), join(fixture.path, 'node_modules'), 'dir');
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ast-grep', 'ec', 'typos']) };
-            run(
+            await run(
                 fixture.path,
                 [
                     'init',

@@ -90,7 +90,7 @@ describe('the python preset', () => {
             await install(fixture.path, INIT, environment);
             const checkIds = new Set([...CASES.map((planted) => planted.id), 'python/import-linter', 'python/deptry']);
             for (const id of checkIds) {
-                const clean = run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
@@ -126,9 +126,13 @@ describe('the python preset', () => {
             expect(policy).toContain('planted/skipped.py');
             expect(policy).not.toContain('.venv');
             expect(await Bun.file(`${fixture.path}/.gspot/baselines/basedpyright.root.json`).exists()).toBe(true);
-            const held = run(fixture.path, ['check', 'python/basedpyright', '--no-cache'], environment);
+            const held = await run(fixture.path, ['check', 'python/basedpyright', '--no-cache'], environment);
             expect(held.code, held.stdout + held.stderr).toBe(0);
-            const current = run(fixture.path, ['check', 'integrity/baselines-current', '--no-cache'], environment);
+            const current = await run(
+                fixture.path,
+                ['check', 'integrity/baselines-current', '--no-cache'],
+                environment,
+            );
             expect(current.code, current.stdout + current.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 4,

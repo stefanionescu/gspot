@@ -119,21 +119,21 @@ describe('the nextjs and i18n presets', () => {
             expect(written).toContain("nextPlugin.configs['core-web-vitals']");
             expect(written).toContain('i18next/no-literal-string');
             // A later block that turns a required rule off is what integrity/required-rules exists to see.
-            const held = run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
+            const held = await run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
             expect(held.code, held.stdout + held.stderr).toBe(0);
             chmodSync(join(fixture.path, '.gspot/eslint.config.mjs'), OWNER_WRITES);
             const loosened = written.replace("'react/no-danger': 'error'", "'react/no-danger': 'off'");
             await Bun.write(join(fixture.path, '.gspot/eslint.config.mjs'), loosened);
-            const seen = run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
+            const seen = await run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
             expect(seen.code, seen.stdout + seen.stderr).toBe(1);
             expect(seen.stdout).toContain('react/no-danger is off for app/layout.tsx');
             await Bun.write(join(fixture.path, '.gspot/eslint.config.mjs'), written);
-            const yielded = run(fixture.path, ['check', 'typescript/tsc', '--no-cache'], environment);
+            const yielded = await run(fixture.path, ['check', 'typescript/tsc', '--no-cache'], environment);
             expect(yielded.stdout).toContain('nextjs/typecheck runs it here');
             // Text written into the markup is what the i18n rule exists for, and a rule that runs proves its plugin works.
             const literal = LAYOUT.replace('<body>{children}</body>', '<body>Welcome{children}</body>');
             await Bun.write(join(fixture.path, 'app/layout.tsx'), literal);
-            const lint = run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
+            const lint = await run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
             expect(lint.stdout + lint.stderr).not.toContain('broke');
             expect(lint.stdout).toContain('i18next/no-literal-string');
         },

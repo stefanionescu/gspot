@@ -98,7 +98,7 @@ process.exit(2);
                 PATH: `${join(fixture.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
             };
             await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
-            const result = run(fixture.path, ['check', 'config-files/toml-format', '--no-cache'], environment);
+            const result = await run(fixture.path, ['check', 'config-files/toml-format', '--no-cache'], environment);
             expect(result.code, result.stderr + result.stdout).toBe(1);
             expect(result.stdout).toContain('taplo broke: exit 2');
             expect(result.stdout).toContain('INFO taplo: loaded configuration');
@@ -124,7 +124,7 @@ process.exit(2);
             const path = join(fixture.path, '.github/workflows/broken.yml');
             const workflow = `${WORKFLOW_HEAD}            - uses: actions/checkout@0000000000000000000000000000000000000000\n`;
             await Bun.write(path, workflow);
-            const result = run(
+            const result = await run(
                 fixture.path,
                 ['check', 'config-files/actions-pins', '--at', 'push', '--no-cache'],
                 environment,
@@ -163,17 +163,17 @@ process.exit(2);
             const environment = {
                 PATH: toolsPath(['taplo', 'yamllint', 'actionlint', 'zizmor', 'dotenv-linter', 'typos', 'ec']),
             };
-            run(fixture.path, [...INIT, '--hooks', 'none'], environment);
+            await run(fixture.path, [...INIT, '--hooks', 'none'], environment);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.id).toMatch(new RegExp(String.raw`^root\s+${planted.id}\s+fail\s`, 'u'));
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
             }
-            expect(run(fixture.path, ['check', 'config-files/json'], environment).stdout).toContain(
-                'its findings come from',
-            );
-            const record = JSON.parse(run(fixture.path, ['check', '--at', 'commit', '--json'], environment).stdout) as {
+            const jsonCheck = await run(fixture.path, ['check', 'config-files/json'], environment);
+            expect(jsonCheck.stdout).toContain('its findings come from');
+            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const record = JSON.parse(checked.stdout) as {
                 checks: { id: string }[];
             };
             expect(record.checks.map((check) => check.id)).not.toContain('config-files/schema');
@@ -188,7 +188,7 @@ process.exit(2);
             await using fixture = await createFixture({ 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['taplo', 'typos', 'ec']) };
-            run(fixture.path, [...INIT, '--hooks', 'none'], environment);
+            await run(fixture.path, [...INIT, '--hooks', 'none'], environment);
             const outcome = await runPlanted(
                 fixture.path,
                 {
@@ -216,12 +216,13 @@ process.exit(2);
             git(fixture.path, ['init', '-q']);
             git(fixture.path, ['add', '-A']);
             git(fixture.path, ['commit', '-qm', 'init']);
-            expect(run(fixture.path, INIT).stdout).toContain('write');
+            const initialized = await run(fixture.path, INIT);
+            expect(initialized.stdout).toContain('write');
             const environment = { PATH: toolsPath(['taplo', 'yamllint']) };
-            const toml = run(fixture.path, ['check', 'config-files/toml'], environment);
+            const toml = await run(fixture.path, ['check', 'config-files/toml'], environment);
             expect(toml.code).toBe(1);
             expect(toml.stdout).toContain('settings.toml:2');
-            const yaml = run(fixture.path, ['check', 'config-files/yaml'], environment);
+            const yaml = await run(fixture.path, ['check', 'config-files/yaml'], environment);
             expect(yaml.code).toBe(1);
             expect(yaml.stdout).toContain('key-duplicates');
             await Bun.write(
@@ -229,7 +230,7 @@ process.exit(2);
                 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n',
             );
             git(fixture.path, ['add', '-A']);
-            const keys = run(fixture.path, ['check', 'config-files/env-example', '--at', 'push']);
+            const keys = await run(fixture.path, ['check', 'config-files/env-example', '--at', 'push']);
             expect(keys.code).toBe(1);
             expect(keys.stdout).toContain('HOST');
             expect(keys.stdout).not.toContain('PORT is read');
@@ -253,22 +254,22 @@ test(
         const environment = { PATH: toolsPath(['v8r']) };
         await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
         const mapping = JSON.stringify({ pattern: 'settings/café.json', schema: 'schema.json' });
-        const setting = run(fixture.path, ['set', 'tools.v8r.schemas', mapping], environment);
+        const setting = await run(fixture.path, ['set', 'tools.v8r.schemas', mapping], environment);
         expect(setting.code, setting.stdout + setting.stderr).toBe(0);
-        const applied = run(fixture.path, ['apply'], environment);
+        const applied = await run(fixture.path, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const path = join(fixture.path, 'settings/café.json');
         await Bun.write(path, JSON.stringify({ count: 'invalid' }));
         expect(git(fixture.path, ['add', 'settings/café.json']).code).toBe(0);
         const command = ['check', 'config-files/schema', '--staged', '--at', 'push', '--no-cache'];
-        const invalid = run(fixture.path, command, environment);
+        const invalid = await run(fixture.path, command, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect(invalid.stdout).toContain('settings/café.json');
         expect(invalid.stdout).toContain('must be integer');
         expect(invalid.stdout).not.toContain('broke:');
         await Bun.write(path, JSON.stringify({ count: 1 }));
         expect(git(fixture.path, ['add', 'settings/café.json']).code).toBe(0);
-        const valid = run(fixture.path, command, environment);
+        const valid = await run(fixture.path, command, environment);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         expect(valid.stdout).toMatch(/config-files\/schema\s+ok\s/u);
     },

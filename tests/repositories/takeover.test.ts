@@ -37,7 +37,7 @@ describe('takeover', () => {
             git(fixture.path, ['init', '-q']);
             git(fixture.path, ['add', '-A']);
             git(fixture.path, ['commit', '-qm', 'init']);
-            const init = run(fixture.path, INIT, { PATH: toolsPath(['ast-grep']) });
+            const init = await run(fixture.path, INIT, { PATH: toolsPath(['ast-grep']) });
             expect(init.stdout).toContain('carried into gspot.toml');
             expect(init.stdout).toContain('quality/');
             const policy = readFileSync(join(fixture.path, 'gspot.toml'), 'utf8');
@@ -63,7 +63,8 @@ describe('takeover', () => {
             expect(readFileSync(join(fixture.path, eslintStub ?? ''), 'utf8')).not.toContain('no-var');
             expect(existsSync(join(fixture.path, '.markdownlint.jsonc'))).toBe(false);
             expect(existsSync(join(fixture.path, 'quality', 'lint.sh'))).toBe(true);
-            expect(run(fixture.path, ['apply', '--check']).code).toBe(0);
+            const applied = await run(fixture.path, ['apply', '--check']);
+            expect(applied.code).toBe(0);
         },
         PLANTED_TIMEOUT_MS,
     );

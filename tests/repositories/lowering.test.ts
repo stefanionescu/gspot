@@ -25,21 +25,21 @@ describe('apply --lower-baselines', () => {
             expect(existsSync(join(fixture.path, LONE_FILE))).toBe(true);
             expect(existsSync(join(fixture.path, CONTAINER))).toBe(true);
 
-            run(fixture.path, ['check', 'structure/folder-names', '--no-cache'], environment);
-            const partial = run(fixture.path, ['apply', '--lower-baselines'], environment);
+            await run(fixture.path, ['check', 'structure/folder-names', '--no-cache'], environment);
+            const partial = await run(fixture.path, ['apply', '--lower-baselines'], environment);
             expect(partial.stdout).toContain('kept     structure/single-file-folder:lone-file');
             expect(existsSync(join(fixture.path, LONE_FILE))).toBe(true);
             expect(existsSync(join(fixture.path, CONTAINER))).toBe(true);
 
             // A full run holds both rules, and a held count is a count: lowering finds nothing to change.
-            run(fixture.path, ['check', '--no-cache'], environment);
-            const full = run(fixture.path, ['apply', '--lower-baselines'], environment);
+            await run(fixture.path, ['check', '--no-cache'], environment);
+            const full = await run(fixture.path, ['apply', '--lower-baselines'], environment);
             expect(full.stdout).not.toContain('removed');
             expect(existsSync(join(fixture.path, LONE_FILE))).toBe(true);
             expect(existsSync(join(fixture.path, CONTAINER))).toBe(true);
 
-            run(fixture.path, ['check', '--staged', '--no-cache'], environment);
-            const narrowed = run(fixture.path, ['apply', '--lower-baselines'], environment);
+            await run(fixture.path, ['check', '--staged', '--no-cache'], environment);
+            const narrowed = await run(fixture.path, ['apply', '--lower-baselines'], environment);
             expect(narrowed.code).toBe(2);
             expect(narrowed.stdout + narrowed.stderr).toContain('its counts are partial');
             expect(existsSync(join(fixture.path, LONE_FILE))).toBe(true);

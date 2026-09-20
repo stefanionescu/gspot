@@ -42,12 +42,12 @@ describe('gspot add', () => {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await install(fixture.path, INIT, environment);
-            const before = run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
+            const before = await run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
             expect(before.code, before.stdout + before.stderr).toBe(0);
-            const added = run(fixture.path, ['add', 'zod', '--json'], environment);
+            const added = await run(fixture.path, ['add', 'zod', '--json'], environment);
             expect(added.code, added.stdout + added.stderr).toBe(0);
             expect(added.stdout).not.toContain('formatting/prettier');
-            const after = run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
+            const after = await run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
             expect(after.code, after.stdout + after.stderr).toBe(0);
             const held = await Bun.file(join(fixture.path, '.gspot/baselines/eslint.json')).text();
             expect(held).toContain('zod/no-any-schema');

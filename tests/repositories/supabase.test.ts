@@ -81,7 +81,7 @@ describe('the supabase preset', () => {
             await install(fixture.path, INIT, environment);
             const checkIds = new Set(CASES.map((planted) => planted.id));
             for (const id of checkIds) {
-                const clean = run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
@@ -89,7 +89,8 @@ describe('the supabase preset', () => {
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
             }
-            const atPush = JSON.parse(run(fixture.path, ['check', '--at', 'push', '--json'], environment).stdout) as {
+            const checked = await run(fixture.path, ['check', '--at', 'push', '--json'], environment);
+            const atPush = JSON.parse(checked.stdout) as {
                 checks: { id: string }[];
             };
             expect(atPush.checks.map((check) => check.id)).toContain('supabase/types-fresh');

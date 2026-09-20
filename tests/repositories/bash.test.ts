@@ -11,7 +11,7 @@ describe('the bash planted repository', () => {
         async () => {
             await using fixture = await createFixture({ 'scripts/build.sh': script, 'README.md': '# planted\n' });
             commitAll(fixture.path);
-            const init = run(fixture.path, [
+            const init = await run(fixture.path, [
                 'init',
                 '--yes',
                 '--presets',
@@ -30,17 +30,17 @@ describe('the bash planted repository', () => {
             expect(existsSync(join(fixture.path, '.gspot', 'version'))).toBe(true);
             expect(existsSync(join(fixture.path, '.gspot', 'hooks', 'pre-commit'))).toBe(true);
             expect(readFileSync(join(fixture.path, '.gitignore'), 'utf8')).toContain('>>> gspot managed >>>');
-            const check = run(fixture.path, ['check', 'bash/shellcheck']);
+            const check = await run(fixture.path, ['check', 'bash/shellcheck']);
             expect(check.code).toBe(0);
             expect(check.stdout).toContain('bash/shellcheck');
             expect(check.stdout).toContain('ok');
-            const json = run(fixture.path, ['check', 'bash/shfmt', '--json']);
+            const json = await run(fixture.path, ['check', 'bash/shfmt', '--json']);
             const record = JSON.parse(json.stdout) as { checks: { id: string; status: string }[]; exitCode: number };
             expect(record.checks[0]?.id).toBe('bash/shfmt');
             expect(record.exitCode).toBe(0);
-            const drift = run(fixture.path, ['apply', '--check']);
+            const drift = await run(fixture.path, ['apply', '--check']);
             expect(drift.code).toBe(0);
-            const second = run(fixture.path, ['init', '--yes']);
+            const second = await run(fixture.path, ['init', '--yes']);
             expect(second.code).toBe(2);
             expect(second.stdout).toContain('gspot doctor');
         },
@@ -52,7 +52,7 @@ describe('the bash planted repository', () => {
         async () => {
             await using fixture = await createFixture({ 'scripts/good.sh': script, 'README.md': '# planted\n' });
             commitAll(fixture.path);
-            run(fixture.path, [
+            await run(fixture.path, [
                 'init',
                 '--yes',
                 '--presets',
@@ -65,12 +65,12 @@ describe('the bash planted repository', () => {
                 '--no-install',
             ]);
             await Bun.write(join(fixture.path, 'scripts', 'bad.sh'), '#!/usr/bin/env bash\necho $1\n');
-            const check = run(fixture.path, ['check', 'bash/shellcheck', '--no-cache']);
+            const check = await run(fixture.path, ['check', 'bash/shellcheck', '--no-cache']);
             expect(check.code).toBe(1);
             expect(check.stdout).toContain('scripts/bad.sh:2:6  SC2086');
             expect(check.stdout).toContain('help:');
             expect(check.stdout).toContain('reproduce: gspot check bash/shellcheck');
-            const ignored = run(fixture.path, [
+            const ignored = await run(fixture.path, [
                 'ignore',
                 'bash/shellcheck',
                 '--rule',
@@ -79,7 +79,8 @@ describe('the bash planted repository', () => {
                 'Word splitting is wanted in this launcher.',
             ]);
             expect(ignored.code).toBe(0);
-            expect(run(fixture.path, ['check', 'bash/shellcheck', '--no-cache']).code).toBe(0);
+            const ignoredCheck = await run(fixture.path, ['check', 'bash/shellcheck', '--no-cache']);
+            expect(ignoredCheck.code).toBe(0);
         },
         PLANTED_TIMEOUT_MS,
     );
@@ -89,7 +90,7 @@ describe('the bash planted repository', () => {
         async () => {
             await using fixture = await createFixture({ 'scripts/a.sh': script, home: {}, bin: {} });
             commitAll(fixture.path);
-            run(fixture.path, [
+            await run(fixture.path, [
                 'init',
                 '--yes',
                 '--presets',
@@ -106,7 +107,7 @@ describe('the bash planted repository', () => {
             expect(gitPath).not.toBeNull();
             symlinkSync(process.execPath, join(bin, process.platform === 'win32' ? 'bun.exe' : 'bun'));
             symlinkSync(gitPath!, join(bin, process.platform === 'win32' ? 'git.exe' : 'git'));
-            const check = run(fixture.path, ['check', 'bash/shellcheck', '--no-cache'], {
+            const check = await run(fixture.path, ['check', 'bash/shellcheck', '--no-cache'], {
                 PATH: bin,
                 HOME: join(fixture.path, 'home'),
                 MISE_DATA_DIR: join(fixture.path, 'home', 'mise'),
@@ -123,7 +124,7 @@ describe('the bash planted repository', () => {
         async () => {
             await using fixture = await createFixture({ 'scripts/a.sh': script });
             commitAll(fixture.path);
-            run(fixture.path, [
+            await run(fixture.path, [
                 'init',
                 '--yes',
                 '--presets',
@@ -136,12 +137,13 @@ describe('the bash planted repository', () => {
                 '--no-install',
             ]);
             await Bun.write(join(fixture.path, '.gspot', 'version'), '9.9.9\n');
-            const check = run(fixture.path, ['check']);
+            const check = await run(fixture.path, ['check']);
             expect(check.code).toBe(2);
             expect(check.stderr).toContain('mise install');
             expect(check.stderr).toContain('gspot upgrade --to');
-            expect(run(fixture.path, ['doctor']).code).not.toBe(2);
-            const removed = run(fixture.path, ['doctor', '--offline']);
+            const doctor = await run(fixture.path, ['doctor']);
+            expect(doctor.code).not.toBe(2);
+            const removed = await run(fixture.path, ['doctor', '--offline']);
             expect(removed.code).toBe(2);
             expect(removed.stderr).toContain("unknown option '--offline'");
         },

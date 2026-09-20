@@ -69,9 +69,9 @@ describe('the structure preset', () => {
             await using fixture = await createFixture({ 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            run(fixture.path, [...INIT, '--hooks', 'gspot'], environment);
+            await run(fixture.path, [...INIT, '--hooks', 'gspot'], environment);
             for (const planted of CASES) {
-                const clean = run(fixture.path, ['check', planted.id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
                 expect(clean.code, `${planted.id} on the clean repository: ${clean.stdout}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
@@ -87,12 +87,17 @@ describe('the structure preset', () => {
             await using fixture = await createFixture({ 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            run(fixture.path, [...INIT, '--hooks', 'none'], environment);
-            expect(run(fixture.path, ['check', 'integrity/tracked-dependencies'], environment).code).toBe(0);
+            await run(fixture.path, [...INIT, '--hooks', 'none'], environment);
+            const clean = await run(fixture.path, ['check', 'integrity/tracked-dependencies'], environment);
+            expect(clean.code).toBe(0);
             mkdirSync(join(fixture.path, 'web', 'node_modules', 'left-pad'), { recursive: true });
             await Bun.write(join(fixture.path, 'web', 'node_modules', 'left-pad', 'index.js'), 'module.exports = 1;\n');
             git(fixture.path, ['add', '-f', 'web/node_modules/left-pad/index.js']);
-            const check = run(fixture.path, ['check', 'integrity/tracked-dependencies', '--no-cache'], environment);
+            const check = await run(
+                fixture.path,
+                ['check', 'integrity/tracked-dependencies', '--no-cache'],
+                environment,
+            );
             expect(check.code).toBe(1);
             expect(check.stdout).toContain('git tracks 1 file(s) under web/node_modules/');
         },

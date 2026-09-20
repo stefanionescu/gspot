@@ -56,7 +56,7 @@ describe('the cloudflare preset', () => {
             const environment = { PATH: toolsPath(['typos', 'ec', 'ast-grep']) };
             await install(fixture.path, INIT, environment);
             for (const id of [...CASES.map((planted) => planted.id), 'cloudflare/env-types-fresh']) {
-                const clean = run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {

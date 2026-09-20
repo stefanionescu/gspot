@@ -90,7 +90,7 @@ describe('the nestjs preset', () => {
             };
             await install(fixture.path, INIT, environment);
             // Nothing the framework asks for is held in a baseline: the module passes as written, file names included.
-            const held = run(fixture.path, ['check', '--at', 'commit', '--no-cache'], environment);
+            const held = await run(fixture.path, ['check', '--at', 'commit', '--no-cache'], environment);
             expect(held.code, held.stdout + held.stderr).toBe(0);
             const eslintFile = join(fixture.path, '.gspot/baselines/eslint.json');
             const eslintHeld = existsSync(eslintFile) ? await Bun.file(eslintFile).text() : '';
@@ -99,7 +99,7 @@ describe('the nestjs preset', () => {
                 existsSync(join(fixture.path, '.gspot/baselines/structure.prefix-collisions.shared-prefix.json')),
             ).toBe(false);
             for (const id of ['typescript/eslint', 'typescript/tsc', 'integrity/tsconfig-options']) {
-                const clean = run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {

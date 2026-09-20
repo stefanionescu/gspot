@@ -36,11 +36,11 @@ describe('the duplication preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['shellcheck', 'shfmt', 'typos', 'ec'])}` };
             await install(fixture.path, INIT, environment);
-            const clean = run(fixture.path, ['check', 'duplication/jscpd', '--no-cache'], environment);
+            const clean = await run(fixture.path, ['check', 'duplication/jscpd', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             await Bun.write(`${fixture.path}/scripts/second.sh`, copied('count_second'));
             commitAll(fixture.path);
-            const found = run(fixture.path, ['check', 'duplication/jscpd', '--no-cache'], environment);
+            const found = await run(fixture.path, ['check', 'duplication/jscpd', '--no-cache'], environment);
             expect(found.code, found.stdout + found.stderr).toBe(1);
             expect(found.stdout).toContain('lines repeat scripts/');
             expect(found.stdout).toContain('over the ceiling of 4');

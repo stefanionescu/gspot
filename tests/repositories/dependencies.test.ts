@@ -92,7 +92,8 @@ describe('the dependencies preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
             await install(fixture.path, INIT, environment);
-            expect(run(fixture.path, ['check', 'integrity/manifest-policy', '--no-cache'], environment).code).toBe(0);
+            const manifest = await run(fixture.path, ['check', 'integrity/manifest-policy', '--no-cache'], environment);
+            expect(manifest.code).toBe(0);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(1);
@@ -106,12 +107,11 @@ describe('the dependencies preset', () => {
                 join(fixture.path, 'bun.lock'),
                 '{\n  "lockfileVersion": 1,\n  "workspaces": { "": { "name": "planted" } },\n  "packages": {}\n}\n',
             );
-            const stale = run(fixture.path, ['check', 'integrity/lockfile-fresh', '--no-cache'], environment);
+            const stale = await run(fixture.path, ['check', 'integrity/lockfile-fresh', '--no-cache'], environment);
             expect(stale.code, stale.stdout).toBe(1);
             expect(stale.stdout).toContain('refuses this lockfile');
-            const atCommit = JSON.parse(
-                run(fixture.path, ['check', '--at', 'commit', '--json'], environment).stdout,
-            ) as {
+            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const atCommit = JSON.parse(checked.stdout) as {
                 checks: { id: string }[];
             };
             const ids = atCommit.checks.map((check) => check.id);

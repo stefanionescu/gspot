@@ -86,11 +86,11 @@ describe('the swift preset', () => {
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const check of ['swift/swiftlint', 'swift/swiftformat']) {
-                const result = run(fixture.path, ['check', check, '--no-cache'], environment);
+                const result = await run(fixture.path, ['check', check, '--no-cache'], environment);
                 expect(result.code, result.stdout + result.stderr).toBe(0);
             }
             await fixture.writeFile(path, header + SPACED);
-            const fixed = run(fixture.path, ['check', 'swift/swiftformat', '--fix', '--no-cache'], environment);
+            const fixed = await run(fixture.path, ['check', 'swift/swiftformat', '--fix', '--no-cache'], environment);
             expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
             expect(readFileSync(join(fixture.path, path), 'utf8')).toBe(header + CLEAN);
         },
@@ -105,7 +105,7 @@ describe('the swift preset', () => {
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = run(fixture.path, ['check', planted.id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
                 expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 if (process.platform === 'win32' && planted.id === 'swift/swiftlint') {
@@ -127,9 +127,8 @@ describe('the swift preset', () => {
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}`).toBe(0);
                 expect(outcome.stdout, planted.id).toContain('ok');
             }
-            const atCommit = JSON.parse(
-                run(fixture.path, ['check', '--at', 'commit', '--json'], environment).stdout,
-            ) as {
+            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const atCommit = JSON.parse(checked.stdout) as {
                 checks: { id: string }[];
             };
             const ids = atCommit.checks.map((check) => check.id);
@@ -169,7 +168,7 @@ describe('the swift preset inside a scope', () => {
             ];
             await install(fixture.path, argv, environment);
             for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
-                const clean = run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             const outcome = await runPlanted(
@@ -230,7 +229,7 @@ describe('the swift preset over a package', () => {
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'periphery', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const planted of BUILD_CASES) {
-                const clean = run(fixture.path, ['check', planted.id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
                 expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 if (process.platform !== 'darwin') {

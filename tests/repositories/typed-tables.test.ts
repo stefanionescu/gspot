@@ -29,13 +29,17 @@ describe('gspot set', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
             await install(fixture.path, INIT, environment);
-            const written = run(fixture.path, ['set', 'tools.docs.paths_allowed', TABLE], environment);
+            const written = await run(fixture.path, ['set', 'tools.docs.paths_allowed', TABLE], environment);
             expect(written.code, written.stdout + written.stderr).toBe(0);
             const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
             expect(policy).toContain('patterns = ["REPORT.md"]');
             expect(policy).not.toContain('"[{patterns');
 
-            const unreadable = run(fixture.path, ['set', 'tools.docs.paths_allowed', '[{patterns = '], environment);
+            const unreadable = await run(
+                fixture.path,
+                ['set', 'tools.docs.paths_allowed', '[{patterns = '],
+                environment,
+            );
             expect(unreadable.code).toBe(2);
             expect(unreadable.stdout + unreadable.stderr).toContain('reads as neither JSON nor TOML');
 
@@ -44,7 +48,7 @@ describe('gspot set', () => {
                 join(fixture.path, 'gspot.toml'),
                 `${policy}\n[tools.typos]\nexclude = ["{paths = [\\"a\\"], reason = \\"x\\"}"]\n`,
             );
-            const read = run(fixture.path, ['check', 'docs/readme-present'], environment);
+            const read = await run(fixture.path, ['check', 'docs/readme-present'], environment);
             expect(read.code).toBe(2);
             expect(read.stdout + read.stderr).toContain('holds a table written inside quotes');
         },

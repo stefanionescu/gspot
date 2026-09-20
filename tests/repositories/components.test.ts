@@ -88,7 +88,7 @@ describe('the vue and svelte presets', () => {
                     PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
                 };
                 await install(fixture.path, init(shape.presets), environment);
-                const clean = run(fixture.path, ['check', shape.check, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', shape.check, '--no-cache'], environment);
                 expect(clean.code, clean.stdout + clean.stderr).toBe(0);
                 expect(clean.stdout).toContain('1 file');
                 for (const [rule, text] of shape.cases) {
@@ -100,9 +100,13 @@ describe('the vue and svelte presets', () => {
                     expect(outcome.code, `${rule}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                     expect(outcome.stdout, rule).toContain(rule);
                 }
-                const code = run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
+                const code = await run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
                 expect(code.code, code.stdout + code.stderr).toBe(0);
-                const required = run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
+                const required = await run(
+                    fixture.path,
+                    ['check', 'integrity/required-rules', '--no-cache'],
+                    environment,
+                );
                 expect(required.code, required.stdout + required.stderr).toBe(0);
             },
             PLANTED_TIMEOUT_MS * 6,

@@ -15,11 +15,12 @@ describe('init refusals', () => {
         async () => {
             await using fixture = await createFixture({ 'scripts/a.sh': script });
             commitAll(fixture.path);
-            const result = run(fixture.path, ['init', '--yes', '--hooks', 'foo']);
+            const result = await run(fixture.path, ['init', '--yes', '--hooks', 'foo']);
             expect(result.code).toBe(2);
             expect(result.stderr).toContain('Allowed choices are gspot, lefthook, husky, none');
             expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
-            expect(run(fixture.path, ['check', '--at', 'later']).code).toBe(2);
+            const invalidStage = await run(fixture.path, ['check', '--at', 'later']);
+            expect(invalidStage.code).toBe(2);
         },
         PLANTED_TIMEOUT_MS,
     );
@@ -29,10 +30,10 @@ describe('init refusals', () => {
         async () => {
             await using fixture = await createFixture({ 'scripts/a.sh': script });
             commitAll(fixture.path);
-            const unknown = run(fixture.path, ['init', '--yes', '--presets', 'bassh', ...QUIET]);
+            const unknown = await run(fixture.path, ['init', '--yes', '--presets', 'bassh', ...QUIET]);
             expect(unknown.code).toBe(2);
             expect(unknown.stderr).toContain('Did you mean `bash`');
-            const required = run(fixture.path, [
+            const required = await run(fixture.path, [
                 'init',
                 '--yes',
                 '--presets',
@@ -54,11 +55,11 @@ describe('init refusals', () => {
             await using fixture = await createFixture({ 'scripts/a.sh': script });
             commitAll(fixture.path);
             await Bun.write(join(fixture.path, 'notes.txt'), 'draft\n');
-            const refused = run(fixture.path, ['init', '--yes', '--presets', 'bash', ...QUIET]);
+            const refused = await run(fixture.path, ['init', '--yes', '--presets', 'bash', ...QUIET]);
             expect(refused.code).toBe(2);
             expect(refused.stderr).toContain('--allow-dirty');
             expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
-            const allowed = run(fixture.path, ['init', '--yes', '--presets', 'bash', '--allow-dirty', ...QUIET], {
+            const allowed = await run(fixture.path, ['init', '--yes', '--presets', 'bash', '--allow-dirty', ...QUIET], {
                 PATH: `${join(import.meta.dir, '../../node_modules/.bin')}${delimiter}${toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos', 'ec'])}`,
             });
             expect(allowed.code, allowed.stdout + allowed.stderr).toBe(0);
@@ -99,11 +100,15 @@ describe('init refusals', () => {
             await using fixture = await createFixture({ 'scripts/a.sh': script });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            run(fixture.path, ['init', '--yes', '--presets', 'bash', '--without', 'naming', ...QUIET], environment);
+            await run(
+                fixture.path,
+                ['init', '--yes', '--presets', 'bash', '--without', 'naming', ...QUIET],
+                environment,
+            );
             const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
             expect(policy).toContain('"formatting"');
             expect(policy).not.toContain('"naming"');
-            const check = run(fixture.path, ['check', 'naming/identifiers'], environment);
+            const check = await run(fixture.path, ['check', 'naming/identifiers'], environment);
             expect(check.code).toBe(2);
             expect(check.stdout).toContain('No selected preset runs a check called `naming/identifiers`');
         },
@@ -126,7 +131,7 @@ describe('init refusals', () => {
                 'jobs=bash',
                 ...QUIET,
             ];
-            const init = run(fixture.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
+            const init = await run(fixture.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
             expect(init.stderr).not.toContain('did not run');
             const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
             expect(policy).toContain('path = "tools"');

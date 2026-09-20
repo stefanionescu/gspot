@@ -13,9 +13,9 @@ describe.skipIf(repositories.length === 0)('acceptance on the reference reposito
     for (const repository of repositories)
         test(
             `gspot installs and checks ${repository} in a worktree and leaves the repository as it was`,
-            () => {
+            async () => {
                 const before = git(repository, ['status', '--porcelain']).stdout;
-                const result = acceptanceRun(repository);
+                const result = await acceptanceRun(repository);
                 expect(result.init).toContain('written: gspot.toml');
                 expect(result.statuses['error'] ?? 0, JSON.stringify(result.statuses)).toBe(0);
                 expect(git(repository, ['status', '--porcelain']).stdout).toBe(before);

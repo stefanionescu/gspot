@@ -93,7 +93,7 @@ describe('the library presets', () => {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await install(fixture.path, INIT, environment);
-            const clean = run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
+            const clean = await run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const [rule, path, text] of LINT) {
                 const outcome = await runPlanted(
@@ -104,12 +104,18 @@ describe('the library presets', () => {
                 expect(outcome.stdout, `${rule}: ${outcome.stdout}${outcome.stderr}`).toContain(rule);
             }
             for (const planted of CASES) {
-                expect(run(fixture.path, ['check', planted.id, '--no-cache'], environment).code, planted.id).toBe(0);
+                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
+                expect(clean.code, planted.id).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
             }
-            expect(run(fixture.path, ['check', 'drizzle/migrations-fresh', '--no-cache'], environment).code).toBe(0);
+            const migrations = await run(
+                fixture.path,
+                ['check', 'drizzle/migrations-fresh', '--no-cache'],
+                environment,
+            );
+            expect(migrations.code).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 8,
     );

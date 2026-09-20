@@ -64,15 +64,14 @@ describe('the xctest preset', () => {
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = run(fixture.path, ['check', planted.id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', planted.id, '--no-cache'], environment);
                 expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
             }
-            const atCommit = JSON.parse(
-                run(fixture.path, ['check', '--at', 'commit', '--json'], environment).stdout,
-            ) as {
+            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const atCommit = JSON.parse(checked.stdout) as {
                 checks: { id: string }[];
             };
             expect(atCommit.checks.map((check) => check.id)).not.toContain('xctest/coverage');

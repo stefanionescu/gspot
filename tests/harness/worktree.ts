@@ -12,14 +12,14 @@ import { git, run } from '#tests/harness/planted.ts';
  * @param repository the reference repository
  * @returns the init output, the run record and the counts by status
  */
-export function acceptanceRun(repository: string): AcceptanceRun {
+export async function acceptanceRun(repository: string): Promise<AcceptanceRun> {
     const holder = mkdtempSync(join(tmpdir(), 'gspot-acceptance-'));
     const worktree = join(holder, 'tree');
     const added = git(repository, ['worktree', 'add', '--detach', worktree, 'HEAD']);
     if (added.code !== 0) throw new Error(`The worktree of ${repository} was not created: ${added.stderr}`);
     try {
-        const init = run(worktree, ['init', '--yes', '--no-install', '--hooks', 'none', '--ci', 'none']);
-        const checked = run(worktree, ['check', '--at', 'commit', '--json']);
+        const init = await run(worktree, ['init', '--yes', '--no-install', '--hooks', 'none', '--ci', 'none']);
+        const checked = await run(worktree, ['check', '--at', 'commit', '--json']);
         const record = JSON.parse(checked.stdout) as RunRecord;
         const statuses: Record<string, number> = {};
         for (const check of record.checks) statuses[check.status] = (statuses[check.status] ?? 0) + 1;

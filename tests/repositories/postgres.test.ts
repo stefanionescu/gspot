@@ -108,7 +108,7 @@ describe('the postgres preset', () => {
             commitAll(fixture.path);
             const checkIds = new Set(CASES.map((planted) => planted.id));
             for (const id of checkIds) {
-                const clean = run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {

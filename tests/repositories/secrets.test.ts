@@ -44,24 +44,25 @@ describe('the secrets preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['gitleaks']) };
             await install(fixture.path, INIT, environment);
-            expect(run(fixture.path, ['check', '--at', 'commit', '--no-cache'], environment).code).toBe(0);
+            const clean = await run(fixture.path, ['check', '--at', 'commit', '--no-cache'], environment);
+            expect(clean.code).toBe(0);
 
             await Bun.write(join(fixture.path, 'settings.py'), SETTINGS);
             git(fixture.path, ['add', 'settings.py']);
-            const staged = run(fixture.path, ['check', 'secrets/gitleaks-staged', '--no-cache'], environment);
+            const staged = await run(fixture.path, ['check', 'secrets/gitleaks-staged', '--no-cache'], environment);
             expect(staged.code, staged.stdout).toBe(1);
             expect(staged.stdout).toContain('settings.py:1');
             expect(staged.stdout).toContain('aws-access-token');
             expect(staged.stdout).not.toContain(KEY_ID);
 
             git(fixture.path, ['commit', '-qm', 'feat: add settings', '--no-verify']);
-            const pushed = run(fixture.path, ['check', 'secrets/gitleaks', '--no-cache'], environment);
+            const pushed = await run(fixture.path, ['check', 'secrets/gitleaks', '--no-cache'], environment);
             expect(pushed.code, pushed.stdout).toBe(1);
             expect(pushed.stdout).toContain('settings.py');
 
             await Bun.write(join(fixture.path, '.env'), 'TOKEN=value\n');
             git(fixture.path, ['add', '-f', '.env']);
-            const tracked = run(fixture.path, ['check', 'integrity/env-files', '--no-cache'], environment);
+            const tracked = await run(fixture.path, ['check', 'integrity/env-files', '--no-cache'], environment);
             expect(tracked.code).toBe(1);
             expect(tracked.stdout).toContain('.env is tracked');
 
@@ -79,9 +80,8 @@ describe('the secrets preset', () => {
             expect(baseline.stdout).toContain('names old.py, which is gone');
             // An entry with a commit lives in history, where a deleted file still holds its value.
             expect(baseline.stdout).not.toContain('names gone.md');
-            const network = JSON.parse(
-                run(fixture.path, ['check', '--at', 'commit', '--json'], environment).stdout,
-            ) as {
+            const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
+            const network = JSON.parse(checked.stdout) as {
                 checks: { id: string }[];
             };
             expect(network.checks.map((check) => check.id)).not.toContain('secrets/trufflehog');

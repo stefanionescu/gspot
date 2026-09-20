@@ -20,12 +20,12 @@ describe('profiles', () => {
         });
         commitAll(fixture.path);
         const before = treeContents(fixture.path);
-        const result = run(fixture.path, ['init', '--yes', '--from', 'team.profile.toml', '--dry-run'], TOOLS);
+        const result = await run(fixture.path, ['init', '--yes', '--from', 'team.profile.toml', '--dry-run'], TOOLS);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(result.stdout).toContain('profile    team');
         expect(result.stdout).toContain('--dry-run: nothing written');
         expect(treeContents(fixture.path)).toEqual(before);
-        const removed = run(fixture.path, ['profile', 'check', 'team.profile.toml'], TOOLS);
+        const removed = await run(fixture.path, ['profile', 'check', 'team.profile.toml'], TOOLS);
         expect(removed.code).toBe(2);
         expect(removed.stderr).toContain("unknown command 'check'");
     });
@@ -35,7 +35,7 @@ describe('profiles', () => {
         async () => {
             await using first = await createFixture({ 'scripts/a.sh': script });
             commitAll(first.path);
-            run(
+            await run(
                 first.path,
                 [
                     'init',
@@ -54,8 +54,8 @@ describe('profiles', () => {
                 ],
                 TOOLS,
             );
-            run(first.path, ['set', 'format.indent_width', '2'], TOOLS);
-            run(
+            await run(first.path, ['set', 'format.indent_width', '2'], TOOLS);
+            await run(
                 first.path,
                 [
                     'ignore',
@@ -69,14 +69,14 @@ describe('profiles', () => {
                 ],
                 TOOLS,
             );
-            const saved = run(first.path, ['profile', 'save', 'house.profile.toml'], TOOLS);
+            const saved = await run(first.path, ['profile', 'save', 'house.profile.toml'], TOOLS);
             expect(saved.code).toBe(0);
             expect(saved.stdout).toContain('left out  [[ignore]]: 1 entries');
 
             await using second = await createFixture({ 'tools/b.sh': script, 'index.ts': 'export const b = 1;\n' });
             commitAll(second.path);
             const from = join(first.path, 'house.profile.toml');
-            const init = run(second.path, ['init', '--yes', '--from', from, '--no-install'], TOOLS);
+            const init = await run(second.path, ['init', '--yes', '--from', from, '--no-install'], TOOLS);
             expect(init.stdout).toContain('profile    house');
             expect(init.stdout).toContain('detected, not in the profile: typescript');
             const [one, two] = [await tables(first.path), await tables(second.path)];
@@ -97,13 +97,17 @@ describe('profiles', () => {
                     'version = 1\nprofile = "bad"\nselection = "sometimes"\npresets = ["speling"]\n\n[[tools.typos.exclude]]\npaths = ["a/**"]\nreason = "A reason that says something."\n',
             });
             commitAll(fixture.path);
-            const init = run(fixture.path, ['init', '--yes', '--from', 'bad.profile.toml'], TOOLS);
+            const init = await run(fixture.path, ['init', '--yes', '--from', 'bad.profile.toml'], TOOLS);
             expect(init.code).toBe(2);
             expect(init.stderr).toContain('selection');
             expect(init.stderr).toContain('Did you mean `spelling`');
             expect(init.stderr).toContain('a profile carries no path');
             expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
-            const preview = run(fixture.path, ['init', '--yes', '--from', 'bad.profile.toml', '--dry-run'], TOOLS);
+            const preview = await run(
+                fixture.path,
+                ['init', '--yes', '--from', 'bad.profile.toml', '--dry-run'],
+                TOOLS,
+            );
             expect(preview.code).toBe(2);
             expect(preview.stderr).toContain('a profile carries no path');
         },
@@ -124,7 +128,7 @@ describe('policy edits', () => {
             ['ignore', 'bash/shellcheck', '--reason', 'A deliberately unquoted argument.', '--dry-run'],
         ];
         for (const command of commands) {
-            const result = run(fixture.path, command, TOOLS);
+            const result = await run(fixture.path, command, TOOLS);
             expect(result.code).toBe(2);
             expect(result.stderr).toContain("unknown option '--dry-run'");
             expect(treeContents(fixture.path)).toEqual(before);
@@ -136,7 +140,7 @@ describe('policy edits', () => {
         async () => {
             await using fixture = await createFixture({ 'scripts/a.sh': script });
             commitAll(fixture.path);
-            run(
+            await run(
                 fixture.path,
                 [
                     'init',
@@ -155,13 +159,13 @@ describe('policy edits', () => {
                 ],
                 TOOLS,
             );
-            const own = run(
+            const own = await run(
                 fixture.path,
                 ['set', 'tools.typos.exclude', '{"paths":["a/**"],"reason":"Text in another language lives here."}'],
                 TOOLS,
             );
             expect(own.code, own.stderr).toBe(0);
-            const filled = run(
+            const filled = await run(
                 fixture.path,
                 [
                     'set',
@@ -181,7 +185,8 @@ describe('policy edits', () => {
                 'Text in another language lives here.',
                 'Fixtures that hold typos on purpose.',
             ]);
-            expect(run(fixture.path, ['set', 'tools.typos.exclude', '{"paths":["c/**"]}'], TOOLS).code).not.toBe(0);
+            const invalid = await run(fixture.path, ['set', 'tools.typos.exclude', '{"paths":["c/**"]}'], TOOLS);
+            expect(invalid.code).not.toBe(0);
         },
         PLANTED_TIMEOUT_MS,
     );

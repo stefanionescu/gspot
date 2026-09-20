@@ -20,10 +20,10 @@ describe('explain', () => {
     test('a recognized name keeps its meaning and an explicit path selects a colliding file', async () => {
         await using fixture = await createFixture({ 'gspot.toml': POLICY, bash: script, 'api/build.sh': script });
         commitAll(fixture.path);
-        const preset = run(fixture.path, ['explain', 'bash', '--json']);
+        const preset = await run(fixture.path, ['explain', 'bash', '--json']);
         expect(preset.code, preset.stdout + preset.stderr).toBe(0);
         expect(JSON.parse(preset.stdout)).toMatchObject({ kind: 'preset', subject: 'bash' });
-        const file = run(fixture.path, ['explain', './bash', '--json']);
+        const file = await run(fixture.path, ['explain', './bash', '--json']);
         expect(file.code, file.stdout + file.stderr).toBe(0);
         expect(JSON.parse(file.stdout)).toMatchObject({ kind: 'path', subject: 'bash', path: 'bash' });
     });
@@ -34,7 +34,7 @@ describe('explain', () => {
             'api/build.sh': script,
         });
         commitAll(fixture.path);
-        const result = run(fixture.path, ['explain', './api/build.sh', '--json']);
+        const result = await run(fixture.path, ['explain', './api/build.sh', '--json']);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(JSON.parse(result.stdout)).toMatchObject({
             kind: 'path',
@@ -52,7 +52,7 @@ describe('explain', () => {
                 },
             ],
         });
-        const text = run(fixture.path, ['explain', 'api/build.sh']);
+        const text = await run(fixture.path, ['explain', 'api/build.sh']);
         expect(text.code, text.stdout + text.stderr).toBe(0);
         expect(text.stdout).toContain('api/build.sh  (scope api, source');
         expect(text.stdout).toContain('bash/shellcheck  commit');
@@ -62,10 +62,10 @@ describe('explain', () => {
     test('a missing explicit path fails and the removed command is unknown', async () => {
         await using fixture = await createFixture({ 'gspot.toml': POLICY, 'api/build.sh': script });
         commitAll(fixture.path);
-        const missing = run(fixture.path, ['explain', './missing.sh']);
+        const missing = await run(fixture.path, ['explain', './missing.sh']);
         expect(missing.code).toBe(2);
         expect(missing.stdout + missing.stderr).toContain('missing.sh is not a file git tracks or would track here');
-        const removed = run(fixture.path, ['why', 'missing.sh']);
+        const removed = await run(fixture.path, ['why', 'missing.sh']);
         expect(removed.code).toBe(2);
         expect(removed.stderr).toContain("unknown command 'why'");
     });
@@ -77,7 +77,7 @@ describe('explain', () => {
             ['bash', 'preset'],
             ['bash/shellcheck', 'check'],
         ] as const) {
-            const result = run(fixture.path, ['explain', subject, '--json']);
+            const result = await run(fixture.path, ['explain', subject, '--json']);
             expect(result.code, result.stdout + result.stderr).toBe(0);
             expect(JSON.parse(result.stdout)).toMatchObject({ kind, subject });
         }

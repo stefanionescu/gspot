@@ -28,7 +28,7 @@ describe('a [[check]] entry', () => {
             });
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            run(
+            await run(
                 fixture.path,
                 [
                     'init',
@@ -46,7 +46,7 @@ describe('a [[check]] entry', () => {
             );
             const policy = join(fixture.path, 'gspot.toml');
             await Bun.write(policy, `${await Bun.file(policy).text()}${ENTRY}`);
-            const check = run(fixture.path, ['check', 'notes/no-fixme'], environment);
+            const check = await run(fixture.path, ['check', 'notes/no-fixme'], environment);
             expect(check.code).toBe(1);
             expect(check.stdout).toContain('notes/plan.txt:2');
             expect(check.stdout).toContain('FIXME later');

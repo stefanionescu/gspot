@@ -12,7 +12,7 @@ describe('the gspot hook', () => {
             git(fixture.path, ['init', '-q']);
             git(fixture.path, ['add', '-A']);
             git(fixture.path, ['commit', '-qm', 'init']);
-            run(fixture.path, [
+            await run(fixture.path, [
                 'init',
                 '--yes',
                 '--presets',
