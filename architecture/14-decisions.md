@@ -233,7 +233,7 @@ documentation alone, which answers "what is it" and not the question of changing
 ## D-40 Every tool has an `extra` passthrough
 
 `[tools.<name>.extra]` renders verbatim into the tool's configuration with a required reason,
-prints every run, and is reported by `upgrade --check` when a slot arrives for one of its keys.
+prints every run, and is reported by `upgrade --dry-run` when a slot arrives for one of its keys.
 A person writes it; `init` does not (D-46). Rejected: failing on unknown options, which blocked
 a person until a release added the slot.
 

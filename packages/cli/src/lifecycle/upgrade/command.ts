@@ -81,7 +81,7 @@ export async function upgradeCommand(options: UpgradeOptions): Promise<CommandRe
     if (pinned === target) return alreadyAtTarget(header, pinned, target);
     const report = upgradeReport(await openSession(root));
     const lines = [...header, ...upgradeReportLines(report), ...actionLines(target, options.install)];
-    if (options.check)
+    if (options.isDryRun)
         return { text: `${lines.join('\n')}\n`, json: { pinned, target, report, isDryRun: true }, exitCode: 0 };
     const isGo = await isConfirmed('Apply the upgrade?', '--yes', true, options.yes);
     if (!isGo) return { text: 'Nothing changed.\n', json: { pinned, target, applied: false }, exitCode: 0 };

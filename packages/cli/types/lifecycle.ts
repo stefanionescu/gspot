@@ -77,7 +77,7 @@ export type UninstallOptions = { cwd: string; isHooksKept: boolean; yes: boolean
 
 export type UpgradeOptions = {
     cwd: string;
-    check: boolean;
+    isDryRun: boolean;
     to?: string;
     yes: boolean;
     install: boolean;

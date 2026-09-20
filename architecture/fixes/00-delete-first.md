@@ -67,6 +67,10 @@ The remaining version lookup is owned by `lifecycle/upgrade/newer-version.ts`.
 `ignore` and `set` reject `--dry-run` before entering their policy writers. A regression
 compares repository contents and modes after each rejected invocation.
 
+`upgrade --dry-run` replaces `upgrade --check`. The report test verifies repository
+contents and modes before and after the preview. Migration ordering and upgrade
+recovery remain open under their lifecycle fixes.
+
 ## D-100: the lint files at the root of this repository
 
 Closes D-100 and K-47.

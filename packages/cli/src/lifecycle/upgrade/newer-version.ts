@@ -1,4 +1,4 @@
-// The one network lookup: is there a newer gspot? Only when a person runs init or upgrade --check.
+// The one network lookup: is there a newer gspot? Only when a person runs init or upgrade.
 import semver from 'semver';
 import latestVersion from 'latest-version';
 

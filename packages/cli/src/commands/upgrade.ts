@@ -14,7 +14,7 @@ export function registerUpgrade(program: Command): void {
         .description(
             'Move this repository to this gspot version: report the changes, ask, re-render, baseline what arrives',
         )
-        .option('--check', 'Print the report and write nothing')
+        .option('--dry-run', 'Print the report and write nothing')
         .option('--to <version>', 'Move to an exact version, downward included')
         .option('--yes', 'Skip the question')
         .option('--no-install', 'Skip the install step and print the command instead')
@@ -24,7 +24,7 @@ export function registerUpgrade(program: Command): void {
                 () =>
                     upgradeCommand({
                         cwd: directoryOf(global),
-                        check: flags['check'] === true,
+                        isDryRun: flags['dryRun'] === true,
                         yes: flags['yes'] === true,
                         install: flags['install'] !== false,
                         ...textEntry(flags, 'to', 'to'),

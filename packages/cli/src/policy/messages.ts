@@ -270,7 +270,7 @@ export function invalidValue(where: string, detail: string): string {
  * @returns the message
  */
 export function versionUnsupported(version: number): string {
-    return `gspot.toml says \`version = ${String(version)}\`, and this gspot reads version 1. Run \`gspot upgrade --check\` to see the way forward.`;
+    return `gspot.toml says \`version = ${String(version)}\`, and this gspot reads version 1. Run \`gspot upgrade --dry-run\` to see the way forward.`;
 }
 
 /**

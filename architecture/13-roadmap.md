@@ -170,7 +170,7 @@ SwiftLint installation is restricted to Linux and macOS. Windows acceptance rema
 | Structure engine: tree-sitter loading, ast-grep driver, directory analyses, shell analyses                                 | every shell check in the ledger fires on its planted defect                                                    |
 | Baselines                                                                                                                  | deleted by D-165                                                                                               |
 | Integrity: generated drift, stale paths, allowlists, suppressions, manifest policy, lockfile, docs links, tsconfig options | each has a fixture                                                                                             |
-| `upgrade --check` and `upgrade`, including the install step and `--to`                                                     | the report renders between two planted preset versions; the pin moves both ways                                |
+| `upgrade --dry-run` and `upgrade`, including the install step and `--to`                                                   | the report renders between two planted preset versions; the pin moves both ways                                |
 | Takeover: replace and carry exceptions (typos, gitleaks, osv, licenses, disabled rules as ignores)                         | a planted repository with the four files loses them and gains the entries                                      |
 | Full self-lint                                                                                                             | gspot's TypeScript passes under gspot with no ignores; `docs/` and every check `summary` pass the prose engine |
 

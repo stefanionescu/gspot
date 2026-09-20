@@ -13,7 +13,7 @@ gspot upgrade [options]
 
 | Flag             | Meaning                                             |
 | ---------------- | --------------------------------------------------- |
-| `--check`        | Print the report and write nothing                  |
+| `--dry-run`      | Print the report and write nothing                  |
 | `--to <version>` | Move to an exact version, downward included         |
 | `--yes`          | Skip the question                                   |
 | `--no-install`   | Skip the install step and print the command instead |

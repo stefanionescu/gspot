@@ -178,7 +178,7 @@ async function write(
     const newer = await newerVersion(GSPOT_VERSION);
     const { dim } = paint();
     const version =
-        newer === undefined ? `gspot ${GSPOT_VERSION}` : `gspot ${newer} is available: gspot upgrade --check`;
+        newer === undefined ? `gspot ${GSPOT_VERSION}` : `gspot ${newer} is available: gspot upgrade --dry-run`;
     return { lines: [...summary.lines, dim(version), ''], first, installNote, failing: summary.failing };
 }
 
