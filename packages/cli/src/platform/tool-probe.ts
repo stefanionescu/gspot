@@ -1,4 +1,4 @@
-// Locate and version every tool: node_modules/.bin, .venv/bin, mise shims, PATH.
+// Locate and version every tool: node_modules/.bin, .venv/bin, PATH, mise shims.
 import semver from 'semver';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
@@ -29,11 +29,12 @@ function candidates(root: string, name: string): string[] {
         join(root, 'node_modules', '.bin'),
         join(root, '.venv', 'bin'),
         join(root, '.venv', 'Scripts'),
-        join(miseHome() ?? join(homedir(), '.local', 'share', 'mise'), 'shims'),
     ];
     const found = directories.flatMap((dir) => names.map((file) => join(dir, file))).filter((path) => existsSync(path));
     const onPath = Bun.which(name);
-    return onPath === null ? found : [...found, onPath];
+    if (onPath !== null) found.push(onPath);
+    const miseBin = join(miseHome() ?? join(homedir(), '.local', 'share', 'mise'), 'shims');
+    return [...found, ...names.map((file) => join(miseBin, file)).filter((path) => existsSync(path))];
 }
 
 // The version a package.json above the real file of an npm tool holds, for the package the pin names.
@@ -144,7 +145,7 @@ function probeUncached(root: string, tool: ToolPin): ToolProbe {
 }
 
 /**
- * Where a tool is, searching the repository's own bin folders, the mise shims and PATH, or undefined.
+ * Where a tool is, searching the repository's bin folders, PATH, and mise shims, or undefined.
  * @param root the repository root
  * @param name the executable name
  * @returns the first path found

@@ -1,8 +1,9 @@
 import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import type { ToolPin } from '#types/manifest.ts';
-import { describe, expect, test } from 'bun:test';
 import { probeTool } from '#cli/platform/tool-probe.ts';
+import { describe, expect, spyOn, test } from 'bun:test';
+import * as environment from '#cli/platform/environment.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
 
 function library(name: string, version: string): ToolPin {
@@ -16,6 +17,26 @@ function command(name: string, version: string, npm?: string): ToolPin {
 }
 
 describe('the tool probe', () => {
+    test('an active PATH executable wins over an unrelated mise shim', async () => {
+        await using fixture = await createFixture({
+            'active/teller': '#!/bin/sh\necho 3.8.1\n',
+            'mise/shims/teller': '#!/bin/sh\necho 1.0.0\n',
+        });
+        const active = join(fixture.path, 'active/teller');
+        chmodSync(active, RUNS);
+        chmodSync(join(fixture.path, 'mise/shims/teller'), RUNS);
+        const which = spyOn(Bun, 'which').mockReturnValue(active);
+        const home = spyOn(environment, 'miseHome').mockReturnValue(join(fixture.path, 'mise'));
+        try {
+            const probe = probeTool(fixture.path, command('teller', '3.8.1'));
+            expect(probe.state).toBe('ok');
+            expect(probe.path).toBe(active);
+        } finally {
+            which.mockRestore();
+            home.mockRestore();
+        }
+    });
+
     test('an npm tool is the version its package holds, whatever it prints about itself', async () => {
         await using fixture = await createFixture({
             'node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
