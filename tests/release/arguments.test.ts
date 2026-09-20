@@ -209,3 +209,41 @@ Bun.spawnSync = (argv) => {
         },
     );
 });
+
+describe('plugin build arguments', () => {
+    test('preserves existing output after invalid arguments and information requests', async () => {
+        await using fixture = await createFixture({
+            'packages/eslint-plugin/build.ts': readFileSync(join(ROOT, 'packages/eslint-plugin/build.ts'), 'utf8'),
+            'packages/eslint-plugin/package.json': readFileSync(
+                join(ROOT, 'packages/eslint-plugin/package.json'),
+                'utf8',
+            ),
+            'packages/eslint-plugin/dist/plugin.js': '// existing plugin\n',
+        });
+        const before = treeContents(fixture.path);
+        const execute = (args: string[]) =>
+            Bun.spawnSync([process.execPath, join(fixture.path, 'packages/eslint-plugin/build.ts'), ...args], {
+                cwd: fixture.path,
+                stdout: 'pipe',
+                stderr: 'pipe',
+                timeout: 10_000,
+            });
+        for (const args of [
+            ['--checks'],
+            ['unexpected'],
+            ['--help=true'],
+            ['--version=true'],
+            ['--help', 'unexpected'],
+        ]) {
+            const result = execute(args);
+            expect(result.exitCode, result.stderr.toString()).toBe(2);
+            expect(treeContents(fixture.path)).toEqual(before);
+        }
+        for (const flag of ['--help', '--version']) {
+            const result = execute([flag]);
+            expect(result.exitCode, result.stderr.toString()).toBe(0);
+            expect(result.stdout.toString().trim().length).toBeGreaterThan(0);
+            expect(treeContents(fixture.path)).toEqual(before);
+        }
+    });
+});

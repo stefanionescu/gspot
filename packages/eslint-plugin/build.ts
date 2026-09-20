@@ -1,7 +1,9 @@
+import { parseArgs } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 // Builds the plugin to ESM and CommonJS under dist/, with a declaration file.
 import { mkdirSync, rmSync, writeFileSync } from 'node:fs';
+import packageManifest from '#plugin-package' with { type: 'json' };
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 const distribution = join(here, 'dist');
@@ -32,4 +34,40 @@ async function build(): Promise<void> {
     console.log('built packages/eslint-plugin/dist/plugin.js and plugin.cjs');
 }
 
-await build();
+async function main(): Promise<void> {
+    let options: { help?: boolean; version?: boolean };
+    try {
+        ({ values: options } = parseArgs({
+            options: { help: { type: 'boolean' }, version: { type: 'boolean' } },
+            strict: true,
+            allowPositionals: false,
+        }));
+    } catch (error) {
+        if (!(error instanceof Error)) throw error;
+        console.error(
+            'Invalid build arguments:',
+            error.message,
+            '\nRun bun packages/eslint-plugin/build.ts --help for usage.',
+        );
+        process.exitCode = 2;
+        return;
+    }
+    if (options.help === true)
+        console.log(
+            [
+                'Usage: bun packages/eslint-plugin/build.ts [options]',
+                '',
+                'Build the ESLint plugin as ESM and CommonJS.',
+                '',
+                'Options:',
+                '  --help     Print this usage and exit',
+                '  --version  Print the package version and exit',
+                '',
+                'Example: bun packages/eslint-plugin/build.ts',
+            ].join('\n'),
+        );
+    else if (options.version === true) console.log(packageManifest.version);
+    else await build();
+}
+
+await main();
