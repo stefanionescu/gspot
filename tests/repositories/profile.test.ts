@@ -1,8 +1,8 @@
 // Planted repositories: a profile saved in one repository installs the same policy in another, and a bad one stops init.
 import { join } from 'node:path';
-import { existsSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
+import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
 
 const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };
@@ -11,7 +11,36 @@ async function tables(root: string): Promise<Record<string, unknown>> {
     return Bun.TOML.parse(await Bun.file(join(root, 'gspot.toml')).text()) as Record<string, unknown>;
 }
 
+function treeContents(root: string): Record<string, string> {
+    return Object.fromEntries(
+        readdirSync(root, { recursive: true }).map((entry) => {
+            const path = String(entry);
+            const full = join(root, path);
+            const attributes = statSync(full);
+            const bytes = attributes.isFile() ? readFileSync(full).toString('base64') : 'directory';
+            return [path, `${String(attributes.mode)}:${bytes}`];
+        }),
+    );
+}
+
 describe('profiles', () => {
+    test('init validates a profile in a dry run without changing the repository', async () => {
+        await using fixture = await createFixture({
+            'scripts/a.sh': script,
+            'team.profile.toml': 'version = 1\nprofile = "team"\nselection = "exact"\npresets = ["bash"]\n',
+        });
+        commitAll(fixture.path);
+        const before = treeContents(fixture.path);
+        const result = run(fixture.path, ['init', '--yes', '--from', 'team.profile.toml', '--dry-run'], TOOLS);
+        expect(result.code, result.stdout + result.stderr).toBe(0);
+        expect(result.stdout).toContain('profile    team');
+        expect(result.stdout).toContain('--dry-run: nothing written');
+        expect(treeContents(fixture.path)).toEqual(before);
+        const removed = run(fixture.path, ['profile', 'check', 'team.profile.toml'], TOOLS);
+        expect(removed.code).toBe(2);
+        expect(removed.stderr).toContain("unknown command 'check'");
+    });
+
     test(
         'profile save in one repository and init --from in another give the same tables',
         async () => {
@@ -85,7 +114,9 @@ describe('profiles', () => {
             expect(init.stderr).toContain('Did you mean `spelling`');
             expect(init.stderr).toContain('a profile carries no path');
             expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
-            expect(run(fixture.path, ['profile', 'check', 'bad.profile.toml'], TOOLS).code).toBe(2);
+            const preview = run(fixture.path, ['init', '--yes', '--from', 'bad.profile.toml', '--dry-run'], TOOLS);
+            expect(preview.code).toBe(2);
+            expect(preview.stderr).toContain('a profile carries no path');
         },
         PLANTED_TIMEOUT_MS,
     );

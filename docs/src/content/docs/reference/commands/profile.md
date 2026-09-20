@@ -1,9 +1,9 @@
 ---
 title: "gspot profile"
-description: "Carry a policy between repositories: save one from here, or check one before init --from"
+description: "Save a policy profile for another repository"
 ---
 
-Carry a policy between repositories: save one from here, or check one before init --from.
+Save a policy profile for another repository.
 
 ```text
 gspot profile [options] [command]

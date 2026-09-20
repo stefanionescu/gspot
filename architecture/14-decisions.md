@@ -524,6 +524,8 @@ Replaced by D-153.
 
 ## D-79 A profile carries a policy between repositories
 
+Command names are amended by D-129 and D-160. Profile validation uses `init --from --dry-run`.
+
 Recorded 2026-09-18. A profile is a TOML file with the schema of `gspot.toml`, a `profile` name,
 a `selection` mode, and no entry that names a path. `gspot profile save` writes one,
 `gspot profile check` validates one, and `gspot init --from` installs from one, by path, `https`

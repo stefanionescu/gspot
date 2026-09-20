@@ -56,6 +56,10 @@ output module are removed. Command tests cover text and JSON output, a name shar
 a file and a preset, and unknown-command refusal. D-129 remains open for its other
 commands and flags.
 
+`profile check` is removed. `init --from --dry-run` validates a profile and prints its plan.
+A planted test compares all repository file contents and modes before and after that dry run.
+Invalid profiles fail before writes, and the removed subcommand is rejected.
+
 ## D-100: the lint files at the root of this repository
 
 Closes D-100 and K-47.
