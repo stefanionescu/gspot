@@ -44,7 +44,7 @@ export type DoctorReport = {
     hooks: string;
     ci: string;
     rules: { files: number };
-    version: { running: string; pinned?: string; newer?: string };
+    version: { running: string; pinned?: string };
     exitCode: number;
 };
 
@@ -59,7 +59,7 @@ export type ChangeKey =
 export type ChangeRow = { path: string; note: string; command: string };
 
 /** gspot doctor. */
-export type DoctorOptions = { cwd: string; settings: boolean; offline: boolean };
+export type DoctorOptions = { cwd: string; settings: boolean };
 
 /** One `[tools.<tool>.extra]` table: the keys it sets and why. */
 export type ExtraRow = { tool: string; keys: string[]; reason: string; scope: string };

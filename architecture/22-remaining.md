@@ -166,7 +166,7 @@ exactly one fix file fails it.
 
 [00-delete-first.md](fixes/00-delete-first.md)
 
-- [ ] D-129: Delete `gspot declare`, six of the seven lists of `gspot allow`, `doctor --offline`, `uninstall --keep-hooks`, `apply --check`, and `--dry-run` on `ignore` and `set`. File explanations are implemented by `explain <path>`.
+- [ ] D-129: Delete `gspot declare`, six of the seven lists of `gspot allow`, `uninstall --keep-hooks`, `apply --check`, and `--dry-run` on `ignore` and `set`. File explanations are implemented by `explain <path>`.
 - [ ] D-100: Delete the twelve lint stubs at the root of this repository.
 - [ ] K-47: Delete the nine `copy = true` stubs and `copyStubContent` (D-100).
 - [ ] K-92: Delete the subagents sentence from the managed block.

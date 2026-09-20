@@ -60,6 +60,9 @@ commands and flags.
 A planted test compares all repository file contents and modes before and after that dry run.
 Invalid profiles fail before writes, and the removed subcommand is rejected.
 
+`doctor` uses local state and has no `--offline` flag or registry version lookup. Its unit
+test rejects registry access and verifies that local diagnostics still report the repository.
+
 ## D-100: the lint files at the root of this repository
 
 Closes D-100 and K-47.

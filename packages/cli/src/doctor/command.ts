@@ -3,10 +3,9 @@ import { openSession } from '#cli/run/session.ts';
 import type { DoctorOptions } from '#types/doctor.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { settingRows } from '#cli/doctor/settings.ts';
+import { pinnedVersion } from '#cli/run/version-pin.ts';
 import type { Session, CommandResult } from '#types/run.ts';
-import { newerVersion } from '#cli/doctor/newer-version.ts';
 import { doctorReport, doctorText } from '#cli/doctor/report.ts';
-import { GSPOT_VERSION, pinnedVersion } from '#cli/run/version-pin.ts';
 
 const KEY_GAP = 2;
 const VALUE_WIDTH = 28;
@@ -41,7 +40,6 @@ export async function doctorCommand(options: DoctorOptions): Promise<CommandResu
     const root = findRoot(options.cwd);
     const session = await openSession(root);
     if (options.settings) return settingsText(session);
-    const newer = options.offline ? undefined : await newerVersion(GSPOT_VERSION);
-    const report = doctorReport(session, pinnedVersion(root), newer);
+    const report = doctorReport(session, pinnedVersion(root));
     return { text: doctorText(report), json: report, exitCode: report.exitCode };
 }

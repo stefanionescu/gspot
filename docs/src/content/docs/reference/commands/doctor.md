@@ -14,4 +14,3 @@ gspot doctor [options]
 | Flag         | Meaning                                                                     |
 | ------------ | --------------------------------------------------------------------------- |
 | `--settings` | Print every setting the selection exposes, its value and where it came from |
-| `--offline`  | Skip the one lookup for a newer gspot                                       |

@@ -140,7 +140,10 @@ describe('the bash planted repository', () => {
             expect(check.code).toBe(2);
             expect(check.stderr).toContain('mise install');
             expect(check.stderr).toContain('gspot upgrade --to');
-            expect(run(fixture.path, ['doctor', '--offline']).code).not.toBe(2);
+            expect(run(fixture.path, ['doctor']).code).not.toBe(2);
+            const removed = run(fixture.path, ['doctor', '--offline']);
+            expect(removed.code).toBe(2);
+            expect(removed.stderr).toContain("unknown option '--offline'");
         },
         PLANTED_TIMEOUT_MS,
     );

@@ -123,21 +123,19 @@ function changeLines(changes: ChangeReport): string[] {
 }
 
 function versionLine(report: DoctorReport): string {
-    const { running, pinned, newer } = report.version;
+    const { running, pinned } = report.version;
     const runningText = pinned === running ? 'running' : `running ${running}`;
     const pin = pinned === undefined ? `${running} running, no pin` : `${pinned} pinned and ${runningText}`;
-    const upgrade = newer === undefined ? '' : ` (${newer} available: gspot upgrade --check)`;
-    return `gspot      ${pin}${upgrade}`;
+    return `gspot      ${pin}`;
 }
 
 /**
  * Builds the report: tool probes, coverage, changes after the install, hooks, CI, rules and versions.
  * @param session the session
  * @param pinned the version `.gspot/version` pins, if any
- * @param newer a newer released version, if one is known
  * @returns the report, with exit code 1 when a tool is missing or outdated
  */
-export function doctorReport(session: Session, pinned: string | undefined, newer: string | undefined): DoctorReport {
+export function doctorReport(session: Session, pinned: string | undefined): DoctorReport {
     const scopePaths = session.scopes.map((entry) => entry.scope.path).filter((path) => path !== '');
     const tools = collectPins(everyManifest(session)).map((tool) => probeTool(session.root, tool, scopePaths));
     const { policy } = session.policyFiles;
@@ -152,7 +150,6 @@ export function doctorReport(session: Session, pinned: string | undefined, newer
         version: {
             running: session.version,
             ...(pinned === undefined ? {} : { pinned }),
-            ...(newer === undefined ? {} : { newer }),
         },
         exitCode: isBroken ? 1 : 0,
     };
