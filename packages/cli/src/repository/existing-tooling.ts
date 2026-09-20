@@ -51,7 +51,7 @@ function conventionalConfigs(root: string, paths: Set<string>, scopes: ScopeEntr
         prefixes.flatMap((prefix) =>
             names
                 .filter((name) => isConfigurationPresent(root, paths, name, `${prefix}${name}`))
-                .map((name): ExistingTool => ({ tool, path: `${prefix}${name}`, owned: false })),
+                .map((name): ExistingTool => ({ tool, path: `${prefix}${name}` })),
         ),
     );
 }

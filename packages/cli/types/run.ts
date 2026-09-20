@@ -74,7 +74,6 @@ export type PlanOptions = {
     scope?: string;
     skips: string[];
     localSkips: string[];
-    fix?: boolean;
     messageFile?: string;
 };
 
@@ -104,7 +103,6 @@ export type Session = {
     manifests: Map<string, Manifest>;
     repository: Repository;
     scopes: ScopeSelection[];
-    problems: string[];
 };
 
 export type EslintEntry = {

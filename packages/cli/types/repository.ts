@@ -43,7 +43,6 @@ export type ManifestFacts = {
 export type ExistingTool = {
     tool: string;
     path: string;
-    owned: boolean;
 };
 
 export type ExistingTooling = {

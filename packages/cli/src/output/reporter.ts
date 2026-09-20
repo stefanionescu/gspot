@@ -56,11 +56,10 @@ function location(finding: Finding): string {
     return `${finding.file}${line}${column}  `;
 }
 
-function findingLines(finding: Finding, docsBase: string | undefined, colors: Painter): string[] {
+function findingLines(finding: Finding, colors: Painter): string[] {
     const { dim, cyan } = colors;
     const rule = cyan(finding.rule ?? finding.check);
-    const link = docsBase === undefined ? '' : dim(` ${docsBase}/${finding.check}`);
-    const lines = [`  ${location(finding)}${rule}  ${finding.message}${link}`];
+    const lines = [`  ${location(finding)}${rule}  ${finding.message}`];
     if (finding.help !== undefined && finding.help !== '') lines.push(`    ${dim('help:')} ${finding.help}`);
     return lines;
 }
@@ -73,7 +72,7 @@ function checkTail(check: CheckResult): string {
 
 function failureLines(check: CheckResult, options: ReportOptions, colors: Painter): string[] {
     const shown = options.verbose ? check.findings : check.findings.slice(0, FINDINGS_SHOWN);
-    const lines = shown.flatMap((finding) => findingLines(finding, options.docsBase, colors));
+    const lines = shown.flatMap((finding) => findingLines(finding, colors));
     const hidden = check.findings.length - shown.length;
     if (hidden > 0) {
         const more = `and ${String(hidden)} more (--verbose prints every finding)`;
@@ -147,7 +146,7 @@ function summaryLine(record: RunRecord, options: ReportOptions, shownCount: numb
 /**
  * The run as text, the way 02-cli.md shows it.
  * @param record the run record
- * @param options quiet, verbose and the docs base URL
+ * @param options quiet and verbose output flags
  * @returns the text for stdout
  */
 export function runText(record: RunRecord, options: ReportOptions): string {

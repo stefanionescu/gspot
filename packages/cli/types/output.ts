@@ -11,7 +11,7 @@ export type Verbosity = 'quiet' | 'normal' | 'verbose';
 
 export type OutputOptions = { verbosity: Verbosity; json: boolean; color: boolean };
 
-export type ReportOptions = { quiet: boolean; verbose: boolean; docsBase?: string };
+export type ReportOptions = { quiet: boolean; verbose: boolean };
 
 export type PathExplanation = {
     path: string;
