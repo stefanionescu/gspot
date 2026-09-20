@@ -79,7 +79,6 @@ function shapeProblems(
 
 function termProblems(identifier: Identifier, parts: string[], context: NamingContext): NameProblem[] {
     const { policy } = context;
-    if (isExempt(policy, identifier)) return [];
     const problems: NameProblem[] = [];
     const terms = context.isTestFile ? policy.terms.filter((term) => term.source !== TEST_GROUP) : policy.terms;
     const banned = bannedTerm(parts, terms);
@@ -111,6 +110,7 @@ function callbackProblem(identifier: Identifier, parts: string[], isReactFile: b
  */
 export function nameProblems(identifier: Identifier, context: NamingContext): NameProblem[] {
     const { policy } = context;
+    if (isExempt(policy, identifier)) return [];
     const rules = rulesFor(policy, identifier);
     if (rules.some((rule) => rule.isExcluding)) return [];
     const limits = limitsUnderRules(policy, identifier, rules);

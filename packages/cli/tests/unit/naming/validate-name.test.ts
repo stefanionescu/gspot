@@ -12,9 +12,9 @@ function caseFor(language: string, category: string): string[] {
 const policy: EffectivePolicy = {
     terms: compileTerms(['enhanced', 'handler', 'fixture'], 'marketing group'),
     reserved: new Map([['config', ['configuration directory', 'configuration variable']]]),
-    external: new Set(['setTimeout']),
+    external: new Set(['requestAnimationFrame']),
     allowed: new Map([['enhancedThing', 'a reason']]),
-    contractProperties: new Map([['api/route.ts', new Set(['Retry-After'])]]),
+    contractProperties: new Map([['api/route.ts', new Set(['Content-Type'])]]),
     rules: [
         {
             isPath: pathMatcher(['**']),
@@ -29,7 +29,7 @@ const policy: EffectivePolicy = {
             source: 'shipped rule 1',
         },
         {
-            isPath: pathMatcher(['**/e2e/**']),
+            isPath: pathMatcher(['**/acceptance/**']),
             languages: undefined,
             categories: undefined,
             names: undefined,
@@ -90,14 +90,20 @@ describe('nameProblems', () => {
         ).toEqual([]);
     });
 
-    test('exclusions, digit allowances, structural prefixes and exemptions apply', () => {
+    test('path exclusions, digit allowances and structural prefixes apply', () => {
         expect(nameProblems(identifier('i', 'variables'), plain)).toEqual([]);
         expect(nameProblems(identifier('user2', 'variables', 'tests/acceptance/a.ts'), plain)).toEqual([]);
         expect(nameProblems(identifier('_private_step', 'functions', 'scripts/a.sh', 'bash'), plain)).toEqual([]);
-        expect(nameProblems(identifier('setTimeout'), plain)).toEqual([]);
+    });
+
+    test('external names and file-specific contracts bypass naming checks', () => {
+        expect(nameProblems(identifier('requestAnimationFrame'), plain)).toEqual([]);
         expect(nameProblems(identifier('enhancedThing'), plain)).toEqual([]);
+        expect(nameProblems(identifier('Content-Type', 'properties', 'api/route.ts'), plain)).toEqual([]);
         expect(
-            nameProblems(identifier('Retry-After', 'properties', 'api/route.ts'), plain).map((problem) => problem.rule),
+            nameProblems(identifier('Content-Type', 'properties', 'api/internal.ts'), plain).map(
+                (problem) => problem.rule,
+            ),
         ).toEqual(['case']);
     });
 

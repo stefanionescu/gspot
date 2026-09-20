@@ -547,6 +547,10 @@ source root for both paths, and compares. The message names the alias only where
 
 **Done when.** That test passes.
 
+**Status: locally verified.** Exemptions apply before every naming check.
+The naming suite verifies `Content-Type` in its declared file and keeps the finding outside that file.
+It also verifies an external browser API name that exceeds the ordinary length limit.
+
 ## K-206: two pins their npm package never had
 
 **What is wrong.** A manifest holds one `version` for every installer. taplo 0.10.0 and

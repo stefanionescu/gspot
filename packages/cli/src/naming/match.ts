@@ -65,7 +65,7 @@ export function isReservedUseAllowed(allowedFor: string[], category: string): bo
  * True when the whole identifier is exempt: an external name, an allowed name, or a contract property in its file.
  * @param policy the effective policy
  * @param identifier the identifier
- * @returns whether no term check applies
+ * @returns whether no naming check applies
  */
 export function isExempt(policy: EffectivePolicy, identifier: Identifier): boolean {
     if (policy.external.has(identifier.name) || policy.allowed.has(identifier.name)) return true;
