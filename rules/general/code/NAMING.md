@@ -669,6 +669,11 @@ Rules:
 - Predicate functions, predicate methods, computed predicates, and
   presentation-state assertions use `is` for state or characteristics, `has`
   for possession or presence, and `can` for capability.
+- Name actions by what they do, even when they return a Boolean. Use
+  `askConfirmation` for a prompt and `runFixer` for execution.
+- Name proposed answers and control parameters by their role, such as
+  `defaultAnswer` and `useDefaults`. A Boolean type does not establish that a
+  function is a predicate.
 - Preserve externally owned Boolean names exactly, including framework, SDK,
   protocol, wire, and generated relationship names.
 - Do not introduce `should` in new local names. Preserve it only for external

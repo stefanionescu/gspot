@@ -260,6 +260,8 @@ const sonarRules = {
 // the explicit return; import-style is off because the shape of an import is not a slop signal; prefer-ternary
 // stays single-line only.
 const unicornRules = {
+    // Boolean types do not distinguish stored values, predicates, and actions.
+    'unicorn/consistent-boolean-name': 'off',
     'unicorn/prevent-abbreviations': 'off',
     'unicorn/name-replacements': 'off',
     'unicorn/filename-case': 'off',
