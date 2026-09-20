@@ -1,85 +1,133 @@
-// --fix: every fixer in order, then the checks again; --dry-run through a scratch copy and a diff.
+// Corrections run in order; dry runs use a scratch copy and return diffs.
 import { join } from 'node:path';
 import { createTwoFilesPatch } from 'diff';
-import { run } from '#cli/platform/spawn.ts';
 import { readFileSync, rmSync } from 'node:fs';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { byFixOrder } from '#cli/run/concurrency.ts';
-import { substitute } from '#cli/run/tool-runner.ts';
 import { scratchCopy } from '#cli/run/scratch-copy.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
-import type { FixReport, Session, PlannedCheck } from '#types/run.ts';
+import { prepareCommand, runToolCommand } from '#cli/run/tool-runner.ts';
+import type { FixReport, FixResult, Session, PlannedCheck, PreparedCommand } from '#types/run.ts';
 
 const DIFF_CONTEXT = 3;
 
-function isFixable(check: PlannedCheck): boolean {
-    return check.spec.fix_command !== undefined && check.skip === undefined && check.files.length > 0;
-}
-
-function fixable(planned: PlannedCheck[]): PlannedCheck[] {
-    const ordered = byFixOrder(
-        planned.filter((check) => isFixable(check)).map((check) => ({ ...check, order: check.spec.fix_order })),
-    );
-    return ordered.map(({ order: _order, ...check }) => check);
-}
-
-async function didRunFixer(session: Session, planned: PlannedCheck, root: string, failed: string[]): Promise<boolean> {
-    const { spec, tool } = planned;
-    if (tool === undefined || spec.fix_command === undefined) return false;
-    const probe = probeTool(session.root, tool);
-    if (probe.path === undefined) return false;
-    const argv = substitute(session, planned, spec.fix_command, {
-        files: planned.files.map((file) => file.path),
-        scope: planned.scope.scope.path,
-        root,
-        indent: planned.scope.view.format.indent_width,
-    });
-    argv[0] = probe.path;
-    const result = await run(argv, { cwd: root, env: { NO_COLOR: '1' } });
-    if (result.missing || result.isTimedOut === true) failed.push(`${planned.id}: ${tool.name} did not run`);
-    return true;
-}
-
-function contentsOf(root: string, paths: string[]): Map<string, string> {
-    const map = new Map<string, string>();
+function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {
+    const contents = new Map<string, Buffer | undefined>();
     for (const path of paths) {
         try {
-            map.set(path, readFileSync(join(root, path), 'utf8'));
-        } catch {
-            map.set(path, '');
+            contents.set(path, readFileSync(join(root, path)));
+        } catch (error) {
+            if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+            contents.set(path, undefined);
         }
     }
-    return map;
+    return contents;
 }
 
-function diffOf(path: string, was: string, now: string): string {
-    return createTwoFilesPatch(`a/${toPlatform(path)}`, `b/${toPlatform(path)}`, was, now, '', '', {
-        context: DIFF_CONTEXT,
-    });
+function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string, Buffer | undefined>): string[] {
+    return before
+        .keys()
+        .filter((path) => {
+            const was = before.get(path);
+            const now = after.get(path);
+            return was === undefined || now === undefined ? was !== now : !was.equals(now);
+        })
+        .toArray();
+}
+
+function isSkipped(plannedCheck: PlannedCheck): boolean {
+    return plannedCheck.skip !== undefined || plannedCheck.files.length === 0;
+}
+
+async function runCorrection(plannedCheck: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
+    const check = plannedCheck.id;
+    const paths = plannedCheck.files.map((file) => file.path);
+    const before = contentsOf(prepared.root, paths);
+    for (const command of prepared.commands) {
+        const result = await runToolCommand(plannedCheck, command, prepared.cwd);
+        if (result.code !== 0 || result.missing || result.isTimedOut === true) {
+            const detail = [result.stderr.trim(), result.stdout.trim()].filter((text) => text !== '').join('\n');
+            return {
+                check,
+                status: 'failed',
+                changed: changedPaths(before, contentsOf(prepared.root, paths)),
+                note: [`${check} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': '),
+            };
+        }
+    }
+    const changed = changedPaths(before, contentsOf(prepared.root, paths));
+    return { check, status: changed.length === 0 ? 'unchanged' : 'changed', changed };
+}
+
+function diffOf(path: string, was: Buffer | undefined, now: Buffer | undefined): string {
+    return createTwoFilesPatch(
+        `a/${toPlatform(path)}`,
+        `b/${toPlatform(path)}`,
+        was?.toString('utf8') ?? '',
+        now?.toString('utf8') ?? '',
+        '',
+        '',
+        {
+            context: DIFF_CONTEXT,
+        },
+    );
 }
 
 /**
- * Runs every fixer in order. On a dry run, runs them in a scratch copy and returns diffs; nothing under the repository changes.
+ * Runs one correction and determines its outcome from process status and resulting bytes.
+ * @param session the repository session
+ * @param plannedCheck the correction and its selected files
+ * @param workingDirectory the repository or scratch root
+ * @returns the correction outcome, including changes made before a failure
+ */
+export async function runFixer(
+    session: Session,
+    plannedCheck: PlannedCheck,
+    workingDirectory: string,
+): Promise<FixResult> {
+    const { spec, tool } = plannedCheck;
+    const check = plannedCheck.id;
+    if (spec.fix_command === undefined || isSkipped(plannedCheck)) return { check, status: 'skipped', changed: [] };
+    if (tool === undefined) return { check, status: 'failed', changed: [], note: 'No correction tool is configured.' };
+    const probe = probeTool(session.root, tool);
+    if (probe.path === undefined || probe.state === 'missing' || probe.state === 'outdated')
+        return {
+            check,
+            status: 'failed',
+            changed: [],
+            note: `${tool.name} is unavailable. Run: ${probe.hint ?? 'install the configured tool'}`,
+        };
+    const prepared = prepareCommand({ ...session, root: workingDirectory }, plannedCheck, spec.fix_command, probe.path);
+    return runCorrection(plannedCheck, prepared);
+}
+
+/**
+ * Runs corrections in order and assembles their outcomes. Dry runs always remove the scratch copy.
  * @param session the session
  * @param planned the planned checks
  * @param isDryRun whether to run in a scratch copy and report diffs
- * @returns which fixers ran, which files changed, and the diffs on a dry run
+ * @returns the correction results, changed paths, and dry-run diffs
  */
 export async function applyFixers(session: Session, planned: PlannedCheck[], isDryRun: boolean): Promise<FixReport> {
-    const checks = fixable(planned);
+    const checks = byFixOrder(
+        planned
+            .filter((check) => check.spec.fix_command !== undefined)
+            .map((check) => ({ ...check, order: check.spec.fix_order })),
+    );
     const paths = [...new Set(checks.flatMap((check) => check.files.map((file) => file.path)))].toSorted((a, b) =>
         a.localeCompare(b),
     );
     const scratch = isDryRun ? scratchCopy(session, paths) : undefined;
     const root = scratch ?? session.root;
-    const before = contentsOf(root, paths);
-    const ran: FixReport['ran'] = [];
-    const failed: string[] = [];
-    for (const check of checks)
-        if (await didRunFixer(session, check, root, failed)) ran.push({ id: check.id, files: check.files.length });
-    const after = contentsOf(root, paths);
-    const changed = paths.filter((path) => (before.get(path) ?? '') !== (after.get(path) ?? ''));
-    const diffs = isDryRun ? changed.map((path) => diffOf(path, before.get(path) ?? '', after.get(path) ?? '')) : [];
-    if (scratch !== undefined) rmSync(scratch, { recursive: true, force: true });
-    return { ran, changed, diffs, failed };
+    try {
+        const before = contentsOf(root, paths);
+        const results: FixResult[] = [];
+        for (const check of checks) results.push(await runFixer(session, check, root));
+        const after = contentsOf(root, paths);
+        const changed = changedPaths(before, after);
+        const diffs = isDryRun ? changed.map((path) => diffOf(path, before.get(path), after.get(path))) : [];
+        return { results, changed, diffs };
+    } finally {
+        if (scratch !== undefined) rmSync(scratch, { recursive: true, force: true });
+    }
 }

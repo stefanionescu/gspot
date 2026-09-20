@@ -16,7 +16,17 @@ import type { CheckResult, Finding } from '#types/finding.ts';
 import { applyBaselines, readBaselines } from '#cli/run/baselines.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
 import { textHash, cacheKey, fileHash, readCached, writeCached } from '#cli/run/cache.ts';
-import type { FilterInputs, IgnoreUse, RunOptions, RunOutcome, Session, PlannedCheck, Sifted } from '#types/run.ts';
+
+import type {
+    FilterInputs,
+    FixReport,
+    IgnoreUse,
+    RunOptions,
+    RunOutcome,
+    Session,
+    PlannedCheck,
+    Sifted,
+} from '#types/run.ts';
 
 const NEVER_CACHED = new Set(['integrity/generated-drift', 'commits/commitlint', 'commits/range']);
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
@@ -219,6 +229,12 @@ function skipRows(planned: PlannedCheck[]): RunRecord['skips'] {
     return planned.flatMap((check) => (check.skip ? [{ check: check.id, source: check.skip.source }] : []));
 }
 
+function failedChecks(results: CheckResult[], fixes: FixReport | undefined): string[] {
+    const checks = results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.id);
+    const corrections = (fixes?.results ?? []).flatMap((result) => (result.status === 'failed' ? [result.check] : []));
+    return [...new Set([...checks, ...corrections])];
+}
+
 /**
  * Runs the checks and returns the record. Writes .gspot/last.json.
  * @param session the session
@@ -240,9 +256,7 @@ export async function executeRun(session: Session, options: RunOptions): Promise
     const filtering: FilterInputs = { baselines: readBaselines(session.root), ignores, staged };
     const uses = new Map<string, IgnoreUse>(ignores.map((entry) => [JSON.stringify(entry), { entry, matched: 0 }]));
     const verdicts = filterAll(session.root, active, results, filtering, uses);
-    const failed = [
-        ...new Set(results.filter((result) => FAILED_STATUSES.has(result.status)).map((result) => result.id)),
-    ];
+    const failed = failedChecks(results, fixes);
     const claimed = new Set(planned.flatMap((check) => check.files.map((file) => file.path)));
     const sources = session.repository.files.filter((file) => file.nature === 'source');
     const checkedSources = sources.filter((file) => claimed.has(file.path));

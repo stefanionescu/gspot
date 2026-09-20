@@ -166,6 +166,16 @@ that exits 3 holds its line in the report.
 
 **Done when.** Both pass, and the result distinguishes changed, unchanged, skipped, and failed execution.
 
+**Partial implementation, September 20, 2026.** `runFixer` returns a `FixResult` with changed,
+unchanged, skipped, or failed status. Checks and fixers share command preparation, file
+batching, and execution deadlines. The caller assembles `FixReport`, preserves partial
+changes, and includes correction failures in the final verdict. Byte comparison distinguishes
+empty-file deletion and invalid UTF-8 changes. Scratch cleanup covers execution, read, and
+partial-copy failures.
+
+**Local verification.** Twenty focused tests pass with 247 assertions. Shared side commands,
+site checks, and ast-grep batching remain open under K-42/K-158. Windows execution is deferred.
+
 ## K-76: mise tasks that are files
 
 Closes K-76 and K-78.

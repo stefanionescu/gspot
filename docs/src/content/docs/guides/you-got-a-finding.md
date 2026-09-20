@@ -24,6 +24,10 @@ do. For a rule inside a tool, `gspot explain <tool>/<rule>` prints the same and 
 `gspot check --fix` runs every fixer that can fix its own findings (formatters, import sorters,
 codemods) and then the checks again. What it changed is in the working tree, not staged.
 
+A missing tool or failed correction makes the command fail even if the checks pass afterward.
+Read the fixer diagnostic and review any partial edits before running it again. A successful
+correction counts as a change only when the selected files have different bytes.
+
 ## Ignore it with a reason
 
 ```bash
