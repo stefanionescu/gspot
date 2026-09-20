@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, symlinkSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run, script } from '#tests/harness/planted.ts';
 
 describe('the bash planted repository', () => {
@@ -87,7 +87,7 @@ describe('the bash planted repository', () => {
     test(
         'a missing tool fails with the install hint',
         async () => {
-            await using fixture = await createFixture({ 'scripts/a.sh': script, home: {} });
+            await using fixture = await createFixture({ 'scripts/a.sh': script, home: {}, bin: {} });
             commitAll(fixture.path);
             run(fixture.path, [
                 'init',
@@ -101,10 +101,15 @@ describe('the bash planted repository', () => {
                 '--no-rules',
                 '--no-install',
             ]);
-            const bunDir = join(process.execPath, '..');
+            const bin = join(fixture.path, 'bin');
+            const gitPath = Bun.which('git');
+            expect(gitPath).not.toBeNull();
+            symlinkSync(process.execPath, join(bin, process.platform === 'win32' ? 'bun.exe' : 'bun'));
+            symlinkSync(gitPath!, join(bin, process.platform === 'win32' ? 'git.exe' : 'git'));
             const check = run(fixture.path, ['check', 'bash/shellcheck', '--no-cache'], {
-                PATH: `${bunDir}:/usr/bin:/bin`,
+                PATH: bin,
                 HOME: join(fixture.path, 'home'),
+                MISE_DATA_DIR: join(fixture.path, 'home', 'mise'),
             });
             expect(check.code).toBe(1);
             expect(check.stdout).toContain('missing');

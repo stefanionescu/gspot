@@ -200,6 +200,11 @@ describe('the swift preset over a package', () => {
                 const clean = run(fixture.path, ['check', planted.id, '--no-cache'], environment);
                 expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
+                if (process.platform !== 'darwin') {
+                    expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
+                    expect(outcome.stdout).toContain('runs on macos only');
+                    continue;
+                }
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
                 expect(outcome.stdout, planted.id).toContain('Sources/App/');

@@ -133,6 +133,11 @@ describe('the xcode preset', () => {
             }
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);
+                if (planted.id === 'xcode/plist' && process.platform !== 'darwin') {
+                    expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
+                    expect(outcome.stdout).toContain('runs on macos only');
+                    continue;
+                }
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
             }
