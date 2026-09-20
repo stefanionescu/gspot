@@ -1,6 +1,6 @@
+import { runBlocking } from '#cli/platform/spawn.ts';
 // Staged files for the commit stage, and the honest note about unstaged changes.
 import type { StagedSet } from '#types/repository.ts';
-import { git, runBlocking } from '#cli/platform/spawn.ts';
 
 function observed(root: string, argv: string[]): string {
     const result = runBlocking(['git', ...argv], { cwd: root });
@@ -50,8 +50,10 @@ export function changedSince(root: string, reference: string): string[] {
  * @returns the commit the pushed range starts after
  */
 export function pushBase(root: string): string {
-    const upstream = git(root, ['merge-base', 'HEAD', '@{upstream}'])?.trim();
-    if (upstream !== undefined && upstream !== '') return upstream;
-    const first = git(root, ['rev-list', '--max-parents=0', 'HEAD'])?.trim().split('\n').at(-1);
-    return first ?? 'HEAD';
+    const head = observed(root, ['rev-parse', '--symbolic-full-name', 'HEAD']).trim();
+    const upstream = observed(root, ['for-each-ref', '--format=%(upstream)', '--', head]).trim();
+    if (upstream !== '') return observed(root, ['merge-base', '--', 'HEAD', upstream]).trim();
+    const first = observed(root, ['rev-list', '--max-parents=0', 'HEAD']).trim().split('\n').at(-1);
+    if (first === undefined || first === '') throw new Error('Git did not return a root commit for HEAD.');
+    return first;
 }

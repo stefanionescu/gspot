@@ -85,8 +85,12 @@ Staged and changed-file readers retain deleted paths and both rename paths. Fail
 merge-base observations raise errors instead of returning an empty selection. Project plans
 keep absent change triggers separately from readable files, including an emptied scope.
 Per-file commands do not receive those absent paths. Corrections track recreated files in
-both previews and real runs. Push-base observation and immutable revision selection remain
-open under K-276 and K-293.
+both previews and real runs.
+
+Push-base observation reads upstream configuration separately
+from its merge base: a missing upstream object, failed command, unborn HEAD, or corrupt HEAD
+raises an error. Seven real-repository tests pass (42 assertions). Immutable revision
+selection and first-push range semantics remain open under K-272 and K-293.
 
 Process launch failures distinguish `ENOENT` from permission errors. Both captured streams
 and child status are preserved through completion. Local real-process regressions cover the
@@ -222,10 +226,11 @@ A proposed deletion must identify the current caller and the owner that takes ov
 
 ## September 20 verification details
 
-Keep K-307 open for `repository/staged.ts`: failed Git observations still become empty path
-sets, and `--diff-filter=ACMRT` excludes deletions. Preserve deleted tracked paths as triggers
-without attempting to read them as current source. Test last-file deletion and both rename ends
-through the planner, not only through the Git listing helper.
+The original `repository/staged.ts` audit found failures converted to empty path sets and
+`--diff-filter=ACMRT` excluding deletions. The staged, changed, and push-base readers now
+propagate command failures. Planner regressions preserve last-file deletions and both rename
+ends as triggers without passing absent paths to per-file commands. K-307 remains open for
+other failed observations and takeover parsing.
 
 K-263 and K-307 also cover the subprocess boundary in `platform/spawn.ts`. Windows currently
 infers a timeout from any signal when a deadline was configured. Its error handler settles

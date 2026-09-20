@@ -3,7 +3,7 @@ import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, writeFileSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { changedSince, stagedFiles } from '#cli/repository/staged.ts';
+import { changedSince, stagedFiles, pushBase } from '#cli/repository/staged.ts';
 
 function git(root: string, ...argv: string[]): void {
     const result = runBlocking(['git', ...argv], { cwd: root });
@@ -57,5 +57,27 @@ describe('Git change observation', () => {
         expect(() => changedSince(fixture.path, 'missing-reference')).toThrow('Git merge-base failed');
         expect(() => changedSince(fixture.path, '--output=outside.txt')).toThrow('Git merge-base failed');
         expect(existsSync(join(fixture.path, 'outside.txt'))).toBe(false);
+    });
+    test('push comparison distinguishes an absent upstream from a missing upstream object', async () => {
+        await using fixture = await createFixture({ 'source.ts': 'export {};\n' });
+        commit(fixture.path);
+        const first = pushBase(fixture.path);
+        git(fixture.path, 'branch', 'upstream');
+        git(fixture.path, 'branch', '--set-upstream-to=upstream');
+        await Bun.write(join(fixture.path, 'source.ts'), 'export const changed = true;\n');
+        git(fixture.path, 'add', '.');
+        git(fixture.path, '-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.com', 'commit', '-qm', 'Second');
+        expect(pushBase(fixture.path)).toBe(first);
+        git(fixture.path, 'update-ref', '-d', 'refs/heads/upstream');
+        expect(() => pushBase(fixture.path)).toThrow('Git merge-base failed');
+    });
+
+    test('push comparison reports an unborn or corrupt HEAD instead of inventing a base', async () => {
+        await using fixture = await createFixture({ 'source.ts': 'export {};\n' });
+        git(fixture.path, 'init');
+        expect(() => pushBase(fixture.path)).toThrow('Git rev-parse failed');
+        commit(fixture.path);
+        writeFileSync(join(fixture.path, '.git/HEAD'), 'broken head');
+        expect(() => pushBase(fixture.path)).toThrow('Git rev-parse failed');
     });
 });
