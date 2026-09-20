@@ -15,11 +15,25 @@ describe.skipIf(repositories.length === 0)('acceptance on the reference reposito
             `gspot installs and checks ${repository} in a worktree and leaves the repository as it was`,
             async () => {
                 const before = git(repository, ['status', '--porcelain']).stdout;
+                const worktrees = git(repository, ['worktree', 'list', '--porcelain']);
+                expect(worktrees.code, worktrees.stderr).toBe(0);
                 const result = await acceptanceRun(repository);
                 expect(result.init).toContain('written: gspot.toml');
-                expect(result.statuses['error'] ?? 0, JSON.stringify(result.statuses)).toBe(0);
+                expect(result.report.checks.length).toBeGreaterThan(0);
+                expect(result.report.coverage.checked).toBeGreaterThan(0);
+                expect(result.report.exitCode, JSON.stringify(result.report.checks)).toBe(0);
+                expect(result.report.failed).toEqual([]);
+                expect(result.report.skips.filter((skip) => skip.source !== 'rules')).toEqual([]);
+                for (const check of result.report.checks) {
+                    expect(['ok', 'skipped'], JSON.stringify(check)).toContain(check.status);
+                    if (check.status === 'skipped')
+                        expect(result.report.skips).toContainEqual({ check: check.check, source: 'rules' });
+                    expect(check.findings, JSON.stringify(check)).toEqual([]);
+                }
                 expect(git(repository, ['status', '--porcelain']).stdout).toBe(before);
-                expect(git(repository, ['worktree', 'list']).stdout.trim().split('\n')).toHaveLength(1);
+                const after = git(repository, ['worktree', 'list', '--porcelain']);
+                expect(after.code, after.stderr).toBe(0);
+                expect(after.stdout).toBe(worktrees.stdout);
             },
             ACCEPTANCE_TIMEOUT_MS,
         );

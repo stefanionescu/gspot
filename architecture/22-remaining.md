@@ -69,9 +69,14 @@ prove the same intended protection on every affected surface first.
 - [ ] **1. Replace reference acceptance.** In `tests/acceptance/cli/reference.test.ts`, require
       successful initialization, the expected executed checks, and reviewed structured findings.
       An empty run, missing tools, unexpected skips, or zero engine errors alone cannot pass.
-- [ ] **2. Repair worktree isolation.** Check init and Git cleanup exit statuses in
-      `tests/harness/worktree.ts`. Compare worktree inventories before and after, rather than assuming one
-      worktree. Verify preserved repository content; delete redundant status-count machinery.
+- [x] **2. Repair worktree isolation.** Init and Git cleanup failures are checked. Real Git
+      regressions preserve existing worktrees, uncommitted files, and a locked recovery location.
+      Reference acceptance compares inventories and uses validated reports instead of status counts.
+
+Item 1 remains open for repository-specific expected check sets and reviewed findings. Reference
+acceptance rejects empty runs, failures, missing tools, and unexplained skips. These stricter
+criteria do not establish completion of the reference-project gate.
+
 - [ ] **3. Exercise a fresh installed consumer.** Build, publish to an isolated local registry,
       install, initialize, report a known defect, correct it, and pass. Assert command exits and
       the exact finding. This journey must not symlink checkout dependencies or run source entry points.
