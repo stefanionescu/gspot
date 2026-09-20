@@ -23,7 +23,7 @@ jobs:
               run: sudo apt-get update && sudo apt-get install --yes libxml2-utils
             - run: mise run gspot:setup
             - run: bunx tsc --noEmit -p tsconfig.json
-            - run: bun test --coverage
+            - run: mise exec -- bun test --coverage
             - run: bun packages/cli/build.ts
             - run: bun packages/cli/src/main.ts check
               if: runner.os != 'Windows'
