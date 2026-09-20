@@ -91,6 +91,8 @@ export type PlannedCheck = {
     tool?: ToolPin;
     skip?: { source: 'local' | 'flag' | 'platform' | 'rules'; note: string };
     projectWide: boolean;
+    /** Changed paths absent from the readable tree that still trigger a project check. */
+    triggerPaths: string[];
     messageFile?: string;
 };
 

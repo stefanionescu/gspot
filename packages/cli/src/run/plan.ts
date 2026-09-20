@@ -3,7 +3,7 @@ import { hasEngine } from '#cli/run/engines.ts';
 import type { RepositoryCheck } from '#types/config.ts';
 import type { TrackedFile } from '#types/repository.ts';
 import type { CheckSpec, Manifest, Stage, ToolPin } from '#types/manifest.ts';
-import { claimedByClaims, claimedFiles, pathMatcher } from '#cli/presets/claims.ts';
+import { claimedByClaims, claimedFiles, isInScope, pathMatcher } from '#cli/presets/claims.ts';
 
 import type {
     PlanEntry,
@@ -147,14 +147,20 @@ function narrowed(context: PlanContext, entry: PlanEntry, files: TrackedFile[]):
     return reclaimed(context, entry);
 }
 
-function filesFor(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean): TrackedFile[] {
+function filesFor(
+    context: PlanContext,
+    entry: PlanEntry,
+    isWholeCheck: boolean,
+): Pick<PlannedCheck, 'files' | 'triggerPaths'> {
     const { scope, children } = context;
     const { spec, manifest } = entry;
-    const isWhole =
-        isWholeCheck || spec.runs !== 'per-file-list' || (manifest !== undefined && isRepositoryWide(manifest));
-    let files = claimedFor(context, entry, isWholeCheck ? '' : scope.scope.path);
+    const scopePath = isWholeCheck ? '' : scope.scope.path;
+    const triggerPaths = missingTriggers(context, spec, scopePath);
+    const isWhole = spec.runs !== 'per-file-list' || (manifest !== undefined && isRepositoryWide(manifest));
+    let files = triggerPaths.length === 0 ? claimedFor(context, entry, scopePath) : projectFiles(context, scopePath);
     if (!isWhole) files = files.filter((file) => isOutsideChildren(file, children));
-    return narrowed(context, entry, withoutExcluded(files, spec, scope));
+    const selected = withoutExcluded(files, spec, scope);
+    return { files: triggerPaths.length === 0 ? narrowed(context, entry, selected) : selected, triggerPaths };
 }
 
 function platformSkipFor(spec: CheckSpec, tool: ToolPin | undefined, platform: string): PlannedCheck['skip'] {
@@ -179,6 +185,12 @@ function skipFor(
     return undefined;
 }
 
+function missingTriggers(context: PlanContext, spec: CheckSpec, scopePath: string): string[] {
+    if (spec.runs === 'per-file-list' || context.narrow === undefined) return [];
+    const readable = new Set(context.session.repository.files.map((file) => file.path));
+    return [...context.narrow].filter((path) => !readable.has(path) && isInScope(path, scopePath));
+}
+
 function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean): PlannedCheck {
     const { session, scope, options, platform } = context;
     const { spec, manifest } = entry;
@@ -187,7 +199,7 @@ function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean):
         check: spec.name,
         scope: isWholeCheck ? rootScope : scope,
         spec,
-        files: filesFor(context, entry, isWholeCheck),
+        ...filesFor(context, entry, isWholeCheck),
         projectWide: spec.runs !== 'per-file-list',
     };
     if (manifest) check.manifest = manifest;

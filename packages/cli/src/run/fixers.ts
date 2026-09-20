@@ -37,7 +37,9 @@ function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string
 }
 
 function isSkipped(plannedCheck: PlannedCheck): boolean {
-    return plannedCheck.skip !== undefined || plannedCheck.files.length === 0;
+    return (
+        plannedCheck.skip !== undefined || (plannedCheck.files.length === 0 && plannedCheck.triggerPaths.length === 0)
+    );
 }
 
 function correctionTool(session: Session, plannedCheck: PlannedCheck): ToolPin | undefined {
@@ -53,7 +55,7 @@ function correctionTool(session: Session, plannedCheck: PlannedCheck): ToolPin |
 
 async function runCorrection(plannedCheck: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
     const check = plannedCheck.check;
-    const paths = plannedCheck.files.map((file) => file.path);
+    const paths = [...new Set([...plannedCheck.files.map((file) => file.path), ...plannedCheck.triggerPaths])];
     const before = contentsOf(prepared.root, paths);
     for (const command of prepared.commands) {
         const result = await runToolCommand(plannedCheck, command, prepared.cwd);
@@ -127,9 +129,9 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], isD
             .filter((check) => check.spec.fix_command !== undefined)
             .map((check) => ({ ...check, order: check.spec.fix_order })),
     );
-    const paths = [...new Set(checks.flatMap((check) => check.files.map((file) => file.path)))].toSorted((a, b) =>
-        a.localeCompare(b),
-    );
+    const paths = [
+        ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
+    ].toSorted((a, b) => a.localeCompare(b));
     const scratch = isDryRun ? scratchCopy(session, paths) : undefined;
     const root = scratch ?? session.root;
     try {

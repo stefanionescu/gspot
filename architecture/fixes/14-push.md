@@ -79,6 +79,22 @@ CI uses event-specific base and target objects, including merge queues and zero-
 
 **Done when.** No regression is hidden solely because its reported file was unchanged; the documented adoption tradeoff is visible.
 
+**Partially implemented, September 20, 2026.** Staged and reference-relative observations
+retain deletions and both sides of renames. Failed observations report errors. Absent paths
+conservatively select project checks in their scope even when no readable inputs remain.
+Per-file tools receive only current files.
+
+Real execution fixtures cover deleting the last
+file from an existing scope directory and moving it to another scope. Both affected project
+findings survive, and correction previews report restored paths without changing the source.
+
+Local verification passes 56 run, Git observation, and planted repository tests with 397
+assertions. TypeScript and lint checks also pass.
+
+Reverse dependencies, exact committed snapshots, configuration-only impact, event-specific
+CI bases, and package-manager selection remain open. These local fixtures do not establish
+Windows or Linux platform acceptance during the CI bypass.
+
 ## K-295: two flags name one idea
 
 **What is wrong.** `gspot check --changed` compares with the upstream branch. `--since <ref>`

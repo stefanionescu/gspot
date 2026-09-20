@@ -222,7 +222,7 @@ function filterAll(
 }
 
 function isActive(check: PlannedCheck): boolean {
-    return check.files.length > 0 || check.spec.stage === 'message';
+    return check.files.length > 0 || check.triggerPaths.length > 0 || check.spec.stage === 'message';
 }
 
 function skipRows(planned: PlannedCheck[]): RunReport['skips'] {

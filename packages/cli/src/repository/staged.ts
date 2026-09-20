@@ -1,21 +1,33 @@
 // Staged files for the commit stage, and the honest note about unstaged changes.
-import { git } from '#cli/platform/spawn.ts';
 import type { StagedSet } from '#types/repository.ts';
+import { git, runBlocking } from '#cli/platform/spawn.ts';
 
-function paths(listed: string | undefined): string[] {
-    return (listed ?? '').split('\0').filter((path) => path !== '');
+function observed(root: string, argv: string[]): string {
+    const result = runBlocking(['git', ...argv], { cwd: root });
+    if (result.code !== 0) {
+        throw new Error(
+            `Git ${argv[0] ?? ''} failed in ${root} (exit ${String(result.code)}): ${result.stderr.trim()}`,
+        );
+    }
+    return result.stdout;
+}
+
+function paths(root: string, argv: string[]): string[] {
+    return observed(root, argv)
+        .split('\0')
+        .filter((path) => path !== '');
 }
 
 /**
- * Staged paths (added, copied, modified, renamed, type-changed) and how many of them also have unstaged changes.
+ * Staged paths include deletions and both sides of renames. Count paths with unstaged changes.
  * @param root the repository root
  * @returns the staged paths, sorted, and the unstaged count
  */
 export function stagedFiles(root: string): StagedSet {
-    const staged = paths(git(root, ['diff', '--cached', '--name-only', '--diff-filter=ACMRT', '-z'])).toSorted((a, b) =>
+    const staged = paths(root, ['diff', '--cached', '--name-only', '--no-renames', '-z']).toSorted((a, b) =>
         a.localeCompare(b),
     );
-    const dirty = new Set(paths(git(root, ['diff', '--name-only', '-z'])));
+    const dirty = new Set(paths(root, ['diff', '--name-only', '--no-renames', '-z']));
     return { staged, unstaged: staged.filter((path) => dirty.has(path)).length };
 }
 
@@ -26,9 +38,9 @@ export function stagedFiles(root: string): StagedSet {
  * @returns the paths, sorted
  */
 export function changedSince(root: string, reference: string): string[] {
-    const merged = git(root, ['merge-base', reference, 'HEAD'])?.trim() ?? reference;
-    const committed = paths(git(root, ['diff', '--name-only', '--diff-filter=ACMRT', '-z', merged]));
-    const working = paths(git(root, ['diff', '--name-only', '--diff-filter=ACMRT', '-z']));
+    const merged = observed(root, ['merge-base', '--', reference, 'HEAD']).trim();
+    const committed = paths(root, ['diff', '--name-only', '--no-renames', '-z', merged, '--']);
+    const working = paths(root, ['diff', '--name-only', '--no-renames', '-z']);
     return [...new Set([...committed, ...working])].toSorted((a, b) => a.localeCompare(b));
 }
 

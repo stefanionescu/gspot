@@ -78,8 +78,15 @@ reading their absent targets. The current device/inode root regression is retain
 existing implementation rather than replaced with the stale parked assertion.
 
 The affected repository, doctor, emission, and uninstall suites pass locally (26 tests,
-88 assertions). Staged deletion triggers, other Git observations, and takeover parsing remain
-open. Windows execution remains platform verification deferred.
+88 assertions). Staged deletion triggers now have separate planner and execution regressions.
+Other Git observations and takeover parsing remain open. Windows execution remains platform verification deferred.
+
+Staged and changed-file readers retain deleted paths and both rename paths. Failed diffs and
+merge-base observations raise errors instead of returning an empty selection. Project plans
+keep absent change triggers separately from readable files, including an emptied scope.
+Per-file commands do not receive those absent paths. Corrections track recreated files in
+both previews and real runs. Push-base observation and immutable revision selection remain
+open under K-276 and K-293.
 
 Process launch failures distinguish `ENOENT` from permission errors. Both captured streams
 and child status are preserved through completion. Local real-process regressions cover the
