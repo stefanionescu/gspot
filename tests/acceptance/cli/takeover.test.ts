@@ -4,6 +4,7 @@ import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { treeContents } from '#tests/harness/contents.ts';
 import { git, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
 
 const INIT = [
@@ -41,6 +42,26 @@ describe('takeover', () => {
             }
             expect(readFileSync(join(fixture.path, 'hooks/use-thing.ts'), 'utf8')).toContain('useThing');
             expect(existsSync(join(fixture.path, 'gspot.toml'))).toBe(false);
+        },
+        PLANTED_TIMEOUT_MS,
+    );
+
+    test(
+        'unreadable takeover input preserves every original file and mode',
+        async () => {
+            await using fixture = await createFixture({
+                'typos.toml': '[default\n',
+                'notes.md': '# Notes\n',
+            });
+            const before = treeContents(fixture.path);
+            const preview = await run(fixture.path, [...INIT, '--hooks', 'none', '--dry-run']);
+            expect(preview.code, preview.stdout + preview.stderr).toBe(0);
+            expect(preview.stdout).toContain('not read and not deleted');
+            expect(treeContents(fixture.path)).toEqual(before);
+            const result = await run(fixture.path, [...INIT, '--hooks', 'none']);
+            expect(result.code, result.stdout + result.stderr).toBe(2);
+            expect(result.stdout).toContain('Cannot apply takeover');
+            expect(treeContents(fixture.path)).toEqual(before);
         },
         PLANTED_TIMEOUT_MS,
     );

@@ -101,6 +101,11 @@ Documentation task discovery treats absent optional manifests as empty, but prop
 malformed TOML, malformed JSON, and other read errors with their configuration path.
 Real-file regressions cover both parsers and a directory where a manifest belongs.
 
+Init refuses all mutation when takeover reports unread configuration, including generated
+root pointers that otherwise overwrite retained originals. Its preview still shows the
+proposal. A real init regression verifies unchanged repository bytes and modes.
+Consolidating the takeover parsers remains open.
+
 **What is wrong.** `platform/spawn.ts` maps every failed Git command to `undefined`; `repository/tracked.ts` then falls back to a non-Git walk. `entryFor()` drops a path after any stat failure, and `head()` returns empty text after any read failure. `integrity/manifest-policy.ts` treats unreadable or malformed package JSON as absent. The takeover readers also catch read and parse errors, while a separate preflight reparses only selected suffixes.
 
 **Target.** Keep real boundary validation, but do not turn failed observation into valid empty input or a clean verdict.

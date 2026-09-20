@@ -196,6 +196,12 @@ export async function initCommand(options: InitOptions): Promise<InitResult> {
         if (!options.json) print('--dry-run: nothing written.\n');
         return { text: '', json: { root, plan, policy: policyText, isDryRun: true }, exitCode: 0 };
     }
+    if (plan.unread.length > 0)
+        return {
+            text: 'Cannot apply takeover because configuration could not be read. Fix the listed files and run gspot init again.\n',
+            json: { root, plan, error: 'unread-configuration', written: false },
+            exitCode: 2,
+        };
     const isGo = await askConfirmation('Continue?', '--yes', true, options.yes);
     if (!isGo) return { text: 'Nothing written.\n', json: { root, plan, written: false }, exitCode: 0 };
     const written = await write(root, options, prepared);

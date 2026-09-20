@@ -8,6 +8,10 @@ sidebar:
 `gspot init` on a repository with linting in it replaces what it owns and lists what it can prove
 redundant. It prints its plan and waits for a yes.
 
+If the plan lists unread configuration, `init` exits with status 2 before
+writing or installing anything. Fix the listed files and run `gspot init` again.
+Use `gspot init --dry-run` to inspect the proposal without changing files.
+
 ## What it deletes
 
 The configuration file of every tool a selected preset owns: `.eslintrc`, `eslint.config.js`,
