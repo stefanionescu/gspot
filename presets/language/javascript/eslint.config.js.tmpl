@@ -87,8 +87,9 @@ function installedReact() {
     return '19.0';
 }
 <% } %>
-const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}'];
-const TYPESCRIPT = ['**/*.{ts,tsx,mts,cts}'];
+const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}'<% if (has('vue')) { %>, '**/*.vue'<% } %><% if (has('svelte')) { %>, '**/*.svelte'<% } %>];
+const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
+const TYPESCRIPT = [...TYPESCRIPT_SOURCE<% if (has('vue')) { %>, '**/*.vue'<% } %><% if (has('svelte')) { %>, '**/*.svelte'<% } %>];
 const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
 const TESTS = <%= json(testFiles) %>;
 const SCRIPTS = <%= json(scriptFiles) %>;

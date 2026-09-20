@@ -9,7 +9,7 @@ export type HeaderCommentsOptions = [{ allowRequire?: boolean }];
 
 export type EnvAccessOwnerOptions = [{ owners?: string[] }];
 
-export type TypesPlacementOptions = [{ typesDirectory?: string; exempt?: string[] }];
+export type TypesPlacementOptions = [{ typesDirectory?: string; allowInterface?: boolean; exempt?: string[] }];
 
 export type CrossProjectImportsOptions = [{ scopes?: string[]; allowedEscapes?: string[] }];
 
@@ -40,3 +40,11 @@ export type CrossFolderImportsOptions = [{ scope?: string[]; aliases?: Record<st
 export type NoReexportsOptions = [{ allowIndex?: boolean }];
 
 /** A rule context with any message ids and options; what the shared file helpers accept. */
+
+export type NoTrivialFunctionsOptions = [{ maxStatements?: number }];
+
+export type SingleFileFoldersOptions = [{ extensions?: string[]; ignorePaths?: string[]; allow?: string[] }];
+
+export type NoPrefixCollisionsOptions = [
+    { threshold?: number; scope?: string[]; ignorePaths?: string[]; allow?: string[] },
+];

@@ -59,7 +59,10 @@ These are implementation tasks, not claims of completed repairs. Close a task on
 observable behavior from its current owner. Related fix sections retain defect evidence
 and detailed contracts; this list owns cleanup status. No separate audit framework or test
 inventory is required. Existing code has no claim to preservation merely because it exists.
-Rules and useful enforcement do: replacement must prove the same intended protection first.
+
+All existing Swift, JavaScript, TypeScript, and Python rules remain required across supported
+frameworks. Preserve public plugin exports and standalone enforcement too. Replacement must
+prove the same intended protection on every affected surface first.
 
 #### Installed product and release tests
 
@@ -160,15 +163,15 @@ Rules and useful enforcement do: replacement must prove the same intended protec
 - [ ] **29. Finish recommended and all.** One metadata owner drives planner, templates, plugin,
       and documentation. Recommended produces useful findings on ordinary projects; forwarding
       preferences belong at all. Retain the rule there and delete independent duplicated rule lists.
-- [ ] **30. Prove replacement enforcement before deletion.** Finish K-188 only after pinned
-      replacement rules run through generated config and preserve scopes, aliases, type-only
-      imports, exemptions, valid cases, and diagnostic locations. Cover anonymous forwarding and
-      Next.js re-export exceptions.
+- [ ] **30. Preserve rules during replacement.** Keep public plugin exports. Verify pinned replacements
+      through generated config and standalone use. Cover scopes, aliases, type-only imports,
+      exemptions, valid cases, and finding locations. Retain anonymous-forwarding and Next.js
+      re-export regressions before closing K-188.
 
 Keep focused custom rules when a replacement cannot express
 the policy. Delete only superseded implementations, options, hooks, and duplicate tests.
 
-- [ ] **31. Remove forced universal analyses.** Rewrite K-235/D-149 so sharing follows proven
+- [ ] **31. Preserve universal coverage without forced universal analyses.** Rewrite K-235/D-149 so sharing follows proven
       common operations. Delete demands that analyses never name a language or that a language
       needs only a table row.
 
@@ -374,9 +377,9 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [D-100](fixes/00-delete-first.md#d-100-the-lint-files-at-the-root-of-this-repository): Delete the twelve lint stubs at the root of this repository.
 - [ ] [K-47](fixes/00-delete-first.md#d-100-the-lint-files-at-the-root-of-this-repository): Delete the nine `copy = true` stubs and `copyStubContent` (D-100).
 - [ ] [K-100](fixes/00-delete-first.md#k-99-keys-and-settings-with-no-reader): Delete `limits.line_length`, `limits.trivial_ast_nodes` and `tools.trufflehog.verified_only`.
-- [x] [K-102](fixes/00-delete-first.md#k-102-seven-plugin-rules): Delete `no-trivial-functions` and its option; `no-call-through` covers every function form (see K-235 for the other languages).
-- [x] [K-187](fixes/00-delete-first.md#k-102-seven-plugin-rules): Delete the plugin rules `no-single-file-folders` and `no-prefix-collisions`; the structure engine owns facts about folders.
-- [ ] [K-188](fixes/00-delete-first.md#k-102-seven-plugin-rules): Prove pinned replacement enforcement through generated config before deleting each duplicate implementation. Keep custom rules where equivalent policy cannot be expressed.
+- [x] [K-102](fixes/00-delete-first.md#k-102-seven-plugin-rules): Retain the forwarding rule exports and options. The default config uses `no-call-through` once, with every supported function form covered; K-235 preserves other languages.
+- [x] [K-187](fixes/00-delete-first.md#k-102-seven-plugin-rules): Retain both plugin folder rules for standalone users. The CLI uses the structure engine, with language and framework source claims and correction regressions.
+- [ ] [K-188](fixes/00-delete-first.md#k-102-seven-plugin-rules): Preserve existing plugin exports and standalone behavior. Prove replacement enforcement on every affected surface before consolidating internals; keep custom rules where needed.
 - [x] [K-111](fixes/00-delete-first.md#k-111-three-ways-to-silence-a-finding-become-one): Delete the `lint:justify` and `lint:allow-...` markers.
 - [x] [K-115](fixes/00-delete-first.md#k-111-three-ways-to-silence-a-finding-become-one): Delete the `finding` key of `[[ignore]]`.
 - [x] [K-119](fixes/00-delete-first.md#k-119-a-branch-for-an-engine-that-is-not-built): Delete the branch for an engine that is not built, and keep the comment openers and `UNPARSED_LIMIT` once.

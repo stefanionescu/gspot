@@ -5,6 +5,11 @@ combine, and the catalog.
 
 ## Policy ownership
 
+Shared language policies cover Swift, JavaScript, TypeScript, Python, and their supported
+frameworks. `from_languages` includes source claims contributed by framework presets, such
+as Vue and Svelte components. Selecting a framework must not drop language rules. See
+[shared enforcement](05-engines.md#shared-enforcement-across-languages-and-frameworks).
+
 Presets own shipped tools, versions, templates, default rule policy, styles, and vocabulary.
 CLI code owns operational loading, validation, parsing, and execution. Recommended and all
 use one metadata owner across planning, generated templates, plugin exports, and documentation.

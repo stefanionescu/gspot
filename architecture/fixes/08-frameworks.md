@@ -1,5 +1,10 @@
 # Frameworks, Naming, and Lint Tools
 
+Shared enforcement covers Swift, JavaScript, TypeScript, Python, and their supported frameworks.
+Framework integrations retain every applicable language policy, including folder structure.
+The [shared enforcement contract](../05-engines.md#shared-enforcement-across-languages-and-frameworks)
+distinguishes universal coverage from a forced universal implementation.
+
 Row 12 of the build order. Three things change here. The lint tools of gspot install under
 `.gspot/` and never into the `package.json` of the developer (D-145). A framework preset carries
 its own naming rules and every linter that exists for it (D-112, D-141). The shared rules reach a

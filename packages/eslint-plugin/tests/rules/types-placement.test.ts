@@ -13,6 +13,7 @@ tester().run('types-placement', typesPlacement, {
         },
         { code: "import type { A } from '../types/a';\nexport const a: A = 'x';", filename: '/repo/src/a.ts' },
         { code: 'export type A = string;', filename: '/repo/src/a.d.ts' },
+        { code: 'interface A { a: string }', filename: '/repo/src/a.ts', options: [{ allowInterface: true }] },
         {
             code: 'export type A = string;',
             filename: '/repo/src/vendor/a.ts',
@@ -26,6 +27,7 @@ tester().run('types-placement', typesPlacement, {
             filename: '/repo/src/a.ts',
             errors: [{ messageId: 'aliasOutside', data: { directory: 'types', name: 'A' } }],
         },
+        { code: 'interface A { a: string }', filename: '/repo/src/a.ts', errors: [{ messageId: 'interface' }] },
         {
             code: "export const Mode = { on: 'on' } as const;",
             filename: '/repo/src/a.ts',

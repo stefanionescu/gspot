@@ -87,8 +87,9 @@ The plugin owns editor-compatible rule implementation and standalone exports. It
 exercise actual invalid and valid code. Release tests install its published artifact and use
 exports and declarations. Recommended and all derive from one level-policy owner.
 
-A rule implementation is deleted only after replacement proves intended enforcement through
-generated configuration. Keep custom rules for policies a maintained external rule cannot express.
+Keep existing public rule exports and their standalone enforcement. A CLI replacement does
+not replace the standalone plugin contract. Share implementation where it preserves both
+surfaces; keep custom rules where external tools cannot express the policy.
 
 ## `packages/npm/`
 

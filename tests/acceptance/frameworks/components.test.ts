@@ -2,16 +2,18 @@ import { symlinkSync } from 'node:fs';
 // Planted repositories for the vue and svelte presets: markup set from a string and a list with no key, in each framework.
 import { delimiter, join } from 'node:path';
 import { createSandbox } from '@gspot/testing';
+import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
 import type { ComponentShape } from '#tests/types/acceptance.ts';
+import vueManifest from 'vue/package.json' with { type: 'json' };
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
-const init = (presets: string): string[] => [
+const init = (presets: string[]): string[] => [
     'init',
     '--yes',
     '--presets',
-    presets,
+    ...presets,
     '--without',
     'naming',
     'spelling',
@@ -57,14 +59,18 @@ const SVELTE_CASES: [string, string][] = [
 const SHAPES: ComponentShape[] = [
     {
         check: 'vue/eslint',
-        presets: 'typescript,vue',
-        files: { 'package.json': manifest('vue', '3.5.22'), 'src/Greeting.vue': VUE_CLEAN },
-        planted: 'src/Planted.vue',
+        presets: ['typescript', 'vue'],
+        files: {
+            'package.json': manifest('vue', vueManifest.version),
+            'src/UserGreeting.vue': VUE_CLEAN,
+            'src/env.d.ts': "import 'vue';\n",
+        },
+        planted: 'src/PlantedExample.vue',
         cases: VUE_CASES,
     },
     {
         check: 'svelte/eslint',
-        presets: 'typescript,svelte',
+        presets: ['typescript', 'svelte'],
         files: { 'package.json': manifest('svelte', '5.57.0'), 'src/Greeting.svelte': SVELTE_CLEAN },
         planted: 'src/Planted.svelte',
         cases: SVELTE_CASES,
@@ -116,3 +122,67 @@ describe('the vue and svelte presets', () => {
             PLANTED_TIMEOUT_MS * 6,
         );
 });
+
+test.each([
+    ['vue', 'javascript'],
+    ['svelte', 'javascript'],
+    ['vue', 'typescript'],
+    ['svelte', 'typescript'],
+])(
+    '%s applies shared %s rules inside component scripts',
+    async (framework, language) => {
+        const filename = `src/SharedPolicy.${framework}`;
+        const before =
+            language === 'typescript'
+                ? '<script lang="ts">\nfunction forward(value: any) { return build(value); }\n</script>\n'
+                : '<script>\nfunction forward(value) { return build(value); }\n</script>\n';
+        await using sandbox = await createSandbox({
+            'gspot.toml': `version = 1\npresets = ["${framework}", "${language}"]\n`,
+            'package.json': '{"name":"component-policy","private":true,"type":"module"}',
+            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}',
+            'src/build.ts': 'export const build = (value: number): number => value + 1;',
+            [filename]: before,
+        });
+        symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
+        const applied = await run(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const args = ['check', '--only', `${framework}/eslint`, '--no-cache', '--json'];
+        const broken = await run(sandbox.path, args);
+        expect(broken.code, broken.stdout + broken.stderr).toBe(1);
+        const report = JSON.parse(broken.stdout) as RunReport;
+        expect(
+            report.checks
+                .flatMap((check) => check.findings)
+                .filter((finding) => finding.rule === 'gspot/no-call-through')
+                .map(({ check, rule, file, line, column }) => ({ check, rule, file, line, column })),
+            broken.stdout + broken.stderr,
+        ).toEqual([
+            { check: `${framework}/eslint`, rule: 'gspot/no-call-through', file: filename, line: 2, column: 1 },
+        ]);
+        if (language === 'typescript')
+            expect(
+                report.checks
+                    .flatMap((check) => check.findings)
+                    .find((finding) => finding.rule === '@typescript-eslint/no-explicit-any'),
+            ).toMatchObject({ file: filename, line: 2 });
+        await Bun.write(
+            join(sandbox.path, filename),
+            before.replace('build(value)', 'build(value + 1)').replace('value: any', 'value: number'),
+        );
+        const corrected = await run(sandbox.path, args);
+        expect([0, 1]).toContain(corrected.code);
+        const after = JSON.parse(corrected.stdout) as RunReport;
+        expect(after.checks).toHaveLength(1);
+        expect(after.checks[0]?.status).toMatch(/^(?:ok|fail)$/u);
+        expect(
+            after.checks
+                .flatMap((check) => check.findings)
+                .filter(
+                    (finding) =>
+                        finding.rule === 'gspot/no-call-through' ||
+                        finding.rule === '@typescript-eslint/no-explicit-any',
+                ),
+        ).toEqual([]);
+    },
+    PLANTED_TIMEOUT_MS,
+);

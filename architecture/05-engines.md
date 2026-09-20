@@ -19,6 +19,28 @@ where each draws its line against writing original analysis.
 
 Every engine returns findings with the same fields: `check`, optional `file`, `line`, `column`, and `rule`, plus `message`, optional `help`, and `fixable`. `check` holds a check name. Fileless failures stay representable. The reporter and the ignore filter never know which engine spoke.
 
+## Shared enforcement across languages and frameworks
+
+Preserve all existing policies for Swift, JavaScript, TypeScript, and Python. Shared policies
+apply across all four languages and their supported frameworks. Framework integration extends
+coverage; it does not silently disable the underlying language rules. Folder policies apply
+to component files and framework-owned source as well as ordinary language files.
+
+Universal framework enforcement means consistent policy coverage across supported frameworks.
+It does not require one language-blind parser or analysis implementation. Use the parser and
+rule engine appropriate to each language while preserving the intended protection. Keep
+language-specific rules where their semantics differ.
+
+A cleanup may change implementation ownership, but must retain enforcement in every shipped
+surface that provides it. A CLI replacement cannot justify removing a rule from
+the standalone ESLint plugin. Keep its public rule exports and options. Configure overlapping
+checks once per surface so a defect need not produce duplicate diagnostics.
+
+An exception requires an explicit policy decision and a narrow tested scope. Selecting a
+framework alone is not permission to disable a shared rule. Tests must report the same intended
+defect, accept corrected input, and verify any approved exception in each affected language
+and framework. Missing coverage is unfinished work, never a reason to delete the policy.
+
 ## Execution ownership
 
 Validate check definitions as explicit external-tool or built-in forms. Reject impossible
@@ -81,15 +103,15 @@ Editors run it. The plugin owns structural policies that the pinned tools do not
 Generated configuration selects those tools' rules where they already enforce the policy.
 Executed findings establish coverage; a fixed number of plugin rules does not.
 
-The following checks retain their enforcement under these owners. Moving an implementation
-does not remove its policy.
+The following plugin exports remain available. Generated CLI configuration may select the
+listed owner to avoid duplicate findings; standalone plugin coverage remains required.
 
-| Previous implementation             | Enforcement owner                      | Behavior retained                                                                                                          |
+| Retained plugin rule                | Enforcement owner                      | Behavior retained                                                                                                          |
 | ----------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
 | `gspot/no-trivial-functions`        | `gspot/no-call-through`                | Forwarding declarations, expressions, arrows, and methods, including anonymous block bodies, with the configured allowlist |
 | `gspot/no-duplicate-barrel-exports` | `import-x/export`                      | Duplicate exported names, including local declarations and nested star exports                                             |
 | `gspot/no-reexports-outside-index`  | `gspot/no-reexports` with `allowIndex` | Re-exports outside index files when the policy permits index barrels                                                       |
-| `gspot/no-single-file-folders`      | `structure/single-file-folder`         | Leaf folders holding one code file, including JavaScript and TypeScript                                                    |
+| `gspot/no-single-file-folders`      | `structure/single-file-folder`         | Leaf folders holding one code file across Swift, JavaScript, TypeScript, Python, and framework source                      |
 | `gspot/no-prefix-collisions`        | `structure/prefix-collisions`          | Files sharing a name prefix, with the configured threshold and allowances                                                  |
 
 | Rule                                   | Reports                                                                                                                                                           |

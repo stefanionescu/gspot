@@ -23,7 +23,8 @@ import { createTypeScriptImportResolver } from 'eslint-import-resolver-typescrip
 const root = fileURLToPath(new URL('..', import.meta.url));
 
 const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}'];
-const TYPESCRIPT = ['**/*.{ts,tsx,mts,cts}'];
+const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
+const TYPESCRIPT = [...TYPESCRIPT_SOURCE];
 const JAVASCRIPT = ['**/*.{js,mjs,cjs,jsx}'];
 const TESTS = [
     "**/*.{test,spec}.{ts,tsx,js,mjs,cjs}",
@@ -592,9 +593,10 @@ export default [
     ...scopeRules,
     ...runtimeOverrides,
     ...boundaryConfigs,
-    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: TYPESCRIPT })),
+    ...tseslint.configs.strictTypeChecked.map((entry) => ({ ...entry, files: entry.languageOptions?.parser ? TYPESCRIPT_SOURCE : TYPESCRIPT })),
     {
         files: TYPESCRIPT,
+        plugins: { '@typescript-eslint': tseslint.plugin },
         languageOptions: { parserOptions: { projectService: true, tsconfigRootDir: root } },
         settings: {
             'import-x/parsers': { '@typescript-eslint/parser': ['.ts', '.tsx', '.mts', '.cts'] },
@@ -606,6 +608,7 @@ export default [
 ] })],
         },
         rules: {
+            'gspot/types-placement': ['error', { ...gspotRules['gspot/types-placement'][1], allowInterface: true }],
             '@typescript-eslint/consistent-type-definitions': ['error', 'type'],
             '@typescript-eslint/consistent-type-imports': ['error', { prefer: 'type-imports', fixStyle: 'separate-type-imports' }],
             '@typescript-eslint/consistent-type-exports': ['error', { fixMixedExportsWithInlineTypeSpecifier: true }],

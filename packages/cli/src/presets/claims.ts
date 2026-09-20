@@ -1,7 +1,7 @@
 // Which selected preset claims which file, per scope.
 import picomatch from 'picomatch';
+import { sourcePresets } from '#cli/presets/select.ts';
 import type { TrackedFile } from '#types/repository.ts';
-import { languagePresets } from '#cli/presets/select.ts';
 import type { Claims, Manifest } from '#types/manifest.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 
@@ -78,14 +78,14 @@ export function claimedByClaims(
 ): TrackedFile[] {
     const candidates = files.filter((file) => isInScope(file.path, scope) && claims.natures.includes(file.nature));
     if (claims.from_languages) {
-        const languages = languagePresets(selected);
+        const languages = sourcePresets(selected);
         return candidates.filter((file) => languages.some((language) => isClaimed(language.claims, file)));
     }
     return candidates.filter((file) => isClaimed(claims, file));
 }
 
 /**
- * The files a preset claims in a scope. A repository preset with from_languages claims what the language presets claim.
+ * The files a preset claims in a scope. A repository preset with from_languages claims what the language and framework presets claim.
  * @param manifest the preset
  * @param selected the selected manifests
  * @param files the tracked files
@@ -108,7 +108,7 @@ export function claimedFiles(
  * @returns the claimants
  */
 export function claimants(file: TrackedFile, selected: Manifest[]): Manifest[] {
-    const languages = languagePresets(selected);
+    const languages = sourcePresets(selected);
     return selected.filter((manifest) => {
         if (manifest.claims.from_languages) return languages.some((language) => isClaimed(language.claims, file));
         return isClaimed(manifest.claims, file);

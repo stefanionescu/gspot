@@ -1,7 +1,11 @@
 # Shared Rule Logic
 
 K-87, K-235, and K-86 share this contract. It replaces the earlier universal-analysis design.
-The goal is reliable enforcement with fewer independent implementations where semantics agree.
+Preserve every existing Swift, JavaScript, TypeScript, and Python policy across their supported
+frameworks. The goal is reliable enforcement with fewer independent implementations where
+semantics agree. Universal framework coverage remains required; only the forced universal
+implementation design is removed.
+
 An analysis may name its language. Adding a language need not take only a table row. The cleanup status lives in
 [22-remaining.md](../22-remaining.md#cleanup-acceptance-backlog).
 

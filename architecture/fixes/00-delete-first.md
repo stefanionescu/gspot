@@ -145,80 +145,37 @@ schema validation, and all 272 reference-page comparisons pass locally.
 
 ## K-102: seven plugin rules
 
-**K-102 locally verified.** The forwarding-function rule covers named declarations,
-expressions, arrows, and methods. Its allow list also applies to those forms. Defaults,
-reordered arguments, and changes between rest and array arguments retain their behavior.
+**Historical failure.** Consolidation removed five public plugin rules and the interface
+listener from `types-placement`. CLI tests covered replacement engines, but did not prove
+standalone plugin coverage. An earlier consolidation also lost anonymous forwarding functions;
+that defect has a retained regression. These failures prohibit treating a CLI replacement as
+proof that a shipped plugin rule can disappear.
 
-The duplicate rule, option, types, and repeated tests are removed. The JavaScript template
-uses the retained rule. The statement ceiling remains a Bash setting. A later preservation
-audit found that anonymous block-bodied forwarding functions had lost enforcement during
-consolidation. The retained rule now reports those functions too, with regressions for
-default exports and callbacks.
+**Current contract.** Preserve `no-trivial-functions`, `no-single-file-folders`,
+`no-prefix-collisions`, `no-duplicate-barrel-exports`, `no-reexports-outside-index`, and interface
+enforcement in `types-placement`, with their public options. Retain the improved
+`no-call-through` handling of anonymous functions, defaults, reordered arguments, and rest
+arguments. Default configs select one forwarding check; alternate exports remain usable.
 
-Local verification passes 33 rule, plugin, and planted TypeScript cases. The plugin build,
-TypeScript check, schema validation, and all 274 reference comparisons pass.
+Generated CLI configuration can use `import-x/export`, TypeScript's interface rule,
+`no-reexports` with `allowIndex`, and structure-engine folder checks without double reporting.
+These selections do not remove standalone plugin capabilities. Preserve narrow Next.js
+index-only exceptions without exempting the policy that forbids all re-exports.
 
-**K-187 locally verified.** Folder checks belong to the structure engine. The two plugin
-rules, their options, their tests, and their unused filename helpers are removed. Generated
-ESLint configuration delegates folder findings to that engine. Real TypeScript trees verify
-leaf folders, declaration files, nested directories, prefix groups, allowances, and thresholds.
+**Framework coverage.** Shared policies apply to Swift, JavaScript, TypeScript, Python, and
+all their supported frameworks. Language-only file claims missed Vue and Svelte components.
+Shared selection must include framework source. Component parsers must receive shared language
+rules as well as their framework-specific rules. See
+[05-engines.md](../05-engines.md#shared-enforcement-across-languages-and-frameworks).
 
-All 11 affected integration, plugin, and framework cases pass locally. TypeScript, ESLint,
-schema validation, and 274 reference comparisons pass.
+**Acceptance.** Execute invalid and corrected inputs through the standalone plugin and generated
+CLI configurations. Assert check or rule, diagnostic, file, and location. Cover aliases,
+type-only imports, approved exemptions, valid code, and repeated runs after files change.
+Folder tests cover all four languages and framework source. Preserve process and parser fixes;
+do not restore stale global observations merely to restore a rule.
 
-**K-188 partial local verification.** Generated TypeScript configuration reports an interface
-once through the pinned `@typescript-eslint/consistent-type-definitions` rule, with its source
-location. The duplicate `types-placement` message and `allowInterface` option are removed.
-
-Generated configuration also reports duplicate names from star exports, local declarations,
-and nested barrels through `import-x/export`. Its TypeScript parser and pinned resolver
-follow `.js` imports to `.ts` source. Corrected exports produce no duplicate finding.
-The retained `no-reexports` rule handles index-only policy with `allowIndex`.
-The two replaced barrel rules, their tests, and their export-cache reset are removed.
-Import direction and harness import enforcement remain open.
-
-Next.js entry files keep their existing exemption only under index-only policy. The policy
-that forbids all re-exports still reports those entries. Generated-configuration regressions
-exercise both modes and an ordinary source module.
-
-The standalone plugin keeps forwarding
-functions at `all`; its recommended regression verifies private environment access in client
-code. Generated configuration level selection and review of public boundaries remain open
-under K-301.
-
-K-102, K-187, and K-188 share this acceptance contract. K-188 closes only after the pinned replacement
-rules report the intended defects through generated configuration.
-
-**What is wrong.** `no-trivial-functions` repeats `no-call-through`, and its option changes
-nothing. `no-single-file-folders` and `no-prefix-collisions` repeat two structure checks. Five
-rules repeat a pinned tool: `import-direction`, `no-harness-barrel-imports`,
-`no-reexports-outside-index`, `no-duplicate-barrel-exports`, and the `interface` message of
-`types-placement`. One fact is two findings under two names, with two allow lists.
-
-**Target.** Preserve intended enforcement with one authoritative implementation per policy.
-Rule counts do not establish enforcement coverage. No rule is deleted merely because another
-plugin has a similarly named rule.
-
-**Files.** Remove only proven duplicate implementations under `packages/eslint-plugin/src/rules/`
-and their obsolete unit tests after surviving behavioral cases pass through the replacement.
-Retain a focused custom rule where external rules cannot express the policy.
-`presets/language/javascript/eslint.config.js.tmpl` and `presets/language/typescript/eslint.fragment.js.tmpl`
-change.
-
-**Logic.** `no-call-through` covers declarations, expressions, arrows, and methods, and keeps its
-allow list. The template writes `boundaries/element-types` for direction, `no-restricted-imports`
-for the harness folder, `no-reexports` with `allowIndex`, and `import-x/export` for duplicates.
-
-**What goes.** The setting `limits.trivial_statements` for TypeScript, and the option
-`maxStatements`. The rule names leave `plugin.ts` and `configs.recommended`.
-
-**Tests.** The cases of each deleted rule move into a planted TypeScript repository, where the
-rule of the tool must report them.
-
-**Done when.** Each replacement preserves scopes, aliases, type-only imports, exemptions,
-valid code, and finding locations through generated configuration. Anonymous forwarding
-functions and Next.js re-export modes remain covered. A lone-file defect is still reported
-by `structure/single-file-folder`; moving its owner does not remove enforcement.
+K-188 remains open for import direction and harness imports. Their public rules and policies
+stay; any internal consolidation requires equivalent behavior on every shipped surface.
 
 ## K-104: fields nothing reads
 

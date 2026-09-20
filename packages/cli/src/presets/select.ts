@@ -107,6 +107,15 @@ export function languagePresets(selected: Manifest[]): Manifest[] {
 }
 
 /**
+ * Language and framework presets that contribute source to shared checks.
+ * @param selected the selected manifests
+ * @returns the source policy owners
+ */
+export function sourcePresets(selected: Manifest[]): Manifest[] {
+    return selected.filter((manifest) => manifest.preset.kind === 'language' || manifest.preset.kind === 'framework');
+}
+
+/**
  * Every distinct manifest across the scopes, in first-seen order.
  * @param session the session
  * @returns the manifests

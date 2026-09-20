@@ -28,7 +28,7 @@ export type AcceptanceRun = { init: string; report: RunReport; statuses: Record<
 /** One framework of component files in the planted components test: its check, its presets, its files and its planted cases. */
 export type ComponentShape = {
     check: string;
-    presets: string;
+    presets: string[];
     files: Record<string, string>;
     planted: string;
     cases: [string, string][];

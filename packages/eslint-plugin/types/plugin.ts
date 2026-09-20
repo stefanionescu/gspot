@@ -22,6 +22,7 @@ export type DirectoryEntry = { name: string; kind: 'file' | 'dir' };
 export type ImportPathStyleName = 'js' | 'ts' | 'extensionless';
 
 export type TypesPlacementMessages =
+    | 'interface'
     | 'aliasOutside'
     | 'enumOutside'
     | 'runtimeInside'

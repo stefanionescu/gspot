@@ -169,6 +169,11 @@ Nothing in the release path is code gspot wrote:
 
 ## Tests
 
+Shared-policy acceptance spans Swift, JavaScript, TypeScript, Python, and their supported
+frameworks. Exercise ordinary source and framework component files. Verify each
+shipped surface, including the standalone ESLint plugin; a CLI pass alone cannot establish
+plugin enforcement. Preserve rule exports and language-specific protection during cleanup.
+
 Tests establish current product behavior. They must exercise real logic with meaningful inputs
 and observable results. A test of a removed implementation, a forwarding wrapper, a filename,
 a registry entry, or a source-text token does not establish that the CLI works. Delete tests

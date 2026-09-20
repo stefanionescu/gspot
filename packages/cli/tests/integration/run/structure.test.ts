@@ -1,4 +1,5 @@
 import { join } from 'node:path';
+import { renameSync } from 'node:fs';
 import { createSandbox } from '@gspot/testing';
 import { expect, spyOn, test } from 'bun:test';
 import { executeRun } from '#cli/run/execute.ts';
@@ -131,4 +132,53 @@ test('prefix checks group files and directories once and honor allowances and th
     );
     const raised = await executeRun(await openSession(sandbox.path), options);
     expect(raised.report.exitCode).toBe(0);
+});
+
+test.each([
+    ['javascript', 'js'],
+    ['typescript', 'ts'],
+    ['swift', 'swift'],
+    ['python', 'py'],
+    ['react', 'jsx'],
+    ['nextjs', 'tsx'],
+    ['react-native', 'tsx'],
+    ['nestjs', 'ts'],
+    ['express', 'js'],
+    ['vue', 'vue'],
+    ['svelte', 'svelte'],
+    ['fastapi', 'py'],
+    ['xcode', 'swift'],
+    ['xctest', 'swift'],
+])('%s retains shared folder enforcement and observes corrections', async (preset, extension) => {
+    const language = { ts: 'typescript', tsx: 'typescript', swift: 'swift', py: 'python' }[extension] ?? 'javascript';
+    const lone = `feature/only.${extension}`;
+    const card = `cards/asset-card.${extension}`;
+    const list = `cards/asset-list.${extension}`;
+    await using sandbox = await createSandbox({
+        'gspot.toml': `version = 1\npresets = ["${preset}", "${language}", "structure"]\n`,
+        [lone]: '',
+        [card]: '',
+        [list]: '',
+    });
+    const options = {
+        stage: 'all' as const,
+        skips: [],
+        localSkips: [],
+        fix: false,
+        isDryRun: false,
+        noCache: true,
+        only: ['structure/single-file-folder', 'structure/prefix-collisions'],
+    };
+    const initial = await executeRun(await openSession(sandbox.path), options);
+    expect(initial.report.exitCode).toBe(1);
+    expect(initial.report.checks.flatMap((check) => check.findings)).toMatchObject([
+        { check: 'structure/single-file-folder', file: lone, line: 1, rule: 'lone-file' },
+        { check: 'structure/prefix-collisions', file: card, line: 1, rule: 'shared-prefix' },
+    ]);
+    await Bun.write(join(sandbox.path, `feature/second.${extension}`), '');
+    renameSync(join(sandbox.path, list), join(sandbox.path, `cards/other.${extension}`));
+    const corrected = await executeRun(await openSession(sandbox.path), options);
+    expect(corrected.report.checks).toHaveLength(2);
+    expect(corrected.report.checks.flatMap((check) => check.findings)).toEqual([]);
+    expect(corrected.report.exitCode).toBe(0);
 });
