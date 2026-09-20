@@ -339,3 +339,14 @@ Assert no publication reaches the unrelated responder and no owned child or temp
 survives each completed failure path. Run on supported platforms when CI is re-enabled.
 
 **Done when.** Readiness identifies the owned server and all setup/teardown paths release it.
+
+**Locally verified, September 20, 2026; platform verification deferred.** The registry harness
+under `tests/harness/registry/` uses a dedicated child interprocess communication channel to learn
+its bound loopback port. Readiness requests have a deadline. Child output is captured, termination is awaited,
+and partial setup removes owned storage. Publication rejects an exited child.
+
+Eight local regressions cover an occupied healthy responder, separate registries, missing executable,
+early exit, startup timeout, stalled readiness, and writes failing before and after launch.
+They assert released storage and terminated children. Bun signal termination is identified
+through `signalCode` as well as `exitCode`. Supported Windows and Linux execution is deferred
+while CI remains bypassed; this requirement stays open until that evidence exists.

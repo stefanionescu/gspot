@@ -2,7 +2,7 @@
 // Runs when GSPOT_RELEASE_TEST=1 (CI sets it); it needs a built binary under dist/ and a free port.
 import { describe, expect, test } from 'bun:test';
 import { isReleaseTestWanted } from '#cli/platform/environment.ts';
-import { publishTo, startRegistry } from '#tests/harness/registry.ts';
+import { publishTo, startRegistry } from '#tests/harness/registry/lifecycle.ts';
 
 describe.skipIf(!isReleaseTestWanted())('the release publish', () => {
     test('puts the launcher and this platform package into the registry at one version', async () => {
@@ -20,7 +20,7 @@ describe.skipIf(!isReleaseTestWanted())('the release publish', () => {
             const platformPackage = await fetch(`${registry.url}/${name.replace('/', '%2f')}`);
             expect(platformPackage.ok).toBe(true);
         } finally {
-            registry.stop();
+            await registry.stop();
         }
     });
 });

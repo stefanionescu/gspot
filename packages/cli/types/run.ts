@@ -167,7 +167,13 @@ export type RuleCount = { check: string; rule: string; count: number; paths: Rec
 export type SpawnOutcome = { code: number; stdout: string; stderr: string };
 
 /** A local npm registry the release tests publish into. */
-export type Registry = { url: string; npmrc: string; work: string; stop: () => void };
+export type Registry = {
+    url: string;
+    npmrc: string;
+    work: string;
+    assertRunning: () => void;
+    stop: () => Promise<void>;
+};
 
 /** One planted defect: the files that hold it, the check that finds it, and what the check says. */
 export type PlantedCase = {

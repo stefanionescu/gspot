@@ -3,7 +3,7 @@
 import { join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, writeFileSync } from 'node:fs';
-import { publishTo, startRegistry } from '#tests/harness/registry.ts';
+import { publishTo, startRegistry } from '#tests/harness/registry/lifecycle.ts';
 import { environmentVariables, isReleaseTestWanted } from '#cli/platform/environment.ts';
 
 describe.skipIf(!isReleaseTestWanted())('the npm launcher', () => {
@@ -40,7 +40,7 @@ describe.skipIf(!isReleaseTestWanted())('the npm launcher', () => {
             });
             expect(version.stdout.toString().trim()).toBe('0.1.0');
         } finally {
-            registry.stop();
+            await registry.stop();
         }
     });
 });
