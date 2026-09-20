@@ -1,12 +1,13 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { rejects } from 'node:assert/strict';
 import { createSandbox } from '@gspot/testing';
 import { expect, spyOn, test } from 'bun:test';
+import { readCached } from '#cli/run/cache.ts';
 import type { Stage } from '#types/manifest.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { runText } from '#cli/output/reporter.ts';
+import { rejects, throws } from 'node:assert/strict';
 
 async function sessionFor(root: string, status: number, stage: Stage = 'commit') {
     const session = await openSession(root);
@@ -124,4 +125,42 @@ test('an absent tool baseline is optional but an unreadable baseline rejects the
     expect(outcome.report.exitCode).toBe(0);
     fs.mkdirSync(join(sandbox.path, 'tool-baseline.json'));
     await rejects(executeRun(session, options), { code: 'EISDIR' });
+});
+
+test.each(['{', '{"status":"ok","findings":[]}'])(
+    'invalid cached result %s refuses the run and preserves the prior report',
+    async (content) => {
+        await using sandbox = await createSandbox({
+            'gspot.toml': 'version = 1\npresets = []\n',
+            'source.ts': 'export {};\n',
+        });
+        const session = await sessionFor(sandbox.path, 1);
+        const options = { stage: 'commit' as const, skips: [], localSkips: [], fix: false, isDryRun: false };
+        const initial = await executeRun(session, options);
+        expect(initial.report.exitCode).toBe(1);
+        const reportPath = join(sandbox.path, '.gspot/report.json');
+        const report = fs.readFileSync(reportPath, 'utf8');
+        const cache = join(sandbox.path, '.gspot/cache');
+        const [entry] = fs.readdirSync(cache);
+        fs.writeFileSync(join(cache, entry!), content);
+        await rejects(executeRun(session, options), /Could not read cached check result/);
+        expect(fs.readFileSync(reportPath, 'utf8')).toBe(report);
+    },
+);
+
+test('a denied cache read reports its path and cause', async () => {
+    await using sandbox = await createSandbox({ '.gspot/cache/entry.json': '{}' });
+    const path = join(sandbox.path, '.gspot/cache/entry.json');
+    const failure = Object.assign(new Error('Denied cache read'), { code: 'EACCES' });
+    const reads = spyOn(fs, 'readFileSync').mockImplementationOnce(() => {
+        throw failure;
+    });
+    try {
+        throws(() => readCached(sandbox.path, 'entry'), {
+            message: `Could not read cached check result ${path}: Error: Denied cache read`,
+            cause: failure,
+        });
+    } finally {
+        reads.mockRestore();
+    }
 });

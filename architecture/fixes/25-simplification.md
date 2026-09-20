@@ -125,6 +125,10 @@ refuses failed build logs and reports an unsuccessful or timed-out analyzer as a
 Focused tests exercise those verdicts at the subprocess boundary. Incremental builds and
 native platform acceptance remain open under K-143.
 
+Cached check results are validated with the report schema. An absent entry permits a fresh
+run; malformed JSON, invalid result fields, and denied reads report the cache path and
+preserve the prior report. Three cache observation regressions cover these failures.
+
 Other Git observations and takeover parsing remain open. Windows execution remains platform verification deferred.
 
 Staged and changed-file readers retain deleted paths and both rename paths. Failed diffs and

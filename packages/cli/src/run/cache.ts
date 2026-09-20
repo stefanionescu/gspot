@@ -2,8 +2,9 @@
 import { join } from 'node:path';
 import type { CacheKeyInput } from '#types/run.ts';
 import type { CheckResult } from '#types/finding.ts';
+import { reportSchema } from '#cli/run/report/schema.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
-import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 
 const CACHE_FORMAT = 3;
 
@@ -50,11 +51,13 @@ export function fileHash(root: string, path: string): string {
  */
 export function readCached(root: string, key: string): CheckResult | undefined {
     const path = join(cacheDir(root), `${key}.json`);
-    if (!existsSync(path)) return undefined;
     try {
-        return JSON.parse(readFileSync(path, 'utf8')) as CheckResult;
-    } catch {
-        return undefined;
+        const result: unknown = JSON.parse(readFileSync(path, 'utf8'));
+        reportSchema.shape.checks.element.parse(result);
+        return result as CheckResult;
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
+        throw new Error(`Could not read cached check result ${path}: ${String(error)}`, { cause: error });
     }
 }
 
