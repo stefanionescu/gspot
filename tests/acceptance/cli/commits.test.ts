@@ -5,18 +5,7 @@ import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { git, gspot, toolsPath, PLANTED_TIMEOUT_MS, run, script } from '#tests/harness/planted.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--presets',
-    'commits',
-    '--runner',
-    'none',
-    '--ci',
-    'none',
-    '--no-rules',
-    '--no-install',
-];
+const INIT = ['init', '--yes', '--presets', 'commits', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
 describe('the commits preset', () => {
     test(

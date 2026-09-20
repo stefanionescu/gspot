@@ -4,7 +4,7 @@ import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
-const QUIET = ['--runner', 'none', '--ci', 'none', '--hooks', 'none', '--no-rules', '--no-install'];
+const QUIET = ['--no-runner', '--no-ci', '--no-hooks', '--no-rules', '--no-install'];
 const PROJECT = (dependency: string): string =>
     `[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = ["${dependency}"]\n\n[tool.pytest.ini_options]\npythonpath = ["."]\n`;
 const MATH =

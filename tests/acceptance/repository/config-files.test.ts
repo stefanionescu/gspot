@@ -17,18 +17,7 @@ import {
     script,
 } from '#tests/harness/planted.ts';
 
-const INIT = [
-    'init',
-    '--yes',
-    '--presets',
-    'config-files',
-    '--runner',
-    'none',
-    '--ci',
-    'none',
-    '--no-rules',
-    '--no-install',
-];
+const INIT = ['init', '--yes', '--presets', 'config-files', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
 const WORKFLOW_HEAD =
     'name: planted\non: [push]\npermissions:\n    contents: read\njobs:\n    build:\n        runs-on: ubuntu-24.04\n        steps:\n';
@@ -101,7 +90,7 @@ process.exit(2);
             const environment = {
                 PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
             };
-            await install(sandbox.path, [...INIT, '--hooks', 'none'], environment);
+            await install(sandbox.path, [...INIT, '--no-hooks'], environment);
             const result = await run(
                 sandbox.path,
                 ['check', '--only', 'config-files/toml-format', '--no-cache'],
@@ -128,7 +117,7 @@ process.exit(2);
             const environment = {
                 PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
             };
-            await install(sandbox.path, [...INIT, '--hooks', 'none'], environment);
+            await install(sandbox.path, [...INIT, '--no-hooks'], environment);
             const path = join(sandbox.path, '.github/workflows/broken.yml');
             const workflow = `${WORKFLOW_HEAD}            - uses: actions/checkout@0000000000000000000000000000000000000000\n`;
             await Bun.write(path, workflow);
@@ -150,7 +139,7 @@ process.exit(2);
             await using sandbox = await createSandbox({ 'README.md': '# Workflow test\n' });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['actionlint']) };
-            await install(sandbox.path, [...INIT, '--ci', 'github', '--hooks', 'none'], environment);
+            await install(sandbox.path, [...INIT, '--ci', 'github', '--no-hooks'], environment);
             expect(await Bun.file(join(sandbox.path, '.github/workflows/gspot.yml')).exists()).toBe(true);
             const result = Bun.spawnSync(['actionlint', '-no-color', '.github/workflows/gspot.yml'], {
                 cwd: sandbox.path,
@@ -171,7 +160,7 @@ process.exit(2);
             const environment = {
                 PATH: toolsPath(['taplo', 'yamllint', 'actionlint', 'zizmor', 'dotenv-linter', 'typos', 'ec']),
             };
-            await run(sandbox.path, [...INIT, '--hooks', 'none'], environment);
+            await run(sandbox.path, [...INIT, '--no-hooks'], environment);
             for (const planted of CASES) {
                 const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
@@ -198,7 +187,7 @@ process.exit(2);
             await using sandbox = await createSandbox({ 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['taplo', 'typos', 'ec']) };
-            await run(sandbox.path, [...INIT, '--hooks', 'none'], environment);
+            await run(sandbox.path, [...INIT, '--no-hooks'], environment);
             const outcome = await runPlanted(
                 sandbox.path,
                 {
@@ -262,7 +251,7 @@ test(
         });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['v8r']) };
-        await install(sandbox.path, [...INIT, '--hooks', 'none'], environment);
+        await install(sandbox.path, [...INIT, '--no-hooks'], environment);
         const mapping = JSON.stringify({ pattern: 'settings/café.json', schema: 'schema.json' });
         const setting = await run(sandbox.path, ['set', 'tools.v8r.schemas', mapping], environment);
         expect(setting.code, setting.stdout + setting.stderr).toBe(0);
@@ -294,7 +283,7 @@ test(
         await using sandbox = await createSandbox({ '.env.example': 'lowercase=value\n' });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['dotenv-linter']) };
-        await install(sandbox.path, [...INIT, '--hooks', 'none'], environment);
+        await install(sandbox.path, [...INIT, '--no-hooks'], environment);
         const fixed = await run(
             sandbox.path,
             ['check', '--only', 'config-files/dotenv', '--fix', '--no-cache'],

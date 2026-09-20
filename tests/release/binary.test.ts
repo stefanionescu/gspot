@@ -44,10 +44,8 @@ describe.skipIf(!isReleaseTestWanted())('the compiled binary', () => {
                 '--yes',
                 '--presets',
                 'bash',
-                '--runner',
-                'none',
-                '--ci',
-                'none',
+                '--no-runner',
+                '--no-ci',
                 '--no-install',
             ]);
             expect(init.code).toBe(0);

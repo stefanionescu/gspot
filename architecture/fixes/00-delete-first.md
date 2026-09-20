@@ -72,6 +72,11 @@ compares repository contents and modes after each rejected invocation.
 contents and modes before and after the preview. Migration ordering and upgrade
 recovery remain open under their lifecycle fixes.
 
+Initialization uses `--no-hooks`, `--no-ci`, and `--no-runner` to omit integrations. The
+positive flags accept only supported integration names. Formatter selection uses
+`--format keep` or `--format shipped`. Existing callers and generated references share
+these forms without aliases for the removed flags.
+
 ## D-100: the lint files at the root of this repository
 
 Closes D-100 and K-47.

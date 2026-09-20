@@ -17,10 +17,8 @@ describe('the gspot hook', () => {
                 '--yes',
                 '--presets',
                 'bash',
-                '--runner',
-                'none',
-                '--ci',
-                'none',
+                '--no-runner',
+                '--no-ci',
                 '--no-rules',
                 '--no-install',
             ]);

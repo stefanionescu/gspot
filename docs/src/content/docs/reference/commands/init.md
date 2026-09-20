@@ -22,8 +22,10 @@ gspot init [options]
 | `--allow-dirty`             | Run although the working tree has uncommitted changes             |
 | `--hooks <tool>`            | Where hooks go                                                    |
 | `--ci <provider>`           | Write a CI workflow                                               |
+| `--no-hooks`                | Do not install hooks                                              |
+| `--no-ci`                   | Write no CI workflow                                              |
 | `--no-rules`                | Leave the agent rule files out                                    |
-| `--keep-format`             | Keep your formatter settings                                      |
-| `--shipped-format`          | Take the shipped formatter settings                               |
+| `--format <choice>`         | Keep existing or use shipped formatter settings                   |
 | `--runner <tool>`           | The task runner                                                   |
+| `--no-runner`               | Write no task-runner configuration                                |
 | `--dry-run`                 | Print the plan and write nothing                                  |

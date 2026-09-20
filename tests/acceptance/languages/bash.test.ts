@@ -66,10 +66,8 @@ describe('the bash planted repository', () => {
                 '--yes',
                 '--presets',
                 'bash',
-                '--runner',
-                'none',
-                '--ci',
-                'none',
+                '--no-runner',
+                '--no-ci',
                 '--no-rules',
                 '--no-install',
                 '--hooks',
@@ -107,10 +105,8 @@ describe('the bash planted repository', () => {
                 '--yes',
                 '--presets',
                 'bash',
-                '--runner',
-                'none',
-                '--ci',
-                'none',
+                '--no-runner',
+                '--no-ci',
                 '--no-rules',
                 '--no-install',
             ]);
@@ -157,18 +153,7 @@ describe('the bash planted repository', () => {
             };
             const initialized = await run(
                 sandbox.path,
-                [
-                    'init',
-                    '--yes',
-                    '--presets',
-                    'bash',
-                    '--runner',
-                    'none',
-                    '--ci',
-                    'none',
-                    '--no-rules',
-                    '--no-install',
-                ],
+                ['init', '--yes', '--presets', 'bash', '--no-runner', '--no-ci', '--no-rules', '--no-install'],
                 environment,
             );
             expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
@@ -205,10 +190,8 @@ describe('the bash planted repository', () => {
                 '--yes',
                 '--presets',
                 'bash',
-                '--runner',
-                'none',
-                '--ci',
-                'none',
+                '--no-runner',
+                '--no-ci',
                 '--no-rules',
                 '--no-install',
             ]);

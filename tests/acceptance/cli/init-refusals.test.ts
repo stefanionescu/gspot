@@ -4,10 +4,11 @@ import { hookBody } from '#cli/emit/hooks.ts';
 import { createSandbox } from '@gspot/testing';
 import { chmodSync, existsSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
+import { parsePolicyText } from '#cli/policy/read-policy.ts';
 import { commitAll, git, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
 
 const SYSTEM_BASH = '/bin/bash';
-const QUIET = ['--runner', 'none', '--ci', 'none', '--no-rules', '--no-install'];
+const QUIET = ['--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
 describe('init refusals', () => {
     test(
@@ -17,7 +18,7 @@ describe('init refusals', () => {
             commitAll(sandbox.path);
             const result = await run(sandbox.path, ['init', '--yes', '--hooks', 'foo']);
             expect(result.code).toBe(2);
-            expect(result.stderr).toContain('Allowed choices are gspot, lefthook, husky, none');
+            expect(result.stderr).toContain('Allowed choices are gspot, lefthook, husky');
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
             const invalidStage = await run(sandbox.path, ['check', '--stage', 'later']);
             expect(invalidStage.code).toBe(2);
@@ -120,7 +121,7 @@ describe('init refusals', () => {
         async () => {
             await using sandbox = await createSandbox({ 'tools/a.sh': script, 'jobs/b.sh': script });
             commitAll(sandbox.path);
-            const argv = ['init', '--yes', '--hooks', 'none', '--scope', 'tools=bash', 'jobs=bash', ...QUIET];
+            const argv = ['init', '--yes', '--no-hooks', '--scope', 'tools=bash', 'jobs=bash', ...QUIET];
             const init = await run(sandbox.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
             expect(init.stderr).not.toContain('did not run');
             const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
@@ -129,4 +130,37 @@ describe('init refusals', () => {
         },
         PLANTED_TIMEOUT_MS,
     );
+});
+
+test('initialization flags control integrations and formatter carryover in the proposal', async () => {
+    await using sandbox = await createSandbox({
+        'source.js': 'export const port = 8080;\n',
+        '.prettierrc.json': '{"semi":false,"tabWidth":8}\n',
+    });
+    const command = [
+        'init',
+        '--yes',
+        '--presets',
+        'javascript',
+        '--no-hooks',
+        '--no-ci',
+        '--no-runner',
+        '--no-rules',
+        '--no-install',
+        '--dry-run',
+        '--json',
+    ];
+    const kept = await run(sandbox.path, [...command, '--format', 'keep']);
+    expect(kept.code, kept.stdout + kept.stderr).toBe(0);
+    const keptProposal = JSON.parse(kept.stdout) as { policy: string };
+    const keptPolicy = parsePolicyText(keptProposal.policy, 'gspot.toml');
+    expect([keptPolicy.hooks.tool, keptPolicy.ci.provider, keptPolicy.runner.tool]).toEqual(['none', 'none', 'none']);
+    expect(keptPolicy.format.semicolons).toBe(false);
+    const shipped = await run(sandbox.path, [...command, '--format', 'shipped']);
+    expect(shipped.code, shipped.stdout + shipped.stderr).toBe(0);
+    const shippedProposal = JSON.parse(shipped.stdout) as { policy: string };
+    const shippedPolicy = parsePolicyText(shippedProposal.policy, 'gspot.toml');
+    expect(shippedPolicy.format).toEqual({});
+    expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
+    expect(await Bun.file(join(sandbox.path, '.prettierrc.json')).text()).toBe('{"semi":false,"tabWidth":8}\n');
 });

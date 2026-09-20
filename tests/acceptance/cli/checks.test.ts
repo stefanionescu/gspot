@@ -66,18 +66,7 @@ stage = "commit"
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(
                 sandbox.path,
-                [
-                    'init',
-                    '--yes',
-                    '--presets',
-                    'bash',
-                    '--runner',
-                    'none',
-                    '--ci',
-                    'none',
-                    '--no-rules',
-                    '--no-install',
-                ],
+                ['init', '--yes', '--presets', 'bash', '--no-runner', '--no-ci', '--no-rules', '--no-install'],
                 environment,
             );
             const policy = join(sandbox.path, 'gspot.toml');

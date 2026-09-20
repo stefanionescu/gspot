@@ -15,10 +15,8 @@ const INIT = [
     'javascript',
     'spelling',
     'markdown',
-    '--runner',
-    'none',
-    '--ci',
-    'none',
+    '--no-runner',
+    '--no-ci',
     '--no-rules',
     '--no-install',
 ];
@@ -61,11 +59,11 @@ describe('takeover', () => {
                 'notes.md': '# Notes\n',
             });
             const before = treeContents(sandbox.path);
-            const preview = await run(sandbox.path, [...INIT, '--hooks', 'none', '--dry-run']);
+            const preview = await run(sandbox.path, [...INIT, '--no-hooks', '--dry-run']);
             expect(preview.code, preview.stdout + preview.stderr).toBe(0);
             expect(preview.stdout).toContain('not read and not deleted');
             expect(treeContents(sandbox.path)).toEqual(before);
-            const result = await run(sandbox.path, [...INIT, '--hooks', 'none']);
+            const result = await run(sandbox.path, [...INIT, '--no-hooks']);
             expect(result.code, result.stdout + result.stderr).toBe(2);
             expect(result.stdout).toContain('Cannot apply takeover');
             expect(treeContents(sandbox.path)).toEqual(before);

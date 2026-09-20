@@ -51,7 +51,7 @@ function optionsFrom(paths: string[], flags: Record<string, unknown>, global: Re
  * @param program the commander program
  */
 export function registerCheck(program: Command): void {
-    const command = new CheckCommand('check');
+    const command = new CheckCommand('check').copyInheritedSettings(program);
     program.addCommand(command);
     command
         .argument('[paths...]')

@@ -24,7 +24,7 @@ on `PATH`. gspot writes no task to `pyproject.toml`.
 
 ## With no runner
 
-`--runner none` writes no task-runner configuration. The hooks call the gspot binary by its absolute path, recorded
+`--no-runner` writes no task-runner configuration. The hooks call the gspot binary by its absolute path, recorded
 at `init`. Every tool is yours to install; `gspot doctor` lists what is missing.
 
 ## What you lose

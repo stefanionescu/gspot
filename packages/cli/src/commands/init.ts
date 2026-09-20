@@ -6,9 +6,8 @@ import { initCommand } from '#cli/lifecycle/init/command.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 
-function formatChoice(flags: Record<string, unknown>): InitOptions['format'] {
-    if (flags['keepFormat'] === true) return 'keep';
-    return flags['shippedFormat'] === true ? 'shipped' : undefined;
+function integrationChoice(flags: Record<string, unknown>, name: string): string | undefined {
+    return flags[name] === false ? 'none' : textFlag(flags, name);
 }
 
 function optionsFrom(flags: Record<string, unknown>, global: Record<string, unknown>): InitOptions {
@@ -18,11 +17,11 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         scopes: listFlag(flags, 'scope'),
     };
     const choices = {
-        hooks: textFlag(flags, 'hooks') as InitOptions['hooks'],
-        ci: textFlag(flags, 'ci') as InitOptions['ci'],
-        runner: textFlag(flags, 'runner') as InitOptions['runner'],
+        hooks: integrationChoice(flags, 'hooks') as InitOptions['hooks'],
+        ci: integrationChoice(flags, 'ci') as InitOptions['ci'],
+        runner: integrationChoice(flags, 'runner') as InitOptions['runner'],
         rules: flags['rules'] === false ? ('no' as const) : undefined,
-        format: formatChoice(flags),
+        format: textFlag(flags, 'format') as InitOptions['format'],
     };
     const given: Partial<InitOptions> = Object.fromEntries(
         [...Object.entries(lists), ...Object.entries(choices)].filter(([, value]) => value !== undefined),
@@ -54,14 +53,19 @@ export function registerInit(program: Command): void {
         .option('--scope <path=presets...>', 'Scopes and their comma-separated presets')
         .option('--no-install', 'Skip the install step and print the command instead')
         .option('--allow-dirty', 'Run although the working tree has uncommitted changes')
-        .addOption(new Option('--hooks <tool>', 'Where hooks go').choices(['gspot', 'lefthook', 'husky', 'none']))
-        .addOption(new Option('--ci <provider>', 'Write a CI workflow').choices(['github', 'none']))
+        .addOption(new Option('--hooks <tool>', 'Where hooks go').choices(['gspot', 'lefthook', 'husky']))
+        .addOption(new Option('--ci <provider>', 'Write a CI workflow').choices(['github']))
+        .option('--no-hooks', 'Do not install hooks')
+        .option('--no-ci', 'Write no CI workflow')
         .option('--no-rules', 'Leave the agent rule files out')
-        .addOption(new Option('--keep-format', 'Keep your formatter settings').conflicts('shippedFormat'))
-        .addOption(new Option('--shipped-format', 'Take the shipped formatter settings').conflicts('keepFormat'))
         .addOption(
-            new Option('--runner <tool>', 'The task runner').choices(['mise', 'npm', 'bun', 'pnpm', 'uv', 'none']),
+            new Option('--format <choice>', 'Keep existing or use shipped formatter settings').choices([
+                'keep',
+                'shipped',
+            ]),
         )
+        .addOption(new Option('--runner <tool>', 'The task runner').choices(['mise', 'npm', 'bun', 'pnpm', 'uv']))
+        .option('--no-runner', 'Write no task-runner configuration')
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();

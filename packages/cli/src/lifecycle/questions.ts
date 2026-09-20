@@ -102,7 +102,7 @@ async function askFormat(
         options.format ??
         (await askChoice<'keep' | 'shipped'>(
             'Your formatter settings differ from the shipped ones. Keep yours?',
-            '--keep-format or --shipped-format',
+            '--format keep or --format shipped',
             [
                 { value: 'keep', label: `keep (${shown})` },
                 { value: 'shipped', label: 'take the shipped values' },

@@ -18,7 +18,7 @@ export async function acceptanceRun(repository: string): Promise<AcceptanceRun> 
     const added = git(repository, ['worktree', 'add', '--detach', worktree, 'HEAD']);
     if (added.code !== 0) throw new Error(`The worktree of ${repository} was not created: ${added.stderr}`);
     try {
-        const init = await run(worktree, ['init', '--yes', '--no-install', '--hooks', 'none', '--ci', 'none']);
+        const init = await run(worktree, ['init', '--yes', '--no-install', '--no-hooks', '--no-ci']);
         const checked = await run(worktree, ['check', '--stage', 'commit', '--json']);
         const report = JSON.parse(checked.stdout) as RunReport;
         const statuses: Record<string, number> = {};

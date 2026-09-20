@@ -6,7 +6,7 @@ import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, git, PLANTED_TIMEOUT_MS, run, runPlanted, script, toolsPath } from '#tests/harness/planted.ts';
 
-const INIT = ['init', '--yes', '--presets', 'bash', '--runner', 'none', '--ci', 'none', '--no-rules', '--no-install'];
+const INIT = ['init', '--yes', '--presets', 'bash', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain() {');
 const KILOBYTE = 1024;
 const OVER_LIMIT_KB = 1100;
@@ -87,7 +87,7 @@ describe('the structure preset', () => {
             await using sandbox = await createSandbox({ 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            await run(sandbox.path, [...INIT, '--hooks', 'none'], environment);
+            await run(sandbox.path, [...INIT, '--no-hooks'], environment);
             const clean = await run(sandbox.path, ['check', '--only', 'integrity/tracked-dependencies'], environment);
             expect(clean.code).toBe(0);
             mkdirSync(join(sandbox.path, 'web', 'node_modules', 'left-pad'), { recursive: true });
