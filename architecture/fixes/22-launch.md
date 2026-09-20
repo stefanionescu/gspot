@@ -106,6 +106,13 @@ linting. Setup also runs a minimal formatting smoke check with the tool cache di
 A setup failure includes the exit code and both output streams. The cause of the lint
 failure remains unconfirmed, and the Swift acceptance tests remain required.
 
+The PostgreSQL fixture times out after five minutes in
+[Windows job 106029693038](https://github.com/stefanionescu/gspot/actions/runs/35492486973/job/106029693038),
+then passes in 25.97 seconds in the next Windows job. Its cause remains unconfirmed.
+The planted harness gives each CLI subprocess a two-minute deadline and reports the
+command, working directory, and captured output when that deadline expires. A boundary
+regression preserves both streams, and the outer test deadlines are unchanged.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.

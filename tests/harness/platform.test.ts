@@ -1,7 +1,7 @@
 import { realpathSync } from 'node:fs';
 import { basename, delimiter } from 'node:path';
-import { toolsPath } from '#tests/harness/planted.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
+import { run, toolsPath } from '#tests/harness/planted.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
 // Mise is the subprocess boundary; the resulting search path must locate a real executable.
@@ -33,5 +33,24 @@ describe('the planted harness tool path', () => {
         });
         expect(result.exitCode, result.stderr.toString()).toBe(0);
         expect(result.stdout.toString().trim()).toBe(Bun.version);
+    });
+});
+
+describe('the planted command deadline', () => {
+    test('a timed-out process names its command and retains both diagnostic streams', () => {
+        const outcome = Bun.spawnSync([process.execPath, '--version'], { stdout: 'pipe', stderr: 'pipe' });
+        const probe = spyOn(Bun, 'spawnSync').mockReturnValueOnce({
+            ...outcome,
+            exitedDueToTimeout: true,
+            stdout: Buffer.from('migration.sql:1: checking\n'),
+            stderr: Buffer.from('waiting for tool\n'),
+        });
+        try {
+            expect(() => run(process.cwd(), ['check', 'postgres/squawk'])).toThrow(
+                `Command gspot check postgres/squawk timed out in ${process.cwd()}.\nmigration.sql:1: checking\nwaiting for tool\n`,
+            );
+        } finally {
+            probe.mockRestore();
+        }
     });
 });

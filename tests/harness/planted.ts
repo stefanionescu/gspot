@@ -61,7 +61,12 @@ export function run(cwd: string, argv: string[], environment: Record<string, str
         env: { ...environmentVariables(), NO_COLOR: '1', CI: '1', ...environment },
         stdout: 'pipe',
         stderr: 'pipe',
+        timeout: PLANTED_TIMEOUT_MS * 2,
     });
+    if (result.exitedDueToTimeout === true)
+        throw new Error(
+            `Command gspot ${argv.join(' ')} timed out in ${cwd}.\n${result.stdout.toString()}${result.stderr.toString()}`,
+        );
     return { code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() };
 }
 
