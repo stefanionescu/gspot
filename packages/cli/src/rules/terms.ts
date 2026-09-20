@@ -1,6 +1,6 @@
-// What the corpus lint of this repository refuses. None of this ships in the binary (D-86).
+// What the rule lint of this repository refuses. None of this ships in the binary (D-86).
 
-/** The layers a corpus file can declare. */
+/** The layers a rule file can declare. */
 export const RULE_LAYERS = [
     'agent',
     'code',
@@ -99,7 +99,7 @@ export const FENCE_LANGUAGES = [
     'console',
 ];
 
-/** No corpus file exceeds this many lines. */
+/** No rule file exceeds this many lines. */
 export const RULE_FILE_LINE_CEILING = 800;
 
 /** What ties a rule file to gspot or claims enforcement; a rule file stands without either (D-81). */

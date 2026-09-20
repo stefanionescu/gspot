@@ -191,7 +191,7 @@ export const BANNED_FOLDER_NAMES = [
 export const HOOK_DIRECTORIES = ['.gspot/hooks', '.githooks', '.husky', '.mise/tasks/hook'];
 export const HOOK_PREFIX = 'pre';
 
-/** Documentation extensions: the folder analyses judge code, and a corpus of one page per topic is a layout, not a smell. */
+/** Documentation extensions: the folder analyses judge code, and a collection of one page per topic is a layout, not a smell. */
 export const DOCUMENT_EXTENSIONS = ['.md', '.mdx'];
 
 /** Folders no analysis looks into. */

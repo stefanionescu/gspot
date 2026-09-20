@@ -1,4 +1,4 @@
-// The corpus lint of this repository, run as the [[check]] rules/lint: every rule file under rules/ against the corpus rules.
+// The rule lint of this repository, run as the [[check]] rules/lint: every rule file under rules/ against the rule requirements.
 
 import { globby } from 'globby';
 import { readFileSync } from 'node:fs';

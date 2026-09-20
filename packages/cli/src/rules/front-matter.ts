@@ -1,4 +1,4 @@
-// The front matter of a corpus file: layer, preset and title, and whether they agree with the path and the H1.
+// The front matter of a rule file: layer, preset and title, and whether they agree with the path and the H1.
 import { RULE_LAYERS } from '#cli/rules/terms.ts';
 import type { RuleFinding, FrontMatter } from '#types/rules.ts';
 

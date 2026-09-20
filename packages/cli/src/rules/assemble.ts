@@ -1,4 +1,4 @@
-// Select the corpus files for the selection and render them under [rules] directory, keeping the layer folders.
+// Select the rule files for the selection and render them under [rules] directory, keeping the layer folders.
 import type { Session } from '#types/run.ts';
 import type { RuleFile } from '#types/rules.ts';
 import { nearMatches } from '#cli/policy/near.ts';
@@ -41,7 +41,7 @@ function manifestFiles(session: Session): { source: string; layer: string; prese
 export const FIRST_READ = ['general/agent/WORKING.md', 'general/prose/WRITING.md'];
 
 /**
- * The corpus files the selection installs, in layer order, deduplicated.
+ * The rule files the selection installs, in layer order, deduplicated.
  * @param session the session
  * @returns the rule files with their targets and titles
  */
@@ -64,7 +64,7 @@ export function selectRuleFiles(session: Session): RuleFile[] {
 }
 
 /**
- * The rule files as generated files. Content is the corpus text unchanged.
+ * The rule files as generated files. Content is the rule text unchanged.
  * @param session the session
  * @returns the files to write under the rules directory
  */

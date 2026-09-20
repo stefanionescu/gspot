@@ -263,6 +263,11 @@ comment openers live once, in `config/markers.ts`.
 
 ## K-146: the word corpus
 
+**Status: complete (locally verified).** Source comments, type descriptions, test labels,
+and generated Vale explanations use rule-file terminology. The prose owner regenerates its
+Vale configuration. Naming checks pass without a vocabulary exception for the removed term.
+No alias or deletion-only test is retained.
+
 **What is wrong.** The naming policy gspot ships bans the word, and 24 places of the source still
 hold it, in comments and in names under `src/rules/` and `config/`.
 

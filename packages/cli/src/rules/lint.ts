@@ -1,4 +1,4 @@
-// Lints the rule corpus: front matter, links, size, layer boundary, fences, corruption.
+// Lints the rule files: front matter, links, size, layer boundary, fences, corruption.
 import { frontMatterFindings, layerOfPath } from '#cli/rules/front-matter.ts';
 import type { RuleText, RuleFinding, RulesLintReport, FenceWalk } from '#types/rules.ts';
 
@@ -129,7 +129,7 @@ function fileReport(file: RuleText): RuleFinding[] {
 }
 
 /**
- * True when a path under rules/ is a corpus file: Markdown in a known layer folder.
+ * True when a path under rules/ is a rule file: Markdown in a known layer folder.
  * @param path the path relative to rules/
  * @returns whether the lint reads it
  */
@@ -139,8 +139,8 @@ export function isRulePath(path: string): boolean {
 }
 
 /**
- * Lints the structure and content of the corpus files.
- * @param files the corpus files
+ * Lints the structure and content of the rule files.
+ * @param files the rule files
  * @returns the findings and file count
  */
 export function lintRules(files: RuleText[]): RulesLintReport {

@@ -2,16 +2,16 @@
 
 export type RuleFile = { source: string; target: string; layer: string; preset: string; title: string };
 
-/** The front matter of a corpus file. */
+/** The front matter of a rule file. */
 export type FrontMatter = { layer: string; preset: string; title: string; fields: Record<string, string> };
 
-/** One thing the corpus lint found: the file relative to rules/, the one-based line, and what is wrong. */
+/** One thing the rule lint found: the file relative to rules/, the one-based line, and what is wrong. */
 export type RuleFinding = { file: string; line: number; message: string };
 
-/** A corpus file by its path relative to rules/. */
+/** A rule file by its path relative to rules/. */
 export type RuleText = { path: string; text: string };
 
-/** The corpus lint's result. */
+/** The rule lint's result. */
 export type RulesLintReport = { findings: RuleFinding[]; files: number };
 
 /** The state of a walk over a file's fenced blocks. */
