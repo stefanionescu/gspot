@@ -55,17 +55,23 @@ const INDEX_ONLY_RULES = new Set(['no-reexports-outside-index', 'no-duplicate-ba
 
 const base = { meta: { name: packageManifest.name, version: packageManifest.version }, rules };
 
-const recommendedRules = Object.fromEntries(
+const allRules = Object.fromEntries(
     Object.keys(rules)
         .filter((name) => !INDEX_ONLY_RULES.has(name))
         .map((name) => [`gspot/${name}`, 'error' as const]),
 );
 
+const recommendedRules = Object.fromEntries(
+    Object.entries(allRules).filter(([name]) => name !== 'gspot/no-call-through'),
+);
+
 const plugin = {
     ...base,
     configs: {
-        /** Every rule on at its shipped options: `export default [gspot.configs.recommended]`. */
+        /** Default rules for standalone use. */
         recommended: { name: 'gspot/recommended', plugins: { gspot: base }, rules: recommendedRules },
+        /** Adds preferences such as rejecting forwarding functions. */
+        all: { name: 'gspot/all', plugins: { gspot: base }, rules: allRules },
     },
 };
 

@@ -140,8 +140,8 @@ library is maintained and does the whole job.
 - The npm release publishes one platform package per target plus the launcher package, all at one version.
 - The launcher resolves the installed platform package by `process.platform` and `process.arch`, and fails with the install hint when none is present.
 - `@gspot/eslint-plugin` builds with `bun build` to ESM and CommonJS, versioned with the binary.
-- The plugin exports `configs.recommended`, a flat config with every rule on at its shipped
-  options, so a person who installs the plugin alone writes one line (D-88).
+- The plugin exports `configs.recommended` for standalone use. `configs.all` also rejects
+  forwarding functions. Each uses shipped options (D-88).
 - The plugin matches paths with `picomatch`, the matcher the binary uses, so one pattern in
   `gspot.toml` means one thing.
 

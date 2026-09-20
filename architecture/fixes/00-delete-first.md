@@ -163,8 +163,10 @@ leaf folders, declaration files, nested directories, prefix groups, allowances, 
 All 11 affected integration, plugin, and framework cases pass locally. TypeScript, ESLint,
 schema validation, and 274 reference comparisons pass.
 
-K-188 remains open for the other duplicate rules. Level selection and review of public
-boundaries remain open under K-301.
+K-188 remains open for the other duplicate rules. The standalone plugin keeps forwarding
+functions at `all`; its recommended regression verifies private environment access in client
+code. Generated configuration level selection and review of public boundaries remain open
+under K-301.
 
 K-102, K-187, and K-188 share this acceptance contract. K-188 closes only after the pinned replacement
 rules report the intended defects through generated configuration.
