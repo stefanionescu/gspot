@@ -1,12 +1,13 @@
 // The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
 import { globby } from 'globby';
-import { join } from 'node:path';
-import { git } from '#cli/platform/spawn.ts';
+import { dirname, join, resolve } from 'node:path';
 import type { RawEntry } from '#types/repository.ts';
+import { git, runBlocking } from '#cli/platform/spawn.ts';
 import { existsSync, lstatSync, readFileSync, statSync } from 'node:fs';
 
 const EXECUTABLE_BITS = 0o111;
 const HEAD_BYTES = 2048;
+const NOT_REPOSITORY_CODE = 128;
 
 function symlinkEntry(full: string, path: string): RawEntry | undefined {
     try {
@@ -31,9 +32,34 @@ function entryFor(root: string, path: string): RawEntry | undefined {
     return { path, size: stat.size, executable: isExecutable, symlink: false };
 }
 
+function hasGitEntry(directory: string): boolean {
+    try {
+        lstatSync(join(directory, '.git'));
+        return true;
+    } catch (error) {
+        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+    }
+    const parent = dirname(directory);
+    return parent !== directory && hasGitEntry(parent);
+}
+
+function isOutsideGit(root: string): boolean {
+    const probe = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
+        cwd: root,
+        env: { LC_ALL: 'C' },
+    });
+    return (
+        probe.code === NOT_REPOSITORY_CODE &&
+        probe.stderr.startsWith('fatal: not a git repository (or any ') &&
+        !hasGitEntry(resolve(root))
+    );
+}
+
 async function listedPaths(root: string): Promise<string[]> {
-    const listed = git(root, ['ls-files', '--cached', '--others', '--exclude-standard', '-z']);
-    if (listed !== undefined) return listed.split('\0').filter((path) => path !== '');
+    const listed = runBlocking(['git', 'ls-files', '--cached', '--others', '--exclude-standard', '-z'], { cwd: root });
+    if (listed.code === 0) return listed.stdout.split('\0').filter((path) => path !== '');
+    if (!isOutsideGit(root))
+        throw new Error(`Git ls-files failed in ${root} (exit ${String(listed.code)}): ${listed.stderr.trim()}`);
     return globby(['**/*'], {
         cwd: root,
         gitignore: true,
