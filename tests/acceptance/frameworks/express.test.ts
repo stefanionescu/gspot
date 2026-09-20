@@ -12,7 +12,10 @@ const INIT = [
     '--presets',
     'express',
     '--without',
-    'naming,spelling,security,vitest',
+    'naming',
+    'spelling',
+    'security',
+    'vitest',
     '--runner',
     'none',
     '--ci',
@@ -98,7 +101,11 @@ describe('the express preset', () => {
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
-            const openapi = await run(fixture.path, ['check', 'express/openapi-lint', '--no-cache'], environment);
+            const openapi = await run(
+                fixture.path,
+                ['check', '--only', 'express/openapi-lint', '--no-cache'],
+                environment,
+            );
             expect(openapi.code).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 5,

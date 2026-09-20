@@ -109,10 +109,10 @@ describe('profiles', () => {
                 join(second.path, 'tools/b.sh'),
                 '#!/usr/bin/env bash\nunused_variable=hello\nprintf \'%s\\n\' "${exported_env}"\n',
             );
-            const checked = await run(second.path, ['check', 'bash/shellcheck', '--no-cache'], TOOLS);
+            const checked = await run(second.path, ['check', '--only', 'bash/shellcheck', '--no-cache'], TOOLS);
             expect(checked.code, checked.stdout + checked.stderr).toBe(0);
             await Bun.write(join(second.path, 'tools/b.sh'), '#!/usr/bin/env bash\necho $unquoted\n');
-            const reported = await run(second.path, ['check', 'bash/shellcheck', '--no-cache'], TOOLS);
+            const reported = await run(second.path, ['check', '--only', 'bash/shellcheck', '--no-cache'], TOOLS);
             expect(reported.code, reported.stdout + reported.stderr).toBe(1);
             expect(reported.stdout).toContain('SC2086');
         },

@@ -58,6 +58,12 @@ manual-stage build/test behavior. Scan docs for stale target claims without dele
 
 **Done when.** Help, schema, generated docs, decisions, and fix acceptance tests agree on the implemented behavior.
 
+**Partial implementation.** Check selection accepts space-separated check names after one `--only` flag and
+positional files or folders. Project checks retain all inputs after a selected path triggers
+them. The `-C` directory controls relative path selection. Callers and generated command
+references use the same contract; the positional check-name form is removed.
+Other command-surface and lifecycle contracts remain open.
+
 ## K-301: Recommended adoption findings need usefulness tests
 
 **What is wrong.** Banned terms and abstraction preferences were presented as defect-only checks. A fixed finding count does not establish that findings help a developer.

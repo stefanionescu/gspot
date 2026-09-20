@@ -71,7 +71,7 @@ describe('the structure preset', () => {
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(fixture.path, [...INIT, '--hooks', 'gspot'], environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check} on the clean repository: ${clean.stdout}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
@@ -88,14 +88,14 @@ describe('the structure preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(fixture.path, [...INIT, '--hooks', 'none'], environment);
-            const clean = await run(fixture.path, ['check', 'integrity/tracked-dependencies'], environment);
+            const clean = await run(fixture.path, ['check', '--only', 'integrity/tracked-dependencies'], environment);
             expect(clean.code).toBe(0);
             mkdirSync(join(fixture.path, 'web', 'node_modules', 'left-pad'), { recursive: true });
             await Bun.write(join(fixture.path, 'web', 'node_modules', 'left-pad', 'index.js'), 'module.exports = 1;\n');
             git(fixture.path, ['add', '-f', 'web/node_modules/left-pad/index.js']);
             const check = await run(
                 fixture.path,
-                ['check', 'integrity/tracked-dependencies', '--no-cache'],
+                ['check', '--only', 'integrity/tracked-dependencies', '--no-cache'],
                 environment,
             );
             expect(check.code).toBe(1);

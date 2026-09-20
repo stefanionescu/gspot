@@ -8,7 +8,8 @@ const INIT = [
     'init',
     '--yes',
     '--presets',
-    'sql,naming',
+    'sql',
+    'naming',
     '--runner',
     'none',
     '--ci',
@@ -61,7 +62,7 @@ describe('the sql preset', () => {
             await install(fixture.path, INIT, environment);
             const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
-                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
@@ -84,17 +85,21 @@ describe('gspot apply --baseline', () => {
             await install(fixture.path, INIT, environment);
             await Bun.write(`${fixture.path}/db/commented.sql`, '/* Old. */\nSELECT 1;\n');
             commitAll(fixture.path);
-            const before = await run(fixture.path, ['check', 'sql/block-comments', '--no-cache'], environment);
+            const before = await run(
+                fixture.path,
+                ['check', '--only', 'sql/block-comments', '--no-cache'],
+                environment,
+            );
             expect(before.code).toBe(1);
             const first = await run(fixture.path, ['apply', '--baseline', 'sql/block-comments'], environment);
             expect(first.stdout).toContain('baseline: 1 rules of sql/block-comments with 1 findings');
-            const held = await run(fixture.path, ['check', 'sql/block-comments', '--no-cache'], environment);
+            const held = await run(fixture.path, ['check', '--only', 'sql/block-comments', '--no-cache'], environment);
             expect(held.code).toBe(0);
             await Bun.write(`${fixture.path}/db/second.sql`, '/* Older. */\nSELECT 2;\n');
             commitAll(fixture.path);
             const again = await run(fixture.path, ['apply', '--baseline', 'sql/block-comments'], environment);
             expect(again.stdout).toContain('has no finding without a baseline');
-            const after = await run(fixture.path, ['check', 'sql/block-comments', '--no-cache'], environment);
+            const after = await run(fixture.path, ['check', '--only', 'sql/block-comments', '--no-cache'], environment);
             expect(after.code).toBe(1);
             const layout = await run(fixture.path, ['apply', '--baseline', 'sql/sqlfluff'], environment);
             expect(layout.code).toBe(2);

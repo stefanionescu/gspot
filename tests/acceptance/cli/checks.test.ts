@@ -40,17 +40,17 @@ stage = "commit"
             'selected.txt': 'unchanged trigger',
             'state.txt': 'invalid',
         });
-        const failed = await run(fixture.path, ['check', 'notes/state']);
+        const failed = await run(fixture.path, ['check', '--only', 'notes/state']);
         expect(failed.code).toBe(1);
         expect(failed.stdout).toContain('notes/state');
 
         await Bun.write(join(fixture.path, 'state.txt'), 'valid');
-        const passed = await run(fixture.path, ['check', 'notes/state']);
+        const passed = await run(fixture.path, ['check', '--only', 'notes/state']);
         expect(passed.code).toBe(0);
         expect(passed.stdout).toContain('notes/state');
 
         await Bun.write(join(fixture.path, 'state.txt'), 'invalid');
-        const failedAgain = await run(fixture.path, ['check', 'notes/state']);
+        const failedAgain = await run(fixture.path, ['check', '--only', 'notes/state']);
         expect(failedAgain.code).toBe(1);
         expect(failedAgain.stdout).toContain('notes/state');
     });
@@ -82,7 +82,7 @@ stage = "commit"
             );
             const policy = join(fixture.path, 'gspot.toml');
             await Bun.write(policy, `${await Bun.file(policy).text()}${ENTRY}`);
-            const check = await run(fixture.path, ['check', 'notes/no-fixme'], environment);
+            const check = await run(fixture.path, ['check', '--only', 'notes/no-fixme'], environment);
             expect(check.code).toBe(1);
             expect(check.stdout).toContain('notes/plan.txt:2');
             expect(check.stdout).toContain('FIXME later');
@@ -136,5 +136,70 @@ message = "text"
             rule: 'fixture-rule',
             message: 'A planted defect.',
         },
+    ]);
+});
+
+test('file and folder arguments intersect check lists and respect -C', async () => {
+    const command = [
+        process.execPath,
+        '-e',
+        'process.argv.slice(1).forEach((path) => console.log(path)); process.exitCode = 1;',
+        '{files}',
+    ];
+    const entries = ['one', 'two', 'three']
+        .map(
+            (name) => `
+[[check]]
+name = "fixture/${name}"
+command = ${JSON.stringify(command)}
+paths = ["src/**", "docs/**"]
+stage = "commit"
+[check.output]
+format = "lines"
+`,
+        )
+        .join('');
+    await using fixture = await createFixture({
+        'gspot.toml': `version = 1\npresets = []\n${entries}`,
+        'src/selected.ts': 'selected',
+        'src/other.ts': 'other',
+        'docs/guide.md': '# Guide\n',
+    });
+    const selected = await run(fixture.path, [
+        'check',
+        'src/selected.ts',
+        'docs',
+        '--only',
+        'fixture/one',
+        'fixture/two',
+        '--json',
+    ]);
+    expect(selected.code, selected.stdout + selected.stderr).toBe(1);
+    const report = JSON.parse(selected.stdout) as RunReport;
+    expect(report.checks.map((check) => check.check)).toEqual(['fixture/one', 'fixture/two']);
+    for (const check of report.checks)
+        expect(new Set(check.findings.map((finding) => finding.message))).toEqual(
+            new Set(['docs/guide.md', 'src/selected.ts']),
+        );
+    const skipped = await run(fixture.path, [
+        'check',
+        'src/selected.ts',
+        '--skip',
+        'fixture/one',
+        'fixture/two',
+        '--json',
+    ]);
+    expect(skipped.code, skipped.stdout + skipped.stderr).toBe(1);
+    const skippedReport = JSON.parse(skipped.stdout) as RunReport;
+    expect(skippedReport.checks.map((check) => [check.check, check.status])).toEqual([
+        ['fixture/one', 'skipped'],
+        ['fixture/two', 'skipped'],
+        ['fixture/three', 'fail'],
+    ]);
+    const relative = await run(fixture.path, ['-C', 'src', 'check', 'selected.ts', '--only', 'fixture/one', '--json']);
+    expect(relative.code, relative.stdout + relative.stderr).toBe(1);
+    const relativeReport = JSON.parse(relative.stdout) as RunReport;
+    expect(relativeReport.checks.flatMap((check) => check.findings.map((finding) => finding.message))).toEqual([
+        'src/selected.ts',
     ]);
 });

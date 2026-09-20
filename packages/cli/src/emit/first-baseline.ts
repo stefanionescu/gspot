@@ -17,7 +17,7 @@ function refusal(text: string): CommandResult {
 export async function firstBaseline(session: Session, check: string): Promise<CommandResult> {
     const outcome = await executeRun(session, {
         stage: 'all',
-        only: check,
+        only: [check],
         skips: [],
         localSkips: [],
         fix: false,

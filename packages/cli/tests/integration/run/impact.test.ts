@@ -6,11 +6,12 @@ import type { Session } from '#types/run.ts';
 import { applyFixers } from '#cli/run/fixers.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
+import type { CheckSpec } from '#types/manifest.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { stagedFiles } from '#cli/repository/staged.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 
-const options = { stage: 'commit' as const, skips: [], localSkips: [], only: 'fixture/project' };
+const options = { stage: 'commit' as const, skips: [], localSkips: [], only: ['fixture/project'] };
 const policy = `version = 1
 presets = []
 [[scope]]
@@ -28,10 +29,14 @@ function git(root: string, ...argv: string[]): void {
 
 function projectChecks(session: Session): void {
     const manifest = session.manifests.get('typescript')!;
-    const compiler = manifest.checks.find((check) => check.name === 'typescript/tsc')!;
-    const spec = {
-        ...compiler,
+    const spec: CheckSpec = {
         name: 'fixture/project',
+        stage: 'commit',
+        runs: 'per-scope',
+        coverage: [],
+        summary: 'Reports the planted project finding.',
+        why: 'Changed files trigger the complete project check.',
+        help: 'Fix the planted project finding.',
         cwd: 'root' as const,
         command: [process.execPath, '-e', "console.log('Project finding'); process.exitCode = 1"],
         output: { format: 'lines' as const },
@@ -64,7 +69,7 @@ test.each(['delete', 'rename'])('a last-file %s triggers the affected project th
     const api = planned.find((check) => check.scope.scope.path === 'api')!;
     expect(api.files).toEqual([]);
     expect(api.triggerPaths).toContain('api/source.ts');
-    const fileChecks = planRun(session, { ...options, only: 'fixture/files', staged });
+    const fileChecks = planRun(session, { ...options, only: ['fixture/files'], staged });
     expect(fileChecks.flatMap((check) => check.triggerPaths)).toEqual([]);
     expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toEqual(
         operation === 'delete' ? [] : ['web/source.ts'],
@@ -83,4 +88,28 @@ test.each(['delete', 'rename'])('a last-file %s triggers the affected project th
     const applied = await applyFixers(session, [api], false);
     expect(applied.changed).toEqual(['api/source.ts']);
     expect(readFileSync(join(fixture.path, 'api/source.ts'), 'utf8')).toBe('restored');
+});
+
+test('a positional file trigger preserves project-wide input and findings', async () => {
+    await using fixture = await createFixture({
+        'gspot.toml': policy,
+        'api/source.ts': 'export {};\n',
+        'api/caller.ts': 'export {};\n',
+        'web/source.ts': 'export {};\n',
+    });
+    const session = await openSession(fixture.path);
+    projectChecks(session);
+    const planned = planRun(session, { ...options, paths: ['api/source.ts'] });
+    const affected = planned.filter((check) => check.files.length > 0);
+    expect(affected.map((check) => check.scope.scope.path)).toEqual(['api']);
+    expect(affected[0]?.files.map((file) => file.path)).toEqual(['api/caller.ts', 'api/source.ts']);
+    const outcome = await executeRun(session, {
+        ...options,
+        paths: ['api/source.ts'],
+        fix: false,
+        isDryRun: false,
+        noCache: true,
+    });
+    expect(outcome.report.exitCode).toBe(1);
+    expect(outcome.report.checks[0]?.findings[0]?.message).toBe('Project finding');
 });

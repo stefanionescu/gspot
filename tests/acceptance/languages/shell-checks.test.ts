@@ -259,7 +259,7 @@ describe('the bash preset', () => {
                 environment,
             );
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check} on the clean repository: ${clean.stdout}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
@@ -286,7 +286,7 @@ test.each([
     });
     const path = join(fixture.path, 'greet.sh');
     chmodSync(path, 0o755);
-    const command = ['check', 'structure/shell-interpreter', '--no-cache'];
+    const command = ['check', '--only', 'structure/shell-interpreter', '--no-cache'];
     const clean = await run(fixture.path, command);
     expect(clean.code, clean.stdout + clean.stderr).toBe(0);
     writeFileSync(path, source(!isInherited));

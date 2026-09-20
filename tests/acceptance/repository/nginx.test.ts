@@ -33,7 +33,7 @@ describe('the nginx preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['gixy', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
-            const clean = await run(fixture.path, ['check', 'nginx/gixy', '--no-cache'], environment);
+            const clean = await run(fixture.path, ['check', '--only', 'nginx/gixy', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);

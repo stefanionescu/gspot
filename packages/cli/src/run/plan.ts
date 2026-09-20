@@ -91,8 +91,7 @@ function isStageOk(spec: CheckSpec, options: PlanOptions): boolean {
 }
 
 function isWanted(spec: CheckSpec, options: PlanOptions): boolean {
-    if (options.only !== undefined && spec.name !== options.only) return false;
-    if (options.among?.has(spec.name) === false) return false;
+    if (options.only !== undefined && !options.only.includes(spec.name)) return false;
     return isStageOk(spec, options);
 }
 
@@ -217,8 +216,9 @@ function planOne(context: PlanContext, entry: PlanEntry, isWholeCheck: boolean):
 }
 
 function narrowSet(options: PlanOptions): Set<string> | undefined {
-    if (options.staged) return new Set(options.staged);
-    return options.since ? new Set(options.since) : undefined;
+    const changed = options.staged ?? options.since;
+    if (options.paths === undefined) return changed === undefined ? undefined : new Set(changed);
+    return new Set(options.paths.filter((path) => changed === undefined || changed.includes(path)));
 }
 
 // A check that takes another over runs that work itself, so the other one yields in the same scope.

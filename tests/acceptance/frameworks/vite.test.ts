@@ -30,7 +30,7 @@ entry = []
 const START = "import { start } from './start.js';\nstart();\n";
 
 async function trivialFiles(root: string): Promise<string[]> {
-    const outcome = await run(root, ['check', 'javascript/eslint', '--json', '--no-cache']);
+    const outcome = await run(root, ['check', '--only', 'javascript/eslint', '--json', '--no-cache']);
     const report = JSON.parse(outcome.stdout) as RunReport;
     expect(
         report.checks.every((check) => check.status === 'ok' || check.status === 'fail'),

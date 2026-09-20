@@ -6,10 +6,12 @@ import { runText } from '#cli/output/reporter.ts';
 import { note, warn } from '#cli/output/messages.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import { SelectionError } from '#cli/presets/select.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
+import { isAbsolute, relative, resolve, sep } from 'node:path';
 import { changedSince, stagedFiles } from '#cli/repository/staged.ts';
 import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#config/env-files.ts';
-import type { CheckOptions, CommandResult, FixReport, RunOptions, StageFilter } from '#types/run.ts';
+import type { CheckOptions, CommandResult, FixReport, RunOptions, StageFilter, Session } from '#types/run.ts';
 
 const CHANGED_SHOWN = 8;
 
@@ -53,7 +55,8 @@ function runOptions(
         noCache: options.noCache,
         ...(staged === undefined ? {} : { staged }),
         ...(since === undefined ? {} : { since }),
-        ...(options.check === undefined ? {} : { only: options.check }),
+        ...(options.only === undefined ? {} : { only: options.only }),
+        ...(options.paths.length === 0 ? {} : { paths: options.paths }),
         ...(options.scope === undefined ? {} : { scope: options.scope }),
         ...(options.messageFile === undefined ? {} : { messageFile: options.messageFile }),
     };
@@ -102,13 +105,40 @@ function unknownCheck(check: string): CommandResult {
     };
 }
 
+function selectedPaths(session: Session, options: CheckOptions, changed: string[]): string[] {
+    if (options.paths.length === 0) return [];
+    const candidates = [...new Set([...session.repository.files.map((file) => file.path), ...changed])];
+    const selected = new Set<string>();
+    for (const path of options.paths) {
+        const selector = relative(session.root, resolve(options.cwd, path)).split(sep).join('/');
+        if (selector === '..' || selector.startsWith('../') || isAbsolute(selector))
+            throw new SelectionError([`Path ${path} is outside this repository.`]);
+        const matches = candidates.filter(
+            (file) => selector === '' || file === selector || file.startsWith(`${selector}/`),
+        );
+        if (matches.length === 0) throw new SelectionError([`Path ${path} matches no repository files.`]);
+        for (const match of matches) selected.add(match);
+    }
+    return [...selected];
+}
+
+function unknownSelection(session: Session, only: string[] | undefined): CommandResult | undefined {
+    const known = new Set([
+        ...session.scopes.flatMap((scope) =>
+            scope.selected.flatMap((manifest) => manifest.checks.map((check) => check.name)),
+        ),
+        ...session.policyFiles.policy.checks.map((check) => check.name),
+    ]);
+    const unknown = only?.find((check) => !known.has(check));
+    return unknown === undefined ? undefined : unknownCheck(unknown);
+}
+
 function resultFor(
     options: CheckOptions,
     outcome: Awaited<ReturnType<typeof executeRun>>,
     unstaged: number,
 ): CommandResult {
     outcome.report.unstaged = unstaged;
-    if (options.check !== undefined && outcome.planned.length === 0) return unknownCheck(options.check);
     const rendered = runText(outcome.report, { quiet: options.quiet, verbose: options.verbose });
     const text = outcome.fixes ? fixSummary(outcome.fixes, options.isDryRun, rendered) : rendered;
     return { text, json: outcome.report, exitCode: outcome.report.exitCode };
@@ -123,14 +153,21 @@ export async function checkCommand(options: CheckOptions): Promise<CommandResult
     const root = findRoot(options.cwd);
     assertPinMatches(root);
     const session = await openSession(root);
+    const unknown = unknownSelection(session, options.only);
+    if (unknown !== undefined) return unknown;
     const set = options.staged ? stagedFiles(root) : { staged: undefined, unstaged: 0 };
     const stage: StageFilter = options.stage ?? (options.staged ? 'commit' : 'all');
     const refusal = refusalFor(options, stage, set.staged);
     if (refusal) return refusal;
     const since = options.since === undefined ? undefined : changedSince(root, options.since);
+    const paths = selectedPaths(
+        session,
+        options,
+        [set.staged, since].flatMap((selection) => selection ?? []),
+    );
     const outcome = await executeRun(
         session,
-        runOptions(options, stage, set.staged, since, session.policyFiles.local.skip),
+        runOptions({ ...options, paths }, stage, set.staged, since, session.policyFiles.local.skip),
     );
     return resultFor(options, outcome, set.unstaged);
 }

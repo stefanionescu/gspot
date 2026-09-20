@@ -12,7 +12,8 @@ const INIT = [
     '--presets',
     'xcode',
     '--without',
-    'spelling,swift',
+    'spelling',
+    'swift',
     '--runner',
     'none',
     '--ci',
@@ -128,7 +129,7 @@ describe('the xcode preset', () => {
             commitAll(fixture.path);
             const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
-                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {
@@ -143,7 +144,7 @@ describe('the xcode preset', () => {
             }
             symlinkSync('Home.swift', join(fixture.path, 'App/Linked.swift'));
             commitAll(fixture.path);
-            const linked = await run(fixture.path, ['check', 'xcode/symlinks', '--no-cache'], environment);
+            const linked = await run(fixture.path, ['check', '--only', 'xcode/symlinks', '--no-cache'], environment);
             expect(linked.code, linked.stdout).toBe(1);
             expect(linked.stdout).toContain('A symlink to Home.swift');
         },
@@ -167,7 +168,9 @@ describe('init in a repository with an Xcode project', () => {
                 '--scope',
                 'ios=swift,xcode',
                 '--without',
-                'spelling,naming,structure',
+                'spelling',
+                'naming',
+                'structure',
                 '--runner',
                 'none',
                 '--ci',

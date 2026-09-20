@@ -10,7 +10,9 @@ const INIT = [
     '--presets',
     'xctest',
     '--without',
-    'spelling,naming,structure',
+    'spelling',
+    'naming',
+    'structure',
     '--runner',
     'none',
     '--ci',
@@ -63,7 +65,7 @@ describe('the xctest preset', () => {
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);

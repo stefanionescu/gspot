@@ -53,8 +53,6 @@ export function buildProgram(): Command {
         .exitOverride()
         .hook('preAction', (thisCommand) => {
             const options = thisCommand.optsWithGlobals();
-            const directory: unknown = options['C'];
-            if (typeof directory === 'string' && directory !== '') options['directory'] = directory;
             configureOutput({
                 verbosity: verbosityOf(options),
                 json: options['json'] === true,

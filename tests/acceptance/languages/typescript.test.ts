@@ -301,7 +301,7 @@ for (const scope of ['', 'api/']) {
             });
             symlinkSync(join(root, 'node_modules'), join(fixture.path, 'node_modules'), 'dir');
             commitAll(fixture.path);
-            const failed = await run(fixture.path, ['check', 'typescript/tsc', '--no-cache', '--json']);
+            const failed = await run(fixture.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
             const report = JSON.parse(failed.stdout) as RunReport;
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
             const findings = report.checks.flatMap((check) => check.findings);
@@ -313,7 +313,7 @@ for (const scope of ['', 'api/']) {
             ).toEqual([`${scope}orders/order.ts`, `${scope}users/user.ts`]);
             writeFileSync(join(fixture.path, `${scope}orders/order.ts`), 'export const total: number = 3;');
             writeFileSync(join(fixture.path, `${scope}users/user.ts`), 'export const active: boolean = true;');
-            const clean = await run(fixture.path, ['check', 'typescript/tsc', '--no-cache', '--json']);
+            const clean = await run(fixture.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             const output = ['orders', 'users'].flatMap((folder) =>
                 readdirSync(join(fixture.path, scope, folder), { recursive: true }).map(String),

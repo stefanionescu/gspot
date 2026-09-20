@@ -52,7 +52,7 @@ describe.skipIf(!isReleaseTestWanted())('the compiled binary', () => {
             ]);
             expect(init.code).toBe(0);
             expect(existsSync(join(fixture.path, '.gspot', 'rules', 'general', 'agent', 'WORKING.md'))).toBe(true);
-            expect(binary(fixture.path, ['check', 'bash/shellcheck']).code).toBe(0);
+            expect(binary(fixture.path, ['check', '--only', 'bash/shellcheck']).code).toBe(0);
             expect(binary(fixture.path, ['apply', '--check']).code).toBe(0);
         },
         PLANTED_TIMEOUT_MS,

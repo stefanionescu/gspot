@@ -1,30 +1,31 @@
 ---
 title: "gspot check"
-description: "Run the checks and print findings; one check when its id is given"
+description: "Run checks over the selected files and folders and print findings"
 ---
 
-Run the checks and print findings; one check when its id is given.
+Run checks over the selected files and folders and print findings.
 
 ```text
-gspot check [options] [check-id]
+gspot check [options] [paths...]
 ```
 
 ## Arguments
 
-| Argument   | Meaning  |
-| ---------- | -------- |
-| `check-id` | optional |
+| Argument | Meaning  |
+| -------- | -------- |
+| `paths`  | optional |
 
 ## Options
 
 | Flag                    | Meaning                                                            |
 | ----------------------- | ------------------------------------------------------------------ |
+| `--only <checks...>`    | Run the named checks                                               |
 | `--staged`              | The commit stage over staged files, as the pre-commit hook runs it |
 | `--since <ref>`         | Commit and push stages over files changed since a git ref          |
 | `--fix`                 | Run every fixer in order, then the checks again                    |
 | `--dry-run`             | With --fix, print the diff of every fix and write nothing          |
 | `--at <stage>`          | One stage                                                          |
 | `--scope <path>`        | One scope only                                                     |
-| `--skip <check-id>`     | Skip one check this run; repeat for more                           |
+| `--skip <checks...>`    | Skip the named checks for this run                                 |
 | `--message-file <path>` | The commit message file, for the message stage                     |
 | `--no-cache`            | Run every check even when its inputs are unchanged                 |

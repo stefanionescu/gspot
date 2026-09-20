@@ -58,7 +58,7 @@ describe('the planted command deadline', () => {
                 ),
                 {
                     message:
-                        `Command gspot check postgres/squawk --no-cache timed out in ${fixture.path}.\n` +
+                        `Command gspot check --only postgres/squawk --no-cache timed out in ${fixture.path}.\n` +
                         'Duration: 120000 ms; exit: 1.\n' +
                         'stdout:\nmigration.sql:1: checking\n\nstderr:\nwaiting for tool\n',
                 },

@@ -28,7 +28,7 @@ test('disabled settings produce skipped results and enabling a setting runs the 
         stage: 'all' as const,
         skips: [],
         localSkips: [],
-        among: new Set(WAITING.keys()),
+        only: WAITING.keys().toArray(),
         fix: false,
         isDryRun: false,
         noCache: true,
@@ -46,7 +46,7 @@ test('disabled settings produce skipped results and enabling a setting runs the 
     );
     const enabled = await executeRun(await openSession(fixture.path), {
         ...options,
-        among: new Set(['xcode/entitlements-policy']),
+        only: ['xcode/entitlements-policy'],
     });
     expect(enabled.report.exitCode).toBe(1);
     expect(enabled.report.checks[0]?.status).toBe('fail');
@@ -75,7 +75,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
             stage: stage as 'push' | 'manual',
             skips: [],
             localSkips: [],
-            among: new Set(['static-site/build', ...consumers]),
+            only: ['static-site/build', ...consumers],
         }),
     );
     expect(planned).toHaveLength(consumers.size + 1);
@@ -94,7 +94,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
         'import {mkdirSync, writeFileSync} from "node:fs"; mkdirSync("dist"); writeFileSync("dist/index.html", "built");',
     );
     const next = await openSession(fixture.path);
-    const [build] = planRun(next, { stage: 'push', skips: [], localSkips: [], only: 'static-site/build' });
+    const [build] = planRun(next, { stage: 'push', skips: [], localSkips: [], only: ['static-site/build'] });
     const rebuilt = await runEngineCheck(next, build!.spec.engine!, build!);
     expect(rebuilt.status).toBe('ok');
 });

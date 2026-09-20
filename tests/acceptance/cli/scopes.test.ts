@@ -35,7 +35,10 @@ describe('typescript in a scope', () => {
                 '--scope',
                 'api=typescript',
                 '--without',
-                'naming,spelling,markdown,docs',
+                'naming',
+                'spelling',
+                'markdown',
+                'docs',
                 '--runner',
                 'none',
                 '--ci',
@@ -46,7 +49,7 @@ describe('typescript in a scope', () => {
                 '--no-install',
             ];
             await install(fixture.path, argv, environment);
-            const lint = await run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
+            const lint = await run(fixture.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(lint.stdout + lint.stderr).not.toContain('Parsing error');
             const written = await Bun.file(join(fixture.path, '.gspot/eslint.config.mjs')).text();
             expect(written).toContain('tseslint.configs.strictTypeChecked');
@@ -71,7 +74,11 @@ describe('typescript in a scope', () => {
                 '--scope',
                 'db=sql',
                 '--without',
-                'naming,spelling,markdown,docs,structure',
+                'naming',
+                'spelling',
+                'markdown',
+                'docs',
+                'structure',
                 '--runner',
                 'none',
                 '--ci',
@@ -85,7 +92,7 @@ describe('typescript in a scope', () => {
             const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
             expect(policy).toContain('db/**/templates/**');
             expect(policy).toContain('carried from db/.sqlfluffignore at init: Templates');
-            const syntax = await run(fixture.path, ['check', 'sql/syntax', '--no-cache'], environment);
+            const syntax = await run(fixture.path, ['check', '--only', 'sql/syntax', '--no-cache'], environment);
             expect(syntax.code).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 3,

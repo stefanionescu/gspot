@@ -10,9 +10,13 @@ const INIT = [
     'init',
     '--yes',
     '--presets',
-    'typescript,react',
+    'typescript',
+    'react',
     '--without',
-    'naming,spelling,css,vitest',
+    'naming',
+    'spelling',
+    'css',
+    'vitest',
     '--runner',
     'none',
     '--ci',
@@ -72,7 +76,7 @@ describe('the react preset', () => {
             const written = await Bun.file(join(fixture.path, '.gspot/eslint.config.mjs')).text();
             expect(written).toContain("from 'eslint-plugin-react-hooks'");
             expect(written).not.toContain('@next/eslint-plugin-next');
-            const clean = await run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
+            const clean = await run(fixture.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const [rule, path, text] of LINT) {
                 const outcome = await runPlanted(
@@ -82,7 +86,11 @@ describe('the react preset', () => {
                 );
                 expect(outcome.stdout, `${rule}: ${outcome.stdout}${outcome.stderr}`).toContain(rule);
             }
-            const required = await run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
+            const required = await run(
+                fixture.path,
+                ['check', '--only', 'integrity/required-rules', '--no-cache'],
+                environment,
+            );
             expect(required.code, required.stdout + required.stderr).toBe(0);
         },
         PLANTED_TIMEOUT_MS * 6,

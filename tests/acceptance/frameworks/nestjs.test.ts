@@ -11,9 +11,14 @@ const INIT = [
     'init',
     '--yes',
     '--presets',
-    'typescript,nestjs',
+    'typescript',
+    'nestjs',
     '--without',
-    'naming,spelling,vitest,security,dependencies',
+    'naming',
+    'spelling',
+    'vitest',
+    'security',
+    'dependencies',
     '--runner',
     'none',
     '--ci',
@@ -99,7 +104,7 @@ describe('the nestjs preset', () => {
                 existsSync(join(fixture.path, '.gspot/baselines/structure.prefix-collisions.shared-prefix.json')),
             ).toBe(false);
             for (const id of ['typescript/eslint', 'typescript/tsc', 'integrity/tsconfig-options']) {
-                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {

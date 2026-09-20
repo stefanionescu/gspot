@@ -51,19 +51,19 @@ describe('the commits preset', () => {
             await Bun.write(draft, 'Fixed stuff.\n');
             const refused = await run(
                 fixture.path,
-                ['check', 'commits/commitlint', '--at', 'message', '--message-file', draft],
+                ['check', '--only', 'commits/commitlint', '--at', 'message', '--message-file', draft],
                 environment,
             );
             expect(refused.code).toBe(1);
             expect(refused.stdout).toContain('commits/commitlint');
             expect(readFileSync(reportPath, 'utf8')).toBe(report);
             expect(readFileSync(sarifPath, 'utf8')).toBe(sarif);
-            const accepted = await run(fixture.path, ['check', 'commits/range', '--no-cache'], environment);
+            const accepted = await run(fixture.path, ['check', '--only', 'commits/range', '--no-cache'], environment);
             expect(accepted.code).toBe(0);
             await Bun.write(join(fixture.path, 'more.md'), '# more\n');
             git(fixture.path, ['add', '-A']);
             git(fixture.path, ['commit', '-qm', 'Pushed past the hook.', '--no-verify']);
-            const range = await run(fixture.path, ['check', 'commits/range', '--no-cache'], environment);
+            const range = await run(fixture.path, ['check', '--only', 'commits/range', '--no-cache'], environment);
             expect(range.code).toBe(1);
             expect(range.stdout).toContain('type-empty');
         },

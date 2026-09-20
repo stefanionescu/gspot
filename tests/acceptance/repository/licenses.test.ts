@@ -39,13 +39,13 @@ describe('the licenses preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['typos', 'ec'])}` };
             await install(fixture.path, INIT, environment);
-            const clean = await run(fixture.path, ['check', 'licenses/npm', '--no-cache'], environment);
+            const clean = await run(fixture.path, ['check', '--only', 'licenses/npm', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             await Bun.write(
                 join(fixture.path, 'node_modules/strict/package.json'),
                 installed('strict', 'GPL-3.0-only'),
             );
-            const refused = await run(fixture.path, ['check', 'licenses/npm', '--no-cache'], environment);
+            const refused = await run(fixture.path, ['check', '--only', 'licenses/npm', '--no-cache'], environment);
             expect(refused.code, refused.stdout + refused.stderr).toBe(1);
             expect(refused.stdout).toContain('strict@1.0.0 reports GPL-3.0-only');
             expect(refused.stdout).not.toContain('kind@1.0.0');
@@ -53,7 +53,7 @@ describe('the licenses preset', () => {
                 join(fixture.path, 'node_modules/strict/package.json'),
                 installed('strict', '(MIT OR Apache-2.0) AND GPL-3.0-only'),
             );
-            const mixed = await run(fixture.path, ['check', 'licenses/npm', '--no-cache'], environment);
+            const mixed = await run(fixture.path, ['check', '--only', 'licenses/npm', '--no-cache'], environment);
             expect(mixed.code, mixed.stdout + mixed.stderr).toBe(1);
             expect(mixed.stdout).toContain('strict@1.0.0 reports (MIT OR Apache-2.0) AND GPL-3.0-only');
             await Bun.write(
@@ -65,10 +65,10 @@ describe('the licenses preset', () => {
             const exception = (license: string): string =>
                 `${before}\n[[tools.licenses.exceptions]]\npackage = "strict@1.0.0"\nlicense = "${license}"\nreason = "Used at build time only, never shipped."\n`;
             await Bun.write(policy, exception('GPL-3.0-only'));
-            const accepted = await run(fixture.path, ['check', 'licenses/npm', '--no-cache'], environment);
+            const accepted = await run(fixture.path, ['check', '--only', 'licenses/npm', '--no-cache'], environment);
             expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
             await Bun.write(policy, exception('LGPL-3.0-only'));
-            const stale = await run(fixture.path, ['check', 'licenses/npm', '--no-cache'], environment);
+            const stale = await run(fixture.path, ['check', '--only', 'licenses/npm', '--no-cache'], environment);
             expect(stale.code).toBe(1);
             expect(stale.stdout).toContain('the exception no longer holds');
         },

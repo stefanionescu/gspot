@@ -41,7 +41,7 @@ describe.skipIf(!isReleaseTestWanted())('npm binary wrappers', () => {
                 '--no-rules',
                 '--no-install',
             ]);
-            const format = ['check', 'config-files/toml-format', '--no-cache'];
+            const format = ['check', '--only', 'config-files/toml-format', '--no-cache'];
             const unformatted = await run(fixture.path, format);
             expect(unformatted.code, unformatted.stdout + unformatted.stderr).toBe(1);
             expect(unformatted.stdout).toContain('settings.toml');
@@ -49,13 +49,13 @@ describe.skipIf(!isReleaseTestWanted())('npm binary wrappers', () => {
             expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
             expect(await Bun.file(join(fixture.path, 'settings.toml')).text()).toBe('a = 1\n');
             await Bun.write(join(fixture.path, 'settings.toml'), 'a = [\n');
-            const invalid = await run(fixture.path, ['check', 'config-files/toml', '--no-cache']);
+            const invalid = await run(fixture.path, ['check', '--only', 'config-files/toml', '--no-cache']);
             expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
             expect(invalid.stdout).toContain('settings.toml');
             await Bun.write(join(fixture.path, 'settings.toml'), 'a = 1\n');
-            const valid = await run(fixture.path, ['check', 'config-files/toml', '--no-cache']);
+            const valid = await run(fixture.path, ['check', '--only', 'config-files/toml', '--no-cache']);
             expect(valid.code, valid.stdout + valid.stderr).toBe(0);
-            const whitespace = ['check', 'formatting/editorconfig-checker', '--no-cache'];
+            const whitespace = ['check', '--only', 'formatting/editorconfig-checker', '--no-cache'];
             const trailing = await run(fixture.path, whitespace);
             expect(trailing.code, trailing.stdout + trailing.stderr).toBe(1);
             expect(trailing.stdout).toContain('notes.json');

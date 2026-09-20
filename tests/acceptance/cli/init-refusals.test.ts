@@ -108,7 +108,7 @@ describe('init refusals', () => {
             const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();
             expect(policy).toContain('"formatting"');
             expect(policy).not.toContain('"naming"');
-            const check = await run(fixture.path, ['check', 'naming/identifiers'], environment);
+            const check = await run(fixture.path, ['check', '--only', 'naming/identifiers'], environment);
             expect(check.code).toBe(2);
             expect(check.stdout).toContain('No selected preset runs a check called `naming/identifiers`');
         },
@@ -116,21 +116,11 @@ describe('init refusals', () => {
     );
 
     test(
-        'a --scope flag given twice writes both scopes with their presets',
+        'one --scope flag writes both scopes with their presets',
         async () => {
             await using fixture = await createFixture({ 'tools/a.sh': script, 'jobs/b.sh': script });
             commitAll(fixture.path);
-            const argv = [
-                'init',
-                '--yes',
-                '--hooks',
-                'none',
-                '--scope',
-                'tools=bash',
-                '--scope',
-                'jobs=bash',
-                ...QUIET,
-            ];
+            const argv = ['init', '--yes', '--hooks', 'none', '--scope', 'tools=bash', 'jobs=bash', ...QUIET];
             const init = await run(fixture.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
             expect(init.stderr).not.toContain('did not run');
             const policy = await Bun.file(join(fixture.path, 'gspot.toml')).text();

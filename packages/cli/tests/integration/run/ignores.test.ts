@@ -29,7 +29,7 @@ test('inline ignores apply to Swift engine findings on fresh and cached runs', a
         stage: 'all' as const,
         skips: [],
         localSkips: [],
-        only: 'swift/call-through',
+        only: ['swift/call-through'],
         fix: false,
         isDryRun: false,
     };

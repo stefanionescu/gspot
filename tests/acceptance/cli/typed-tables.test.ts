@@ -8,7 +8,8 @@ const INIT = [
     'init',
     '--yes',
     '--presets',
-    'markdown,docs',
+    'markdown',
+    'docs',
     '--runner',
     'none',
     '--ci',
@@ -48,7 +49,7 @@ describe('gspot set', () => {
                 join(fixture.path, 'gspot.toml'),
                 `${policy}\n[tools.typos]\nexclude = ["{paths = [\\"a\\"], reason = \\"x\\"}"]\n`,
             );
-            const read = await run(fixture.path, ['check', 'docs/readme-present'], environment);
+            const read = await run(fixture.path, ['check', '--only', 'docs/readme-present'], environment);
             expect(read.code).toBe(2);
             expect(read.stdout + read.stderr).toContain('holds a table written inside quotes');
         },

@@ -110,7 +110,8 @@ describe('the markdown, docs and prose presets', () => {
                     'init',
                     '--yes',
                     '--presets',
-                    'markdown,prose',
+                    'markdown',
+                    'prose',
                     '--runner',
                     'none',
                     '--ci',
@@ -142,11 +143,11 @@ describe('the markdown, docs and prose presets', () => {
             );
             expect(named.code, named.stdout).toBe(0);
             for (const id of REPORTED_ELSEWHERE) {
-                const skipped = await run(fixture.path, ['check', id], environment);
+                const skipped = await run(fixture.path, ['check', '--only', id], environment);
                 expect(skipped.stdout, id).toContain('its findings come from');
             }
             unlinkSync(join(fixture.path, '.gspot', 'vale', 'styles', 'config', 'dictionaries'));
-            const broken = await run(fixture.path, ['check', 'prose/vale', '--no-cache'], environment);
+            const broken = await run(fixture.path, ['check', '--only', 'prose/vale', '--no-cache'], environment);
             expect(broken.code, 'a Vale that cannot run is an error, never a pass').toBe(1);
             expect(broken.stdout).toContain('error');
             const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);

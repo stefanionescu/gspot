@@ -10,7 +10,6 @@ import { runText } from '#cli/output/reporter.ts';
 async function sessionFor(root: string, status: number, stage: Stage = 'commit') {
     const session = await openSession(root);
     const manifest = session.manifests.get('typescript')!;
-    const compiler = manifest.checks.find((check) => check.name === 'typescript/tsc')!;
     const script = status === 0 ? 'process.exitCode = 0' : "console.log('Retained finding'); process.exitCode = 1";
     session.scopes[0]!.selected = [
         {
@@ -18,7 +17,12 @@ async function sessionFor(root: string, status: number, stage: Stage = 'commit')
             tools: [],
             checks: [
                 {
-                    ...compiler,
+                    runs: 'per-scope',
+                    coverage: [],
+                    summary: 'Reports the planted storage finding.',
+                    why: 'Storage failures preserve the check result.',
+                    help: 'Fix the planted finding.',
+                    claims: manifest.claims,
                     name: 'fixture/storage',
                     stage,
                     cwd: 'root',

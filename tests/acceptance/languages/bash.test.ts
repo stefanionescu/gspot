@@ -31,7 +31,11 @@ describe('the bash planted repository', () => {
                 },
             ];
             for (const entry of cases) {
-                const clean = await run(fixture.path, ['check', entry.check, '--no-cache', '--json'], environment);
+                const clean = await run(
+                    fixture.path,
+                    ['check', '--only', entry.check, '--no-cache', '--json'],
+                    environment,
+                );
                 expect(clean.code, clean.stdout + clean.stderr).toBe(0);
                 const report = JSON.parse(clean.stdout) as { checks: { files: number; status: string }[] };
                 expect(report.checks[0]?.status).toBe('ok');
@@ -40,7 +44,7 @@ describe('the bash planted repository', () => {
                 const original = readFileSync(path);
                 try {
                     await Bun.write(path, entry.broken);
-                    const broken = await run(fixture.path, ['check', entry.check, '--no-cache'], environment);
+                    const broken = await run(fixture.path, ['check', '--only', entry.check, '--no-cache'], environment);
                     expect(broken.code, broken.stdout + broken.stderr).toBe(1);
                     expect(broken.stdout).toContain(entry.path);
                     expect(broken.stdout).toContain('syntax');
@@ -76,11 +80,11 @@ describe('the bash planted repository', () => {
             expect(existsSync(join(fixture.path, '.gspot', 'version'))).toBe(true);
             expect(existsSync(join(fixture.path, '.gspot', 'hooks', 'pre-commit'))).toBe(true);
             expect(readFileSync(join(fixture.path, '.gitignore'), 'utf8')).toContain('>>> gspot managed >>>');
-            const check = await run(fixture.path, ['check', 'bash/shellcheck']);
+            const check = await run(fixture.path, ['check', '--only', 'bash/shellcheck']);
             expect(check.code).toBe(0);
             expect(check.stdout).toContain('bash/shellcheck');
             expect(check.stdout).toContain('ok');
-            const json = await run(fixture.path, ['check', 'bash/shfmt', '--json']);
+            const json = await run(fixture.path, ['check', '--only', 'bash/shfmt', '--json']);
             const record = JSON.parse(json.stdout) as { checks: { check: string; status: string }[]; exitCode: number };
             expect(record.checks[0]?.check).toBe('bash/shfmt');
             expect(record.exitCode).toBe(0);
@@ -111,11 +115,11 @@ describe('the bash planted repository', () => {
                 '--no-install',
             ]);
             await Bun.write(join(fixture.path, 'scripts', 'bad.sh'), '#!/usr/bin/env bash\necho $1\n');
-            const check = await run(fixture.path, ['check', 'bash/shellcheck', '--no-cache']);
+            const check = await run(fixture.path, ['check', '--only', 'bash/shellcheck', '--no-cache']);
             expect(check.code).toBe(1);
             expect(check.stdout).toContain('scripts/bad.sh:2:6  SC2086');
             expect(check.stdout).toContain('help:');
-            expect(check.stdout).toContain('reproduce: gspot check bash/shellcheck');
+            expect(check.stdout).toContain('reproduce: gspot check --only bash/shellcheck');
             const ignored = await run(fixture.path, [
                 'ignore',
                 'bash/shellcheck',
@@ -125,7 +129,7 @@ describe('the bash planted repository', () => {
                 'Word splitting is wanted in this launcher.',
             ]);
             expect(ignored.code).toBe(0);
-            const ignoredCheck = await run(fixture.path, ['check', 'bash/shellcheck', '--no-cache']);
+            const ignoredCheck = await run(fixture.path, ['check', '--only', 'bash/shellcheck', '--no-cache']);
             expect(ignoredCheck.code).toBe(0);
         },
         PLANTED_TIMEOUT_MS,
@@ -169,7 +173,7 @@ describe('the bash planted repository', () => {
             );
             expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
             expect(initialized.stdout + initialized.stderr).toContain('run gspot check');
-            const check = await run(fixture.path, ['check', 'bash/shellcheck', '--no-cache'], {
+            const check = await run(fixture.path, ['check', '--only', 'bash/shellcheck', '--no-cache'], {
                 PATH: bin,
                 HOME: join(fixture.path, 'home'),
                 MISE_DATA_DIR: join(fixture.path, 'home', 'mise'),
@@ -178,7 +182,7 @@ describe('the bash planted repository', () => {
             expect(check.stdout).toContain('missing');
             expect(check.stdout).toContain('shellcheck 0.11.0 is not installed');
             for (const name of ['shell-branches', 'shell-nesting', 'shell-mutable-assignments']) {
-                const missing = await run(fixture.path, ['check', `structure/${name}`, '--no-cache'], {
+                const missing = await run(fixture.path, ['check', '--only', `structure/${name}`, '--no-cache'], {
                     PATH: bin,
                     HOME: join(fixture.path, 'home'),
                     MISE_DATA_DIR: join(fixture.path, 'home', 'mise'),

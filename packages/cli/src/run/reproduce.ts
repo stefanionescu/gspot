@@ -8,7 +8,7 @@
  * @returns the command line
  */
 export function reproduceLine(checkName: string, scope: string, stage?: string): string {
-    const parts = ['gspot check', checkName];
+    const parts = ['gspot check --only', checkName];
     if (scope !== '') parts.push('--scope', scope);
     if (stage !== undefined && stage !== 'commit' && stage !== 'push') parts.push('--at', stage);
     return parts.join(' ');

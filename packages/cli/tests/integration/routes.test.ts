@@ -9,7 +9,7 @@ const OPTIONS = {
     stage: 'all' as const,
     skips: [],
     localSkips: [],
-    only: 'express/routes-tested',
+    only: ['express/routes-tested'],
     fix: false,
     isDryRun: false,
     noCache: true,

@@ -32,15 +32,19 @@ describe('the pytest preset', () => {
                     'init',
                     '--yes',
                     '--presets',
-                    'python,pytest,naming',
+                    'python',
+                    'pytest',
+                    'naming',
                     '--without',
-                    'structure,spelling,dependencies',
+                    'structure',
+                    'spelling',
+                    'dependencies',
                     ...QUIET,
                 ],
                 environment,
             );
             for (const id of ['pytest/coverage', 'naming/identifiers', 'python/ruff']) {
-                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             const untested: PlantedCase = {
@@ -79,15 +83,21 @@ describe('the fastapi preset', () => {
                     'init',
                     '--yes',
                     '--presets',
-                    'python,fastapi',
+                    'python',
+                    'fastapi',
                     '--without',
-                    'structure,spelling,naming,dependencies,security,pytest',
+                    'structure',
+                    'spelling',
+                    'naming',
+                    'dependencies',
+                    'security',
+                    'pytest',
                     ...QUIET,
                 ],
                 environment,
             );
             for (const id of ['fastapi/no-blocking-io-in-async', 'fastapi/openapi-lint', 'fastapi/openapi-fresh']) {
-                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             const blocked = await runPlanted(

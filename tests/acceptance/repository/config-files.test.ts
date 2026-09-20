@@ -102,7 +102,11 @@ process.exit(2);
                 PATH: `${join(fixture.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
             };
             await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
-            const result = await run(fixture.path, ['check', 'config-files/toml-format', '--no-cache'], environment);
+            const result = await run(
+                fixture.path,
+                ['check', '--only', 'config-files/toml-format', '--no-cache'],
+                environment,
+            );
             expect(result.code, result.stderr + result.stdout).toBe(1);
             expect(result.stdout).toContain('taplo broke: exit 2');
             expect(result.stdout).toContain('INFO taplo: loaded configuration');
@@ -130,7 +134,7 @@ process.exit(2);
             await Bun.write(path, workflow);
             const result = await run(
                 fixture.path,
-                ['check', 'config-files/actions-pins', '--at', 'push', '--no-cache'],
+                ['check', '--only', 'config-files/actions-pins', '--at', 'push', '--no-cache'],
                 environment,
             );
             expect(result.code, result.stderr + result.stdout).toBe(1);
@@ -176,7 +180,7 @@ process.exit(2);
                 );
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
-            const jsonCheck = await run(fixture.path, ['check', 'config-files/json'], environment);
+            const jsonCheck = await run(fixture.path, ['check', '--only', 'config-files/json'], environment);
             expect(jsonCheck.stdout).toContain('its findings come from');
             const checked = await run(fixture.path, ['check', '--at', 'commit', '--json'], environment);
             const record = JSON.parse(checked.stdout) as {
@@ -225,10 +229,10 @@ process.exit(2);
             const initialized = await run(fixture.path, INIT);
             expect(initialized.stdout).toContain('write');
             const environment = { PATH: toolsPath(['taplo', 'yamllint']) };
-            const toml = await run(fixture.path, ['check', 'config-files/toml'], environment);
+            const toml = await run(fixture.path, ['check', '--only', 'config-files/toml'], environment);
             expect(toml.code).toBe(1);
             expect(toml.stdout).toContain('settings.toml:2');
-            const yaml = await run(fixture.path, ['check', 'config-files/yaml'], environment);
+            const yaml = await run(fixture.path, ['check', '--only', 'config-files/yaml'], environment);
             expect(yaml.code).toBe(1);
             expect(yaml.stdout).toContain('key-duplicates');
             await Bun.write(
@@ -236,7 +240,7 @@ process.exit(2);
                 'const host = process.env.HOST;\nconsole.log(host, process.env.PORT);\n',
             );
             git(fixture.path, ['add', '-A']);
-            const keys = await run(fixture.path, ['check', 'config-files/env-example', '--at', 'push']);
+            const keys = await run(fixture.path, ['check', '--only', 'config-files/env-example', '--at', 'push']);
             expect(keys.code).toBe(1);
             expect(keys.stdout).toContain('HOST');
             expect(keys.stdout).not.toContain('PORT is read');
@@ -269,7 +273,7 @@ test(
         const path = join(fixture.path, 'settings/café.json');
         await Bun.write(path, JSON.stringify({ count: 'invalid' }));
         expect(git(fixture.path, ['add', 'settings/café.json']).code).toBe(0);
-        const command = ['check', 'config-files/schema', '--staged', '--at', 'push', '--no-cache'];
+        const command = ['check', '--only', 'config-files/schema', '--staged', '--at', 'push', '--no-cache'];
         const invalid = await run(fixture.path, command, environment);
         expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
         expect(invalid.stdout).toContain('settings/café.json');
@@ -291,10 +295,14 @@ test(
         commitAll(fixture.path);
         const environment = { PATH: toolsPath(['dotenv-linter']) };
         await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
-        const fixed = await run(fixture.path, ['check', 'config-files/dotenv', '--fix', '--no-cache'], environment);
+        const fixed = await run(
+            fixture.path,
+            ['check', '--only', 'config-files/dotenv', '--fix', '--no-cache'],
+            environment,
+        );
         expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
         expect(await Bun.file(join(fixture.path, '.env.example')).text()).toBe('LOWERCASE=value\n');
-        const checked = await run(fixture.path, ['check', 'config-files/dotenv', '--no-cache'], environment);
+        const checked = await run(fixture.path, ['check', '--only', 'config-files/dotenv', '--no-cache'], environment);
         expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS,

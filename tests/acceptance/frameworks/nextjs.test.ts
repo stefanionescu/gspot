@@ -12,9 +12,13 @@ const INIT = [
     'init',
     '--yes',
     '--presets',
-    'nextjs,i18n',
+    'nextjs',
+    'i18n',
     '--without',
-    'naming,spelling,css,config-files',
+    'naming',
+    'spelling',
+    'css',
+    'config-files',
     '--runner',
     'none',
     '--ci',
@@ -108,7 +112,7 @@ describe('the nextjs and i18n presets', () => {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await install(fixture.path, INIT, environment);
-            const disabled = await run(fixture.path, ['check', 'nextjs/build', '--no-cache'], environment);
+            const disabled = await run(fixture.path, ['check', '--only', 'nextjs/build', '--no-cache'], environment);
             expect(disabled.code, disabled.stdout + disabled.stderr).toBe(0);
             expect(disabled.stdout).toContain('skipped');
             expect(disabled.stdout).toContain('tools.next.build_in_gate');
@@ -123,21 +127,29 @@ describe('the nextjs and i18n presets', () => {
             expect(written).toContain("nextPlugin.configs['core-web-vitals']");
             expect(written).toContain('i18next/no-literal-string');
             // A later block that turns a required rule off is what integrity/required-rules exists to see.
-            const held = await run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
+            const held = await run(
+                fixture.path,
+                ['check', '--only', 'integrity/required-rules', '--no-cache'],
+                environment,
+            );
             expect(held.code, held.stdout + held.stderr).toBe(0);
             chmodSync(join(fixture.path, '.gspot/eslint.config.mjs'), OWNER_WRITES);
             const loosened = written.replace("'react/no-danger': 'error'", "'react/no-danger': 'off'");
             await Bun.write(join(fixture.path, '.gspot/eslint.config.mjs'), loosened);
-            const seen = await run(fixture.path, ['check', 'integrity/required-rules', '--no-cache'], environment);
+            const seen = await run(
+                fixture.path,
+                ['check', '--only', 'integrity/required-rules', '--no-cache'],
+                environment,
+            );
             expect(seen.code, seen.stdout + seen.stderr).toBe(1);
             expect(seen.stdout).toContain('react/no-danger is off for app/layout.tsx');
             await Bun.write(join(fixture.path, '.gspot/eslint.config.mjs'), written);
-            const yielded = await run(fixture.path, ['check', 'typescript/tsc', '--no-cache'], environment);
+            const yielded = await run(fixture.path, ['check', '--only', 'typescript/tsc', '--no-cache'], environment);
             expect(yielded.stdout).toContain('nextjs/typecheck runs it here');
             // Text written into the markup is what the i18n rule exists for, and a rule that runs proves its plugin works.
             const literal = LAYOUT.replace('<body>{children}</body>', '<body>Welcome{children}</body>');
             await Bun.write(join(fixture.path, 'app/layout.tsx'), literal);
-            const lint = await run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
+            const lint = await run(fixture.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(lint.stdout + lint.stderr).not.toContain('broke');
             expect(lint.stdout).toContain('i18next/no-literal-string');
         },

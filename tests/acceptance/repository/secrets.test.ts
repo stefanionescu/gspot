@@ -49,20 +49,28 @@ describe('the secrets preset', () => {
 
             await Bun.write(join(fixture.path, 'settings.py'), SETTINGS);
             git(fixture.path, ['add', 'settings.py']);
-            const staged = await run(fixture.path, ['check', 'secrets/gitleaks-staged', '--no-cache'], environment);
+            const staged = await run(
+                fixture.path,
+                ['check', '--only', 'secrets/gitleaks-staged', '--no-cache'],
+                environment,
+            );
             expect(staged.code, staged.stdout).toBe(1);
             expect(staged.stdout).toContain('settings.py:1');
             expect(staged.stdout).toContain('aws-access-token');
             expect(staged.stdout).not.toContain(KEY_ID);
 
             git(fixture.path, ['commit', '-qm', 'feat: add settings', '--no-verify']);
-            const pushed = await run(fixture.path, ['check', 'secrets/gitleaks', '--no-cache'], environment);
+            const pushed = await run(fixture.path, ['check', '--only', 'secrets/gitleaks', '--no-cache'], environment);
             expect(pushed.code, pushed.stdout).toBe(1);
             expect(pushed.stdout).toContain('settings.py');
 
             await Bun.write(join(fixture.path, '.env'), 'TOKEN=value\n');
             git(fixture.path, ['add', '-f', '.env']);
-            const tracked = await run(fixture.path, ['check', 'integrity/env-files', '--no-cache'], environment);
+            const tracked = await run(
+                fixture.path,
+                ['check', '--only', 'integrity/env-files', '--no-cache'],
+                environment,
+            );
             expect(tracked.code).toBe(1);
             expect(tracked.stdout).toContain('.env is tracked');
 

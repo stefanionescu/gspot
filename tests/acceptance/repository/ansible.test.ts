@@ -43,7 +43,7 @@ describe('the ansible preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['ansible-lint', 'typos', 'ec', 'taplo', 'yamllint']) };
             await install(fixture.path, INIT, environment);
-            const clean = await run(fixture.path, ['check', 'ansible/lint', '--no-cache'], environment);
+            const clean = await run(fixture.path, ['check', '--only', 'ansible/lint', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const planted of CASES) {
                 const outcome = await runPlanted(fixture.path, planted, environment);

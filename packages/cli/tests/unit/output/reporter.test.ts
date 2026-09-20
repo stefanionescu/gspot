@@ -16,7 +16,7 @@ const report: RunReport = {
             files: 3,
             duration: 120,
             baselined: 0,
-            reproduce: 'gspot check bash/shellcheck',
+            reproduce: 'gspot check --only bash/shellcheck',
             findings: [
                 {
                     check: 'bash/shellcheck',
@@ -40,7 +40,7 @@ const report: RunReport = {
             baselined: 0,
             findings: [],
             note: 'prettier is not installed. Run: mise install',
-            reproduce: 'gspot check formatting/prettier --scope api',
+            reproduce: 'gspot check --only formatting/prettier --scope api',
         },
     ],
     baselines: [{ check: 'bash/shellcheck', rule: 'SC2154', count: 3, baseline: 5, held: true, paths: { 'a.sh': 3 } }],
@@ -60,7 +60,7 @@ describe('the reporter', () => {
         expect(text).toContain('root  bash/shellcheck      fail       3 files     0.1s');
         expect(text).toContain('  a.sh:4:3  SC2086  Double quote to prevent globbing.');
         expect(text).toContain('    help: Quote it.');
-        expect(text).toContain('  reproduce: gspot check bash/shellcheck');
+        expect(text).toContain('  reproduce: gspot check --only bash/shellcheck');
         expect(text).toContain('api   formatting/prettier  missing    prettier is not installed. Run: mise install');
         expect(text).toContain('baselines  bash/shellcheck:SC2154  3 of 5');
         expect(text).toContain('ignores    1 (printed with --verbose)');

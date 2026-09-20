@@ -223,7 +223,7 @@ export async function runPlanted(
 ): Promise<SpawnOutcome> {
     const restore = plant(cwd, planted);
     try {
-        return await run(cwd, ['check', planted.check, '--no-cache'], environment);
+        return await run(cwd, ['check', '--only', planted.check, '--no-cache'], environment);
     } finally {
         restore();
     }

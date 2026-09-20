@@ -4,7 +4,7 @@ import type { Command } from 'commander';
 import type { InitOptions } from '#types/lifecycle.ts';
 import { initCommand } from '#cli/lifecycle/init/command.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
-import { commaList, directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
+import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 
 function formatChoice(flags: Record<string, unknown>): InitOptions['format'] {
     if (flags['keepFormat'] === true) return 'keep';
@@ -49,13 +49,9 @@ export function registerInit(program: Command): void {
         .description('Read this repository, propose a policy, and write it after a yes')
         .option('--yes', 'Take every proposal without asking')
         .option('--from <profile>', 'Install from a profile: a path, an https URL or github:owner/repo')
-        .option('--presets <ids>', 'The root presets, comma separated, instead of the detected ones', commaList)
-        .option('--without <ids>', 'Presets to leave out of the proposal, comma separated', commaList)
-        .option(
-            '--scope <path=ids>',
-            'A scope and its presets; repeat for each scope',
-            (value: string, previous: string[] | undefined) => [...(previous ?? []), value],
-        )
+        .option('--presets <presets...>', 'The root presets instead of the detected ones')
+        .option('--without <presets...>', 'Presets to leave out of the proposal')
+        .option('--scope <path=presets...>', 'Scopes and their comma-separated presets')
         .option('--no-install', 'Skip the install step and print the command instead')
         .option('--allow-dirty', 'Run although the working tree has uncommitted changes')
         .addOption(new Option('--hooks <tool>', 'Where hooks go').choices(['gspot', 'lefthook', 'husky', 'none']))

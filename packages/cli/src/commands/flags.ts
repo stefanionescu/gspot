@@ -1,17 +1,6 @@
 // The readers for the flag values commander hands over as unknown.
 
-/**
- * A comma-separated flag value as a list, trimmed, empty items dropped.
- * @param value the flag text
- * @returns the items
- */
-export function commaList(value: string): string[] {
-    return value
-        .split(',')
-        .map((item) => item.trim())
-        .filter((item) => item !== '');
-}
-
+import { resolve } from 'node:path';
 /**
  * A text flag, undefined when absent or empty.
  * @param flags the parsed flags
@@ -40,7 +29,7 @@ export function listFlag(flags: Record<string, unknown>, name: string): string[]
  * @returns the directory
  */
 export function directoryOf(global: Record<string, unknown>): string {
-    return textFlag(global, 'directory') ?? process.cwd();
+    return resolve(textFlag(global, 'C') ?? process.cwd());
 }
 
 /**

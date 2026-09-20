@@ -10,9 +10,11 @@ const INIT = [
     'init',
     '--yes',
     '--presets',
-    'swift,naming',
+    'swift',
+    'naming',
     '--without',
-    'structure,spelling',
+    'structure',
+    'spelling',
     '--runner',
     'none',
     '--ci',
@@ -90,11 +92,15 @@ describe('the swift preset', () => {
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const check of ['swift/swiftlint', 'swift/swiftformat']) {
-                const result = await run(fixture.path, ['check', check, '--no-cache'], environment);
+                const result = await run(fixture.path, ['check', '--only', check, '--no-cache'], environment);
                 expect(result.code, result.stdout + result.stderr).toBe(0);
             }
             await fixture.writeFile(path, header + SPACED);
-            const fixed = await run(fixture.path, ['check', 'swift/swiftformat', '--fix', '--no-cache'], environment);
+            const fixed = await run(
+                fixture.path,
+                ['check', '--only', 'swift/swiftformat', '--fix', '--no-cache'],
+                environment,
+            );
             expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
             expect(readFileSync(join(fixture.path, path), 'utf8')).toBe(header + CLEAN);
         },
@@ -109,7 +115,7 @@ describe('the swift preset', () => {
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 if (process.platform === 'win32' && planted.check === 'swift/swiftlint') {
@@ -160,7 +166,11 @@ describe('the swift preset inside a scope', () => {
                 '--scope',
                 'ios=swift',
                 '--without',
-                'structure,spelling,naming,markdown,docs',
+                'structure',
+                'spelling',
+                'naming',
+                'markdown',
+                'docs',
                 '--runner',
                 'none',
                 '--ci',
@@ -172,7 +182,7 @@ describe('the swift preset inside a scope', () => {
             ];
             await install(fixture.path, argv, environment);
             for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
-                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             const outcome = await runPlanted(
@@ -233,7 +243,7 @@ describe('the swift preset over a package', () => {
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'periphery', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
             for (const planted of BUILD_CASES) {
-                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 if (process.platform !== 'darwin') {

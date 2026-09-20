@@ -6,13 +6,10 @@ import { printCommand } from '#cli/commands/print-result.ts';
 import type { StageFilter, CheckOptions } from '#types/run.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 
-function optionsFrom(
-    checkId: string | undefined,
-    flags: Record<string, unknown>,
-    global: Record<string, unknown>,
-): CheckOptions {
+function optionsFrom(paths: string[], flags: Record<string, unknown>, global: Record<string, unknown>): CheckOptions {
     const stage = textFlag(flags, 'at') as StageFilter | undefined;
     const scope = textFlag(flags, 'scope');
+    const only = listFlag(flags, 'only');
     return {
         cwd: directoryOf(global),
         staged: flags['staged'] === true,
@@ -22,7 +19,8 @@ function optionsFrom(
         quiet: global['quiet'] === true,
         verbose: global['verbose'] === true,
         noCache: flags['cache'] === false,
-        ...(checkId === undefined ? {} : { check: checkId }),
+        paths,
+        ...(only === undefined ? {} : { only }),
         ...textEntry(flags, 'since', 'since'),
         ...(stage === undefined ? {} : { stage }),
         ...(scope === undefined ? {} : { scope: scope.endsWith('/') ? scope.slice(0, -1) : scope }),
@@ -36,23 +34,20 @@ function optionsFrom(
  */
 export function registerCheck(program: Command): void {
     program
-        .command('check [check-id]')
-        .description('Run the checks and print findings; one check when its id is given')
+        .command('check [paths...]')
+        .description('Run checks over the selected files and folders and print findings')
+        .option('--only <checks...>', 'Run the named checks')
         .option('--staged', 'The commit stage over staged files, as the pre-commit hook runs it')
         .option('--since <ref>', 'Commit and push stages over files changed since a git ref')
         .option('--fix', 'Run every fixer in order, then the checks again')
         .option('--dry-run', 'With --fix, print the diff of every fix and write nothing')
         .addOption(new Option('--at <stage>', 'One stage').choices(['commit', 'push', 'manual', 'message']))
         .option('--scope <path>', 'One scope only')
-        .option(
-            '--skip <check-id>',
-            'Skip one check this run; repeat for more',
-            (value: string, previous: string[]) => [...previous, value],
-        )
+        .option('--skip <checks...>', 'Skip the named checks for this run')
         .option('--message-file <path>', 'The commit message file, for the message stage')
         .option('--no-cache', 'Run every check even when its inputs are unchanged')
-        .action(async (checkId: string | undefined, flags: Record<string, unknown>, command: Command) => {
+        .action(async (paths: string[], flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await printCommand(() => checkCommand(optionsFrom(checkId, flags, global)), global);
+            await printCommand(() => checkCommand(optionsFrom(paths, flags, global)), global);
         });
 }

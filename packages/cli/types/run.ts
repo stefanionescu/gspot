@@ -24,7 +24,8 @@ export type CacheKeyInput = {
 
 export type CheckOptions = {
     cwd: string;
-    check?: string;
+    only?: string[];
+    paths: string[];
     staged: boolean;
     since?: string;
     fix: boolean;
@@ -75,9 +76,9 @@ export type PlanOptions = {
     stage: StageFilter;
     staged?: string[];
     since?: string[];
-    only?: string;
-    /** The checks a run is limited to, for a command that needs a few of them and not the whole gate. */
-    among?: Set<string>;
+    only?: string[];
+    /** Root-relative paths selected by positional file and directory arguments. */
+    paths?: string[];
     scope?: string;
     skips: string[];
     localSkips: string[];

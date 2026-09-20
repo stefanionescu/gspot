@@ -13,7 +13,8 @@ const INIT = [
     '--presets',
     'static-site',
     '--without',
-    'spelling,naming',
+    'spelling',
+    'naming',
     '--runner',
     'none',
     '--ci',
@@ -124,7 +125,7 @@ describe('the static-site preset', () => {
             };
             await install(fixture.path, INIT, environment);
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);

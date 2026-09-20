@@ -10,7 +10,11 @@ const INIT = [
     '--presets',
     'supabase',
     '--without',
-    'naming,structure,spelling,typescript,security',
+    'naming',
+    'structure',
+    'spelling',
+    'typescript',
+    'security',
     '--runner',
     'none',
     '--ci',
@@ -85,7 +89,7 @@ describe('the supabase preset', () => {
             await install(fixture.path, INIT, environment);
             const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
-                const clean = await run(fixture.path, ['check', id, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
             }
             for (const planted of CASES) {

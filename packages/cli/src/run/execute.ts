@@ -273,7 +273,7 @@ export async function executeRun(session: Session, options: RunOptions): Promise
         coverage: { checked: checkedSources.length, unchecked: sources.length - checkedSources.length },
         suppressions: census(session, checkedSources),
         unstaged: 0,
-        narrowed: options.staged !== undefined || options.since !== undefined,
+        narrowed: [options.staged, options.since, options.paths].some((selection) => selection !== undefined),
         failed,
         exitCode: failed.length > 0 ? 1 : 0,
     };

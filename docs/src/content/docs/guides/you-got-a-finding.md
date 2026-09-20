@@ -19,6 +19,14 @@ src/routes/turn.ts:41:3  gspot/no-call-through  This function passes its argumen
 do. For a rule inside a tool, `gspot explain <tool>/<rule>` prints the same and the exact
 `gspot ignore` and `gspot set` lines that change it.
 
+Run `gspot check --only typescript/eslint typescript/tsc` to select several checks.
+List all check names after one `--only` flag.
+
+Place paths before flags, or after `--`. Positional arguments select files or folders, as in
+`gspot check src/app.ts docs`. Paths are relative to the working directory or the
+directory selected with `-C`. A selected path can trigger a project-wide check;
+that check still reports findings across the project.
+
 ## Fix it
 
 `gspot check --fix` runs every fixer that can fix its own findings (formatters, import sorters,

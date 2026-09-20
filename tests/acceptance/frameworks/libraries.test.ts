@@ -11,9 +11,16 @@ const INIT = [
     'init',
     '--yes',
     '--presets',
-    'typescript,zod,trpc,tanstack-query,zustand,react-hook-form,drizzle',
+    'typescript',
+    'zod',
+    'trpc',
+    'tanstack-query',
+    'zustand',
+    'react-hook-form',
+    'drizzle',
     '--without',
-    'naming,spelling',
+    'naming',
+    'spelling',
     '--runner',
     'none',
     '--ci',
@@ -93,7 +100,7 @@ describe('the library presets', () => {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await install(fixture.path, INIT, environment);
-            const clean = await run(fixture.path, ['check', 'typescript/eslint', '--no-cache'], environment);
+            const clean = await run(fixture.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const [rule, path, text] of LINT) {
                 const outcome = await runPlanted(
@@ -104,7 +111,7 @@ describe('the library presets', () => {
                 expect(outcome.stdout, `${rule}: ${outcome.stdout}${outcome.stderr}`).toContain(rule);
             }
             for (const planted of CASES) {
-                const clean = await run(fixture.path, ['check', planted.check, '--no-cache'], environment);
+                const clean = await run(fixture.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, planted.check).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
@@ -112,7 +119,7 @@ describe('the library presets', () => {
             }
             const migrations = await run(
                 fixture.path,
-                ['check', 'drizzle/migrations-fresh', '--no-cache'],
+                ['check', '--only', 'drizzle/migrations-fresh', '--no-cache'],
                 environment,
             );
             expect(migrations.code).toBe(0);

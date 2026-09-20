@@ -8,7 +8,8 @@ const INIT = [
     'init',
     '--yes',
     '--presets',
-    'typescript,security',
+    'typescript',
+    'security',
     '--runner',
     'none',
     '--ci',
@@ -35,11 +36,11 @@ describe('the security preset', () => {
             commitAll(fixture.path);
             const environment = { PATH: toolsPath(['semgrep', 'typos', 'ec']) };
             await install(fixture.path, INIT, environment);
-            const clean = await run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
+            const clean = await run(fixture.path, ['check', '--only', 'security/semgrep', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             await Bun.write(join(fixture.path, 'src/run.ts'), EVALUATED);
             commitAll(fixture.path);
-            const found = await run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
+            const found = await run(fixture.path, ['check', '--only', 'security/semgrep', '--no-cache'], environment);
             if (process.platform === 'win32') {
                 expect(found.code, found.stdout + found.stderr).toBe(0);
                 expect(found.stdout).toMatch(/skipped\s+security\/semgrep\s+\(platform\)/u);
@@ -59,7 +60,7 @@ describe('the security preset', () => {
                 `${await Bun.file(policy).text()}\n[tools.semgrep]\nrules = ["security/own.yml"]\n`,
             );
             commitAll(fixture.path);
-            const own = await run(fixture.path, ['check', 'security/semgrep', '--no-cache'], environment);
+            const own = await run(fixture.path, ['check', '--only', 'security/semgrep', '--no-cache'], environment);
             if (process.platform === 'win32') {
                 expect(own.code, own.stdout + own.stderr).toBe(0);
                 expect(own.stdout).toMatch(/skipped\s+security\/semgrep\s+\(platform\)/u);

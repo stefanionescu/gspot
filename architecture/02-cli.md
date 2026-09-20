@@ -8,12 +8,12 @@ command exists when nothing else answers its question (D-131).
 ## Commands
 
 ```text
-gspot init       [--yes] [--dry-run] [--from <profile>] [--presets <names>] [--without <names>] [--scope <path=names>]
+gspot init       [--yes] [--dry-run] [--from <profile>] [--presets <names...>] [--without <names...>] [--scope <path=names...>]
                  [--hooks gspot|husky|lefthook|pre-commit|simple-git-hooks|existing] [--no-hooks] [--ci github|gitlab] [--no-ci]
                  [--runner mise|npm|pnpm|yarn|bun] [--no-runner] [--format keep|shipped]
                  [--no-rules] [--no-checks] [--no-install] [--allow-dirty]
 gspot check      [<path>...] [--staged] [--changed[=<ref>]] [--fix] [--dry-run]
-                 [--only <check>] [--skip <check>] [--stage commit|push|manual] [--no-cache]
+                 [--only <checks...>] [--skip <checks...>] [--stage commit|push|manual] [--no-cache]
 gspot install    [--dry-run]
 gspot apply      [--dry-run]
 gspot list       [settings]
@@ -250,10 +250,10 @@ Runs checks and prints findings. `gspot check` is the truth, and the hooks are t
 | `gspot check --stage manual`           | the checks that build, test, or scan a whole project, or that need the network |
 | `gspot check src/app.ts docs`          | those files and folders, as `eslint` and `ruff check` take paths               |
 | `gspot check api`                      | one project of a monorepo, because a scope is a folder                         |
-| `gspot check --only typescript/eslint` | one check; repeat the flag for more                                            |
+| `gspot check --only typescript/eslint` | one check; list more names after the same flag                                 |
 | `gspot check --fix`                    | every fixer in order, then the checks again                                    |
 | `gspot check --fix --dry-run`          | the diff of every fix, and no write                                            |
-| `gspot check --skip <check>`           | skips one check this run, printed and recorded                                 |
+| `gspot check --skip <checks...>`       | skips the named checks this run, printed and recorded                          |
 
 A changed-file run narrows file-list checks, not the findings of a project-wide check (D-168).
 A project-wide check runs when a changed, deleted, or renamed path affects its inputs. Every
