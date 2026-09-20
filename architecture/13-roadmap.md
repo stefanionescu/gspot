@@ -57,6 +57,14 @@ TypeScript checking and the native macOS `arm64` build pass. The generated entry
 all four preset directories and the Go grammar, including stale grammar files from an earlier build.
 All 273 reference pages match their generated content, and `apply --check` reports no drift.
 
+At `fbfb142f032d4712eacef69526038d5fe5485358`,
+[Linux](https://github.com/stefanionescu/gspot/actions/runs/35489701634/job/106022412676)
+passes 443 tests with four skipped, and
+[macOS](https://github.com/stefanionescu/gspot/actions/runs/35489701634/job/106022412843)
+passes 444 tests with three skipped. Both native builds and all 136 self-checks pass.
+The gspot workflow also passes for that revision. Windows setup reaches the plugin build,
+where K-306 supplies the next repair.
+
 Cargo remains an external installer for retained tools such as Taplo and Typos.
 Generic lockfile classification also remains. Neither provides a Rust preset.
 The seven tool pins for the deleted presets and their Go runtime pin are removed.

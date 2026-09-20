@@ -17,6 +17,7 @@ natures = ["source"]
 
 [[tools]]
 name = "swiftlint"
+windows = false
 version = "0.63.2"
 floor = "0.57.0"
 mise = "swiftlint"

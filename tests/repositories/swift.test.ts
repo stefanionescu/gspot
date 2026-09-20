@@ -85,6 +85,11 @@ describe('the swift preset', () => {
                 const clean = run(fixture.path, ['check', planted.id, '--no-cache'], environment);
                 expect(clean.code, `${planted.id}: ${clean.stdout}${clean.stderr}`).toBe(0);
                 const outcome = await runPlanted(fixture.path, planted, environment);
+                if (process.platform === 'win32' && planted.id === 'swift/swiftlint') {
+                    expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
+                    expect(outcome.stdout).toContain('swiftlint has no Windows build');
+                    continue;
+                }
                 expect(outcome.code, `${planted.id}: ${outcome.stdout}${outcome.stderr}`).toBe(1);
                 expect(outcome.stdout, planted.id).toContain(planted.expected);
                 expect(outcome.stdout, planted.id).toContain('Sources/App/');
@@ -149,8 +154,13 @@ describe('the swift preset inside a scope', () => {
                 { id: 'swift/swiftlint', files: { 'ios/Sources/App/Cast.swift': CAST }, expected: 'force_cast' },
                 environment,
             );
-            expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
-            expect(outcome.stdout).toContain('ios/Sources/App/Cast.swift');
+            if (process.platform === 'win32') {
+                expect(outcome.code, outcome.stdout + outcome.stderr).toBe(0);
+                expect(outcome.stdout).toContain('swiftlint has no Windows build');
+            } else {
+                expect(outcome.code, outcome.stdout + outcome.stderr).toBe(1);
+                expect(outcome.stdout).toContain('ios/Sources/App/Cast.swift');
+            }
         },
         PLANTED_TIMEOUT_MS * 4,
     );

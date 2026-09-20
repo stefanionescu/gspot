@@ -55,6 +55,11 @@ prepend to `PATH`. A subprocess regression test checks inherited executable look
 The encoded-checkout asset test passes on Windows. Two plugin export tests also fail and
 remain open pending their replacement under K-102.
 
+SwiftLint declares `windows = false` in its tool metadata. The planted Swift tests
+require an explicit unsupported-platform result on Windows for SwiftLint, while keeping
+finding assertions for SwiftFormat and the built-in Swift checks. Linux and macOS retain
+the SwiftLint finding assertions.
+
 ## K-164: a release can ship broken and say nothing
 
 Closes K-164, K-145, K-121, K-244, and K-245.
