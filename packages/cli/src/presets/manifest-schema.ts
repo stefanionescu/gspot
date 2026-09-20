@@ -15,6 +15,18 @@ const claimsSchema = z.strictObject({
 
 const installerSchema = z.union([z.string(), z.strictObject({ name: z.string(), version: z.string() })]);
 
+const installerFields = {
+    npm: installerSchema.optional(),
+    pypi: installerSchema.optional(),
+    mise: installerSchema.optional(),
+    brew: installerSchema.optional(),
+    apt: installerSchema.optional(),
+    cargo: installerSchema.optional(),
+    github: installerSchema.optional(),
+    winget: installerSchema.optional(),
+    scoop: installerSchema.optional(),
+};
+
 const toolSchema = z.strictObject({
     name: z.string(),
     kind: z.enum(['binary', 'library']).default('binary'),
@@ -25,16 +37,7 @@ const toolSchema = z.strictObject({
     version_command: z.array(z.string()).optional(),
     version_regex: z.string().optional(),
     env: z.record(z.string(), z.string()).optional(),
-    npm: installerSchema.optional(),
-    pypi: installerSchema.optional(),
-    mise: installerSchema.optional(),
-    brew: installerSchema.optional(),
-    apt: installerSchema.optional(),
-    cargo: installerSchema.optional(),
-    github: installerSchema.optional(),
-    winget: installerSchema.optional(),
-    scoop: installerSchema.optional(),
-    ubi: installerSchema.optional(),
+    ...installerFields,
 });
 
 const stubSchema = z.strictObject({
@@ -50,7 +53,6 @@ const configSchema = z.strictObject({
     stub: stubSchema.optional(),
     fragment: z.boolean().default(false),
     per_scope: z.boolean().default(false),
-    executable: z.boolean().default(false),
     header: z.boolean().default(true),
     needs: z.string().optional(),
 });
@@ -140,3 +142,5 @@ export const manifestSchema = z.strictObject({
     rule_files: stringListTable.default({}),
     required_rules: stringListTable.default({}),
 });
+
+export const INSTALLER_KEYS = Object.keys(installerFields) as (keyof typeof installerFields)[];

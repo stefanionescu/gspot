@@ -3,10 +3,9 @@ import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/policy/normalize.ts';
 import { TOOL_ANALYSES } from '#cli/run/analyses.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
-import { manifestSchema } from '#cli/presets/manifest-schema.ts';
+import { manifestSchema, INSTALLER_KEYS } from '#cli/presets/manifest-schema.ts';
 import type { RawCheck, RawManifest, RawTool, CheckSpec, Manifest, ToolPin } from '#types/manifest.ts';
 
-const INSTALLER_KEYS = ['npm', 'pypi', 'mise', 'brew', 'apt', 'cargo', 'github', 'winget', 'scoop', 'ubi'] as const;
 const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
 const GSPOT_DIRECTORY = '.gspot/';
 

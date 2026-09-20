@@ -406,7 +406,7 @@ twenty-six rules with no fixture.
 
 Until a release exists, `mise.toml` in this repository sets `GSPOT_BIN` to run the CLI from
 source with Bun, and the hook body already reads `${GSPOT_BIN:-gspot}`. Once the first tag
-exists, `.config/mise/conf.d/gspot.toml` pins gspot through `ubi:` like any other repository and the
+exists, `.config/mise/conf.d/gspot.toml` pins gspot through `github:` like any other repository and the
 environment entry goes. Rejected: a special case in `init` for this repository.
 
 ## D-66 One naming scheme for the packages

@@ -1,6 +1,7 @@
-// The install command for a tool on this platform: mise first, then the platform's manager.
 import type { ToolPin } from '#types/manifest.ts';
 import type { RunnerTool } from '#types/config.ts';
+// The install command for a tool on this platform: mise first, then the platform's manager.
+import { MISE_BACKENDS } from '#config/installers.ts';
 
 const HOST_HINTS: Record<string, string> = {
     xcodebuild: 'install Xcode from the App Store',
@@ -9,7 +10,6 @@ const HOST_HINTS: Record<string, string> = {
     docker: 'install Docker Desktop or the docker engine',
     bash: "install bash through your platform's package manager",
 };
-const MISE_INSTALLERS = ['mise', 'npm', 'pypi', 'ubi', 'github'];
 const NPM_RUNNERS = new Set(['npm', 'bun', 'pnpm']);
 const PLATFORM_INSTALLERS: { platform: NodeJS.Platform; installer: string; command: string }[] = [
     { platform: 'darwin', installer: 'brew', command: 'brew install' },
@@ -34,10 +34,9 @@ function cargoHint(installers: ToolPin['installers']): string | undefined {
 
 function githubHint(tool: ToolPin): string | undefined {
     const { installers } = tool;
-    const pin = installers['ubi'] ?? installers['github'];
+    const pin = installers['github'];
     if (pin === undefined) return undefined;
-    const backend = installers['ubi'] === undefined ? 'github' : 'ubi';
-    return `mise use ${backend}:${pin.name}@${pin.version ?? 'latest'}`;
+    return `mise use github:${pin.name}@${pin.version ?? 'latest'}`;
 }
 
 function packageHint(tool: ToolPin, runner: RunnerTool): string | undefined {
@@ -51,7 +50,7 @@ function packageHint(tool: ToolPin, runner: RunnerTool): string | undefined {
 }
 
 function hasMiseInstaller(tool: ToolPin): boolean {
-    return MISE_INSTALLERS.some((installer) => tool.installers[installer] !== undefined);
+    return MISE_BACKENDS.some(({ installer }) => tool.installers[installer] !== undefined);
 }
 
 function installerHint(tool: ToolPin, runner: RunnerTool): string | undefined {

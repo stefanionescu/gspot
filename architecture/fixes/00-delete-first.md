@@ -286,6 +286,16 @@ they use.
 
 ## K-180: manifest keys, a pin, and a runner that do nothing
 
+**Partially implemented.** The unused config `executable` field and `ubi` installer are
+removed with their readers. Executable hook output remains owned by the hook generator.
+Installer keys derive from the schema, and runner output and installation hints share one
+backend table. Gspot installation hints and mise output use the GitHub backend.
+
+All 22 affected preset, emission, hook, and tool-probe tests pass (90 assertions).
+Schema validation and 274 reference comparisons pass. K-240 and the broader unused-manifest
+field audit remain open. The installation guide identifies the prerelease state and shows
+how to run the CLI from a contributor checkout.
+
 Closes K-180, K-195, and K-240.
 
 **What is wrong.** The config key `executable` and the installer `ubi` have readers and no

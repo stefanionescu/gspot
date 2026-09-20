@@ -103,7 +103,6 @@ function configurationFiles(
             kind: 'config',
             preset: manifest.preset.name,
         };
-        if (config.executable) file.executable = true;
         out.files.push(file);
         stubFor({ session, selection, manifest }, config, file, out);
     }

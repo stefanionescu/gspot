@@ -4,19 +4,12 @@ import { existsSync, readFileSync } from 'node:fs';
 import { headerFor } from '#cli/emit/templates.ts';
 import type { GeneratedFile } from '#types/emit.ts';
 import { isEmbedded } from '#cli/platform/assets.ts';
+import { MISE_BACKENDS } from '#config/installers.ts';
 import type { Manifest, ToolPin, InstallerPin } from '#types/manifest.ts';
 
 const HOST_ONLY = new Set(['bash', 'git', 'docker', 'xcodebuild', 'plutil', 'xcstringstool', 'swift', 'xmllint']);
 const BARE_KEY = /^[\w-]+$/u;
 const MISE_PATH = '.config/mise/conf.d/gspot.toml';
-const BACKENDS: { installer: string; prefix: string }[] = [
-    { installer: 'mise', prefix: '' },
-    { installer: 'npm', prefix: 'npm:' },
-    { installer: 'pypi', prefix: 'pipx:' },
-    { installer: 'ubi', prefix: 'ubi:' },
-    { installer: 'github', prefix: 'github:' },
-    { installer: 'cargo', prefix: 'cargo:' },
-];
 const MISE_TASKS = [
     '',
     '[tasks."gspot:check"]',
@@ -69,7 +62,7 @@ function isPinnedInPackage(tool: ToolPin, isPackagePinned: boolean): boolean {
  */
 export function misePin(tool: ToolPin): InstallerPin | undefined {
     if (tool.provider === 'host' || HOST_ONLY.has(tool.name)) return undefined;
-    const backend = BACKENDS.find(({ installer }) => tool.installers[installer] !== undefined);
+    const backend = MISE_BACKENDS.find(({ installer }) => tool.installers[installer] !== undefined);
     if (backend === undefined) return undefined;
     const pin = tool.installers[backend.installer];
     return pin === undefined ? undefined : { ...pin, name: `${backend.prefix}${pin.name}` };
@@ -99,7 +92,7 @@ export function collectPins(manifests: Manifest[]): ToolPin[] {
  */
 export function miseTasks(manifests: Manifest[], version: string, isPackagePinned: boolean): GeneratedFile {
     const lines = [headerFor(MISE_PATH, version).trimEnd(), '', '[tools]'];
-    if (isEmbedded()) lines.push(`"ubi:stefanionescu/gspot" = "${version}"`);
+    if (isEmbedded()) lines.push(`"github:stefanionescu/gspot" = "${version}"`);
     for (const tool of collectPins(manifests)) {
         if (isPinnedInPackage(tool, isPackagePinned)) continue;
         const pin = misePin(tool);

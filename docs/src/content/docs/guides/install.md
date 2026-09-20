@@ -1,34 +1,23 @@
 ---
 title: Install gspot
-description: Put the gspot binary on your machine through mise, npm or a release download, and pin it in the repository.
+description: Run the prerelease CLI from a contributor checkout.
 sidebar:
     order: 1
 ---
 
-gspot is one binary. Install it once on your machine to run `gspot init`; after that the
-repository pins its own version and the hooks run that one.
-
-## With mise
+gspot is prerelease. Public npm packages and release binaries are not available yet.
+Use a repository checkout for contributor work:
 
 ```bash
-mise use -g ubi:stefanionescu/gspot@latest
-gspot --version
+git clone https://github.com/stefanionescu/gspot.git
+cd gspot
+bun install
+bun packages/cli/src/main.ts --help
 ```
 
-## With npm
-
-```bash
-npm install -g gspot
-gspot --version
-```
-
-The npm package is a launcher that installs the binary for your platform.
-
-## From a release
-
-Download the file for your platform from the
-[releases page](https://github.com/stefanionescu/gspot/releases), put it on your `PATH`, and run
-`gspot --version`.
+Run the source entry point with Bun from the repository you want to check. Candidate package
+validation uses an isolated local registry. A cross-compiled binary does not establish that
+its target platform has passed acceptance.
 
 ## What the repository pins
 

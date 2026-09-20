@@ -11,7 +11,7 @@ import { GSPOT_VERSION, pinnedVersion, writePin } from '#cli/run/version-pin.ts'
 import { upgradeReport, upgradeReportLines } from '#cli/lifecycle/upgrade/report.ts';
 
 function otherBinaryText(target: string): string {
-    return `This binary is ${GSPOT_VERSION}. Install gspot ${target} first (mise use ubi:stefanionescu/gspot@${target}, or your package manager), then run gspot upgrade --to ${target} with it.`;
+    return `This binary is ${GSPOT_VERSION}. Install gspot ${target} first (mise use github:stefanionescu/gspot@${target}, or your package manager), then run gspot upgrade --to ${target} with it.`;
 }
 
 async function alreadyAtTarget(header: string[], pinned: string | undefined, target: string): Promise<CommandResult> {
