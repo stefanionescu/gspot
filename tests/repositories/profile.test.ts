@@ -1,26 +1,15 @@
 // Planted repositories: a profile saved in one repository installs the same policy in another, and a bad one stops init.
 import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 import { createFixture } from 'fs-fixture';
 import { describe, expect, test } from 'bun:test';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
+import { treeContents } from '#tests/harness/contents.ts';
 import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
 
 const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };
 
 async function tables(root: string): Promise<Record<string, unknown>> {
     return Bun.TOML.parse(await Bun.file(join(root, 'gspot.toml')).text()) as Record<string, unknown>;
-}
-
-function treeContents(root: string): Record<string, string> {
-    return Object.fromEntries(
-        readdirSync(root, { recursive: true }).map((entry) => {
-            const path = String(entry);
-            const full = join(root, path);
-            const attributes = statSync(full);
-            const bytes = attributes.isFile() ? readFileSync(full).toString('base64') : 'directory';
-            return [path, `${String(attributes.mode)}:${bytes}`];
-        }),
-    );
 }
 
 describe('profiles', () => {
