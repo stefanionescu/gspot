@@ -3,7 +3,18 @@ import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
-import { commitAll, git, toolsPath, PLANTED_TIMEOUT_MS, run, runPlanted, script } from '#tests/harness/planted.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+
+import {
+    commitAll,
+    git,
+    install,
+    toolsPath,
+    PLANTED_TIMEOUT_MS,
+    run,
+    runPlanted,
+    script,
+} from '#tests/harness/planted.ts';
 
 const INIT = [
     'init',
@@ -48,6 +59,25 @@ const CASES: PlantedCase[] = [
 ];
 
 describe('the config-files preset', () => {
+    test(
+        'GitHub initialization writes a workflow accepted by actionlint',
+        async () => {
+            await using fixture = await createFixture({ 'README.md': '# Workflow test\n' });
+            commitAll(fixture.path);
+            const environment = { PATH: toolsPath(['actionlint']) };
+            await install(fixture.path, [...INIT, '--ci', 'github', '--hooks', 'none'], environment);
+            expect(await Bun.file(join(fixture.path, '.github/workflows/gspot.yml')).exists()).toBe(true);
+            const result = Bun.spawnSync(['actionlint', '-no-color', '.github/workflows/gspot.yml'], {
+                cwd: fixture.path,
+                env: { ...environmentVariables(), ...environment },
+                stdout: 'pipe',
+                stderr: 'pipe',
+            });
+            expect(result.exitCode, result.stderr.toString() + result.stdout.toString()).toBe(0);
+        },
+        PLANTED_TIMEOUT_MS,
+    );
+
     test(
         'each remaining check fires on its planted defect, and the two that others report say so',
         async () => {

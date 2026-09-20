@@ -43,6 +43,13 @@ brew = "actionlint"
 github = "rhysd/actionlint"
 
 [[tools]]
+name = "pinact"
+version = "5.0.0"
+mise = "pinact"
+brew = "pinact"
+github = "suzuki-shunsuke/pinact"
+
+[[tools]]
 name = "zizmor"
 version = "1.30.1"
 mise = "zizmor"
@@ -155,6 +162,19 @@ output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\
 summary = "Checks every GitHub Actions workflow with actionlint: syntax, expressions, action inputs, and shell steps."
 why = "A workflow error surfaces on the first push after the change, in CI, where it costs a round trip."
 fix = "Fix the line actionlint names."
+
+[[checks]]
+id = "config-files/actions-pins"
+stage = "push"
+runs = "per-file-list"
+requires = "network"
+command = ["pinact", "run", "--verify", "--check", "{files}"]
+claims = {paths = [".github/workflows/*.yml", ".github/workflows/*.yaml"]}
+inspection = ["security"]
+output = {format = "lines"}
+summary = "Verifies GitHub action commits and version comments without changing workflow files."
+why = "A nonexistent action commit prevents the workflow from starting."
+fix = "Replace the invalid action pin with a verified commit and its matching version comment."
 
 [[checks]]
 id = "config-files/actions-security"

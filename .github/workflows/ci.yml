@@ -13,11 +13,11 @@ jobs:
                 os: [ubuntu-latest, macos-latest, windows-latest]
         runs-on: ${{ matrix.os }}
         steps:
-            - uses: actions/checkout@34e114876b0b11c390a56381ad4ec7f4b0d0a6ae
+            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   fetch-depth: 0
                   persist-credentials: false
-            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566
+            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
             - run: bun install --frozen-lockfile
             - run: bunx tsc --noEmit -p tsconfig.json
             - run: bun test --coverage

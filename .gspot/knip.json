@@ -130,6 +130,7 @@
         "lychee",
         "markdownlint-cli2",
         "osv-scanner",
+        "pinact",
         "plutil",
         "prettier",
         "semgrep",

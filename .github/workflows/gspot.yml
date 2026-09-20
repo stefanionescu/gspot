@@ -9,15 +9,15 @@ jobs:
   check-ubuntu:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@34e114876b0b11c390a56381ad4ec7f4b0d0a6ae
+      - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
         with:
           fetch-depth: 0
-      - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566
+      - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
       - run: mise run gspot:setup
       - run: gspot check --json > gspot.json
       - run: gspot check --at manual
         if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)
-      - uses: github/codeql-action/upload-sarif@df5a14dc28094dc936e103b37d749c6628682b60
+      - uses: github/codeql-action/upload-sarif@df5a14dc28094dc936e103b37d749c6628682b60 # v3.25.0
         if: always()
         with:
           sarif_file: .gspot/last.sarif

@@ -13,6 +13,7 @@ Kind: concern. Requires: `formatting`. Selected by default.
 - yamllint 1.38.0
 - v8r 6.1.0
 - actionlint 1.7.12
+- pinact 5.0.0
 - zizmor 1.30.1
 - dotenv-linter 4.0.0
 - plutil
@@ -34,6 +35,7 @@ Kind: concern. Requires: `formatting`. Selected by default.
 | [`config-files/yaml`](/reference/rules/config-files/yaml/)                         | commit | Parses every YAML file and checks its indentation, keys, and values with yamllint.                                                                           |
 | [`config-files/schema`](/reference/rules/config-files/schema/)                     | push   | Validates every configuration file that has a known schema against it: package.json, tsconfig.json, mise, workflows and the rest of the SchemaStore catalog. |
 | [`config-files/actions`](/reference/rules/config-files/actions/)                   | commit | Checks every GitHub Actions workflow with actionlint: syntax, expressions, action inputs, and shell steps.                                                   |
+| [`config-files/actions-pins`](/reference/rules/config-files/actions-pins/)         | push   | Verifies GitHub action commits and version comments without changing workflow files.                                                                         |
 | [`config-files/actions-security`](/reference/rules/config-files/actions-security/) | commit | Audits every GitHub Actions workflow with zizmor: template injection, unpinned actions, excessive permissions, dangerous triggers.                           |
 | [`config-files/dotenv`](/reference/rules/config-files/dotenv/)                     | commit | Checks every tracked environment file: key format, duplicates, quoting, ordering, and trailing spaces.                                                       |
 | [`config-files/env-example`](/reference/rules/config-files/env-example/)           | push   | Checks that every environment variable the code reads appears in the environment template.                                                                   |

@@ -2,7 +2,7 @@
 import { headerFor } from '#cli/emit/templates.ts';
 import type { GeneratedFile, WorkflowShape } from '#types/emit.ts';
 
-const CHECKOUT = 'actions/checkout@34e114876b0b11c390a56381ad4ec7f4b0d0a6ae';
+const CHECKOUT = 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5';
 const MISE = 'jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566';
 const SARIF = 'github/codeql-action/upload-sarif@df5a14dc28094dc936e103b37d749c6628682b60';
 const RELEASES = 'https://github.com/stefanionescu/gspot/releases/download';
@@ -56,7 +56,7 @@ function windowsInstall(version: string): string[] {
 }
 
 function setupSteps(shape: WorkflowShape, platform: string): string[] {
-    if (shape.isMise) return [`      - uses: ${MISE}`, '      - run: mise run gspot:setup'];
+    if (shape.isMise) return [`      - uses: ${MISE} # v3.2.0`, '      - run: mise run gspot:setup'];
     const install = platform === 'windows' ? windowsInstall(shape.version) : unixInstall(shape.version);
     return [...install, '      - run: gspot doctor', '      - run: gspot apply'];
 }
@@ -66,7 +66,7 @@ function jobHead(name: string, runner: string, setup: string[]): string[] {
         `  ${name}:`,
         `    runs-on: ${runner}`,
         '    steps:',
-        `      - uses: ${CHECKOUT}`,
+        `      - uses: ${CHECKOUT} # v4.3.1`,
         '        with:',
         '          fetch-depth: 0',
         ...setup,
@@ -79,7 +79,7 @@ function checkJob(shape: WorkflowShape, platform: string): string[] {
         '      - run: gspot check --json > gspot.json',
         '      - run: gspot check --at manual',
         "        if: github.event_name == 'push' && github.ref == format('refs/heads/{0}', github.event.repository.default_branch)",
-        `      - uses: ${SARIF}`,
+        `      - uses: ${SARIF} # v3.25.0`,
         '        if: always()',
         '        with:',
         '          sarif_file: .gspot/last.sarif',
