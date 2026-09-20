@@ -116,12 +116,12 @@ fix = "Fix the line taplo names."
 id = "config-files/toml-format"
 stage = "commit"
 runs = "per-file-list"
-command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "--check", "{files}"]
+command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
 fix_command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "{files}"]
 fix_order = "format"
 claims = {extensions = [".toml"]}
 inspection = ["format"]
-output = {format = "regex", pattern = "^ERROR taplo:format_files: (?<message>.+?) path=\"(?<file>[^\"]+)\"$"}
+output = {format = "regex", pattern = "^(?:--- a/(?<file>.+)|ERROR taplo:format_files: the file is not properly formatted path=\"(?<file>[^\"]+)\")$", message = "The file is not formatted with the configured TOML settings."}
 summary = "Checks that every TOML file is formatted the way taplo formats it with the shared settings."
 why = "One formatter keeps a diff about the values, not the spacing."
 fix = "Run gspot check --fix."

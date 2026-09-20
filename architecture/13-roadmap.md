@@ -56,6 +56,13 @@ Crash reports retain the exit code and the first 20 lines of each output stream.
 A planted crash test checks that stdout diagnostics survive nonempty stderr. The strict
 formatter finding assertion remains in place.
 
+[macOS job 106027893754](https://github.com/stefanionescu/gspot/actions/runs/35491796100/job/106027893754)
+confirms exit 1 with no formatting diagnostic in either stream. The formatter command
+requests diff output, which [Taplo 0.10.0 flushes](https://github.com/tamasfe/taplo/blob/0.10.0/crates/taplo-cli/src/commands/format.rs)
+before returning. The parser accepts a diff header or the existing formatting log entry.
+Identical regex findings are emitted once when both streams describe the same defect.
+A regression covers diff-only, log-only, and combined output against a real file.
+
 The [Windows job 106025469643](https://github.com/stefanionescu/gspot/actions/runs/35490879911/job/106025469643)
 exposes CRLF output rejected by the ShellCheck and XML regular expressions. The shared
 parser normalizes those line endings before matching and converts native finding paths

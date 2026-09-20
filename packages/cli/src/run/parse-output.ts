@@ -72,12 +72,15 @@ function parseRegex(check: string, output: OutputFormat, text: string, help: str
     const pattern = compiled(output.pattern, DEFAULT_PATTERN);
     const fixable = output.fixable === undefined ? undefined : compiled(output.fixable, '');
     const parser: RegexParser = { output, fixable, help };
-    const findings: Finding[] = [];
+    const findings = new Map<string, Finding>();
     for (const line of text.split('\n')) {
         const groups = pattern.exec(line)?.groups;
-        if (groups) findings.push(regexFinding(check, parser, line, groups));
+        if (groups) {
+            const finding = regexFinding(check, parser, line, groups);
+            findings.set(JSON.stringify(finding), finding);
+        }
     }
-    return findings;
+    return findings.values().toArray();
 }
 
 function groupedFinding(

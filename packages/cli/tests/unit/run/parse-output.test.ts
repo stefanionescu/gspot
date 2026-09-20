@@ -38,6 +38,26 @@ describe('tool output across platforms', () => {
         expect(isToolBroken(spec, findings, [fixture.path])).toBe(false);
     });
 
+    test('Taplo reports one finding from a diff, a log entry, or both', async () => {
+        await using fixture = await createFixture({ 'settings/café.toml': 'a=1\n' });
+        const spec = presetManifests()
+            .get('config-files')!
+            .checks.find((check) => check.id === 'config-files/toml-format')!;
+        const path = join(fixture.path, 'settings', 'café.toml');
+        const diff = `--- a/${path}\n+++ b/${path}\n@@ -1 +1 @@\n-a=1\n+a = 1\n`;
+        const log = `ERROR taplo:format_files: the file is not properly formatted path="${path}"\n`;
+        for (const [stdout, stderr] of [
+            [diff, 'INFO loaded configuration\n'],
+            ['', log],
+            [diff, log],
+        ]) {
+            const findings = parseOutput(spec, stdout!, stderr!, fixture.path);
+            expect(findings).toHaveLength(1);
+            expect(findings[0]).toMatchObject({ file: 'settings/café.toml', fixable: true });
+            expect(isToolBroken(spec, findings, [fixture.path])).toBe(false);
+        }
+    });
+
     test('grouped output strips line endings and relativizes native absolute paths', async () => {
         await using fixture = await createFixture({ 'settings/café.toml': 'a=1\n' });
         const base = presetManifests()
