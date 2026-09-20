@@ -160,6 +160,14 @@ Supabase holds no row level security finding.
 
 ## K-175: seven Vale packages and 93 rules turned off
 
+**Partial local verification, September 20, 2026.** The prose preset owns shipped vocabulary,
+package selection, styles, and the default disabled-rule policy. The CLI retains source
+parsing and output handling. Generated vocabulary combines shipped and project words without
+duplicates. Package readiness reads the generated Vale configuration.
+
+All 24 focused prose and generation cases pass. Recommended-level selection, offline
+recommended acceptance, and review of inherited disabled-rule reasons remain open.
+
 **What is wrong.** The prose preset turns on seven style packages of other companies and turns 93
 of their rules off, each with a reason about the text of this repository. The off list and a
 vocabulary of 68 product names live in `config/prose.ts` and ship to every project.

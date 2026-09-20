@@ -9,12 +9,12 @@ import { routeGroups } from '#cli/prose/grammars.ts';
 import type { SpawnResult } from '#types/platform.ts';
 import { isAbsolute, join, relative } from 'node:path';
 import { locateTool } from '#cli/platform/tool-probe.ts';
+import { vocabularyFor } from '#cli/prose/vocabulary.ts';
 import type { MergedView, Policy } from '#types/config.ts';
 import type { ProseRoute, ValeAlert } from '#types/prose.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import { vocabularyFor, vocabularyText } from '#cli/prose/vocabulary.ts';
-import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY, VALE_LINE, VALE_PACKAGES, VALE_STDIN } from '#config/prose.ts';
+import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY, VALE_LINE, VALE_STDIN } from '#config/prose.ts';
 
 const STYLE_ASSETS = 'presets/concern/prose/styles/gspot/';
 
@@ -85,7 +85,7 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
         ...rules,
         {
             path: `${base}/accept.txt`,
-            content: vocabularyText(vocabulary.accept),
+            content: `${vocabulary.accept.join('\n')}\n`,
             readOnly: true,
             kind: 'config',
             preset: 'prose',
@@ -99,8 +99,13 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
  * @returns whether vale sync has run
  */
 export function hasPackages(root: string): boolean {
+    const configured = /^Packages = (.*)$/mu.exec(readFileSync(join(root, VALE_CONFIG), 'utf8'))?.[1] ?? '';
+    const packages = configured
+        .split(',')
+        .map((name) => name.trim())
+        .filter((name) => name !== '');
     // The Harper package reads the dictionaries vale sync puts beside the styles; without them Vale stops with E201.
-    const needed = [...VALE_PACKAGES, ...(VALE_PACKAGES.includes('Harper') ? [join('config', 'dictionaries')] : [])];
+    const needed = [...packages, ...(packages.includes('Harper') ? [join('config', 'dictionaries')] : [])];
     return needed.every((name) => existsSync(join(root, STYLES_DIRECTORY, name)));
 }
 

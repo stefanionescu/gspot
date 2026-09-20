@@ -9,10 +9,10 @@ import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
 import { dirname, join, relative, resolve } from 'node:path';
 import { extensionOf, toPosix } from '#cli/platform/paths.ts';
+import { BLOCK_IGNORES, TOKEN_IGNORES } from '#config/prose.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { GENERATED_HEADER_LINES, GENERATED_JSON_KEY } from '#config/markers.ts';
 import type { JsonFormat, PackageImports, TemplateInputs } from '#types/emit.ts';
-import { BLOCK_IGNORES, DISABLED_UPSTREAM_RULES, TOKEN_IGNORES, VALE_PACKAGES } from '#config/prose.ts';
 
 const JSON_INDENT = 4;
 
@@ -203,10 +203,8 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
             .map((file) => file.path);
     return {
         prose: {
-            packages: VALE_PACKAGES,
             blockIgnores: BLOCK_IGNORES,
             tokenIgnores: TOKEN_IGNORES,
-            disabledUpstream: DISABLED_UPSTREAM_RULES,
         },
         version: session.version,
         scope: selection.scope.path,

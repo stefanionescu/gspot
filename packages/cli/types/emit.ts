@@ -62,7 +62,7 @@ export type RenderedSet = {
 };
 
 export type TemplateInputs = {
-    prose: { packages: string[]; blockIgnores: string[]; tokenIgnores: string[]; disabledUpstream: [string, string][] };
+    prose: { blockIgnores: string[]; tokenIgnores: string[] };
     version: string;
     scope: string;
     scopes: { path: string; presets: string[] }[];

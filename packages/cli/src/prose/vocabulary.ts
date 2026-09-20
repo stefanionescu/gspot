@@ -1,7 +1,7 @@
 // The accept list Vale reads: tool names from the shipped list and [prose] vocabulary.
 import type { Policy } from '#types/config.ts';
 import type { Vocabulary } from '#types/prose.ts';
-import { SHIPPED_VOCABULARY } from '#config/prose.ts';
+import { readAsset } from '#cli/platform/assets.ts';
 
 function sorted(words: Iterable<string>): string[] {
     return [...new Set(words)].toSorted((a, b) => a.localeCompare(b));
@@ -13,14 +13,6 @@ function sorted(words: Iterable<string>): string[] {
  * @returns the accept list (shipped names plus [prose] vocabulary)
  */
 export function vocabularyFor(policy: Policy): Vocabulary {
-    return { accept: sorted([...SHIPPED_VOCABULARY, ...policy.prose.vocabulary]) };
-}
-
-/**
- * The text of one vocabulary file: one word per line.
- * @param words the words
- * @returns the file text
- */
-export function vocabularyText(words: string[]): string {
-    return words.length === 0 ? '' : `${words.join('\n')}\n`;
+    const shipped = readAsset('presets/concern/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
+    return { accept: sorted([...shipped, ...policy.prose.vocabulary]) };
 }
