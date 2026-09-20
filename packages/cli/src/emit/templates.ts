@@ -1,15 +1,15 @@
 // Render a preset template with the merged settings; prepend the generated-file header.
 import { Eta } from 'eta';
 import { join } from 'node:path';
+import { readFileSync } from 'node:fs';
 import { stringify as stringifyYaml } from 'yaml';
-import { existsSync, readFileSync } from 'node:fs';
-import { parse as parseJsonc } from 'jsonc-parser';
 import { jsonText } from '#cli/emit/json-format.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { policyValue } from '#cli/policy/settings.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
+import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 import { GENERATED_HEADER_LINES, GENERATED_JSON_KEY } from '#config/markers.ts';
 import type { JsonFormat, PackageImports, TemplateInputs, TsconfigPaths } from '#types/emit.ts';
 import { BLOCK_IGNORES, DISABLED_UPSTREAM_RULES, TOKEN_IGNORES, VALE_PACKAGES } from '#config/prose.ts';
@@ -37,12 +37,20 @@ const eta = new Eta({ autoEscape: false, autoTrim: false, useWith: true, rmWhite
 const SLASH_COMMENT_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts', '.jsonc', '.json5']);
 
 function readJsonFile(path: string, parse: (text: string) => unknown): unknown {
-    if (!existsSync(path)) return undefined;
     try {
         return parse(readFileSync(path, 'utf8'));
-    } catch {
-        return undefined;
+    } catch (error) {
+        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+        const detail = error instanceof Error ? error.message : String(error);
+        throw new Error(`Cannot read configuration ${path}: ${detail}`, { cause: error });
     }
+}
+
+function parsedTsconfig(text: string): unknown {
+    const errors: ParseError[] = [];
+    const parsed: unknown = parseJsonc(text, errors, { allowTrailingComma: true });
+    if (errors.length > 0) throw new Error(`Invalid JSON configuration at offset ${String(errors[0]?.offset)}.`);
+    return parsed;
 }
 
 function importTarget(target: unknown): string | undefined {
@@ -69,9 +77,7 @@ function packageAliases(root: string, prefix: string): Record<string, string> {
 
 function tsconfigAliases(root: string, prefix: string): Record<string, string> {
     const aliases: Record<string, string> = {};
-    const tsconfig = readJsonFile(join(root, prefix, 'tsconfig.json'), (text) => parseJsonc(text)) as
-        | TsconfigPaths
-        | undefined;
+    const tsconfig = readJsonFile(join(root, prefix, 'tsconfig.json'), parsedTsconfig) as TsconfigPaths | undefined;
     const paths = Object.entries(tsconfig?.compilerOptions?.paths ?? {});
     for (const [pattern, targets] of paths) {
         const target = targets[0];
