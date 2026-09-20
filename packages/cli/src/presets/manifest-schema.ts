@@ -1,5 +1,6 @@
 // The zod schema of manifest.toml, and the refusals the loader applies.
 import { z } from 'zod';
+import { outputSchema } from '#cli/presets/output-schema.ts';
 
 const stringList = z.array(z.string()).default([]);
 
@@ -10,27 +11,6 @@ const claimsSchema = z.strictObject({
     paths: stringList,
     from_languages: z.boolean().default(false),
     natures: z.array(z.enum(['source', 'generated', 'vendored', 'binary'])).default(['source']),
-});
-
-const outputSchema = z.strictObject({
-    format: z.enum(['regex', 'grouped', 'eslint-json', 'json', 'lines', 'none']),
-    items: z.string().optional(),
-    children: z.string().optional(),
-    line_base: z.union([z.literal(0), z.literal(1)]).optional(),
-    file_is: z.enum(['path', 'link', 'history']).optional(),
-    fields: z
-        .strictObject({
-            file: z.string().optional(),
-            line: z.string().optional(),
-            column: z.string().optional(),
-            rule: z.string().optional(),
-            message: z.string().optional(),
-        })
-        .optional(),
-    pattern: z.string().optional(),
-    file_pattern: z.string().optional(),
-    fixable: z.string().optional(),
-    message: z.string().optional(),
 });
 
 const toolSchema = z.strictObject({

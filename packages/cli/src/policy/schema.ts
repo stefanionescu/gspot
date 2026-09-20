@@ -1,5 +1,6 @@
 // The zod schema of gspot.toml. Pure: no transforms, so the JSON schema is generated from it.
 import { z } from 'zod';
+import { outputSchema } from '#cli/presets/output-schema.ts';
 
 const INDENT_MAX = 8;
 
@@ -135,14 +136,6 @@ const declareSchema = z.strictObject({
     reason: text.optional(),
 });
 
-const checkOutput = z.strictObject({
-    format: z.enum(['regex', 'grouped', 'eslint-json', 'lines', 'none']),
-    pattern: text.optional(),
-    file_pattern: text.optional(),
-    fixable: text.optional(),
-    message: text.optional(),
-});
-
 const checkSchema = z
     .strictObject({
         name: text,
@@ -156,7 +149,7 @@ const checkSchema = z
         requires: z.enum(['build', 'docker', 'network']).optional(),
         platform: z.array(z.enum(['macos', 'linux', 'windows'])).optional(),
         summary: text.optional(),
-        output: checkOutput.optional(),
+        output: outputSchema.optional(),
     })
     .refine((check) => check.fix_command === undefined || check.fix_order !== undefined, {
         message: 'A fix_command requires fix_order.',

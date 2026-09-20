@@ -49,6 +49,11 @@ gspot set limits.function_lines 80 --reason "The parser is one state machine."
 
 A loosening takes a reason; a tightening does not.
 
+For a repository command that prints JSON, set `format = "json"` under `[check.output]`.
+Use `items` to select its diagnostic array and `children` for nested arrays. Map the source
+fields under `[check.output.fields]` to `file`, `line`, `column`, `rule`, and `message`.
+Set `line_base = 0` when the tool counts lines and columns from zero.
+
 ## Machine-readable reports
 
 `gspot check --json` prints the check report. A run also writes `.gspot/report.json` and

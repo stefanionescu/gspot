@@ -188,8 +188,8 @@ deployment, or app adoption is inferred from this documentation review.
 ## Every row, by fix file
 
 Each named row links to its owning acceptance section, including rows grouped under another
-ID. The September 20 reconciliation found exactly one owner for each named row. After K-99, K-104, K-129, and K-195
-closed, 324 named rows remain open.
+ID. The September 20 reconciliation found exactly one owner for each named row. After K-99, K-104, K-116, K-129, and K-195
+closed, 323 named rows remain open.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
 
@@ -318,7 +318,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-51](fixes/06-config.md#k-51-scope-settings-as-inline-tables): Write scope settings as sub-tables, and fix the writer so both forms load (D-106).
 - [ ] [K-88](fixes/06-config.md#k-88-src-is-refused-where-src-is-wanted): Accept `src` as `src/**`, and allow a scope inside a scope.
 - [ ] [K-89](fixes/06-config.md#k-89-working-words-of-the-code-reach-a-person): Rename `PolicyScopeLayer`, and keep `slot`, `surface`, `direction` and `exposes` out of text a person reads.
-- [ ] [K-116](fixes/06-config.md#k-116-a-repository-check-cannot-use-the-json-format): Accept the `json` output format in a `[[check]]` of the repository.
 - [ ] [K-215](fixes/06-config.md#k-215-one-idea-many-words-in-setting-names): D-144, with the table in [19-names.md](19-names.md) and a test over the manifests.
 - [ ] [K-224](fixes/06-config.md#k-215-one-idea-many-words-in-setting-names): Each changes in the commit of its rename.
 - [ ] [K-228](fixes/06-config.md#k-215-one-idea-many-words-in-setting-names): The two switches go, and the name becomes `xcode/asset-catalogs`.

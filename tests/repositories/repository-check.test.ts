@@ -1,6 +1,7 @@
 // Planted repository: a [[check]] entry of the repository itself, with an output format that gives file and line.
 import { join } from 'node:path';
 import { createFixture } from 'fs-fixture';
+import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
 
@@ -88,4 +89,52 @@ stage = "commit"
         },
         PLANTED_TIMEOUT_MS,
     );
+});
+
+test('a declared check maps nested JSON output into findings', async () => {
+    const diagnostic = {
+        files: [
+            { path: 'source.txt', messages: [{ row: 0, column: 2, code: 'fixture-rule', text: 'A planted defect.' }] },
+        ],
+    };
+    const command = [
+        process.execPath,
+        '-e',
+        `console.log(${JSON.stringify(JSON.stringify(diagnostic))}); process.exitCode = 1;`,
+    ];
+    await using fixture = await createFixture({
+        'source.txt': 'defect',
+        'gspot.toml': `version = 1
+presets = []
+[[check]]
+name = "fixture/json"
+command = ${JSON.stringify(command)}
+paths = ["source.txt"]
+stage = "commit"
+[check.output]
+format = "json"
+items = "files"
+children = "messages"
+line_base = 0
+[check.output.fields]
+file = "path"
+line = "row"
+column = "column"
+rule = "code"
+message = "text"
+`,
+    });
+    const result = await run(fixture.path, ['check', '--json']);
+    expect(result.code).toBe(1);
+    const report = JSON.parse(result.stdout) as RunReport;
+    expect(report.checks[0]?.findings).toMatchObject([
+        {
+            check: 'fixture/json',
+            file: 'source.txt',
+            line: 1,
+            column: 3,
+            rule: 'fixture-rule',
+            message: 'A planted defect.',
+        },
+    ]);
 });

@@ -1,4 +1,5 @@
 import type { z } from 'zod';
+import type { outputSchema } from '#cli/presets/output-schema.ts';
 import type { manifestSchema } from '#cli/presets/manifest-schema.ts';
 // The shape of a preset manifest.toml after validation.
 
@@ -39,19 +40,8 @@ export type Claims = {
     natures: string[];
 };
 
-export type OutputFormat = {
-    format: 'regex' | 'grouped' | 'eslint-json' | 'json' | 'lines' | 'none';
-    items?: string | undefined;
-    children?: string | undefined;
-    line_base?: number | undefined;
-    /** What the file group of a finding holds: a path in the repository, a link target, or a path in a past commit. The last two need not exist. */
-    file_is?: 'path' | 'link' | 'history' | undefined;
-    fields?: Partial<Record<'file' | 'line' | 'column' | 'rule' | 'message', string | undefined>> | undefined;
-    pattern?: string;
-    file_pattern?: string;
-    fixable?: string;
-    message?: string;
-};
+/** The output fields accepted by both preset and repository checks. */
+export type OutputFormat = z.infer<typeof outputSchema>;
 
 export type ToolPin = {
     name: string;

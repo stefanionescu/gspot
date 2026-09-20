@@ -88,6 +88,12 @@ selected preset has the setting.
 
 **Done when.** That fixture loads.
 
+**Complete, locally verified September 20, 2026.** Repository and preset checks use
+one output schema, and `OutputFormat` is derived from it. A planted repository check uses
+nested JSON output with field mappings and zero-based lines. It produces a finding with the
+expected file, position, rule, and message. Published schemas are regenerated through their
+owner. Broader output-parser validation remains with the first-fix requirements.
+
 ## K-215: one idea, many words in setting names
 
 Closes K-215, K-224, and K-228.

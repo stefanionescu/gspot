@@ -275,3 +275,7 @@ named requirements open. The original 328-row review remains historical evidence
 K-99 is also complete after root and scoped schema rejection tests and a CLI no-write
 regression. The index contains 324 open named requirements. K-100 remains partial: its three
 unused settings are removed, but the retained-setting reader audit is still open.
+
+K-116 is complete after a real repository command produced mapped, nested JSON findings.
+The shared output schema, parser regressions, and generated schema checks pass locally
+(23 tests, 123 assertions). The index contains 323 open named requirements.
