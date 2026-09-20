@@ -10,6 +10,13 @@ const PRINT_WIDTH_MAX = 400;
 
 const text = z.string();
 
+const relativeDirectory = text
+    .min(1)
+    .regex(
+        /^(?!\/)(?![\s\S]*(?:^|\/)\.\.(?:\/|$))[^\\:\p{Cc}]+$/u,
+        'Use a relative path with forward slashes, without parent traversal or a drive prefix.',
+    );
+
 const flag = z.boolean();
 
 const textList = z.array(text);
@@ -168,7 +175,7 @@ const ciSchema = z.strictObject({
 
 const rulesSchema = z.strictObject({
     install: flag.optional(),
-    directory: text.optional(),
+    directory: relativeDirectory.optional(),
     project: text.optional(),
     exclude: textList.optional(),
 });
@@ -189,7 +196,7 @@ const scopeBody = {
 };
 
 /** One [[scope]] entry: its path, presets, and the per-scope tables. */
-export const scopeSchema = z.strictObject({ path: text, presets: textList.optional(), ...scopeBody });
+export const scopeSchema = z.strictObject({ path: relativeDirectory, presets: textList.optional(), ...scopeBody });
 
 /** The whole of gspot.toml. */
 export const policySchema = z.strictObject({

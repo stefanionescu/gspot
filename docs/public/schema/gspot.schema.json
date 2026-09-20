@@ -22,7 +22,9 @@
                 "type": "object",
                 "properties": {
                     "path": {
-                        "type": "string"
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
                     },
                     "presets": {
                         "type": "array",
@@ -1749,7 +1751,9 @@
                     "type": "boolean"
                 },
                 "directory": {
-                    "type": "string"
+                    "type": "string",
+                    "minLength": 1,
+                    "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
                 },
                 "project": {
                     "type": "string"

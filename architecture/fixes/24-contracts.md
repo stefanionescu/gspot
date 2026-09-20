@@ -23,6 +23,12 @@ variants, and a config below the Git root. Assert no external file is changed.
 
 **Done when.** All lifecycle operations reject escapes before any external write or deletion.
 
+**Partially implemented.** Policy loading rejects parent traversal, absolute paths,
+drive prefixes, backslashes, empty values, and control characters in scope paths and the rules
+directory. Profiles inherit the rules-directory constraint. Portable relative paths retain
+spaces, percent signs, and Unicode. Canonical ancestry validation, native mutation
+confinement, and symlink-swap protection remain open.
+
 ## K-299: Recovery and uninstall disagree about ownership
 
 **What is wrong.** `lifecycle/takeover.ts` deletes replaced files relying on Git; `lifecycle/uninstall-command.ts` recursively removes `.gspot/`, defeating K-118 preservation.

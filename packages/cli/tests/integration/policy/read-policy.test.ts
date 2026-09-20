@@ -1,3 +1,4 @@
+import { stringify } from 'smol-toml';
 import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
 import { readPolicy, parseLocalText, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
@@ -152,5 +153,37 @@ fix_order = "imports"
     test('refuses incomplete executable corrections', () => {
         expect(problems(`${check}fix_command = ["tool"]`)[0]).toContain('fix_order');
         expect(problems(`${check}fix_command = []\nfix_order = "format"`)).not.toEqual([]);
+    });
+});
+
+describe('configuration directory boundaries', () => {
+    test.each([
+        '../outside',
+        'api/../../outside',
+        '/outside',
+        'C:outside',
+        'C:/outside',
+        String.raw`..\outside`,
+        String.raw`\\host\share`,
+        'bad\0path',
+        'api\n/../../outside',
+        'api\u{2028}/../../outside',
+        '',
+    ])('refuses escaping directory %j before filesystem discovery', (path) => {
+        for (const settings of [{ scope: [{ path }] }, { rules: { directory: path } }]) {
+            expect(() => parsePolicyText(stringify({ version: 1, ...settings }), 'gspot.toml')).toThrow(PolicyError);
+        }
+    });
+
+    test('accepts relative directories containing spaces, percent signs, and Unicode', async () => {
+        const path = 'apps/café 100%';
+        await using sandbox = await createSandbox({ [`${path}/source.ts`]: 'export const count = 1;\n' });
+        const policy = parsePolicyText(
+            stringify({ version: 1, scope: [{ path }], rules: { directory: 'agent rules/café 100%' } }),
+            'gspot.toml',
+            sandbox.path,
+        );
+        expect(policy.scopes[0]?.path).toBe(path);
+        expect(policy.rules.directory).toBe('agent rules/café 100%');
     });
 });
