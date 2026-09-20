@@ -867,7 +867,8 @@ of description and its number of checks, and found items start ticked.
 ## D-121 yap-swift-app first, and the owner is asked before any other repository
 
 The owner amended this order on 2026-09-20. No app branch is deleted before gspot is implemented,
-its tests and self-lint pass, and the exact candidate's CI is green. The full gate and branch
+its tests and self-lint pass, and the candidate gate is satisfied. D-177 explicitly defers CI
+evidence while the user bypass is active. The full gate and branch
 commands are authoritative in [22-remaining.md](22-remaining.md).
 
 1. Complete implementation, tests, self-lint at all with no ignores, manual-stage verification,
@@ -1197,24 +1198,13 @@ where the major version differs. That asks a repository on the newest ESLint to 
 before it can try gspot. Also rejected: leaving a newer exact version in place, which is what
 the code does today, and which runs plugins on an ESLint they do not support.
 
-## D-146 A built-in check is one file named after its check name
+## D-146 Built-in checks have domain owners
 
-One file registered 130 analyses under names of their own, and the folders of `src/` were named
-after presets and package managers (K-79). A built-in check that is not structure, naming, or
-prose is now one file under `src/checks/`. The folder is the first part of the check name, and the
-file is the second part. `checks/registry.ts` maps the name to the function, and a unit test holds
-that map equal to the manifests. The manifest key `analysis` goes, because the check name already selects the analysis.
-
-The family `integrity` keeps the checks over the policy and the files gspot writes. A check that
-reads documents, dependencies, licenses, or secrets takes the family of its preset:
-`integrity/docs-headings` becomes `docs/headings`, and `integrity/lockfile-fresh` becomes
-`dependencies/lockfile-fresh`. A parser that several checks use sits in `src/readers/`.
-[16-file-tree.md](16-file-tree.md) holds every move.
-
-Rejected: a registration in each manifest that the build turns into an index, which adds a build
-step to answer a question one table answers. Also rejected: folders named after languages for
-this code (D-128), because `apple/` held the Xcode, the XCTest, and the Swift checks together.
-D-128 still names the two folders `swift` and `python` under `checks/`.
+The earlier giant catalog mixed executable checks, readers, and platform work (K-79).
+Group checks by the domain inspected and put shared observations outside catalogs.
+Planning resolves the implementation once. Do not require one file per check, repeated dispatch
+wrappers, or a manifest-equality test as proof of enforcement. The ownership map in
+[16-file-tree.md](16-file-tree.md) replaces the previous mandatory filename inventory.
 
 ## D-147 The launcher is the one package gspot writes into a manifest
 
@@ -1233,18 +1223,16 @@ which extends the file of the repository and adds flags that only add errors: `s
 of the repository holds `references`, the check builds them as they are. Rejected: a shared base
 the developer extends, because a Vite, Vue, or Svelte app then stops resolving its imports.
 
-## D-149 An idea is written once, and each language lists it under its own name
+## D-149 Share proven operations and preserve language semantics
 
-The trivial-function, call-through, and duplicate-function logic existed three times, with three
-sets of constants. The ideas did not hold in every language alike (K-87, K-235). One
-analysis holds each idea over the syntax tree, and a small table for each language names its
-node kinds.
+K-87 and K-235 found repeated constants and inconsistent language coverage. The previous
+universal-analysis prescription was too broad. Share actual common operations; keep explicit
+language semantics where they differ. No requirement forbids naming a language or demands
+that a new language need only a table row.
 
-D-98 stands: the manifest of each language lists the idea under a name of its own, so
-a baseline and an ignore hold one language. D-02 stands: TypeScript keeps its ESLint rules, and
-one table of cases holds both implementations to the same answers.
-The fix file of that row holds the table of what runs where. Rejected: moving
-the TypeScript rules into the structure engine, which loses what an editor shows.
+D-98 retains language-specific policy scope and
+D-02 retains TypeScript editor integration. Delete duplicate implementations only after
+behavioral tests prove surviving enforcement. Cover valid cases and exemptions too.
 
 ## D-150 A manifest holds every fact about its preset, and takeover carries both ways
 

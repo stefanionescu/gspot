@@ -1,13 +1,12 @@
 # The Manifest Owns What the Preset Knows
 
-Row 13 of the build order, and the largest change to the shape of the code. The CLI names
-presets, tools, check names, flags, and file names in its own tables, so a new preset means edits
-in five files of `src/`. After this step a manifest holds everything the CLI knows about its
-preset, and `src/` names none. The folders of `src/` change with it, and the last table of
-[16-file-tree.md](../16-file-tree.md) lists every move.
+Presets own shipped policy and tool data. Operational adapters own parsing and execution.
+Remove repeated policy tables without prohibiting legitimate domain-specific code from naming
+its domain. The ownership map in [16-file-tree.md](../16-file-tree.md) and execution contract
+in [05-engines.md](../05-engines.md#execution-ownership) supersede the earlier file inventory.
 
-One unit test closes the step. It reads every file of `packages/cli/src` and
-`packages/cli/config` outside `checks/`, and fails on a preset name, a tool name, or a check name.
+No source scan for preset or tool names establishes this boundary. Acceptance exercises
+selection, generation, execution, and findings. Cleanup status lives in 22-remaining.md.
 
 ## K-79: one file registers 130 analyses under names of their own
 
@@ -17,32 +16,21 @@ names to functions. The folders are named after presets and package managers: `a
 and the README shape. An analysis name repeats its check name in another spelling, such as
 `xctest-sleep` for `xctest/no-sleep`.
 
-**Target.** D-146. A built-in check that is not structure, naming, or prose is one file under
-`src/checks/`. The folder is the first part of its check name, and the file is the second. A
-parser that several checks share sits in `src/readers/`.
+**Target.** D-146. Checks belong to the domain they inspect. Shared parsers and platform
+operations live outside catalogs. Infrastructure must not import the catalog for basic work.
 
-**Files.** Every file under `src/apple`, `src/pyproject`, `src/web`, `src/sql`, `src/postgres`,
-`src/supabase`, `src/express`, and `src/integrity` moves, as the table of the file tree says.
-New: `src/checks/registry.ts`. The same move happens under `tests/unit/` and `types/`.
+**Implementation.** Resolve the implementation in planning, then execute it once. Validate
+external-tool and built-in forms at loading. Remove redundant analysis aliases and name lookups
+after callers migrate. Keep real preparation and shared context. No one-file-per-check scheme,
+mirrored type tree, or required number of directories follows from this contract.
 
-**Logic.** `registry.ts` is one map from a check name to a function with the signature
-`(input: EngineInput) => Promise<Finding[]>`. `run/engines.ts` looks the name of the planned check
-up in it. The manifest key `analysis` goes.
+**Deletion.** Split the responsibilities of `integrity/dispatch.ts`; delete its dispatch-only
+parts once the plan owns selection. Move actual checks and shared readers to their domain
+owners. Preserve public check meaning and findings; do not create forwarding files.
 
-The family `integrity` keeps the checks over the
-policy and the files gspot writes. The others take the family of their preset:
-`integrity/docs-headings` becomes `docs/headings`, `integrity/lockfile-fresh` becomes
-`dependencies/lockfile-fresh`, `integrity/env-files` becomes `secrets/env-files`, and
-`integrity/locales` becomes `i18n/locales`. A file that held several checks splits, one check to
-a file.
-
-**What goes.** `integrity/dispatch.ts`, the key `analysis` in 130 manifest entries, and the four
-folder names that told a reader nothing.
-
-**Tests.** A unit test holds the keys of the registry equal to the names of every manifest check
-with `engine = "builtin"`, the one engine name for every check under `src/checks/`. The planted tests change their expected names in the same commit.
-
-**Done when.** `ls packages/cli/src` prints the 17 folders of the file tree.
+**Acceptance.** Actual planned checks execute once and report intended defects at their
+locations. Valid inputs pass; invalid manifest combinations fail at loading. Registry metadata
+validation complements these cases but cannot replace them.
 
 ## K-39: takeover tables that name 29 tools
 
@@ -105,12 +93,12 @@ words the advice for each runner, and its fallback is the runner the repository 
 list of the rules lint is the set of tool and library names of every manifest, less the names
 of the file's own preset.
 
-**What goes.** `NEVER_CACHED`, `VERSION_FLAGS`, `TOOL_RULE_SOURCES`, the fourteen words, and every
-comparison of a preset name under `src/`.
+**What goes.** `NEVER_CACHED`, `VERSION_FLAGS`, `TOOL_RULE_SOURCES`, the fourteen words, and duplicate policy comparisons after consumers move.
 
-**Tests.** The unit test named at the top of this file.
+**Tests.** Exercise tool selection, version probing, crash classification, install advice, and
+rule explanation using the owning manifest data.
 
-**Done when.** That test passes with an empty exception list.
+**Done when.** Changed manifest policy reaches its consumers without repeated code tables.
 
 ## K-197: one template holds the rules of seven presets
 
@@ -139,10 +127,11 @@ repository keeps its own entries in `tools.knip.entry`.
 **What goes.** `has()`, every default in a template, and three file names of this repository in
 the knip template.
 
-**Tests.** The snapshots, and a unit test that reads every template for `has(` and for a number
-that a setting of the same name holds.
+**Tests.** Render selected preset combinations and execute their pinned consumers. Verify
+that merged selectors retain each intended library defect and that changed settings reach
+the actual rule. Assert valid and corrected cases too.
 
-**Done when.** That test passes.
+**Done when.** Composed generated config preserves intended policy without repeated defaults.
 
 ## K-105: the shape of the config is written twice
 
@@ -159,9 +148,9 @@ that is gone.
 **Files.** `policy/schema.ts`, `types/config.ts`, `run/record/schema.ts`, `types/record.ts`,
 `types/run.ts`, `types/lifecycle.ts`, `commands/init.ts`, `tests/harness/`.
 
-**Logic.** `types/config.ts` holds `export type Policy = z.infer<typeof policySchema>` with a
-type-only import, which keeps the rule that types live under `types/`. The three lists are
-`z.enum` values, and `commands/init.ts` reads its choices from `.options`.
+**Logic.** Infer parsed policy types from the schema. Keep owner-specific types beside their
+owner; a separate shared type module needs real consumers. Derive command choices from the
+validated enum definitions.
 
 **What goes.** About 300 lines of hand-written types, and `SpawnOutcome`, `Registry`,
 `PlantedCase`, `AcceptanceRun`, and `ComponentShape`, which move to `tests/harness/types.ts`.

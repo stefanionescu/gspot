@@ -34,33 +34,197 @@ in force.
 
 ## The order
 
-Before further ownership moves, reconcile the preset and test contracts in
-[12-repository-layout.md](12-repository-layout.md) and [16-file-tree.md](16-file-tree.md).
-The cleanup covers grouped preset discovery and embedded assets (K-73), prose policy
-ownership (K-175), replacement-rule findings (K-188), and behavioral assertions (T-29).
-Verify nested TypeScript package inheritance with the installed compiler and isolate Swift
-build observations by command session. These repairs precede candidate acceptance; they
-do not replace the remaining implementation scope below.
+The cleanup below is the current implementation order. It supersedes older phase and fix-file
+sequences. Fix numbers group related evidence; they do not decide priority. Keep Yap unchanged
+until the implementation gate passes. Keep hooks enabled and CI paused under the policy above.
 
-The order is fixed by D-121. K-298 through K-301 are prerequisites of the affected lifecycle, hook, naming, and adoption steps, not work deferred until after launch. K-302 follows the release and manual.
+1. Establish trustworthy installed-product acceptance: cleanup items 1 through 7.
+2. Establish safe ownership and generation: items 8 through 15. Apply K-298 and K-299 before destructive
+   lifecycle changes; an acceptance test must not put a real repository at risk.
+3. Simplify execution and configuration behind those tests: items 16 through 31. Resolve shared
+   contracts before changing callers; migrate callers before deleting their old owner.
+4. Complete the test and architecture cleanup: items 32 through 40. Apply their acceptance requirements
+   throughout the earlier batches, not only after implementation.
+5. Complete the remaining language coverage, framework coverage, hooks, documentation, artwork,
+   website, release capabilities, and frozen-candidate acceptance. Cleanup does not replace that scope. K-300 and K-308 precede schema changes.
+6. Pass the implementation gate below. Then perform the authorized Yap adoption, leave its
+   validated migration uncommitted, and push nothing in the app. Ask before another repository.
+7. Fix defects exposed by adoption and repeat the candidate gate against the changed artifact.
+   Incorporate measured evidence into documentation. Public publication, production deployment,
+   and domain changes remain deferred; preparing their capabilities does not authorize them.
 
-1. Leave yap-swift-app unchanged while implementing and verifying gspot.
-2. Delete what nothing uses: [00-delete-first.md](fixes/00-delete-first.md). A thing with a
-   replacement is deleted in the commit that builds the replacement (K-282).
-3. Close the other wrong answers of [01-first-fixes.md](fixes/01-first-fixes.md).
-4. Do the rows of the Adoption phase in the order of the fix files, from
-   [02-takeover.md](fixes/02-takeover.md) to [20-self-check.md](fixes/20-self-check.md), and then
-   [23-scenarios.md](fixes/23-scenarios.md).
-5. Complete the launch-code and documentation implementation, including the visual assets,
-   before the app handoff. Public publication, production deployment, and app-derived evidence
-   are later gates, not reasons to defer code fixes. Pass the implementation gate below.
-6. Follow the app handoff below: delete only the old local `chore/gspot` branch, create
-   `chore/gspot-adoption`, install the packaged candidate from the local registry (D-158), and
-   measure it. Push nothing there. Ask the owner before any other real repository.
-7. Incorporate the app evidence into the manual and case study. Fix every gspot defect exposed
-   by adoption, rerun the affected tests and the complete implementation gate, and repeat the
-   app acceptance. Then complete public-release prerequisites in [22-launch.md](fixes/22-launch.md)
-   and production deployment in [21-documentation.md](21-documentation.md).
+### Cleanup acceptance backlog
+
+These are implementation tasks, not claims of completed repairs. Close a task only with
+observable behavior from its current owner. Related fix sections retain defect evidence
+and detailed contracts; this list owns cleanup status. No separate audit framework or test
+inventory is required. Existing code has no claim to preservation merely because it exists.
+Rules and useful enforcement do: replacement must prove the same intended protection first.
+
+#### Installed product and release tests
+
+- [ ] **1. Replace reference acceptance.** In `tests/acceptance/cli/reference.test.ts`, require
+      successful initialization, the expected executed checks, and reviewed structured findings.
+      An empty run, missing tools, unexpected skips, or zero engine errors alone cannot pass.
+- [ ] **2. Repair worktree isolation.** Check init and Git cleanup exit statuses in
+      `tests/harness/worktree.ts`. Compare worktree inventories before and after, rather than assuming one
+      worktree. Verify preserved repository content; delete redundant status-count machinery.
+- [ ] **3. Exercise a fresh installed consumer.** Build, publish to an isolated local registry,
+      install, initialize, report a known defect, correct it, and pass. Assert command exits and
+      the exact finding. This journey must not symlink checkout dependencies or run source entry points.
+- [ ] **4. Verify packaged assets.** From the installed artifact outside the source checkout,
+      detect and select grouped presets, generate config, and exercise embedded templates,
+      grammars, prose styles, shipped vocabulary, and project vocabulary. Include offline
+      recommended prose checks; a version response is insufficient.
+- [ ] **5. Combine publication and installation tests.** Move useful package-identity checks
+      from `tests/release/publish.test.ts` into the consumer journey, then delete the repeated
+      publication scenario. Derive versions from built artifacts; remove hardcoded `0.1.0`.
+- [ ] **6. Execute the published plugin.** Replace metadata-only confidence in
+      `tests/release/plugin.test.ts` with installation, usable public exports and declarations,
+      and real ESLint findings from the published package. Exercise recommended and all.
+- [ ] **7. Separate pin availability from compatibility.** A registry version lookup establishes
+      availability only. Execute the pinned tools with generated config and parse their actual
+      results before claiming compatibility. Preserve isolated registry lifecycle and cleanup tests.
+
+#### Ownership, recovery, and generated output
+
+- [ ] **8. Remove directory-wide uninstall.** Replace recursive deletion of `.gspot/` in
+      `packages/cli/src/lifecycle/uninstall-command.ts` with explicit owned-file operations.
+      Preserve unowned files, later user edits, and recovery material (K-299).
+- [ ] **9. Give lifecycle ownership one owner.** Init, apply, upgrade, remove, and uninstall use
+      the same record of original bytes and modes, installed content, later edits, and interrupted
+      operations. Delete ownership reconstruction from filenames, headers, or current templates.
+- [ ] **10. Validate mutation paths once.** Route mutations through the boundary in K-298,
+      including symlink parents and supported platform path forms. Independent path joins cannot
+      authorize writes, replacements, or deletion. Test escape rejection without harming sentinels.
+- [ ] **11. Separate generation from mutation.** Discovery and rendering return proposals.
+      One managed application boundary owns collisions, replacement, pruning, and recovery.
+      Delete writes from renderers and competing application paths after callers migrate.
+- [ ] **12. Make reference generation safe.** Render and validate output in
+      `docs/reference-pages.ts` before applying it. Replace and prune only owned marked pages. Delete recursive removal
+      of the reference root. Verify an authored sentinel survives and a failed render preserves output.
+- [ ] **13. Stop tracking generated reference copies.** Generate them during the docs build;
+      delete the stale-copy comparison mode after generation behavior has coverage (K-303).
+      Test completeness and content against validated definitions, not checked-in duplicate output.
+- [ ] **14. Remove the public decisions mirror.** Delete `decisionsPage`, its generated page,
+      and its sidebar entry. Link architecture history separately where useful. Public docs describe
+      implemented released behavior, not unfinished design or acceptance status (K-304).
+- [ ] **15. Delete forwarding-only generation helpers.** Inline wrappers such as
+      `quote(JSON.stringify)` that add no behavior. Preserve real escaping, serialization, malformed
+      input handling, and format-specific rendering tests. Do not replace one wrapper with another.
+
+#### Execution and observations
+
+- [ ] **16. Use one tool execution contract.** Executable resolution, version selection,
+      environment, working directory, argument batching, timeout, cancellation, output capture,
+      and failure classification belong to the shared runner. Preserve process termination tests.
+- [ ] **17. Remove adapter execution copies.** Migrate Ansible, Python import-linter, Docker
+      image, and framework-build subprocess/reporting paths to that contract. Retain domain-specific
+      discovery and multistep preparation. Do not introduce a generic workflow language.
+- [ ] **18. Validate check variants.** Replace loose optional combinations in `CheckSpec` with
+      explicit external-tool and built-in forms. Reject impossible combinations at loading. Keep
+      multistep preparation in ordinary code instead of encoding arbitrary control flow in manifests.
+- [ ] **19. Resolve dispatch once.** Planning selects the implementation; execution calls it.
+      Delete dispatch-only wrappers and repeated name lookups in `run/analyses.ts`, `run/engines.ts`,
+      and catalogs where they add no behavior. Preserve shared context and preparation owners.
+- [ ] **20. Stop using integrity as a miscellaneous catalog.** Move checks to the domain they
+      inspect. Move shared parsing and platform operations outside check catalogs. Infrastructure
+      must not import the entire catalog for a basic operation. Change ownership, not just names.
+- [ ] **21. Observe the repository once per command.** Share files, scopes, metadata, and Git
+      observations within a session. The next session observes changes. Remove repeated discovery
+      and process-global caches that need test reset hooks; retain repeated Swift-session regression.
+- [ ] **22. Stop turning read failures into empty input.** Audit required readers, including
+      the plugin directory reader. Distinguish allowed absence from unreadable or malformed input.
+      Remove broad catch-and-empty fallbacks and their false-success tests.
+- [ ] **23. Justify each cache.** Verify keys and invalidation include actual source, config,
+      tool, and scope inputs. Delete caches without demonstrated value or reliable ownership.
+      Test changed inputs and sessions, not the existence of a cache or reset method.
+- [ ] **24. Report execution honestly.** Distinguish not-applicable, platform unavailable,
+      explicit skip, missing prerequisite, missing tool, and delegation. Required checks that did
+      not run fail acceptance even when the engine error count is zero.
+- [ ] **25. Resolve check ownership explicitly.** Validate `reported_by` and `takes_over` so a
+      requested check never appears executed merely because another entry describes its coverage.
+      Separate descriptive coverage from executable specs; delete duplicate executable registrations.
+
+#### Policy and enforcement
+
+- [ ] **26. Make schemas own input contracts.** Derive parsed-input types, field lists,
+      defaults, help, and reference data from validated definitions. Keep a separate normalized
+      type only for a real transformation. Delete manually synchronized copies after consumers move.
+- [ ] **27. Complete preset policy ownership.** Presets own shipped tools, pins, templates,
+      default rule policy, styles, and vocabulary. CLI code owns loading, validation, operational
+      parsing, and execution. Verify grouped discovery and compiled lookup; create no path aliases.
+- [ ] **28. Consolidate persistent exceptions.** Replace overlapping local skips, ignores,
+      and exception branches with the canonical persistent policy. Keep temporary command selection
+      and baselines distinct. Delete superseded schemas, readers, commands, and tests together.
+- [ ] **29. Finish recommended and all.** One metadata owner drives planner, templates, plugin,
+      and documentation. Recommended produces useful findings on ordinary projects; forwarding
+      preferences belong at all. Retain the rule there and delete independent duplicated rule lists.
+- [ ] **30. Prove replacement enforcement before deletion.** Finish K-188 only after pinned
+      replacement rules run through generated config and preserve scopes, aliases, type-only
+      imports, exemptions, valid cases, and diagnostic locations. Cover anonymous forwarding and
+      Next.js re-export exceptions.
+
+Keep focused custom rules when a replacement cannot express
+the policy. Delete only superseded implementations, options, hooks, and duplicate tests.
+
+- [ ] **31. Remove forced universal analyses.** Rewrite K-235/D-149 so sharing follows proven
+      common operations. Delete demands that analyses never name a language or that a language
+      needs only a table row.
+
+Preserve explicit Python, Swift, Bash, SQL, and TypeScript semantics.
+Do not trade copies for a framework full of language flags.
+
+#### Meaningful tests and completion
+
+- [ ] **32. Replace weak finding assertions.** Review the 22 acceptance files identified by
+      `toContain(planted.expected)` in the audit. Assert check, intended rule or diagnostic, file,
+      location, exit status, and corrected behavior. A filename or words such as `The`, `turn`,
+      and `helpers` are not evidence.
+
+Keep the planted defects; delete low-signal assertions.
+
+- [ ] **33. Test generated behavior.** Replace redundant plugin-import and config-substring
+      assertions with findings from the loaded generated configuration. Keep meaningful escaping,
+      malformed-input, serialization, and preservation regressions. Validate published schemas by
+      acceptance and rejection, not property inspection. Fold vocabulary formatting into real generation.
+- [ ] **34. Name acceptance cases individually.** Replace large loops that stop at the first
+      failure with identifiable cases. Share expensive setup only when isolation and restoration
+      are reliable. Do not build a case-definition language to avoid ordinary tests.
+- [ ] **35. Share setup that does work.** Deduplicate actual installation and tool setup;
+      keep case-specific inputs beside the case. Retain filesystem, process, and registry support
+      with real behavior.
+
+Delete unused or forwarding helpers and test-only production types.
+Do not centralize every command, filename, literal, or timeout into configuration tables.
+
+- [ ] **36. Exercise representative projects.** Use a small matrix covering fresh and existing
+      projects, mixed languages, nested scopes, and clean clones. Exercise actual installation,
+      hooks, retained config, and supported package managers. Keep focused unit tests inexpensive;
+      do not make every test install the world.
+- [ ] **37. Use tool-owned config resolution.** Use executable resolvers for ESLint, formatter,
+      framework, and compiler settings. Preserve unsupported input with an explicit limitation.
+      Delete heuristic parsers only after consumers move. Retain nested TypeScript package inheritance
+      and generated-base resolution regressions against the installed compiler.
+- [ ] **38. Consolidate architecture status.** Keep canonical contracts in their owner sections
+      and actionable cleanup status here. Remove repeated current-status prose from phase summaries,
+      gaps, and fixes; preserve historical failure evidence once with links.
+
+Retire obsolete improvements when a simpler design meets the product contract. Do not create another audit system.
+
+- [ ] **39. Remove paperwork as acceptance.** Delete fixed rule-count targets, mandatory test
+      filename inventories, source-text coverage guards, and blanket config-table requirements.
+      Remove tests for deleted implementation details.
+
+If the user contract survives, move its
+behavioral regression to the new owner. No test README or parallel E2E directory is required.
+
+- [ ] **40. Accept the installed product.** Completion means required checks execute, planted
+      defects produce useful findings, corrected inputs pass, user files survive, and representative
+      project output is reviewed.
+
+Documentation, artwork, website builds, and green self-lint cannot
+substitute for this evidence. Record unavailable platform evidence as deferred, never passed.
 
 ### Implementation gate before touching the app
 
@@ -212,7 +376,7 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-100](fixes/00-delete-first.md#k-99-keys-and-settings-with-no-reader): Delete `limits.line_length`, `limits.trivial_ast_nodes` and `tools.trufflehog.verified_only`.
 - [x] [K-102](fixes/00-delete-first.md#k-102-seven-plugin-rules): Delete `no-trivial-functions` and its option; `no-call-through` covers every function form (see K-235 for the other languages).
 - [x] [K-187](fixes/00-delete-first.md#k-102-seven-plugin-rules): Delete the plugin rules `no-single-file-folders` and `no-prefix-collisions`; the structure engine owns facts about folders.
-- [ ] [K-188](fixes/00-delete-first.md#k-102-seven-plugin-rules): Delete the five plugin rules a pinned tool covers, and write the rule of that tool in the template.
+- [ ] [K-188](fixes/00-delete-first.md#k-102-seven-plugin-rules): Prove pinned replacement enforcement through generated config before deleting each duplicate implementation. Keep custom rules where equivalent policy cannot be expressed.
 - [x] [K-111](fixes/00-delete-first.md#k-111-three-ways-to-silence-a-finding-become-one): Delete the `lint:justify` and `lint:allow-...` markers.
 - [x] [K-115](fixes/00-delete-first.md#k-111-three-ways-to-silence-a-finding-become-one): Delete the `finding` key of `[[ignore]]`.
 - [x] [K-119](fixes/00-delete-first.md#k-119-a-branch-for-an-engine-that-is-not-built): Delete the branch for an engine that is not built, and keep the comment openers and `UNPARSED_LIMIT` once.
@@ -449,7 +613,7 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [T-19](fixes/10-tests.md#t-19-no-test-reads-the-shipped-policy-over-ordinary-code): One test for each language runs the shipped policy over a short file written the way that language and its frameworks are written, and expects no finding.
 - [ ] [T-33](fixes/10-tests.md#t-19-no-test-reads-the-shipped-policy-over-ordinary-code): Generated and established reference projects get a usefulness review of each recommended finding before message/count snapshots; no unexplained house-style finding is accepted (K-301).
 - [ ] [K-28](fixes/10-tests.md#k-28-the-eslint-template-has-411-lines-and-its-test-has-21): Test the ESLint template by resolving the config for one file of each file class and comparing rule lists.
-- [ ] [T-36](fixes/10-tests.md#t-36-no-test-holds-a-generated-file-byte-for-byte): Add one test for each preset that compares every generated file of a fixed policy with a tracked copy.
+- [ ] [T-36](fixes/10-tests.md#t-36-no-test-holds-a-generated-file-byte-for-byte): Exercise generated configuration through its pinned consumer. Keep exact-output snapshots only for meaningful serialization contracts.
 - [ ] [T-12](fixes/10-tests.md#t-12-no-test-measures-time): Add a timed test with a ceiling over a planted repository of 5,000 files.
 - [ ] [T-22](fixes/10-tests.md#t-22-tests-that-read-a-list-written-by-hand): The test reads the commands from the program, and looks for each in both scripts.
 - [ ] [T-25](fixes/10-tests.md#t-22-tests-that-read-a-list-written-by-hand): Read the version from the one version source in the two release tests.
@@ -538,8 +702,8 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 
 [18-one-copy.md](fixes/18-one-copy.md)
 
-- [ ] [K-87](fixes/18-one-copy.md#k-87-three-copies-of-one-idea): Write trivial-function, call-through and duplicate-function once over the syntax tree, with one set of limits.
-- [ ] [K-235](fixes/18-one-copy.md#k-87-three-copies-of-one-idea): With K-87, an idea that stays is written once over the syntax tree and listed in the manifest of each language. An idea of taste moves to `all` in every language in one commit.
+- [ ] [K-87](fixes/18-one-copy.md#k-87-three-copies-of-one-idea): Share proven common rule operations and preset-owned limits while preserving language-specific semantics and intended enforcement.
+- [ ] [K-235](fixes/18-one-copy.md#k-87-three-copies-of-one-idea): With K-87, remove the universal-analysis prescription. Verify invalid and valid language cases, preserve language policy scope, and place preferences at `all` through one level owner.
 - [ ] [K-86](fixes/18-one-copy.md#k-87-three-copies-of-one-idea): Allow `swift` and `python` as folder names here by `structure.folder_name_allowed`, and move the list out of the shell file (D-128, D-135).
 
 ### The Command Surface and GitLab

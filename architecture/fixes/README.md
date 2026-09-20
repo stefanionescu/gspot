@@ -3,22 +3,17 @@
 Follow the [active CI bypass](../22-remaining.md#active-ci-bypass) for every fix. CI acceptance
 is deferred until the user explicitly re-enables CI; continue locally verified implementation.
 
-One file for each step of the order in `architecture/13-roadmap.md`. A file holds one section
-for each row of [18-gaps.md](../18-gaps.md) that its step closes. Every section has the same seven
-labels in bold, so a reader finds the same thing in the same place.
+Fix files group subject contracts and historical defect evidence. Implementation priority and
+cleanup status live in [22-remaining.md](../22-remaining.md). File numbers are not execution order.
 
-| Label         | Holds                                                                                           |
-| ------------- | ----------------------------------------------------------------------------------------------- |
-| What is wrong | the evidence of the row: the file, the function, and the run that showed it                     |
-| Target        | how it works afterwards, as behavior a test can hold                                            |
-| Files         | what is created, moved, renamed, and deleted, as [16-file-tree.md](../16-file-tree.md) names it |
-| Logic         | the functions that change, and how                                                              |
-| What goes     | the workaround, flag, key, alias, cast, or suppression deleted with it                          |
-| Tests         | the test that fails today and passes afterwards                                                 |
-| Done when     | one sentence a reviewer can check                                                               |
+A fix states the actual defect, intended behavior, owner, superseded code, and observable
+acceptance. Use headings or tables when they help; seven fixed labels are not a requirement.
+Do not repeat current status across phase summaries, gaps, and fixes. Preserve useful failure
+evidence once and link to it. Remove obsolete prescriptions when the owning contract changes.
+A closed implementation detail needs no permanent test or documentation entry of its own.
 
-Nothing is kept for an older config, flag, or file layout (D-134). A section leaves this folder in
-the commit that closes its row.
+No compatibility aliases or forwarding files survive a replacement (D-134). Preserve the
+user-facing enforcement contract through verified replacement before deleting duplicate code.
 
 ## The files
 
@@ -31,7 +26,7 @@ the commit that closes its row.
 - [06-config.md](06-config.md): the text of `gspot.toml`, one word for one idea, and scopes.
 - [07-levels.md](07-levels.md): the level key, templates that render by level, and what `recommended` holds in each preset.
 - [08-frameworks.md](08-frameworks.md): lint tools under `.gspot/`, the ESLint pin, shared rules in component files, every linter of a framework, and naming rules in the framework preset.
-- [09-manifests.md](09-manifests.md): one file for each check name, and every fact about a preset in its manifest.
+- [09-manifests.md](09-manifests.md): domain-owned checks and preset-owned policy, without forced file inventories.
 - [10-tests.md](10-tests.md): a harness that fails early, installs as a developer runs them, one failing case for each check, snapshots, and time.
 - [11-layouts.md](11-layouts.md): checks that read their scope, and settings detected from the repository.
 - [12-menu.md](12-menu.md): `gspot list`, the three questions of `init`, and the managed block as a list.
@@ -40,7 +35,7 @@ the commit that closes its row.
 - [15-top-level.md](15-top-level.md): the root of this repository.
 - [16-output.md](16-output.md): progress lines, the summary, and what `doctor` asks git.
 - [17-recommended.md](17-recommended.md): no edit of a `tsconfig.json`, and the house rules that move to `all`.
-- [18-one-copy.md](18-one-copy.md): one analysis for each idea, in every language.
+- [18-one-copy.md](18-one-copy.md): proven shared operations with explicit language semantics.
 - [19-gitlab.md](19-gitlab.md): the flag names, and GitLab.
 - [20-self-check.md](20-self-check.md): templates, tests, and documents under the gate of this repository.
 - [21-manual.md](21-manual.md): the README, the guides, and the site.

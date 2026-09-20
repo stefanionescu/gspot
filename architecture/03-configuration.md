@@ -3,6 +3,22 @@
 This document decides the one file a person edits, the files gspot writes, and how settings
 merge.
 
+## Ownership boundaries
+
+One lifecycle owner records originals, installed content, modes, later edits, and interrupted
+operations for init, apply, upgrade, remove, and uninstall. Names, headers, and current templates
+cannot reconstruct permission to delete. All mutations use the validated path boundary. It checks symlink parents and supported
+platform forms. Never remove `.gspot/` recursively.
+
+Generation returns proposals; one application boundary owns collisions, replacement, pruning,
+and recovery. Readers and renderers do not apply their own writes. Persistent exceptions use
+one policy model; temporary command selection and baselines remain separate concepts. Remove
+superseded schemas and readers only after their callers and behavioral contracts move.
+
+Schemas own parsed-input types, defaults, field lists, and reference data. A normalized type
+exists only for a real transformation. Use tool-owned configuration resolution where available;
+preserve unsupported authored input with an explicit limitation rather than guessing its meaning.
+
 ## Files
 
 | Path                                                    | Owner                         | Tracked | Purpose                                                                                                                           |

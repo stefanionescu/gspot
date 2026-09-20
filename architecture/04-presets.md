@@ -3,6 +3,19 @@
 This document decides the unit of selection: its manifest, how it is detected, how presets
 combine, and the catalog.
 
+## Policy ownership
+
+Presets own shipped tools, versions, templates, default rule policy, styles, and vocabulary.
+CLI code owns operational loading, validation, parsing, and execution. Recommended and all
+use one metadata owner across planning, generated templates, plugin exports, and documentation.
+Moving a preference to all preserves its enforcement; a duplicate implementation is removed
+only after the replacement proves the intended policy through generated configuration.
+
+Validate external-tool and built-in check definitions as distinct forms. Descriptive coverage
+and delegated ownership do not create additional executed checks. Multistep preparation belongs
+in ordinary code, not a manifest workflow language. The execution contract lives in
+[05-engines.md](05-engines.md#execution-ownership).
+
 ## What a preset is
 
 A preset is a folder in the gspot distribution:

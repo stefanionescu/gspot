@@ -1,9 +1,11 @@
 # Build Order
 
-This document decides the build order, the v1 cut, and what "done" means for each phase. Phase acceptance requires verified check execution with no policy silently lost. This repository comes first, then the real yap-swift-app adoption branch under D-121, then other authorized reference repositories through
-planted repositories of their shape (D-62). Phases 0, 1 and 6 have implementations with open acceptance gaps. The order from here is the hardening phase, then 5, 2, 4, and 3
-(D-82). The Swift application needs the security presets, SQL, Supabase, Docker, and nginx before
-the Swift presets can close its acceptance run.
+This document records phase scope and historical implementation evidence. The active sequence
+and unfinished acceptance live in [22-remaining.md](22-remaining.md#the-order). Earlier phase
+orders below do not override that sequence. Start with installed-product evidence, then safe
+ownership and generation, then execution and policy simplification. Apply meaningful test
+requirements throughout. Preserve the full language, framework, documentation, artwork,
+website, release, and gated adoption scope.
 
 ## Status
 

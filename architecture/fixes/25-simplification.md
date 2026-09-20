@@ -91,12 +91,11 @@ files but report unreadable or malformed package and TypeScript configuration. V
 and trailing commas in TypeScript configuration remain accepted. Other observation paths
 remain open.
 
-Generation, takeover, and compiler project selection use one parser for JSON with comments.
-The TypeScript options check validates its consumed fields and reports malformed or denied
-reads with their paths. Missing inherited configurations and inheritance cycles fail the
-observation. Repeated bases are reapplied in declaration order across independent branches.
-The 11 reader and inheritance regressions pass locally; package-based inheritance
-resolution and other readers remain open.
+Generation, takeover, and compiler project selection now share installed TypeScript compiler
+resolution, including nested package inheritance. Generated bases are available during rendering
+before application writes them. Missing arbitrary bases and invalid configurations still fail.
+Retain these behavior regressions; do not restore the handwritten inheritance resolver.
+Other observation paths remain subject to the cleanup backlog in 22-remaining.md.
 
 Project detection and manifest policy share a validated package reader. Detection reports
 failed reads, malformed package JSON or Python TOML, and invalid consumed fields instead of

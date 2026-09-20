@@ -195,10 +195,13 @@ rules repeat a pinned tool: `import-direction`, `no-harness-barrel-imports`,
 `no-reexports-outside-index`, `no-duplicate-barrel-exports`, and the `interface` message of
 `types-placement`. One fact is two findings under two names, with two allow lists.
 
-**Target.** One fact has one finding. Rule counts do not establish enforcement coverage.
+**Target.** Preserve intended enforcement with one authoritative implementation per policy.
+Rule counts do not establish enforcement coverage. No rule is deleted merely because another
+plugin has a similarly named rule.
 
-**Files.** Deleted under `packages/eslint-plugin/src/rules/` and `tests/rules/`: the six rule
-files and their six tests. `types-placement.ts` loses its `interface` message.
+**Files.** Remove only proven duplicate implementations under `packages/eslint-plugin/src/rules/`
+and their obsolete unit tests after surviving behavioral cases pass through the replacement.
+Retain a focused custom rule where external rules cannot express the policy.
 `presets/language/javascript/eslint.config.js.tmpl` and `presets/language/typescript/eslint.fragment.js.tmpl`
 change.
 
@@ -212,7 +215,10 @@ for the harness folder, `no-reexports` with `allowIndex`, and `import-x/export` 
 **Tests.** The cases of each deleted rule move into a planted TypeScript repository, where the
 rule of the tool must report them.
 
-**Done when.** A lone file in a folder is one finding, `structure/single-file-folder`.
+**Done when.** Each replacement preserves scopes, aliases, type-only imports, exemptions,
+valid code, and finding locations through generated configuration. Anonymous forwarding
+functions and Next.js re-export modes remain covered. A lone-file defect is still reported
+by `structure/single-file-folder`; moving its owner does not remove enforcement.
 
 ## K-104: fields nothing reads
 

@@ -19,6 +19,36 @@ where each draws its line against writing original analysis.
 
 Every engine returns findings with the same fields: `check`, optional `file`, `line`, `column`, and `rule`, plus `message`, optional `help`, and `fixable`. `check` holds a check name. Fileless failures stay representable. The reporter and the ignore filter never know which engine spoke.
 
+## Execution ownership
+
+Validate check definitions as explicit external-tool or built-in forms. Reject impossible
+combinations when loading the manifest. Resolve the implementation once during planning;
+execution uses that resolved plan. Ordinary code owns multistep preparation. Manifests are
+policy and tool contracts, not a generic workflow language.
+
+The runner owns executable resolution, versions, environment, working directory, batching,
+timeouts, cancellation, output capture, and failure classification. Adapters own discovery,
+preparation, and diagnostic interpretation. Ansible, import-linter, Docker, and framework
+builds use the same process contract. Delete their repeated process plumbing after migration.
+Do not add a forwarding layer in its place.
+
+A command session owns repository observations and justified caches. Share files, scopes,
+metadata, and Git state within that session; the next command observes changed inputs.
+Required unreadable or malformed input is an error, not an empty collection. Cache keys must
+include the actual source, policy, tool, and scope inputs they depend on.
+
+Distinguish applicability from execution. Report explicit skips, unavailable platforms, missing
+prerequisites, missing tools, and delegated coverage accurately. Validate `reported_by` and
+`takes_over` ownership so descriptive coverage never impersonates an executed check.
+Infrastructure stays independent of domain check catalogs.
+
+Preserve intended enforcement when replacing rules. Generated configuration using the pinned
+replacement must demonstrate scope, aliases, type-only imports, exemptions, valid cases, and
+finding locations before deleting an implementation. If the replacement cannot express the
+policy, retain a focused custom rule. Recommended and all share one policy owner; moving a
+preference to all preserves it. Cross-language sharing follows proven common operations and
+keeps language semantics explicit; no analysis is required to be language-blind.
+
 ## 1. Tool runner
 
 Runs external tools. Owns nothing about what they find.

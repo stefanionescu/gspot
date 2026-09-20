@@ -1,13 +1,23 @@
 # Tests
 
-Row 14 of the build order. The suite is large and proves less than its size says. A failed
-`init` passes, and 59 of 60 installs use a runner no developer uses. A check counts as tested
-when its name stands in a skip list, and many cases expect a word that any output holds. Every defect
-of the first fix file lived where no test looked. This step makes the suite install as a
-developer installs, fail every check once, and expect the sentence of each finding.
+The audit found a large suite whose passing result did not establish a working installation.
+Historical failures below remain evidence; current cleanup status lives in
+[22-remaining.md](../22-remaining.md#cleanup-acceptance-backlog). The acceptance contract is
+[12-repository-layout.md](../12-repository-layout.md#tests).
 
-Two kinds of test change elsewhere. A test that expects a defect changes in the commit that
-fixes it (T-20). A test that uses a removed flag changes with the flag (T-35).
+Tests exercise real current behavior, not wrappers, deleted logic, source tokens, or filename
+inventories. Delete obsolete assertions and move surviving behavioral regressions to their
+new owner. Assert intended findings and corrected behavior. A test must not preserve a known
+bug or weaken a rule to keep its fixture green.
+
+Reference acceptance requires successful init, expected checks actually executed, reviewed
+findings, and preserved worktrees. Worktree setup and cleanup failures are failures.
+Release acceptance combines publication and installation into one fresh consumer journey.
+Exercise embedded assets and plugin execution.
+
+Checkout dependency symlinks and source entry
+points cannot establish packaged acceptance. Metadata and version responses alone are insufficient.
+Keep registry isolation, restoration, serialization, malformed-input, and process tests.
 
 ## T-27: the harness lets a failed `init` pass
 
@@ -176,14 +186,15 @@ Closes T-23, T-10, T-15, and T-16.
 structure, bash, python, and swift presets. Eighteen unit test files hold one input each.
 `require-server-only` and `tests-directory-contents` have thin cases.
 
-**Target.** Each check under `src/checks/` and each analysis under `src/structure/analyses/` has
-a unit test on a text. The test needs no tool and no repository.
+**Target.** Retained analyses have meaningful invalid and valid cases at their real boundary.
+Pure text logic needs no tool or repository; filesystem and process behavior use their actual
+boundaries. Do not invent a universal input abstraction solely to make every test look alike.
 
 **Files.** `packages/cli/tests/unit/checks/`, `tests/unit/structure/analyses/`,
 `tests/unit/doctor/`, `tests/unit/lifecycle/`.
 
-**Logic.** A check that reads text takes the text through `engineInput`, so its test needs no
-disk. Each test holds the plain case, the edge of each limit, and one input that must not match.
+**Logic.** Test actual consumed inputs, relevant limit boundaries, and valid inputs that must
+not match. Share established setup behavior without forcing every analysis through a test adapter.
 
 **What goes.** Nothing.
 
@@ -244,18 +255,16 @@ component. It holds each rule list as a snapshot.
 test calls a snapshot matcher. A change to a template changes the config of every repository, and
 no test shows the difference to a reviewer.
 
-**Target.** One snapshot folder for each preset.
+**Target.** Test rendered behavior and retain snapshots only where exact serialization is a
+meaningful contract. Every preset need not have a snapshot directory or every target a copy.
 
-**Files.** `packages/cli/tests/snapshots/<preset>/`, new `tests/unit/emit/snapshots.test.ts`.
+**Implementation.** Run pinned consumers against generated configuration and assert the intended
+finding, valid input, and corrected behavior at each relevant level. Test escaping and output
+preservation directly. A snapshot cannot replace these assertions. Remove redundant tracked
+copies and text-presence tests once behavioral coverage owns their contract.
 
-**Logic.** For each preset the test renders every target for a fixed policy at both levels, and
-compares it with the tracked copy. `bun test --update-snapshots` writes them.
-
-**What goes.** Nothing.
-
-**Tests.** This is the test.
-
-**Done when.** A change of one template line shows as one changed snapshot line in the diff.
+**Done when.** A broken template or policy is caught through its consumer or a meaningful
+serialization assertion, rather than merely appearing as a changed snapshot line.
 
 ## T-12: no test measures time
 

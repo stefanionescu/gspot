@@ -42,7 +42,7 @@ open requirements, historical completion claims, and deferred verification.
 | [13-roadmap.md](13-roadmap.md)                       | Phases, the v1 cut, acceptance per phase                                                                                                          |
 | [14-decisions.md](14-decisions.md)                   | The decision log with the rejected alternative for each                                                                                           |
 | [15-prior-art.md](15-prior-art.md)                   | What gspot copies from tools people already use, and which libraries it reuses instead of writing its own                                         |
-| [16-file-tree.md](16-file-tree.md)                   | Every folder and file in gspot's repository, and what each holds                                                                                  |
+| [16-file-tree.md](16-file-tree.md)                   | Repository ownership and the boundaries that justify moves                                                                                        |
 | [17-migration.md](17-migration.md)                   | The two goals; what `init` replaces, carries, deletes and leaves in a repository that has its own linting, with yap-swift-app worked file by file |
 | [18-gaps.md](18-gaps.md)                             | Where the repository differs from this folder, with evidence, and the order in which the gaps close                                               |
 | [19-names.md](19-names.md)                           | The names that change, and the one meaning each word keeps                                                                                        |
@@ -97,7 +97,8 @@ recovery are defined in [03-configuration.md](03-configuration.md), not inferred
 ## How this folder is maintained
 
 - Every document opens with what it decides.
-- Sentences are short and active. The text describes the present design, not its history.
+- Canonical sections describe the target contract. Keep historical defect evidence in its
+  existing record and link to it; do not repeat current status across documents.
 - A number that summarizes a list lives beside the list, or not at all.
 - No document links to a file that does not exist. A link check runs over this folder in the gate of this repository.
 - Paths from the reference repositories appear only in the source column of the ledger.
@@ -120,3 +121,10 @@ together. Historical evidence in the gap log describes the defect, not a competi
 
 The September 20 review is tracked in [24-contracts.md](fixes/24-contracts.md), with the
 existing subject fixes amended in place. [22-remaining.md](22-remaining.md) remains the work index.
+
+The cleanup backlog in [22-remaining.md](22-remaining.md#cleanup-acceptance-backlog) supersedes
+older implementation prescriptions where they conflict. [12-repository-layout.md](12-repository-layout.md#tests)
+owns meaningful test acceptance; [05-engines.md](05-engines.md#execution-ownership) owns
+execution boundaries; [04-presets.md](04-presets.md) owns shipped preset policy.
+[16-file-tree.md](16-file-tree.md) defines ownership without mandatory filename inventories.
+Fixed counts, source-text guards, generic frameworks, and paperwork do not establish completion.

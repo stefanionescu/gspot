@@ -27,8 +27,9 @@ gspot/
 └── AGENTS.md  CLAUDE.md  CHANGELOG.md  CONTRIBUTING.md  LICENSE.md  NOTICE.md  README.md  SECURITY.md
 ```
 
-Every folder and file, with what each holds, is in [16-file-tree.md](16-file-tree.md). A file
-goes where that document says or the document changes in the same commit.
+The ownership map is in [16-file-tree.md](16-file-tree.md). It defines responsibilities, not
+a mandatory inventory of source and test filenames. Move code when ownership improves;
+do not preserve a layout or repeat a reorganization because an earlier plan prescribed it.
 
 Two published artifacts: the binary (GitHub Releases, one asset per platform) and
 `@gspot/eslint-plugin` (npm). Presets, rules, and prose ship inside the binary. On npm the binary ships the way Biome and ast-grep ship theirs. One package per platform (`@gspot/cli-darwin-arm64`, `@gspot/cli-linux-x64` and the rest) holds the executable, gated by the `os` and `cpu` fields. A thin `gspot` package lists them as `optionalDependencies`, and its `bin` launcher runs the one that installed. Nothing downloads at install time and no
@@ -64,18 +65,18 @@ top, and little else.
   command acceptance, shared harness tests, and packaged release acceptance.
 - `packages/testing` owns shared filesystem setup and cleanup for those suites. Keep it
   limited to shared test support. Test-only types live with their tests.
-- A folder has more than one file or does not exist.
-- `commands/` holds no logic. Each command is a function elsewhere that a test calls with no
-  terminal.
-- `checks/` has one file for each check name. The folder is the first part of the id, and the file
-  is the second.
-- `checks/registry.ts` maps the id to the function. No other file of `src/` names a preset, a
-  tool, or a check name (D-146, K-17, K-38).
-- `readers/` holds a parser that more than one check uses, and a reader parses a scope once.
-- `structure/analyses/` has one file for each check name, for every language the engine reads.
+- Commands own argument translation and presentation. Keep application behavior testable
+  without a terminal, but do not create a forwarding file for every command.
+- Domain-owned checks share actual parsers and preparation where needed. A check identifier
+  does not require its own source file, wrapper, test file, or registry layer.
+- Planning resolves the implementation once. Infrastructure does not import a check catalog
+  merely to read config or compute paths.
+- Shared readers parse once per command session. Language-specific semantics remain explicit.
 - No folder is named `util`, `helper`, `common`, `shared`, `core`, `lib` or `misc`. The naming
   policy gspot ships refuses them, and gspot lints itself.
-- `packages/cli/config/` holds the literal tables gspot ships in code. Those are the regexes and pattern lists (shebangs, generated-file banners, environment-file names), the marker strings and header templates, the refused reasons, and the file-tag table.
+- Presets own shipped policy and tool data. Colocate algorithm-specific constants and types
+  with their owner; share only contracts and data that multiple consumers actually use.
+  Existing `packages/cli/config/` tables remain only where they serve that boundary.
 - Files there hold literals only, and none names a preset or a tool. `integrity/config-purity`
   guards them here, because the `gspot.toml` of this repository names the folder as the `config` role.
 - A constant of one algorithm, such as an index or a loop bound, stays inline (D-22).
@@ -168,32 +169,48 @@ Nothing in the release path is code gspot wrote:
 
 ## Tests
 
-| Kind               | What                                                                                                                                                                             |
-| ------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Unit               | one test file for each source file with logic, in every folder of `src/`: schema and merge, selectors, natures, the matcher, each extractor, each check, each writer (T-23)      |
-| Rule               | every ESLint rule through the rule tester of ESLint                                                                                                                              |
-| Snapshot           | every generated file of every preset for a fixed policy, compared with a tracked copy (T-36)                                                                                     |
-| Planted repository | `gspot init` as a developer runs it, then `gspot check`, on a small repository for each preset, with the real tools; exit code, check lines, and the text of each finding (T-24) |
-| Failing case       | every shipped check has one planted case that makes it fail (T-17, T-28)                                                                                                         |
-| Platform           | the unit tests, the planted repositories, and `gspot check` run on Linux, macOS, and Windows in CI (K-263)                                                                       |
-| Completion         | every command and flag of the program appears in the completions for bash, zsh, fish, and PowerShell, read from the program and not from a list (T-22)                           |
-| Schema             | `gspot.schema.json` accepts every example config of this folder and of the guides, and refuses every invalid test repository (S-11)                                              |
-| Tool contract      | every flag a manifest passes exists in the help text of the pinned tool (K-251)                                                                                                  |
-| Launcher           | the launcher and the platform packages are published to a `verdaccio` registry and installed from it with `--ignore-scripts`                                                     |
-| Time               | a staged check of ten files in a scope of 1,000 files ends within its stated limit, warm and cold (T-12)                                                                         |
-| Rule files         | the repository check `rules/lint` reads front matter, links, size, the layer of each file, fences, and each good example (K-261)                                                 |
-| Self               | `gspot check` on gspot, with no `[[ignore]]` entry                                                                                                                               |
+Tests establish current product behavior. They must exercise real logic with meaningful inputs
+and observable results. A test of a removed implementation, a forwarding wrapper, a filename,
+a registry entry, or a source-text token does not establish that the CLI works. Delete tests
+whose only subject is deleted. When a user contract survives a replacement, move its
+regression to the new owner and execute that owner.
 
-Each suite owns its command inputs and expected behavior. Shared setup belongs in the harness
-when callers need the same behavior (D-113). The harness fails a test whose `init` exits with an error (T-27).
+| Boundary                | Required evidence                                                                                                                                                         |
+| ----------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Parsing and policy      | Valid input resolves correctly; malformed input reports the relevant path and defect. Validate the published schema with accepted and rejected documents.                 |
+| Rule or check           | A planted defect produces the intended check, rule or diagnostic, file, and location; corrected and valid inputs do not produce that finding.                             |
+| Generated configuration | The pinned consumer loads it and reports the intended defect. Snapshots cover meaningful serialization only; they do not establish enforcement.                           |
+| Command                 | Verify exit status, structured result, applicable check execution, and relevant filesystem effects. Missing tools, unexpected skips, and empty runs cannot pass as clean. |
+| Lifecycle               | Originals, binary bytes, modes, unowned files, later edits, interrupted operations, and recovery follow the ownership contract.                                           |
+| Process                 | Verify actual termination, output handling, argument batching, cancellation, environment, and known failure classification.                                               |
+| Packaged consumer       | Build, isolated publication, fresh installation, init, exact defect, correction, and successful rerun without checkout dependency links.                                  |
+| Published plugin        | Install the artifact, consume its public exports and types, and obtain actual findings at the intended levels.                                                            |
+| Platform                | Execute supported platform boundaries where available; record unavailable evidence as deferred.                                                                           |
 
-Tests never call the network. Tools run in CI through mise pins, and a missing tool fails the
-run. A `--json` test holds the documented shape of the JSON output of every command, because
-agents drive gspot through it.
+Use identifiable cases with minimal inputs. Share expensive setup only where isolation and
+restoration remain reliable. Shared harness code earns its place through setup or cleanup
+behavior, not forwarding. Unit tests remain cheap; a small representative installation matrix
+covers fresh and existing repositories, mixed languages, nested scopes, clean clones, hooks,
+retained configuration, and supported package managers.
 
-`bun test --coverage` runs in CI and the summary is part of the run. Check coverage requires
-executed cases that identify the check, planted defect, and finding location. Finding a check
-name in test source does not establish coverage.
+Do not require one test file per source file, fixed test or rule counts, complete filename
+inventories, or source-text coverage guards. Tests need no generic case framework or central
+table of every command and timeout. A mock can isolate a real unit boundary; mocked tools
+cannot establish installed-tool compatibility. Availability of a registry pin proves only
+that the version exists.
+
+Delete low-signal config substring assertions once executed findings cover the contract.
+Retain meaningful serialization, escaping, malformed-input, restoration, registry isolation,
+and process regressions. Corrected input must remove the intended finding; unrelated findings
+must not be hidden to manufacture a pass. Test recommended behavior on ordinary code, and
+verify optional strict policies at all. Never weaken a rule to make a fixture pass.
+
+Local-registry installation tests run against the built artifacts and derive their version.
+External acquisition is explicit and separate from deterministic fixture execution. Required
+tool absence fails acceptance; unit tests need not download tools. Check coverage comes from
+executed behavior, not finding a check name in test source. Coverage reports complement this
+contract and cannot replace it. The actionable cleanup is in
+[22-remaining.md](22-remaining.md#cleanup-acceptance-backlog).
 
 ## Self-lint
 

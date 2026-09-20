@@ -1,14 +1,11 @@
-# One Copy of Each Rule
+# Shared Rule Logic
 
-Row 23 of the build order. The rules gspot wrote itself exist once for each language, with their
-own constants, and they do not hold in every language alike. After this step an idea that stays
-is written once over the syntax tree, with one set of limits. The manifest of each language
-lists it under a name of its own (D-98). TypeScript keeps its ESLint rules, so an editor still
-shows them (D-02), and one test repository set holds both implementations to the same answers. This step also builds the checks the ledger promised and nobody wrote (K-248).
+K-87, K-235, and K-86 share this contract. It replaces the earlier universal-analysis design.
+The goal is reliable enforcement with fewer independent implementations where semantics agree.
+An analysis may name its language. Adding a language need not take only a table row. The cleanup status lives in
+[22-remaining.md](../22-remaining.md#cleanup-acceptance-backlog).
 
 ## K-87: three copies of one idea
-
-Closes K-87, K-235, and K-86.
 
 **What is wrong.** The trivial-function, call-through, and duplicate-function logic exists for
 shell, for Python, and for Swift, each with `TRIVIAL_STATEMENTS = 2`, `TRIVIAL_LINES = 3`, and
@@ -21,40 +18,28 @@ The import layout, the import boundaries,
 duplicate names in `__all__`, and export-only modules exist for TypeScript alone. The Swift doc
 comment rule and the trivial function of PL/pgSQL were never written.
 
-**Target.** This table, held by a unit test over the manifests:
+**Target.** Preserve each intended policy while removing proven duplication. Share parsing,
+traversal, comparison, or reporting operations only where actual callers use the same contract.
+Keep Bash, Python, Swift, SQL, and TypeScript semantics explicit. TypeScript keeps its editor
+integration through ESLint (D-02). Language check identifiers retain their policy and baseline
+scope (D-98).
 
-| Idea                                    | Level       | Bash | Python | Swift | TypeScript | SQL |
-| --------------------------------------- | ----------- | ---- | ------ | ----- | ---------- | --- |
-| File and function length                | recommended | yes  | yes    | yes   | yes        | yes |
-| Call-through                            | recommended | yes  | yes    | yes   | yes        | yes |
-| Duplicate functions                     | recommended | yes  | yes    | yes   | yes        | no  |
-| Unused functions                        | recommended | yes  | yes    | yes   | yes        | no  |
-| Dead parameters                         | recommended | yes  | yes    | yes   | yes        | no  |
-| Import cycles                           | recommended | no   | yes    | no    | yes        | no  |
-| Environment owner                       | all         | yes  | yes    | yes   | yes        | no  |
-| Import layout and boundaries            | all         | no   | yes    | no    | yes        | no  |
-| Export-only files, alias constants      | all         | no   | yes    | no    | yes        | no  |
-| Private before public, doc comment form | all         | yes  | yes    | yes   | yes        | no  |
+Recommended and all follow the level owner; forwarding preferences belong at all.
 
-**Files.** `structure/analyses/`: one file for each idea, with a small table for each language
-under `structure/languages/` that names the node kinds of a function, a call, a parameter, an
-import, and an export. The folders `apple/structure/` and `pyproject/structure/` fold into it.
-`presets/concern/structure/manifest.toml` holds the limits once.
+**Implementation.** Inspect each existing rule and its consumers before deciding what moves.
+Shared limits belong to preset policy. Domain checks own their semantics; shared readers own
+reusable observations. Inline an abstraction with caller-specific flags before extracting its
+proven common operations.
 
-**Logic.** An analysis asks the language table for nodes and never names a language. The name
-stays with the language: `structure/call-through` for shell, `python/call-through`,
-`swift/call-through`, and `sql/call-through`, so a baseline and an ignore hold one language
-(D-98). TypeScript keeps `gspot/no-call-through` and its sibling rules in the plugin (D-02), and
-reads the same limits from the same settings. A call-through replaces the trivial-function check
-in every language, as K-102 found for TypeScript. A language gains an idea by adding its table
-row and one manifest entry.
+No generic analysis framework, mandatory language table, or mirrored
+file layout is required. The unwritten enforcement recorded by K-248 remains work to complete.
 
-**What goes.** The three constant sets, the per-language copies, and the check names
-`structure/trivial-function`, `python/trivial-function`, and `swift/trivial-function`. The key
-`limits.sql.function_lines` gains its reader here.
+**Deletion.** Delete duplicate code, options, constants, dispatch wrappers, cache reset hooks,
+and tests only after their callers and surviving contracts move. Do not delete a rule because
+another rule has a similar name. Trivial-function checks are not unconditionally removable:
+prove that their intended defects remain covered, or retain the necessary focused check.
 
-**Tests.** One test repository for each cell of the table that says yes: a short file with the defect and
-one without. The TypeScript test data run through the rule tester of ESLint, and the same cases in
-the other languages run through the shared analysis, from one table of cases.
-
-**Done when.** The unit test over the table passes, and the ledger test of K-248 passes.
+**Acceptance.** Run representative invalid and valid language cases through the actual owner.
+Use generated config for tool replacements and assert the check, diagnostic, file, and location.
+Exercise language-specific distinctions, exemptions, anonymous functions, and corrected input.
+A table saying a language supports an idea is descriptive metadata, not evidence of enforcement.
