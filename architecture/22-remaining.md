@@ -323,7 +323,6 @@ exactly one fix file fails it.
 - [ ] K-175: `recommended` runs the `gspot` style alone, which is what `WRITING.md` tells an agent. The `all` level adds the packages. The off list and the vocabulary move into the prose preset.
 - [ ] K-201: The base holds the flags that only add errors, and every option that changes emit or resolution stays in the `tsconfig.json` of the repository.
 - [ ] K-218: A shipped pack names the API of its framework and nothing else. A rule that names a function of one repository moves into that repository, under `tools.semgrep.rules`, in its migration.
-- [ ] K-219: Both lines leave the templates.
 - [ ] K-93: Detect the build command, the output folder, the assets folder and the Swift destination, or ask.
 - [ ] K-230: A section of a rule file carries the level of the checks it describes, and the assembler leaves out a section above the level of the repository. `REACT.md` names the file after its component.
 

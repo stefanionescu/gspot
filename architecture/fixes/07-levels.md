@@ -226,32 +226,6 @@ own validator, with no finding.
 
 **Done when.** A search of `presets/` for the three function names finds nothing.
 
-## K-219: the Swift templates forbid every file header
-
-**Implementation.** Both templates preserve source headers. The Swift rule guide
-permits them. A planted regression checks linting and verifies that formatting fixes spacing
-without changing an Xcode-style header or copyright notice. The Windows setup smoke check
-uses the rendered configuration and a source header.
-
-**What is wrong.** `swiftlint.yml.tmpl` sets `file_header` with the forbidden pattern `.`, so the
-header Xcode writes is a finding in every file. `swiftformat.tmpl` sets `--header strip`, so
-`gspot check --fix` deletes a license line.
-
-**Target.** gspot has no opinion on a file header.
-
-**Files.** `presets/swift/swiftlint.yml.tmpl`, `presets/swift/swiftformat.tmpl`,
-`rules/language/SWIFT.md`.
-
-**Logic.** Both lines leave the templates, at both levels.
-
-**What goes.** `file_header` from the opt-in list, and the sentence of `SWIFT.md` that bans
-headers (K-241).
-
-**Tests.** The Swift planted file with the Xcode header holds no finding, and the header is
-there after `check --fix`.
-
-**Done when.** That case passes.
-
 ## K-93: defaults that assume one kind of project
 
 **What is wrong.** A static site builds with `npm run build` into `dist`, assets live under

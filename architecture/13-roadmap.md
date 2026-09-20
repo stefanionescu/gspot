@@ -97,6 +97,31 @@ which can add the Windows extended-path prefix. Clone paths and the repository r
 use the same native namespace before relative-path comparison. The regression includes
 that form alongside ordinary absolute and relative paths.
 
+### Cross-platform CI repair
+
+Revision `b553f9d7b8d25640da0d8dbb4c799966f2aed9ec` passes the complete CI workflow
+on all three platforms. Each job builds its native binary and passes 136 repository
+self-checks. The separate [normal and manual gspot workflow](https://github.com/stefanionescu/gspot/actions/runs/35498214506) also passes.
+
+| Platform | CI job                                                                                           | Tests passed | Skipped | Test duration   | Function coverage | Line coverage |
+| -------- | ------------------------------------------------------------------------------------------------ | ------------ | ------- | --------------- | ----------------- | ------------- |
+| Linux    | [106045086797](https://github.com/stefanionescu/gspot/actions/runs/35498214484/job/106045086797) | 469          | 4       | 888.13 seconds  | 44.37%            | 54.72%        |
+| macOS    | [106045086708](https://github.com/stefanionescu/gspot/actions/runs/35498214484/job/106045086708) | 470          | 3       | 791.72 seconds  | 44.37%            | 54.72%        |
+| Windows  | [106045086759](https://github.com/stefanionescu/gspot/actions/runs/35498214484/job/106045086759) | 468          | 5       | 1578.21 seconds | 60.64%            | 67.71%        |
+
+The Windows run exercises the real command shim with spaced Unicode arguments. Its
+local-schema regression detects and fixes an invalid value in a nested Unicode path.
+The snapshot cases pass after the fixture helper disables automatic Git maintenance.
+
+K-219 closes at this revision. The source-header regression passes on all three platforms.
+SwiftFormat preserves the header during linting and spacing fixes. SwiftLint also accepts
+the header on Linux and macOS. It has no Windows build. Both templates and the Swift
+rule guide permit source headers.
+
+This is CI repair evidence, not the complete implementation gate. Coverage remains below
+80%, and required release tests remain skipped. Packaging acceptance under K-263 and
+the Yap handoff remain open.
+
 ### Preset deletion
 
 D-136 removes the Go, Rust, Ruby, and Django presets, leaving 48 manifests.
