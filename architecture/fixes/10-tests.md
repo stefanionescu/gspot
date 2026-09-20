@@ -75,7 +75,7 @@ clone, a `[tool.ruff]` table, or a `lint` script.
 
 **Target.** Each finding of [20-adoption.md](../20-adoption.md) has one planted case.
 
-**Files.** `tests/repositories/takeover.test.ts`, `hooks.test.ts`, `scope-languages.test.ts` (as
+**Files.** `tests/acceptance/cli/takeover.test.ts`, `hooks.test.ts`, `scope-languages.test.ts` (as
 `scope-presets.test.ts`), `structure.test.ts`.
 
 **Logic.** Each fix section of files 01 to 06 names its planted case. The cases are written with their fix and counted here.
@@ -106,7 +106,7 @@ inventory assertions are also removed. Real input, process, and storage failure 
 its own rule.
 
 **Files.** `packages/cli/tests/unit/presets/every-check-tested.test.ts`, the test of each preset,
-`tests/repositories/libraries.test.ts`, `react.test.ts`, `handheld.test.ts`.
+`tests/acceptance/frameworks/libraries.test.ts`, `react.test.ts`, `handheld.test.ts`.
 
 **Logic.** The guard test passes for a check name only inside a planted case that expects exit 1
 and a finding of that check. A case is data: `{ check, plant, expects }` in the test file, and
@@ -255,6 +255,9 @@ Closes T-22 and T-25.
 
 **What is wrong.** The completion test expects a length over 100 and the word `gspot`, and its
 list of commands is written by hand. Two release tests expect the text `0.1.0`.
+
+**Status: open.** The completion test that checked script length and copied a command
+list is deleted. Command and option completion behavior still needs executable coverage.
 
 **Target.** A test reads what it checks from its one source.
 

@@ -337,7 +337,7 @@ sits in the middle of the file.
 **Target.** Hand entries first, then the managed block, and no entry for a path that does not
 exist.
 
-**Files.** `.gitignore`, and the planted test that runs pytest, `tests/repositories/fastapi.test.ts`
+**Files.** `.gitignore`, and the planted test that runs pytest, `tests/acceptance/frameworks/fastapi.test.ts`
 or `pyproject/tools.test.ts`, whichever leaves the cache.
 
 **Logic.** The harness runs a tool with the planted folder as its working directory, never the

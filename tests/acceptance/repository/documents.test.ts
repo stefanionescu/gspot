@@ -9,7 +9,7 @@ import { describe, expect, test } from 'bun:test';
 import { existsSync, mkdirSync, readdirSync, symlinkSync, unlinkSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
-const root = fileURLToPath(new URL('../..', import.meta.url));
+const root = fileURLToPath(new URL('../../..', import.meta.url));
 const STYLES = join(root, '.gspot', 'vale', 'styles');
 const OWN_STYLES = new Set(['gspot', 'config']);
 

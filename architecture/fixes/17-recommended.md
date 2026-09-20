@@ -34,6 +34,11 @@ strict error.
 
 ## K-75: checks of taste that fail a normal repository
 
+**Additional local evidence.** The test-layout staged gate rejects `e2e` as a duplicate
+word, `python` as a folder name, and React/React Native suites as a shared prefix.
+It also rejects `custom-checks` and `scoped-presets` through vocabulary groups. These
+are descriptive test names, not demonstrated defects. K-75 remains open.
+
 Closes K-75 and K-91.
 
 **What is wrong.** Every dependency must be an exact version, and `packageManager` must exist.

@@ -6,7 +6,7 @@ import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
-const MODULES = join(import.meta.dir, '../../node_modules');
+const MODULES = join(import.meta.dir, '../../../node_modules');
 const INIT = [
     'init',
     '--yes',

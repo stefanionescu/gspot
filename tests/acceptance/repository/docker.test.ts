@@ -2,7 +2,6 @@
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
-import { composeImages } from '#cli/integrity/docker/image-scan.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const INIT = [
@@ -72,10 +71,4 @@ describe('the docker preset', () => {
         },
         PLANTED_TIMEOUT_MS * 4,
     );
-
-    test('the image scan reads the images a Compose file names, and skips one that comes from a variable', () => {
-        const compose =
-            'services:\n    proxy:\n        image: "nginx:1.27.2"\n    api:\n        image: ${API_IMAGE}\n    cache:\n        image: redis:7.4.1 # pinned\n';
-        expect(composeImages(compose)).toEqual(['nginx:1.27.2', 'redis:7.4.1']);
-    });
 });

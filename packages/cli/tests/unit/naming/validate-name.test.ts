@@ -92,7 +92,7 @@ describe('nameProblems', () => {
 
     test('exclusions, digit allowances, structural prefixes and exemptions apply', () => {
         expect(nameProblems(identifier('i', 'variables'), plain)).toEqual([]);
-        expect(nameProblems(identifier('user2', 'variables', 'tests/e2e/a.ts'), plain)).toEqual([]);
+        expect(nameProblems(identifier('user2', 'variables', 'tests/acceptance/a.ts'), plain)).toEqual([]);
         expect(nameProblems(identifier('_private_step', 'functions', 'scripts/a.sh', 'bash'), plain)).toEqual([]);
         expect(nameProblems(identifier('setTimeout'), plain)).toEqual([]);
         expect(nameProblems(identifier('enhancedThing'), plain)).toEqual([]);

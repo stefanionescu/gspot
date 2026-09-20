@@ -152,7 +152,7 @@ without naming, so nothing ran the two together.
 
 **Files.** `presets/naming/policy.json`, the manifests of react, nextjs, react-native, vue,
 svelte, express, and nestjs, `naming/engine.ts`, `naming/validate-name.ts` (`callbackProblem`),
-`naming/policy.ts`, `tests/repositories/react.test.ts`.
+`naming/policy.ts`, `tests/acceptance/frameworks/react/web.test.ts`.
 
 **Logic.** `policy.ts` merges the rules of the selected manifests after the shared policy. The
 react rule accepts PascalCase for a function that returns JSX and for its file. The `handle`

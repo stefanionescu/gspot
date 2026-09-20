@@ -9,7 +9,7 @@ import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
-const root = fileURLToPath(new URL('../..', import.meta.url));
+const root = fileURLToPath(new URL('../../..', import.meta.url));
 
 const PACKAGE = `{
     "name": "planted",

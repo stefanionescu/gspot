@@ -5,7 +5,7 @@ import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
-const MODULES = join(import.meta.dir, '../../node_modules');
+const MODULES = join(import.meta.dir, '../../../node_modules');
 const SOURCE =
     '// The port the service listens on.\n\n/** The port, read once. */\nexport const port = Number("8080") as number;\n';
 

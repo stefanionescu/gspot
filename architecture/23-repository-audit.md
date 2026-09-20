@@ -231,7 +231,7 @@ the same stale failure, so K-69 became a prerequisite for committing the account
 Revision `7ec8f29` prevents repository checks without declared cache inputs from reusing
 verdicts. The new planted regression fails before that repair and passes after it.
 
-Both tests in `tests/repositories/repository-check.test.ts` pass, as does
+Both tests in `tests/acceptance/cli/checks.test.ts` pass, as does
 `bunx tsc --noEmit -p tsconfig.json`. The staged gate passes 63 checks, and the push hook passes
 136 checks. The revision is pushed to `main` with `[skip ci]`. Explicit cache inputs remain
 open under K-69. Platform verification is deferred under the CI bypass.

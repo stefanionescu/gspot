@@ -30,13 +30,6 @@
         }
     },
     "include": ["packages/**/*.ts", "tests/**/*.ts"],
-    "exclude": [
-        "node_modules",
-        "dist",
-        "**/node_modules",
-        "packages/cli/build",
-        "tests/repositories/**/fixtures",
-        "packages/cli/scratch"
-    ],
+    "exclude": ["node_modules", "dist", "**/node_modules", "packages/cli/build", "packages/cli/scratch"],
     "extends": "./.gspot/tsconfig.base.json"
 }

@@ -4,7 +4,7 @@ import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
-const NPM_BIN = join(import.meta.dir, '../../node_modules/.bin');
+const NPM_BIN = join(import.meta.dir, '../../../node_modules/.bin');
 const INIT = [
     'init',
     '--yes',

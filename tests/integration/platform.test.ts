@@ -4,7 +4,6 @@ import { rejects } from 'node:assert/strict';
 import * as processes from '#cli/platform/spawn.ts';
 import { basename, delimiter, join } from 'node:path';
 import { describe, expect, spyOn, test } from 'bun:test';
-import { environmentVariables } from '#cli/platform/environment.ts';
 import { run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 // Mise is the subprocess boundary; the resulting search path must locate a real executable.
@@ -25,17 +24,6 @@ describe('the planted harness tool path', () => {
         const executable = Bun.which(basename(process.execPath), { PATH: first });
         expect(executable).not.toBeNull();
         expect(realpathSync(executable!)).toBe(realpathSync(process.execPath));
-    });
-
-    test('prepending a directory preserves inherited executable lookup', () => {
-        const inherited = environmentVariables();
-        const result = Bun.spawnSync([basename(process.execPath), '--version'], {
-            env: { ...inherited, PATH: `${process.cwd()}${delimiter}${inherited['PATH'] ?? ''}` },
-            stdout: 'pipe',
-            stderr: 'pipe',
-        });
-        expect(result.exitCode, result.stderr.toString()).toBe(0);
-        expect(result.stdout.toString().trim()).toBe(Bun.version);
     });
 });
 

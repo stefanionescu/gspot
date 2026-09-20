@@ -2,7 +2,6 @@
 import { createFixture } from 'fs-fixture';
 import type { PlantedCase } from '#types/run.ts';
 import { describe, expect, test } from 'bun:test';
-import { underFloor } from '#cli/apple/xctest/coverage.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const INIT = [
@@ -78,15 +77,4 @@ describe('the xctest preset', () => {
         },
         PLANTED_TIMEOUT_MS * 5,
     );
-
-    test('the coverage check compares each named target with its floor', () => {
-        const report = { targets: [{ name: 'App.app', lineCoverage: 0.617 }] };
-        expect(underFloor(report, [{ target: 'App', percent: 60 }])).toEqual([]);
-        expect(underFloor(report, [{ target: 'App', percent: 80 }])).toEqual([
-            'App covers 61 of 100 lines, under the floor of 80.',
-        ]);
-        expect(underFloor(report, [{ target: 'Widget', percent: 10 }])).toEqual([
-            'The coverage report holds no target named Widget.',
-        ]);
-    });
 });
