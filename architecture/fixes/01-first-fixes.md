@@ -740,6 +740,14 @@ key `env`, which `tool-runner.ts` passes to the spawn.
 
 **Done when.** It passes for all manifests.
 
+**Status: partially implemented.** Check environments expand the same scalar placeholders as commands.
+Checks, fixers, and side commands receive those values through the shared runner.
+The v8r command uses its supported output flag and generated configuration through `V8R_CONFIG_FILE`.
+The root v8r copy and its generation entry are removed, and dotenv corrections use supported flags.
+The 27 focused regressions pass.
+
+The release contract over every pinned tool argument remains open.
+
 ## K-253: the workflow gspot writes breaks the rule file gspot installs
 
 **What is wrong.** `RUNNERS` in `emit/workflow.ts` holds `ubuntu-latest`, and the job has no

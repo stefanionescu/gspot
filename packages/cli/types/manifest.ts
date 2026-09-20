@@ -64,6 +64,7 @@ export type CheckSpec = {
     stage: Stage;
     runs: 'per-file-list' | 'per-scope' | 'once';
     command?: string[];
+    env?: Record<string, string>;
     fix_command?: string[];
     fix_order?: FixOrder;
     baseline_file?: string;

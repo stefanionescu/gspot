@@ -98,10 +98,18 @@ function plainPart(session: Session, planned: PlannedCheck, part: string, sub: S
     if (part === '{file}') return [{ file: true }];
     if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}'))
         return isWorkspace(session.root, sub.scope) ? [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope] : [];
-    return [substituteOne(session, planned, part, sub)];
+    return [substituteValue(session, planned, part, sub)];
 }
 
-function substituteOne(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string {
+/**
+ * Expands a scalar command argument or environment value from the check scope.
+ * @param session the repository session
+ * @param planned the planned check
+ * @param part the value with placeholders
+ * @param sub the expansion values
+ * @returns the expanded value
+ */
+export function substituteValue(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string {
     return settingsFilled(planned, part)
         .replaceAll(CONFIG_PLACEHOLDER, (_match, name: string) =>
             toPlatform(join(session.root, configurationPath(session, planned, name))),

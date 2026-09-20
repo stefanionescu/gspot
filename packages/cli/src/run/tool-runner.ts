@@ -10,7 +10,7 @@ import { parseOutput } from '#cli/run/parse-output.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import type { ToolPin, CheckSpec } from '#types/manifest.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
-import { baselinePath, substitute, perFileCommands } from '#cli/run/command-parts.ts';
+import { baselinePath, substitute, perFileCommands, substituteValue } from '#cli/run/command-parts.ts';
 import type { ToolRunState, PreparedCommand, Substitutions, Session, PlannedCheck } from '#types/run.ts';
 
 const TAIL_LINES = 20;
@@ -174,7 +174,7 @@ async function runCommands(
     const started = performance.now();
     for (const command of prepared.commands) {
         const seconds = planned.scope.view.limit('tool_seconds') ?? DEFAULT_TOOL_SECONDS;
-        const result = await runToolCommand(planned, command, cwd);
+        const result = await runToolCommand(planned, command, prepared);
         if (result.isTimedOut === true) {
             const note = `${tool.name} ran past ${String(seconds)} seconds and was stopped; raise limits.tool_seconds with a reason, or run it at a later stage`;
             return { ...base, status: 'error', duration: performance.now() - started, note, command: argv };
@@ -219,13 +219,20 @@ export function prepareCommand(
         indent: scope.view.format.indent_width,
     };
     if (planned.messageFile !== undefined) sub.messageFile = planned.messageFile;
-    if (command.some((part) => part.includes('{merge_base}'))) sub.mergeBase = pushBase(session.root);
+    const parts = [...command, ...Object.values(planned.spec.env ?? {})];
+    if (parts.some((part) => part.includes('{merge_base}'))) sub.mergeBase = pushBase(session.root);
     const argv = substitute(session, planned, command, sub);
     if (toolPath !== undefined) argv[0] = toolPath;
     const commands = command.includes(FILES_PLACEHOLDER)
         ? batchedCommands(session, planned, command, sub, toolPath)
         : perFileCommands(argv, files);
-    return { root: session.root, cwd, argv: argv.filter((part) => typeof part === 'string'), commands };
+    const env = Object.fromEntries(
+        Object.entries(planned.spec.env ?? {}).map(([name, value]) => [
+            name,
+            substituteValue(session, planned, value, sub),
+        ]),
+    );
+    return { root: session.root, cwd, argv: argv.filter((part) => typeof part === 'string'), commands, env };
 }
 
 /**
@@ -272,21 +279,25 @@ export async function runSideCommand(
     const prepared = prepareCommand(session, planned, command, probe.path);
     const baseline = baselinePath(session, planned);
     if (baseline !== undefined) mkdirSync(dirname(baseline), { recursive: true });
-    return run(prepared.argv, { cwd: prepared.cwd });
+    return runToolCommand(planned, prepared.argv, prepared);
 }
 
 /**
  * Runs a tool command with the shared output environment and configured deadline.
  * @param plannedCheck the check whose limits apply
  * @param command the expanded argument vector
- * @param workingDirectory the command directory
+ * @param prepared the command directory and expanded environment
  * @returns the completed process result
  */
 export async function runToolCommand(
     plannedCheck: PlannedCheck,
     command: string[],
-    workingDirectory: string,
+    prepared: PreparedCommand,
 ): Promise<SpawnResult> {
     const seconds = plannedCheck.scope.view.limit('tool_seconds') ?? DEFAULT_TOOL_SECONDS;
-    return run(command, { cwd: workingDirectory, env: TOOL_ENV, timeoutMs: seconds * MILLISECONDS });
+    return run(command, {
+        cwd: prepared.cwd,
+        env: { ...TOOL_ENV, ...prepared.env },
+        timeoutMs: seconds * MILLISECONDS,
+    });
 }

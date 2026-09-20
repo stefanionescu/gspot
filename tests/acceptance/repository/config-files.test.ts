@@ -264,6 +264,8 @@ test(
         expect(setting.code, setting.stdout + setting.stderr).toBe(0);
         const applied = await run(fixture.path, ['apply'], environment);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        // A conflicting authored config must not replace the generated configuration.
+        await Bun.write(join(fixture.path, '.v8rrc.yml'), 'invalid: [\n');
         const path = join(fixture.path, 'settings/café.json');
         await Bun.write(path, JSON.stringify({ count: 'invalid' }));
         expect(git(fixture.path, ['add', 'settings/café.json']).code).toBe(0);
@@ -278,6 +280,22 @@ test(
         const valid = await run(fixture.path, command, environment);
         expect(valid.code, valid.stdout + valid.stderr).toBe(0);
         expect(valid.stdout).toMatch(/config-files\/schema\s+ok\s/u);
+    },
+    PLANTED_TIMEOUT_MS,
+);
+
+test(
+    'The dotenv fixer corrects tracked environment files with the pinned tool',
+    async () => {
+        await using fixture = await createFixture({ '.env.example': 'lowercase=value\n' });
+        commitAll(fixture.path);
+        const environment = { PATH: toolsPath(['dotenv-linter']) };
+        await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
+        const fixed = await run(fixture.path, ['check', 'config-files/dotenv', '--fix', '--no-cache'], environment);
+        expect(fixed.code, fixed.stdout + fixed.stderr).toBe(0);
+        expect(await Bun.file(join(fixture.path, '.env.example')).text()).toBe('LOWERCASE=value\n');
+        const checked = await run(fixture.path, ['check', 'config-files/dotenv', '--no-cache'], environment);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
     },
     PLANTED_TIMEOUT_MS,
 );

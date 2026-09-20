@@ -182,7 +182,8 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - A check takes `waits_for`, the setting it needs. With the setting unset the check prints
   `skipped` and names it.
 - A check takes `cached = false` when its verdict depends on more than its files.
-- A check takes `env`, a table of environment values for its tool.
+- A check takes `env`, a table of environment values for its tool. Values expand scalar command
+  placeholders such as `{config:name}` before execution.
 - A tool takes `version_command`, `rule_page`, `suppression`, `crash_pattern`, and
   `[[tools.takeover]]` rows. A takeover row names a `file`, or a `key` or `table` of a shared
   manifest with `shared = true`, and what it `carries`.

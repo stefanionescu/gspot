@@ -87,7 +87,6 @@ stub = {path = ".yamllint.yml", copy = true}
 [[configs]]
 template = "v8r.yml.tmpl"
 target = ".gspot/v8r.yml"
-stub = {path = ".v8rrc.yml", copy = true}
 
 [[checks]]
 name = "config-files/json"
@@ -143,7 +142,8 @@ name = "config-files/schema"
 stage = "push"
 runs = "per-file-list"
 requires = "network"
-command = ["v8r", "--config", "{config:v8r}", "--ignore-errors", "--format", "text", "{files}"]
+command = ["v8r", "--ignore-errors", "--output-format", "text", "{files}"]
+env = {V8R_CONFIG_FILE = "{config:v8r}"}
 claims = {extensions = [".json", ".jsonc", ".yaml", ".yml", ".toml"]}
 coverage = ["schema"]
 output = {format = "regex", pattern = "^(?<file>[^#\\s]+)#(?<message>.+)$"}
@@ -193,7 +193,7 @@ name = "config-files/dotenv"
 stage = "commit"
 runs = "per-file-list"
 command = ["dotenv-linter", "check", "--plain", "--skip-updates", "{files}"]
-fix_command = ["dotenv-linter", "fix", "--plain", "--no-backup", "--skip-updates", "{files}"]
+fix_command = ["dotenv-linter", "fix", "--plain", "--no-backup", "{files}"]
 fix_order = "format"
 claims = {filenames = [".env", ".dev.vars"], paths = [".env.*", "**/.env.*", ".dev.vars.*", "**/.dev.vars.*"]}
 coverage = ["syntax", "style"]

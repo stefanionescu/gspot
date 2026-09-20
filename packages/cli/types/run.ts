@@ -141,7 +141,13 @@ export type ToolRunState = { root: string; cwd: string; findings: Finding[]; isF
 export type EslintFile = { filePath: string; messages: EslintEntry[] };
 
 /** A tool command expanded and ready to spawn: once, or once per file. */
-export type PreparedCommand = { root: string; cwd: string; argv: string[]; commands: string[][] };
+export type PreparedCommand = {
+    root: string;
+    cwd: string;
+    argv: string[];
+    commands: string[][];
+    env: Record<string, string>;
+};
 
 /** What the regex output parser needs per line: the format, the compiled fixable pattern and the help text. */
 export type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; help: string };

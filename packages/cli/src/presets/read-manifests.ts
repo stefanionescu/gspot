@@ -68,7 +68,11 @@ function checkProblems(check: RawCheck): string[] {
 function configurationReaders(checks: RawCheck[]): Set<string> {
     const readers = new Set<string>();
     for (const check of checks)
-        for (const argument of [...(check.command ?? []), ...(check.fix_command ?? [])])
+        for (const argument of [
+            ...(check.command ?? []),
+            ...(check.fix_command ?? []),
+            ...Object.values(check.env ?? {}),
+        ])
             for (const match of argument.matchAll(CONFIG_PLACEHOLDER)) readers.add(match[1] ?? '');
     return readers;
 }

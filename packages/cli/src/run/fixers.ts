@@ -58,7 +58,7 @@ async function runCorrection(plannedCheck: PlannedCheck, prepared: PreparedComma
     const paths = [...new Set([...plannedCheck.files.map((file) => file.path), ...plannedCheck.triggerPaths])];
     const before = contentsOf(prepared.root, paths);
     for (const command of prepared.commands) {
-        const result = await runToolCommand(plannedCheck, command, prepared.cwd);
+        const result = await runToolCommand(plannedCheck, command, prepared);
         if (result.code !== 0 || result.missing || result.isTimedOut === true) {
             const detail = [result.stderr.trim(), result.stdout.trim()].filter((text) => text !== '').join('\n');
             return {

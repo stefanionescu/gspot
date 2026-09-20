@@ -62,6 +62,7 @@ const checkSchema = z.strictObject({
     stage: z.enum(['commit', 'push', 'manual', 'message']),
     runs: z.enum(['per-file-list', 'per-scope', 'once']).default('per-file-list'),
     command: z.array(z.string()).optional(),
+    env: z.record(z.string(), z.string()).optional(),
     fix_command: z.array(z.string()).min(1).optional(),
     fix_order: z.enum(['codemod', 'imports', 'manifest', 'format']).optional(),
     baseline_file: z.string().optional(),

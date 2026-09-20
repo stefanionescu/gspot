@@ -179,3 +179,20 @@ test.each(['copy', 'read'])('cleans the scratch directory after a failed %s', as
     }
     if (operation === 'read') expect(readFileSync(join(fixture.path, 'source.txt'), 'utf8')).toBe('original');
 });
+
+test('Correction environment paths expand against the execution root', async () => {
+    await using fixture = await createFixture({
+        'gspot.toml': policy,
+        'source.txt': 'original',
+        'café settings.txt': 'corrected',
+    });
+    const session = await openSession(fixture.path);
+    const planned = correction(
+        session,
+        "await Bun.write('source.txt', await Bun.file(process.env['FIXTURE_SETTINGS']).text())",
+    );
+    planned.spec.env = { FIXTURE_SETTINGS: '{root}/café settings.txt' };
+    const result = await runFixer(session, planned, fixture.path);
+    expect(result.status).toBe('changed');
+    expect(readFileSync(join(fixture.path, 'source.txt'), 'utf8')).toBe('corrected');
+});
