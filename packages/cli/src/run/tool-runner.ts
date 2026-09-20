@@ -74,7 +74,7 @@ function expandPart(session: Session, planned: PlannedCheck, part: string, sub: 
 }
 
 function plainPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string[] {
-    if (part === '{files}') return sub.files.map((file) => toPlatform(file));
+    if (part === '{files}') return sub.files;
     if (part === '{suppressions}') return suppressionsArguments(session, planned);
     if (part === '{file}') return [];
     if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}'))
@@ -143,7 +143,7 @@ function relativizer(session: Session, planned: PlannedCheck, cwd: string): (pat
 function perFileCommands(argv: string[], command: string[], files: string[]): string[][] {
     const slot = command.indexOf('{file}');
     if (slot === -1) return [argv];
-    return files.map((file) => [...argv.slice(0, slot), toPlatform(file), ...argv.slice(slot + 1)]);
+    return files.map((file) => [...argv.slice(0, slot), file, ...argv.slice(slot + 1)]);
 }
 
 function prefixScope(findings: Finding[], scopePath: string): void {

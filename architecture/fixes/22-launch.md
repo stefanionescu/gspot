@@ -234,3 +234,9 @@ adding paths. Windows batches account for quoting and double escaping within a
 
 The subprocess test exercises a `.cmd` shim on Windows. Side commands and fixers
 still need the batching work owned by the execution fixes.
+
+The v8r failure at `2397e0a` receives `.changeset\config.json` as a pattern and
+finds no files. Tool file arguments retain the forward slashes of repository paths.
+A planted test validates `settings/café.json` against a local schema through v8r.
+It reports the invalid value and passes after the value is corrected. Both runs
+select only the staged file and disable the cache.

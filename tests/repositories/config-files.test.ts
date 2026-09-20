@@ -237,3 +237,40 @@ process.exit(2);
         PLANTED_TIMEOUT_MS,
     );
 });
+
+test(
+    'Schema validation finds nested Unicode paths through the real tool',
+    async () => {
+        await using fixture = await createFixture({
+            'README.md': '# Schema validation\n',
+            'schema.json': JSON.stringify({
+                type: 'object',
+                properties: { count: { type: 'integer' } },
+                required: ['count'],
+            }),
+        });
+        commitAll(fixture.path);
+        const environment = { PATH: toolsPath(['v8r']) };
+        await install(fixture.path, [...INIT, '--hooks', 'none'], environment);
+        const mapping = JSON.stringify({ pattern: 'settings/café.json', schema: 'schema.json' });
+        const setting = run(fixture.path, ['set', 'tools.v8r.schemas', mapping], environment);
+        expect(setting.code, setting.stdout + setting.stderr).toBe(0);
+        const applied = run(fixture.path, ['apply'], environment);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const path = join(fixture.path, 'settings/café.json');
+        await Bun.write(path, JSON.stringify({ count: 'invalid' }));
+        expect(git(fixture.path, ['add', 'settings/café.json']).code).toBe(0);
+        const command = ['check', 'config-files/schema', '--staged', '--at', 'push', '--no-cache'];
+        const invalid = run(fixture.path, command, environment);
+        expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
+        expect(invalid.stdout).toContain('settings/café.json');
+        expect(invalid.stdout).toContain('must be integer');
+        expect(invalid.stdout).not.toContain('broke:');
+        await Bun.write(path, JSON.stringify({ count: 1 }));
+        expect(git(fixture.path, ['add', 'settings/café.json']).code).toBe(0);
+        const valid = run(fixture.path, command, environment);
+        expect(valid.code, valid.stdout + valid.stderr).toBe(0);
+        expect(valid.stdout).toMatch(/config-files\/schema\s+ok\s/u);
+    },
+    PLANTED_TIMEOUT_MS,
+);
