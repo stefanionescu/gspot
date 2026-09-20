@@ -17,7 +17,10 @@ export function largeFiles(input: EngineInput): Promise<Finding[]> {
     const isDeclared = pathMatcher(input.session.policyFiles.policy.declares.flatMap((entry) => entry.paths));
     const findings = input.session.repository.files
         .filter(
-            (file) => file.size > limitKb * KILOBYTE && !isDeclared(file.path) && !isUnderLfs(input.root, file.path),
+            (file) =>
+                file.size > limitKb * KILOBYTE &&
+                !isDeclared(file.path) &&
+                !isUnderLfs(input.session.repository.attributes, file.path),
         )
         .map((file) => ({
             check: input.spec.name,

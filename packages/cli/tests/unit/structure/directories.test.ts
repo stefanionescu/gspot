@@ -3,7 +3,7 @@ import type { TrackedFile } from '#types/repository.ts';
 import { directoryOf, directoryTree, prefixOf, stemOf } from '#cli/structure/directories.ts';
 
 function tracked(path: string): TrackedFile {
-    return { path, nature: 'source', tags: ['text'], executable: false, size: 1 };
+    return { path, prefix: Buffer.alloc(0), nature: 'source', tags: ['text'], executable: false, size: 1 };
 }
 
 describe('the tracked directory tree', () => {

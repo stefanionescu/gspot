@@ -107,6 +107,9 @@ Environment-file and tracked-dependency checks use a shared index reader. It pre
 tracked deletions and literal path characters, permits an absent Git repository, and reports
 failed index reads. Real corrupt-index tests produce error verdicts for both checks.
 
+Attribute rules are captured per repository observation. An unreadable `.gitattributes`
+reports its error, and a later session sees edited attributes without a reset hook.
+
 Other Git observations and takeover parsing remain open. Windows execution remains platform verification deferred.
 
 Staged and changed-file readers retain deleted paths and both rename paths. Failed diffs and

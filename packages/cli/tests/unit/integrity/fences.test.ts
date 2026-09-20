@@ -10,6 +10,7 @@ import { stalePaths } from '#cli/integrity/stale-paths.ts';
 function input(root: string, paths: string[], tracked = paths): EngineInput {
     const files = paths.map((path) => ({
         path,
+        prefix: Buffer.alloc(0),
         nature: 'source' as const,
         tags: ['text'],
         executable: false,
@@ -17,6 +18,7 @@ function input(root: string, paths: string[], tracked = paths): EngineInput {
     }));
     const all = tracked.map((path) => ({
         path,
+        prefix: Buffer.alloc(0),
         nature: 'source' as const,
         tags: ['text'],
         executable: false,

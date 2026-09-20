@@ -10,7 +10,16 @@ import { baselinesCurrent } from '#cli/integrity/baselines-current.ts';
 import type { EngineInput, ScopeSelection, Session } from '#types/run.ts';
 
 function input(root: string, checks: Partial<CheckSpec>[]): EngineInput {
-    const files = [{ path: 'src/kept.ts', nature: 'source' as const, tags: ['text'], executable: false, size: 1 }];
+    const files = [
+        {
+            path: 'src/kept.ts',
+            prefix: Buffer.alloc(0),
+            nature: 'source' as const,
+            tags: ['text'],
+            executable: false,
+            size: 1,
+        },
+    ];
     const repository: Partial<Repository> = { files };
     const manifest: Partial<Manifest> = { checks: checks as CheckSpec[] };
     const entry: Partial<ScopeEntry> = { path: '' };

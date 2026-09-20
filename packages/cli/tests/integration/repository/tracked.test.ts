@@ -2,6 +2,7 @@ import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { rejects } from 'node:assert/strict';
 import { createSandbox } from '@gspot/testing';
+import { openSession } from '#cli/run/session.ts';
 import { statSync, writeFileSync } from 'node:fs';
 import * as processes from '#cli/platform/spawn.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
@@ -146,4 +147,35 @@ describe('repository file discovery', () => {
             missing.mockRestore();
         }
     });
+});
+
+test('opening a session reads less than one megabyte with a fifty-megabyte source', async () => {
+    const megabyte = 1024 * 1024;
+    await using sandbox = await createSandbox({
+        'gspot.toml': 'version = 1\npresets = []\n',
+        large: '#!/usr/bin/env bash\n# @generated\n' + 'x'.repeat(50 * megabyte),
+    });
+    const prefixReads = spyOn(fs, 'readSync');
+    const fullReads = spyOn(fs, 'readFileSync');
+    try {
+        const session = await openSession(sandbox.path);
+        const large = session.repository.files.find((file) => file.path === 'large')!;
+        expect(large.size).toBeGreaterThanOrEqual(50 * megabyte);
+        expect(large.prefix.byteLength).toBe(4096);
+        expect(large.tags).toContain('bash');
+        expect(large.nature).toBe('generated');
+        const prefixBytes = prefixReads.mock.results.reduce(
+            (sum, result) => sum + (result.type === 'return' ? result.value : 0),
+            0,
+        );
+        const fullBytes = fullReads.mock.results.reduce(
+            (sum, result) => sum + (result.type === 'return' ? Buffer.byteLength(result.value) : 0),
+            0,
+        );
+        expect(prefixBytes).toBeLessThanOrEqual(4096 * session.repository.files.length);
+        expect(prefixBytes + fullBytes).toBeLessThan(megabyte);
+    } finally {
+        prefixReads.mockRestore();
+        fullReads.mockRestore();
+    }
 });

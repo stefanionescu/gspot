@@ -9,7 +9,14 @@ import type { EngineInput, Session } from '#types/run.ts';
 import { buildReproducible, siteBuild } from '#cli/web/site/build.ts';
 
 function input(root: string, paths: string[]): EngineInput {
-    const files = paths.map((path) => ({ path, nature: 'source' as const, tags: [], executable: false, size: 1 }));
+    const files = paths.map((path) => ({
+        path,
+        prefix: Buffer.alloc(0),
+        nature: 'source' as const,
+        tags: [],
+        executable: false,
+        size: 1,
+    }));
     const view: Partial<MergedView> = { tool: () => ({ build: 'bun build.js' }) };
     const repository: Partial<Repository> = { files, scopes: [] };
     const session: Partial<Session> = { root, repository: repository as Repository };

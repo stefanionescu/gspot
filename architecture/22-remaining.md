@@ -189,7 +189,7 @@ deployment, or app adoption is inferred from this documentation review.
 
 Each named row links to its owning acceptance section, including rows grouped under another
 ID. The September 20 reconciliation found exactly one owner for each named row.
-Twenty-six requirements are locally complete; 302 named rows remain open.
+Twenty-seven requirements are locally complete; 301 named rows remain open.
 Completed evidence stays in each owning acceptance section.
 The nine cleanup entries refer to those owners and add no independent requirements. Historical
 omissions and their current dispositions are recorded in the [audit](23-repository-audit.md#historical-requirement-dispositions).
@@ -279,7 +279,6 @@ omissions and their current dispositions are recorded in the [audit](23-reposito
 - [ ] [K-71](fixes/04-speed.md#k-43-every-check-hashes-all-of-gspot): Closes with K-44.
 - [ ] [K-53](fixes/04-speed.md#k-53-init-opens-three-sessions-applies-twice-and-runs-every-check): Make init open one session, apply once, install the tools, and run no check (D-165).
 - [ ] [K-127](fixes/04-speed.md#k-53-init-opens-three-sessions-applies-twice-and-runs-every-check): Make `upgrade` run no check, and print an image finding as one line.
-- [ ] [K-125](fixes/04-speed.md#k-125-whole-files-read-for-their-first-bytes): Read the first bytes of a file, not the whole file, for `head`, the binary sniff, and the banner.
 - [ ] [K-138](fixes/04-speed.md#k-138-two-full-parses-for-the-naming-checks): Parse each source file once for both naming checks.
 - [ ] [K-148](fixes/04-speed.md#k-138-two-full-parses-for-the-naming-checks): One parsed set for a scope and a run, shared the way the shell index is.
 - [ ] [K-143](fixes/04-speed.md#k-143-a-clean-swift-build-on-every-run): Build Swift incrementally for `swift/build`, and keep the clean build for the analyzer at the `manual` stage (D-122).

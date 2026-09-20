@@ -1,13 +1,11 @@
 // File tags computed the way pre-commit's identify does: extension, filename, shebang, executable bit, content.
-import { readPrefix } from '#cli/repository/tracked.ts';
 import type { Tagged, RawEntry } from '#types/repository.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import { BINARY_EXTENSIONS, LOCKFILE_NAMES } from '#config/patterns.ts';
 import { shebangExecutable, shebangInterpreter } from '#cli/presets/detect.ts';
-import { BINARY_SNIFF_BYTES, EXTENSION_TAGS, FILENAME_TAGS, SHEBANG_TAGS } from '#config/file-tags.ts';
+import { EXTENSION_TAGS, FILENAME_TAGS, SHEBANG_TAGS } from '#config/file-tags.ts';
 
-function sniff(root: string, path: string): { isBinary: boolean; firstLine: string } {
-    const buffer = readPrefix(root, path, BINARY_SNIFF_BYTES);
+function sniff(buffer: Buffer): { isBinary: boolean; firstLine: string } {
     if (buffer.includes(0)) return { isBinary: true, firstLine: '' };
     const text = buffer.toString('utf8');
     const newline = text.indexOf('\n');
@@ -45,11 +43,6 @@ function shebangTags(firstLine: string): { shebang: string | undefined; tags: st
     };
 }
 
-function requiresSniff(entry: RawEntry, tags: Set<string>, extension: string): boolean {
-    if (entry.symlink || entry.size === 0) return false;
-    return extension === '' || !tags.has('text') || entry.executable;
-}
-
 function textTags(tags: Set<string>, firstLine: string): Tagged {
     const { shebang, tags: fromShebang } = shebangTags(firstLine);
     for (const tag of fromShebang) tags.add(tag);
@@ -60,18 +53,16 @@ function textTags(tags: Set<string>, firstLine: string): Tagged {
 
 /**
  * Tags for one entry. Binary files get `binary` and nothing else.
- * @param root the repository root
  * @param entry the tracked entry
+ * @param prefix the captured first bytes
  * @returns the tags, whether the file is binary, and the shebang interpreter when there is one
  */
-export function tagEntry(root: string, entry: RawEntry): Tagged {
+export function tagEntry(entry: RawEntry, prefix: Buffer): Tagged {
     const extension = extensionOf(entry.path);
     const base = baseName(entry.path);
     const tags = nameTags(entry, base, extension);
     if (BINARY_EXTENSIONS.includes(extension)) return { tags: ['binary', ...tags], binary: true };
-    const sniffed = requiresSniff(entry, tags, extension)
-        ? sniff(root, entry.path)
-        : { isBinary: false, firstLine: '' };
+    const sniffed = sniff(prefix);
     if (sniffed.isBinary) return { tags: ['binary', ...tags], binary: true };
     return textTags(tags, sniffed.firstLine);
 }

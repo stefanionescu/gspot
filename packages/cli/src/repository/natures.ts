@@ -1,7 +1,6 @@
 // Every tracked path has one nature: source, generated, vendored, binary.
 import { join } from 'node:path';
-import { head } from '#cli/repository/tracked.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import type { DeclareEntry } from '#types/config.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import type { Attribute, NatureVerdict } from '#types/repository.ts';
@@ -23,8 +22,6 @@ const VENDORED_ATTRIBUTES = new Set(['linguist-vendored', 'linguist-vendored=tru
 
 const BINARY_ATTRIBUTES = new Set(['-text', 'binary']);
 
-const state: { attributes: { root: string; rules: Attribute[] } | undefined } = { attributes: undefined };
-
 function attributeRule(line: string): Attribute | undefined {
     const trimmed = line.trim();
     if (trimmed === '' || trimmed.startsWith('#')) return undefined;
@@ -34,18 +31,8 @@ function attributeRule(line: string): Attribute | undefined {
     return { matcher: pathMatcher([pattern.includes('/') ? bare : `**/${pattern}`]), attributes };
 }
 
-function parseGitattributes(root: string): Attribute[] {
-    const path = join(root, '.gitattributes');
-    if (!existsSync(path)) return [];
-    return readFileSync(path, 'utf8')
-        .split('\n')
-        .map((line) => attributeRule(line))
-        .filter((rule) => rule !== undefined);
-}
-
-function attributesFor(root: string, path: string): string[] {
-    if (state.attributes?.root !== root) state.attributes = { root, rules: parseGitattributes(root) };
-    return state.attributes.rules.filter((rule) => rule.matcher(path)).flatMap((rule) => rule.attributes);
+function attributesFor(rules: Attribute[], path: string): string[] {
+    return rules.filter((rule) => rule.matcher(path)).flatMap((rule) => rule.attributes);
 }
 
 function declaredNature(path: string, declares: DeclareEntry[]): NatureVerdict | undefined {
@@ -69,8 +56,8 @@ function attributeNature(attributes: string[]): NatureVerdict | undefined {
     return isBinary ? { nature: 'binary', source: '.gitattributes' } : undefined;
 }
 
-function hasBanner(root: string, path: string): boolean {
-    const start = head(root, path, BANNER_BYTES);
+function hasBanner(prefix: Buffer): boolean {
+    const start = prefix.subarray(0, BANNER_BYTES).toString('utf8');
     return GENERATED_BANNERS.some((banner) => banner.test(start));
 }
 
@@ -90,12 +77,12 @@ function isUnderVendoredDirectory(path: string): boolean {
 
 /**
  * Whether git stores the file through LFS, by its attributes.
- * @param root the repository root
+ * @param attributes the captured attribute rules
  * @param path the file, relative to the root
  * @returns true under an lfs filter
  */
-export function isUnderLfs(root: string, path: string): boolean {
-    return attributesFor(root, path).some((attribute) => attribute.startsWith('filter=lfs'));
+export function isUnderLfs(attributes: Attribute[], path: string): boolean {
+    return attributesFor(attributes, path).some((attribute) => attribute.startsWith('filter=lfs'));
 }
 
 /**
@@ -109,31 +96,45 @@ export function isValePackageFile(path: string): boolean {
 
 /**
  * Decides the nature of one path in the order the design fixes: declarations, .gitattributes, the gspot installs, banners, vendored directories, the binary sniff.
- * @param root the repository root
  * @param path the file, relative to the root
  * @param declares the [[declare]] entries
  * @param isBinary whether the content sniff found binary bytes
- * @param isText whether the file is text that can carry a banner
+ * @param prefix the captured first bytes
+ * @param attributes the captured attribute rules
  * @returns the nature and where it came from
  */
 export function natureOf(
-    root: string,
     path: string,
     declares: DeclareEntry[],
     isBinary: boolean,
-    isText: boolean,
+    prefix: Buffer,
+    attributes: Attribute[],
 ): NatureVerdict {
-    const declared = declaredNature(path, declares) ?? attributeNature(attributesFor(root, path));
+    const declared = declaredNature(path, declares) ?? attributeNature(attributesFor(attributes, path));
     if (declared) return declared;
     if (isBinary) return { nature: 'binary', source: 'content' };
     const managed = managedNature(path);
     if (managed) return managed;
-    if (isText && hasBanner(root, path)) return { nature: 'generated', source: 'banner' };
+    if (hasBanner(prefix)) return { nature: 'generated', source: 'banner' };
     if (isUnderVendoredDirectory(path)) return { nature: 'vendored', source: 'directory' };
     return { nature: 'source', source: 'default' };
 }
 
-/** Drops the .gitattributes cache; tests use it after planting a file. */
-export function resetNatures(): void {
-    state.attributes = undefined;
+/**
+ * Reads attribute rules once for a repository observation.
+ * @param root the repository root
+ * @returns the parsed rules, or none when the optional file is absent
+ */
+export function readAttributes(root: string): Attribute[] {
+    let text: string;
+    try {
+        text = readFileSync(join(root, '.gitattributes'), 'utf8');
+    } catch (error) {
+        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return [];
+        throw error;
+    }
+    return text
+        .split('\n')
+        .map((line) => attributeRule(line))
+        .filter((rule) => rule !== undefined);
 }

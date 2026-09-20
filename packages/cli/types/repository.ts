@@ -9,6 +9,7 @@ export type Nature = 'source' | 'generated' | 'vendored' | 'binary';
 
 export type TrackedFile = {
     path: string;
+    prefix: Buffer;
     nature: Nature;
     natureSource?: string;
     tags: string[];
@@ -26,6 +27,7 @@ export type ScopeEntry = {
 
 export type Repository = {
     root: string;
+    attributes: Attribute[];
     hasGit: boolean;
     files: TrackedFile[];
     scopes: ScopeEntry[];

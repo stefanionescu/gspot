@@ -7,6 +7,7 @@ import { detectPresets, shebangInterpreter, unknownLanguages } from '#cli/preset
 
 const file = (path: string, tags: string[] = ['text']): TrackedFile => ({
     path,
+    prefix: Buffer.alloc(0),
     nature: 'source',
     tags,
     executable: false,

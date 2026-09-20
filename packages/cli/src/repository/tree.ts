@@ -1,10 +1,11 @@
 // Builds the Repository record: the file set with natures and tags, and the scopes.
 import { tagEntry } from '#cli/repository/tags.ts';
 import type { DeclareEntry } from '#types/config.ts';
-import { natureOf } from '#cli/repository/natures.ts';
+import { FILE_PREFIX_BYTES } from '#config/file-tags.ts';
 import { policyScopes } from '#cli/repository/scopes.ts';
 import type { Repository, TrackedFile } from '#types/repository.ts';
-import { isGitRepository, trackedEntries } from '#cli/repository/tracked.ts';
+import { natureOf, readAttributes } from '#cli/repository/natures.ts';
+import { isGitRepository, trackedEntries, readPrefix } from '#cli/repository/tracked.ts';
 
 /**
  * Reads the tree once: every tracked or about-to-be-tracked file with its nature and tags.
@@ -20,17 +21,14 @@ export async function readRepository(
 ): Promise<Repository> {
     const entries = await trackedEntries(root);
     const files: TrackedFile[] = [];
+    const attributes = readAttributes(root);
     for (const entry of entries) {
-        const tagged = tagEntry(root, entry);
-        const verdict = natureOf(
-            root,
-            entry.path,
-            declares,
-            tagged.binary,
-            !entry.symlink && tagged.tags.includes('text'),
-        );
+        const prefix = entry.symlink ? Buffer.alloc(0) : readPrefix(root, entry.path, FILE_PREFIX_BYTES);
+        const tagged = tagEntry(entry, prefix);
+        const verdict = natureOf(entry.path, declares, tagged.binary, prefix, attributes);
         const file: TrackedFile = {
             path: entry.path,
+            prefix,
             nature: verdict.nature,
             natureSource: verdict.source,
             tags: tagged.tags,
@@ -40,5 +38,5 @@ export async function readRepository(
         if (verdict.producedBy !== undefined) file.producedBy = verdict.producedBy;
         files.push(file);
     }
-    return { root, hasGit: isGitRepository(root), files, scopes: policyScopes(scopeEntries) };
+    return { root, attributes, hasGit: isGitRepository(root), files, scopes: policyScopes(scopeEntries) };
 }

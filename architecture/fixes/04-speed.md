@@ -84,9 +84,16 @@ for most tracked files when it opens.
 
 **Done when.** That test passes.
 
-**Partially implemented, September 20, 2026.** Header and sniff reads use the same bounded
-prefix reader. Its byte limit and descriptor cleanup are tested. Sharing a single 4 KB buffer
-through the session and the 50 MB test repository acceptance remain open.
+**Locally verified, September 20, 2026.** Repository classification captures one 4 KB prefix
+per regular file and retains it on `TrackedFile`. Tags and generated banners consume those
+bytes without reopening the file. Attribute rules belong to the repository observation, so a
+new session observes edits without a process-wide cache or a test-only reset function.
+
+The 50 MB source test opens a session in a fresh process. It verifies interpreter and banner
+classification while measuring less than 1 MB read in total. Prefix reads stay within 4 KB per
+file. All 69 affected repository and consumer tests pass locally, together with TypeScript,
+ESLint, schema validation, and reference validation. Remote platform acceptance remains deferred
+under K-263 while CI is paused.
 
 ## K-138: two full parses for the naming checks
 

@@ -1,7 +1,9 @@
+import { join } from 'node:path';
+import { rejects } from 'node:assert/strict';
 import { createSandbox } from '@gspot/testing';
 import { describe, expect, test } from 'bun:test';
+import { mkdirSync, writeFileSync } from 'node:fs';
 import { readRepository } from '#cli/repository/tree.ts';
-import { natureOf, resetNatures } from '#cli/repository/natures.ts';
 
 describe('natures', () => {
     test('declarations win, then .gitattributes, then banners, then vendored directories, then the sniff', async () => {
@@ -13,18 +15,20 @@ describe('natures', () => {
             'assets/a.bin': 'x',
             'src/a.ts': 'export const a = 1;\n',
         });
-        resetNatures();
-        const root = sandbox.path;
-        expect(natureOf(root, 'src/a.ts', [{ paths: ['src/a.ts'], produced_by: 'gen' }], false, true)).toEqual({
+        const declares = [{ paths: ['src/a.ts'], produced_by: 'gen' }];
+        const declared = await readRepository(sandbox.path, declares, []);
+        expect(declared.files.find((file) => file.path === 'src/a.ts')).toMatchObject({
             nature: 'generated',
-            source: 'declare',
+            natureSource: 'declare',
             producedBy: 'gen',
         });
-        expect(natureOf(root, 'generated/x.ts', [], false, true).source).toBe('.gitattributes');
-        expect(natureOf(root, 'types.ts', [], false, true).nature).toBe('generated');
-        expect(natureOf(root, 'vendor/lib.js', [], false, true).nature).toBe('vendored');
-        expect(natureOf(root, 'assets/a.bin', [], false, true).nature).toBe('binary');
-        expect(natureOf(root, 'src/a.ts', [], false, true).nature).toBe('source');
+        const repository = await readRepository(sandbox.path, [], []);
+        const files = new Map(repository.files.map((file) => [file.path, file]));
+        expect(files.get('generated/x.ts')?.natureSource).toBe('.gitattributes');
+        expect(files.get('types.ts')?.nature).toBe('generated');
+        expect(files.get('vendor/lib.js')?.nature).toBe('vendored');
+        expect(files.get('assets/a.bin')?.nature).toBe('binary');
+        expect(files.get('src/a.ts')?.nature).toBe('source');
     });
 
     test('readRepository lists files without git through the gitignore walk', async () => {
@@ -38,4 +42,20 @@ describe('natures', () => {
         expect(repo.files.map((file) => file.path)).toEqual(['.gitignore', 'kept.txt']);
         expect(repo.scopes[0]?.path).toBe('');
     });
+});
+
+test('each repository observation reads current attributes', async () => {
+    await using sandbox = await createSandbox({ 'source.ts': 'export {};\n' });
+    const before = await readRepository(sandbox.path, [], []);
+    expect(before.files[0]!.nature).toBe('source');
+    writeFileSync(join(sandbox.path, '.gitattributes'), '*.ts linguist-generated\n');
+    const after = await readRepository(sandbox.path, [], []);
+    expect(after.files.find((file) => file.path === 'source.ts')!.nature).toBe('generated');
+    expect(before.files[0]!.nature).toBe('source');
+});
+
+test('an unreadable attributes file cannot become an empty rule set', async () => {
+    await using sandbox = await createSandbox({ 'source.ts': 'export {};\n' });
+    mkdirSync(join(sandbox.path, '.gitattributes'));
+    await rejects(readRepository(sandbox.path, [], []), { code: 'EISDIR' });
 });

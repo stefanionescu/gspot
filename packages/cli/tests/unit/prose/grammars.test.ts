@@ -3,7 +3,7 @@ import type { TrackedFile } from '#types/repository.ts';
 import { routeFor, routeGroups } from '#cli/prose/grammars.ts';
 
 function tracked(path: string, tags: string[] = ['text']): TrackedFile {
-    return { path, nature: 'source', tags, executable: false, size: 1 };
+    return { path, prefix: Buffer.alloc(0), nature: 'source', tags, executable: false, size: 1 };
 }
 
 describe('prose routes', () => {

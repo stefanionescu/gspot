@@ -10,6 +10,7 @@ import { docsHeadings } from '#cli/integrity/docs-headings.ts';
 function input(root: string, paths: string[], docs: Record<string, unknown> = {}): EngineInput {
     const files = paths.map((path) => ({
         path,
+        prefix: Buffer.alloc(0),
         nature: 'source' as const,
         tags: ['text'],
         executable: false,

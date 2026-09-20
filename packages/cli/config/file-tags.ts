@@ -69,4 +69,4 @@ export const SHEBANG_TAGS: Record<string, string[]> = {
     node: ['javascript', 'node', 'executable', 'text'],
 };
 
-export const BINARY_SNIFF_BYTES = 8000;
+export const FILE_PREFIX_BYTES = 4096;

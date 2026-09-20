@@ -4,6 +4,7 @@ import { describe, expect, test } from 'bun:test';
 import type { CheckSpec } from '#types/manifest.ts';
 import type { EngineInput, Session } from '#types/run.ts';
 import { largeFiles } from '#cli/integrity/large-files.ts';
+import { readAttributes } from '#cli/repository/natures.ts';
 import { suppressions } from '#cli/integrity/suppressions.ts';
 import type { Repository, TrackedFile } from '#types/repository.ts';
 import { allowlistsMatch } from '#cli/integrity/allowlists-match.ts';
@@ -11,11 +12,11 @@ import { configurationPurity } from '#cli/integrity/config-purity.ts';
 import type { MergedView, NamingSettings, Policy } from '#types/config.ts';
 
 function tracked(path: string, size = 1): TrackedFile {
-    return { path, nature: 'source', tags: ['text'], executable: false, size };
+    return { path, prefix: Buffer.alloc(0), nature: 'source', tags: ['text'], executable: false, size };
 }
 
 function input(root: string, files: TrackedFile[], policy: Partial<Policy>): EngineInput {
-    const repository: Partial<Repository> = { files };
+    const repository: Partial<Repository> = { files, attributes: readAttributes(root) };
     const policyFiles: Partial<Session['policyFiles']> = { policy: policy as Policy };
     const session: Partial<Session> = {
         repository: repository as Repository,
