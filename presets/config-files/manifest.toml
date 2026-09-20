@@ -16,11 +16,12 @@ natures = ["source"]
 [[tools]]
 name = "taplo"
 version = "0.10.0"
+floor = "0.9.0"
 mise = "taplo"
 brew = "taplo"
 cargo = "taplo-cli"
-npm = "@taplo/cli"
-github = "tamasfe/taplo"
+npm = {name = "@taplo/cli", version = "0.7.0"}
+github = {name = "tamasfe/taplo", version = "0.10.0"}
 
 [[tools]]
 name = "yamllint"
@@ -40,14 +41,14 @@ name = "actionlint"
 version = "1.7.12"
 mise = "actionlint"
 brew = "actionlint"
-github = "rhysd/actionlint"
+github = {name = "rhysd/actionlint", version = "v1.7.12"}
 
 [[tools]]
 name = "pinact"
 version = "5.0.0"
 mise = "pinact"
 brew = "pinact"
-github = "suzuki-shunsuke/pinact"
+github = {name = "suzuki-shunsuke/pinact", version = "v5.0.0"}
 
 [[tools]]
 name = "zizmor"
@@ -63,7 +64,7 @@ version = "4.0.0"
 mise = "dotenv-linter"
 brew = "dotenv-linter"
 cargo = "dotenv-linter"
-github = "dotenv-linter/dotenv-linter"
+github = {name = "dotenv-linter/dotenv-linter", version = "v4.0.0"}
 
 [[tools]]
 name = "plutil"

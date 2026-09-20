@@ -12,18 +12,25 @@ const GSPOT_DIRECTORY = '.gspot/';
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
 
-function toTool(raw: RawTool): ToolPin {
-    const installers: Record<string, string> = {};
+function installerPins(raw: RawTool): ToolPin['installers'] {
+    const installers: ToolPin['installers'] = {};
     for (const key of INSTALLER_KEYS) {
         const value = raw[key];
-        if (value !== undefined) installers[key] = value;
+        if (value === undefined) continue;
+        installers[key] = typeof value === 'string' ? { name: value } : value;
+        if (typeof value === 'string' && raw.version !== undefined) installers[key].version = raw.version;
     }
-    const tool: ToolPin = { name: raw.name, kind: raw.kind, windows: raw.windows, installers };
+    return installers;
+}
+
+function toTool(raw: RawTool): ToolPin {
+    const tool: ToolPin = { name: raw.name, kind: raw.kind, windows: raw.windows, installers: installerPins(raw) };
     if (raw.version !== undefined) tool.version = raw.version;
     if (raw.floor !== undefined) tool.floor = raw.floor;
     if (raw.provider !== undefined) tool.provider = raw.provider;
     if (raw.version_command !== undefined) tool.version_command = raw.version_command;
     if (raw.version_regex !== undefined) tool.version_regex = raw.version_regex;
+    if (raw.env !== undefined) tool.env = raw.env;
     return tool;
 }
 

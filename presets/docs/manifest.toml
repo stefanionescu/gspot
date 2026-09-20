@@ -15,7 +15,7 @@ version = "0.24.2"
 mise = "lychee"
 brew = "lychee"
 cargo = "lychee"
-github = "lycheeverse/lychee"
+github = {name = "lycheeverse/lychee", version = "lychee-v0.24.2"}
 
 [[configs]]
 template = "lychee.toml.tmpl"

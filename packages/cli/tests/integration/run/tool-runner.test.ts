@@ -77,14 +77,16 @@ stage = "commit"
         'gspot.toml': policy,
         'settings.txt': '',
         'inputs/café source.txt': '',
-        'echo.cjs': 'process.stdout.write(JSON.stringify(process.argv.slice(2)));',
+        'echo.cjs': 'process.stdout.write(JSON.stringify([process.env.TOOL_RELEASE, ...process.argv.slice(2)]));',
     });
     const session = await openSession(fixture.path);
     const planned = planRun(session, { stage: 'all', skips: [], localSkips: [] })[0]!;
+    planned.tool = { name: 'echo', windows: true, installers: {}, env: { TOOL_RELEASE: 'v3.4.0' } };
     const prepared = prepareCommand(session, planned, planned.spec.command!, undefined);
-    const result = await run(prepared.commands[0]!, { cwd: prepared.cwd });
+    const result = await run(prepared.commands[0]!, { cwd: prepared.cwd, env: prepared.env });
     expect(result.code, result.stderr).toBe(0);
     expect(JSON.parse(result.stdout)).toEqual([
+        'v3.4.0',
         '--config',
         join(fixture.path, 'settings.txt'),
         'inputs/café source.txt',

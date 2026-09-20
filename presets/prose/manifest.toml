@@ -16,7 +16,7 @@ mise = "vale"
 brew = "vale"
 winget = "errata-ai.Vale"
 scoop = "vale"
-github = "errata-ai/vale"
+github = {name = "errata-ai/vale", version = "v3.21.0"}
 
 [[configs]]
 template = "vale.ini.tmpl"

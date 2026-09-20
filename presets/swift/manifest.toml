@@ -22,7 +22,7 @@ version = "0.63.2"
 floor = "0.57.0"
 mise = "swiftlint"
 brew = "swiftlint"
-github = "realm/SwiftLint"
+github = {name = "realm/SwiftLint", version = "0.63.2"}
 version_command = ["version"]
 
 [[tools]]
@@ -31,7 +31,7 @@ version = "0.61.1"
 floor = "0.54.0"
 mise = "swiftformat"
 brew = "swiftformat"
-github = "nicklockwood/SwiftFormat"
+github = {name = "nicklockwood/SwiftFormat", version = "0.61.1"}
 
 [[tools]]
 name = "periphery"
@@ -39,7 +39,7 @@ version = "3.6.0"
 floor = "3.0.0"
 mise = "periphery"
 brew = "periphery"
-github = "peripheryapp/periphery"
+github = {name = "peripheryapp/periphery", version = "3.6.0"}
 version_command = ["version"]
 
 [[tools]]

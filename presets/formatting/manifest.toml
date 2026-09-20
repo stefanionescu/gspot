@@ -15,10 +15,11 @@ npm = "prettier"
 [[tools]]
 name = "ec"
 version = "3.4.0"
-npm = "editorconfig-checker"
+env = {EC_VERSION = "v3.4.0"}
+npm = {name = "editorconfig-checker", version = "7.0.0"}
 mise = "aqua:editorconfig-checker/editorconfig-checker"
 brew = "editorconfig-checker"
-github = "editorconfig-checker/editorconfig-checker"
+github = {name = "editorconfig-checker/editorconfig-checker", version = "v3.4.0"}
 
 [[configs]]
 template = "editorconfig.tmpl"

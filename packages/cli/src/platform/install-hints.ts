@@ -18,30 +18,36 @@ const PLATFORM_INSTALLERS: { platform: NodeJS.Platform; installer: string; comma
     { platform: 'win32', installer: 'scoop', command: 'scoop install' },
 ];
 
-function platformHint(installers: Record<string, string>): string | undefined {
+function platformHint(installers: ToolPin['installers']): string | undefined {
     const match = PLATFORM_INSTALLERS.find(
         ({ platform, installer }) => platform === process.platform && installers[installer] !== undefined,
     );
-    return match === undefined ? undefined : `${match.command} ${installers[match.installer] ?? ''}`;
+    return match === undefined ? undefined : `${match.command} ${installers[match.installer]?.name ?? ''}`;
 }
 
-function cargoHint(installers: Record<string, string>): string | undefined {
-    return installers['cargo'] === undefined ? undefined : `cargo install ${installers['cargo']}`;
+function cargoHint(installers: ToolPin['installers']): string | undefined {
+    const pin = installers['cargo'];
+    if (pin === undefined) return undefined;
+    const version = pin.version === undefined ? '' : ` --version ${pin.version}`;
+    return `cargo install ${pin.name}${version}`;
 }
 
 function githubHint(tool: ToolPin): string | undefined {
     const { installers } = tool;
-    if (installers['github'] === undefined) return undefined;
-    const source = installers['ubi'] === undefined ? `github:${installers['github']}` : `ubi:${installers['ubi']}`;
-    return `mise use ${source}@${tool.version ?? 'latest'}`;
+    const pin = installers['ubi'] ?? installers['github'];
+    if (pin === undefined) return undefined;
+    const backend = installers['ubi'] === undefined ? 'github' : 'ubi';
+    return `mise use ${backend}:${pin.name}@${pin.version ?? 'latest'}`;
 }
 
 function packageHint(tool: ToolPin, runner: RunnerTool): string | undefined {
     const { installers } = tool;
     if (installers['npm'] !== undefined) return `${NPM_RUNNERS.has(runner) ? runner : 'bun'} install`;
-    if (installers['pypi'] !== undefined)
-        return runner === 'uv' ? 'uv sync --group gspot' : `uv tool install ${installers['pypi']}`;
-    return undefined;
+    const python = installers['pypi'];
+    if (python === undefined) return undefined;
+    if (runner === 'uv') return 'uv sync --group gspot';
+    const version = python.version === undefined ? '' : `==${python.version}`;
+    return `uv tool install ${python.name}${version}`;
 }
 
 function hasMiseInstaller(tool: ToolPin): boolean {

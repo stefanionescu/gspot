@@ -17,7 +17,7 @@ brew = "typos-cli"
 cargo = "typos-cli"
 winget = "crate-ci.typos"
 scoop = "typos"
-github = "crate-ci/typos"
+github = {name = "crate-ci/typos", version = "v1.43.5"}
 
 [[configs]]
 template = "typos.toml.tmpl"

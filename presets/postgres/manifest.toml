@@ -18,7 +18,7 @@ version = "2.64.0"
 floor = "2.0.0"
 mise = "github:sbdchd/squawk"
 npm = "squawk-cli"
-github = "sbdchd/squawk"
+github = {name = "sbdchd/squawk", version = "v2.64.0"}
 
 [[configs]]
 template = "squawk.toml.tmpl"

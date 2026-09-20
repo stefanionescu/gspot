@@ -13,6 +13,8 @@ const claimsSchema = z.strictObject({
     natures: z.array(z.enum(['source', 'generated', 'vendored', 'binary'])).default(['source']),
 });
 
+const installerSchema = z.union([z.string(), z.strictObject({ name: z.string(), version: z.string() })]);
+
 const toolSchema = z.strictObject({
     name: z.string(),
     kind: z.enum(['binary', 'library']).default('binary'),
@@ -22,16 +24,17 @@ const toolSchema = z.strictObject({
     windows: z.boolean().default(true),
     version_command: z.array(z.string()).optional(),
     version_regex: z.string().optional(),
-    npm: z.string().optional(),
-    pypi: z.string().optional(),
-    mise: z.string().optional(),
-    brew: z.string().optional(),
-    apt: z.string().optional(),
-    cargo: z.string().optional(),
-    github: z.string().optional(),
-    winget: z.string().optional(),
-    scoop: z.string().optional(),
-    ubi: z.string().optional(),
+    env: z.record(z.string(), z.string()).optional(),
+    npm: installerSchema.optional(),
+    pypi: installerSchema.optional(),
+    mise: installerSchema.optional(),
+    brew: installerSchema.optional(),
+    apt: installerSchema.optional(),
+    cargo: installerSchema.optional(),
+    github: installerSchema.optional(),
+    winget: installerSchema.optional(),
+    scoop: installerSchema.optional(),
+    ubi: installerSchema.optional(),
 });
 
 const stubSchema = z.strictObject({

@@ -20,7 +20,7 @@ version = "2.6.6"
 floor = "2.0.0"
 mise = "deno"
 brew = "deno"
-github = "denoland/deno"
+github = {name = "denoland/deno", version = "v2.6.6"}
 scoop = "deno"
 
 [[tools]]

@@ -18,7 +18,7 @@ version = "2.6.0"
 floor = "2.0.0"
 mise = "osv-scanner"
 brew = "osv-scanner"
-github = "google/osv-scanner"
+github = {name = "google/osv-scanner", version = "v2.6.0"}
 winget = "Google.OSVScanner"
 scoop = "osv-scanner"
 

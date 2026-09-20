@@ -21,7 +21,7 @@ windows = false
 name = "codeql"
 version = "2.23.1"
 brew = "codeql"
-github = "github/codeql-cli-binaries"
+github = {name = "github/codeql-cli-binaries", version = "v2.23.1"}
 
 [[configs]]
 template = "semgrep-node.yml.tmpl"

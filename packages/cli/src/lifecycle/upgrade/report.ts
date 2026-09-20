@@ -3,11 +3,12 @@ import { join } from 'node:path';
 import type { Session } from '#types/run.ts';
 import { parse as parseToml } from 'smol-toml';
 import type { DriftEntry } from '#types/emit.ts';
-import type { ToolPin } from '#types/manifest.ts';
 import { computeDrift } from '#cli/emit/drift.ts';
 import { existsSync, readFileSync } from 'node:fs';
+import { misePin } from '#cli/emit/runner-tasks.ts';
 import { changeReport } from '#cli/doctor/changes.ts';
 import type { UpgradeReport } from '#types/lifecycle.ts';
+import type { ToolPin, InstallerPin } from '#types/manifest.ts';
 
 const MISE_PATH = '.config/mise/conf.d/gspot.toml';
 const PACKAGE_PATH = 'package.json';
@@ -19,8 +20,7 @@ function misePins(root: string): [string, string][] {
     if (!existsSync(path)) return [];
     const parsed = parseToml(readFileSync(path, 'utf8')) as { tools?: Record<string, unknown> };
     return Object.entries(parsed.tools ?? {}).flatMap(([key, value]) => {
-        const name = key.slice(key.lastIndexOf(':') + 1).replace(/^.*\//u, '');
-        return typeof value === 'string' ? [[name, value] as [string, string]] : [];
+        return typeof value === 'string' ? [[key, value] as [string, string]] : [];
     });
 }
 
@@ -33,17 +33,23 @@ function packagePins(root: string): [string, string][] {
     );
 }
 
+function installedPin(tool: ToolPin, pinned: Map<string, string>): InstallerPin | undefined {
+    const npm = tool.installers['npm'];
+    if (npm !== undefined && pinned.has(npm.name)) return npm;
+    return misePin(tool);
+}
+
 function toolChange(
     tool: ToolPin,
     preset: string,
     pinned: Map<string, string>,
 ): UpgradeReport['tools'][number] | undefined {
-    if (tool.version === undefined) return undefined;
-    const before = pinned.get(tool.name) ?? pinned.get(tool.installers['npm'] ?? '');
-    if (before === undefined) return { tool: tool.name, to: tool.version, requiredBy: preset };
-    return before === tool.version
-        ? undefined
-        : { tool: tool.name, from: before, to: tool.version, requiredBy: preset };
+    const pin = installedPin(tool, pinned);
+    if (pin?.version === undefined) return undefined;
+    const { version } = pin;
+    const before = pinned.get(pin.name);
+    if (before === undefined) return { tool: tool.name, to: version, requiredBy: preset };
+    return before === version ? undefined : { tool: tool.name, from: before, to: version, requiredBy: preset };
 }
 
 function toolChanges(session: Session): UpgradeReport['tools'] {

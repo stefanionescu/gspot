@@ -7,13 +7,19 @@ import * as environment from '#cli/platform/environment.ts';
 import { chmodSync, mkdirSync, symlinkSync } from 'node:fs';
 
 function library(name: string, version: string): ToolPin {
-    return { name, kind: 'library', version, windows: true, installers: { npm: name } };
+    return { name, kind: 'library', version, windows: true, installers: { npm: { name, version } } };
 }
 
 const RUNS = 0o755;
 
 function command(name: string, version: string, npm?: string): ToolPin {
-    return { name, kind: 'binary', version, windows: true, installers: npm === undefined ? {} : { npm } };
+    return {
+        name,
+        kind: 'binary',
+        version,
+        windows: true,
+        installers: npm === undefined ? {} : { npm: { name: npm, version } },
+    };
 }
 
 describe('the tool probe', () => {
@@ -48,6 +54,26 @@ describe('the tool probe', () => {
         const probe = probeTool(fixture.path, command('teller', '5.0.1', 'teller'));
         expect(probe.found).toBe('5.0.1');
         expect(probe.state).toBe('ok');
+    });
+
+    test.each([
+        ['0.9.0', 'ok'],
+        ['0.8.0', 'outdated'],
+    ] as const)('an independently versioned wrapper runs native %s and reports %s', async (native, state) => {
+        await using fixture = await createFixture({
+            'node_modules/wrapper/package.json': '{"name":"wrapper","version":"0.7.0"}',
+            'node_modules/wrapper/run.sh': '#!/bin/sh\necho "$WRAPPER_NATIVE_VERSION"\n',
+        });
+        chmodSync(join(fixture.path, 'node_modules/wrapper/run.sh'), RUNS);
+        mkdirSync(join(fixture.path, 'node_modules/.bin'));
+        symlinkSync('../wrapper/run.sh', join(fixture.path, 'node_modules/.bin/wrapped'));
+        const tool = command('wrapped', '0.10.0');
+        tool.floor = '0.9.0';
+        tool.env = { WRAPPER_NATIVE_VERSION: native };
+        tool.installers['npm'] = { name: 'wrapper', version: '0.7.0' };
+        const probe = probeTool(fixture.path, tool);
+        expect(probe.found).toBe(native);
+        expect(probe.state).toBe(state);
     });
 
     test('a shim that no configuration gives a version is missing, not broken', async () => {

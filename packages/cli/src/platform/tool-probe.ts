@@ -38,7 +38,8 @@ function candidates(root: string, name: string): string[] {
 }
 
 // The version a package.json above the real file of an npm tool holds, for the package the pin names.
-function packageVersion(path: string, name: string): string | undefined {
+function packageVersion(path: string, name: string | undefined): string | undefined {
+    if (name === undefined) return undefined;
     let folder = dirname(realpathSync(path));
     while (folder !== dirname(folder)) {
         const manifest = join(folder, 'package.json');
@@ -50,11 +51,13 @@ function packageVersion(path: string, name: string): string | undefined {
 }
 
 // A mise shim is one file for every version, so the version installed is read from the folder mise keeps it in.
-function miseVersion(path: string, name: string, want: string): string | undefined {
+function miseVersion(path: string, tool: ToolPin): string | undefined {
+    const npm = tool.installers['npm'];
+    if (npm?.version === undefined || npm.version !== tool.version) return undefined;
     const home = miseHome() ?? join(homedir(), '.local', 'share', 'mise');
     if (!path.startsWith(join(home, 'shims'))) return undefined;
-    const installed = join(home, 'installs', `npm-${name.replaceAll('/', '-')}`, want);
-    return existsSync(installed) ? want : undefined;
+    const installed = join(home, 'installs', `npm-${npm.name.replaceAll('/', '-')}`, npm.version);
+    return existsSync(installed) ? npm.version : undefined;
 }
 
 // What the tool prints about its version, with no color codes: their numbers read as a version.
@@ -64,7 +67,7 @@ function printedVersion(root: string, path: string, tool: ToolPin): string {
     const result = runBlocking([path, ...command], {
         cwd: root,
         timeoutMs: VERSION_TIMEOUT_MS,
-        env: { NO_COLOR: '1' },
+        env: { NO_COLOR: '1', ...tool.env },
     });
     return stripVTControlCharacters(`${result.stdout}\n${result.stderr}`);
 }
@@ -78,13 +81,13 @@ function parsedVersion(text: string, tool: ToolPin): string | undefined {
 // An npm tool is the version its package says. Some print another one: license-checker-rseidelsohn 5.0.1 prints 4.4.2.
 // A shim that no configuration gives a version starts nothing, whatever mise keeps installed for other repositories.
 function readVersion(root: string, path: string, tool: ToolPin): string | undefined {
-    const name = tool.installers['npm'];
-    const held = name === undefined ? undefined : packageVersion(path, name);
+    const npm = tool.installers['npm'];
+    const name = npm?.version === tool.version ? npm?.name : undefined;
+    const held = packageVersion(path, name);
     if (held !== undefined) return held;
     const text = printedVersion(root, path, tool);
     if (text.includes(NO_VERSION)) return NO_VERSION;
-    const kept = name === undefined || tool.version === undefined ? undefined : miseVersion(path, name, tool.version);
-    return kept ?? parsedVersion(text, tool);
+    return miseVersion(path, tool) ?? parsedVersion(text, tool);
 }
 
 function stateFor(found: string, want: string, floor: string): ToolProbe['state'] {
@@ -109,7 +112,7 @@ function libraryVersion(root: string, scopes: string[], name: string): { path: s
 
 function probeLibrary(root: string, scopes: string[], tool: ToolPin): ToolProbe {
     const hint = installHint(tool);
-    const name = tool.installers['npm'] ?? tool.name;
+    const name = tool.installers['npm']?.name ?? tool.name;
     const found = libraryVersion(root, scopes, name);
     const want = tool.version === undefined ? {} : { want: tool.version };
     if (found === undefined) return { name: tool.name, state: 'missing', hint, ...want };

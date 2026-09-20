@@ -14,7 +14,7 @@ npm = "@ast-grep/cli"
 mise = "ast-grep"
 brew = "ast-grep"
 cargo = "ast-grep"
-github = "ast-grep/ast-grep"
+github = {name = "ast-grep/ast-grep", version = "0.45.3"}
 
 [[checks]]
 name = "structure/single-file-folder"

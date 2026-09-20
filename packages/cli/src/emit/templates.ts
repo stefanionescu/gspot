@@ -103,7 +103,7 @@ function toolPackages(session: Session): string[] {
     const names = session.scopes.flatMap((entry) =>
         entry.selected.flatMap((manifest) =>
             manifest.tools.flatMap((tool) => {
-                const name = tool.installers['npm'];
+                const name = tool.installers['npm']?.name;
                 return name === undefined ? [] : [name];
             }),
         ),

@@ -219,7 +219,7 @@ export function prepareCommand(
         indent: scope.view.format.indent_width,
     };
     if (planned.messageFile !== undefined) sub.messageFile = planned.messageFile;
-    const parts = [...command, ...Object.values(planned.spec.env ?? {})];
+    const parts = [...command, ...Object.values({ ...planned.tool?.env, ...planned.spec.env })];
     if (parts.some((part) => part.includes('{merge_base}'))) sub.mergeBase = pushBase(session.root);
     const argv = substitute(session, planned, command, sub);
     if (toolPath !== undefined) argv[0] = toolPath;
@@ -227,7 +227,7 @@ export function prepareCommand(
         ? batchedCommands(session, planned, command, sub, toolPath)
         : perFileCommands(argv, files);
     const env = Object.fromEntries(
-        Object.entries(planned.spec.env ?? {}).map(([name, value]) => [
+        Object.entries({ ...planned.tool?.env, ...planned.spec.env }).map(([name, value]) => [
             name,
             substituteValue(session, planned, value, sub),
         ]),

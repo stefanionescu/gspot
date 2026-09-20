@@ -43,6 +43,8 @@ export type Claims = {
 /** The output fields accepted by both preset and repository checks. */
 export type OutputFormat = z.infer<typeof outputSchema>;
 
+export type InstallerPin = { name: string; version?: string };
+
 export type ToolPin = {
     name: string;
     kind?: 'binary' | 'library';
@@ -52,7 +54,8 @@ export type ToolPin = {
     windows: boolean;
     version_command?: string[];
     version_regex?: string;
-    installers: Record<string, string>;
+    env?: Record<string, string>;
+    installers: Record<string, InstallerPin>;
 };
 
 export type ConfigurationTarget = RawManifest['configs'][number];

@@ -4,7 +4,7 @@ import { existsSync, readFileSync } from 'node:fs';
 import { headerFor } from '#cli/emit/templates.ts';
 import type { GeneratedFile } from '#types/emit.ts';
 import { isEmbedded } from '#cli/platform/assets.ts';
-import type { Manifest, ToolPin } from '#types/manifest.ts';
+import type { Manifest, ToolPin, InstallerPin } from '#types/manifest.ts';
 
 const HOST_ONLY = new Set(['bash', 'git', 'docker', 'xcodebuild', 'plutil', 'xcstringstool', 'swift', 'xmllint']);
 const BARE_KEY = /^[\w-]+$/u;
@@ -63,14 +63,16 @@ function isPinnedInPackage(tool: ToolPin, isPackagePinned: boolean): boolean {
 }
 
 /**
- * The mise tool name for a pin, using the backend the manifest names.
+ * The mise package and version, using the backend the manifest names.
  * @param tool the pin
- * @returns the name with its backend prefix, or undefined for a host tool
+ * @returns the installer pin with its backend prefix, or undefined for a host tool
  */
-export function misePinName(tool: ToolPin): string | undefined {
+export function misePin(tool: ToolPin): InstallerPin | undefined {
     if (tool.provider === 'host' || HOST_ONLY.has(tool.name)) return undefined;
     const backend = BACKENDS.find(({ installer }) => tool.installers[installer] !== undefined);
-    return backend === undefined ? undefined : `${backend.prefix}${tool.installers[backend.installer] ?? ''}`;
+    if (backend === undefined) return undefined;
+    const pin = tool.installers[backend.installer];
+    return pin === undefined ? undefined : { ...pin, name: `${backend.prefix}${pin.name}` };
 }
 
 /**
@@ -100,9 +102,9 @@ export function miseTasks(manifests: Manifest[], version: string, isPackagePinne
     if (isEmbedded()) lines.push(`"ubi:stefanionescu/gspot" = "${version}"`);
     for (const tool of collectPins(manifests)) {
         if (isPinnedInPackage(tool, isPackagePinned)) continue;
-        const name = misePinName(tool);
-        if (name === undefined || tool.version === undefined) continue;
-        lines.push(`${tomlKey(name)} = "${tool.version}"`);
+        const pin = misePin(tool);
+        if (pin?.version === undefined) continue;
+        lines.push(`${tomlKey(pin.name)} = "${pin.version}"`);
     }
     lines.push(...MISE_TASKS);
     return { path: MISE_PATH, content: `${lines.join('\n')}\n`, readOnly: true, kind: 'runner' };
@@ -117,10 +119,10 @@ export function miseTasks(manifests: Manifest[], version: string, isPackagePinne
 export function npmPins(manifests: Manifest[], runner = 'npm'): Record<string, string> {
     const pins: [string, string][] = [];
     for (const tool of collectPins(manifests)) {
-        const name = tool.installers['npm'];
-        if (name === undefined || tool.version === undefined) continue;
+        const pin = tool.installers['npm'];
+        if (pin?.version === undefined) continue;
         if (runner === 'mise' && tool.installers['mise'] !== undefined) continue;
-        pins.push([name, tool.version]);
+        pins.push([pin.name, pin.version]);
     }
     return Object.fromEntries(pins.toSorted(([a], [b]) => a.localeCompare(b)));
 }
@@ -145,11 +147,11 @@ export function pinnedTwice(root: string, manifests: Manifest[]): { tool: string
     const keys = tomlKeys(readFileSync(path, 'utf8'));
     const found: { tool: string; version: string; place: string }[] = [];
     for (const tool of collectPins(manifests)) {
-        const name = misePinName(tool);
-        if (name === undefined || tool.version === undefined) continue;
-        const bare = name.slice(name.indexOf(':') + 1);
-        if (keys.has(name) || keys.has(bare))
-            found.push({ tool: tool.name, version: tool.version, place: 'mise.toml' });
+        const pin = misePin(tool);
+        if (pin?.version === undefined) continue;
+        const bare = pin.name.slice(pin.name.indexOf(':') + 1);
+        if (keys.has(pin.name) || keys.has(bare))
+            found.push({ tool: tool.name, version: pin.version, place: 'mise.toml' });
     }
     return found;
 }

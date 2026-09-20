@@ -22,7 +22,7 @@ brew = "shellcheck"
 apt = "shellcheck"
 winget = "koalaman.shellcheck"
 scoop = "shellcheck"
-github = "koalaman/shellcheck"
+github = {name = "koalaman/shellcheck", version = "v0.11.0"}
 
 [[tools]]
 name = "shfmt"
@@ -31,7 +31,7 @@ mise = "shfmt"
 brew = "shfmt"
 winget = "mvdan.shfmt"
 scoop = "shfmt"
-github = "mvdan/sh"
+github = {name = "mvdan/sh", version = "v3.12.0"}
 
 [[tools]]
 name = "bash"

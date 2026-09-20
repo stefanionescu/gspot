@@ -187,6 +187,8 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - A tool takes `version_command`, `rule_page`, `suppression`, `crash_pattern`, and
   `[[tools.takeover]]` rows. A takeover row names a `file`, or a `key` or `table` of a shared
   manifest with `shared = true`, and what it `carries`.
+- Tool `env` supplies literal environment settings to version probes and commands. Check
+  `env` overrides tool settings and supports command placeholders.
 - An installer name is a string, or a table with `name` and `version` for an installer that
   numbers by itself.
 - A setting takes `detect`, a small table `init` reads to fill it from the repository.
