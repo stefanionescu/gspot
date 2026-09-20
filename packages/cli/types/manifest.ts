@@ -161,7 +161,12 @@ export type Proposal = { preset: string; evidence: string; kind: string; count?:
 
 export type UnknownLanguage = { language: string; extensions: string[]; count: number };
 
-export type LinguistEntry = { extensions?: readonly string[]; type?: string; filenames?: readonly string[] };
+export type LinguistEntry = {
+    extensions?: readonly string[];
+    type?: string;
+    filenames?: readonly string[];
+    aliases?: readonly string[];
+};
 
 /** manifest.toml as the schema accepts it. */
 export type RawManifest = z.infer<typeof manifestSchema>;

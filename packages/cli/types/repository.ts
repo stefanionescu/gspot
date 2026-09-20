@@ -30,7 +30,7 @@ export type DependencyMap = Record<string, string>;
 
 export type ManifestFacts = {
     path: string;
-    kind: 'package.json' | 'pyproject.toml' | 'Package.swift' | 'Cargo.toml' | 'go.mod' | 'Gemfile';
+    kind: 'package.json' | 'pyproject.toml' | 'Package.swift';
     dependencies: DependencyMap;
     installed: DependencyMap;
     scripts: Record<string, string>;

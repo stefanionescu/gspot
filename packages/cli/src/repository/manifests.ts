@@ -6,11 +6,6 @@ import type { DependencyMap, ManifestFacts, TrackedFile } from '#types/repositor
 
 const REQUIREMENT_NAME_END = /[\s<>=!~;[]/u;
 const SWIFT_PACKAGE_URL = /url:\s*"([^"]+)"/gu;
-const BARE_KINDS = new Set<ManifestFacts['kind']>(['Cargo.toml', 'go.mod', 'Gemfile']);
-
-function isBareKind(base: string): base is ManifestFacts['kind'] {
-    return BARE_KINDS.has(base as ManifestFacts['kind']);
-}
 
 function readJson(root: string, path: string): Record<string, unknown> | undefined {
     try {
@@ -152,7 +147,6 @@ export function readManifests(root: string, files: TrackedFile[]): ManifestFacts
         .filter((file) => !file.path.includes('node_modules/'))
         .flatMap((file) => {
             const base = file.path.slice(file.path.lastIndexOf('/') + 1);
-            if (isBareKind(base)) return [bareFacts(file.path, base)];
             const found = READERS[base]?.(root, file.path);
             return found ? [found] : [];
         });

@@ -202,8 +202,7 @@ were choices.
 
 ## A-11 Scopes come from workspaces only
 
-**Evidence.** `workspaceScopes` reads npm workspaces, the uv workspace, and the Cargo workspace. The Cargo
-reader goes with the rust preset (D-136).
+**Evidence.** `workspaceScopes` reads npm workspaces and the uv workspace.
 The app has `api/`, `supabase/` and `ios/`. `ios/` is no workspace member, so the install
 needed three hand-typed `--scope` flags. A repository with a Swift folder or two
 independent `package.json` files gets no scope.

@@ -166,7 +166,6 @@ exactly one fix file fails it.
 
 [00-delete-first.md](fixes/00-delete-first.md)
 
-- [ ] D-136: Delete the `go`, `rust`, `django`, and `ruby` presets whole, with every path the delete table of [13-roadmap.md](13-roadmap.md) lists, and their six tool pins.
 - [ ] D-129: Delete `gspot why`, `gspot declare`, `gspot profile check`, six of the seven lists of `gspot allow`, `doctor --offline`, `uninstall --keep-hooks`, `apply --check`, and `--dry-run` on the six edit commands.
 - [ ] D-100: Delete the twelve lint stubs at the root of this repository.
 - [ ] K-47: Delete the nine `copy = true` stubs and `copyStubContent` (D-100).

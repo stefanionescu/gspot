@@ -70,6 +70,19 @@ describe('detection', () => {
         expect(unknown[0]).toEqual({ language: 'Kotlin', extensions: ['.kt'], count: 2 });
     });
 
+    test('names unsupported source languages and disambiguates a module filename', () => {
+        const module = file('go.mod');
+        const proposals = detectPresets([module], manifests, []);
+        expect(proposals.filter((proposal) => proposal.kind === 'language')).toEqual([]);
+        const unknown = unknownLanguages([module, file('main.go'), file('lib.rs'), file('app.rb')], manifests);
+        expect(unknown).toEqual([
+            { language: 'Go Module', extensions: ['.mod'], count: 1 },
+            { language: 'Go', extensions: ['.go'], count: 1 },
+            { language: 'Rust', extensions: ['.rs'], count: 1 },
+            { language: 'Ruby', extensions: ['.rb'], count: 1 },
+        ]);
+    });
+
     test('reads the interpreter from a shebang', () => {
         expect(shebangInterpreter('#!/usr/bin/env bash')).toBe('shell');
         expect(shebangInterpreter('#!/bin/sh')).toBe('shell');

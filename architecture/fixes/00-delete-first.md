@@ -13,40 +13,8 @@ and `doctor --settings` with `gspot list` (K-62).
 The order inside the step: the four presets first, because they are the largest cut. Then the
 command surface, then the dead keys and fields, then the plugin rules, then the repository files.
 
-The tree loses these folders in this step: `presets/go`, `presets/rust`, `presets/django`,
-`presets/ruby`, `src/golang`, `src/cargo`, and `src/pyproject/django`. `packages/cli/rules-lint`
-moves to `src/rules`. [16-file-tree.md](../16-file-tree.md) holds the
-full table.
-
-## D-136: the go, rust, django, and ruby presets
-
-**What is wrong.** Four presets ship that nobody asked for, and no reference repository holds
-their language. They add six tool pins, a Go grammar to the binary, and four test files.
-
-**Target.** The menu of `init` and `gspot list` name 48 presets, and `jest` joins in row 12.
-Detection names Go, Rust, and Ruby as languages gspot has no preset for, through
-`linguist-languages`, as it does for any other language.
-
-**Files.** Deleted: `presets/go`, `presets/rust`, `presets/django`, `presets/ruby`. Deleted:
-`src/golang/`, `src/cargo/`, `src/pyproject/django/`, `src/integrity/gems.ts`, `types/cargo.ts`,
-`types/bundler.ts`. Deleted: `tests/repositories/golang.test.ts`, `cargo.test.ts`,
-`bundler.test.ts`, and `pyproject/django.test.ts`. Deleted: `rules/language/GO.md`, `RUST.md`,
-`RUBY.md`, `rules/framework/django/`, and the four preset pages under `architecture/presets/`.
-
-**Logic.** `integrity/dispatch.ts` loses the entries of the four presets. `repository/scopes.ts`
-loses the Cargo workspace reader and the Go module reader. `ruff.toml.tmpl` loses the `DJ`
-family and its `has('django')` branch. `config/grammars.ts` loses the Go entry.
-
-**What goes.** `tree-sitter-go` leaves `packages/cli/package.json` and `build.ts`. Six tool pins
-leave with the manifests. The words `go`, `rust`, `django`, and `ruby` leave
-[04-presets.md](../04-presets.md), [06-enforcement-ledger.md](../06-enforcement-ledger.md), and
-the dependencies and licenses pages.
-
-**Tests.** `every shipped check has a test` passes with 48 manifests. A unit test of
-`presets/detect.ts` holds that a `go.mod` names the language and selects nothing.
-
-**Done when.** A search of the repository for `golang`, `cargo`, `django`, and `bundler` finds
-only [18-gaps.md](../18-gaps.md) and the decision log.
+`packages/cli/rules-lint` moves to `src/rules`.
+[16-file-tree.md](../16-file-tree.md) holds the full table.
 
 ## D-129: commands and flags that leave
 

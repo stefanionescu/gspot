@@ -102,7 +102,7 @@ export type NameProblem = {
 export type ExtractSink = { file: string; language: string; out: Identifier[] };
 
 /** The parser languages the engine loads. */
-export type GrammarName = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'swift' | 'html' | 'css' | 'go';
+export type GrammarName = 'typescript' | 'tsx' | 'javascript' | 'bash' | 'python' | 'swift' | 'html' | 'css';
 
 /** What the engine needs to check a file's identifiers: the policy and the language the file belongs to. */
 export type NamingContext = { policy: EffectivePolicy; isReactFile: boolean; isTestFile: boolean };

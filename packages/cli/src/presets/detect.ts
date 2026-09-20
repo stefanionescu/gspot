@@ -9,6 +9,11 @@ import type { Manifest, LinguistEntry, Proposal, UnknownLanguage } from '#types/
 const SHEBANG_TAG = 'shebang:';
 const GLOB_CHARS = /[*?{]/u;
 const ENV_SUFFIX = '/env';
+const LANGUAGE_BY_FILENAME = new Map(
+    Object.entries(linguistLanguages).flatMap(([language, value]) =>
+        ((value as LinguistEntry).filenames ?? []).map((filename) => [filename, language] as const),
+    ),
+);
 
 function languageByExtension(): Map<string, string> {
     const map = new Map<string, string>();
@@ -16,8 +21,11 @@ function languageByExtension(): Map<string, string> {
         const entry = value as LinguistEntry;
         if (entry.type !== 'programming') continue;
         const extensions = entry.extensions ?? [];
-        for (const extension of extensions)
-            if (!map.has(extension.toLowerCase())) map.set(extension.toLowerCase(), name);
+        for (const extension of extensions) {
+            const normalized = extension.toLowerCase();
+            const isAlias = entry.aliases?.includes(normalized.slice(1)) === true;
+            if (isAlias || !map.has(normalized)) map.set(normalized, name);
+        }
     }
     return map;
 }
@@ -158,8 +166,10 @@ export function unknownLanguages(files: TrackedFile[], manifests: Map<string, Ma
     const counts = new Map<string, { extensions: Set<string>; count: number }>();
     for (const file of files) {
         const extension = extensionOf(file.path);
-        const language = file.nature === 'source' && !known.has(extension) ? byExtension.get(extension) : undefined;
-        if (language === undefined) continue;
+        const fromExtension =
+            file.nature === 'source' && !known.has(extension) ? byExtension.get(extension) : undefined;
+        if (fromExtension === undefined) continue;
+        const language = LANGUAGE_BY_FILENAME.get(baseName(file.path)) ?? fromExtension;
         const entry = counts.get(language) ?? { extensions: new Set<string>(), count: 0 };
         entry.extensions.add(extension);
         entry.count += 1;

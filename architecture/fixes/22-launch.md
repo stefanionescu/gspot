@@ -32,9 +32,9 @@ reaches tool installation and fails on two dependencies. SwiftLint 0.63.2 has no
 artifact. RuboCop 1.91.0 fails to build a native gem extension. The setup step now runs
 on Windows, but the job has not reached the test suite.
 
-Remove the Ruby dependency with its
-authorized preset deletion. Resolve SwiftLint platform selection without treating unexecuted
-checks as findings or passes.
+D-136 removes the Ruby dependency. SwiftLint installation is restricted to Linux and macOS.
+The Windows test suite and self-check still require successful CI evidence. Unexecuted
+checks cannot count as findings or passes.
 
 ## K-164: a release can ship broken and say nothing
 

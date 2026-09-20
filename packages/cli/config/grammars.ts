@@ -3,7 +3,6 @@
 /** Grammar file name to the path inside its npm package. The Swift grammar is vendored by hand. */
 export const GRAMMAR_SOURCES: Record<string, string> = {
     'bash.wasm': 'tree-sitter-bash/tree-sitter-bash.wasm',
-    'go.wasm': 'tree-sitter-go/tree-sitter-go.wasm',
     'css.wasm': 'tree-sitter-css/tree-sitter-css.wasm',
     'html.wasm': 'tree-sitter-html/tree-sitter-html.wasm',
     'javascript.wasm': 'tree-sitter-javascript/tree-sitter-javascript.wasm',

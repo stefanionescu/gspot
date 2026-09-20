@@ -330,47 +330,44 @@ Snapshots sit under `packages/cli/tests/snapshots/<preset>/` (T-36).
 
 Each path of today, and where it ends. A path not listed stays.
 
-| Today                                                                                               | Target                                                                        | Row                 |
-| --------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------- |
-| `presets/go`, `presets/rust`, `presets/django`, `presets/ruby`                                      | deleted, with their rule files and preset pages                               | D-136               |
-| `src/golang/`, `src/cargo/`, `src/pyproject/django/`, `types/cargo.ts`, `types/bundler.ts`          | deleted                                                                       | D-136               |
-| `src/apple/structure/`, `src/pyproject/structure/`                                                  | `src/structure/analyses/`, one file for each check name                       | K-79, K-235         |
-| `src/apple/build.ts`, `plan.ts`                                                                     | `src/checks/swift/`                                                           | K-79                |
-| `src/apple/xcode/project.ts`, `files.ts`                                                            | `src/readers/xcode-project.ts`                                                | K-148, K-149        |
-| `src/apple/xcode/`, `src/apple/xctest/`, the rest                                                   | `src/checks/xcode/`, `src/checks/xctest/`                                     | K-79                |
-| `src/pyproject/project.ts`                                                                          | `src/readers/python-project.ts`                                               | K-79                |
-| `src/pyproject/blocking-calls.ts`                                                                   | `src/checks/fastapi/no-blocking-io-in-async.ts`                               | K-79                |
-| `src/sql/parser.ts`, `statements.ts`, `tree.ts`                                                     | `src/readers/sql/`                                                            | K-79                |
-| `src/sql/checks.ts`                                                                                 | `src/checks/sql/`, one file for each check name                               | K-79                |
-| `src/postgres/schema/facts.ts`, `history.ts`                                                        | `src/readers/postgres-schema.ts`                                              | K-79                |
-| `src/postgres/`, `src/supabase/`, `src/express/`, the rest                                          | `src/checks/postgres/`, `src/checks/supabase/`, `src/checks/express/`         | K-79                |
-| `src/web/`                                                                                          | `src/checks/nextjs/`, `static-site/`, `html/`, `css/`, `i18n/`, `cloudflare/` | K-79, K-255         |
-| `src/integrity/dispatch.ts`                                                                         | `src/checks/registry.ts`                                                      | K-79                |
-| `src/integrity/`, the rest                                                                          | `src/checks/`, by the first part of each check name                           | K-79                |
-| `src/profile/command.ts`, the `check` half                                                          | deleted; `init --from <profile> --dry-run` validates a profile                | D-131               |
-| `commands/why.ts`, `commands/declare.ts`, `output/why.ts`, `policy/declare-command.ts`              | deleted                                                                       | D-131               |
-| `commands/flags.ts`                                                                                 | `program.ts`                                                                  | K-98                |
-| `doctor/settings.ts`, `doctor/newer-version.ts`                                                     | `output/list.ts`, `lifecycle/upgrade/newer-version.ts`                        | D-131               |
-| `emit/stubs.ts`                                                                                     | `emit/pointers.ts`                                                            | D-100, K-47         |
-| `emit/kept-pins.ts`, the devDependencies half of `emit/runner-surface.ts`                           | `emit/tool-packages.ts`                                                       | D-145, K-217        |
-| `emit/runner-surface.ts`, the rest                                                                  | `emit/runner-tasks.ts`                                                        | D-116, D-127        |
-| `emit/lefthook.ts`                                                                                  | `emit/hook-managers.ts`, for husky and lefthook                               | D-101, D-114        |
-| `emit/drift.ts`                                                                                     | `checks/integrity/generated-drift.ts`; `apply --check` is deleted             | D-129, K-246        |
-| `emit/first-baseline.ts`, `lower-baselines.ts`, `prune-baselines.ts`                                | deleted, with `run/baselines.ts` and `lifecycle/first-check.ts`               | D-165               |
-| `run/list-arguments.ts`, the argument half of `run/tool-runner.ts`                                  | `run/command-parts.ts`                                                        | K-258               |
-| `run/json-output.ts`, `run/scope-paths.ts`                                                          | `output/json.ts`, `repository/scopes.ts`                                      | K-79                |
-| `lifecycle/questions.ts`                                                                            | `lifecycle/init/questions.ts`                                                 | D-120               |
-| `lifecycle/xcode-proposal.ts`, `lifecycle/unreadable.ts`                                            | keys of the xcode manifest, and `repository/natures.ts`                       | K-38                |
-| `config/carry.ts`, `OWNER_PRESET`, `CHECK_BY_TOOL`, the tables of `policy/propose.ts`               | `[takeover]` and `[carry]` tables of each manifest                            | K-14, K-39          |
-| `config/integrity.ts`, `postgres.ts`, `supabase.ts`, `prose.ts`                                     | `config/suppressions.ts`, and settings of the three manifests                 | K-38                |
-| `packages/cli/rules-lint/`                                                                          | `src/rules/`; the Vale half is deleted                                        | S-10                |
-| `packages/cli/build/entry.ts`                                                                       | `packages/cli/build.ts`                                                       | K-73                |
-| `prose/styles/`, `prose/vocabularies/`                                                              | `presets/prose/`; `prose/vale.ini` is deleted                                 | K-73, S-10          |
-| `schema/`, `docs/public/schema/`                                                                    | `gspot.schema.json` at the root; the schema of the report is part of it       | K-68                |
-| the twelve lint files at the root, `eslint.config.mjs` included                                     | deleted; each tool reads `.gspot/`                                            | D-100               |
-| `.config/mise/conf.d/gspot.toml`                                                                    | `.mise/conf.d/gspot-tools.toml`                                               | D-127               |
-| `.gspot/baseline/`, one file for each rule                                                          | deleted                                                                       | D-165               |
-| seven rules of `packages/eslint-plugin/src/rules/`                                                  | deleted, with their tests                                                     | K-102, K-187, K-188 |
-| constants beside the plugin rules                                                                   | `packages/eslint-plugin/config/`                                              | G-13                |
-| `tests/repositories/golang.test.ts`, `cargo.test.ts`, `bundler.test.ts`, `pyproject/django.test.ts` | deleted                                                                       | D-136               |
-| `rules/language/GO.md`, `RUST.md`, `RUBY.md`, `rules/framework/django/`, `rules/templates/project/` | deleted                                                                       | D-136, K-97         |
+| Today                                                                                  | Target                                                                        | Row                 |
+| -------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------- | ------------------- |
+| `src/apple/structure/`, `src/pyproject/structure/`                                     | `src/structure/analyses/`, one file for each check name                       | K-79, K-235         |
+| `src/apple/build.ts`, `plan.ts`                                                        | `src/checks/swift/`                                                           | K-79                |
+| `src/apple/xcode/project.ts`, `files.ts`                                               | `src/readers/xcode-project.ts`                                                | K-148, K-149        |
+| `src/apple/xcode/`, `src/apple/xctest/`, the rest                                      | `src/checks/xcode/`, `src/checks/xctest/`                                     | K-79                |
+| `src/pyproject/project.ts`                                                             | `src/readers/python-project.ts`                                               | K-79                |
+| `src/pyproject/blocking-calls.ts`                                                      | `src/checks/fastapi/no-blocking-io-in-async.ts`                               | K-79                |
+| `src/sql/parser.ts`, `statements.ts`, `tree.ts`                                        | `src/readers/sql/`                                                            | K-79                |
+| `src/sql/checks.ts`                                                                    | `src/checks/sql/`, one file for each check name                               | K-79                |
+| `src/postgres/schema/facts.ts`, `history.ts`                                           | `src/readers/postgres-schema.ts`                                              | K-79                |
+| `src/postgres/`, `src/supabase/`, `src/express/`, the rest                             | `src/checks/postgres/`, `src/checks/supabase/`, `src/checks/express/`         | K-79                |
+| `src/web/`                                                                             | `src/checks/nextjs/`, `static-site/`, `html/`, `css/`, `i18n/`, `cloudflare/` | K-79, K-255         |
+| `src/integrity/dispatch.ts`                                                            | `src/checks/registry.ts`                                                      | K-79                |
+| `src/integrity/`, the rest                                                             | `src/checks/`, by the first part of each check name                           | K-79                |
+| `src/profile/command.ts`, the `check` half                                             | deleted; `init --from <profile> --dry-run` validates a profile                | D-131               |
+| `commands/why.ts`, `commands/declare.ts`, `output/why.ts`, `policy/declare-command.ts` | deleted                                                                       | D-131               |
+| `commands/flags.ts`                                                                    | `program.ts`                                                                  | K-98                |
+| `doctor/settings.ts`, `doctor/newer-version.ts`                                        | `output/list.ts`, `lifecycle/upgrade/newer-version.ts`                        | D-131               |
+| `emit/stubs.ts`                                                                        | `emit/pointers.ts`                                                            | D-100, K-47         |
+| `emit/kept-pins.ts`, the devDependencies half of `emit/runner-surface.ts`              | `emit/tool-packages.ts`                                                       | D-145, K-217        |
+| `emit/runner-surface.ts`, the rest                                                     | `emit/runner-tasks.ts`                                                        | D-116, D-127        |
+| `emit/lefthook.ts`                                                                     | `emit/hook-managers.ts`, for husky and lefthook                               | D-101, D-114        |
+| `emit/drift.ts`                                                                        | `checks/integrity/generated-drift.ts`; `apply --check` is deleted             | D-129, K-246        |
+| `emit/first-baseline.ts`, `lower-baselines.ts`, `prune-baselines.ts`                   | deleted, with `run/baselines.ts` and `lifecycle/first-check.ts`               | D-165               |
+| `run/list-arguments.ts`, the argument half of `run/tool-runner.ts`                     | `run/command-parts.ts`                                                        | K-258               |
+| `run/json-output.ts`, `run/scope-paths.ts`                                             | `output/json.ts`, `repository/scopes.ts`                                      | K-79                |
+| `lifecycle/questions.ts`                                                               | `lifecycle/init/questions.ts`                                                 | D-120               |
+| `lifecycle/xcode-proposal.ts`, `lifecycle/unreadable.ts`                               | keys of the xcode manifest, and `repository/natures.ts`                       | K-38                |
+| `config/carry.ts`, `OWNER_PRESET`, `CHECK_BY_TOOL`, the tables of `policy/propose.ts`  | `[takeover]` and `[carry]` tables of each manifest                            | K-14, K-39          |
+| `config/integrity.ts`, `postgres.ts`, `supabase.ts`, `prose.ts`                        | `config/suppressions.ts`, and settings of the three manifests                 | K-38                |
+| `packages/cli/rules-lint/`                                                             | `src/rules/`; the Vale half is deleted                                        | S-10                |
+| `packages/cli/build/entry.ts`                                                          | `packages/cli/build.ts`                                                       | K-73                |
+| `prose/styles/`, `prose/vocabularies/`                                                 | `presets/prose/`; `prose/vale.ini` is deleted                                 | K-73, S-10          |
+| `schema/`, `docs/public/schema/`                                                       | `gspot.schema.json` at the root; the schema of the report is part of it       | K-68                |
+| the twelve lint files at the root, `eslint.config.mjs` included                        | deleted; each tool reads `.gspot/`                                            | D-100               |
+| `.config/mise/conf.d/gspot.toml`                                                       | `.mise/conf.d/gspot-tools.toml`                                               | D-127               |
+| `.gspot/baseline/`, one file for each rule                                             | deleted                                                                       | D-165               |
+| seven rules of `packages/eslint-plugin/src/rules/`                                     | deleted, with their tests                                                     | K-102, K-187, K-188 |
+| constants beside the plugin rules                                                      | `packages/eslint-plugin/config/`                                              | G-13                |
+| `rules/templates/project/`                                                             | deleted                                                                       | K-97                |

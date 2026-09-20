@@ -409,8 +409,7 @@ plan.
 
 ## What each language and framework holds
 
-The presets `go`, `rust`, `django` and `ruby` leave (D-136). The table lists what stays. A cell
-names the tool a manifest pins today. `D-141` marks a tool the decision adds and no manifest holds
+The table lists the shipped languages and frameworks. A cell names the tool a manifest pins today. `D-141` marks a tool the decision adds and no manifest holds
 yet. `nothing` marks a job no tool does.
 
 | Language or framework  | Format                                          | Lint and types                                                                                     | Dead code and copies   | Security                   | Tests                | Open                                                                 |

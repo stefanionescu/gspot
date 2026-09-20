@@ -67,7 +67,7 @@ export function isLintOnlyManifest(facts: ManifestFacts): boolean {
 }
 
 /**
- * Workspace packages as scopes, from every workspace format @manypkg knows plus uv and Cargo. Lint-only packages are left out.
+ * Workspace packages as scopes, from every workspace format @manypkg knows plus uv. Lint-only packages are left out.
  * @param root the repository root
  * @param facts the manifests read from the tree
  * @returns the scopes in path order, and the lint-only manifests left out
@@ -78,7 +78,6 @@ export function workspaceScopes(root: string, facts: ManifestFacts[]): { scopes:
     const found = [
         ...npmScopes(root, byPath, lintOnly),
         ...memberScopes(root, tomlMembers(root, 'pyproject.toml', ['tool', 'uv', 'workspace', 'members'])),
-        ...memberScopes(root, tomlMembers(root, 'Cargo.toml', ['workspace', 'members'])),
     ];
     const unique = new Map<string, ScopeEntry>();
     for (const scope of found) if (!unique.has(scope.path)) unique.set(scope.path, scope);

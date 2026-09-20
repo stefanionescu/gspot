@@ -53,7 +53,10 @@ function assetKey(file: string): string {
 
 // Writes the entry module that embeds every asset and starts the CLI.
 function writeEntry(): string {
-    const assets = [...ASSET_FOLDERS.flatMap((folder) => walk(join(root, folder))), ...walk(join(here, 'grammars'))];
+    const grammars = [...Object.keys(GRAMMAR_SOURCES), 'swift.wasm']
+        .toSorted((a, b) => a.localeCompare(b))
+        .map((name) => join(here, 'grammars', name));
+    const assets = [...ASSET_FOLDERS.flatMap((folder) => walk(join(root, folder))), ...grammars];
     const buildDir = join(here, 'build');
     const imports = assets.map((file, index) => {
         const source = JSON.stringify(relative(buildDir, file));

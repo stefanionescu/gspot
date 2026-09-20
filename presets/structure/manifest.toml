@@ -143,7 +143,7 @@ name = "limits.file_lines"
 kind = "number"
 direction = "ceiling"
 default = 300
-languages = ["typescript", "javascript", "python", "swift", "bash", "sql", "go", "rust", "ruby"]
+languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
 summary = "The most lines a file may have. Bash counts code lines; the other languages count every line."
 
 [[settings]]
@@ -151,7 +151,7 @@ name = "limits.function_lines"
 kind = "number"
 direction = "ceiling"
 default = 60
-languages = ["typescript", "javascript", "python", "swift", "bash", "sql", "go", "rust", "ruby"]
+languages = ["typescript", "javascript", "python", "swift", "bash", "sql"]
 summary = "The most lines one function may have."
 
 [[settings]]

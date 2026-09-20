@@ -38,7 +38,6 @@
         "smol-toml": "1.8.0",
         "tree-sitter-bash": "0.25.1",
         "tree-sitter-css": "0.25.0",
-        "tree-sitter-go": "0.25.0",
         "tree-sitter-html": "0.23.2",
         "tree-sitter-javascript": "0.25.0",
         "tree-sitter-python": "0.25.0",
