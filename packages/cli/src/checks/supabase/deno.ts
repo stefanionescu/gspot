@@ -2,14 +2,23 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { run } from '#cli/platform/spawn.ts';
+import { z } from 'zod';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
-import type { DenoLintReport } from '#types/supabase.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
-const DENO_TIMEOUT_MS = 300_000;
+const lintReport = z.object({
+    diagnostics: z.array(
+        z.object({
+            filename: z.string(),
+            code: z.string(),
+            message: z.string(),
+            range: z.object({ start: z.object({ line: z.number().int().positive() }) }),
+        }),
+    ),
+    errors: z.array(z.object({ file_path: z.string(), message: z.string() })),
+});
 const CHECK_LOCATION = /at (?<file>file:\/\/\S+?):(?<line>\d+):\d+/u;
 
 function denoFileArguments(root: string, folder: string): string[] {
@@ -24,13 +33,14 @@ function relative(root: string, locator: string): string {
 
 async function linted(input: EngineInput, folder: string): Promise<Finding[]> {
     const argv = ['deno', 'lint', '--json', ...denoFileArguments(input.root, folder), join(input.root, folder)];
-    const result = await run(argv, { cwd: input.root, timeoutMs: DENO_TIMEOUT_MS });
-    if (result.missing) throw new MissingToolError('Deno is not installed.');
-    const report = JSON.parse(result.stdout === '' ? '{}' : result.stdout) as DenoLintReport;
-    const broken = (report.errors ?? []).map((entry) =>
+    const result = await runCheckCommand(input, argv, { cwd: join(input.root, input.scope) });
+    const report = lintReport.parse(JSON.parse(result.stdout));
+    if (result.code !== 0 && report.diagnostics.length === 0 && report.errors.length === 0)
+        throw new Error(`Deno lint failed without diagnostics: ${result.stderr.trim()}`);
+    const broken = report.errors.map((entry) =>
         supabaseFinding(input, { file: relative(input.root, entry.file_path), line: 1 }, 'parse', entry.message),
     );
-    const found = (report.diagnostics ?? []).map((entry) =>
+    const found = report.diagnostics.map((entry) =>
         supabaseFinding(
             input,
             { file: relative(input.root, entry.filename), line: entry.range.start.line },
@@ -56,8 +66,7 @@ async function typed(input: EngineInput, folder: string): Promise<Finding[]> {
         .find((path) => existsSync(path));
     if (entry === undefined) return [];
     const argv = ['deno', 'check', '--quiet', ...denoFileArguments(input.root, folder), entry];
-    const result = await run(argv, { cwd: input.root, timeoutMs: DENO_TIMEOUT_MS });
-    if (result.missing) throw new MissingToolError('Deno is not installed.');
+    const result = await runCheckCommand(input, argv, { cwd: join(input.root, input.scope) });
     return result.code === 0 ? [] : [firstError(input, folder, result.stderr)];
 }
 

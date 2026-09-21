@@ -23,6 +23,7 @@ target = ".gspot/lychee.toml"
 
 [[checks]]
 name = "docs/links"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["lychee", "--config", "{config:lychee}", "--offline", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
@@ -35,6 +36,7 @@ help = "Point the link at the file or heading that exists, or delete it."
 
 [[checks]]
 name = "docs/links-external"
+level = "recommended"
 stage = "manual"
 runs = "per-file-list"
 requires = "network"
@@ -48,6 +50,7 @@ help = "Update or remove the link, or exclude the URL pattern with a reason unde
 
 [[checks]]
 name = "integrity/docs-headings"
+level = "all"
 stage = "commit"
 engine = "integrity"
 analysis = "docs-headings"
@@ -58,6 +61,7 @@ help = "Replace the section with prose that explains, or delete it."
 
 [[checks]]
 name = "integrity/stale-paths"
+level = "recommended"
 stage = "commit"
 engine = "integrity"
 analysis = "stale-paths"
@@ -68,6 +72,7 @@ help = "Fix the path or the task name, or add the pattern with a reason under to
 
 [[checks]]
 name = "docs/readme-present"
+level = "all"
 stage = "commit"
 engine = "integrity"
 analysis = "readme-present"
@@ -78,6 +83,7 @@ help = "Write the README; the docs rule files say what goes in it."
 
 [[checks]]
 name = "docs/readme-shape"
+level = "all"
 stage = "commit"
 engine = "integrity"
 analysis = "readme-shape"

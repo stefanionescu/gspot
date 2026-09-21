@@ -1,6 +1,6 @@
 import { expect, test } from 'bun:test';
 import { dirname, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#types/report.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { symlinkSync, writeFileSync, readdirSync } from 'node:fs';
@@ -10,6 +10,7 @@ const MODULES = join(import.meta.dir, '../../../node_modules');
 const VITEST = dirname(Bun.resolveSync('vitest/package.json', import.meta.dir));
 const VITE = dirname(Bun.resolveSync('vite/package.json', VITEST));
 const POLICY = `version = 1
+level = "all"
 presets = ["javascript"]
 [rules]
 install = false
@@ -43,8 +44,9 @@ async function trivialFiles(root: string): Promise<string[]> {
 test(
     'Vite startup files follow the declared entry points of their own scope',
     async () => {
-        await using sandbox = await createSandbox({
-            node_modules: null,
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            node_modules: {},
             'gspot.toml': POLICY,
             '.gitignore': 'node_modules\n.gspot/\ndist/\n',
             'package.json':

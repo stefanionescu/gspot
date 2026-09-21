@@ -1,6 +1,6 @@
-import type { EngineInput } from '#types/run.ts';
+import type { Engine, EngineInput } from '#types/run.ts';
 // The structure engine: one analysis per check, chosen by `analysis =` in the manifest.
-import type { Finding } from '#types/finding.ts';
+import type { CheckSpec } from '#types/manifest.ts';
 import { countFindings } from '#cli/structure/counts.ts';
 import { DOCUMENT_EXTENSIONS } from '#config/structure.ts';
 import { scriptIndex } from '#cli/structure/cross-file-index.ts';
@@ -84,18 +84,16 @@ function contextFor(input: EngineInput): StructureContext {
     };
 }
 
-/**
- * Runs the analysis a structure check names.
- * @param input the engine input
- * @returns the findings
- */
-export async function runStructure(input: EngineInput): Promise<Finding[]> {
-    const analysis = input.spec.analysis ?? '';
-    const context = contextFor(input);
-    const scriptFiles = context.files.filter((file) => file.tags.includes(SCRIPT_TAG));
-    const scripts = (): ReturnType<typeof scriptIndex> => scriptIndex(input, scriptFiles);
-    if (COUNT_ANALYSES.has(analysis)) return countFindings(analysis, context, await scripts());
-    const run = ANALYSES[analysis];
-    if (run === undefined) throw new Error(`No structure analysis is called ${analysis}.`);
-    return run(context, scripts);
+/** Resolve the structure analysis while retaining source indexing at execution time. */
+export function resolveStructure(spec: CheckSpec): Engine {
+    const name = spec.analysis ?? '';
+    const analysis: Analysis | undefined = COUNT_ANALYSES.has(name)
+        ? async (context, scripts) => countFindings(name, context, await scripts())
+        : ANALYSES[name];
+    if (analysis === undefined) throw new Error(`No structure analysis is called ${name}.`);
+    return async (input) => {
+        const context = contextFor(input);
+        const scriptFiles = context.files.filter((file) => file.tags.includes(SCRIPT_TAG));
+        return analysis(context, () => scriptIndex(input, scriptFiles));
+    };
 }

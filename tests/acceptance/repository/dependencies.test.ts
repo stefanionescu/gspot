@@ -1,6 +1,6 @@
 // Planted repository for the dependencies preset: a version range, a second package manager, a public workspace root, a stale lockfile.
 import { join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -85,10 +85,13 @@ describe('the dependencies preset', () => {
     test(
         'the manifest policy and the lockfile check fire on their planted defects, and the advisory lookup waits for the network',
         async () => {
-            await using sandbox = await createSandbox({ 'package.json': CLEAN });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'package.json': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const manifest = await run(
                 sandbox.path,
                 ['check', '--only', 'integrity/manifest-policy', '--no-cache'],

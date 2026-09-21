@@ -2,11 +2,21 @@
 // The launcher: runs the platform package that installed for this machine.
 'use strict';
 
-const { spawnSync } = require('node:child_process');
+const { spawn } = require('node:child_process');
 const { existsSync } = require('node:fs');
 const { join } = require('node:path');
+const { familySync } = require('detect-libc');
+const targets = require('./targets.json');
 
-const platformPackage = `@gspot/cli-${process.platform}-${process.arch}`;
+const libc = process.platform === 'linux' ? familySync() : null;
+const target = targets.find(
+    (candidate) => candidate.os === process.platform && candidate.cpu === process.arch && candidate.libc === libc,
+);
+if (!target) {
+    process.stderr.write(`gspot has no build for ${process.platform} ${process.arch} ${libc ?? 'unknown libc'}.\n`);
+    process.exit(2);
+}
+const platformPackage = target.package;
 const binaryName = process.platform === 'win32' ? 'gspot.exe' : 'gspot';
 
 let binary;
@@ -24,9 +34,16 @@ if (!binary || !existsSync(binary)) {
     process.exit(2);
 }
 
-const result = spawnSync(binary, process.argv.slice(2), { stdio: 'inherit' });
-if (result.error) {
-    process.stderr.write(`gspot could not start: ${result.error.message}\n`);
+const child = spawn(binary, process.argv.slice(2), { stdio: 'inherit' });
+const signals = ['SIGINT', 'SIGTERM', 'SIGHUP'];
+const forward = (signal) => child.kill(signal);
+for (const signal of signals) process.on(signal, forward);
+child.on('error', (error) => {
+    process.stderr.write(`gspot could not start: ${error.message}\n`);
     process.exit(2);
-}
-process.exit(result.status ?? 1);
+});
+child.on('close', (code, signal) => {
+    for (const forwarded of signals) process.removeListener(forwarded, forward);
+    if (signal) process.kill(process.pid, signal);
+    else process.exitCode = code ?? 1;
+});

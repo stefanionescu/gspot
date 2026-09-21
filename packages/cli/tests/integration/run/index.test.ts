@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { rmSync, writeFileSync } from 'node:fs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
@@ -14,7 +14,8 @@ function git(root: string, ...args: string[]): void {
 
 test('the index keeps deleted tracked paths, encoded names, and excludes untracked files', async () => {
     const path = 'folder % café/file.env';
-    await using sandbox = await createSandbox({ [path]: 'TOKEN=example', 'untracked.ts': 'export {};\n' });
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { [path]: 'TOKEN=example', 'untracked.ts': 'export {};\n' });
     expect(indexedPaths(sandbox.path)).toEqual([]);
     git(sandbox.path, 'init', '-q');
     git(sandbox.path, 'add', '--', path);
@@ -25,7 +26,8 @@ test('the index keeps deleted tracked paths, encoded names, and excludes untrack
 test.each(['integrity/env-files', 'integrity/tracked-dependencies'])(
     '%s reports a failed index observation instead of a clean verdict',
     async (check) => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'gspot.toml': 'version = 1\npresets = ["secrets", "structure"]\n',
             '.env': 'TOKEN=example\n',
             'node_modules/example/source.js': 'export {};\n',
@@ -38,7 +40,6 @@ test.each(['integrity/env-files', 'integrity/tracked-dependencies'])(
             stage: 'all' as const,
             only: [check],
             skips: [],
-            localSkips: [],
             fix: false,
             isDryRun: true,
             noCache: true,

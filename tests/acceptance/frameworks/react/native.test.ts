@@ -1,7 +1,7 @@
 import { symlinkSync } from 'node:fs';
 // Planted repository for the react-native preset: an environment variable taken apart, an inline style, a list with no key, and a token in AsyncStorage.
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
@@ -26,7 +26,7 @@ const INIT = [
 const PACKAGE =
     '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "expo": "54.0.0",\n        "react": "19.1.1",\n        "react-native": "0.81.4"\n    }\n}\n';
 const TSCONFIG =
-    '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "compilerOptions": { "jsx": "react-jsx", "module": "ESNext", "moduleResolution": "Bundler" },\n    "include": ["src"]\n}\n';
+    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "ESNext",\n        "moduleResolution": "Bundler",\n        "types": [],\n        "skipLibCheck": true,\n        "jsx": "react-jsx"\n    },\n    "include": ["src"]\n}\n';
 const CLEAN = '// A value the planted files build on.\n\n/** The answer. */\nexport const answer = 42;\n';
 const head = (text: string): string => `// A planted file.\n\n${text}`;
 
@@ -65,7 +65,8 @@ describe('the react-native preset', () => {
     test(
         'the Expo rules and the React Native selectors fire on their planted files',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 '.gitignore': 'node_modules\n',
                 'package.json': PACKAGE,
                 'tsconfig.json': TSCONFIG,
@@ -77,6 +78,8 @@ describe('the react-native preset', () => {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
             expect(policy).toContain('react-native');
             const clean = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);

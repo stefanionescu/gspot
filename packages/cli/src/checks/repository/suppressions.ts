@@ -1,11 +1,14 @@
-// Every inline suppression is counted by form, and one without a reason is a finding of its own.
+// Validate suppression comments against the repository reason policy; reporting owns the census.
 import { join } from 'node:path';
+import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import { readFileSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput, Session } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import type { TrackedFile } from '#types/repository.ts';
-import { SUPPRESSION_FORMS } from '#config/integrity.ts';
-import type { SuppressionForm } from '#types/integrity.ts';
+import { GSPOT_SUPPRESSION } from '#config/suppressions.ts';
+import { claimedByClaims } from '#cli/presets/claims.ts';
+import { scopeOf } from '#cli/repository/scopes.ts';
+import type { SuppressionComment } from '#types/integrity.ts';
 import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#config/markers.ts';
 
 function styleOf(file: TrackedFile): string | undefined {
@@ -27,53 +30,85 @@ function commentOf(line: string, style: string): string | undefined {
     return starts.length === 0 ? undefined : line.slice(Math.min(...starts));
 }
 
-function findingFor(input: EngineInput, file: string, line: number, form: SuppressionForm, text: string): Finding {
-    const base = { check: input.spec.name, file, line, fixable: false };
-    if (form.isForbidden === true)
-        return {
-            ...base,
-            rule: form.form,
-            message: `${form.form} is not allowed; fix the finding or exclude the path with a reason.`,
-        };
-    if (!form.reason.test(text))
-        return { ...base, rule: `${form.form}-no-reason`, message: `This ${form.form} carries no reason.` };
-    return {
-        ...base,
-        rule: form.form,
-        message: `${form.form} suppression (counted; the census never grows without a baseline update).`,
-    };
-}
-
-function lineFindings(
-    input: EngineInput,
-    file: string,
-    number: number,
-    text: string,
-    forms: SuppressionForm[],
-): Finding[] {
-    return forms.filter((form) => form.marker.test(text)).map((form) => findingFor(input, file, number, form, text));
-}
-
-function fileFindings(input: EngineInput, file: TrackedFile, style: string, forms: SuppressionForm[]): Finding[] {
-    const lines = readFileSync(join(input.root, file.path), 'utf8').split('\n');
-    return lines.flatMap((line, index) => {
-        const text = commentOf(line, style);
-        return text === undefined ? [] : lineFindings(input, file.path, index + 1, text, forms);
+/** Observe comments once through the selected tool definitions for each file scope. */
+export function suppressionComments(session: Session, files: TrackedFile[]): SuppressionComment[] {
+    return files.flatMap((file) => {
+        const style = styleOf(file);
+        if (style === undefined) return [];
+        const scope = scopeOf(file.path, session.repository.scopes);
+        const selected = session.scopes.find((selection) => selection.scope.path === scope.path)!.selected;
+        const readers = new Set(
+            selected.flatMap((manifest) =>
+                manifest.checks.flatMap((check) =>
+                    claimedByClaims(check.claims ?? manifest.claims, selected, [file], scope.path).length === 0
+                        ? []
+                        : [check.tool ?? check.command?.[0]],
+                ),
+            ),
+        );
+        const definitions = new Map(
+            selected.flatMap((manifest) =>
+                manifest.tools.flatMap((tool) =>
+                    tool.suppression === undefined || !readers.has(tool.name)
+                        ? []
+                        : [[tool.name, tool.suppression] as const],
+                ),
+            ),
+        );
+        definitions.set('gspot-ignore', GSPOT_SUPPRESSION);
+        const forms = [...definitions].map(([form, definition]) => ({
+            form,
+            marker: new RegExp(definition.marker, 'u'),
+            reason: new RegExp(definition.reason, 'u'),
+            forbidden: definition.forbidden === true,
+        }));
+        return readFileSync(join(session.root, file.path), 'utf8')
+            .split('\n')
+            .flatMap((line, index) => {
+                const comment = commentOf(line, style);
+                if (comment === undefined) return [];
+                const text = comment.replace(/(?:\*\/|-->)\s*$/u, '').trimEnd();
+                return forms.flatMap((form): SuppressionComment[] => {
+                    if (!form.marker.test(text)) return [];
+                    const reason = form.reason.exec(text)?.groups?.['reason']?.trim();
+                    return [
+                        {
+                            file: file.path,
+                            line: index + 1,
+                            form: form.form,
+                            forbidden: form.forbidden,
+                            ...(reason === undefined ? {} : { reason }),
+                        },
+                    ];
+                });
+            });
     });
 }
 
-/**
- * One finding per inline suppression: its form for the census, and a no-reason rule when the reason is missing. The tree is one, so the root scope reports.
- * @param input the engine input
- * @returns the findings
- */
+/** Report forbidden suppressions and missing or invalid required reasons. */
 export function suppressions(input: EngineInput): Promise<Finding[]> {
-    const findings = input.session.repository.files
-        .filter((file) => file.nature === 'source' && file.tags.includes('text'))
-        .flatMap((file) => {
-            const style = styleOf(file) ?? '';
-            const forms = SUPPRESSION_FORMS[style];
-            return forms === undefined ? [] : fileFindings(input, file, style, forms);
-        });
+    const files = input.session.repository.files.filter(
+        (file) => file.nature === 'source' && file.tags.includes('text'),
+    );
+    const findings = suppressionComments(input.session, files).flatMap((entry): Finding[] => {
+        const base = { check: input.spec.name, file: entry.file, line: entry.line, fixable: false };
+        if (entry.forbidden)
+            return [
+                {
+                    ...base,
+                    rule: entry.form,
+                    message: `${entry.form} suppression is not allowed; fix the finding or configure an explicit ignore.`,
+                },
+            ];
+        if (!input.session.policyFiles.policy.requireReasons) return [];
+        if (isReasonAccepted(entry.reason)) return [];
+        return [
+            {
+                ...base,
+                rule: `${entry.form}-no-reason`,
+                message: `This ${entry.form} suppression needs a meaningful reason.`,
+            },
+        ];
+    });
     return Promise.resolve(findings);
 }

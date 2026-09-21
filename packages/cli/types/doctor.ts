@@ -18,7 +18,7 @@ export type ToolProbe = {
     floor?: string;
 };
 
-export type ToolContext = { root: string; probes: Map<string, ToolProbe> };
+export type ToolContext = { root: string; cwd?: string; probes: Map<string, ToolProbe> };
 
 export type CoverageReport = {
     unchecked: { path: string; reason: string; remedy?: string }[];
@@ -32,14 +32,6 @@ export type ChangeReport = {
     configurationNotOwned: { path: string; note: string; command: string }[];
     changedOutsideGspot: { path: string; note: string; command: string }[];
     pinnedTwice: { tool: string; version: string; places: string[]; command: string }[];
-};
-
-export type SettingRow = {
-    key: string;
-    value: unknown;
-    source: string;
-    direction: string;
-    scope?: string;
 };
 
 export type DoctorReport = {
@@ -64,13 +56,4 @@ export type ChangeKey =
 export type ChangeRow = { path: string; note: string; command: string };
 
 /** gspot doctor. */
-export type DoctorOptions = { cwd: string; settings: boolean };
-
-/** One `[tools.<tool>.extra]` table: the keys it sets and why. */
-export type ExtraRow = { tool: string; keys: string[]; reason: string; scope: string };
-
-/** The --settings listing. */
-export type SettingsListing = { rows: SettingRow[]; extras: ExtraRow[] };
-
-/** The `[tools.<tool>]` tables of one policy layer, as the settings listing reads them. */
-export type ToolTables = Record<string, { extra?: Record<string, unknown> & { reason: string } }>;
+export type DoctorOptions = { cwd: string };

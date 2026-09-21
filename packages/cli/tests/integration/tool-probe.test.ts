@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import type { ToolPin } from '#types/manifest.ts';
 import { openSession } from '#cli/run/session.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
@@ -25,7 +25,8 @@ function command(name: string, version: string, npm?: string): ToolPin {
 
 describe('the tool probe', () => {
     test('an active PATH executable wins over an unrelated mise shim', async () => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'active/teller': '#!/bin/sh\necho 3.8.1\n',
             'mise/shims/teller': '#!/bin/sh\necho 1.0.0\n',
         });
@@ -45,7 +46,8 @@ describe('the tool probe', () => {
     });
 
     test('an npm tool is the version its package holds, whatever it prints about itself', async () => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
             'node_modules/teller/run.sh': '#!/bin/sh\necho 4.4.2\n',
         });
@@ -61,7 +63,8 @@ describe('the tool probe', () => {
         ['0.9.0', 'ok'],
         ['0.8.0', 'outdated'],
     ] as const)('an independently versioned wrapper runs native %s and reports %s', async (native, state) => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'node_modules/wrapper/package.json': '{"name":"wrapper","version":"0.7.0"}',
             'node_modules/wrapper/run.sh': '#!/bin/sh\necho "$WRAPPER_NATIVE_VERSION"\n',
         });
@@ -78,7 +81,8 @@ describe('the tool probe', () => {
     });
 
     test('a shim that no configuration gives a version is missing, not broken', async () => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'node_modules/.bin/shimmed':
                 "#!/bin/sh\necho 'mise ERROR No version is set for shim: shimmed' >&2\nexit 1\n",
         });
@@ -89,7 +93,8 @@ describe('the tool probe', () => {
     });
 
     test('color codes around a version are no part of it', async () => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'node_modules/.bin/painter': "#!/bin/sh\nprintf 'painter \\033[1;36m26.8.0\\033[0m using more\\n'\n",
         });
         chmodSync(join(sandbox.path, 'node_modules/.bin/painter'), RUNS);
@@ -99,7 +104,8 @@ describe('the tool probe', () => {
     });
 
     test('a library is found through its package.json, in the root or in a scope', async () => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'node_modules/globals/package.json': '{"name":"globals","version":"17.12.0"}',
             'api/node_modules/eslint-plugin-n/package.json': '{"name":"eslint-plugin-n","version":"18.3.0"}',
         });
@@ -110,7 +116,8 @@ describe('the tool probe', () => {
     });
 
     test('a library that is absent is missing, and one off its pin is reported', async () => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'node_modules/typescript/package.json': '{"name":"typescript","version":"6.0.0"}',
         });
         const absent = probeTool({ root: sandbox.path, probes: new Map() }, library('eslint-plugin-regexp', '3.3.0'));
@@ -127,7 +134,7 @@ test.each([
     ['console.log("unrecognized output");', 'error', 'valid version'],
     ['console.error("3.8.1");', 'ok', undefined],
 ] as const)('a version process classifies %s as %s', async (script, state, note) => {
-    await using sandbox = await createSandbox({});
+    await using sandbox = await testdir();
     const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
     try {
         const tool = { ...command('version-teller', '3.8.1'), version_command: ['-e', script] };
@@ -144,7 +151,8 @@ test.each([
 });
 
 test('an npm package version does not hide a failed executable', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'node_modules/teller/package.json': '{"name":"teller","version":"5.0.1"}',
         'node_modules/teller/run.sh': '#!/bin/sh\necho 5.0.1\nexit 7\n',
     });
@@ -157,7 +165,7 @@ test('an npm package version does not hide a failed executable', async () => {
 });
 
 test('a version printed before a genuine timeout does not make a tool usable', async () => {
-    await using sandbox = await createSandbox({});
+    await using sandbox = await testdir();
     const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
     try {
         const tool = {
@@ -173,7 +181,7 @@ test('a version printed before a genuine timeout does not make a tool usable', a
 }, 20_000);
 
 test('a manifest can declare its help command status without accepting other failed probes', async () => {
-    await using sandbox = await createSandbox({});
+    await using sandbox = await testdir();
     const which = spyOn(Bun, 'which').mockReturnValue(process.execPath);
     try {
         const tool = {
@@ -194,7 +202,8 @@ test('a manifest can declare its help command status without accepting other fai
 });
 
 test('tool observations distinguish pins and library search scopes', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\npresets = []\n',
         'api/node_modules/example/package.json': '{"name":"example","version":"1.0.0"}',
     });
@@ -206,7 +215,8 @@ test('tool observations distinguish pins and library search scopes', async () =>
 });
 
 test('a command shares version observations and the next session probes again', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\npresets = []\n',
         'probe.ts':
             'const file = Bun.file("calls.txt"); const calls = await file.exists() ? Number(await file.text()) : 0; await Bun.write("calls.txt", String(calls + 1)); console.log("3.8.1");',
@@ -224,4 +234,25 @@ test('a command shares version observations and the next session probes again', 
     } finally {
         which.mockRestore();
     }
+});
+
+test.each([
+    ['wrapper', 'ok'],
+    ['other-package', 'error'],
+] as const)('the declared npm version exit applies only to the matching package: %s', async (packageName, state) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'node_modules/wrapper/package.json': JSON.stringify({ name: packageName, version: '0.7.0' }),
+        'node_modules/wrapper/run.sh': '#!/bin/sh\necho 0.9.0\nexit 1\n',
+    });
+    chmodSync(join(sandbox.path, 'node_modules/wrapper/run.sh'), RUNS);
+    mkdirSync(join(sandbox.path, 'node_modules/.bin'));
+    symlinkSync('../wrapper/run.sh', join(sandbox.path, 'node_modules/.bin/wrapped'));
+    const tool = command('wrapped', '0.10.0');
+    tool.floor = '0.9.0';
+    tool.installers['npm'] = { name: 'wrapper', version: '0.7.0', version_exit_code: 1 };
+    const observed = probeTool({ root: sandbox.path, probes: new Map() }, tool);
+    expect(observed.state).toBe(state);
+    if (state === 'ok') expect(observed.found).toBe('0.9.0');
+    else expect(observed.note).toContain('version probe exited 1');
 });

@@ -1,5 +1,5 @@
 // Planted repository for the supabase preset: a function with no code, a bucket with no policy, a migration named by hand, a leaked key name.
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -76,7 +76,8 @@ describe('the supabase preset', () => {
     test(
         'every supabase check fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'supabase/config.toml': CONFIG,
                 'supabase/migrations/20240101000000_create_avatars.sql': MIGRATION,
                 'supabase/functions/greet/index.ts': GREET,
@@ -84,6 +85,8 @@ describe('the supabase preset', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['deno', 'squawk', 'sqlfluff', 'typos', 'ec']) };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
                 const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);

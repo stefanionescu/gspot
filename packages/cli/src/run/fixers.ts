@@ -6,7 +6,7 @@ import type { ToolPin } from '#types/manifest.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { byFixOrder } from '#cli/run/concurrency.ts';
 import { scratchCopy } from '#cli/run/scratch-copy.ts';
-import { probeTool } from '#cli/platform/tool-probe.ts';
+import { probeTool, toolPin } from '#cli/platform/tool-probe.ts';
 import { prepareCommand, runToolCommand } from '#cli/run/tool-runner.ts';
 import type { FixReport, FixResult, Session, PlannedCheck, PreparedCommand } from '#types/run.ts';
 
@@ -46,19 +46,19 @@ function correctionTool(session: Session, plannedCheck: PlannedCheck): ToolPin |
     const name = plannedCheck.spec.fix_command?.[0];
     if (name === undefined) return undefined;
     if (plannedCheck.tool?.name === name) return plannedCheck.tool;
-    const pinned = session.manifests
-        .values()
-        .flatMap((manifest) => manifest.tools)
-        .find((tool) => tool.name === name);
-    return pinned ?? { name, windows: true, installers: {} };
+    return toolPin(session.manifests.values(), name);
 }
 
-async function runCorrection(plannedCheck: PlannedCheck, prepared: PreparedCommand): Promise<FixResult> {
+async function runCorrection(
+    session: Session,
+    plannedCheck: PlannedCheck,
+    prepared: PreparedCommand,
+): Promise<FixResult> {
     const check = plannedCheck.check;
     const paths = [...new Set([...plannedCheck.files.map((file) => file.path), ...plannedCheck.triggerPaths])];
     const before = contentsOf(prepared.root, paths);
     for (const command of prepared.commands) {
-        const result = await runToolCommand(plannedCheck, command, prepared);
+        const result = await runToolCommand(plannedCheck.scope.view, command, prepared, session.cancelSignal);
         if (result.code !== 0 || result.missing || result.isTimedOut === true) {
             const detail = [result.stderr.trim(), result.stdout.trim()].filter((text) => text !== '').join('\n');
             return {
@@ -99,13 +99,15 @@ export async function runFixer(
     plannedCheck: PlannedCheck,
     workingDirectory: string,
 ): Promise<FixResult> {
+    if (session.cancelSignal?.aborted === true)
+        return { check: plannedCheck.check, status: 'failed', changed: [], note: 'The correction was canceled.' };
     const { spec } = plannedCheck;
     const tool = correctionTool(session, plannedCheck);
     const check = plannedCheck.check;
     if (spec.fix_command === undefined || isSkipped(plannedCheck)) return { check, status: 'skipped', changed: [] };
     if (tool === undefined) return { check, status: 'failed', changed: [], note: 'No correction tool is configured.' };
-    const { env } = prepareCommand(session, { ...plannedCheck, tool }, spec.fix_command);
-    const probe = probeTool(session, { ...tool, env });
+    const { env, cwd } = prepareCommand(session, { ...plannedCheck, tool }, spec.fix_command);
+    const probe = probeTool({ ...session, cwd }, { ...tool, env });
     if (probe.path === undefined || ['missing', 'outdated', 'error'].includes(probe.state))
         return {
             check,
@@ -114,7 +116,7 @@ export async function runFixer(
             note: probe.note ?? `${tool.name} is unavailable. Run: ${probe.hint ?? 'install the configured tool'}`,
         };
     const prepared = prepareCommand({ ...session, root: workingDirectory }, plannedCheck, spec.fix_command, probe.path);
-    return runCorrection(plannedCheck, prepared);
+    return runCorrection(session, plannedCheck, prepared);
 }
 
 /**

@@ -26,8 +26,9 @@ variants, and a config below the Git root. Assert no external file is changed.
 **Partially implemented.** Policy loading rejects parent traversal, absolute paths,
 drive prefixes, backslashes, empty values, and control characters in scope paths and the rules
 directory. Profiles inherit the rules-directory constraint. Portable relative paths retain
-spaces, percent signs, and Unicode. Canonical ancestry validation, native mutation
-confinement, and symlink-swap protection remain open.
+spaces, percent signs, and Unicode. The native confinement owner uses handle-relative mutations on supported hosts.
+Retained local tests cover linked ancestors, staged parent swaps, and competing writers.
+Complete lifecycle routing and native Windows support remain open under K-263 and K-298.
 
 ## K-299: Recovery and uninstall disagree about ownership
 

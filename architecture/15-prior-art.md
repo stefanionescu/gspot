@@ -50,10 +50,45 @@ it. [12-repository-layout.md](12-repository-layout.md) lists the same libraries 
 | Diffs                                     | [`diff`](https://www.npmjs.com/package/diff)                                                                                                                                                                                              | a diff printer                                                                                          |
 | Concurrency                               | [`p-limit`](https://www.npmjs.com/package/p-limit)                                                                                                                                                                                        | a queue                                                                                                 |
 | Messages on stderr                        | [`consola`](https://github.com/unjs/consola)                                                                                                                                                                                              | a logger with levels and TTY detection                                                                  |
-| Windows spawning                          | [`cross-spawn`](https://www.npmjs.com/package/cross-spawn)                                                                                                                                                                                | `.cmd` shim handling                                                                                    |
+| Process execution                         | [Execa](https://github.com/sindresorhus/execa)                                                                                                                                                                                            | Captured streams, deadlines, cancellation, and platform command shims.                                  |
 | Newer-version lookup                      | [`latest-version`](https://www.npmjs.com/package/latest-version)                                                                                                                                                                          | a registry client                                                                                       |
 | Release                                   | [changesets](https://github.com/changesets/changesets), [`actions/attest`](https://github.com/actions/attest-build-provenance), `softprops/action-gh-release`, [`verdaccio`](https://github.com/verdaccio/verdaccio) for the publish test | release scripts                                                                                         |
 | Docs site                                 | [Starlight](https://starlight.astro.build/) with [`starlight-llms-txt`](https://github.com/delucis/starlight-llms-txt)                                                                                                                    | a site generator and an `llms.txt` writer                                                               |
+
+## Infrastructure reuse candidates
+
+This review records adopted libraries and candidates for remaining infrastructure.
+[Library selection](12-repository-layout.md#libraries) defines the decision order. Prove each
+replacement at the boundary it owns, then remove the old implementation and update its callers.
+Keep the result in the existing owning acceptance item, not a separate audit framework.
+
+| Responsibility               | Candidate                                                                                        | Required evidence before adoption                                                                                                                                                                                                 |
+| ---------------------------- | ------------------------------------------------------------------------------------------------ | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Temporary test directories   | [testdirs](https://github.com/luxass/testdirs)                                                   | Adopted as a direct development dependency used by product tests. Acquire the disposable directory before filling it. Do not maintain tests of its own API.                                                                       |
+| Temporary directory disposal | [Node filesystem APIs](https://nodejs.org/api/fs.html#fspromisesmkdtempdisposableprefix-options) | Prefer native operations where supported. `mkdtempDisposable` requires Node 24.4.0 or later, above the declared Node floor; the local Bun 1.3.11 probe exposes no such function. Do not assume Bun implements a Node API.         |
+| Process lifecycle            | [Execa](https://github.com/sindresorhus/execa)                                                   | Adopted for the shared process boundary after Bun and compiled-consumer execution. Preserve the process-failure regressions; Windows execution, process-tree termination, and command-session cancellation remain required gates. |
+| Atomic file replacement      | [write-file-atomic](https://github.com/npm/write-file-atomic)                                    | Replacement and cleanup failures, bytes and modes, concurrency, and supported-platform behavior. A single-file atomic writer does not establish path confinement, multi-file recovery, or ownership.                              |
+| Writer serialization         | [proper-lockfile](https://github.com/moxystudio/node-proper-lockfile)                            | Contention, interrupted writers, stale locks, lock compromise, and cleanup. Verify its behavior against the lifecycle transaction before adopting it.                                                                             |
+| Git worktrees and revisions  | The installed Git executable through the shared runner                                           | Exact staged and pushed objects, checked exits, worktree preservation, and cleanup. Do not add a Git wrapper that only renames argument arrays.                                                                                   |
+| Installed-package acceptance | The existing Verdaccio dependency and npm commands                                               | Own the server process, port, registry routing, publication, consumer isolation, and shutdown. Do not implement a registry or fake package installation.                                                                          |
+
+Tests import `testdirs` directly. No private workspace package or forwarding helper owns that
+API. Use real files to verify product subprocess execution and preservation of user files.
+Do not add dependency API tests or tests of test helpers. Evaluate dependencies before adoption;
+keep regression tests only for behavior owned by gspot.
+
+The accepted package has an MIT license. Its Zod dependency is already used by the repository.
+The exact version belongs to `package.json` and the lockfile. Its API does not provide the lifecycle path-confinement or
+recovery contract required for mutations of a developer repository. Do not use disposable test
+directories as the production mutation boundary.
+
+Execa 9.6.1 has an MIT license and supports the declared Node floor. It owns process capture,
+timeout and cancellation handling, and command shims; its transitive dependencies include
+cross-spawn. The CLI removes its direct cross-spawn dependency and both platform backends.
+A capture error must explicitly terminate the Execa subprocess: the library otherwise waits for
+exit before returning that error. The regression injects a stream error and verifies prompt
+termination, preserved diagnostics, and no timeout or user-cancellation classification.
+The library does not own gspot tool selection, version policy, domain preparation, or reports.
 
 ## Considered and not adopted
 
@@ -68,3 +103,12 @@ it. [12-repository-layout.md](12-repository-layout.md) lists the same libraries 
 | [qlty](https://github.com/qltysh/qlty) as an engine                  | Running the linters                                        | Fair Source license; downloads tools itself                                                                                                                                                                      |
 | [MegaLinter](https://megalinter.io/) as an engine                    | Running the linters                                        | Docker-only; runs everything rather than a curated set                                                                                                                                                           |
 | [linguist-js](https://github.com/Nixinova/LinguistJS)                | Language detection over the tree                           | Fetches Linguist data at run time; gspot uses the `linguist-languages` data package offline instead                                                                                                              |
+
+The lifecycle implementation uses native handle-relative operations through Bun on macOS
+and Linux. Apple's fixed-argument [`__openat` entry](https://github.com/apple-oss-distributions/xnu/blob/main/libsyscall/wrappers/open-base.c)
+avoids the ARM64 variadic calling convention of the public wrapper. Local product tests
+verify staged parent swaps, competing writers, exact bytes and permissions, and interrupted
+replacement recovery. The compiled installed-consumer journey also executes the boundary.
+Linux execution remains deferred. Unsupported native environments refuse mutations; this
+is not a claim of completed Windows lifecycle support. Git integration and external tool
+installation still require their remaining ownership work.

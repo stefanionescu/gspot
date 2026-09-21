@@ -1,3 +1,5 @@
+import type { z } from 'zod';
+import { ciSchema, hooksSchema, runnerSchema } from '#cli/policy/schema.ts';
 // gspot init
 import { Option } from 'commander';
 import type { Command } from 'commander';
@@ -6,8 +8,8 @@ import { initCommand } from '#cli/lifecycle/init/command.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 
-function integrationChoice(flags: Record<string, unknown>, name: string): string | undefined {
-    return flags[name] === false ? 'none' : textFlag(flags, name);
+function integrationChoice<Value extends string>(flags: Record<string, unknown>, name: string, schema: z.ZodType<Value>): Value | 'none' | undefined {
+    return flags[name] === false ? 'none' : schema.optional().parse(textFlag(flags, name));
 }
 
 function optionsFrom(flags: Record<string, unknown>, global: Record<string, unknown>): InitOptions {
@@ -17,9 +19,9 @@ function optionsFrom(flags: Record<string, unknown>, global: Record<string, unkn
         scopes: listFlag(flags, 'scope'),
     };
     const choices = {
-        hooks: integrationChoice(flags, 'hooks') as InitOptions['hooks'],
-        ci: integrationChoice(flags, 'ci') as InitOptions['ci'],
-        runner: integrationChoice(flags, 'runner') as InitOptions['runner'],
+        hooks: integrationChoice(flags, 'hooks', hooksSchema.shape.tool),
+        ci: integrationChoice(flags, 'ci', ciSchema.shape.provider),
+        runner: integrationChoice(flags, 'runner', runnerSchema.shape.tool),
         rules: flags['rules'] === false ? ('no' as const) : undefined,
         format: textFlag(flags, 'format') as InitOptions['format'],
     };
@@ -53,8 +55,8 @@ export function registerInit(program: Command): void {
         .option('--scope <path=presets...>', 'Scopes and their comma-separated presets')
         .option('--no-install', 'Skip the install step and print the command instead')
         .option('--allow-dirty', 'Run although the working tree has uncommitted changes')
-        .addOption(new Option('--hooks <tool>', 'Where hooks go').choices(['gspot', 'lefthook', 'husky']))
-        .addOption(new Option('--ci <provider>', 'Write a CI workflow').choices(['github']))
+        .addOption(new Option('--hooks <tool>', 'Where hooks go').choices(hooksSchema.shape.tool.options))
+        .addOption(new Option('--ci <provider>', 'Write a CI workflow').choices(ciSchema.shape.provider.options))
         .option('--no-hooks', 'Do not install hooks')
         .option('--no-ci', 'Write no CI workflow')
         .option('--no-rules', 'Leave the agent rule files out')
@@ -64,7 +66,7 @@ export function registerInit(program: Command): void {
                 'shipped',
             ]),
         )
-        .addOption(new Option('--runner <tool>', 'The task runner').choices(['mise', 'npm', 'bun', 'pnpm', 'uv']))
+        .addOption(new Option('--runner <tool>', 'The task runner').choices(runnerSchema.shape.tool.options))
         .option('--no-runner', 'Write no task-runner configuration')
         .option('--dry-run', 'Print the plan and write nothing')
         .action(async (flags: Record<string, unknown>, command: Command) => {

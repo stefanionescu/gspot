@@ -10,6 +10,7 @@ dependencies = ["@trpc/server"]
 
 [[checks]]
 name = "trpc/router-boundaries"
+level = "recommended"
 stage = "commit"
 engine = "integrity"
 analysis = "trpc-boundaries"

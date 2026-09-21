@@ -1,0 +1,14 @@
+{
+    "version": "0.1.0",
+    "platform": "darwin arm64",
+    "cache": "disabled",
+    "broken": "if then\n",
+    "corrected": "printf \"%s\\n\" \"Hello\"\n",
+    "init": "reading 1 tracked files\n\nlanguages     bash 1\nrunner        none\nhooks         none\nci            none\npresets\n  structure        required     10 checks\n  bash             named        27 checks\n  naming           recommended  3 checks\n  formatting       recommended  2 checks\n  spelling         recommended  1 check\n\nwrite\n  gspot.toml     your policy, 16 lines\n  .gspot/        generated configuration and version pin\n  .shellcheckrc  stub\n  typos.toml     stub\n\nchange\n  .gitignore           one managed block\n  .gspot/package.json  3 pinned npm tools; matching lockfile\n\nℹ run gspot check to check this repository; gspot doctor checks the setup\nwritten: gspot.toml, .gspot/\nTool dependencies changed. Run: gspot install\ninstall skipped; run: gspot install\ngspot 0.1.0\n",
+    "failed": "root  bash/syntax  fail       1 file      0.0s\n  greet.sh:1  bash/syntax  syntax error near unexpected token `then'\n    help: Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about.\n  greet.sh:1  bash/syntax  `if then'\n    help: Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about.\n  reproduce: gspot check --only bash/syntax\n\nunchecked  7 files (gspot doctor)\n\nfailed: bash/syntax\n",
+    "passed": "root  bash/syntax  ok         1 file      0.0s\n\nunchecked  7 files (gspot doctor)\n\npassed: 1 check\n",
+    "stderr": {
+        "failed": "",
+        "passed": ""
+    }
+}

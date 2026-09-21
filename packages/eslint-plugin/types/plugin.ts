@@ -12,6 +12,7 @@ export type RuleSpec<Options extends readonly unknown[], MessageIds extends stri
 }>;
 
 export type RuleDocs = {
+    level?: 'recommended' | 'all';
     summary: string;
     why: string;
     fix: string;

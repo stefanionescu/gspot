@@ -1,7 +1,7 @@
 // Planted repository for the structure preset: each repository-shape check fires on its planted defect.
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
 import type { FindingCase } from '#tests/types/acceptance.ts';
@@ -11,7 +11,6 @@ const INIT = ['init', '--yes', '--presets', 'bash', '--no-runner', '--no-ci', '-
 const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain() {');
 const KILOBYTE = 1024;
 const OVER_LIMIT_KB = 1100;
-const STALE_BASELINE = '{"check":"gone/check","rule":"all","count":1,"recorded":"2026-01-01","paths":{}}\n';
 
 const CASES: FindingCase[] = [
     {
@@ -35,11 +34,6 @@ const CASES: FindingCase[] = [
         expected: { file: 'helpers/first.sh', rule: 'container-name', line: 1 },
     },
     {
-        check: 'integrity/baselines-current',
-        files: { '.gspot/baselines/gone.check.all.json': STALE_BASELINE },
-        expected: { file: '.gspot/baselines/gone.check.all.json', rule: 'unknown-check', line: 1 },
-    },
-    {
         check: 'integrity/suppressions',
         files: {
             'scripts/quiet.sh': CLEAN.replace(
@@ -47,7 +41,7 @@ const CASES: FindingCase[] = [
                 () => '    # shellcheck disable=SC2086\n    echo "hello $1"',
             ),
         },
-        expected: { file: 'scripts/quiet.sh', rule: 'shellcheck-disable-no-reason', line: 10 },
+        expected: { file: 'scripts/quiet.sh', rule: 'shellcheck-no-reason', line: 10 },
     },
     {
         check: 'integrity/allowlists-match',
@@ -71,10 +65,15 @@ describe('the structure preset', () => {
     test(
         'every repository-shape check passes on a clean repository and fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({ 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(sandbox.path, [...INIT, '--hooks', 'gspot'], environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            const reasons = await run(sandbox.path, ['set', 'require_reasons', 'true'], environment);
+            expect(reasons.code, reasons.stdout + reasons.stderr).toBe(0);
             for (const planted of CASES) {
                 const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check} on the clean repository: ${clean.stdout}`).toBe(0);
@@ -95,7 +94,8 @@ describe('the structure preset', () => {
     test(
         'integrity/tracked-dependencies reports a dependency folder that git tracks',
         async () => {
-            await using sandbox = await createSandbox({ 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/a.sh': CLEAN, 'scripts/b.sh': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(sandbox.path, [...INIT, '--no-hooks'], environment);

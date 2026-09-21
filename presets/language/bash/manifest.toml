@@ -16,6 +16,7 @@ tags = ["shebang:shell"]
 
 [[tools]]
 name = "shellcheck"
+suppression = { marker = "\\bshellcheck +disable=", reason = "# ?reason: (?<reason>\\S.*)" }
 version = "0.11.0"
 mise = "shellcheck"
 brew = "shellcheck"
@@ -52,6 +53,7 @@ stub = {path = ".shellcheckrc", copy = true}
 
 [[checks]]
 name = "bash/syntax"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["bash", "-n", "{file}"]
@@ -64,6 +66,7 @@ help = "Open the file at the line bash names and fix the quoting, bracket, or ke
 
 [[checks]]
 name = "bash/zsh-syntax"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["zsh", "-n", "{file}"]
@@ -76,6 +79,7 @@ help = "Fix the syntax at the line Zsh reports. Install zsh when the command is 
 
 [[checks]]
 name = "bash/bats-syntax"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["bats", "--count", "{file}"]
@@ -88,18 +92,20 @@ help = "Fix the syntax reported by Bats. Install bats-core when the command is m
 
 [[checks]]
 name = "bash/shellcheck"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 claims = {tags = ["bash", "bats"]}
 command = ["shellcheck", "--rcfile", "{config:shellcheckrc}", "--severity=style", "--check-sourced", "--format=gcc", "{files}"]
 coverage = ["style", "security"]
 output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?:note|warning|error|style): (?<message>.*?) \\[(?<rule>SC\\d+)\\]$"}
-summary = "Runs ShellCheck with every rule on, over every shell script, and the files they source."
+summary = "Runs ShellCheck over shell scripts and sourced files, adding opt-in rules at level all."
 why = "ShellCheck catches the quoting, globbing and exit-status mistakes that make shell scripts fail on the one input nobody tested."
 help = "Read the SC code in the finding; gspot explain shellcheck/SC2086 links to its page. Turn one code off with gspot ignore bash/shellcheck --rule SC2086 --reason."
 
 [[checks]]
 name = "bash/shfmt"
+level = "all"
 stage = "commit"
 runs = "per-file-list"
 claims = {tags = ["bash", "bats"]}
@@ -114,6 +120,7 @@ help = "Run gspot check --fix to format every script, or shfmt -w on one file."
 
 [[checks]]
 name = "structure/bash-interpreter"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "bash-interpreter"
@@ -125,6 +132,7 @@ help = "Open with the shebang, a bare #, one line saying what the script does, a
 
 [[checks]]
 name = "structure/doc-comment"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "doc-comment"
@@ -136,6 +144,7 @@ help = "Write \"# name: what it does\" above the function; when it carries doc s
 
 [[checks]]
 name = "structure/duplicate-functions"
+level = "recommended"
 stage = "commit"
 engine = "structure"
 analysis = "duplicate-functions"
@@ -148,6 +157,7 @@ help = "Keep one function and call it from both places."
 
 [[checks]]
 name = "structure/unused-functions"
+level = "recommended"
 stage = "commit"
 engine = "structure"
 analysis = "unused-functions"
@@ -159,6 +169,7 @@ help = "Delete the function, or put `gspot-ignore structure/unused-functions -- 
 
 [[checks]]
 name = "structure/dead-parameters"
+level = "recommended"
 stage = "commit"
 engine = "structure"
 analysis = "dead-parameters"
@@ -170,6 +181,7 @@ help = "Read the argument in the function, or drop it from every call."
 
 [[checks]]
 name = "structure/private-prefix"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "private-prefix"
@@ -181,6 +193,7 @@ help = "Rename the function with a leading underscore, or drop the underscore wh
 
 [[checks]]
 name = "structure/private-before-public"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "private-before-public"
@@ -192,6 +205,7 @@ help = "Move the private functions above the public ones and main to the end."
 
 [[checks]]
 name = "structure/trivial-function"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "trivial-function"
@@ -204,6 +218,7 @@ help = "Inline the body at its one call, or explain the required boundary with `
 
 [[checks]]
 name = "structure/call-through"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "call-through"
@@ -215,6 +230,7 @@ help = "Call the command directly, or allow the function with a reason under str
 
 [[checks]]
 name = "structure/file-length"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "file-length"
@@ -227,6 +243,7 @@ help = "Split the script, or raise limits.bash.file_lines with a reason."
 
 [[checks]]
 name = "structure/function-length"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "function-length"
@@ -239,6 +256,7 @@ help = "Split the function, or raise limits.bash.function_lines with a reason."
 
 [[checks]]
 name = "structure/bash-script-policy"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "bash-script-policy"
@@ -250,6 +268,7 @@ help = "Call the target script directly, delete the alias, and move the Node cod
 
 [[checks]]
 name = "structure/bash-embeds"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "bash-embeds"
@@ -261,6 +280,7 @@ help = "Move the embedded code into its own file and run that."
 
 [[checks]]
 name = "structure/bash-ssh-blocks"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "bash-ssh-blocks"
@@ -272,6 +292,7 @@ help = "Move the block into a named function and write \"# name - what it does\"
 
 [[checks]]
 name = "structure/bash-config-defaults"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "bash-config-defaults"
@@ -283,6 +304,7 @@ help = "Set the default in a configuration owner named under tools.bash.config_o
 
 [[checks]]
 name = "structure/bash-config-guards"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "bash-config-guards"
@@ -294,6 +316,7 @@ help = "Open the owner with [[ -n ${_CFG_NAME_READY:-} ]] && return 0 and then r
 
 [[checks]]
 name = "structure/bash-boundaries"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "bash-boundaries"
@@ -305,6 +328,7 @@ help = "Add a Boundary line to the header comment, annotate every source with # 
 
 [[checks]]
 name = "structure/env-access-owner"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "env-access-owner"
@@ -316,6 +340,7 @@ help = "Read the variable in the owner named under architecture.roles.env and pa
 
 [[checks]]
 name = "structure/bash-branches"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "bash-branches"
@@ -328,6 +353,7 @@ help = "Split the function by branch, or raise limits.bash.function_branches wit
 
 [[checks]]
 name = "structure/bash-nesting"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "bash-nesting"
@@ -340,6 +366,7 @@ help = "Return early or split the inner block into a function, or raise limits.b
 
 [[checks]]
 name = "structure/bash-mutable-assignments"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "bash-mutable-assignments"
@@ -352,6 +379,7 @@ help = "Split the function, or raise limits.bash.mutable_assignments with a reas
 
 [[checks]]
 name = "structure/bash-safety"
+level = "recommended"
 stage = "commit"
 engine = "structure"
 analysis = "bash-safety"

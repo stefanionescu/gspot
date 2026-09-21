@@ -1,28 +1,10 @@
-// One location and one message from one check, and the verdict of one check run.
+// Findings and check results derive from the public report schema.
+import type { z } from 'zod';
+import type { Defined } from '#types/config.ts';
+import type { reportSchema } from '#cli/run/report-schema.ts';
 
-export type Finding = {
-    check: string;
-    engine?: string;
-    file: string;
-    line?: number;
-    column?: number;
-    rule?: string;
-    message: string;
-    help?: string;
-    fixable: boolean;
-};
-
-export type CheckStatus = 'ok' | 'fail' | 'cache' | 'missing' | 'skipped' | 'error';
-
-export type CheckResult = {
-    check: string;
-    scope: string;
-    status: CheckStatus;
-    files: number;
-    duration: number;
+export type Finding = Defined<z.infer<typeof reportSchema.shape.checks.element.shape.findings.element>>;
+export type CheckStatus = z.infer<typeof reportSchema.shape.checks.element.shape.status>;
+export type CheckResult = Defined<Omit<z.infer<typeof reportSchema.shape.checks.element>, 'findings'>> & {
     findings: Finding[];
-    note?: string;
-    reproduce?: string;
-    command?: string[];
-    baselined: number;
 };

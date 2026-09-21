@@ -9,7 +9,8 @@ Every file a language preset claims. The engine dispatches by grammar.
 
 ## Checks
 
-One analysis holds each idea, over a small table of node kinds for each language (D-149). The
+Share proven common operations while preserving language semantics (D-149). No universal
+analysis table or framework is required. The
 manifest of each language lists the idea under an id of its own, so an ignore holds
 one language (D-98). `structure/call-through` reads shell, and the same idea is
 `python/call-through`, `swift/call-through`, and `sql/call-through`. TypeScript and JavaScript

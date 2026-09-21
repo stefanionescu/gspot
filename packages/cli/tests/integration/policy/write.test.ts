@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { appendEntry, appendList, deleteKey, removeEntries, setKey, writePolicy } from '#cli/policy/write.ts';
 
@@ -9,7 +9,8 @@ const text =
 
 describe('writePolicy', () => {
     test('appends an ignore entry and keeps comments and order', async () => {
-        await using sandbox = await createSandbox({ 'gspot.toml': text });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': text });
         const result = writePolicy(
             sandbox.path,
             appendEntry('ignore', {
@@ -27,7 +28,8 @@ describe('writePolicy', () => {
     });
 
     test('sets a nested key, then deletes it and the empty table', async () => {
-        await using sandbox = await createSandbox({ 'gspot.toml': text });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': text });
         writePolicy(sandbox.path, setKey('limits.bash.file_lines', 100));
         expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toContain('[limits.bash]');
         writePolicy(sandbox.path, deleteKey('limits.bash.file_lines'));
@@ -35,7 +37,8 @@ describe('writePolicy', () => {
     });
 
     test('appends to a list without duplicates and removes matching entries', async () => {
-        await using sandbox = await createSandbox({ 'gspot.toml': text });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': text });
         writePolicy(sandbox.path, appendList('naming.banned_terms', ['dispatcher', 'orchestrator']));
         writePolicy(sandbox.path, appendList('naming.banned_terms', ['dispatcher']));
         const written = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
@@ -54,17 +57,20 @@ describe('writePolicy', () => {
     });
 
     test('a dry run writes nothing', async () => {
-        await using sandbox = await createSandbox({ 'gspot.toml': text });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': text });
         const result = writePolicy(sandbox.path, setKey('coverage.strict', true), true);
         expect(result.changed).toBe(true);
         expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(text);
     });
 
     test('a refused reason is caught before the file is written', async () => {
-        await using sandbox = await createSandbox({ 'gspot.toml': text });
+        await using sandbox = await testdir();
+        const required = text.replace('version = 1', 'version = 1\nrequire_reasons = true');
+        await createFileTree(sandbox.path, { 'gspot.toml': required });
         expect(() =>
             writePolicy(sandbox.path, appendEntry('ignore', { check: 'bash/shellcheck', reason: 'TBD' })),
         ).toThrow('needs a reason that says something');
-        expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(text);
+        expect(readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8')).toBe(required);
     });
 });

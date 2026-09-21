@@ -34,8 +34,9 @@ Kind: language. Requires: javascript, structure. Recommends: naming, formatting,
 
 ## The types directory
 
-`[architecture] types_directory` (default `types`, proposed from what exists) turns on
-`gspot/types-placement`:
+`gspot/types-placement` is an opt-in layout preference. The `all` level selects it with
+`[architecture] types_directory` (default `types` for that rule); `recommended` leaves local
+types beside their consumers. Repositories can select the rule explicitly. At `all`:
 
 - No `interface`. Every type alias, and every `as const` object that stands in for an enum,
   lives under the types directory.
@@ -47,7 +48,7 @@ Kind: language. Requires: javascript, structure. Recommends: naming, formatting,
 
 ## Import direction
 
-Four rules from `[architecture] roles`, always on:
+At `all`, four rules read `[architecture] roles`:
 
 - types import only types;
 - runtime never imports tests or support;

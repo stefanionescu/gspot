@@ -1,8 +1,9 @@
-// .gspot/report.json, --json, and the SARIF rendering.
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+// JSON, SARIF, and GitLab Code Quality reports.
 import { join } from 'node:path';
 import type { Finding } from '#types/finding.ts';
-import type { RunReport } from '#types/report.ts';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import type { RunReport, PushReport } from '#types/report.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import { SarifBuilder, SarifResultBuilder, SarifRuleBuilder, SarifRunBuilder } from 'node-sarif-builder';
 
@@ -21,20 +22,65 @@ function locationOf(finding: Finding): { fileUri: string; startLine: number; sta
     };
 }
 
+/** Render located findings using GitLab's Code Quality format. */
+function codeQualityText(report: RunReport | PushReport): string {
+    const reports = 'revisions' in report ? report.revisions.map((revision) => revision.report) : [report];
+    const findings = reports.flatMap((entry) => entry.checks.flatMap((check) => check.findings));
+    const seen = new Set<string>();
+    const entries = findings.flatMap((finding) => {
+        const path = finding.file.replaceAll('\\', '/').replace(/^\.\//u, '');
+        if (path === '' || path.startsWith('/') || /^[a-zA-Z]:/u.test(path) || path.split('/').includes('..'))
+            return [];
+        const check = ruleIdOf(finding);
+        const line = Math.max(1, finding.line ?? 1);
+        const fingerprint = new Bun.CryptoHasher('sha256')
+            .update(JSON.stringify([check, path, line, finding.column ?? 1, finding.message]))
+            .digest('hex');
+        if (seen.has(fingerprint)) return [];
+        seen.add(fingerprint);
+        return [
+            {
+                description: finding.message,
+                check_name: check,
+                fingerprint,
+                severity: 'major',
+                location: { path, lines: { begin: line } },
+            },
+        ];
+    });
+    return `${JSON.stringify(entries, null, JSON_INDENT)}\n`;
+}
+
 /**
- * Writes .gspot/report.json and .gspot/report.sarif.
+ * Write every public report through the lifecycle owner.
  * @param root the repository root
  * @param report the run report
  */
-export function writeReport(root: string, report: RunReport): void {
+export function writeReport(root: string, report: RunReport | PushReport): void {
     const json = `${JSON.stringify(report, null, JSON_INDENT)}\n`;
     const sarif = sarifText(report);
     let path = join(root, '.gspot', 'report.json');
     try {
-        mkdirSync(join(root, '.gspot'), { recursive: true });
-        writeFileSync(path, json);
-        path = join(root, '.gspot', 'report.sarif');
-        writeFileSync(path, sarif);
+        withLifecycleOwner(root, (owner) => {
+            const proposals = (
+                [
+                    ['.gspot/report.json', json],
+                    ['.gspot/report.sarif', sarif],
+                    ['.gspot/report.codequality.json', codeQualityText(report)],
+                ] as const
+            ).map(([destination, content]) =>
+                owner.proposeReplacement(destination, { bytes: Buffer.from(content), mode: 0o600 }, 'runtime'),
+            );
+            const conflict = proposals.find((proposal) => proposal.status === 'preserved');
+            if (conflict !== undefined)
+                throw new Error(
+                    `Preserved edited or unowned report ${conflict.path}. Move it aside to save a new report.`,
+                );
+            for (const proposal of proposals) {
+                path = join(root, proposal.path);
+                owner.applyProposal(proposal);
+            }
+        });
     } catch (error) {
         reportStorageFailure(path, error);
     }
@@ -45,9 +91,20 @@ export function writeReport(root: string, report: RunReport): void {
  * @param report the run report
  * @returns the SARIF JSON text
  */
-export function sarifText(report: RunReport): string {
-    const builder = new SarifBuilder();
+function sarifRun(report: RunReport): SarifRunBuilder {
     const run = new SarifRunBuilder().initSimple({ toolDriverName: 'gspot', toolDriverVersion: report.version });
+    if (report.comparison !== undefined) run.run.properties = { comparison: report.comparison };
+    const errors = report.checks.filter((check) => check.status === 'error' || check.status === 'missing');
+    run.run.invocations = [
+        {
+            executionSuccessful: errors.length === 0,
+            toolExecutionNotifications: errors.map((check) => ({
+                level: 'error',
+                message: { text: `${check.check}: ${check.note ?? check.status}` },
+                properties: { check: check.check, scope: check.scope },
+            })),
+        },
+    ];
     const rules = new Set<string>();
     const findings = report.checks.flatMap((check) => check.findings);
     for (const finding of findings) {
@@ -67,6 +124,34 @@ export function sarifText(report: RunReport): string {
             }),
         );
     }
-    builder.addRun(run);
+    return run;
+}
+
+/** Render each pushed revision as a separate SARIF run, retaining every verdict. */
+export function sarifText(report: RunReport | PushReport): string {
+    const builder = new SarifBuilder();
+    for (const entry of 'revisions' in report ? report.revisions.map((revision) => revision.report) : [report])
+        builder.addRun(sarifRun(entry));
+    if ('revisions' in report && report.canceled !== undefined) {
+        const canceled = new SarifRunBuilder().initSimple({
+            toolDriverName: 'gspot',
+            toolDriverVersion: GSPOT_VERSION,
+        });
+        canceled.run.properties = { canceled: report.canceled };
+        canceled.run.invocations = [
+            {
+                executionSuccessful: false,
+                toolExecutionNotifications: [
+                    {
+                        level: 'error',
+                        message: {
+                            text: `Push checks canceled. References not checked: ${report.canceled.pendingRefs.join(', ') || 'none; inspect canceled checks'}.`,
+                        },
+                    },
+                ],
+            },
+        ];
+        builder.addRun(canceled);
+    }
     return builder.buildSarifJsonString({ indent: true });
 }

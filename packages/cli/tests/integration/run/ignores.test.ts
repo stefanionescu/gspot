@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { mkdirSync, writeFileSync } from 'node:fs';
@@ -8,7 +8,8 @@ import { reportSchema } from '#cli/run/report-schema.ts';
 import { inlineIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
 
 test('inline gspot-ignore comments apply to the next line when alone and the same line otherwise', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'a.sh': 'echo 1\n# gspot-ignore structure/call-through -- The public name is the stable one.\nx() { y; }\nz() { w; } # gspot-ignore structure/call-through\n',
     });
     const inline = inlineIgnores(sandbox.path, 'a.sh');
@@ -18,17 +19,17 @@ test('inline gspot-ignore comments apply to the next line when alone and the sam
     ]);
 });
 
-test('inline ignores apply to Swift engine findings on fresh and cached runs', async () => {
+test('inline ignores apply to Swift findings across repeated runs and changed source', async () => {
     const source = 'func welcome(for name: String) -> String { return greeting(for: name) }\n';
-    await using sandbox = await createSandbox({
-        'gspot.toml': 'version = 1\npresets = ["swift"]\n',
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["swift"]\n',
         'Sources/Welcome.swift': source,
         '.gitignore': '.gspot/\n',
     });
     const options = {
         stage: 'all' as const,
         skips: [],
-        localSkips: [],
         only: ['swift/call-through'],
         fix: false,
         isDryRun: false,
@@ -43,18 +44,18 @@ test('inline ignores apply to Swift engine findings on fresh and cached runs', a
     const allowed = await executeRun(session, options);
     expect(allowed.report.exitCode).toBe(0);
     expect(allowed.report.checks[0]?.findings).toHaveLength(0);
-    const cached = await executeRun(session, options);
-    expect(cached.report.exitCode).toBe(0);
-    expect(cached.report.checks[0]?.duration).toBe(allowed.report.checks[0]?.duration);
-    expect(cached.report.checks[0]?.findings).toHaveLength(0);
+    const repeated = await executeRun(session, options);
+    expect(repeated.report.exitCode).toBe(0);
+    expect(repeated.report.checks[0]?.findings).toHaveLength(0);
     writeFileSync(path, '// gspot-ignore swift/call-through\n' + source);
     const unexplained = await executeRun(await openSession(sandbox.path), options);
-    expect(unexplained.report.exitCode).toBe(1);
-    expect(unexplained.report.checks[0]!.findings[0]!.message).toContain('has no reason');
+    expect(unexplained.report.exitCode).toBe(0);
+    expect(unexplained.report.checks[0]!.findings).toEqual([]);
 });
 
 test('inline engine comments do not suppress external-tool findings', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'a.sh': '# gspot-ignore structure/custom -- Deliberate.\necho "$1"\n',
     });
     const finding = { check: 'structure/custom', file: 'a.sh', line: 2, message: 'External finding', fixable: false };
@@ -62,7 +63,7 @@ test('inline engine comments do not suppress external-tool findings', async () =
 });
 
 test('missing finding paths have no inline ignores but failed reads remain errors', async () => {
-    await using sandbox = await createSandbox({});
+    await using sandbox = await testdir();
     const finding = {
         check: 'structure/custom',
         engine: 'structure',
@@ -82,15 +83,15 @@ test.each(['unused-functions', 'dead-parameters', 'trivial-function', 'doc-comme
         const check = `structure/${analysis}`;
         const calls = analysis === 'unused-functions' ? '' : 'first_action one\nsecond_action two\n';
         const source = `first_action() { printf '%s\\n' ready; }\nsecond_action() { printf '%s\\n' ready; }\n${calls}`;
-        await using sandbox = await createSandbox({
-            'gspot.toml': 'version = 1\npresets = ["bash"]\n',
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["bash"]\n',
             'actions.sh': source,
             '.gitignore': '.gspot/\n',
         });
         const options = {
             stage: 'all' as const,
             skips: [],
-            localSkips: [],
             only: [check],
             fix: false,
             isDryRun: false,

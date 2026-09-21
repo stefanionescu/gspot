@@ -1,7 +1,7 @@
 // Read every embedded manifest, validate it, and refuse the shapes the design forbids.
+import type { z } from 'zod';
 import { parse as parseToml } from 'smol-toml';
 import { compact } from '#cli/policy/normalize.ts';
-import { TOOL_ANALYSES } from '#cli/run/analyses.ts';
 import { configurationName } from '#cli/run/scope-paths.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { manifestSchema, INSTALLER_KEYS } from '#cli/presets/manifest-schema.ts';
@@ -10,6 +10,13 @@ import type { RawCheck, RawManifest, RawTool, CheckSpec, Manifest, ToolPin } fro
 const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
 
 const state: { cache: Map<string, Manifest> | undefined } = { cache: undefined };
+
+function issueLines(issue: z.core.$ZodIssue): string[] {
+    const line = `${issue.path.map(String).join('.')}: ${issue.message}`;
+    return issue.code === 'invalid_union'
+        ? [line, ...issue.errors.flatMap((branch) => branch.flatMap(issueLines))]
+        : [line];
+}
 
 function installerPins(raw: RawTool): ToolPin['installers'] {
     const installers: ToolPin['installers'] = {};
@@ -30,6 +37,7 @@ function toTool(raw: RawTool): ToolPin {
     if (raw.version_command !== undefined) tool.version_command = raw.version_command;
     if (raw.version_exit_code !== undefined) tool.version_exit_code = raw.version_exit_code;
     if (raw.version_regex !== undefined) tool.version_regex = raw.version_regex;
+    if (raw.suppression !== undefined) tool.suppression = raw.suppression;
     if (raw.env !== undefined) tool.env = raw.env;
     return tool;
 }
@@ -53,14 +61,11 @@ function isIdleManual(check: RawCheck): boolean {
     );
 }
 
-function hasNoRunner(check: RawCheck): boolean {
-    const hasAnalysis = check.tool !== undefined && TOOL_ANALYSES[check.analysis ?? ''] !== undefined;
-    return !hasAnalysis && check.command === undefined && check.engine === undefined && check.reported_by === undefined;
-}
-
 function checkProblems(check: RawCheck): string[] {
     const problems: (string | undefined)[] = [
-        hasNoRunner(check) ? `check ${check.name} has neither a command nor an engine.` : undefined,
+        check.reported_by !== undefined && (check.fix_command !== undefined || check.fix_order !== undefined)
+            ? `check ${check.name} is reported by another check and cannot declare a fixer.`
+            : undefined,
         check.fix_command !== undefined && check.fix_order === undefined
             ? `check ${check.name} has a fix_command and no fix_order.`
             : undefined,
@@ -105,13 +110,6 @@ function refusals(raw: RawManifest): string[] {
     return [...raw.checks.flatMap((check) => checkProblems(check)), ...configurationProblems(raw)];
 }
 
-function checkRequires(manifests: Map<string, Manifest>): void {
-    for (const manifest of manifests.values())
-        for (const required of manifest.preset.requires)
-            if (!manifests.has(required))
-                throw new ManifestError(manifest.preset.name, [`it requires \`${required}\`, which does not exist.`]);
-}
-
 /** A manifest that the schema or the design refuses. */
 export class ManifestError extends Error {
     /**
@@ -135,11 +133,7 @@ export function parseManifest(text: string, dir: string): Manifest {
     const parsed = parseToml(text);
     const result = manifestSchema.safeParse(parsed);
     const presetName = result.success ? result.data.preset.name : dir;
-    if (!result.success)
-        throw new ManifestError(
-            presetName,
-            result.error.issues.map((issue) => `${issue.path.map(String).join('.')}: ${issue.message}`),
-        );
+    if (!result.success) throw new ManifestError(presetName, [...new Set(result.error.issues.flatMap(issueLines))]);
     const raw = result.data;
     const problems = refusals(raw);
     if (problems.length > 0) throw new ManifestError(raw.preset.name, problems);
@@ -158,6 +152,48 @@ export function parseManifest(text: string, dir: string): Manifest {
     };
 }
 
+/** Validate required presets, unique checks, and executable reporting and replacement owners before accepting a manifest collection. */
+export function validateManifests(manifests: Map<string, Manifest>): void {
+    const owners = new Map<string, string>();
+    for (const manifest of manifests.values()) {
+        for (const required of manifest.preset.requires)
+            if (!manifests.has(required))
+                throw new ManifestError(manifest.preset.name, [`it requires \`${required}\`, which does not exist.`]);
+        for (const check of manifest.checks) {
+            const previous = owners.get(check.name);
+            if (previous !== undefined)
+                throw new ManifestError(manifest.preset.name, [`check ${check.name} is already owned by ${previous}.`]);
+            owners.set(check.name, manifest.preset.name);
+        }
+    }
+    const checks = new Map(
+        [...manifests.values()].flatMap((manifest) => manifest.checks.map((check) => [check.name, check] as const)),
+    );
+    for (const manifest of manifests.values()) {
+        for (const check of manifest.checks) {
+            for (const field of ['reported_by', 'takes_over'] as const) {
+                const target = check[field];
+                if (target === undefined) continue;
+                const owner = checks.get(target);
+                if (owner === undefined || target === check.name || owner.reported_by !== undefined)
+                    throw new ManifestError(manifest.preset.name, [
+                        `check ${check.name} ${field} must name a different executable check; received ${target}.`,
+                    ]);
+            }
+            const chain = [check.name];
+            let next = check.takes_over;
+            while (next !== undefined) {
+                if (chain.includes(next))
+                    throw new ManifestError(manifest.preset.name, [
+                        `Check replacement cycle: ${[...chain, next].join(' -> ')}.`,
+                    ]);
+                chain.push(next);
+                next = checks.get(next)?.takes_over;
+            }
+        }
+    }
+}
+
 /**
  * Every embedded manifest by preset name. Read once per process.
  * @returns the manifests
@@ -174,9 +210,11 @@ export function presetManifests(): Map<string, Manifest> {
             throw new ManifestError(manifest.preset.name, [
                 `the folder is \`${folder}\` and the name is \`${manifest.preset.name}\`; they must match.`,
             ]);
+        if (manifests.has(manifest.preset.name))
+            throw new ManifestError(manifest.preset.name, ['The preset name is already registered.']);
         manifests.set(manifest.preset.name, manifest);
     }
-    checkRequires(manifests);
+    validateManifests(manifests);
     state.cache = new Map([...manifests].toSorted(([first], [second]) => first.localeCompare(second)));
     return state.cache;
 }

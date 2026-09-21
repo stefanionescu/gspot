@@ -42,10 +42,10 @@ function quotedTableProblem(key: string, item: unknown): string | undefined {
     return isQuoted ? messages.quotedTable(key, text) : undefined;
 }
 
-function listItemProblems(key: string, items: unknown): string[] {
+function listItemProblems(key: string, items: unknown, requireReasons: boolean): string[] {
     if (!Array.isArray(items)) return [];
     return (items as unknown[])
-        .flatMap((item) => [itemReasonProblem(key, item), quotedTableProblem(key, item)])
+        .flatMap((item) => [requireReasons ? itemReasonProblem(key, item) : undefined, quotedTableProblem(key, item)])
         .filter((problem) => problem !== undefined);
 }
 
@@ -67,13 +67,25 @@ function keyProblems(
     table: Partial<Policy>,
     scope: string | undefined,
     key: string,
+    requireReasons: boolean,
 ): string[] {
     const match = specFor(surface, key);
     if (!match) return [unknownKeyProblem(surface, key)];
     const written = policyValue(table, key);
     if (!written) return [];
-    if (match.spec.kind === 'list') return listItemProblems(key, written.value);
+    if (match.spec.kind === 'list') {
+        const problems = listItemProblems(key, written.value, requireReasons);
+        if (requireReasons && match.spec.direction === 'loosening' && Array.isArray(written.value)) {
+            for (const item of written.value as unknown[]) {
+                const record = asRecord(item);
+                if (record !== undefined && record['reason'] === undefined)
+                    problems.push(messages.missingReason(key, `gspot set ${key} <entry> --reason "..."`));
+            }
+        }
+        return problems;
+    }
     const shipped = surface.defaults.get(match.spec.name)?.value;
+    if (!requireReasons) return [];
     if (!isLoosening(match.spec, written.value, shipped) || isReasonAccepted(written.reason)) return [];
     const problem = looseningProblem(key, written, shipped, scope);
     return problem === undefined ? [] : [problem];
@@ -84,9 +96,12 @@ function extraProblems(surface: ExposedSettings, table: Partial<Policy>): string
     const tools = table.tools ?? {};
     for (const [tool, toolTable] of Object.entries(tools)) {
         const extra = toolTable.extra ?? {};
-        for (const key of Object.keys(extra))
-            if (key !== 'reason' && surface.specs.has(`tools.${tool}.${key}`))
+        for (const key of Object.keys(extra)) {
+            if (tool === 'prettier' && key === 'overrides')
+                problems.push('Use [[format.overrides]] for path-specific formatter settings.');
+            else if (key !== 'reason' && surface.specs.has(`tools.${tool}.${key}`))
                 problems.push(messages.extraCoversSlot(tool, key));
+        }
     }
     return problems;
 }
@@ -101,8 +116,13 @@ function mergedSurface(surfaces: ExposedSettings[]): ExposedSettings {
     };
 }
 
-function tableProblems(surface: ExposedSettings, table: Partial<Policy>, scope: string | undefined): string[] {
-    const keys = writtenKeys(table).flatMap((key) => keyProblems(surface, table, scope, key));
+function tableProblems(
+    surface: ExposedSettings,
+    table: Partial<Policy>,
+    scope: string | undefined,
+    requireReasons: boolean,
+): string[] {
+    const keys = writtenKeys(table).flatMap((key) => keyProblems(surface, table, scope, key, requireReasons));
     return [...keys, ...extraProblems(surface, table)];
 }
 
@@ -127,7 +147,8 @@ export function validateAgainstSurface(
         { table: policy },
         ...Object.entries(policy.scopeTables).map(([scope, table]) => ({ table, scope })),
     ];
-    for (const { table, scope } of tables) problems.push(...tableProblems(surfaceFor(scope), table, scope));
+    for (const { table, scope } of tables)
+        problems.push(...tableProblems(surfaceFor(scope), table, scope, policy.requireReasons));
     for (const { group } of policy.naming.remove_groups)
         if (shippedPolicy().groups[group]?.removable === false) problems.push(messages.groupNotRemovable(group));
     return problems;

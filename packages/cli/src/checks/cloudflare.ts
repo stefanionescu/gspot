@@ -1,19 +1,18 @@
 // The files Cloudflare reads by name: the headers file, the redirects file, the wrangler configuration, and the generated environment types.
 import { join } from 'node:path';
-import { run } from '#cli/platform/spawn.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { scopeOf } from '#cli/repository/scopes.ts';
 import { parse as parseToml } from 'smol-toml';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
-import { locateTool } from '#cli/platform/tool-probe.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync, rmSync } from 'node:fs';
+import { scratchCopy } from '#cli/run/scratch-copy.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
 const HEADER_LINE = /^[A-Za-z!][\w!#$%&'*+.^`|~-]*:\s*\S/u;
 const STATUS_CODES = new Set(['200', '301', '302', '303', '307', '308', '404', '410']);
 const COMPATIBILITY_DATE = /^\d{4}-\d{2}-\d{2}$/u;
 const TYPES_FILE = 'cloudflare-env.d.ts';
-const TYPES_TIMEOUT_MS = 300_000;
 const REDIRECT_PARTS = { least: 2, most: 3 };
 
 function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
@@ -23,7 +22,11 @@ function finding(input: EngineInput, file: string, line: number, rule: string, t
 function named(input: EngineInput, name: string): string[] {
     return input.session.repository.files
         .map((file) => file.path)
-        .filter((path) => path === name || path.endsWith(`/${name}`));
+        .filter(
+            (path) =>
+                scopeOf(path, input.session.repository.scopes).path === input.scope &&
+                (path === name || path.endsWith(`/${name}`)),
+        );
 }
 
 function lines(input: EngineInput, path: string): { text: string; number: number }[] {
@@ -67,22 +70,17 @@ function wranglerTable(
     }
 }
 
-// Runs wrangler types over one tracked file, puts the committed text back, and says whether the two differ.
+// Compares a copied types file with the output of wrangler in the same isolated directory.
 async function isTypesFileStale(input: EngineInput, path: string): Promise<boolean> {
     const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
-    const binary = locateTool(join(input.root, folder), 'wrangler') ?? locateTool(input.root, 'wrangler');
-    if (binary === undefined) throw new MissingToolError('The wrangler command is not installed.');
     const full = join(input.root, path);
-    const before = readFileSync(full, 'utf8');
-    const result = await run([binary, 'types', TYPES_FILE], {
+    const before = readFileSync(full);
+    const result = await runCheckCommand(input, ['wrangler', 'types', TYPES_FILE], {
         cwd: join(input.root, folder),
-        timeoutMs: TYPES_TIMEOUT_MS,
     });
-    const after = existsSync(full) ? readFileSync(full, 'utf8') : '';
-    writeFileSync(full, before);
     if (result.code !== 0)
         throw new Error(`The wrangler types command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-    return after !== before;
+    return !before.equals(readFileSync(full));
 }
 
 /**
@@ -184,17 +182,28 @@ export function wranglerFile(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
-    const findings: Finding[] = [];
-    for (const path of named(input, TYPES_FILE))
-        if (await isTypesFileStale(input, path))
-            findings.push(
-                finding(
-                    input,
-                    path,
-                    1,
-                    'stale-types',
-                    'wrangler types writes this file differently. Run it and commit the result.',
-                ),
-            );
-    return findings;
+    const paths = named(input, TYPES_FILE);
+    if (paths.length === 0) return [];
+    const scratch = scratchCopy(
+        input.session,
+        input.session.repository.files.map((file) => file.path),
+    );
+    const isolated = { ...input, root: scratch, session: { ...input.session, root: scratch } };
+    try {
+        const findings: Finding[] = [];
+        for (const path of paths)
+            if (await isTypesFileStale(isolated, path))
+                findings.push(
+                    finding(
+                        input,
+                        path,
+                        1,
+                        'stale-types',
+                        'wrangler types writes this file differently. Run it and commit the result.',
+                    ),
+                );
+        return findings;
+    } finally {
+        rmSync(scratch, { recursive: true, force: true });
+    }
 }

@@ -1,8 +1,0 @@
-{
-    "name": "@gspot/testing",
-    "description": "Isolated filesystem inputs and cleanup for the gspot test suites.",
-    "version": "0.1.0",
-    "private": true,
-    "type": "module",
-    "exports": "./sandbox.ts"
-}

@@ -1,6 +1,6 @@
 // gspot set with a table for a value: the TOML form is read, text that reads as nothing is refused, and a quoted table in the policy is refused at load.
 import { join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
@@ -23,7 +23,8 @@ describe('gspot set', () => {
     test(
         'a list of tables typed the TOML way lands in the policy as tables',
         async () => {
-            await using sandbox = await createSandbox({ 'README.md': '# planted\n', LICENSE: 'MIT\n' });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'README.md': '# planted\n', LICENSE: 'MIT\n' });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec']) };
             await install(sandbox.path, INIT, environment);

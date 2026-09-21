@@ -20,7 +20,8 @@ floor = "0.9.0"
 mise = "taplo"
 brew = "taplo"
 cargo = "taplo-cli"
-npm = {name = "@taplo/cli", version = "0.7.0"}
+# The npm WASM entry exits 1 after successfully printing its native version.
+npm = {name = "@taplo/cli", version = "0.7.0", version_exit_code = 1}
 github = {name = "tamasfe/taplo", version = "0.10.0"}
 
 [[tools]]
@@ -91,6 +92,7 @@ target = ".gspot/v8r.yml"
 
 [[checks]]
 name = "config-files/json"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 reported_by = "formatting/prettier"
@@ -102,6 +104,7 @@ help = "Run gspot check --fix, or fix the syntax error Prettier names."
 
 [[checks]]
 name = "config-files/toml"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["taplo", "check", "--config", "{config:taplo}", "--colors", "never", "--no-schema", "{files}"]
@@ -114,6 +117,7 @@ help = "Fix the line taplo names."
 
 [[checks]]
 name = "config-files/toml-format"
+level = "all"
 stage = "commit"
 runs = "per-file-list"
 command = ["taplo", "fmt", "--config", "{config:taplo}", "--colors", "never", "--check", "--diff", "{files}"]
@@ -128,6 +132,7 @@ help = "Run gspot check --fix."
 
 [[checks]]
 name = "config-files/yaml"
+level = "all"
 stage = "commit"
 runs = "per-file-list"
 command = ["yamllint", "-c", "{config:yamllint}", "-f", "parsable", "-s", "{files}"]
@@ -140,6 +145,7 @@ help = "Fix the line yamllint names, or set the rule's options with gspot set to
 
 [[checks]]
 name = "config-files/schema"
+level = "recommended"
 stage = "push"
 runs = "per-file-list"
 requires = "network"
@@ -154,6 +160,7 @@ help = "Fix the key v8r names, or map the file to its schema under tools.v8r.sch
 
 [[checks]]
 name = "config-files/actions"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["actionlint", "-no-color", "{files}"]
@@ -166,6 +173,7 @@ help = "Fix the line actionlint names."
 
 [[checks]]
 name = "config-files/actions-pins"
+level = "recommended"
 stage = "push"
 runs = "per-file-list"
 requires = "network"
@@ -179,6 +187,7 @@ help = "Replace the invalid action pin with a verified commit and its matching v
 
 [[checks]]
 name = "config-files/actions-security"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["zizmor", "--offline", "--no-progress", "--format", "github", "{files}"]
@@ -191,6 +200,7 @@ help = "Apply the fix zizmor names, or turn one audit off with gspot ignore conf
 
 [[checks]]
 name = "config-files/dotenv"
+level = "all"
 stage = "commit"
 runs = "per-file-list"
 command = ["dotenv-linter", "check", "--plain", "--skip-updates", "{files}"]
@@ -205,6 +215,7 @@ help = "Run gspot check --fix, or fix the line dotenv-linter names."
 
 [[checks]]
 name = "config-files/env-example"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"
@@ -216,6 +227,7 @@ help = "Add the key to the template (.env.example or the files under tools.doten
 
 [[checks]]
 name = "config-files/plist"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 platform = ["macos"]
@@ -229,6 +241,7 @@ help = "Fix the element plutil names."
 
 [[checks]]
 name = "config-files/xml"
+level = "recommended"
 stage = "commit"
 runs = "per-file-list"
 command = ["xmllint", "--noout", "{files}"]

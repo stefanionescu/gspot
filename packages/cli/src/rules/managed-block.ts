@@ -1,3 +1,5 @@
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 // The index block for the agent instruction files.
 import type { Session } from '#types/run.ts';
 import type { RuleFile } from '#types/rules.ts';
@@ -22,7 +24,7 @@ const MIN_COLUMN = 3;
 const TITLED_LAYERS = new Set(['language', 'framework', 'library', 'tool', 'platform', 'database', 'runtime']);
 
 const CHECKS_INSTALLED =
-    'Run `gspot check --staged` before committing. Change policy with `gspot set`, `gspot allow` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`.';
+    'Run `gspot check --staged` before committing. Change policy with `gspot set` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`.';
 const RULES_ALONE =
     'These files are installed copies. Change `[rules]` in `gspot.toml` and run `gspot apply`, and never edit files under the rules directory.';
 
@@ -77,4 +79,18 @@ export function managedBlock(session: Session): string {
     const hasChecks = session.scopes.some((scope) => scope.selected.some((manifest) => manifest.checks.length > 0));
     const closing = hasChecks ? CHECKS_INSTALLED : RULES_ALONE;
     return ['# Engineering Guidelines', '', ...index, closing].join('\n');
+}
+
+/**
+ * Select configured agent files and conventional integrations present in the repository.
+ * @param root the repository root
+ * @param configured additional instruction files selected by policy
+ * @returns deduplicated repository-relative destinations
+ */
+export function agentFiles(root: string, configured: string[] = []): string[] {
+    const detected = ['CLAUDE.md', 'GEMINI.md', '.github/copilot-instructions.md'].filter((path) =>
+        existsSync(join(root, path)),
+    );
+    if (existsSync(join(root, '.cursor'))) detected.push('.cursor/rules/gspot.mdc');
+    return [...new Set(['AGENTS.md', ...detected, ...configured])];
 }

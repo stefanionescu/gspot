@@ -17,8 +17,9 @@ filenames = ["tsconfig.json", "tsconfig.*.json"]
 
 [[tools]]
 name = "tsc"
-version = "5.9.3"
-npm = "typescript"
+suppression = { marker = "@ts-(?:ignore|expect-error)\\b", reason = "@ts-(?:ignore|expect-error):?\\s+(?<reason>\\S.*)" }
+provider = "host"
+version_command = ["--version"]
 
 [[tools]]
 name = "typescript-eslint"
@@ -39,13 +40,13 @@ target = ".gspot/eslint.config.mjs"
 fragment = true
 
 [[configs]]
-template = "tsconfig.base.json.tmpl"
-target = ".gspot/tsconfig.base.json"
-stub = {path = "tsconfig.json", merge = {extends = "{target}"}}
+template = "tsconfig.check.json.tmpl"
+target = ".gspot/tsconfig.check.json"
 per_scope = true
 
 [[checks]]
 name = "typescript/tsc"
+level = "recommended"
 stage = "commit"
 runs = "per-scope"
 cwd = "scope"
@@ -59,12 +60,10 @@ help = "Read the first error tsc prints and fix that file; later errors are ofte
 
 [[checks]]
 name = "typescript/eslint"
+level = "all"
 stage = "commit"
 runs = "per-file-list"
-command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{suppressions}", "--format", "json", "{files}"]
-baseline_file = ".gspot/baselines/eslint.json"
-baseline_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--suppress-all", "--suppressions-location", "{baseline}", "{files}"]
-prune_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--prune-suppressions", "--suppressions-location", "{baseline}", "{files}"]
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
 claims = {extensions = [".ts", ".tsx", ".mts", ".cts"]}
@@ -77,27 +76,14 @@ help = "Run gspot check --fix for the rules that fix themselves, then read each 
 
 [[checks]]
 name = "integrity/tsconfig-options"
+level = "all"
 stage = "commit"
 engine = "integrity"
 analysis = "tsconfig-options"
 coverage = ["types"]
 summary = "Checks that every tsconfig still turns on the strict options the preset requires."
 why = "One tsconfig that drops strict lets untyped code back in for that whole scope."
-help = "Keep extends pointing at `.gspot/tsconfig.base.json` and do not override the strict options; run gspot apply to restore the stub."
-
-[[settings]]
-name = "tools.typescript.types"
-kind = "list"
-direction = "neutral"
-default = []
-summary = "The type packages every tsconfig loads, like bun, or node."
-
-[[settings]]
-name = "tools.typescript.paths"
-kind = "table"
-direction = "neutral"
-default = {}
-summary = "The path aliases every tsconfig gets, in tsconfig paths form; read from the existing tsconfig at init."
+help = "Enable the reported compiler option in the authored TypeScript configuration."
 
 [coverage]
 ".ts" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]

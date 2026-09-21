@@ -1,12 +1,1 @@
-{
-    "tabWidth": <%= format.indent_width %>,
-    "useTabs": <%= format.indent_style === 'tab' %>,
-    "printWidth": <%= format.print_width %>,
-    "singleQuote": <%= format.quotes === 'single' %>,
-    "trailingComma": "<%= format.trailing_comma %>",
-    "semi": <%= format.semicolons %>,
-    "endOfLine": "<%= format.line_ending %>",
-    "arrowParens": "always",
-    "embeddedLanguageFormatting": "off"<% const extras = extra('prettier'); if (extras) { for (const [key, value] of Object.entries(extras)) { if (key !== 'reason') { %>,
-    <%= json(key, 0) %>: <%= json(value) %><% } } } %>
-}
+<%= json(prettierConfig(targetPath)) %>

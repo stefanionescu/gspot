@@ -57,6 +57,7 @@ export function registerCheck(program: Command): void {
         .argument('[paths...]')
         .description('Run checks over the selected files and folders and print findings')
         .option('--only <checks...>', 'Run the named checks')
+        .addOption(new Option('--push', 'Read Git pre-push object updates from stdin').hideHelp())
         .option('--staged', 'The commit stage over staged files, as the pre-commit hook runs it')
         .option(
             '--changed [ref]',
@@ -70,6 +71,55 @@ export function registerCheck(program: Command): void {
         .option('--no-cache', 'Run every check even when its inputs are unchanged')
         .action(async (paths: string[], flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
-            await printCommand(() => checkCommand(optionsFrom(paths, flags, global)), global);
+            const options = optionsFrom(paths, flags, global);
+            const controller = new AbortController();
+            const cancel = (): void => controller.abort();
+            process.on('SIGINT', cancel);
+            process.on('SIGTERM', cancel);
+            try {
+                await printCommand(async () => {
+                    try {
+                        if (flags['push'] === true) {
+                            if (paths.length !== 0 && paths.length !== 2)
+                                throw new InvalidArgumentError(
+                                    'Pre-push expects the remote name and URL supplied by Git.',
+                                );
+                            const reader = Bun.stdin.stream().getReader();
+                            const stopReading = (): void => {
+                                void reader.cancel();
+                            };
+                            controller.signal.addEventListener('abort', stopReading, { once: true });
+                            const decoder = new TextDecoder('utf-8', { fatal: true });
+                            let input = '';
+                            try {
+                                controller.signal.throwIfAborted();
+                                while (true) {
+                                    const chunk = await reader.read();
+                                    controller.signal.throwIfAborted();
+                                    if (chunk.done) break;
+                                    input += decoder.decode(chunk.value, { stream: true });
+                                }
+                                input += decoder.decode();
+                            } finally {
+                                controller.signal.removeEventListener('abort', stopReading);
+                                reader.releaseLock();
+                            }
+                            options.paths = [];
+                            options.push = { input, ...(paths[0] === undefined ? {} : { remote: paths[0] }) };
+                        }
+                        return await checkCommand(options, controller.signal);
+                    } catch (error) {
+                        if (!controller.signal.aborted) throw error;
+                        return {
+                            text: 'Check canceled before all selected content was checked.\n',
+                            json: { error: 'canceled', exitCode: 1 },
+                            exitCode: 1,
+                        };
+                    }
+                }, global);
+            } finally {
+                process.removeListener('SIGINT', cancel);
+                process.removeListener('SIGTERM', cancel);
+            }
         });
 }

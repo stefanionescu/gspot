@@ -1,12 +1,11 @@
 // Which selected preset claims which file, per scope.
 import picomatch from 'picomatch';
 import { sourcePresets } from '#cli/presets/select.ts';
-import type { TrackedFile } from '#types/repository.ts';
+import type { PathExpressions, TrackedFile } from '#types/repository.ts';
 import type { Claims, Manifest } from '#types/manifest.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 
 const GLOB_CHARS = /[*?{]/u;
-const isNoMatch = (): boolean => false;
 
 const matcherCache = new Map<string, (path: string) => boolean>();
 
@@ -27,16 +26,29 @@ function isFilenameClaimed(claims: Claims, base: string): boolean {
  * @returns the matcher
  */
 export function pathMatcher(patterns: string[]): (path: string) => boolean {
-    const key = patterns.join('\n');
+    const key = JSON.stringify(patterns);
     const cached = matcherCache.get(key);
     if (cached) return cached;
-    const includes = patterns.filter((pattern) => !pattern.startsWith('!'));
-    const excludes = patterns.filter((pattern) => pattern.startsWith('!')).map((pattern) => pattern.slice(1));
-    const isIncluded = includes.length > 0 ? picomatch(includes, { dot: true }) : isNoMatch;
-    const isExcluded = excludes.length > 0 ? picomatch(excludes, { dot: true }) : isNoMatch;
-    const isMatch = (path: string): boolean => isIncluded(path) && !isExcluded(path);
+    const expressions = pathExpressions(patterns);
+    const includes = expressions.includes.map((source) => new RegExp(source));
+    const excludes = expressions.excludes.map((source) => new RegExp(source));
+    const isMatch = (path: string): boolean =>
+        includes.some((pattern) => pattern.test(path)) && !excludes.some((pattern) => pattern.test(path));
     matcherCache.set(key, isMatch);
     return isMatch;
+}
+
+/** Compile the same directory, inclusion, and exclusion selectors for CLI and generated tool configurations. */
+export function pathExpressions(patterns: string[]): PathExpressions {
+    const expanded = expandedPaths(patterns);
+    return {
+        includes: expanded
+            .filter((pattern) => !pattern.startsWith('!'))
+            .map((pattern) => picomatch.makeRe(pattern, { dot: true }).source),
+        excludes: expanded
+            .filter((pattern) => pattern.startsWith('!'))
+            .map((pattern) => picomatch.makeRe(pattern.slice(1), { dot: true }).source),
+    };
 }
 
 /**
@@ -112,5 +124,13 @@ export function claimants(file: TrackedFile, selected: Manifest[]): Manifest[] {
     return selected.filter((manifest) => {
         if (manifest.claims.from_languages) return languages.some((language) => isClaimed(language.claims, file));
         return isClaimed(manifest.claims, file);
+    });
+}
+
+/** Expand literal directory selectors while retaining their inclusion or exclusion polarity. */
+export function expandedPaths(patterns: string[]): string[] {
+    return patterns.flatMap((pattern) => {
+        const bare = pattern.startsWith('!') ? pattern.slice(1) : pattern;
+        return picomatch.scan(bare).isGlob ? [pattern] : [pattern, `${pattern.replace(/\/$/u, '')}/**`];
     });
 }

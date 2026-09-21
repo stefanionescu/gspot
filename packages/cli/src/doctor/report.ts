@@ -1,3 +1,4 @@
+import { hookStatus } from '#cli/lifecycle/hooks.ts';
 // What doctor prints, as data and as text.
 import type { Session } from '#types/run.ts';
 import type { Painter } from '#types/output.ts';
@@ -24,11 +25,6 @@ const CHANGE_SECTIONS: { key: ChangeKey; title: string }[] = [
     { key: 'configurationNotOwned', title: 'configuration not owned' },
     { key: 'changedOutsideGspot', title: 'changed outside gspot' },
 ];
-
-function hooksLine(tool: string | undefined): string {
-    if (tool === undefined) return 'none';
-    return `${tool === 'gspot' ? '.gspot/hooks' : tool}  installed`;
-}
 
 function stateLabel(tool: ToolProbe, colors: Painter): string {
     const { red, green, dim } = colors;
@@ -149,8 +145,13 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
         tools,
         coverage: coverageReport(session),
         changes: changeReport(session),
-        hooks: hooksLine(policy.hooks?.tool),
-        ci: policy.ci?.provider === 'github' ? '.github/workflows/gspot.yml' : 'none',
+        hooks: hookStatus(session),
+        ci:
+            policy.ci === undefined
+                ? 'none'
+                : policy.ci.provider === 'github'
+                  ? '.github/workflows/gspot.yml'
+                  : '.gitlab/ci/gspot.yml (include from .gitlab-ci.yml)',
         rules: { files: policy.rules.install ? selectRuleFiles(session).length : 0 },
         version: {
             running: session.version,

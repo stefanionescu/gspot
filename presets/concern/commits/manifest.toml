@@ -22,6 +22,7 @@ stub = {path = ".commitlintrc.json", body = "{\n    \"extends\": [\"./.gspot/com
 
 [[checks]]
 name = "commits/commitlint"
+level = "all"
 stage = "message"
 runs = "per-file-list"
 command = ["commitlint", "--config", "{config:commitlint}", "--edit", "{message_file}"]
@@ -33,12 +34,14 @@ help = "Write <type>(<scope>): <subject>, with a type from the list and a subjec
 
 [[checks]]
 name = "commits/range"
+level = "all"
 stage = "push"
 runs = "per-scope"
-command = ["commitlint", "--config", "{config:commitlint}", "--from", "{merge_base}", "--to", "HEAD"]
+tool = "commitlint"
+analysis = "commit-messages"
 output = {format = "regex", pattern = "^\\s*[✖⚠]\\s+(?<message>.*?)\\s+\\[(?<rule>[a-z-]+)\\]\\s*$"}
 coverage = []
-summary = "Checks every commit message about to be pushed, from the merge base with the upstream branch to HEAD."
+summary = "Checks messages in the supplied pushed commit sets, or the local range from the upstream merge base to HEAD."
 why = "A message written past the hook (--no-verify, a rebase, a merge) still reaches the shared branch unless the push checks it."
 help = "Reword the commits that fail with git rebase -i, or change the rule with gspot set tools.commitlint.rules."
 

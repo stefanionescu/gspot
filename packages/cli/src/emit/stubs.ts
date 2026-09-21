@@ -21,7 +21,7 @@ function fillTarget(value: unknown, stubPath: string, targetPath: string): unkno
  * @param targetPath the generated file's path
  * @returns the path starting with ./ or ../
  */
-export function relativeTarget(stubPath: string, targetPath: string): string {
+function relativeTarget(stubPath: string, targetPath: string): string {
     const rel = toPosix(relative(dirname(stubPath) === '.' ? '' : dirname(stubPath), targetPath));
     return rel.startsWith('./') || rel.startsWith('../') ? rel : `./${rel}`;
 }

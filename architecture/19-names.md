@@ -2,8 +2,8 @@
 
 This document decides how gspot names things (D-92). One word carries one meaning in the code,
 the setting names, the manifest keys, the flags, and the folders. The glossary in
-[README.md](README.md) holds the words and their one meaning. A row below leaves this document
-in the commit that applies it.
+[README.md](README.md) holds the words and their one meaning. Historical migration proposals below do not require cosmetic renames. Current work belongs
+to its owning entry in [22-remaining.md](22-remaining.md).
 
 ## Names across the public contract
 
@@ -65,8 +65,8 @@ Existing source names such as `emit` need no reverse rename.
     | the option of a tool, under its name | the tool's word      | `tools.knip.ignore`, `tools.typos.exclude`, `tools.linkinator.skip`, `tools.lychee.exclude_paths`                  | stays                                                                                              |
 
     A preset name, a check name, and a command flag are kebab-case. A field of the JSON output is
-    camelCase, as JSON from a JavaScript tool is. A test reads every manifest and refuses a
-    setting whose last word is outside this table.
+    camelCase, as JSON from a JavaScript tool is. Validate setting names through their public schema and usage; suffix inventories do not
+    establish that a setting works.
 
 - A check name is `<family>/<name>`, and [04-presets.md](04-presets.md) says what the family is.
 
@@ -75,24 +75,22 @@ Existing source names such as `emit` need no reverse rename.
 - A name that a library fixes keeps the form the library asks for. The style folder Vale loads
   is one.
 
-## Still to apply
+## Historical migration vocabulary
 
 | Today                                                                          | Where a person meets it                           | Becomes                                                                                                            |
 | ------------------------------------------------------------------------------ | ------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------ |
 | `[runner] surface`, `--runner <surface>`, "runner surface"                     | `gspot.toml`, `init --help`, the guide on mise    | `[runner] tool`, the shape of `[hooks] tool`. The word leaves the code too, where it also means exposed settings   |
-| run record, `.gspot/last.json`, `run-record.schema.json`                       | `.gspot/`, the manual, `check --json`             | report: `.gspot/report.json`, `report.schema.json`                                                                 |
+| run record, `.gspot/last.json`, `run-record.schema.json`                       | `.gspot/`, the manual, `check --json`             | report: `.gspot/report.json`                                                                                       |
 | `layer:` in rule files, "the project rule layer"                               | every installed rule file, `--help` of 3 commands | the key is deleted, because the folder says it, and the value differs from the folder today. "your own rule files" |
 | `[inspection] strict`, "inspection"                                            | every `gspot.toml`                                | `[coverage] strict`                                                                                                |
 | `[[declare]]`, `produced_by`, `gspot declare`                                  | `gspot.toml`, the command list                    | `[[generated]]`, `[[vendored]]`, and `gspot set generated` (D-131)                                                 |
 | policy                                                                         | 40 places in help, output and guides              | config, in text a person reads. The file stays `gspot.toml`                                                        |
 | nature, concern, engine, takeover, exposed settings                            | `doctor` output, `why` output, two guides         | a plain phrase each: "kind of file", "applies to every language", "built-in check", "replacing your old setup"     |
 | "Re-render", "idempotent"                                                      | `apply --help`, `upgrade --help`, the mise task   | "Write the generated files again. Safe to run twice."                                                              |
-| `render`, `RenderedSet`, `isRenderedHere`, `synced`                            | the code, more than 100 places (K-54)             | `emit`, `EmittedSet`, `isEmittedHere`, `applied`                                                                   |
 | `src/apple/`, `src/pyproject/`, `tests/repositories/pyproject/`                | the code                                          | `checks/swift/`, `checks/python/`, `tests/repositories/python/` (D-128, D-146)                                     |
 | `packages/cli/rules-lint`, `#rules-lint/*`                                     | the code (K-61)                                   | `packages/cli/src/rules/`, `#cli/rules/*`                                                                          |
 | `--at`, `upgrade --check`, `--ci none`, `--keep-format`, `--project-templates` | `--help` of four commands                         | `--stage`, `--dry-run`, `--no-ci`, `--format keep` ([02-cli.md](02-cli.md))                                        |
 | `hooks.tool = "shared"`                                                        | the stash `hooks-existing`                        | `existing` (D-101)                                                                                                 |
-| `repository-check.test.ts`, `scope-languages.test.ts`                          | `tests/repositories/`                             | `declared-check.test.ts`, `scope-presets.test.ts` (D-113)                                                          |
 
 preset, check, finding, ignore, scope, stage and profile stay: other tools use them
 the same way.

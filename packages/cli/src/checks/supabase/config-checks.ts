@@ -1,3 +1,4 @@
+import { join, posix } from 'node:path';
 import type { EngineInput } from '#types/run.ts';
 // The checks that read supabase/config.toml: it parses, its functions exist, its buckets have policies, and migrations are named as the CLI names them.
 import type { Finding } from '#types/finding.ts';
@@ -5,24 +6,23 @@ import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { MIGRATION_NAME, SUPABASE_CONFIG } from '#config/supabase.ts';
 import { functionFolders, readProject, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
-const AT_CONFIG = { file: SUPABASE_CONFIG, line: 1 };
-
 /**
  * The project file parses, and every function it configures has a folder.
  * @param input the engine input
  * @returns the findings
  */
 export function projectValid(input: EngineInput): Promise<Finding[]> {
-    const config = readProject(input.root);
+    const config = readProject(join(input.root, input.scope));
+    const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
     if (config === undefined) return Promise.resolve([]);
-    if (typeof config === 'string') return Promise.resolve([supabaseFinding(input, AT_CONFIG, 'parse', config)]);
+    if (typeof config === 'string') return Promise.resolve([supabaseFinding(input, at, 'parse', config)]);
     const folders = new Set(functionFolders(input).map((folder) => folder.slice(folder.lastIndexOf('/') + 1)));
     const missing = Object.keys(config.functions ?? {}).filter((name) => !folders.has(name));
     return Promise.resolve(
         missing.map((name) =>
             supabaseFinding(
                 input,
-                AT_CONFIG,
+                at,
                 'function',
                 `[functions.${name}] configures a function that has no folder with an index file.`,
             ),
@@ -36,8 +36,10 @@ export function projectValid(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function storagePolicies(input: EngineInput): Promise<Finding[]> {
-    const config = readProject(input.root);
-    if (config === undefined || typeof config === 'string') return [];
+    const config = readProject(join(input.root, input.scope));
+    const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
+    if (config === undefined) return [];
+    if (typeof config === 'string') throw new Error(`Cannot inspect storage policies: ${config}`);
     const migrations = await migrationsOf(input);
     const policed = migrations
         .map((migration) => migration.text)
@@ -47,7 +49,7 @@ export async function storagePolicies(input: EngineInput): Promise<Finding[]> {
         .map((bucket) =>
             supabaseFinding(
                 input,
-                AT_CONFIG,
+                at,
                 'bucket-policy',
                 `The bucket ${bucket} has no policy on storage.objects in any migration.`,
             ),

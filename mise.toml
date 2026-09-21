@@ -1,3 +1,5 @@
+min_version = "2026.8.8"
+
 [settings.npm]
 package_manager = "npm"
 
@@ -5,7 +7,6 @@ package_manager = "npm"
 bats = "1.14.0"
 bun = "1.3.11"
 node = "24.20.0"
-uv = "0.12.13"
 deno = "2.6.6"
 hadolint = "2.14.0"
 trivy = "0.69.3"
@@ -25,13 +26,23 @@ swiftformat = {version = "0.61.1", no_app = true, rename_exe = "swiftformat"}
 periphery = {version = "3.6.0", os = ["macos"]}
 "github:sbdchd/squawk" = "2.64.0"
 
-[env]
-GSPOT_BIN = "bun {{config_root}}/packages/cli/src/main.ts"
-
-[tasks."gspot:setup"]
-description = "Install repository dependencies and prepare gspot"
-run = ["mise install", "bun install --frozen-lockfile", "bun packages/eslint-plugin/build.ts", "bun packages/cli/src/main.ts apply"]
-
+# Source-checkout overrides of the generated installed-CLI tasks.
 [tasks."gspot:check"]
-description = "Run gspot from repository source"
+alias = "check"
+description = "Run repository checks from gspot source."
 run = "bun packages/cli/src/main.ts check"
+
+[tasks."gspot:fix"]
+alias = "check:fix"
+description = "Apply corrections using gspot source."
+run = "bun packages/cli/src/main.ts check --fix"
+
+[tasks."gspot:apply"]
+alias = "apply"
+description = "Generate repository configuration using gspot source."
+run = "bun packages/cli/src/main.ts apply"
+
+[tasks."gspot:doctor"]
+alias = "doctor"
+description = "Diagnose the repository using gspot source."
+run = "bun packages/cli/src/main.ts doctor"

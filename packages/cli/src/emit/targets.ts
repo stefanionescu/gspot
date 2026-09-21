@@ -1,24 +1,28 @@
+import { toolEnvironment } from '#cli/emit/tool-environment.ts';
+import { toolPackages } from '#cli/emit/tool-packages.ts';
+import { retainedConfigurationPaths } from '#cli/emit/retained-config.ts';
+import type { FileSnapshot } from '#types/lifecycle.ts';
+import { mutationTarget } from '#cli/lifecycle/confined.ts';
 import { join } from 'node:path';
 import { styleFiles } from '#cli/prose/vale.ts';
 import type { MergedView } from '#types/config.ts';
 import { existsSync, readFileSync } from 'node:fs';
 // Every generated file for the selection: path, template, stub; the managed blocks and the merge stubs beside them.
-import { hasEveryPin } from '#cli/emit/kept-pins.ts';
-import { workflowFile } from '#cli/emit/workflow.ts';
+import { workflowFile, gitlabFile } from '#cli/emit/workflow.ts';
 import { assembleRules } from '#cli/rules/assemble.ts';
 import { everyManifest } from '#cli/presets/select.ts';
 import { GENERATED_JSON_KEY } from '#config/markers.ts';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { bodyStub, mergeStub } from '#cli/emit/stubs.ts';
-import { managedBlock } from '#cli/rules/managed-block.ts';
+import { agentFiles, managedBlock } from '#cli/rules/managed-block.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
-import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
+import { applyBlock, gitignoreBlock } from '#cli/emit/managed-blocks.ts';
 import { binaryPath, readAsset } from '#cli/platform/assets.ts';
 import type { ConfigurationTarget, Manifest } from '#types/manifest.ts';
-import { gspotHooks, huskyLines, lefthookBlock } from '#cli/emit/hooks.ts';
-import { miseTasks, npmPins, npmScripts } from '#cli/emit/runner-tasks.ts';
+import { huskyLines, lefthookBlock } from '#cli/emit/hooks.ts';
+import { miseTasks, npmScripts } from '#cli/emit/runner-tasks.ts';
 import { emitTarget, templateText, templateInputs } from '#cli/emit/templates.ts';
-import type { EmitContext, GeneratedFile, PackageContent, PackageOutput, RenderedSet } from '#types/emit.ts';
+import type { EmitContext, GeneratedFile, PackageContent, PackageOutput, GeneratedProposal } from '#types/emit.ts';
 
 const JSON_INDENT = 4;
 const NPM_RUNNERS = new Set(['bun', 'npm', 'pnpm']);
@@ -53,7 +57,7 @@ function fragmentsFor(session: Session, selection: ScopeSelection, owner: Config
         .join('\n');
 }
 
-function stubFor(context: EmitContext, config: ConfigurationTarget, file: GeneratedFile, out: RenderedSet): void {
+function stubFor(context: EmitContext, config: ConfigurationTarget, file: GeneratedFile, out: GeneratedProposal): void {
     const { session, selection, manifest } = context;
     const { stub } = config;
     if (!stub) return;
@@ -87,7 +91,7 @@ function configurationFiles(
     session: Session,
     selection: ScopeSelection,
     manifest: Manifest,
-    out: RenderedSet,
+    out: GeneratedProposal,
     seen: Set<string>,
 ): void {
     for (const config of manifest.configs) {
@@ -108,12 +112,11 @@ function configurationFiles(
     }
 }
 
-function hookOutputs(session: Session, out: RenderedSet, binary: string | undefined): void {
+function hookOutputs(session: Session, out: GeneratedProposal, binary: string | undefined): void {
     const { policy } = session.policyFiles;
     const runner = policy.runner?.tool;
     switch (policy.hooks?.tool) {
         case 'gspot': {
-            out.files.push(...gspotHooks(runner, binary));
             break;
         }
         case 'husky': {
@@ -136,29 +139,31 @@ function hookOutputs(session: Session, out: RenderedSet, binary: string | undefi
     }
 }
 
-function runnerOutputs(session: Session, out: RenderedSet): void {
+function runnerOutputs(session: Session, out: GeneratedProposal): void {
     const runner = session.policyFiles.policy.runner?.tool;
     if (runner === undefined) return;
     const isRootPackage = hasRootPackage(session.root);
-    if (runner === 'mise') out.files.push(miseTasks(everyManifest(session), session.version, isRootPackage));
+    if (runner === 'mise')
+        out.files.push(miseTasks(everyManifest(session), session.version, session.packageManager !== undefined));
     const isNpmRunner = NPM_RUNNERS.has(runner);
-    if (isRootPackage && (isNpmRunner || runner === 'mise'))
+    if (isRootPackage && isNpmRunner)
         out.packages.push({
             path: 'package.json',
-            devDependencies: npmPins(everyManifest(session), runner),
             scripts: isNpmRunner ? npmScripts() : {},
         });
 }
 
-function workflowOutput(session: Session, out: RenderedSet): void {
+function workflowOutput(session: Session, out: GeneratedProposal): void {
     const { policy } = session.policyFiles;
-    if (policy.ci?.provider !== 'github') return;
+    if (policy.ci === undefined) return;
     const swiftScope = session.scopes.find((selection) =>
         selection.selected.some((manifest) => manifest.preset.name === 'swift'),
     );
     out.files.push(
-        workflowFile({
+        (policy.ci.provider === 'github' ? workflowFile : gitlabFile)({
             version: session.version,
+            run: policy.ci.run,
+            sarif: policy.ci.sarif,
             platforms: policy.ci.platforms,
             swiftScope: swiftScope?.scope.path,
             isMise: policy.runner?.tool === 'mise',
@@ -172,15 +177,29 @@ function rootView(session: Session): MergedView {
     return root.view;
 }
 
-function blockOutputs(session: Session, out: RenderedSet): void {
+function blockOutputs(session: Session, out: GeneratedProposal): void {
     out.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
+    out.blocks.push({
+        path: '.gitattributes',
+        block: '.gspot/** linguist-generated\n.gspot/** text eol=lf',
+        style: 'hash',
+    });
     if (!session.policyFiles.policy.rules.install) return;
     const block = managedBlock(session);
-    out.blocks.push({ path: 'CLAUDE.md', block, style: 'markdown' }, { path: 'AGENTS.md', block, style: 'markdown' });
+    for (const path of agentFiles(session.root, session.policyFiles.policy.rules.agents)) {
+        if (path === '.cursor/rules/gspot.mdc') {
+            out.files.push({
+                path,
+                content: `---\ndescription: Repository engineering rules\nalwaysApply: true\n---\n\n${applyBlock('', block, 'markdown')}`,
+                readOnly: false,
+                kind: 'rules',
+            });
+        } else out.blocks.push({ path, block, style: 'markdown' });
+    }
 }
 
 /**
- * True when the root holds a package.json, which is where npm tools are pinned.
+ * True when the root holds a package.json, where task scripts can be integrated.
  * @param root the repository root
  * @returns whether the file is there
  */
@@ -189,12 +208,12 @@ export function hasRootPackage(root: string): boolean {
 }
 
 /**
- * True when package.json already carries every pin and script the output asks for.
+ * True when package.json already carries every requested task script.
  * @param root the repository root
- * @param output the pins and scripts wanted
+ * @param output the scripts wanted
  * @returns whether nothing needs writing
  */
-export function hasPackagePins(root: string, output: PackageOutput): boolean {
+export function hasPackageScripts(root: string, output: PackageOutput): boolean {
     const full = join(root, output.path);
     if (!existsSync(full)) return false;
     let manifestContent: PackageContent;
@@ -203,10 +222,26 @@ export function hasPackagePins(root: string, output: PackageOutput): boolean {
     } catch {
         return false;
     }
-    return (
-        hasEveryPin(manifestContent.devDependencies, output.devDependencies) &&
-        Object.entries(output.scripts).every(([name, command]) => manifestContent.scripts?.[name] === command)
-    );
+    return Object.entries(output.scripts).every(([name, command]) => manifestContent.scripts?.[name] === command);
+}
+
+function validateProposal(proposal: GeneratedProposal): void {
+    const paths = new Map<string, string>();
+    const outputs = [
+        ...proposal.files,
+        ...proposal.blocks,
+        ...proposal.merges,
+        ...proposal.packages,
+        ...(proposal.lefthook === undefined ? [] : [proposal.lefthook]),
+    ];
+    for (const output of outputs) {
+        mutationTarget(output.path);
+        const key = output.path.normalize('NFC').toLowerCase();
+        const previous = paths.get(key);
+        if (previous !== undefined) throw new Error(`Generated destinations collide: ${previous} and ${output.path}`);
+        paths.set(key, output.path);
+    }
+    for (const merge of proposal.merges) mutationTarget(merge.target);
 }
 
 /**
@@ -214,13 +249,38 @@ export function hasPackagePins(root: string, output: PackageOutput): boolean {
  * @param session the session
  * @returns the files, blocks, merges and package edits
  */
-export function emitAll(session: Session): RenderedSet {
+export function emitAll(session: Session, takeover?: ReadonlyMap<string, FileSnapshot>): GeneratedProposal {
     const binary = binaryPath();
-    const out: RenderedSet = { files: [], blocks: [], merges: [], packages: [] };
+    const out: GeneratedProposal = { notes: [], files: [], blocks: [], merges: [], packages: [] };
     const seen = new Set<string>();
     for (const selection of session.scopes)
         for (const manifest of selection.selected) configurationFiles(session, selection, manifest, out, seen);
+    if (out.files.some((file) => file.preset === 'formatting')) {
+        const retained = retainedConfigurationPaths(session, ['prettier', 'prettierignore', 'editorconfig'], takeover);
+        if (retained.length > 0) {
+            out.files = out.files.filter((file) => file.preset !== 'formatting' || file.path.startsWith('.gspot/'));
+            out.notes.push(
+                ...retained.map(
+                    (path) =>
+                        `retained ${path}: editor configuration remains active; gspot checks use generated policy`,
+                ),
+            );
+        }
+    }
+    if (out.files.some((file) => file.path === '.gspot/eslint.config.mjs')) {
+        const retained = retainedConfigurationPaths(session, ['eslint'], takeover);
+        if (retained.length > 0) {
+            out.files = out.files.filter((file) => file.path !== 'eslint.config.mjs');
+            out.notes.push(
+                ...retained.map(
+                    (path) =>
+                        `retained ${path}: authored ESLint configuration remains active; gspot checks use generated policy`,
+                ),
+            );
+        }
+    }
     hookOutputs(session, out, binary);
+    out.files.push(...toolPackages(session), ...toolEnvironment(session));
     runnerOutputs(session, out);
     workflowOutput(session, out);
     out.files.push(...assembleRules(session));
@@ -228,5 +288,6 @@ export function emitAll(session: Session): RenderedSet {
         out.files.push(...styleFiles(session.policyFiles.policy, rootView(session)));
     blockOutputs(session, out);
     out.files.sort((a, b) => a.path.localeCompare(b.path));
+    validateProposal(out);
     return out;
 }

@@ -3,11 +3,11 @@
 import { join } from 'node:path';
 // The sandbox links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
 import { fileURLToPath } from 'node:url';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
 import type { FindingCase } from '#tests/types/acceptance.ts';
-import { symlinkSync, writeFileSync, readdirSync } from 'node:fs';
+import { symlinkSync, writeFileSync, readdirSync, chmodSync, statSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
@@ -15,8 +15,9 @@ const root = fileURLToPath(new URL('../../..', import.meta.url));
 test(
     'generated TypeScript configuration reports an interface once through the pinned replacement rule',
     async () => {
-        await using sandbox = await createSandbox({
-            'gspot.toml': 'version = 1\npresets = ["typescript"]\n',
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["typescript"]\n',
             'package.json': '{"name":"interface-check","private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
             'src/order.ts': 'export interface Order { total: number }\n',
@@ -54,8 +55,10 @@ test.each([
 ])(
     'generated index-only policy reports duplicate names from %s',
     async (_scenario, barrel) => {
-        await using sandbox = await createSandbox({
-            'gspot.toml': 'version = 1\npresets = ["typescript"]\n[structure]\nreexports = "index-only"\n',
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml':
+                'version = 1\nlevel = "all"\npresets = ["typescript"]\n[structure]\nreexports = "index-only"\n',
             'package.json': '{"name":"barrel-check","private":true,"type":"module"}',
             'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src/**/*.ts"]}',
             'src/first.ts': 'export const shared = 1;\n',
@@ -257,8 +260,7 @@ const CASES: FindingCase[] = [
     {
         check: 'integrity/tsconfig-options',
         files: {
-            'tsconfig.json':
-                '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "compilerOptions": { "strict": false }\n}\n',
+            'tsconfig.json': '{\n    "compilerOptions": { "strict": false }\n}\n',
         },
         expected: { file: 'tsconfig.json', rule: 'strict' },
     },
@@ -268,8 +270,11 @@ describe('the typescript preset', () => {
     test(
         'every check passes on a clean project and fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'package.json': PACKAGE,
+                'tsconfig.json':
+                    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src", "types"]\n}\n',
                 '.gitignore': 'node_modules/\n',
                 'types/orders.ts': ORDERS_TYPES,
                 'types/totals.ts': TOTALS_TYPES,
@@ -295,6 +300,8 @@ describe('the typescript preset', () => {
                 ],
                 environment,
             );
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const whole = await run(sandbox.path, ['check', '--no-cache'], environment);
             expect(whole.code, whole.stdout).toBe(0);
             for (const planted of CASES) {
@@ -327,7 +334,8 @@ describe('the typescript preset', () => {
         async () => {
             const clean =
                 '// Doubles numbers.\n\n/**\n * Doubles a number.\n * @param {number} value the value\n * @returns {number} twice the value\n */\nexport function twice(value) {\n    return value * 2;\n}\n';
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'package.json': PACKAGE,
                 '.gitignore': 'node_modules/\n',
                 'src/main.js': clean,
@@ -351,6 +359,8 @@ describe('the typescript preset', () => {
                 ],
                 environment,
             );
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const outcome = await runPlanted(
                 sandbox.path,
                 {
@@ -367,6 +377,7 @@ describe('the typescript preset', () => {
 });
 
 const POLICY = `version = 1
+level = "all"
 presets = ["typescript"]
 [rules]
 install = false
@@ -379,19 +390,26 @@ for (const scope of ['', 'api/']) {
         async () => {
             const solution =
                 '{// The solution has no sources.\n"files":[],"references":[{"path":"./orders"},{"path":"./users"}],}';
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'gspot.toml': scope === '' ? POLICY : POLICY + '\n[[scope]]\npath = "api"\npresets = ["typescript"]\n',
                 '.gitignore': 'node_modules/\n.gspot/\n',
                 'tsconfig.json': scope === '' ? solution : '{"files":["root.ts"],"compilerOptions":{"types":[]}}',
                 'root.ts': 'export const root = 1;',
                 [`${scope}tsconfig.json`]: solution,
                 [`${scope}orders/tsconfig.json`]: PROJECT,
-                [`${scope}users/tsconfig.json`]: PROJECT,
+                [`${scope}users/tsconfig.json`]: PROJECT.replace(
+                    '"include"',
+                    '"references":[{"path":"../orders"}],"include"',
+                ),
                 [`${scope}orders/order.ts`]: 'export const total: number = "wrong";',
-                [`${scope}users/user.ts`]: 'export const active: boolean = 42;',
+                [`${scope}users/user.ts`]:
+                    'import { total } from "../orders/order.js"; export const active: boolean = total;',
             });
             symlinkSync(join(root, 'node_modules'), join(sandbox.path, 'node_modules'), 'dir');
             commitAll(sandbox.path);
+            const applied = await run(sandbox.path, ['apply']);
+            expect(applied.code, applied.stdout + applied.stderr).toBe(0);
             const failed = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
             const report = JSON.parse(failed.stdout) as RunReport;
             expect(failed.code, failed.stdout + failed.stderr).toBe(1);
@@ -403,7 +421,10 @@ for (const scope of ['', 'api/']) {
                     .toSorted((left, right) => left.localeCompare(right)),
             ).toEqual([`${scope}orders/order.ts`, `${scope}users/user.ts`]);
             writeFileSync(join(sandbox.path, `${scope}orders/order.ts`), 'export const total: number = 3;');
-            writeFileSync(join(sandbox.path, `${scope}users/user.ts`), 'export const active: boolean = true;');
+            writeFileSync(
+                join(sandbox.path, `${scope}users/user.ts`),
+                'import { total } from "../orders/order.js"; export const active: boolean = total > 0;',
+            );
             const clean = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             const output = ['orders', 'users'].flatMap((folder) =>
@@ -414,3 +435,119 @@ for (const scope of ['', 'api/']) {
         PLANTED_TIMEOUT_MS,
     );
 }
+
+test.each(['', 'apps/web'])(
+    'Vite initialization in %s preserves authored compiler settings while each level checks its diagnostic flags',
+    async (scope) => {
+        await using sandbox = await testdir();
+        const prefix = scope === '' ? '' : `${scope}/`;
+        const authored = `{
+    // The application owns its build and module settings.
+    "compilerOptions": {
+        "strict": false,
+        "target": "ES2020",
+        "module": "ESNext",
+        "moduleResolution": "Bundler",
+        "types": [],
+        "incremental": true,
+        "tsBuildInfoFile": ${JSON.stringify(join(sandbox.path, scope, 'build/cache.tsbuildinfo'))}
+    },
+    "include": ["src"],
+}\n`;
+        await createFileTree(sandbox.path, {
+            'package.json':
+                '{"name":"preserved-vite","private":true,"type":"module","devDependencies":{"vite":"8.3.0"}}',
+            '.gitignore': 'node_modules/\n.gspot/\n',
+            [`${prefix}tsconfig.json`]: authored,
+            [`${prefix}src/main.ts`]: 'export function echo(value) { return value; }\n',
+            [`${prefix}build/cache.tsbuildinfo`]: 'authored metadata\n',
+        });
+        symlinkSync(join(root, 'node_modules'), join(sandbox.path, 'node_modules'), 'dir');
+        chmodSync(join(sandbox.path, scope, 'tsconfig.json'), 0o640);
+        const initialized = await run(sandbox.path, [
+            'init',
+            '--yes',
+            '--presets',
+            scope === '' ? 'typescript' : 'javascript',
+            ...(scope === '' ? [] : ['--scope', `${scope}=typescript`]),
+            '--no-runner',
+            '--no-ci',
+            '--no-hooks',
+            '--no-rules',
+            '--no-install',
+        ]);
+        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+        expect(await Bun.file(join(sandbox.path, scope, 'tsconfig.json')).text()).toBe(authored);
+        expect(statSync(join(sandbox.path, scope, 'tsconfig.json')).mode & 0o777).toBe(0o640);
+        const failed = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
+        expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+        const report = JSON.parse(failed.stdout) as RunReport;
+        expect(report.checks.flatMap((check) => check.findings)).toMatchObject([
+            { check: 'typescript/tsc', file: `${prefix}src/main.ts`, rule: 'TS7006', line: 1, column: 22 },
+        ]);
+        writeFileSync(
+            join(sandbox.path, scope, 'src/main.ts'),
+            'export function echo(value: string) { return value; }\nexport const first: number = [1][0];\n',
+        );
+        const recommended = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
+        expect(recommended.code, recommended.stdout + recommended.stderr).toBe(0);
+        const selected = await run(sandbox.path, ['set', 'level', 'all']);
+        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+        const strict = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
+        expect(strict.code, strict.stdout + strict.stderr).toBe(1);
+        const strictReport = JSON.parse(strict.stdout) as RunReport;
+        expect(strictReport.checks.flatMap((check) => check.findings)).toMatchObject([
+            { check: 'typescript/tsc', file: `${prefix}src/main.ts`, rule: 'TS2322', line: 2, column: 14 },
+        ]);
+        writeFileSync(
+            join(sandbox.path, scope, 'src/main.ts'),
+            'export function echo(value: string) { return value; }\nexport const first: number = [1][0] ?? 0;\n',
+        );
+        const corrected = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(await Bun.file(join(sandbox.path, scope, 'tsconfig.json')).text()).toBe(authored);
+        expect(statSync(join(sandbox.path, scope, 'tsconfig.json')).mode & 0o777).toBe(0o640);
+        expect(await Bun.file(join(sandbox.path, scope, 'build/cache.tsbuildinfo')).text()).toBe('authored metadata\n');
+    },
+    PLANTED_TIMEOUT_MS,
+);
+
+test.each(['absolute', 'symlink'])(
+    'TypeScript refuses %s build output outside its disposable project and accepts an internal output path',
+    async (kind) => {
+        await using sandbox = await testdir();
+        await using outside = await testdir();
+        await createFileTree(outside.path, { 'value.js': 'authored output\n', '.bin': {} });
+        symlinkSync(join(root, 'node_modules/.bin/tsc'), join(outside.path, '.bin/tsc'));
+        const project = (outDir: string): string =>
+            JSON.stringify({
+                compilerOptions: { composite: true, types: [], outDir },
+                include: ['*.ts'],
+            });
+        await createFileTree(sandbox.path, {
+            'gspot.toml': POLICY,
+            '.gitignore': 'node_modules\n.gspot\n',
+            'tsconfig.json': '{"files":[],"references":[{"path":"./app"}]}',
+            'app/tsconfig.json': project(kind === 'absolute' ? outside.path : '../node_modules'),
+            'app/value.ts': 'export const count = 1;\n',
+        });
+        symlinkSync(
+            kind === 'symlink' ? outside.path : join(root, 'node_modules'),
+            join(sandbox.path, 'node_modules'),
+            'dir',
+        );
+        commitAll(sandbox.path);
+        const applied = await run(sandbox.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        const failed = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
+        expect(failed.code, failed.stdout + failed.stderr).not.toBe(0);
+        expect(failed.stdout + failed.stderr).toContain('outside the disposable project');
+        expect(await Bun.file(join(outside.path, 'value.js')).text()).toBe('authored output\n');
+        writeFileSync(join(sandbox.path, 'app/tsconfig.json'), project('./dist'));
+        const corrected = await run(sandbox.path, ['check', '--only', 'typescript/tsc', '--no-cache', '--json']);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+        expect(await Bun.file(join(outside.path, 'value.js')).text()).toBe('authored output\n');
+        expect(readdirSync(join(sandbox.path, 'app')).sort()).toEqual(['tsconfig.json', 'value.ts']);
+    },
+    PLANTED_TIMEOUT_MS,
+);

@@ -1,152 +1,96 @@
-// uninstall: print the plan, ask, remove what init wrote.
-import { join } from 'node:path';
-import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
-import { hasHeader } from '#cli/emit/templates.ts';
-import type { PackageContent } from '#types/emit.ts';
-import { removeHooksPath } from '#cli/emit/hooks.ts';
-import { withoutLefthook } from '#cli/emit/lefthook.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { uninstallHooks, hookLocation } from '#cli/lifecycle/hooks.ts';
 import { askConfirmation } from '#cli/output/prompts.ts';
-import { withoutBlock } from '#cli/emit/managed-blocks.ts';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import type { Session, CommandResult } from '#types/run.ts';
-import { head, findRoot } from '#cli/repository/tracked.ts';
-import { applyEdits, modify, parse as parseJsonc } from 'jsonc-parser';
-import { existsSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
-import type { UninstallOptions, UninstallPlan } from '#types/lifecycle.ts';
-
-const HEAD_BYTES = 600;
-const BLOCK_FILES = [
-    '.gitignore',
-    'CLAUDE.md',
-    'AGENTS.md',
-    '.husky/pre-commit',
-    '.husky/pre-push',
-    '.husky/commit-msg',
-];
-const MARKDOWN_BLOCK_FILES = new Set(['CLAUDE.md', 'AGENTS.md']);
-
-function renderedPaths(session: Session): string[] {
-    return emitAll(session)
-        .files.map((file) => file.path)
-        .filter((path) => !path.startsWith('.gspot/') && existsSync(join(session.root, path)));
-}
-
-function headedPaths(session: Session): string[] {
-    return session.repository.files
-        .filter((file) => !file.path.startsWith('.gspot/') && file.tags.includes('text'))
-        .filter((file) => hasHeader(head(session.root, file.path, HEAD_BYTES)))
-        .map((file) => file.path);
-}
-
-function blockPaths(root: string): string[] {
-    return BLOCK_FILES.filter((path) => {
-        const full = join(root, path);
-        return existsSync(full) && readFileSync(full, 'utf8').includes('gspot managed');
-    });
-}
+import type { UninstallOptions, UninstallPlan, OwnershipState } from '#types/lifecycle.ts';
 
 function planText(plan: UninstallPlan): string {
-    const lines = [
-        'remove',
-        ...plan.remove.map((path) => `  ${path}`),
-        ...(plan.blocks.length > 0 ? ['managed blocks removed from', ...plan.blocks.map((path) => `  ${path}`)] : []),
-        ...(plan.hooksPath ? ['unset core.hooksPath'] : []),
-        'kept: gspot.toml and the project rule layer',
+    return [
+        'restore originals or remove unchanged installed files',
+        ...[...plan.remove, ...plan.blocks].map((path) => `  ${path}`),
+        ...(plan.hooks ? ['restore unchanged dispatchers in the Git-resolved hooks directory'] : []),
+        'kept: gspot.toml, recovery data, ignore entries, unowned files, and subsequent edits',
         '',
+    ].join('\n');
+}
+
+// Pending entries are candidates; the lifecycle owner confirms their state before mutation.
+function restorationCandidates(state: OwnershipState) {
+    return [
+        ...state.files,
+        ...(state.pending ?? []).flatMap((pending) => (pending.entry === undefined ? [] : [pending.entry])),
     ];
-    return lines.join('\n');
-}
-
-// The devDependencies and scripts gspot wrote leave package.json when they still hold the value gspot gave them.
-function removePackagePins(session: Session): string[] {
-    const edited: string[] = [];
-    for (const output of emitAll(session).packages) {
-        const full = join(session.root, output.path);
-        if (!existsSync(full)) continue;
-        let text = readFileSync(full, 'utf8');
-        const content = parseJsonc(text) as PackageContent;
-        const owned: [string, Record<string, string>, Record<string, string>][] = [
-            ['devDependencies', content.devDependencies ?? {}, output.devDependencies],
-            ['scripts', content.scripts ?? {}, output.scripts],
-        ];
-        for (const [table, current, mine] of owned) {
-            const names = Object.keys(current).filter((key) => mine[key] === current[key]);
-            for (const name of names) text = applyEdits(text, modify(text, [table, name], undefined, {}));
-        }
-        writeFileSync(full, text);
-        edited.push(output.path);
-    }
-    return edited;
-}
-
-function removeLefthookCommands(session: Session): string | undefined {
-    const { lefthook } = emitAll(session);
-    if (!lefthook || !existsSync(join(session.root, lefthook.path))) return undefined;
-    const full = join(session.root, lefthook.path);
-    writeFileSync(full, withoutLefthook(readFileSync(full, 'utf8'), lefthook.block));
-    return lefthook.path;
 }
 
 /**
- * What uninstall removes: everything the selection renders, plus any file that carries the header.
- * @param session the session
- * @param isHooksKept whether --keep-hooks leaves core.hooksPath alone
- * @returns the paths to remove, the files whose managed block goes, and whether the hooks path is unset
+ * Preview only recorded ownership; matching templates do not authorize deletion.
+ * @param session the repository being removed
+ * @returns the recorded restoration and removal candidates
  */
-export function planUninstall(session: Session, isHooksKept: boolean): UninstallPlan {
-    const { root } = session;
-    const remove = new Set([
-        ...(existsSync(join(root, '.gspot')) ? ['.gspot/'] : []),
-        ...renderedPaths(session),
-        ...headedPaths(session),
-    ]);
+export function planUninstall(session: Session): UninstallPlan {
+    const recorded = restorationCandidates(readOwnership(session.root));
+    const blocks = recorded
+        .filter((entry) => entry.kind === 'block' && entry.path !== '.gitignore')
+        .map((entry) => entry.path);
+    const blockSet = new Set(blocks);
+    const remove = new Set(recorded.map((entry) => entry.path));
+    for (const path of ['gspot.toml', '.gitignore', ...blocks]) remove.delete(path);
+    for (const entry of recorded) if (entry.kind === 'hook') remove.delete(entry.path);
+    const location = session.repository.hasGit ? hookLocation(session.root) : undefined;
+    const hooks =
+        location !== undefined &&
+        restorationCandidates(readOwnership(location.root)).some(
+            (entry) => entry.kind === 'hook' && entry.path.startsWith(`${location.directory}/`),
+        );
     return {
-        remove: [...remove].toSorted((a, b) => a.localeCompare(b)),
-        blocks: blockPaths(root),
-        hooksPath: !isHooksKept,
+        remove: [...remove].toSorted((left, right) => left.localeCompare(right)),
+        blocks: [...blockSet].toSorted((left, right) => left.localeCompare(right)),
+        hooks,
     };
 }
 
 /**
- * Applies the plan.
- * @param root the repository root
- * @param plan what to remove
+ * Restore only unchanged or absent destinations, retaining recovery and subsequent edits.
+ * @param session the repository being removed
+ * @param plan the reviewed restoration and removal candidates
+ * @returns paths preserved because they were edited or unowned
  */
-export function applyUninstall(root: string, plan: UninstallPlan): void {
-    for (const path of plan.remove) rmSync(join(root, path), { recursive: true, force: true });
-    for (const path of plan.blocks) {
-        const full = join(root, path);
-        const text = withoutBlock(readFileSync(full, 'utf8'), MARKDOWN_BLOCK_FILES.has(path) ? 'markdown' : 'hash');
-        if (text === '') rmSync(full, { force: true });
-        else writeFileSync(full, text);
-    }
-    if (plan.hooksPath) removeHooksPath(root);
+export function applyUninstall(session: Session, plan: UninstallPlan): string[] {
+    return withLifecycleOwner(session.root, (owner) => {
+        const proposed = new Set([...plan.remove, ...plan.blocks]);
+        const proposals = [...proposed].map((path) => owner.proposeRestoration(path));
+        const preserved = proposals
+            .filter((proposal) => proposal.status === 'preserved')
+            .map((proposal) => proposal.path);
+        owner.applyProposals(proposals.filter((proposal) => proposal.status !== 'preserved'));
+        if (plan.hooks) preserved.push(...uninstallHooks(session));
+        return preserved;
+    });
 }
 
 /**
- * Runs uninstall: prints the plan, asks, removes.
- * @param options the parsed flags
- * @returns the command result
+ * Preview uninstall and apply the accepted operations through the lifecycle owner.
+ * @param options parsed command options
+ * @returns the proposed or completed removal report
  */
 export async function uninstallCommand(options: UninstallOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
     const session = await openSession(root);
-    const plan = planUninstall(session, options.isHooksKept);
+    const plan = planUninstall(session);
     const text = planText(plan);
     if (options.isDryRun)
         return { text: `${text}--dry-run: nothing removed.\n`, json: { plan, isDryRun: true }, exitCode: 0 };
-    process.stdout.write(text);
-    // --yes is the answer to this one question, so it means yes; the terminal still starts on no.
-    const isGo = options.yes || (await askConfirmation('Remove these?', '--yes', false, false));
+    process.stderr.write(text);
+    const isGo =
+        options.yes || (await askConfirmation('Apply these removals and restorations?', '--yes', false, false));
     if (!isGo) return { text: 'Nothing removed.\n', json: { plan, applied: false }, exitCode: 0 };
-    const edited = [...removePackagePins(session), removeLefthookCommands(session)].filter(
-        (path) => path !== undefined,
-    );
-    applyUninstall(root, plan);
-    const pins = edited.length === 0 ? '' : ` The gspot entries left ${edited.join(' and ')}.`;
+    const preserved = applyUninstall(session, plan);
+    const retained = preserved.map((path) => `preserved edited or unowned ${path}\n`).join('');
     return {
-        text: `removed.${pins} gspot.toml stays; delete it to finish.\n`,
-        json: { plan, applied: true, edited },
+        text: `${retained}Uninstall complete. Recovery data and gspot.toml remain.\n`,
+        json: { plan, applied: true, preserved },
         exitCode: 0,
     };
 }

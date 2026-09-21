@@ -1,5 +1,5 @@
 // Planted repository for the sql preset: a statement that does not parse, a block comment, a lowercase keyword, a camel-case column.
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -49,7 +49,8 @@ describe('the sql preset', () => {
     test(
         'every sql check fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'db/accounts.sql': CLEAN,
                 'db/report.sql': PSQL,
                 'db/.sqlfluffignore': '# Scripts for psql, which the linter cannot read\nreport.sql\n',
@@ -57,6 +58,8 @@ describe('the sql preset', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
                 const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
@@ -67,40 +70,6 @@ describe('the sql preset', () => {
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
                 expect(outcome.stdout, planted.check).toContain(planted.expected);
             }
-        },
-        PLANTED_TIMEOUT_MS * 4,
-    );
-});
-
-describe('gspot apply --baseline', () => {
-    test(
-        'writes the first baseline of one check, never raises one that exists, and refuses findings a fixer clears',
-        async () => {
-            await using sandbox = await createSandbox({ 'db/accounts.sql': CLEAN });
-            commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['sqlfluff', 'typos', 'ec']) };
-            await install(sandbox.path, INIT, environment);
-            await Bun.write(`${sandbox.path}/db/commented.sql`, '/* Old. */\nSELECT 1;\n');
-            commitAll(sandbox.path);
-            const before = await run(
-                sandbox.path,
-                ['check', '--only', 'sql/block-comments', '--no-cache'],
-                environment,
-            );
-            expect(before.code).toBe(1);
-            const first = await run(sandbox.path, ['apply', '--baseline', 'sql/block-comments'], environment);
-            expect(first.stdout).toContain('baseline: 1 rules of sql/block-comments with 1 findings');
-            const held = await run(sandbox.path, ['check', '--only', 'sql/block-comments', '--no-cache'], environment);
-            expect(held.code).toBe(0);
-            await Bun.write(`${sandbox.path}/db/second.sql`, '/* Older. */\nSELECT 2;\n');
-            commitAll(sandbox.path);
-            const again = await run(sandbox.path, ['apply', '--baseline', 'sql/block-comments'], environment);
-            expect(again.stdout).toContain('has no finding without a baseline');
-            const after = await run(sandbox.path, ['check', '--only', 'sql/block-comments', '--no-cache'], environment);
-            expect(after.code).toBe(1);
-            const layout = await run(sandbox.path, ['apply', '--baseline', 'sql/sqlfluff'], environment);
-            expect(layout.code).toBe(2);
-            expect(layout.stdout + layout.stderr).toContain('enter no baseline');
         },
         PLANTED_TIMEOUT_MS * 4,
     );

@@ -1,4 +1,4 @@
-<% const at = (key, otherwise) => limit(key, 'python') ?? limit(key) ?? otherwise; const off = rulesOff('python/ruff'); const families = [...["A", "ANN", "ARG", "ASYNC", "B", "BLE", "C4", "C90", "COM", "D", "DTZ", "E", "EM", "ERA", "EXE", "F", "FA", "FBT", "FIX", "FLY", "FURB", "G", "ICN", "INP", "ISC", "LOG", "N", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "Q", "RET", "RSE", "RUF", "S", "SIM", "SLF", "SLOT", "T10", "T20", "TC", "TD", "TRY", "UP", "W", "YTT"], ...(has('fastapi') ? ["FAST"] : [])]; const perFile = ignoresFor('python/ruff').filter((entry) => entry.rule !== undefined && (entry.paths ?? []).length > 0); -%>
+<% const at = (key, otherwise) => limit(key, 'python') ?? limit(key) ?? otherwise; const off = rulesOff('python/ruff'); const families = [...(isAll ? ["A", "ANN", "ARG", "ASYNC", "B", "BLE", "C4", "C90", "COM", "D", "DTZ", "E", "EM", "ERA", "EXE", "F", "FA", "FBT", "FIX", "FLY", "FURB", "G", "ICN", "INP", "ISC", "LOG", "N", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "Q", "RET", "RSE", "RUF", "S", "SIM", "SLF", "SLOT", "T10", "T20", "TC", "TD", "TRY", "UP", "W", "YTT"] : ["E4", "E7", "E9", "F", "B", "S", "ASYNC", "UP", "PLE"]), ...(has('fastapi') ? ["FAST"] : [])]; const perFile = ignoresFor('python/ruff').filter((entry) => entry.rule !== undefined && (entry.paths ?? []).length > 0); -%>
 line-length = <%= format.print_width %>
 indent-width = <%= format.indent_width %>
 exclude = [".git", ".venv", "__pycache__", ".ruff_cache", ".pytest_cache", "build", "dist", "node_modules", ".gspot"]
@@ -10,10 +10,10 @@ line-ending = "lf"
 docstring-code-format = true
 
 [lint]
-<%~ toml({ select: [...families, "ANN401", "PLR2004", "PLR1702", "PLR0917"], ignore: ["COM812", "D203", "D213", ...off] }).trimEnd() %>
+<%~ toml({ select: isAll ? [...families, "ANN401", "PLR2004", "PLR1702", "PLR0917"] : families, ignore: [...(isAll ? ["COM812", "D203", "D213"] : []), ...off] }).trimEnd() %>
 fixable = ["ALL"]
 unfixable = []
-preview = true
+preview = <%= isAll %>
 explicit-preview-rules = true
 
 [lint.mccabe]

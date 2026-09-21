@@ -39,14 +39,21 @@ bun-debug.log*
 
 # Build output of the workspace packages
 /packages/*/dist/
+/packages/eslint-plugin/LICENSE.md
 /docs/dist/
 /docs/.astro/
+/docs/src/content/docs/reference/
 
 # >>> gspot managed >>>
-gspot.local.toml
+.gspot/node_modules/
+.gspot/.venv/
+.gspot/ownership.json
+.gspot/mutation.lock
+.gspot/recovery/
 .gspot/cache/
 .gspot/report.json
 .gspot/report.sarif
+.gspot/report.codequality.json
 .gspot/vale/styles/Google/
 .gspot/vale/styles/Microsoft/
 .gspot/vale/styles/write-good/

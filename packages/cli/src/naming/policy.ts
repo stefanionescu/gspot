@@ -3,7 +3,7 @@ import { compileTerms } from '#cli/naming/match.ts';
 // The shipped policy plus [naming] in gspot.toml: terms, exemptions, rules and the per-language ceilings and cases.
 import { readAsset } from '#cli/platform/assets.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import { settingValue } from '#cli/policy/settings.ts';
+import { settingValue, policyTables } from '#cli/policy/settings.ts';
 import type { NamingSettings, NamingRule, Policy, ExposedSettings } from '#types/config.ts';
 
 import type {
@@ -143,7 +143,17 @@ export function shippedPolicy(): ShippedPolicy {
  */
 export function effectivePolicy(surface: ExposedSettings, policy: Policy, scope: string): EffectivePolicy {
     const shipped = shippedPolicy();
-    const naming = { ...policy.naming, ...policy.scopeTables[scope]?.naming };
+    const tables = policyTables(policy, scope).map(({ table }) => table.naming);
+    const naming: NamingSettings = {
+        ...policy.naming,
+        banned_terms: [...new Set(tables.flatMap((table) => table?.banned_terms ?? []))],
+        allowed: tables.flatMap((table) => table?.allowed ?? []),
+        external: [...new Set(tables.flatMap((table) => table?.external ?? []))],
+        reserved: tables.flatMap((table) => table?.reserved ?? []),
+        remove_groups: tables.flatMap((table) => table?.remove_groups ?? []),
+        contract_properties: tables.flatMap((table) => table?.contract_properties ?? []),
+        rules: tables.flatMap((table) => table?.rules ?? []),
+    };
     const terms = [...groupTerms(shipped, naming), ...compileTerms(naming.banned_terms, 'naming.banned_terms')];
     const rules = [
         ...shipped.rules.map((rule, index) => compileRule(rule, `shipped rule ${String(index + 1)}`)),

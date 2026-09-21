@@ -185,7 +185,7 @@ tasks = { check = "lint", fix = "lint:fix" }     # the task names that call gspo
 
 [rules]
 install   = true
-agents    = ["AGENTS.md", "CLAUDE.md"]   # detected from what the repository holds
+agents    = ["TEAM.md"]                # additional files; supported existing files are detected
 directory = ".gspot/rules"
 exclude   = []
 
@@ -360,13 +360,14 @@ under `.gspot/recovery/<operation>/`. Recovery directories and metadata are owne
 `--allow-dirty`. It is never treated as a cache or removed by cache eviction or uninstall.
 
 If recovery cannot be written, refuse that replacement. A second operation never overwrites an
-earlier original. In a fresh clone, tracked generated marks establish ownership but do not
-invent an original that the clone never had.
+earlier original. A fresh clone has no local ownership or original backups. Preserve its
+unrecorded files, including tracked files that match generated templates. Applying an identical
+proposal records the existing bytes and mode as the original, so later removal restores them.
 
-`apply` and `remove` delete only marked outputs whose bytes still match the recorded installed hash.
-In a fresh clone without a record, reproduce the expected value from its pinned config before
-adopting the file into the ownership record. A mark alone never authorizes deleting modified
-content. Modified outputs are retained and reported until the user restores or moves them.
+`apply`, `remove`, and uninstall delete only outputs with a local ownership record whose
+bytes and mode still match the recorded installed value. Names, marks, Git tracking, and
+reproduction from the pinned configuration do not authorize deletion. Modified outputs are
+retained and reported until the user restores or moves them.
 
 Uninstall uses the same rule and removes only empty owned directories. Restoring an original
 requires an absent destination or an unchanged gspot-installed value. Otherwise, preserve both

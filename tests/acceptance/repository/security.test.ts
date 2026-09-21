@@ -1,6 +1,6 @@
 // Planted repository for the security preset: an eval the shipped pack finds, and a rule of the repository's own.
 import { join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
@@ -26,13 +26,16 @@ describe('the security preset', () => {
     test(
         'the shipped pack finds an eval, a repository rule runs beside it, and CodeQL waits to be asked',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'src/index.ts': CLEAN,
                 'package.json': '{\n    "name": "planted",\n    "private": true\n}\n',
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['semgrep', 'typos', 'ec']) };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const clean = await run(sandbox.path, ['check', '--only', 'security/semgrep', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             await Bun.write(join(sandbox.path, 'src/run.ts'), EVALUATED);

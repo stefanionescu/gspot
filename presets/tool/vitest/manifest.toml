@@ -25,6 +25,7 @@ npm = "@vitest/eslint-plugin"
 
 [[checks]]
 name = "vitest/coverage"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 cwd = "scope"

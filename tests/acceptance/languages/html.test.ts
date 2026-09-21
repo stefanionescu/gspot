@@ -1,10 +1,10 @@
 import { symlinkSync } from 'node:fs';
 // Planted repository for the html preset: an image with no text alternative, an inline handler, and copy written into a template.
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
-import { commitAll, install, PLANTED_TIMEOUT_MS, runPlanted, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const INIT = [
@@ -55,7 +55,8 @@ describe('the html preset', () => {
     test(
         'every html check fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 '.gitignore': 'node_modules\n',
                 'package.json': '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true\n}\n',
                 'pages/home.html': CLEAN,
@@ -64,6 +65,8 @@ describe('the html preset', () => {
             commitAll(sandbox.path);
             const environment = { PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec'])}` };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const planted of CASES) {
                 const clean = await runPlanted(sandbox.path, { ...planted, files: {} }, environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);

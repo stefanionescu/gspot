@@ -56,7 +56,7 @@ const rules = {
     'types-placement': typesPlacement,
 };
 
-// The rules for a project that allows re-exports in index files only; the recommended set bans re-exports outright.
+// Alternative re-export policies are selected explicitly.
 const INDEX_ONLY_RULES = new Set(['max-barrel-reexports', 'no-reexports-outside-index']);
 // no-call-through covers the forwarding policy in the default configs.
 const ALTERNATIVE_RULES = new Set(['no-trivial-functions']);
@@ -65,12 +65,15 @@ const base = { meta: { name: packageManifest.name, version: packageManifest.vers
 
 const allRules = Object.fromEntries(
     Object.keys(rules)
-        .filter((name) => !INDEX_ONLY_RULES.has(name) && !ALTERNATIVE_RULES.has(name))
+        // The Next.js preset selects server files. Standalone callers select them explicitly.
+        .filter((name) => !INDEX_ONLY_RULES.has(name) && !ALTERNATIVE_RULES.has(name) && name !== 'require-server-only')
         .map((name) => [`gspot/${name}`, 'error' as const]),
 );
 
 const recommendedRules = Object.fromEntries(
-    Object.entries(allRules).filter(([name]) => name !== 'gspot/no-call-through'),
+    Object.entries(rules)
+        .filter(([, rule]) => rule.meta.docs?.level === 'recommended')
+        .map(([name]) => [`gspot/${name}`, 'error' as const]),
 );
 
 const plugin = {
@@ -78,7 +81,7 @@ const plugin = {
     configs: {
         /** Default rules for standalone use. */
         recommended: { name: 'gspot/recommended', plugins: { gspot: base }, rules: recommendedRules },
-        /** Adds preferences such as rejecting forwarding functions. */
+        /** Adds layout, ordering, and forwarding-function preferences. */
         all: { name: 'gspot/all', plugins: { gspot: base }, rules: allRules },
     },
 };

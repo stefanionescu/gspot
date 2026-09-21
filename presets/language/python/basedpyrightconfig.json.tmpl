@@ -1,7 +1,8 @@
 <% const up = scope === '' ? '..' : ['..', ...scope.split('/').map(() => '..'), scope].join('/'); -%>
 {
-    "typeCheckingMode": "all",
-    "reportPrivateUsage": "error",
+    "typeCheckingMode": "<%= isAll ? 'all' : 'standard' %>",
+<% if (isAll) { %>    "reportPrivateUsage": "error",
+<% } %>
     "include": [<%~ json(up) %>],
     "extraPaths": [<%~ json(up) %>],
     "exclude": <%~ json([".venv", "__pycache__", "node_modules", ".gspot", "build", "dist"].map((name) => `${up}/**/${name}`).concat((settings['tools.basedpyright.exclude'] ?? []).flatMap((entry) => (entry.paths ?? []).map((path) => `${scope === '' ? '..' : ['..', ...scope.split('/').map(() => '..')].join('/')}/${path}`)))) %>

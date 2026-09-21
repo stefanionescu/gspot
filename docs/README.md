@@ -6,9 +6,10 @@ The user manual for gspot, built with Astro Starlight. The reference pages are w
 ## Setup
 
 ```bash
-bun install
-bun --cwd docs run build
+mise run repo:setup
+mise run docs:build
 ```
 
-`bun --cwd docs run dev` serves the site locally. `bun docs/reference-pages.ts --check` says whether the
-reference pages match the binary; the gate runs it as `docs/generated`.
+From the repository root or `docs/`, `mise run docs:dev` generates the reference and serves the site locally. Builds generate
+reference pages from the CLI definitions; generated pages are not committed. The generator
+preserves authored files and refuses to overwrite an authored page at a generated path.

@@ -1,7 +1,7 @@
     {
         files: ['**/*.{js,jsx,ts,tsx}'],
         plugins: { 'react-hooks': reactHooks, react },
-        settings: { react: { version: installedReact() } },
+        settings: { react: { version: 'detect' } },
         rules: {
             // The plugin ships this set as a list of one block, and its warnings are errors here: the gate allows no warning.
             ...Object.fromEntries(Object.keys(reactHooks.configs['recommended-latest'][0].rules).map((rule) => [rule, 'error'])),

@@ -15,7 +15,6 @@ const report: RunReport = {
             status: 'fail',
             files: 3,
             duration: 120,
-            baselined: 0,
             reproduce: 'gspot check --only bash/shellcheck',
             findings: [
                 {
@@ -30,20 +29,18 @@ const report: RunReport = {
                 },
             ],
         },
-        { check: 'bash/shfmt', scope: '', status: 'ok', files: 3, duration: 20, baselined: 0, findings: [] },
+        { check: 'bash/shfmt', scope: '', status: 'ok', files: 3, duration: 20, findings: [] },
         {
             check: 'formatting/prettier',
             scope: 'api',
             status: 'missing',
             files: 1,
             duration: 0,
-            baselined: 0,
             findings: [],
             note: 'prettier is not installed. Run: mise install',
             reproduce: 'gspot check api --only formatting/prettier',
         },
     ],
-    baselines: [{ check: 'bash/shellcheck', rule: 'SC2154', count: 3, baseline: 5, held: true, paths: { 'a.sh': 3 } }],
     ignores: [{ check: 'bash/shellcheck', rule: 'SC2312', reason: 'why', matched: 1 }],
     skips: [],
     coverage: { checked: 3, unchecked: 2 },
@@ -55,14 +52,13 @@ const report: RunReport = {
 };
 
 describe('the reporter', () => {
-    test('prints one line per check, findings file first with a help line, reproduce lines, baselines and the summary', () => {
+    test('prints one line per check, findings file first with a help line, reproduce lines and the summary', () => {
         const text = runText(report, { quiet: false, verbose: false });
         expect(text).toContain('root  bash/shellcheck      fail       3 files     0.1s');
         expect(text).toContain('  a.sh:4:3  SC2086  Double quote to prevent globbing.');
         expect(text).toContain('    help: Quote it.');
         expect(text).toContain('  reproduce: gspot check --only bash/shellcheck');
         expect(text).toContain('api   formatting/prettier  missing    prettier is not installed. Run: mise install');
-        expect(text).toContain('baselines  bash/shellcheck:SC2154  3 of 5');
         expect(text).toContain('ignores    1 (printed with --verbose)');
         expect(text).toContain('unchecked  2 files (gspot doctor)');
         expect(text).toEndWith('failed: bash/shellcheck, formatting/prettier\n');

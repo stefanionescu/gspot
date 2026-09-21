@@ -1,14 +1,19 @@
 // The project checks of a Python scope: import contracts, who owns the dependencies, and which files the type check leaves out.
 import { join } from 'node:path';
-import { run } from '#cli/platform/spawn.ts';
+import { parse } from 'smol-toml';
+import { z } from 'zod';
+import { scopeOf } from '#cli/repository/scopes.ts';
+import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 const MANIFEST = 'pyproject.toml';
-const LINT_TIMEOUT_MS = 600_000;
+const importConfiguration = z.object({
+    tool: z.object({ importlinter: z.record(z.string(), z.unknown()).optional() }).optional(),
+});
 const BROKEN_CONTRACT = /^(?<name>.+?) BROKEN$/u;
 const REQUIREMENTS_FILE = /(?:^|\/)requirements[^/]*\.txt$/u;
 const PIP_INSTALL = /\bpip3? install\b/u;
@@ -29,12 +34,13 @@ function scopePath(input: EngineInput, path: string): string {
  */
 export async function importLinter(input: EngineInput): Promise<Finding[]> {
     const manifest = join(input.root, scopePath(input, MANIFEST));
-    if (!existsSync(manifest) || !readFileSync(manifest, 'utf8').includes('[tool.importlinter')) return [];
-    const result = await run(['lint-imports', '--no-cache'], {
+    if (!existsSync(manifest)) throw new SkippedCheckError('This scope has no pyproject.toml import contracts.');
+    const project = importConfiguration.parse(parse(readFileSync(manifest, 'utf8')));
+    if (project.tool?.importlinter === undefined)
+        throw new SkippedCheckError('This scope has no tool.importlinter configuration.');
+    const result = await runCheckCommand(input, ['lint-imports', '--no-cache'], {
         cwd: join(input.root, input.scope),
-        timeoutMs: LINT_TIMEOUT_MS,
     });
-    if (result.missing) throw new MissingToolError('The lint-imports command is not installed.');
     const broken = result.stdout.split('\n').flatMap((line) => {
         const name = BROKEN_CONTRACT.exec(line.trim())?.groups?.['name'];
         return name === undefined ? [] : [name];
@@ -53,9 +59,13 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export function dependencyOwnership(input: EngineInput): Promise<Finding[]> {
+    if (!['uv.lock', 'poetry.lock', 'pdm.lock'].some((name) => existsSync(join(input.root, input.scope, name))))
+        throw new SkippedCheckError('Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');
     const allowed = (input.view.tool('dependencies')['pip_install_allowed'] as { paths: string[] }[] | undefined) ?? [];
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
-    const files = input.session.repository.files.filter((file) => file.nature === 'source');
+    const files = input.session.repository.files.filter(
+        (file) => file.nature === 'source' && scopeOf(file.path, input.session.repository.scopes).path === input.scope,
+    );
     const requirements = files
         .filter((file) => REQUIREMENTS_FILE.test(file.path))
         .map((file) =>

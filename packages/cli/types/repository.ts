@@ -1,3 +1,4 @@
+import type { Policy } from '#types/config.ts';
 import type { z } from 'zod';
 import type { packageManifestSchema } from '#cli/repository/manifests.ts';
 
@@ -60,7 +61,7 @@ export type ExistingTooling = {
     rulesDirectories: string[];
     lintFolders: string[];
     lintOnlyManifests: string[];
-    runner: 'mise' | 'npm' | 'bun' | 'pnpm' | 'yarn' | 'uv' | 'none';
+    runner: NonNullable<Policy['runner']>['tool'] | 'yarn' | 'none';
     runnerFile?: string;
 };
 
@@ -85,3 +86,22 @@ export type TreeFacts = {
     dependencies: Map<string, string>;
     scope: string;
 };
+
+/** Compiled selectors over config-root POSIX paths. */
+export type PathExpressions = { includes: string[]; excludes: string[] };
+
+export type SnapshotSource = { kind: 'index' } | { kind: 'commit'; object: string };
+export type PushRevision = {
+    object: string;
+    tree: string;
+    refs: string[];
+    commits: string[];
+    historyComplete: boolean;
+    paths?: string[];
+};
+export type PushSelection = {
+    revisions: PushRevision[];
+    notApplicable: { ref: string; object: string; reason: 'deleted ref' | 'non-commit object' }[];
+};
+
+export type GitEntry = { mode: string; object: string; path: string };

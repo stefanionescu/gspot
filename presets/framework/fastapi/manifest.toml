@@ -26,6 +26,7 @@ needs = "security"
 
 [[checks]]
 name = "fastapi/openapi-lint"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -39,6 +40,7 @@ help = "Change the route metadata that writes the document, then export it again
 
 [[checks]]
 name = "fastapi/openapi-fresh"
+level = "recommended"
 stage = "push"
 runs = "once"
 engine = "integrity"
@@ -50,6 +52,7 @@ help = "Run the command and commit the document it writes."
 
 [[checks]]
 name = "fastapi/no-blocking-io-in-async"
+level = "recommended"
 stage = "commit"
 engine = "integrity"
 analysis = "python-blocking-calls"
@@ -71,7 +74,7 @@ name = "tools.openapi.produced_by"
 kind = "string"
 direction = "neutral"
 default = ""
-summary = "The command that writes the OpenAPI document from the app."
+summary = "The command that writes the OpenAPI document from the code."
 
 [rule_files]
 framework = ["framework/fastapi/FASTAPI.md", "framework/fastapi/RUNTIME.md"]

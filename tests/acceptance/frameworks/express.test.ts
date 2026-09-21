@@ -1,6 +1,6 @@
 // Planted repository for the express preset: an OpenAPI document with a hole, a stale document, and a route with no test.
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -80,7 +80,8 @@ describe('the express preset', () => {
     test(
         'the OpenAPI checks and the route test check fire on their planted defects',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'package.json': PACKAGE,
                 'openapi.yaml': DOCUMENT,
                 'write-document.js': WRITER(DOCUMENT),
@@ -91,6 +92,8 @@ describe('the express preset', () => {
             commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}` };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const planted of CASES) {
                 const clean = await runPlanted(sandbox.path, { ...planted, files: {} }, environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);

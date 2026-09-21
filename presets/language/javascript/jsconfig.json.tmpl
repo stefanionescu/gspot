@@ -11,5 +11,5 @@
         "resolveJsonModule": true
     },
     "include": ["../**/*.js", "../**/*.mjs", "../**/*.cjs"],
-    "exclude": <%= json(["../**/node_modules/**", "./**", "../.gspot/**", "../**/eslint.config.mjs", "../**/eslint.config.js", "../**/eslint.config.cjs", "../**/dist/**", "../**/build/**", "../**/coverage/**", "../**/.build/**", "../**/DerivedData/**", ...policy.declares.flatMap((entry) => entry.paths).map((path) => '../' + path)]) %>
+    "exclude": <%= json(["../**/node_modules/**", "./**", "../.gspot/**", "../**/eslint.config.mjs", "../**/eslint.config.js", "../**/eslint.config.cjs", "../**/dist/**", "../**/build/**", "../**/coverage/**", "../**/.build/**", "../**/DerivedData/**", ...policy.declarations.flatMap((entry) => entry.paths).map((path) => '../' + path)]) %>
 }

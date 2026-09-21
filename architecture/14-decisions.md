@@ -43,7 +43,7 @@ Rejected: a checksummed downloader and lockfile, which re-implemented mise.
 
 ## D-07 mise is recommended, never required
 
-gspot writes `.config/mise/conf.d/gspot.toml` when mise is present and proposes mise when nothing is.
+gspot writes `.mise/conf.d/gspot-tools.toml` when mise is present and proposes mise when nothing is.
 Without it, gspot writes to the package manager the repository has. Rejected: mise as the only
 runner, which fails the stranger with a plain npm repository.
 
@@ -165,16 +165,17 @@ configurations and two exception lists per defect.
 
 ## D-29 Private first, public last
 
-In every language, private declarations precede public ones in a file; `main` and `__all__`
-come last. Python and Bash mark private with `_`; the other languages use their visibility
+At the opt-in `all` level, private declarations precede public ones in a file; `main` and
+`__all__` come last. This ordering is a preference, not a correctness requirement. Python and Bash mark private with `_`; the other languages use their visibility
 keywords. Rejected: public-first ordering, which several style guides prefer. The contract is what a reader wants at the end, after the parts it is built from.
 
 ## D-30 Types live under `types/`
 
-Type aliases live under the declared types directory; `interface` is banned; the directory
-holds type-only imports and no runtime exports. On by default, strict everywhere, exceptions
-through `[[ignore]]`. Rejected: co-located types, which spread a contract across every file
-that uses it and which agents extend in place.
+The mandatory placement proposal is retired. Keep local types with their consumers and
+share types only for a real shared contract. Repositories can opt into types-placement
+rules at `all` or enable an individual rule explicitly. Preserve the plugin exports.
+[Implementation boundaries](16-file-tree.md) govern this repository; directory symmetry
+is not a product requirement.
 
 ## D-31 native on Windows
 
@@ -373,12 +374,11 @@ never saw.
 
 ## D-60 The literals of gspot live in `packages/cli/config/`
 
-The regexes, pattern lists, marker strings, header templates, refused reasons and file-tag table
-gspot ships in code live in one directory of literal-only modules. The check `integrity/config-purity` guards it in the gate of this repository through the `config` role in its `gspot.toml`. The `gspot.toml`
-schema and writer live in `src/policy/`, so `config` means one thing. An algorithm's own constant
-stays inline (D-22). Rejected: literals scattered through the engines, which is what the reference
-audit found and what made a regex change a hunt; rejected: hoisting every constant, which D-22
-already refused.
+The mandatory constants-directory proposal is retired. Presets own shipped policy and
+pins. Local constants stay beside their consumers; shared constants require a shared
+contract. A declared config role can still enforce literal-only configuration in a
+repository that opts into it. No directory move is required merely to satisfy symmetry.
+See [G-13](fixes/09-manifests.md#g-13-two-conventions-for-constants).
 
 ## D-61 one release, whole
 
@@ -404,7 +404,7 @@ twenty-six rules with no test repository.
 
 Until a release exists, `mise.toml` in this repository sets `GSPOT_BIN` to run the CLI from
 source with Bun, and the hook body already reads `${GSPOT_BIN:-gspot}`. Once the first tag
-exists, `.config/mise/conf.d/gspot.toml` pins gspot through `github:` like any other repository and the
+exists, `.mise/conf.d/gspot-tools.toml` pins gspot through `github:` like any other repository and the
 environment entry goes. Rejected: a special case in `init` for this repository.
 
 ## D-66 One naming scheme for the packages
@@ -943,8 +943,8 @@ part of `CLAUDE.md`.
 
 ## D-127 The mise file has one place
 
-mise loads a second file only from a `conf.d` folder, so a file of its own is how gspot adds pins
-and new tasks. It edits an existing `mise.toml` task only when that exact replacement was accepted in the init plan (D-116), with recovery. The file is `.mise/conf.d/gspot-tools.toml` in every
+mise natively loads configuration fragments from `.mise/conf.d`, where gspot adds pins
+and generated tasks. It edits an existing `mise.toml` task only when that exact replacement was accepted in the init plan (D-116), with recovery. The file is `.mise/conf.d/gspot-tools.toml` in every
 repository: mise reads that folder whether or not the repository had a `.mise` folder before. One
 constant holds the path. This amends D-106. Rejected: one place where `.mise/` exists and another
 where it does not, which is two paths to test for no gain.

@@ -1,6 +1,6 @@
 // Planted repository: TypeScript selected in a scope only, with one ESLint configuration for the repository.
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { symlinkSync, writeFileSync } from 'node:fs';
 import { treeContents } from '#tests/harness/contents.ts';
@@ -15,7 +15,8 @@ describe('typescript in a scope', () => {
     test(
         'the shared ESLint configuration reads TypeScript although the root selects none',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'README.md': '# planted\n',
                 '.gitignore': 'node_modules\n',
                 'package.json':
@@ -23,7 +24,7 @@ describe('typescript in a scope', () => {
                 'api/package.json':
                     '{\n    "name": "api",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module"\n}\n',
                 'api/tsconfig.json':
-                    '{\n    "extends": "../.gspot/api/tsconfig.base.json",\n    "include": ["src"]\n}\n',
+                    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n',
                 'api/src/port.ts': SOURCE,
             });
             symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
@@ -48,6 +49,8 @@ describe('typescript in a scope', () => {
                 '--no-install',
             ];
             await install(sandbox.path, argv, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const lint = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(lint.stdout + lint.stderr).not.toContain('Parsing error');
             const written = await Bun.file(join(sandbox.path, '.gspot/eslint.config.mjs')).text();
@@ -60,7 +63,8 @@ describe('typescript in a scope', () => {
     test(
         'an ignore file inside a scope travels into the policy, and a one-word comment stays a reason the policy accepts',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'README.md': '# planted\n',
                 'db/accounts.sql': 'SELECT 1;\n',
                 'db/.sqlfluffignore': '# Templates\ntemplates/\n',
@@ -85,6 +89,8 @@ describe('typescript in a scope', () => {
                 '--no-install',
             ];
             await install(sandbox.path, argv, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
             expect(policy).toContain('db/**/templates/**');
             expect(policy).toContain('carried from db/.sqlfluffignore at init: Templates');
@@ -96,7 +102,8 @@ describe('typescript in a scope', () => {
 });
 
 test('init proposes workspace scopes without a lockfile and preserves files after resolver failure', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'package.json': '{"private":true,"workspaces":["packages/*"]}',
         'packages/api/package.json': '{"name":"api"}',
         'packages/api/source.js': 'export const port = 8080;\n',

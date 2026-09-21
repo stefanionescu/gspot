@@ -31,6 +31,7 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
     meta: {
         type: 'problem',
         docs: {
+            level: 'recommended',
             summary: 'Finds a client module reading environment variables other than the public ones.',
             why: 'A client bundle ships to the browser; a private variable read there is a secret leaked.',
             fix: 'Read private configuration in a server-only module and pass values down, or use a NEXT_PUBLIC_ variable for values meant for the browser.',

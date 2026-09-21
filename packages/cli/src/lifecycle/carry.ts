@@ -1,6 +1,6 @@
-import { readFileSync } from 'node:fs';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 // The carry readers of takeover: the exception lists and disabled rules that old configuration files hold.
-import { extname, join } from 'node:path';
+import { extname } from 'node:path';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
 import type { TomlTable } from '#types/config.ts';
@@ -8,7 +8,7 @@ import { CARRIED_REASON } from '#config/reasons.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { ignoreFileEntries } from '#cli/lifecycle/ignore-files.ts';
 import { CHECK_BY_TOOL, TYPOS_DEFAULT_EXCLUDES } from '#config/carry.ts';
-import type { CarryPush, CarriedLists, CarrySource } from '#types/lifecycle.ts';
+import type { CarryPush, CarriedLists, CarrySource, FileSnapshot } from '#types/lifecycle.ts';
 
 const DATE_LENGTH = 10;
 const COMMENT_MARK = /^(?:#|\/\/)\s?/u;
@@ -43,6 +43,10 @@ const STRUCTURED_PARSERS: Record<string, (text: string) => unknown> = {
 };
 
 function parseSource(tool: string, path: string, text: string): unknown {
+    // EditorConfig is resolved through Prettier and retained, never retired as a parsed settings table.
+    if (tool === 'editorconfig') return {};
+    if (path.endsWith('.json5'))
+        throw new Error('JSON5 configuration requires tool-specific evaluation and must remain active.');
     if (tool === 'eslint' || /\.[cm]?[jt]s$/u.test(path))
         throw new Error('This configuration requires tool-specific evaluation.');
     if (tool === 'licenses') return JSON.parse(text) as unknown;
@@ -272,19 +276,26 @@ const CARRIERS: Record<string, (source: CarrySource, path: string, lists: Carrie
     },
 };
 
-/**
- * Reads and parses takeover input once; failed observations and unsupported executable formats raise errors.
- * @param root the repository root
- * @param tool the tool the file configures
- * @param path the file, relative to the root
- * @returns the original text and parsed table
- */
-export function readCarrySource(root: string, tool: string, path: string): CarrySource {
-    const text = readFileSync(join(root, path), 'utf8');
-    const value = parseSource(tool, path, text);
-    const parsed = asRaw(value);
+/** Capture original UTF-8 configuration bytes and permissions through the confined reader. */
+export function observeConfiguration(root: string, path: string): Omit<CarrySource, 'parsed'> {
+    const files = openConfinedRoot(root);
+    try {
+        const original = files.read(path);
+        if (original === undefined) throw new Error('Configuration disappeared before it could be read.');
+        const text = original.bytes.toString('utf8');
+        if (!Buffer.from(text).equals(original.bytes)) throw new Error('Configuration must be UTF-8 text.');
+        return { text, original };
+    } finally {
+        files.close();
+    }
+}
+
+/** Parse static settings from the same bytes used for mutation authorization. */
+export function parseCarrySource(original: FileSnapshot, tool: string, path: string): CarrySource {
+    const source = { original, text: original.bytes.toString('utf8') };
+    const parsed = asRaw(parseSource(tool, path, source.text));
     if (parsed === undefined) throw new Error('Configuration must contain a settings table.');
-    return { text, parsed };
+    return { ...source, parsed };
 }
 
 /**

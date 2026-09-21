@@ -1,30 +1,25 @@
-import { join } from 'node:path';
-import { existsSync } from 'node:fs';
-import { detectPackageManager } from 'nypm';
-import { run } from '#cli/platform/spawn.ts';
-import type { Manifest } from '#types/manifest.ts';
-// The install step of init and upgrade: the package.json pins, then the tool install through the task runner.
-import { mergedPins } from '#cli/emit/kept-pins.ts';
-import type { InitAnswers } from '#types/lifecycle.ts';
-import { npmPins, npmScripts } from '#cli/emit/runner-tasks.ts';
-import type { ApplyReport, PackageContent } from '#types/emit.ts';
-
-const PACKAGE_RUNNERS = new Set(['bun', 'npm', 'pnpm']);
-
-function installCommands(runner: InitAnswers['runner']): string[][] {
-    if (runner === 'mise') return [['mise', 'install']];
-    if (runner === 'uv') return [['uv', 'sync', '--group', 'gspot']];
-    return [[runner, 'install']];
-}
+import { installHooks } from '#cli/lifecycle/hooks.ts';
+import { UV_INSTALLER } from '#config/installers.ts';
+import { InstallationError } from '#cli/lifecycle/install-error.ts';
+import semver from 'semver';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
+import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
+import { installPythonProject } from '#cli/lifecycle/python-project.ts';
+import { installPackageProject } from '#cli/lifecycle/package-project.ts';
+import { runToolCommand } from '#cli/run/tool-runner.ts';
+import { packageEnvironment } from '#cli/platform/package-environment.ts';
+import { toolEnvironment } from '#cli/emit/tool-environment.ts';
+import type { Session } from '#types/run.ts';
 
 async function runInstall(root: string, commands: string[][]): Promise<string> {
     const notes: string[] = [];
+    const env = await packageEnvironment(root);
     for (const command of commands) {
-        const result = await run(command, { cwd: root });
+        const result = await runToolCommand(undefined, command, { cwd: root, env });
         const shown = command.join(' ');
         if (result.code !== 0)
-            throw new Error(
-                `The installation command ${shown} failed (exit ${String(result.code)}): ${result.stderr.trim()}`,
+            throw new InstallationError(
+                `The installation command ${shown} failed (exit ${String(result.code)}): check the package manager and registry settings.`,
             );
         notes.push(`ran ${shown}`);
     }
@@ -32,54 +27,64 @@ async function runInstall(root: string, commands: string[][]): Promise<string> {
 }
 
 /**
- * Adds the pinned devDependencies and the gspot scripts to package.json, creating the file when there is none.
- * @param root the repository root
- * @param runner the task runner chosen
- * @param everySelected every selected manifest
- */
-export async function updatePackageJson(
-    root: string,
-    runner: InitAnswers['runner'],
-    everySelected: Manifest[],
-): Promise<void> {
-    if (!PACKAGE_RUNNERS.has(runner)) return;
-    const { default: manifestEditor } = await import('@npmcli/package-json');
-    const manifest = existsSync(join(root, 'package.json'))
-        ? await manifestEditor.load(root)
-        : await manifestEditor.create(root);
-    const current = manifest.content as PackageContent;
-    manifest.update({
-        devDependencies: mergedPins(current.devDependencies, npmPins(everySelected, runner)),
-        scripts: { ...current.scripts, ...npmScripts() },
-    });
-    await manifest.save();
-}
-
-/**
- * Installs the pinned tools through the task runner, or says how to when --no-install was given.
- * @param root the repository root
- * @param runner the task runner chosen
- * @param synced what apply wrote, for the package manager step mise needs
+ * Install private tool projects and clone-local hooks, with optional task-runner integration.
+ * @param session the selected tools and repository
  * @param isInstalling whether init was asked to install
- * @returns the note for the summary, empty when there is no runner
+ * @returns the installation summary
  */
-export async function installTools(
-    root: string,
-    runner: InitAnswers['runner'] | undefined,
-    synced: ApplyReport,
-    isInstalling: boolean,
-): Promise<string> {
-    if (runner === undefined || runner === 'none') return '';
+export async function installTools(session: Session, isInstalling: boolean): Promise<string> {
+    const { root } = session;
+    const runner = session.policyFiles.policy.runner?.tool;
     if (!isInstalling) {
-        const command = runner === 'mise' ? 'mise install' : `${runner} install`;
-        return `install skipped; run: ${command}`;
+        return 'install skipped; run: gspot install';
     }
-    const commands = installCommands(runner);
-    if (runner !== 'mise') return runInstall(root, commands);
-    commands.unshift(['mise', 'trust', '.config/mise/conf.d/gspot.toml']);
-    if (synced.packages.length > 0) {
-        const detected = await detectPackageManager(root);
-        commands.push([detected ? detected.name : 'npm', 'install']);
+    const hookNote = installHooks(session);
+    const notes: string[] = hookNote === '' ? [] : [hookNote];
+    const failures: Error[] = [];
+    try {
+        if (runner === 'mise') {
+            const observed = await runToolCommand(undefined, ['mise', '--version'], { cwd: root });
+            const version = semver.coerce(observed.stdout);
+            if (observed.code !== 0 || version === null || semver.lt(version, MISE_MIN_VERSION))
+                throw new MissingToolError(`Install mise ${MISE_MIN_VERSION} or newer to load ${MISE_CONFIG_PATH}.`);
+        }
+        const commands =
+            runner === 'mise'
+                ? [
+                      ['mise', 'trust', MISE_CONFIG_PATH],
+                      ['mise', 'install'],
+                  ]
+                : [];
+        if (commands.length > 0) notes.push(await runInstall(root, commands));
+    } catch (error) {
+        failures.push(error instanceof Error ? error : new Error('Native tool installation failed.'));
     }
-    return runInstall(root, commands);
+    try {
+        const installed = session.packageManager === undefined ? '' : await installPackageProject(root);
+        if (installed !== '') notes.push(installed);
+    } catch (error) {
+        failures.push(error instanceof Error ? error : new Error('Package installation failed.'));
+    }
+    try {
+        if (toolEnvironment(session).length > 0) {
+            let executable = 'uv';
+            if (runner === 'mise') {
+                const located = await runToolCommand(
+                    undefined,
+                    ['mise', 'which', 'uv', '--tool', `${UV_INSTALLER.name}@${UV_INSTALLER.version}`],
+                    { cwd: root },
+                );
+                if (located.code !== 0 || located.stdout.trim() === '')
+                    throw new MissingToolError('The pinned uv installer is unavailable. Run: gspot install');
+                executable = located.stdout.trim();
+            }
+            const installed = await installPythonProject(root, executable);
+            if (installed !== '') notes.push(installed);
+        }
+    } catch (error) {
+        failures.push(error instanceof Error ? error : new Error('Python installation failed.'));
+    }
+    if (failures.length > 0)
+        throw new AggregateError(failures, [...notes, ...failures.map((error) => error.message)].join('\n'));
+    return notes.join('; ');
 }

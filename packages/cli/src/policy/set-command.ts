@@ -83,6 +83,7 @@ function reasonsFilled(value: unknown, reason: string | undefined): unknown {
 }
 
 function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped: unknown): boolean {
+    if (spec.kind === 'list' && o.remove && spec.direction === 'loosening') return false;
     if (spec.kind === 'list' && !o.remove && hasOwnReasons(value)) return false;
     const isListEdit = spec.kind === 'list' && (o.remove || o.replace);
     if (isListEdit) return spec.direction !== 'neutral';
@@ -93,7 +94,17 @@ function setMutation(o: SetOptions, isList: boolean, value: unknown): Mutation {
     const written = !isList && o.reason !== undefined ? { value, reason: o.reason } : value;
     return (raw) => {
         const holder = holderFor(raw, o.scope);
-        if (isList && o.remove) removeFromList(o.key, value as unknown[])(holder);
+        if (
+            (o.key === 'generated' || o.key === 'vendored') &&
+            o.remove &&
+            Array.isArray(value) &&
+            value.every((item) => typeof item === 'string')
+        ) {
+            const entries = (holder[o.key] ?? []) as { paths: string[]; reason?: string; produced_by?: string }[];
+            holder[o.key] = entries
+                .map((entry) => ({ ...entry, paths: entry.paths.filter((path) => !value.includes(path)) }))
+                .filter((entry) => entry.paths.length > 0);
+        } else if (isList && o.remove) removeFromList(o.key, value as unknown[])(holder);
         else if (isList && !o.replace) appendList(o.key, value as unknown[])(holder);
         else setKey(o.key, written)(holder);
     };
@@ -135,18 +146,18 @@ function writeValue(
     if (o.items.length === 0)
         throw new PolicyError([`gspot set ${o.key} needs a value, or --default to remove yours.`]);
     const isList = spec.kind === 'list';
-    const value = reasonsFilled(
-        shaped(
-            o.items.map((text) => parseValue(text)),
-            isList,
-        ),
-        isList ? o.reason : undefined,
+    const parsed = shaped(
+        o.items.map((text) => parseValue(text)),
+        isList,
     );
+    const isDeclaration = o.key === 'generated' || o.key === 'vendored';
+    const paths = isDeclaration && Array.isArray(parsed) && parsed.every((item) => typeof item === 'string');
+    const value = reasonsFilled(paths && !o.remove ? [{ paths: parsed }] : parsed, isList ? o.reason : undefined);
     const shipped = selection.surface.defaults.get(spec.name)?.value;
     const where = `gspot set ${o.key}`;
-    if (isReasonOwed(spec, o, value, shipped))
+    if (session.policyFiles.policy.requireReasons && isReasonOwed(spec, o, value, shipped))
         requireReason(o.reason, where, `${where} ${o.items.join(' ')} --reason "..."`);
-    else refuseBadReason(o.reason, where);
+    else if (session.policyFiles.policy.requireReasons) refuseBadReason(o.reason, where);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
     return commitPolicy(root, setMutation(o, isList, value), false, describeSet(session, selection, o, shown, value));
 }

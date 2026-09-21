@@ -1,15 +1,18 @@
+import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
+import { readGitSetting } from '#cli/platform/spawn.ts';
+import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 // The questions init asks, each answered by a flag or the terminal, with the default read from the repository.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { Manifest } from '#types/manifest.ts';
-import type { FormatSettings } from '#types/config.ts';
+import type { FormatSettings, Policy } from '#types/config.ts';
 import { shippedFormat } from '#cli/presets/listing.ts';
 import type { ExistingTooling } from '#types/repository.ts';
 import { askChoice, askMany, askConfirmation } from '#cli/output/prompts.ts';
-import type { CarrySource, InitAnswers, InitOptions, InitSelection } from '#types/lifecycle.ts';
+import type { CarriedFormatter, InitAnswers, InitOptions, InitSelection } from '#types/lifecycle.ts';
 
 const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
-    { value: 'gspot', label: 'gspot writes .gspot/hooks' },
+    { value: 'gspot', label: 'gspot installs hooks in the Git-resolved directory' },
     { value: 'lefthook', label: 'a block in lefthook.yml' },
     { value: 'husky', label: 'lines in .husky/' },
     { value: 'none', label: 'no hooks' },
@@ -17,38 +20,18 @@ const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
 
 const CI_CHOICES: { value: InitAnswers['ci']; label: string }[] = [
     { value: 'github', label: '.github/workflows/gspot.yml' },
+    { value: 'gitlab', label: '.gitlab/ci/gspot.yml (include from .gitlab-ci.yml)' },
     { value: 'none', label: 'no workflow' },
 ];
 
 const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
-    { value: 'mise', label: 'mise (.config/mise/conf.d/gspot.toml)' },
+    { value: 'mise', label: `mise (${MISE_CONFIG_PATH})` },
     { value: 'bun', label: 'bun (package.json scripts)' },
     { value: 'npm', label: 'npm (package.json scripts)' },
     { value: 'pnpm', label: 'pnpm (package.json scripts)' },
-    { value: 'uv', label: 'uv (dependency group)' },
+    { value: 'uv', label: 'uv (private Python environment)' },
     { value: 'none', label: 'none' },
 ];
-
-function differingFormat(parsed: Record<string, unknown>): Partial<FormatSettings> | undefined {
-    const found: Partial<FormatSettings> = {};
-    const tabWidth = parsed['tabWidth'];
-    const printWidth = parsed['printWidth'];
-    const trailingComma = parsed['trailingComma'];
-    const shipped = shippedFormat();
-    if (typeof tabWidth === 'number' && tabWidth !== shipped['indent_width']) found.indent_width = tabWidth;
-    if (typeof printWidth === 'number' && printWidth !== shipped['print_width']) found.print_width = printWidth;
-    if (trailingComma === 'es5' || trailingComma === 'none') found.trailing_comma = trailingComma;
-    const format = { ...found, ...flagFormat(parsed) };
-    return Object.keys(format).length === 0 ? undefined : format;
-}
-
-function flagFormat(parsed: Record<string, unknown>): Partial<FormatSettings> {
-    const found: Partial<FormatSettings> = {};
-    if (parsed['singleQuote'] === false) found.quotes = 'double';
-    if (parsed['semi'] === false) found.semicolons = false;
-    if (parsed['useTabs'] === true) found.indent_style = 'tab';
-    return found;
-}
 
 function hooksDefault(tooling: ExistingTooling): InitAnswers['hooks'] {
     if (tooling.hooks.some((hook) => hook.kind === 'husky')) return 'husky';
@@ -56,7 +39,14 @@ function hooksDefault(tooling: ExistingTooling): InitAnswers['hooks'] {
 }
 
 function ciDefault(root: string, tooling: ExistingTooling): InitAnswers['ci'] {
-    return existsSync(join(root, '.github')) && tooling.ci.length === 0 ? 'github' : 'none';
+    if (tooling.ci.some((path) => path === '.gitlab-ci.yml')) return 'gitlab';
+    if (tooling.ci.some((path) => path.startsWith('.github/workflows/'))) return 'github';
+    if (existsSync(join(root, '.gitlab-ci.yml'))) return 'gitlab';
+    if (existsSync(join(root, '.github/workflows'))) return 'github';
+    if (tooling.ci.length > 0) return 'none';
+    const remote = readGitSetting(root, 'remote.origin.url') ?? '';
+    if (/^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|[^@/]+@)github\.com[:/]/u.test(remote)) return 'github';
+    return /^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|[^@/]+@)gitlab\.com[:/]/u.test(remote) ? 'gitlab' : 'none';
 }
 
 function runnerDefault(tooling: ExistingTooling): InitAnswers['runner'] {
@@ -69,6 +59,7 @@ async function askHooks(options: InitOptions, tooling: ExistingTooling): Promise
 }
 
 async function askCi(root: string, options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['ci']> {
+    if (options.ci === 'none' || ciLintJobs(root, tooling.ci).length > 0) return 'none';
     if (options.ci !== undefined) return options.ci;
     return askChoice('Write a CI workflow?', '--ci', CI_CHOICES, ciDefault(root, tooling), options.yes);
 }
@@ -85,11 +76,16 @@ async function askRunner(options: InitOptions, tooling: ExistingTooling): Promis
 
 async function askFormat(
     options: InitOptions,
-    differing: Partial<FormatSettings> | undefined,
-): Promise<Partial<FormatSettings> | undefined> {
+    differing: CarriedFormatter | undefined,
+): Promise<CarriedFormatter | undefined> {
     if (!differing) return undefined;
-    const shown = Object.entries(differing)
-        .map(([key, value]) => `${key} ${String(value)}`)
+    const shown = Object.entries({ ...differing.format, ...differing.extra })
+        .filter(([key]) => key !== 'reason')
+        .map(([key, value]) =>
+            key === 'overrides' && Array.isArray(value)
+                ? `${String(value.length)} current path overrides`
+                : `${key} ${String(value)}`,
+        )
         .join(', ');
     const keep =
         options.format ??
@@ -139,20 +135,29 @@ export async function askPresets(
  * @param root the repository root
  * @param options the init flags
  * @param tooling the configuration files, hooks and runner found
- * @param formatSource the formatter input already parsed during takeover observation
+ * @param carriedFormat the validated formatter choices captured during takeover observation
  * @returns the answers
  */
 export async function askInitQuestions(
     root: string,
     options: InitOptions,
     tooling: ExistingTooling,
-    formatSource: CarrySource | undefined,
+    carriedFormat: CarriedFormatter | undefined,
 ): Promise<InitAnswers> {
     const hooks = await askHooks(options, tooling);
     const ci = await askCi(root, options, tooling);
     const isRules = await askRuleFiles(options);
     const runner = await askRunner(options, tooling);
-    const differing = formatSource === undefined ? undefined : differingFormat(formatSource.parsed);
-    const format = await askFormat(options, differing);
-    return { hooks, ci, isRules, runner, ...(format ? { format } : {}) };
+    const shipped = shippedFormat();
+    const differences = Object.fromEntries(
+        Object.entries(carriedFormat?.format ?? {}).filter(
+            ([key, value]) => value !== shipped[key as keyof FormatSettings],
+        ),
+    ) as Policy['format'];
+    const differing =
+        Object.keys(differences).length === 0 && carriedFormat?.extra === undefined
+            ? undefined
+            : { format: differences, ...(carriedFormat?.extra === undefined ? {} : { extra: carriedFormat.extra }) };
+    const formatter = await askFormat(options, differing);
+    return { hooks, ci, isRules, runner, ...(formatter ? { formatter } : {}) };
 }

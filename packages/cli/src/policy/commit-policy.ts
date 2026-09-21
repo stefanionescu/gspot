@@ -1,3 +1,4 @@
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 // What every writing command ends with: one mutation of gspot.toml, validated as load does, then apply. The reason rules live here too.
 import type { Mutation } from '#types/config.ts';
 import type { ApplyReport } from '#types/emit.ts';
@@ -23,16 +24,25 @@ export async function commitPolicy(
     isDryRun: boolean,
     describe: string,
 ): Promise<CommandResult & { applied?: ApplyReport }> {
-    const result = writePolicy(root, mutation, isDryRun);
+    const result = writePolicy(root, mutation, true);
     if (isDryRun)
         return {
             text: `${describe}\n(dry run: gspot.toml not written)\n`,
             json: { text: result.text, dryRun: true },
             exitCode: 0,
         };
-    const session = await openSession(root);
-    const applied = await applyAll(session);
-    return { text: `${describe}\n`, json: { changed: result.changed }, exitCode: 0, applied };
+    return withLifecycleOwner(root, async () => {
+        writePolicy(root, mutation);
+        const session = await openSession(root);
+        const applied = await applyAll(session);
+        const notes = applied.notes.map((note) => `note     ${note}\n`).join('');
+        return {
+            text: `${describe}\n${notes}`,
+            json: { changed: result.changed, notes: applied.notes },
+            exitCode: 0,
+            applied,
+        };
+    });
 }
 
 /**

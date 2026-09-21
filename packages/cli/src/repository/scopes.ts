@@ -116,3 +116,13 @@ export function scopeOf(path: string, scopes: ScopeEntry[]): ScopeEntry {
         .filter((scope) => scope.path !== '' && (path === scope.path || path.startsWith(`${scope.path}/`)))
         .reduce((best, scope) => (scope.path.length > best.path.length ? scope : best), root);
 }
+
+/** Declared ancestors of a scope, ordered from the outermost to the exact scope. */
+export function scopeAncestors(
+    entries: Pick<ScopeEntry, 'path' | 'presets'>[],
+    path: string,
+): Pick<ScopeEntry, 'path' | 'presets'>[] {
+    return entries
+        .filter((entry) => entry.path === path || path.startsWith(`${entry.path}/`))
+        .toSorted((left, right) => left.path.length - right.path.length);
+}

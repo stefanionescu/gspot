@@ -1,9 +1,8 @@
 import type { Manifest } from '#types/manifest.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import { readBaselines } from '#cli/run/baselines.ts';
 import type { TrackedFile } from '#types/repository.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
-// File explanations: claims, checks, baselines, and ignores within the selected scope.
+// File explanations: claims, checks, and ignores within the selected scope.
 import type { Explanation, PathExplanation } from '#types/output.ts';
 import { claimants, claimedByClaims, pathMatcher } from '#cli/presets/claims.ts';
 
@@ -33,26 +32,19 @@ function checksFor(
     );
 }
 
-function baselinesFor(root: string, path: string): PathExplanation['baselines'] {
-    return readBaselines(root).flatMap((baseline) => {
-        const count = baseline.paths[path];
-        return count === undefined ? [] : [{ check: baseline.check, rule: baseline.rule, count }];
-    });
-}
-
 function ignoresFor(session: Session, path: string): PathExplanation['ignores'] {
     return session.policyFiles.policy.ignores
         .filter((entry) => entry.paths !== undefined && pathMatcher(entry.paths)(path))
         .map((entry) => ({
             check: entry.check,
             ...(entry.rule === undefined ? {} : { rule: entry.rule }),
-            reason: entry.reason,
+            ...(entry.reason === undefined ? {} : { reason: entry.reason }),
         }));
 }
 
 function ignoreLine(entry: PathExplanation['ignores'][number]): string {
     const rule = entry.rule === undefined ? '' : ` ${entry.rule}`;
-    return `  ${entry.check}${rule}  ${entry.reason}`;
+    return `  ${entry.check}${rule}${entry.reason === undefined ? '' : `  ${entry.reason}`}`;
 }
 
 function annotated(report: PathExplanation, file: TrackedFile, ownerCount: number): PathExplanation {
@@ -60,7 +52,7 @@ function annotated(report: PathExplanation, file: TrackedFile, ownerCount: numbe
     if (unchecked !== undefined) report.unchecked = unchecked;
     if (ownerCount === 0 && file.nature === 'source') {
         report.unchecked = 'no selected preset claims this file';
-        report.remedy = 'gspot declare "<glob>" --produced-by "..." or --vendored, or gspot add <preset>';
+        report.remedy = 'gspot set generated "<glob>" or gspot set vendored "<glob>", or gspot add <preset>';
     }
     return report;
 }
@@ -88,7 +80,6 @@ function pathReport(session: Session, path: string): PathExplanation | { error: 
         tags: file.tags,
         presets: owners.map((manifest) => manifest.preset.name),
         checks: selection ? checksFor(owners, selection, file, scope.path) : [],
-        baselines: baselinesFor(session.root, path),
         ignores: ignoresFor(session, path),
     };
     if (file.natureSource !== undefined) report.natureSource = file.natureSource;
@@ -110,12 +101,6 @@ function pathText(report: PathExplanation): string {
         ...section(
             'checks:',
             report.checks.map((check) => `  ${check.check}  ${check.stage}  (${check.preset})`),
-        ),
-        ...section(
-            'baselines:',
-            report.baselines.map(
-                (entry) => `  ${entry.check}:${entry.rule}  ${String(entry.count)} recorded in this file`,
-            ),
         ),
         ...section(
             'ignores:',

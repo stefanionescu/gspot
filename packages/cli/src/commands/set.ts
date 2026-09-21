@@ -11,8 +11,8 @@ import { directoryOf, textEntry } from '#cli/commands/flags.ts';
 export function registerSet(program: Command): void {
     program
         .command('set <key> [value...]')
-        .description('Write one setting; the key is the dotted path gspot doctor --settings prints')
-        .option('--reason <text>', 'Why; required when the change loosens a rule')
+        .description('Write one setting; the key is the dotted path gspot list settings prints')
+        .option('--reason <text>', 'Optional explanation; require_reasons makes it required for loosening changes')
         .option('--scope <path>', 'Write into a scope table instead of the root')
         .option('--replace', 'For a list: replace the whole list')
         .option('--remove', 'For a list: remove the named items')

@@ -26,6 +26,7 @@ target = ".gspot/spectral.yaml"
 
 [[checks]]
 name = "express/openapi-lint"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -39,6 +40,7 @@ help = "Change the document the way the rule says, or the code that writes it."
 
 [[checks]]
 name = "express/openapi-fresh"
+level = "recommended"
 stage = "push"
 runs = "once"
 engine = "integrity"
@@ -50,6 +52,7 @@ help = "Run the command and commit the document it writes."
 
 [[checks]]
 name = "express/routes-tested"
+level = "all"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"

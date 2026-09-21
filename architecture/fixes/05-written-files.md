@@ -64,7 +64,7 @@ file under `.gspot/` that no template writes, so `apply` deletes it.
 
 **Files.** `emit/apply-command.ts`, `checks/checks/repository/generated-drift.ts`, `doctor/changes.ts`.
 
-**Logic.** Marks identify candidate managed files, but deletion also checks the recorded installed hash or a reproducible expected generated value for a fresh clone, path confinement, and completed recovery. Modified files are reported, not discarded. The path prefix test goes. The gitleaks baseline moves to the root of the
+**Logic.** Marks identify candidate managed files, but deletion also checks the locally recorded installed hash, path confinement, and completed recovery. Fresh clones preserve unrecorded files even when they match generated templates. Modified files are reported, not discarded. The path prefix test goes. The gitleaks baseline moves to the root of the
 repository as `.gitleaks-baseline.json`, a file the developer owns, and the secrets manifest
 names that path.
 

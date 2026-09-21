@@ -1,6 +1,7 @@
 // The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
 import { globby } from 'globby';
 import { dirname, join, resolve } from 'node:path';
+import type { SpawnResult } from '#types/platform.ts';
 import type { RawEntry } from '#types/repository.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { existsSync, lstatSync, statSync, openSync, readSync, closeSync } from 'node:fs';
@@ -49,11 +50,13 @@ function hasGitEntry(directory: string): boolean {
     return parent !== directory && hasGitEntry(parent);
 }
 
-function isOutsideGit(root: string): boolean {
-    const probe = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
+function isOutsideGit(
+    root: string,
+    probe: SpawnResult = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
         cwd: root,
         env: { LC_ALL: 'C' },
-    });
+    }),
+): boolean {
     return (
         probe.code === NOT_REPOSITORY_CODE &&
         probe.stderr.startsWith('fatal: not a git repository (or any ') &&
@@ -79,29 +82,38 @@ async function listedPaths(root: string): Promise<string[]> {
 /**
  * True when the root is inside a git work tree.
  * @param root the directory
- * @returns whether a .git entry is there
+ * @returns whether Git confirms a work tree
+ * @throws when Git cannot establish the repository state
  */
 export function isGitRepository(root: string): boolean {
-    return existsSync(join(root, '.git'));
+    const probe = runBlocking(['git', 'rev-parse', '--is-inside-work-tree'], {
+        cwd: root,
+        env: { LC_ALL: 'C' },
+    });
+    if (probe.code === 0 && probe.stdout.trim() === 'true') return true;
+    if (isOutsideGit(root, probe)) return false;
+    throw new Error(`Git work-tree discovery failed in ${root} (exit ${String(probe.code)}): ${probe.stderr.trim()}`);
 }
 
 /**
- * The repository root for a directory: git's answer, or the nearest directory holding gspot.toml.
+ * The nearest configuration root within the Git repository, or the root used for initialization.
  * @param start the directory to start from
  * @returns the root
  */
 export function findRoot(start: string): string {
-    const top = runBlocking(['git', 'rev-parse', '--show-toplevel'], { cwd: start });
-    if (top.code === 0 && top.stdout.trim() !== '') return top.stdout.trim();
-    if (!isOutsideGit(start))
-        throw new Error(`Git root discovery failed in ${start} (exit ${String(top.code)}): ${top.stderr.trim()}`);
-    let dir = start;
-    for (;;) {
-        if (existsSync(join(dir, 'gspot.toml'))) return dir;
-        const parent = join(dir, '..');
-        if (parent === dir) return start;
-        dir = parent;
+    const directory = resolve(start);
+    const top = runBlocking(['git', 'rev-parse', '--show-toplevel'], { cwd: directory });
+    const gitRoot = top.code === 0 ? resolve(top.stdout.trim()) : undefined;
+    if (gitRoot === undefined && !isOutsideGit(directory))
+        throw new Error(`Git root discovery failed in ${directory} (exit ${String(top.code)}): ${top.stderr.trim()}`);
+    let current = directory;
+    while (!existsSync(join(current, 'gspot.toml'))) {
+        if (current === gitRoot) return gitRoot;
+        const parent = dirname(current);
+        if (parent === current) return directory;
+        current = parent;
     }
+    return current;
 }
 
 /**

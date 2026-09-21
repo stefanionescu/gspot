@@ -3,7 +3,7 @@ import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { parse as parseYaml } from 'yaml';
 import { parse, stringify } from 'smol-toml';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
@@ -14,7 +14,8 @@ test('typos output preserves quoted keys and paths without creating settings', a
     const words = ['quoted"word', 'dotted.word', String.raw`back\slash`, 'café', "apostrophe'word"];
     const paths = ['docs/"draft"/**', String.raw`generated/\draft/**`, 'café/**'];
     const reason = 'An upstream name.\n[files]\nextend-exclude = ["**"]';
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
             presets: ['spelling'],
@@ -33,7 +34,8 @@ test('typos output preserves quoted keys and paths without creating settings', a
 
 test('profile spelling values use the same TOML emission path', async () => {
     const word = 'café."upstream"';
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'house.profile.toml': stringify({
             version: 1,
             profile: 'house',
@@ -70,7 +72,8 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     const path = 'docs/"draft"/**';
     const reason = 'Reviewed upstream.\n[extend]\nuseDefault = false';
     const option = 'custom."option"';
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
             presets: ['secrets', 'dependencies', 'config-files', 'docs', 'python', 'postgres'],
@@ -106,7 +109,8 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
 });
 
 test('an OSV expiry cannot inject another TOML table', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
             presets: ['dependencies'],
@@ -136,7 +140,8 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
         'Reviewed upstream.\u{2028}];\u{2029}globalThis.injected = true;\nexport default [',
     ];
     for (const reason of reasons) {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 version: 1,
                 presets: ['javascript', 'docker', 'prose'],
@@ -144,7 +149,7 @@ test('reason comments cannot add JavaScript statements or ignore entries', async
                     eslint: { extra: { reason, name: 'custom' } },
                     trivy: { ignore: [{ id: 'CVE-2026-12345', reason }] },
                 },
-                prose: { disabled: [{ rule: 'Vale.Spelling', reason }] },
+                ignore: [{ check: 'prose/vale', rule: 'Vale.Spelling', reason }],
             }),
         });
         const output = emitAll(await openSession(sandbox.path));
@@ -182,13 +187,13 @@ test('JSON option keys and YAML values keep their literal structure', async () =
     const project = 'ios/App: # café.xcodeproj';
     const scheme = 'null';
     const registries = ['null', 'registry.example.com:5000'];
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
             presets: ['typescript', 'formatting', 'markdown', 'config-files', 'docker', 'swift'],
             tools: {
                 prettier: { extra },
-                typescript: { extra },
                 knip: { extra },
                 markdownlint: { rules: { [key]: value } },
                 yamllint: { rules: { [key]: { level: 'warning' }, indentation: { spaces: 2 } } },
@@ -205,9 +210,6 @@ test('JSON option keys and YAML values keep their literal structure', async () =
         const parsed: unknown = parseJsonc(file!.content);
         expect(parsed).toMatchObject({ [key]: value });
     }
-    const typescript = output.files.find((file) => file.path === '.gspot/tsconfig.base.json');
-    expect(typescript).toBeDefined();
-    expect(JSON.parse(typescript!.content)).toMatchObject({ compilerOptions: { [key]: value } });
     const yaml = new Map(
         output.files
             .filter((file) => /\.ya?ml$/u.test(file.path))
@@ -224,7 +226,8 @@ test('JSON option keys and YAML values keep their literal structure', async () =
 test('runtime names remain data in generated JavaScript', async () => {
     const parser = await parserFor('javascript');
     for (const runtime of ['node', 'node }; globalThis.injected = true; //', 'node"\n/* café */']) {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'gspot.toml': stringify({
                 version: 1,
                 presets: ['javascript'],

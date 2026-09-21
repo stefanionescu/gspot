@@ -1,7 +1,7 @@
 import { symlinkSync } from 'node:fs';
 // Planted repository for the library presets: each ESLint addition fires on a small component, and the two file checks fire on theirs.
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -85,10 +85,12 @@ describe('the library presets', () => {
     test(
         'each ESLint addition and each file check fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 '.gitignore': 'node_modules\n',
                 'package.json': PACKAGE,
-                'tsconfig.json': '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "include": ["src"]\n}\n',
+                'tsconfig.json':
+                    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n',
                 'src/answer.ts': CLEAN,
             });
             symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
@@ -97,6 +99,8 @@ describe('the library presets', () => {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const clean = await run(sandbox.path, ['check', '--only', 'typescript/eslint', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             for (const [rule, path, text] of LINT) {

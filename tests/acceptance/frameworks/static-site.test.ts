@@ -1,7 +1,7 @@
 import { symlinkSync } from 'node:fs';
 // Planted repository for the static-site preset: a small site with a build script, broken one way for each check.
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -114,13 +114,16 @@ describe('the static-site preset', () => {
     test(
         'every check passes on a clean site and fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox(FILES);
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, FILES);
             symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
             commitAll(sandbox.path);
             const environment = {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const planted of CASES) {
                 const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);

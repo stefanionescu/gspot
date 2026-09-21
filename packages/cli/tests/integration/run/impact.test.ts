@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { planRun } from '#cli/run/plan.ts';
 import type { Session } from '#types/run.ts';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { applyFixers } from '#cli/run/fixers.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
@@ -11,7 +11,7 @@ import { runBlocking } from '#cli/platform/spawn.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { changedFiles, stagedFiles } from '#cli/repository/staged.ts';
 
-const options = { stage: 'commit' as const, skips: [], localSkips: [], only: ['sandbox/project'] };
+const options = { stage: 'commit' as const, skips: [], only: ['sandbox/project'] };
 const policy = `version = 1
 presets = []
 [[scope]]
@@ -31,6 +31,7 @@ function projectChecks(session: Session): void {
     const manifest = session.manifests.get('typescript')!;
     const spec: CheckSpec = {
         name: 'sandbox/project',
+        level: 'recommended',
         stage: 'commit',
         runs: 'per-scope',
         coverage: [],
@@ -56,7 +57,8 @@ test.each([
     ['delete', 'changed'],
     ['rename', 'changed'],
 ])('a last-file %s triggers the affected project with %s selection', async (operation, selection) => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         'api/source.ts': 'export {};\n',
         'web/kept.ts': 'export {};\n',
@@ -71,13 +73,13 @@ test.each([
     projectChecks(session);
     const revision =
         selection === 'staged'
-            ? { staged: stagedFiles(sandbox.path).staged }
-            : { changed: changedFiles(sandbox.path, 'HEAD').paths };
-    const planned = planRun(session, { ...options, ...revision });
+            ? { staged: (await stagedFiles(sandbox.path)).staged }
+            : { changed: (await changedFiles(sandbox.path, 'HEAD')).paths };
+    const planned = await planRun(session, { ...options, ...revision });
     const api = planned.find((check) => check.scope.scope.path === 'api')!;
     expect(api.files).toEqual([]);
     expect(api.triggerPaths).toContain('api/source.ts');
-    const fileChecks = planRun(session, { ...options, only: ['sandbox/files'], ...revision });
+    const fileChecks = await planRun(session, { ...options, only: ['sandbox/files'], ...revision });
     expect(fileChecks.flatMap((check) => check.triggerPaths)).toEqual([]);
     expect(fileChecks.flatMap((check) => check.files.map((file) => file.path))).toEqual(
         operation === 'delete' ? [] : ['web/source.ts'],
@@ -99,7 +101,8 @@ test.each([
 });
 
 test('a positional file trigger preserves project-wide input and findings', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         'api/source.ts': 'export {};\n',
         'api/caller.ts': 'export {};\n',
@@ -107,7 +110,7 @@ test('a positional file trigger preserves project-wide input and findings', asyn
     });
     const session = await openSession(sandbox.path);
     projectChecks(session);
-    const planned = planRun(session, { ...options, paths: ['api/source.ts'] });
+    const planned = await planRun(session, { ...options, paths: ['api/source.ts'] });
     const affected = planned.filter((check) => check.files.length > 0);
     expect(affected.map((check) => check.scope.scope.path)).toEqual(['api']);
     expect(affected[0]?.files.map((file) => file.path)).toEqual(['api/caller.ts', 'api/source.ts']);
@@ -121,3 +124,44 @@ test('a positional file trigger preserves project-wide input and findings', asyn
     expect(outcome.report.exitCode).toBe(1);
     expect(outcome.report.checks[0]?.findings[0]?.message).toBe('Project finding');
 });
+
+test.each(['integrity', 'naming', 'structure', 'prose'] as const)(
+    'an unknown %s implementation refuses the complete plan before any command runs',
+    async (engine) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\npresets = ["typescript"]\n',
+            'source.ts': 'export const count = 1;\n',
+        });
+        const session = await openSession(sandbox.path);
+        const selected = session.scopes[0]!.selected.find(({ preset }) => preset.name === 'typescript')!;
+        const definition = {
+            name: 'sandbox/command',
+            level: 'recommended',
+            stage: 'commit',
+            runs: 'per-file-list',
+            coverage: [],
+            summary: 'Inspect the source file.',
+            why: 'The input must be valid.',
+            help: 'Correct the source file.',
+        } as const;
+        const first: CheckSpec = {
+            ...definition,
+            coverage: [],
+            command: [process.execPath, '-e', 'await Bun.write("started.txt", "started")'],
+        };
+        const invalid: CheckSpec = {
+            ...definition,
+            coverage: [],
+            name: 'sandbox/unknown',
+            engine,
+            analysis: 'unknown-analysis',
+        };
+        session.scopes[0]!.selected = [{ ...selected, checks: [first, invalid] }];
+        await expect(
+            executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false, noCache: true }),
+        ).rejects.toThrow(`No ${engine} analysis is called unknown-analysis.`);
+        expect(existsSync(join(sandbox.path, 'started.txt'))).toBe(false);
+        expect(existsSync(join(sandbox.path, '.gspot/report.json'))).toBe(false);
+    },
+);

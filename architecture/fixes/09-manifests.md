@@ -168,9 +168,9 @@ and `JSON_INDENT` each stand in two or three files. The release targets are writ
 `build.ts`, `publish.ts`, and the `uname` cases of `emit/workflow.ts`, in three spellings.
 `PATH_KEYS` is written in both profile files. The binary embeds `schema/`, and no code reads it.
 
-**Target.** One constant for each, in `config/paths.ts` or beside its one owner.
+**Target.** One owner for genuinely shared contracts. Keep local constants beside their consumers.
 
-**Files.** New `config/paths.ts`, new `config/targets.ts`, and each file that held a copy.
+**Files.** Change the actual shared owner and its callers; do not add a constants directory.
 
 **Logic.** `targets.ts` holds seven rows (K-280) with `os`, `arch`, the Bun target, the npm package name,
 and the `uname` pair. `PATH_KEYS` lives in `profile/schema.ts`.
@@ -179,7 +179,7 @@ and the `uname` pair. `PATH_KEYS` lives in `profile/schema.ts`.
 
 **Tests.** None beyond the compiler.
 
-**Done when.** A search for `.mise/conf.d` under `packages/` finds `config/paths.ts` alone.
+**Done when.** Task generation, execution, and installed package selection agree on their shared contracts. File placement and occurrence counts are not acceptance criteria.
 
 ## K-24: small duplicates inside the engines
 

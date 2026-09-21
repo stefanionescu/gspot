@@ -1,13 +1,14 @@
 StylesPath = vale/styles
 MinAlertLevel = suggestion
 SkippedScopes = script, style, pre, figure, table
-Packages = Google, Microsoft, write-good, proselint, alex, RedHat, Harper
+Packages = <%= isAll ? "Google, Microsoft, write-good, proselint, alex, RedHat, Harper" : "" %>
 Vocab = gspot
 
 [*]
-BasedOnStyles = Vale, gspot, Google, Microsoft, write-good, proselint, alex, RedHat, Harper
+BasedOnStyles = <%= isAll ? "Vale, gspot, Google, Microsoft, write-good, proselint, alex, RedHat, Harper" : "gspot" %>
 BlockIgnores = <%= prose.blockIgnores.join(', ') %>
 TokenIgnores = <%= prose.tokenIgnores.join(', ') %>
+<% if (isAll) { %>
 # "typos owns spelling"
 Vale.Spelling = NO
 # "typos owns spelling"
@@ -194,6 +195,6 @@ Harper.OkToOkay = NO
 Harper.MoreAdjective2 = NO
 # "it reports that an inflected form exists, which is not an error"
 Harper.MoreAdjective4 = NO
-<% for (const entry of policy.prose.disabled) { %># <%= json(entry.reason, 0) %>
-<%= entry.rule %> = NO
-<% } %>
+<% } else { for (const style of prose.styles) { if (style !== 'dates') { %>
+gspot.<%= style %> = NO
+<% } } } %>

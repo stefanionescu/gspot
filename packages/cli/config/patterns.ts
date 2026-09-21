@@ -126,15 +126,22 @@ export const CONVENTIONAL_CONFIG_PATHS: Record<string, string[]> = {
     prettier: [
         '.prettierrc',
         '.prettierrc.json',
-        '.prettierrc.js',
-        '.prettierrc.cjs',
-        '.prettierrc.mjs',
         '.prettierrc.yml',
         '.prettierrc.yaml',
-        '.prettierrc.toml',
+        '.prettierrc.json5',
+        '.prettierrc.js',
         'prettier.config.js',
+        '.prettierrc.ts',
+        'prettier.config.ts',
+        '.prettierrc.mjs',
         'prettier.config.mjs',
+        '.prettierrc.mts',
+        'prettier.config.mts',
+        '.prettierrc.cjs',
         'prettier.config.cjs',
+        '.prettierrc.cts',
+        'prettier.config.cts',
+        '.prettierrc.toml',
     ],
     prettierignore: ['.prettierignore'],
     editorconfig: ['.editorconfig'],
@@ -257,10 +264,9 @@ export const RULES_DIRECTORY_NAMES = ['rules', '.rules', '.cursor/rules', 'docs/
 /** License and notice files are another party's text, kept as written. */
 export const LICENSE_FILE = /^(?:LICENSE|LICENCE|COPYING|NOTICE)(?:$|[.-])/iu;
 
-/** Files gspot or a tool it drives writes; nobody edits them, so they are generated. A baseline keeps the layout its tool gave it. */
+/** Files gspot or a tool it drives writes; nobody edits them, so they are generated. */
 export const INSTALLED_PREFIXES = [
     '.gspot/rules/',
-    '.gspot/baselines/',
     '.gspot/vale/styles/gspot/',
     '.gspot/vale/styles/config/vocabularies/gspot/',
 ];
@@ -268,3 +274,6 @@ export const INSTALLED_PREFIXES = [
 /** Where Vale packages land; everything there except the gspot style and vocabulary is vendored. */
 export const VALE_STYLES_PREFIX = '.gspot/vale/styles/';
 export const VALE_OWN_PREFIXES = ['.gspot/vale/styles/gspot/', '.gspot/vale/styles/config/vocabularies/gspot/'];
+
+/** Recovery and ownership metadata never enter repository checks or generated proposals. */
+export const LIFECYCLE_PRIVATE_PATH = /^\.gspot\/(?:ownership\.json$|mutation\.lock$|recovery(?:\/|$))/iu;

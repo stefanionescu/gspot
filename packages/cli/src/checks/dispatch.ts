@@ -1,7 +1,7 @@
 // The integrity engine: one function per check, chosen by `analysis =` in the manifest.
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import { localeFiles } from '#cli/checks/i18n.ts';
+import type { Engine } from '#types/run.ts';
+import type { CheckSpec } from '#types/manifest.ts';
+import { localeFiles } from '#cli/checks/i18n/locales.ts';
 import { cssModuleUsage } from '#cli/checks/css.ts';
 import { fences } from '#cli/checks/docs/fences.ts';
 import { ansibleLint } from '#cli/checks/ansible.ts';
@@ -44,7 +44,6 @@ import { gitleaksBaseline } from '#cli/checks/security/gitleaks-baseline.ts';
 import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
 import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
-import { baselinesCurrent } from '#cli/checks/repository/baselines-current.ts';
 import { frameworkBuild, frameworkTypes } from '#cli/checks/framework-build.ts';
 import { sqlBlockComments, sqlFileLength, sqlSyntax } from '#cli/checks/sql.ts';
 import { buildReproducible, siteBuilds } from '#cli/checks/static-site/build.ts';
@@ -85,7 +84,6 @@ const checks: Record<string, IntegrityCheck> = {
     'readme-shape': readmeShape,
     fences,
     'env-example': envExample,
-    'baselines-current': baselinesCurrent,
     'config-purity': configurationPurity,
     suppressions,
     'allowlists-match': allowlistsMatch,
@@ -178,14 +176,10 @@ const checks: Record<string, IntegrityCheck> = {
     'gitleaks-baseline': gitleaksBaseline,
 };
 
-/**
- * Runs the analysis a check names.
- * @param input the engine input
- * @returns the findings
- */
-export async function runIntegrity(input: EngineInput): Promise<Finding[]> {
-    const name = input.spec.analysis ?? input.spec.name.slice(input.spec.name.indexOf('/') + 1);
+/** Resolve the declared integrity analysis before executing any checks. */
+export function resolveIntegrity(spec: CheckSpec): Engine {
+    const name = spec.analysis ?? spec.name.slice(spec.name.indexOf('/') + 1);
     const check = checks[name];
     if (!check) throw new Error(`No integrity analysis is called ${name}.`);
-    return check(input);
+    return check;
 }

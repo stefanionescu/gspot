@@ -1,46 +1,43 @@
 // Planted repository: uninstall removes what init wrote, the package.json entries and the lefthook commands included.
 import { join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, PLANTED_TIMEOUT_MS, run, script } from '#tests/harness/planted.ts';
 
 describe('uninstall', () => {
     test(
         'removes the generated files, its package.json entries and its lefthook commands, and keeps the rest',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'scripts/a.sh': script,
                 'package.json':
                     '{"name":"planted","private":true,"scripts":{"build":"true"},"devDependencies":{"left-pad":"1.3.0"}}\n',
                 'lefthook.yml': 'pre-commit:\n    commands:\n        mine:\n            run: echo mine\n',
             });
             commitAll(sandbox.path);
-            const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
-            await run(
-                sandbox.path,
-                [
-                    'init',
-                    '--yes',
-                    '--presets',
-                    'bash',
-                    '--runner',
-                    'bun',
-                    '--hooks',
-                    'lefthook',
-                    '--no-ci',
-                    '--no-rules',
-                    '--no-install',
-                ],
-                environment,
-            );
+            await run(sandbox.path, [
+                'init',
+                '--yes',
+                '--presets',
+                'bash',
+                '--runner',
+                'bun',
+                '--hooks',
+                'lefthook',
+                '--no-ci',
+                '--no-rules',
+                '--no-install',
+            ]);
             const installed = JSON.parse(readFileSync(join(sandbox.path, 'package.json'), 'utf8')) as {
                 scripts: Record<string, string>;
             };
             expect(installed.scripts['check']).toBe('gspot check');
             expect(readFileSync(join(sandbox.path, 'lefthook.yml'), 'utf8')).toContain('gspot');
-            const removed = await run(sandbox.path, ['uninstall', '--yes'], environment);
+            const removed = await run(sandbox.path, ['uninstall', '--yes', '--json']);
             expect(removed.code).toBe(0);
+            expect((JSON.parse(removed.stdout) as { applied: boolean }).applied).toBe(true);
             const manifest = JSON.parse(readFileSync(join(sandbox.path, 'package.json'), 'utf8')) as {
                 scripts: Record<string, string>;
                 devDependencies: Record<string, string>;
@@ -50,7 +47,9 @@ describe('uninstall', () => {
             const lefthook = readFileSync(join(sandbox.path, 'lefthook.yml'), 'utf8');
             expect(lefthook).toContain('mine');
             expect(lefthook).not.toContain('gspot');
-            expect(existsSync(join(sandbox.path, '.gspot'))).toBe(false);
+            expect(existsSync(join(sandbox.path, '.gspot/recovery'))).toBe(true);
+            expect(readFileSync(join(sandbox.path, '.gitignore'), 'utf8')).toContain('.gspot/recovery/');
+            expect(existsSync(join(sandbox.path, '.gspot/shellcheckrc'))).toBe(false);
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(true);
         },
         PLANTED_TIMEOUT_MS,

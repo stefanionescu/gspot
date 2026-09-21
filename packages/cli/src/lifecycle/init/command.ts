@@ -1,7 +1,10 @@
+import { agentFiles } from '#cli/rules/managed-block.ts';
+import { InstallationError } from '#cli/lifecycle/install-error.ts';
 // init: read the repository, propose a policy, print the plan, write it after a yes, install the tools.
-import { join } from 'node:path';
-import { writeFileSync } from 'node:fs';
-import { git } from '#cli/platform/spawn.ts';
+import { isDeepStrictEqual } from 'node:util';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
 import type { Profile } from '#types/profile.ts';
 import type { TomlTable } from '#types/config.ts';
 import { openSession } from '#cli/run/session.ts';
@@ -9,6 +12,7 @@ import { compact } from '#cli/policy/normalize.ts';
 import { readProfile } from '#cli/profile/read.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { proposeText } from '#cli/policy/propose.ts';
+import { emitAll } from '#cli/emit/targets.ts';
 import { applyAll } from '#cli/emit/apply-command.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { initPlanText } from '#cli/output/plan-text.ts';
@@ -24,13 +28,12 @@ import { presetManifests } from '#cli/presets/read-manifests.ts';
 import { GSPOT_VERSION, writePin } from '#cli/run/version-pin.ts';
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import { newerVersion } from '#cli/lifecycle/upgrade/newer-version.ts';
 import { askInitQuestions, askPresets } from '#cli/lifecycle/questions.ts';
 import { buildInitPlan, buildProposal } from '#cli/lifecycle/init/plan.ts';
-import { installTools, updatePackageJson } from '#cli/lifecycle/install-tools.ts';
-import { applyBlock, gitignoreBlock, fileText } from '#cli/emit/managed-blocks.ts';
+import { installTools } from '#cli/lifecycle/install-tools.ts';
+import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
 import { hasPolicy, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
-import { collectCarried, deleteReplaced, ownedTools, unownedTools } from '#cli/lifecycle/takeover.ts';
+import { collectCarried, retireReplaced, ownedTools, unownedTools } from '#cli/lifecycle/takeover.ts';
 
 import type {
     InitOptions,
@@ -44,11 +47,11 @@ import type {
 const ALREADY_INSTALLED =
     'This repository already has a gspot.toml. Run `gspot doctor` to see what changed since the install and the command that applies each change.\n';
 
-// git is the only way back from a takeover, so init starts from a tree with nothing uncommitted.
 function assertCleanTree(root: string, options: InitOptions): void {
     if (options.allowDirty || options.isDryRun) return;
-    const status = git(root, ['status', '--porcelain']);
-    const changed = (status ?? '').split('\n').filter((line) => line.trim() !== '');
+    const status = runBlocking(['git', 'status', '--porcelain'], { cwd: root });
+    if (status.code !== 0) throw new Error(`Git status failed (exit ${String(status.code)}): ${status.stderr.trim()}`);
+    const changed = status.stdout.split('\n').filter((line) => line.trim() !== '');
     if (changed.length > 0) throw new PolicyError([messages.dirtyTree(changed.length)]);
 }
 
@@ -96,7 +99,8 @@ async function chosenSelection(
 
 async function prepare(root: string, options: InitOptions): Promise<InitPrepared> {
     const manifests = presetManifests();
-    const repo = await readRepository(root, [], []);
+    const repo = await readRepository(root, [], [], []);
+    if (repo.hasGit) assertCleanTree(root, options);
     const facts = readManifests(root, repo.files);
     const workspace = workspaceScopes(root, facts);
     const inputs = { root, repo, facts, workspace: workspace.scopes, manifests };
@@ -116,13 +120,19 @@ async function prepare(root: string, options: InitOptions): Promise<InitPrepared
             }),
         );
     const selection = await chosenSelection(inputs, options, detected);
-    const carried = collectCarried(root, tooling, selection.selectedIds);
-    const answers = await askInitQuestions(root, options, tooling, carried.formatSource);
+    const carried = await collectCarried(
+        root,
+        tooling,
+        selection.selectedIds,
+        repo.files.filter((file) => file.nature === 'source').map((file) => file.path),
+    );
+    const answers = await askInitQuestions(root, options, tooling, carried.formatter);
     const proposal = buildProposal(root, selection, answers, carried);
     const profileTables = options.profile?.tables as TomlTable | undefined;
     const policyText = proposeText(profileTables ? { ...proposal, profileTables } : proposal);
     // The proposal is read the way every later command reads it, before anything is written.
-    assertPolicyComplete(parsePolicyText(policyText, 'gspot.toml', root));
+    const policy = parsePolicyText(policyText, 'gspot.toml', root);
+    assertPolicyComplete(policy);
     const everySelected = [...selection.selectedIds]
         .map((id) => manifests.get(id))
         .filter((manifest) => manifest !== undefined);
@@ -134,6 +144,7 @@ async function prepare(root: string, options: InitOptions): Promise<InitPrepared
         ...(options.profile ? { profile: profileLine(options.profile, selection) } : {}),
         answers,
         carried,
+        agents: policy.rules.install ? agentFiles(root, policy.rules.agents) : [],
         policyLines: policyText.split('\n').length,
     });
     return {
@@ -141,6 +152,7 @@ async function prepare(root: string, options: InitOptions): Promise<InitPrepared
         policyText,
         runner: answers.runner,
         removed: carried.removed,
+        observed: carried.observed,
     };
 }
 
@@ -149,31 +161,50 @@ async function write(
     options: InitOptions,
     prepared: InitPrepared,
 ): Promise<{ lines: string[]; installNote: string }> {
-    writeFileSync(join(root, 'gspot.toml'), prepared.policyText);
-    writePin(root, GSPOT_VERSION);
-    writeFileSync(join(root, '.gitignore'), applyBlock(fileText(root, '.gitignore'), gitignoreBlock(), 'hash'));
-    const opened = await openSession(root);
-    await updatePackageJson(
-        root,
-        prepared.runner,
-        opened.scopes.flatMap((scope) => scope.selected),
-    );
-    const session = await openSession(root);
-    const synced = await applyAll(session);
-    const installNote = await installTools(root, prepared.runner, synced, options.install);
-    const rendered = new Set([...synced.written, ...synced.unchanged]);
-    deleteReplaced(
-        root,
-        prepared.removed.filter((entry) => !rendered.has(entry.path)),
-    );
-    // Refresh generated file lists after the accepted takeover.
-    const after = await openSession(root);
-    await applyAll(after);
-    const newer = await newerVersion(GSPOT_VERSION);
-    const { dim } = paint();
-    const version =
-        newer === undefined ? `gspot ${GSPOT_VERSION}` : `gspot ${newer} is available: gspot upgrade --dry-run`;
-    return { lines: ['written: gspot.toml, .gspot/', installNote, dim(version), ''], installNote };
+    return withLifecycleOwner(root, async (owner) => {
+        for (const [path, original] of prepared.observed)
+            if (!isDeepStrictEqual(owner.read(path), original))
+                throw new PolicyError([
+                    `Configuration changed after takeover was planned: ${path}. Run gspot init again.`,
+                ]);
+        const removedPaths = new Set(prepared.removed.map((entry) => entry.path));
+        const takeover = new Map([...prepared.observed].filter(([path]) => removedPaths.has(path)));
+        owner.replace('gspot.toml', { bytes: Buffer.from(prepared.policyText), mode: 0o644 }, 'policy', true);
+        writePin(root, GSPOT_VERSION);
+        owner.replaceBlock('.gitignore', gitignoreBlock(), 'hash');
+        const session = await openSession(root);
+        const outputs = emitAll(session, takeover);
+        const generated = new Set(
+            [...outputs.files, ...outputs.blocks, ...outputs.merges, ...outputs.packages].map((output) => output.path),
+        );
+        const synced = await applyAll(session, takeover);
+        const retired = retireReplaced(
+            root,
+            prepared.removed.filter((entry) => !generated.has(entry.path)),
+            prepared.observed,
+        );
+        synced.notes.push(
+            ...retired.preserved.map(
+                (path) => `retained ${path}: directory contents or subsequent edits are not authorized for deletion`,
+            ),
+        );
+        let installNote: string;
+        try {
+            installNote = await installTools(session, options.install);
+        } catch (error) {
+            if (
+                !(error instanceof AggregateError) ||
+                !error.errors.every(
+                    (failure: unknown) => failure instanceof MissingToolError || failure instanceof InstallationError,
+                )
+            )
+                throw error;
+            installNote = `${error.message}\nSetup was written; tool installation is incomplete. Run: gspot install`;
+        }
+        const { dim } = paint();
+        const version = `gspot ${GSPOT_VERSION}`;
+        return { lines: ['written: gspot.toml, .gspot/', ...synced.notes, installNote, dim(version), ''], installNote };
+    });
 }
 
 /**
@@ -184,7 +215,6 @@ async function write(
 export async function initCommand(options: InitOptions): Promise<InitResult> {
     const root = findRoot(options.cwd);
     if (hasPolicy(root)) return { text: ALREADY_INSTALLED, json: { error: 'already-installed' }, exitCode: 2 };
-    assertCleanTree(root, options);
     const effective =
         options.from === undefined
             ? options

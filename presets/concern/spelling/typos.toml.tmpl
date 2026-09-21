@@ -14,7 +14,7 @@
             '*.pbxproj', '*.xcstrings', '*.svg', '*.min.js', '*.min.css',
             '.gspot/cache/', '.gspot/vale/', '.gspot/report.json', '.gspot/report.sarif', '.gspot/baselines/',
             ...(settings['tools.typos.exclude'] ?? []).flatMap((entry) => entry.paths),
-            ...policy.declares.flatMap((entry) => entry.paths),
+            ...policy.declarations.flatMap((entry) => entry.paths),
         ],
     },
 }).trimEnd() %>

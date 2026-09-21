@@ -19,23 +19,17 @@ export type ShapeProblem = [number, string, string];
 /** One environment variable read in code: the key and the line it is read on. */
 export type EnvRead = { key: string; line: number };
 
-/** A tool's own suppressions file: its path from the root and the scope it belongs to (the root, until a tool runs per scope). */
-export type SuppressionFile = { path: string; scope: string };
-
 /** A path pattern the policy holds and where it sits. */
 export type PathPattern = { pattern: string; where: string };
 
-/** One inline suppression form: its name, the directive that marks it, how a reason is written after it, and whether it is refused outright. */
-export type SuppressionForm = { form: string; marker: RegExp; reason: RegExp; isForbidden?: boolean };
+/** One suppression observed in a source comment through the selected tool definitions. */
+export type SuppressionComment = { file: string; line: number; form: string; reason?: string; forbidden: boolean };
 
 /** One finding as gitleaks writes it into a report or a baseline. */
 export type GitleaksFinding = { Fingerprint: string; File: string; RuleID: string; Commit?: string };
 
 /** The reason for one reviewed baseline entry. */
 export type BaselineReason = { fingerprint: string; reason: string };
-
-/** What the npm license checker prints: one entry for each installed package, by name and version. */
-export type LicenseReport = Record<string, { licenses?: string | string[] }>;
 
 /** One package accepted under a license outside the allowed list. */
 export type LicenseException = { package: string; license: string; reason: string };

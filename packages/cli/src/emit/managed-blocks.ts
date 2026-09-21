@@ -5,10 +5,15 @@ import { existsSync, readFileSync } from 'node:fs';
 import { HASH_BLOCK_END, HASH_BLOCK_START, MANAGED_BLOCK_END, MANAGED_BLOCK_START } from '#config/markers.ts';
 
 const GITIGNORE_LINES = [
-    'gspot.local.toml',
+    '.gspot/node_modules/',
+    '.gspot/.venv/',
+    '.gspot/ownership.json',
+    '.gspot/mutation.lock',
+    '.gspot/recovery/',
     '.gspot/cache/',
     '.gspot/report.json',
     '.gspot/report.sarif',
+    '.gspot/report.codequality.json',
     '.gspot/vale/styles/Google/',
     '.gspot/vale/styles/Microsoft/',
     '.gspot/vale/styles/write-good/',
@@ -27,54 +32,34 @@ function markers(style: BlockStyle): { start: string; end: string } {
         : { start: HASH_BLOCK_START, end: HASH_BLOCK_END };
 }
 
-function withoutTrailingNewlines(text: string): string {
-    let end = text.length;
-    while (end > 0 && text[end - 1] === '\n') end -= 1;
-    return text.slice(0, end);
+/** Locate one complete block, refusing ambiguous or malformed markers. */
+export function blockSpan(text: string, style: BlockStyle): { start: number; end: number } | undefined {
+    const markersForStyle = markers(style);
+    const start = text.indexOf(markersForStyle.start);
+    const closing = text.indexOf(markersForStyle.end);
+    if (start === -1 && closing === -1) return undefined;
+    if (
+        start === -1 ||
+        closing < start ||
+        text.indexOf(markersForStyle.start, start + markersForStyle.start.length) !== -1 ||
+        text.indexOf(markersForStyle.end, closing + markersForStyle.end.length) !== -1
+    ) {
+        throw new Error('Managed block markers are incomplete or repeated. Preserve the file and resolve its markers.');
+    }
+    let end = closing + markersForStyle.end.length;
+    if (text[end] === '\r' && text[end + 1] === '\n') end += 2;
+    else if (text[end] === '\n') end += 1;
+    return { start, end };
 }
 
-function withoutLeadingNewlines(text: string): string {
-    let start = 0;
-    while (start < text.length && text[start] === '\n') start += 1;
-    return text.slice(start);
-}
-
-/**
- * Puts the block into the text: replaces the existing block between markers, or appends one.
- * @param existing the file's text
- * @param block the block body
- * @param style markdown or hash markers
- * @returns the new text
- */
+/** Replace a complete block or append it, preserving authored bytes around it. */
 export function applyBlock(existing: string, block: string, style: BlockStyle): string {
     const { start, end } = markers(style);
     const gap = style === 'markdown' ? '\n\n' : '\n';
     const body = `${start}${gap}${block.trim()}${gap}${end}\n`;
-    const startIndex = existing.indexOf(start);
-    const endIndex = existing.indexOf(end);
-    if (startIndex !== -1 && endIndex > startIndex) {
-        const after = existing.slice(endIndex + end.length);
-        return `${existing.slice(0, startIndex)}${body}${after.startsWith('\n') ? after.slice(1) : after}`;
-    }
-    if (existing.trim() === '') return body;
-    return `${withoutTrailingNewlines(existing)}\n\n${body}`;
-}
-
-/**
- * Removes the block; returns the text without it.
- * @param existing the file's text
- * @param style markdown or hash markers
- * @returns the text without the block, '' when nothing else was there
- */
-export function withoutBlock(existing: string, style: BlockStyle): string {
-    const { start, end } = markers(style);
-    const startIndex = existing.indexOf(start);
-    const endIndex = existing.indexOf(end);
-    if (startIndex === -1 || endIndex === -1) return existing;
-    const before = existing.slice(0, startIndex);
-    const head = before === '' ? '' : `${withoutTrailingNewlines(before)}\n`;
-    const joined = `${head}${withoutLeadingNewlines(existing.slice(endIndex + end.length))}`;
-    return joined.trim() === '' ? '' : joined;
+    const span = blockSpan(existing, style);
+    if (span !== undefined) return existing.slice(0, span.start) + body + existing.slice(span.end);
+    return existing + (existing === '' ? '' : existing.endsWith('\n') ? '\n' : '\n\n') + body;
 }
 
 /**

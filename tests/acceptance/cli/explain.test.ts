@@ -1,4 +1,4 @@
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, run, script } from '#tests/harness/planted.ts';
 
@@ -18,7 +18,8 @@ reason = "The script deliberately splits a list of arguments."
 
 describe('explain', () => {
     test('a recognized name keeps its meaning and an explicit path selects a colliding file', async () => {
-        await using sandbox = await createSandbox({ 'gspot.toml': POLICY, bash: script, 'api/build.sh': script });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': POLICY, bash: script, 'api/build.sh': script });
         commitAll(sandbox.path);
         const preset = await run(sandbox.path, ['explain', 'bash', '--json']);
         expect(preset.code, preset.stdout + preset.stderr).toBe(0);
@@ -29,7 +30,8 @@ describe('explain', () => {
     });
 
     test('a file path reports its scope, checks, and recorded ignores', async () => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'gspot.toml': POLICY,
             'api/build.sh': script,
         });
@@ -60,7 +62,8 @@ describe('explain', () => {
     });
 
     test('a missing explicit path fails', async () => {
-        await using sandbox = await createSandbox({ 'gspot.toml': POLICY, 'api/build.sh': script });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': POLICY, 'api/build.sh': script });
         commitAll(sandbox.path);
         const missing = await run(sandbox.path, ['explain', './missing.sh']);
         expect(missing.code).toBe(2);
@@ -68,7 +71,8 @@ describe('explain', () => {
     });
 
     test('preset and check explanations still resolve without a policy', async () => {
-        await using sandbox = await createSandbox({ 'README.md': '# Example\n' });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'README.md': '# Example\n' });
         commitAll(sandbox.path);
         for (const [subject, kind] of [
             ['bash', 'preset'],

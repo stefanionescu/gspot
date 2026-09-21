@@ -74,7 +74,7 @@ export type EffectivePolicy = {
     terms: Term[];
     reserved: Map<string, string[]>;
     external: Set<string>;
-    allowed: Map<string, string>;
+    allowed: Map<string, string | undefined>;
     contractProperties: Map<string, Set<string>>;
     rules: PathRule[];
     languages: Record<string, ShippedLanguage>;

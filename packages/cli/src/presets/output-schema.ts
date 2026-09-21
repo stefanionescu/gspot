@@ -2,7 +2,7 @@
 import { z } from 'zod';
 
 export const outputSchema = z.strictObject({
-    format: z.enum(['regex', 'grouped', 'eslint-json', 'json', 'lines', 'none']),
+    format: z.enum(['regex', 'grouped', 'eslint-json', 'trufflehog-json', 'json', 'lines', 'none']),
     items: z.string().optional(),
     children: z.string().optional(),
     line_base: z.union([z.literal(0), z.literal(1)]).optional(),

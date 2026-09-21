@@ -1,4 +1,6 @@
 // Selection: the presets named plus every preset they require, dependencies first, in order of first mention.
+import type { Policy } from '#types/config.ts';
+import { scopeAncestors } from '#cli/repository/scopes.ts';
 import type { Session } from '#types/run.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
@@ -83,18 +85,21 @@ export function selectPresets(presetNames: string[], manifests: Map<string, Mani
 }
 
 /**
- * The selection for one scope: the root selection plus the scope's own, deduplicated in order.
- * @param rootNames the root preset names
- * @param scopeNames the scope's preset names
+ * The root selection and each ancestor scope selection, deduplicated in order.
+ * @param policy the declared selections
+ * @param scope the scope path
  * @param manifests every preset manifest
  * @returns the manifests in order
  */
 export function selectForScope(
-    rootNames: string[],
-    scopeNames: string[],
+    policy: Pick<Policy, 'presets' | 'scopes'>,
+    scope: string,
     manifests: Map<string, Manifest>,
 ): Manifest[] {
-    return selectPresets([...rootNames, ...scopeNames], manifests);
+    return selectPresets(
+        [...policy.presets, ...scopeAncestors(policy.scopes, scope).flatMap((entry) => entry.presets)],
+        manifests,
+    );
 }
 
 /**

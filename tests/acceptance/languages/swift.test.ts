@@ -1,7 +1,7 @@
 // Planted repository for the swift preset: a force cast, doubled spaces, and a snake case function.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -84,10 +84,13 @@ describe('the swift preset', () => {
         async () => {
             const header = '// Greeting.swift\n// Created by Alex Garcia.\n// Copyright 2026 Example Contributors.\n\n';
             const path = 'Sources/App/Greeting.swift';
-            await using sandbox = await createSandbox({ [path]: header + CLEAN });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { [path]: header + CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const check of ['swift/swiftlint', 'swift/swiftformat']) {
                 const result = await run(sandbox.path, ['check', '--only', check, '--no-cache'], environment);
                 expect(result.code, result.stdout + result.stderr).toBe(0);
@@ -107,10 +110,13 @@ describe('the swift preset', () => {
     test(
         'SwiftLint, SwiftFormat and the naming engine fire on their planted defects, and the build waits for push',
         async () => {
-            await using sandbox = await createSandbox({ 'Sources/App/Greeting.swift': CLEAN });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'Sources/App/Greeting.swift': CLEAN });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'typos', 'ec']) };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const planted of CASES) {
                 const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);
@@ -151,7 +157,8 @@ describe('the swift preset inside a scope', () => {
     test(
         'SwiftLint and SwiftFormat read the configuration of their scope, and the findings carry the scope path',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'ios/Sources/App/Greeting.swift': CLEAN,
                 'README.md': '# planted\n',
             });
@@ -175,6 +182,8 @@ describe('the swift preset inside a scope', () => {
                 '--no-install',
             ];
             await install(sandbox.path, argv, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const id of ['swift/swiftlint', 'swift/swiftformat']) {
                 const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);
                 expect(clean.code, `${id}: ${clean.stdout}${clean.stderr}`).toBe(0);
@@ -228,7 +237,8 @@ describe('the swift preset over a package', () => {
     test(
         'the build, the analyzer and Periphery run on a Swift package and fire on their planted defects',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 '.gitignore': '.build\n',
                 'Package.swift': PACKAGE,
                 'Sources/App/Greeting.swift': LIBRARY,
@@ -236,6 +246,8 @@ describe('the swift preset over a package', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['swiftlint', 'swiftformat', 'periphery', 'typos', 'ec']) };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const planted of BUILD_CASES) {
                 const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);

@@ -1,5 +1,5 @@
 // Planted repository for the Python structure checks: one module shaped wrong for each check.
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -126,7 +126,8 @@ describe('the Python structure checks', () => {
     test(
         'every check passes on a clean module and fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'pyproject.toml': PROJECT,
                 'planted/__init__.py': '"""The planted package."""\n',
                 'planted/prices.py': CLEAN,
@@ -134,6 +135,8 @@ describe('the Python structure checks', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ruff', 'typos', 'ec']) };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const planted of CASES) {
                 const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);

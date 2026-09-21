@@ -69,7 +69,7 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
         .map((setting) => setting.name);
     const rules = Object.values(preset.rule_files).flat();
     const lines = [
-        `${checkName}  (${preset.preset.name} preset, ${check.stage} stage)`,
+        `${checkName}  (${preset.preset.name} preset, ${check.stage} stage, ${check.level} level)`,
         '',
         `What it looks for: ${check.summary}`,
         `Why it matters: ${check.why}`,
@@ -96,6 +96,7 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
             check: checkName,
             preset: preset.preset.name,
             stage,
+            level: check.level,
             summary,
             why,
             help,

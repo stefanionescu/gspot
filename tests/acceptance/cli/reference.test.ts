@@ -1,26 +1,51 @@
-// Acceptance on the reference repositories: init and check in a detached worktree, the repository untouched.
-
-import { git } from '#tests/harness/planted.ts';
-// Runs when GSPOT_ACCEPTANCE names the repositories, separated by a colon.
-import { describe, expect, test } from 'bun:test';
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 import { acceptanceRun } from '#tests/harness/worktree.ts';
-import { acceptanceRepositories } from '#cli/platform/environment.ts';
+import { commitAll } from '#tests/harness/planted.ts';
 
-const ACCEPTANCE_TIMEOUT_MS = 900_000;
-const repositories = acceptanceRepositories();
-
-describe.skipIf(repositories.length === 0)('acceptance on the reference repositories', () => {
-    for (const repository of repositories)
-        test(
-            `gspot installs and checks ${repository} in a worktree and leaves the repository as it was`,
-            async () => {
-                const before = git(repository, ['status', '--porcelain']).stdout;
-                const result = await acceptanceRun(repository);
-                expect(result.init).toContain('written: gspot.toml');
-                expect(result.statuses['error'] ?? 0, JSON.stringify(result.statuses)).toBe(0);
-                expect(git(repository, ['status', '--porcelain']).stdout).toBe(before);
-                expect(git(repository, ['worktree', 'list']).stdout.trim().split('\n')).toHaveLength(1);
-            },
-            ACCEPTANCE_TIMEOUT_MS,
-        );
+test('a detected reference project reports its syntax defect, accepts its correction, and preserves authored input', async () => {
+    await using repository = await testdir();
+    await createFileTree(repository.path, {
+        'entry.sh': 'if then\n',
+        '.gspot/baselines/bash.syntax.all.json': JSON.stringify({
+            check: 'bash/syntax',
+            rule: 'all',
+            count: 100,
+            recorded: '2026-01-01',
+            paths: { 'entry.sh': 100 },
+        }),
+        'authored.txt': 'Keep this authored input.\n',
+    });
+    commitAll(repository.path);
+    const result = await acceptanceRun({
+        repository: repository.path,
+        checks: ['bash/syntax'],
+        corrections: { 'entry.sh': 'echo example\n' },
+    });
+    expect(result.init).toContain('written: gspot.toml');
+    expect(result.report.exitCode).toBe(1);
+    expect(result.report.skips).toEqual([]);
+    expect(result.report.checks).toHaveLength(1);
+    expect(result.report.checks[0]).toMatchObject({
+        check: 'bash/syntax',
+        status: 'fail',
+        files: 1,
+        findings: [
+            { check: 'bash/syntax', file: 'entry.sh', line: 1, message: "syntax error near unexpected token `then'" },
+            { check: 'bash/syntax', file: 'entry.sh', line: 1, message: "`if then'" },
+        ],
+    });
+    expect(result.corrected.exitCode).toBe(0);
+    expect(result.corrected.skips).toEqual([]);
+    expect(result.corrected.failed).toEqual([]);
+    expect(result.corrected.checks).toHaveLength(1);
+    expect(result.corrected.checks[0]).toMatchObject({
+        check: 'bash/syntax',
+        status: 'ok',
+        files: 1,
+        findings: [],
+    });
+    expect(await Bun.file(join(repository.path, 'entry.sh')).text()).toBe('if then\n');
+    expect(await Bun.file(join(repository.path, 'authored.txt')).text()).toBe('Keep this authored input.\n');
 });

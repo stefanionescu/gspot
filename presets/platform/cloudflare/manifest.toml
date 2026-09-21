@@ -26,6 +26,7 @@ needs = "security"
 
 [[checks]]
 name = "cloudflare/wrangler-config"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -37,6 +38,7 @@ help = "Add the name and a compatibility_date in the form 2025-01-31."
 
 [[checks]]
 name = "cloudflare/headers-syntax"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -48,6 +50,7 @@ help = "Write each block as a path, then indented lines of a name, a colon, and 
 
 [[checks]]
 name = "cloudflare/redirects-syntax"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -59,6 +62,7 @@ help = "Write the rule as source, destination, status."
 
 [[checks]]
 name = "cloudflare/env-types-fresh"
+level = "recommended"
 stage = "push"
 runs = "once"
 engine = "integrity"

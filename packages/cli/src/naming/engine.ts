@@ -1,7 +1,8 @@
+import type { CheckSpec } from '#types/manifest.ts';
 // The naming engine: identifiers, paths and the policy schema, as one function per analysis.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
+import type { Engine, EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { isKnownCase } from '#cli/naming/cases.ts';
 import { identifiersOf } from '#cli/naming/extract.ts';
@@ -104,20 +105,19 @@ async function schemaFindings(input: EngineInput, policy: EffectivePolicy): Prom
     }));
 }
 
-/**
- * Runs the analysis a naming check names: identifiers, paths or policy-schema.
- * @param input the engine input
- * @returns the findings
- */
-export async function runNaming(input: EngineInput): Promise<Finding[]> {
-    const policy = policyFor(input);
-    if (policy === undefined) return [];
-    const analysis = input.spec.analysis ?? '';
-    if (analysis === 'identifiers') return identifierFindings(input, policy);
-    if (analysis === 'paths')
-        return pathIdentifiers(input).flatMap((identifier) =>
-            findingsFor(input, policy, [identifier], identifier.file),
-        );
-    if (analysis === 'policy-schema') return schemaFindings(input, policy);
-    throw new Error(`No naming analysis is called ${analysis}.`);
+const ANALYSES: Record<string, (input: EngineInput, policy: EffectivePolicy) => Promise<Finding[]>> = {
+    identifiers: identifierFindings,
+    paths: async (input, policy) =>
+        pathIdentifiers(input).flatMap((identifier) => findingsFor(input, policy, [identifier], identifier.file)),
+    'policy-schema': schemaFindings,
+};
+
+/** Resolve the naming analysis while retaining policy preparation at execution time. */
+export function resolveNaming(spec: CheckSpec): Engine {
+    const analysis = ANALYSES[spec.analysis ?? ''];
+    if (analysis === undefined) throw new Error(`No naming analysis is called ${spec.analysis ?? ''}.`);
+    return async (input) => {
+        const policy = policyFor(input);
+        return policy === undefined ? [] : analysis(input, policy);
+    };
 }

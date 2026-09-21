@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 
 const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
@@ -22,7 +22,8 @@ describe('development assets', () => {
         const sources = Object.fromEntries(
             SOURCES.map((path) => [`${CHECKOUT}/${path}`, readFileSync(join(ROOT, path), 'utf8')]),
         );
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             ...sources,
             [`${CHECKOUT}/presets/language/bash/manifest.toml`]: PRESET,
             [`${CHECKOUT}/probe.ts`]: PROBE,

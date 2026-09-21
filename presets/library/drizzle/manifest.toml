@@ -26,6 +26,7 @@ fragment = true
 
 [[checks]]
 name = "drizzle/relations-complete"
+level = "recommended"
 stage = "commit"
 engine = "integrity"
 analysis = "drizzle-relations"
@@ -37,6 +38,7 @@ help = "Add a relations call for the table."
 
 [[checks]]
 name = "drizzle/migrations-fresh"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"

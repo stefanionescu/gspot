@@ -56,18 +56,6 @@ function inlineIgnoreOf(style: string, line: string, index: number): InlineIgnor
     return { line: targetLine(style, line, index), check, ...(reason === undefined ? {} : { reason }) };
 }
 
-function missingReasonFinding(file: string, entry: InlineIgnore): Finding {
-    return {
-        check: 'integrity/suppressions',
-        file,
-        line: entry.line,
-        rule: 'gspot-ignore',
-        message: `This gspot-ignore for ${entry.check} has no reason.`,
-        help: 'Write the reason after two dashes: gspot-ignore <check> -- why this line is fine.',
-        fixable: false,
-    };
-}
-
 /**
  * Splits findings into kept and ignored, counting how many each entry matched.
  * @param findings the findings of one check
@@ -99,10 +87,10 @@ export function inlineIgnores(root: string, path: string): InlineIgnore[] {
 }
 
 /**
- * Applies inline ignores to findings from the gspot engines. A suppression without a reason becomes a finding itself.
+ * Applies inline ignores to findings from the gspot engines. The suppression check owns reason validation.
  * @param root the repository root
  * @param findings the findings before ignores
- * @returns the findings kept, plus one per inline ignore that has no reason
+ * @returns the findings kept
  */
 export function applyInlineIgnores(root: string, findings: Finding[]): Finding[] {
     const byFile = new Map<string, InlineIgnore[]>();
@@ -118,8 +106,5 @@ export function applyInlineIgnores(root: string, findings: Finding[]): Finding[]
             finding.engine === undefined ||
             inlineFor(finding.file).every((entry) => !(entry.check === finding.check && entry.line === finding.line)),
     );
-    const unexplained = [...byFile].flatMap(([file, inline]) =>
-        inline.filter((entry) => entry.reason === undefined).map((entry) => missingReasonFinding(file, entry)),
-    );
-    return [...kept, ...unexplained];
+    return kept;
 }

@@ -8,9 +8,9 @@ D-119 decides two levels. `recommended` holds what finds a defect, a security pr
 `generate` and `service` (D-174). `all` adds what enforces a layout, an order, a header, or one way to write a thing that
 works. `init` installs `recommended` and asks nothing.
 
-No code holds a level today: the manifest schema has no such key, and `[inspection] strict`
-changes nothing. This step builds the mechanism once, then sorts every check and every opt-in
-tool rule. The fix file of row 22 sorts what this step leaves.
+Policy and manifest schemas implement levels, and templates receive `isAll`. Remaining work
+is the behavioral review of each tool rule under K-198 and K-301. A new levels module or
+metadata framework is not required.
 
 ## K-198: every template starts at the strictest setting
 
@@ -53,23 +53,17 @@ check with no `level`.
 
 ## K-101: the plugin calls house style recommended
 
-**What is wrong.** `configs.recommended` of the plugin turns on 23 rules as errors. Rules that
-find a defect (`no-client-environment`, `require-server-only`, `no-cross-project-imports`) sit
-beside imports sorted by line length and a file comment above the imports.
+**Layout split implemented locally.** Standalone `configs.recommended` leaves placement,
+ordering, file-shape, and forwarding preferences off. `configs.all` retains those policies.
+Every existing rule remains exported for explicit selection. The CLI-generated JavaScript
+and TypeScript configuration gates layout rules at `all`, including type placement and
+import/export ordering; explicit repository rules remain the final override.
 
-**Target.** `configs.recommended` holds the rules that find a defect, and `configs.all` holds
-every rule.
-
-**Files.** `packages/eslint-plugin/src/plugin.ts`, `presets/language/javascript/eslint.config.js.tmpl`.
-
-**Logic.** Each rule states `meta.docs.level`. `plugin.ts` builds both configs from that field,
-and the template spreads the config of the level.
-
-**What goes.** The hand-written rule list of `configs.recommended`.
-
-**Tests.** A unit test of the plugin holds that every rule names a level.
-
-**Done when.** That test passes, and the README of the plugin shows both configs.
+Behavioral plugin tests exercise lone folders, interfaces, shared prefixes, and correction.
+Generated-config tests execute ESLint at both levels. Installed package acceptance exercises
+both ESM and CommonJS exports and verifies layout opt-in. No per-rule metadata registry,
+`config/` directory, or export-count test is needed. Broader recommended-rule usefulness
+remains [K-301](24-contracts.md#k-301-recommended-adoption-findings-need-usefulness-tests).
 
 ## K-135: one shell check holds sixteen rules
 

@@ -3,7 +3,7 @@ import { selectPresets } from '#cli/presets/select.ts';
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
-import { exposedSettings, listSettings, settingValue, specFor } from '#cli/policy/settings.ts';
+import { exposedSettings, settingValue, specFor } from '#cli/policy/settings.ts';
 
 const selected = selectPresets(['bash', 'naming', 'formatting', 'spelling'], presetManifests());
 const surface = exposedSettings(selected);
@@ -14,10 +14,6 @@ describe('the settings surface', () => {
         expect(specFor(surface, 'limits.python.file_lines')?.language).toBe('python');
         expect(specFor(surface, 'naming.python.parameters.max_words')?.category).toBe('parameters');
         expect(specFor(surface, 'limits.nope')).toBeUndefined();
-    });
-
-    test('every tool gets an enabled slot', () => {
-        expect(surface.specs.get('tools.shellcheck.enabled')?.direction).toBe('loosening');
     });
 
     test('resolves preset default, root table, then scope table', () => {
@@ -42,7 +38,10 @@ describe('the settings surface', () => {
     });
 
     test('raising a ceiling without a reason is a problem that names the command', () => {
-        const policy = parsePolicyText('version = 1\npresets = ["bash"]\n[limits]\nfile_lines = 400\n', 'gspot.toml');
+        const policy = parsePolicyText(
+            'version = 1\nrequire_reasons = true\npresets = ["bash"]\n[limits]\nfile_lines = 400\n',
+            'gspot.toml',
+        );
         const problems = validateAgainstSurface(surface, policy);
         expect(problems[0]).toContain('gspot set limits.file_lines 400 --reason');
     });
@@ -69,11 +68,23 @@ describe('the settings surface', () => {
         );
         expect(validateAgainstSurface(surface, policy)[0]).toContain('`marketing` term group cannot be removed');
     });
-
-    test('listSettings returns every key sorted', () => {
-        const policy = parsePolicyText('version = 1\npresets = ["bash"]\n', 'gspot.toml');
-        const keys = listSettings(surface, policy).map((row) => row.key);
-        expect(keys).toEqual(keys.toSorted((a, b) => a.localeCompare(b)));
-        expect(keys).toContain('format.indent_width');
-    });
 });
+
+test.each(['min_lines', 'min_tokens'])(
+    'raising duplication %s requires a reason, while lowering it tightens detection',
+    (name) => {
+        const selected = selectPresets(['duplication'], presetManifests());
+        const settings = exposedSettings(selected);
+        const key = `limits.duplication.${name}`;
+        const shipped = settings.defaults.get(key)!.value as number;
+        const policy = (value: number) =>
+            parsePolicyText(
+                `version = 1\nrequire_reasons = true\npresets = ["duplication"]\n[limits.duplication]\n${name} = ${String(value)}\n`,
+                'gspot.toml',
+            );
+        expect(validateAgainstSurface(settings, policy(shipped + 1)).some((problem) => problem.includes(key))).toBe(
+            true,
+        );
+        expect(validateAgainstSurface(settings, policy(shipped - 1))).toEqual([]);
+    },
+);

@@ -1,31 +1,151 @@
 name: ci
+# Jobs stay paused until the owner explicitly enables GSPOT_CI_ENABLED.
 on:
     push:
         branches: [main]
     pull_request:
+    merge_group:
+    workflow_dispatch:
+        inputs:
+            full:
+                description: Run full platform acceptance
+                type: boolean
+                default: true
+    workflow_call:
+        inputs:
+            full:
+                type: boolean
+                default: false
 permissions:
     contents: read
+concurrency:
+    group: ci-${{ github.workflow }}-${{ github.ref }}
+    cancel-in-progress: ${{ github.event_name == 'pull_request' }}
 jobs:
-    test:
-        strategy:
-            fail-fast: false
-            matrix:
-                os: [ubuntu-latest, macos-latest, windows-latest]
-        runs-on: ${{ matrix.os }}
+    affected:
+        if: vars.GSPOT_CI_ENABLED == 'true' && !inputs.full
+        runs-on: ubuntu-24.04
+        timeout-minutes: 30
+        defaults:
+            run:
+                shell: bash
         steps:
             - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   fetch-depth: 0
                   persist-credentials: false
             - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+              with:
+                  version: '2026.8.8'
+                  cache: true
+            - run: mise run --skip-tools repo:setup
+            - run: mise run --skip-tools build:plugin
+            - run: mise run --skip-tools repo:install-checks
+            - name: Check affected inputs
+              env:
+                  GSPOT_CI_BASE: ${{ github.event_name == 'pull_request' && github.event.pull_request.base.sha || github.event_name == 'merge_group' && github.event.merge_group.base_sha || github.event.before }}
+              run: mise run --skip-tools ci:affected
+            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              if: always() && !cancelled()
+              with:
+                  name: affected-${{ github.sha }}
+                  path: .gspot/report.*
+                  include-hidden-files: true
+                  if-no-files-found: warn
+                  retention-days: 14
+    acceptance:
+        if: vars.GSPOT_CI_ENABLED == 'true' && inputs.full
+        strategy:
+            fail-fast: false
+            matrix:
+                os: [ubuntu-24.04, macos-15, windows-2025]
+        runs-on: ${{ matrix.os }}
+        timeout-minutes: 90
+        defaults:
+            run:
+                shell: bash
+        steps:
+            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+              with:
+                  fetch-depth: 0
+                  persist-credentials: false
+            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+              with:
+                  version: '2026.8.8'
+                  cache: true
             - name: Install Linux XML tools
               if: runner.os == 'Linux'
               run: sudo apt-get update && sudo apt-get install --yes libxml2-utils
-            - run: mise run gspot:setup
+            - run: mise run --skip-tools repo:setup
+            - run: mise run --skip-tools build:plugin
             - name: Extract Windows SwiftFormat executable
               if: runner.os == 'Windows'
-              run: bun tests/harness/swiftformat.ts
-            - run: bunx tsc --noEmit -p tsconfig.json
-            - run: mise run gspot:check
-            - run: mise exec -- bun test --coverage
-            - run: bun packages/cli/build.ts
+              run: mise run --skip-tools ci:swiftformat
+            - run: mise run --skip-tools repo:install-checks
+            - run: mise run --skip-tools check:types
+            - run: mise run --skip-tools test:coverage
+            - run: mise run --skip-tools test:integration
+            - run: mise run --skip-tools test:acceptance
+            - id: normal
+              run: mise run --skip-tools gspot:check
+            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              if: always() && !cancelled() && steps.normal.outcome != 'skipped'
+              with:
+                  name: acceptance-${{ matrix.os }}-normal-${{ github.sha }}
+                  path: .gspot/report.*
+                  include-hidden-files: true
+                  if-no-files-found: warn
+                  retention-days: 14
+            - id: manual
+              run: mise run --skip-tools gspot:check -- --stage manual
+            - run: mise run --skip-tools doctor
+            - run: mise run --skip-tools build
+            - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
+              if: always() && !cancelled() && steps.manual.outcome != 'skipped'
+              with:
+                  name: acceptance-${{ matrix.os }}-manual-${{ github.sha }}
+                  path: .gspot/report.*
+                  include-hidden-files: true
+                  if-no-files-found: warn
+                  retention-days: 14
+    documentation:
+        if: vars.GSPOT_CI_ENABLED == 'true' && inputs.full
+        runs-on: ubuntu-24.04
+        timeout-minutes: 15
+        steps:
+            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+              with:
+                  persist-credentials: false
+            - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
+              with:
+                  version: '2026.8.8'
+                  install: false
+            - run: mise install bun node
+            - run: mise run --skip-tools repo:setup
+            - run: mise run --skip-tools docs:build
+    code-scanning:
+        needs: [affected, acceptance]
+        if: always() && !cancelled() && vars.GSPOT_CI_ENABLED == 'true' && github.event_name != 'pull_request' && !github.event.repository.fork
+        runs-on: ubuntu-24.04
+        timeout-minutes: 10
+        permissions:
+            contents: read
+            actions: read
+            security-events: write
+        steps:
+            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+              with:
+                  persist-credentials: false
+            - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
+              with:
+                  pattern: ${{ inputs.full && 'acceptance-ubuntu-24.04-*' || 'affected-*' }}
+                  path: reports
+            - name: Upload repository SARIF
+              if: hashFiles('reports/**/report.sarif') != ''
+              uses: github/codeql-action/upload-sarif@df5a14dc28094dc936e103b37d749c6628682b60 # v3.25.0
+              with:
+                  sarif_file: reports
+                  category: gspot-repository
+            - name: Report absent SARIF
+              if: hashFiles('reports/**/report.sarif') == ''
+              run: echo '::notice::No SARIF artifact was produced. Inspect the setup and check job result.'

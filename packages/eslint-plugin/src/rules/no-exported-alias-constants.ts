@@ -16,7 +16,7 @@ function isAlias(node: TSESTree.Expression | null): boolean {
 export const noExportedAliasConstants = createRule<[], 'alias'>({
     name: 'no-exported-alias-constants',
     meta: {
-        type: 'problem',
+        type: 'suggestion',
         docs: {
             summary: 'Finds an exported constant that only renames another value.',
             why: 'Two names for one value split every search and every reader in two.',

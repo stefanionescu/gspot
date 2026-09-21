@@ -1,5 +1,6 @@
 // The project file against the tree: test plans, sources in no target, references to files that are gone, and symlinks.
-import { git } from '#cli/platform/spawn.ts';
+import { scopeOf } from '#cli/repository/scopes.ts';
+import { gitBlobs, gitEntries } from '#cli/repository/snapshot.ts';
 import type { TestPlan } from '#types/apple.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
@@ -131,23 +132,29 @@ export function orphanSources(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function projectSymlinks(input: EngineInput): Promise<Finding[]> {
+export async function projectSymlinks(input: EngineInput): Promise<Finding[]> {
     const folders = trackedEnding(input, [PROJECT_FILE]).map((path) => folderOf(path));
-    const listed = git(input.root, ['ls-files', '-s']) ?? '';
-    const links = listed
-        .split('\n')
-        .filter((line) => line.startsWith(SYMLINK_MODE))
-        .map((line) => line.slice(line.indexOf('\t') + 1))
-        .filter((path) => folders.some((folder) => path.startsWith(folder)));
-    return Promise.resolve(
-        links.map((path) => {
-            const target = git(input.root, ['cat-file', '-p', `HEAD:${path}`]) ?? 'an unknown place';
-            return xcodeFinding(
-                input,
-                { file: path, line: 1 },
-                'symlink',
-                `A symlink to ${target.trim()}; Xcode and the checks each follow it their own way.`,
-            );
-        }),
+    if (folders.length === 0 || !input.session.repository.hasGit) return [];
+    const entries = await gitEntries(input.root, { kind: 'index' }, input.session.cancelSignal);
+    const links = entries.filter(
+        (entry) =>
+            entry.mode === SYMLINK_MODE &&
+            scopeOf(entry.path, input.session.repository.scopes).path === input.scope &&
+            folders.some((folder) => entry.path.startsWith(folder)),
     );
+    const targets = await gitBlobs(
+        input.root,
+        links.map((entry) => entry.object),
+        input.session.cancelSignal,
+    );
+    return links.map((entry) => {
+        const target = targets.get(entry.object);
+        if (target === undefined) throw new Error('A requested Git blob was not returned.');
+        return xcodeFinding(
+            input,
+            { file: entry.path, line: 1 },
+            'symlink',
+            `A symlink to ${target.toString('utf8')}; Xcode and the checks each follow it their own way.`,
+        );
+    });
 }

@@ -4,7 +4,7 @@ import { existsSync } from 'node:fs';
 import { toPlatform } from '#cli/platform/paths.ts';
 import type { ConfigurationTarget } from '#types/manifest.ts';
 import type { CommandPart, Substitutions, Session, PlannedCheck } from '#types/run.ts';
-import { configurationName, isWorkspace, targetInScope, toolBaselineFile } from '#cli/run/scope-paths.ts';
+import { configurationName, isWorkspace, targetInScope } from '#cli/run/scope-paths.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
 const STUB_PLACEHOLDER = /\{stub:(?<name>[^}]+)\}/gu;
@@ -79,13 +79,6 @@ function stubPath(session: Session, planned: PlannedCheck, name: string, scope: 
     return scope === '' ? path : `${scope}/${path}`;
 }
 
-// `--suppressions-location` only when the file exists: ESLint refuses a missing one, and a repository with no findings has none.
-function suppressionsArguments(session: Session, planned: PlannedCheck): string[] {
-    const path = baselinePath(session, planned);
-    if (path === undefined || !existsSync(path)) return [];
-    return ['--suppressions-location', toPlatform(path), '--pass-on-unpruned-suppressions'];
-}
-
 function expandPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
     const policyPart = listArguments(planned, part) ?? existingFileArguments(session.root, part);
     return policyPart ?? plainPart(session, planned, part, sub);
@@ -93,7 +86,6 @@ function expandPart(session: Session, planned: PlannedCheck, part: string, sub: 
 
 function plainPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
     if (part === '{files}') return sub.files;
-    if (part === '{suppressions}') return suppressionsArguments(session, planned);
     if (part === '{file}') return [{ file: true }];
     if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}'))
         return isWorkspace(session.root, sub.scope) ? [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope] : [];
@@ -117,20 +109,7 @@ export function substituteValue(session: Session, planned: PlannedCheck, part: s
         .replaceAll('{scope}', () => (sub.scope === '' ? '.' : sub.scope))
         .replaceAll('{root}', () => sub.root)
         .replaceAll('{indent}', () => String(sub.indent))
-        .replaceAll('{message_file}', () => sub.messageFile ?? '')
-        .replaceAll('{merge_base}', () => sub.mergeBase ?? '')
-        .replaceAll('{baseline}', () => toPlatform(baselinePath(session, planned) ?? ''));
-}
-
-/**
- * Resolves the tool baseline within its repository and scope.
- * @param session the repository session
- * @param planned the planned check
- * @returns the absolute baseline path when configured
- */
-export function baselinePath(session: Session, planned: PlannedCheck): string | undefined {
-    const file = planned.spec.baseline_file;
-    return file === undefined ? undefined : join(session.root, toolBaselineFile(file, planned.scope.scope.path));
+        .replaceAll('{message_file}', () => sub.messageFile ?? '');
 }
 
 /**

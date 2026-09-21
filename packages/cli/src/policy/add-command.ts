@@ -1,21 +1,18 @@
-import type { ApplyReport } from '#types/emit.ts';
 // gspot add and gspot remove: the preset list of the root or of one scope.
 import { nearMatches } from '#cli/policy/near.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { Manifest } from '#types/manifest.ts';
 import { scopeHolder } from '#cli/policy/write.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
-import { probeTool } from '#cli/platform/tool-probe.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
-import type { CommandResult, Session } from '#types/run.ts';
+import type { CommandResult } from '#types/run.ts';
 import type { TomlTable, Mutation } from '#types/config.ts';
 import { commitPolicy } from '#cli/policy/commit-policy.ts';
 import { installTools } from '#cli/lifecycle/install-tools.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
 import type { AddOptions, RemoveOptions } from '#types/commands.ts';
-import { requireChain, selectPresets } from '#cli/presets/select.ts';
+import { requireChain } from '#cli/presets/select.ts';
 
 function presetHolder(raw: TomlTable, scope: string | undefined): TomlTable {
     const holder = scopeHolder(raw, scope);
@@ -23,14 +20,16 @@ function presetHolder(raw: TomlTable, scope: string | undefined): TomlTable {
     return holder;
 }
 
-// A pin that package.json already held is no change to apply, yet its package may be absent: a preset taken out
-// and added again leaves the pin and nothing installed. The package manager runs for a missing library too.
-function owed(session: Session, added: Manifest[], applied: ApplyReport): ApplyReport {
-    const scopes = session.scopes.map((scope) => scope.scope.path);
-    const isMissing = added
-        .flatMap((manifest) => manifest.tools)
-        .some((tool) => tool.kind === 'library' && probeTool(session, tool, scopes).state === 'missing');
-    return isMissing && applied.packages.length === 0 ? { ...applied, packages: ['package.json'] } : applied;
+async function installChangedSelection(
+    root: string,
+    changed: Awaited<ReturnType<typeof commitPolicy>>,
+): Promise<CommandResult> {
+    const { applied, ...result } = changed;
+    if (applied === undefined) return result;
+    const session = await openSession(root);
+    const installed = await installTools(session, true);
+    const note = installed === '' ? '' : `${installed}\n`;
+    return { ...result, text: `${result.text}${note}Run gspot check to check the selected presets.\n` };
 }
 
 /**
@@ -54,24 +53,8 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
         holder['presets'] = list;
     };
     const where = o.scope === undefined ? '' : ` to scope ${o.scope}`;
-    const { applied, ...result } = await commitPolicy(
-        root,
-        mutation,
-        o.isDryRun,
-        `added ${o.presets.join(', ')}${where}`,
-    );
-    if (applied === undefined) return result;
-    // A library the new preset pins is installed now, as at init: the configuration just written imports it.
-    const session = await openSession(root);
-    const added = selectPresets(o.presets, manifests);
-    const installed = await installTools(
-        root,
-        session.policyFiles.policy.runner?.tool,
-        owed(session, added, applied),
-        true,
-    );
-    const note = installed === '' ? '' : `${installed}\n`;
-    return { ...result, text: `${result.text}${note}Run gspot check to check the selected presets.\n` };
+    const result = await commitPolicy(root, mutation, o.isDryRun, `added ${o.presets.join(', ')}${where}`);
+    return installChangedSelection(root, result);
 }
 
 /**
@@ -94,10 +77,6 @@ export async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
         holder['presets'] = list.filter((id) => id !== o.preset);
     };
     const where = o.scope === undefined ? '' : ` from scope ${o.scope}`;
-    return commitPolicy(
-        root,
-        mutation,
-        o.isDryRun,
-        `removed ${o.preset}${where}; files it rendered are gone after apply`,
-    );
+    const result = await commitPolicy(root, mutation, o.isDryRun, `removed ${o.preset}${where}`);
+    return installChangedSelection(root, result);
 }

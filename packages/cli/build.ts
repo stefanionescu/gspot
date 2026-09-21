@@ -1,34 +1,22 @@
 // Builds one executable per target with grammars, presets, prose, rules and schema embedded.
+import { execaSync } from 'execa';
+import { globbySync } from 'globby';
+import { familySync } from 'detect-libc';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
+import { releaseTargets } from '#config/targets.ts';
 import { GRAMMAR_SOURCES } from '#config/grammars.ts';
 import packageManifest from '#package' with { type: 'json' };
+import { binaryNotices, dependencyNotices } from './notices.ts';
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
-import { existsSync, mkdirSync, readdirSync, rmSync, statSync, writeFileSync, copyFileSync } from 'node:fs';
+import { existsSync, mkdirSync, rmSync, writeFileSync, copyFileSync } from 'node:fs';
 
 const here = dirname(fileURLToPath(new URL(import.meta.url)));
 const root = join(here, '..', '..');
 
-const TARGETS: Record<string, string> = {
-    'bun-darwin-arm64': 'gspot-darwin-arm64',
-    'bun-darwin-x64': 'gspot-darwin-x64',
-    'bun-linux-x64': 'gspot-linux-x64',
-    'bun-linux-arm64': 'gspot-linux-arm64',
-    'bun-windows-x64': 'gspot-windows-x64.exe',
-};
+const TARGETS = Object.fromEntries(releaseTargets.map((target) => [target.target, target.binary]));
 
 const ASSET_FOLDERS = ['presets', 'rules'];
-
-function walk(dir: string, out: string[] = []): string[] {
-    if (!existsSync(dir)) return out;
-    const entries = readdirSync(dir).toSorted((a, b) => a.localeCompare(b));
-    for (const entry of entries) {
-        const full = join(dir, entry);
-        if (statSync(full).isDirectory()) walk(full, out);
-        else out.push(full);
-    }
-    return out;
-}
 
 function packageFile(relativePath: string): string | undefined {
     const candidates = [join(here, 'node_modules', relativePath), join(root, 'node_modules', relativePath)];
@@ -39,17 +27,20 @@ function packageFile(relativePath: string): string | undefined {
 function collectGrammars(): string[] {
     const dir = join(here, 'grammars');
     mkdirSync(dir, { recursive: true });
-    const missing: string[] = [];
+    const sources: string[] = [];
     for (const [name, source] of Object.entries(GRAMMAR_SOURCES)) {
         const found = packageFile(source);
-        if (found === undefined) missing.push(name);
-        else copyFileSync(found, join(dir, name));
+        if (found === undefined) throw new Error(`Missing required grammar: ${name}.`);
+        copyFileSync(found, join(dir, name));
+        sources.push(found);
     }
-    return missing;
+    return sources;
 }
 
 function assetKey(file: string): string {
-    const key = file.startsWith(here) ? `grammars/${relative(join(here, 'grammars'), file)}` : relative(root, file);
+    const key = file.startsWith(join(here, 'grammars') + '/')
+        ? `grammars/${relative(join(here, 'grammars'), file)}`
+        : relative(root, file);
     return key.replaceAll('\\', '/');
 }
 
@@ -59,13 +50,18 @@ function writeEntry(): string {
         .toSorted((a, b) => a.localeCompare(b))
         .map((name) => join(here, 'grammars', name));
     const assets = [
-        ...ASSET_FOLDERS.flatMap((folder) => walk(join(root, folder))),
-        ...['gspot.schema.json', 'report.schema.json'].map((name) => join(root, name)),
+        ...globbySync(
+            ASSET_FOLDERS.map((folder) => `${folder}/**/*`),
+            { cwd: root, absolute: true, dot: true },
+        ).toSorted((left, right) => left.localeCompare(right)),
+        join(root, 'gspot.schema.json'),
         ...grammars,
+        join(here, 'build/configuration-process.js'),
     ];
     const buildDir = join(here, 'build');
     const imports = assets.map((file, index) => {
-        const source = JSON.stringify(relative(buildDir, file));
+        const path = relative(buildDir, file);
+        const source = JSON.stringify(path.startsWith('.') ? path : `./${path}`);
         return `import asset${String(index)} from ${source} with { type: 'file' };`;
     });
     const entries = assets.map((file, index) => `    ${JSON.stringify(assetKey(file))}: asset${String(index)},`);
@@ -88,9 +84,25 @@ function writeEntry(): string {
 }
 
 function build(targets: string[], out: string): void {
-    const missing = collectGrammars();
-    if (missing.length > 0)
-        console.error('Grammars without a prebuilt file (vendor them by hand):', missing.join(', '));
+    const grammarSources = collectGrammars();
+    if (!existsSync(join(here, 'grammars/swift.wasm'))) throw new Error('Missing required grammar: swift.wasm.');
+    binaryNotices('', join(here, 'grammars'));
+    mkdirSync(join(here, 'build'), { recursive: true });
+    const evaluatorMetadata = join(here, 'build/configuration-process.meta.json');
+    const metadata = [{ path: evaluatorMetadata, cwd: here }];
+    execaSync(
+        'bun',
+        [
+            'build',
+            '--target=bun',
+            '--minify-syntax',
+            `--metafile=${evaluatorMetadata}`,
+            join(here, 'src/lifecycle/configuration-process.ts'),
+            '--outfile',
+            join(here, 'build/configuration-process.js'),
+        ],
+        { cwd: here, stdout: 'inherit', stderr: 'inherit' },
+    );
     const entry = writeEntry();
     mkdirSync(out, { recursive: true });
     for (const target of targets) {
@@ -98,13 +110,34 @@ function build(targets: string[], out: string): void {
         if (name === undefined) throw new Error(`Unknown target ${target}; known: ${Object.keys(TARGETS).join(', ')}`);
         const outfile = join(out, name);
         rmSync(outfile, { force: true });
-        const result = Bun.spawnSync(
-            ['bun', 'build', '--compile', `--target=${target}`, '--minify-syntax', entry, '--outfile', outfile],
+        const targetMetadata = join(here, 'build', `${target}.meta.json`);
+        metadata.push({ path: targetMetadata, cwd: here });
+        execaSync(
+            'bun',
+            [
+                'build',
+                '--compile',
+                `--target=${target}`,
+                '--minify-syntax',
+                entry,
+                '--outfile',
+                outfile,
+                `--metafile=${targetMetadata}`,
+            ],
             { cwd: here, stdout: 'inherit', stderr: 'inherit' },
         );
-        if (result.exitCode !== 0) throw new Error(`Build failed for ${target}`);
+        if (process.platform === 'darwin' && target.startsWith('bun-darwin-')) {
+            execaSync('codesign', ['--force', '--sign', '-', outfile], {
+                stdout: 'inherit',
+                stderr: 'inherit',
+            });
+        }
         console.log(`built ${relative(root, outfile)}`);
     }
+    const dependencies = dependencyNotices(metadata, grammarSources);
+    const notice = binaryNotices(dependencies, join(here, 'grammars'));
+    writeFileSync(join(out, 'NOTICE.md'), notice);
+    copyFileSync(join(root, 'LICENSE.md'), join(out, 'LICENSE.md'));
 }
 
 function collectTargets(value: string, previous: string[]): string[] {
@@ -130,10 +163,18 @@ try {
         .exitOverride()
         .parse();
     const options = script.opts<{ target: string[]; out: string }>();
-    const platform = process.platform === 'win32' ? 'windows' : process.platform;
-    const current = `bun-${platform}-${process.arch === 'arm64' ? 'arm64' : 'x64'}`;
-    const targets = options.target.length > 0 ? options.target : collectTargets(current, []);
-    build(targets, options.out);
+    const libc = process.platform === 'linux' ? familySync() : null;
+    const current = releaseTargets.find(
+        (target) => target.os === process.platform && target.cpu === process.arch && target.libc === libc,
+    );
+    if (options.target.length === 0) {
+        if (current === undefined)
+            throw new InvalidArgumentError(
+                `Unsupported build host: ${process.platform} ${process.arch} ${String(libc)}.`,
+            );
+        options.target.push(current.target);
+    }
+    build(options.target, options.out);
 } catch (error) {
     if (!(error instanceof CommanderError)) throw error;
     process.exitCode = error.exitCode === 0 ? 0 : 2;

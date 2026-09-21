@@ -1,4 +1,6 @@
-// Telling a tool that found something from a tool that fell over: a crash must never pass for a finding, or enter a baseline.
+import { ToolOutputError, parseOutput } from '#cli/run/parse-output.ts';
+import type { PlannedCheck } from '#types/run.ts';
+// Telling a tool that found something from a tool that fell over: a crash must never pass for a finding.
 import { existsSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
 import type { Finding } from '#types/finding.ts';
@@ -47,4 +49,78 @@ export function isToolBroken(spec: CheckSpec, parsed: Finding[], roots: string[]
 export function isCrash(spec: CheckSpec, result: SpawnResult, parsed: Finding[], roots: string[]): boolean {
     if (result.code === 0 || (spec.command?.includes('{file}') ?? false)) return false;
     return isToolBroken(spec, parsed, roots);
+}
+
+/**
+ * Classify process failures consistently for direct checks and adapters.
+ * @param result the completed process
+ * @param name the tool name
+ * @param seconds the configured deadline
+ * @returns the failure, or undefined when output can be interpreted
+ */
+export function executionFailure(
+    result: SpawnResult,
+    name: string,
+    seconds: number,
+): { status: 'error' | 'missing'; note: string } | undefined {
+    if (result.isCanceled === true) return { status: 'error', note: `${name} was canceled.` };
+    if (result.isTimedOut === true)
+        return { status: 'error', note: `${name} ran past ${String(seconds)} seconds and was stopped.` };
+    if (result.missing) return { status: 'missing', note: `${name} could not be started: ${result.stderr.trim()}` };
+    return undefined;
+}
+
+const TAIL_LINES = 20;
+const TRUFFLEHOG_FINDINGS = 183;
+
+/**
+ * Bound diagnostics from tools that do not require secret redaction.
+ * @param result captured output
+ * @param placeholder the text used when both streams are empty
+ * @returns the bounded diagnostic
+ */
+export function toolOutputDetail(result: SpawnResult, placeholder: string): string {
+    const output = [result.stderr, result.stdout]
+        .map((stream) => stream.trim().split('\n').slice(0, TAIL_LINES).join('\n'))
+        .filter((stream) => stream !== '');
+    return output.length === 0 ? placeholder : output.join('\n');
+}
+
+function matchesFailure(spec: CheckSpec, result: SpawnResult): boolean {
+    return (
+        spec.tool_errors !== undefined && new RegExp(spec.tool_errors, 'mu').test(`${result.stdout}\n${result.stderr}`)
+    );
+}
+
+/**
+ * Parse findings while rejecting crashes and withholding secret-scanner diagnostics.
+ * @param planned the selected check
+ * @param result captured output
+ * @param roots the working directory followed by the repository root
+ * @returns structured findings
+ */
+export function checkedFindings(planned: PlannedCheck, result: SpawnResult, roots: [string, string]): Finding[] {
+    const { spec } = planned;
+    const broken = matchesFailure(spec, result);
+    const parsed =
+        spec.output?.format === 'trufflehog-json'
+            ? redactedFindings(spec, result, roots[1], broken)
+            : parseOutput(spec, result.stdout, result.stderr, roots[1]);
+    if (broken || (planned.manifest !== undefined && isCrash(spec, result, parsed, roots))) {
+        const name = planned.tool?.name ?? spec.name;
+        const detail = toolOutputDetail(result, `${name} exited ${String(result.code)}`);
+        throw new ToolOutputError(`${name} broke: exit ${String(result.code)}\n${detail}`);
+    }
+    return parsed;
+}
+
+function redactedFindings(spec: CheckSpec, result: SpawnResult, root: string, broken: boolean): Finding[] {
+    if ((result.code !== 0 && result.code !== TRUFFLEHOG_FINDINGS) || broken)
+        throw new ToolOutputError(`TruffleHog failed with exit ${String(result.code)}; raw output was withheld.`);
+    const findings = parseOutput(spec, result.stdout, result.stderr, root);
+    if (result.code === TRUFFLEHOG_FINDINGS && findings.length === 0)
+        throw new ToolOutputError(
+            'TruffleHog reported findings without valid structured data; raw output was withheld.',
+        );
+    return findings;
 }

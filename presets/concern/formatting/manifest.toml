@@ -28,7 +28,11 @@ target = ".editorconfig"
 [[configs]]
 template = "prettier.json.tmpl"
 target = ".gspot/prettier.json"
-stub = {path = ".prettierrc.json", copy = true}
+header = false
+
+[[configs]]
+template = "prettier.json.tmpl"
+target = ".prettierrc.json"
 header = false
 
 [[configs]]
@@ -37,6 +41,7 @@ target = ".prettierignore"
 
 [[checks]]
 name = "formatting/prettier"
+level = "all"
 stage = "commit"
 runs = "per-file-list"
 command = ["prettier", "--check", "--config", "{config:prettier}", "--ignore-path", ".prettierignore", "--log-level", "warn", "{files}"]
@@ -51,6 +56,7 @@ help = "Run gspot check --fix to format every file, or prettier --write on one f
 
 [[checks]]
 name = "formatting/editorconfig-checker"
+level = "all"
 stage = "commit"
 runs = "per-file-list"
 command = ["ec", "-no-color", "-disable-indent-size", "{files}"]
@@ -122,3 +128,9 @@ name = "tools.editorconfig.extra"
 kind = "table"
 direction = "neutral"
 summary = "A section gspot does not render, added verbatim to .editorconfig with a reason."
+
+[[settings]]
+name = "format.overrides"
+kind = "list"
+direction = "neutral"
+summary = "Ordered formatting options for config-root paths, bounded by their declaring scope. Apply regenerates EditorConfig for current governed files."

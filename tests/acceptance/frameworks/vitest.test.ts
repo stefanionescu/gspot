@@ -1,7 +1,7 @@
 import { symlinkSync } from 'node:fs';
 // Planted repository for the vitest preset: a function no test calls, and a focused test.
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -28,13 +28,13 @@ const SOURCE =
     '// Arithmetic the planted tests call.\n\n/**\n * Doubles a number.\n * @param value the number\n * @returns twice the number\n */\nexport function double(value: number): number {\n    return value * 2;\n}\n';
 const UNTESTED = `${SOURCE}\n/**\n * Triples a number.\n * @param value the number\n * @returns three times the number\n */\nexport function triple(value: number): number {\n    return value * 3;\n}\n`;
 const TEST =
-    "import { expect, test } from 'vitest';\nimport { double } from './math.ts';\n\ntest('doubles a number', () => {\n    expect(double(2)).toBe(4);\n});\n";
+    "import { double } from './public.js';\nimport { expect, test } from 'vitest';\n\ntest('doubles a number', () => {\n    expect(double(2)).toBe(4);\n});\n";
 const FOCUSED = TEST.replace("test('doubles", () => "test.only('doubles");
 
 const CASES: PlantedCase[] = [
     {
         check: 'vitest/coverage',
-        files: { 'src/math.ts': UNTESTED },
+        files: { 'src/public.ts': UNTESTED },
         expected: 'Coverage for functions (50%) does not meet global threshold (80%)',
     },
     { check: 'typescript/eslint', files: { 'src/math.test.ts': FOCUSED }, expected: 'vitest/no-focused-tests' },
@@ -44,11 +44,13 @@ describe('the vitest preset', () => {
     test(
         'coverage under the floor and a focused test are findings',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'package.json': PACKAGE,
                 '.gitignore': 'node_modules\ncoverage\n',
-                'tsconfig.json': '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "include": ["src"]\n}\n',
-                'src/math.ts': SOURCE,
+                'tsconfig.json':
+                    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n',
+                'src/public.ts': SOURCE,
                 'src/math.test.ts': TEST,
             });
             symlinkSync(MODULES, join(sandbox.path, 'node_modules'));
@@ -57,6 +59,8 @@ describe('the vitest preset', () => {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const planted of CASES) {
                 const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check}: ${clean.stdout}${clean.stderr}`).toBe(0);

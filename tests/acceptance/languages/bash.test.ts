@@ -1,6 +1,6 @@
 // Planted repositories: gspot init --yes then gspot check on each; asserts exit codes, check lines and finding counts.
 import { join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync, symlinkSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
@@ -9,8 +9,9 @@ describe('the bash planted repository', () => {
     test(
         'syntax checks use each file dialect and reject its broken syntax',
         async () => {
-            await using sandbox = await createSandbox({
-                'gspot.toml': 'version = 1\npresets = ["bash"]\n',
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
+                'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["bash"]\n',
                 'script.sh': 'echo example\n',
                 launcher: '#!/usr/bin/env -S bash -e\necho example\n',
                 'script.zsh': 'repeat 2 do print example; done\n',
@@ -59,7 +60,8 @@ describe('the bash planted repository', () => {
     test(
         'init --yes writes the policy and check passes over a clean script',
         async () => {
-            await using sandbox = await createSandbox({ 'scripts/build.sh': script, 'README.md': '# planted\n' });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/build.sh': script, 'README.md': '# planted\n' });
             commitAll(sandbox.path);
             const init = await run(sandbox.path, [
                 'init',
@@ -82,11 +84,14 @@ describe('the bash planted repository', () => {
             expect(check.code).toBe(0);
             expect(check.stdout).toContain('bash/shellcheck');
             expect(check.stdout).toContain('ok');
+            const selected = await run(sandbox.path, ['set', 'extra_checks', 'bash/shfmt']);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const json = await run(sandbox.path, ['check', '--only', 'bash/shfmt', '--json']);
             const record = JSON.parse(json.stdout) as { checks: { check: string; status: string }[]; exitCode: number };
             expect(record.checks[0]?.check).toBe('bash/shfmt');
             expect(record.exitCode).toBe(0);
-            const drift = await run(sandbox.path, ['apply', '--check']);
+            const drift = await run(sandbox.path, ['apply', '--dry-run', '--json']);
+            expect((JSON.parse(drift.stdout) as { drift: unknown[] }).drift).toEqual([]);
             expect(drift.code).toBe(0);
             const second = await run(sandbox.path, ['init', '--yes']);
             expect(second.code).toBe(2);
@@ -98,7 +103,8 @@ describe('the bash planted repository', () => {
     test(
         'a finding fails the check with the file, the rule and a help line',
         async () => {
-            await using sandbox = await createSandbox({ 'scripts/good.sh': script, 'README.md': '# planted\n' });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/good.sh': script, 'README.md': '# planted\n' });
             commitAll(sandbox.path);
             await run(sandbox.path, [
                 'init',
@@ -134,11 +140,12 @@ describe('the bash planted repository', () => {
     test(
         'a missing tool fails with the install hint',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'scripts/a.sh': script,
                 '.gitignore': 'home/\nbin/\n',
-                home: null,
-                bin: null,
+                home: {},
+                bin: {},
             });
             commitAll(sandbox.path);
             const bin = join(sandbox.path, 'bin');
@@ -166,6 +173,8 @@ describe('the bash planted repository', () => {
             expect(check.code).toBe(1);
             expect(check.stdout).toContain('missing');
             expect(check.stdout).toContain('shellcheck 0.11.0 is not installed');
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const name of ['bash-branches', 'bash-nesting', 'bash-mutable-assignments']) {
                 const missing = await run(sandbox.path, ['check', '--only', `structure/${name}`, '--no-cache'], {
                     PATH: bin,
@@ -183,7 +192,8 @@ describe('the bash planted repository', () => {
     test(
         'a version pin from another gspot refuses check with both remedies',
         async () => {
-            await using sandbox = await createSandbox({ 'scripts/a.sh': script });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             commitAll(sandbox.path);
             await run(sandbox.path, [
                 'init',

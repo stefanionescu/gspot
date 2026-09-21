@@ -15,6 +15,7 @@ natures = ["source"]
 
 [[tools]]
 name = "stylelint"
+suppression = { marker = "\\bstylelint-disable(?:-next-line|-line)?\\b", reason = " -- (?<reason>\\S.*)" }
 version = "16.23.1"
 floor = "16.0.0"
 npm = "stylelint"
@@ -33,6 +34,7 @@ stub = {path = ".stylelintrc.json", body = "{\n    \"extends\": \"./.gspot/style
 
 [[checks]]
 name = "css/stylelint"
+level = "all"
 stage = "commit"
 command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}", "--formatter", "unix", "--allow-empty-input", "{files}"]
 fix_command = ["stylelint", "--config", "{config:stylelint}", "--config-basedir", "{root}", "--fix", "--allow-empty-input", "{files}"]
@@ -45,6 +47,7 @@ help = "Run gspot check --fix for the rules that fix themselves. Turn one rule o
 
 [[checks]]
 name = "integrity/css-usage"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"

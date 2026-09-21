@@ -14,7 +14,7 @@ const KILOBYTE = 1024;
  */
 export function largeFiles(input: EngineInput): Promise<Finding[]> {
     const limitKb = input.view.limit('file_size_kb') ?? FILE_SIZE_KB_DEFAULT;
-    const isDeclared = pathMatcher(input.session.policyFiles.policy.declares.flatMap((entry) => entry.paths));
+    const isDeclared = pathMatcher(input.session.policyFiles.policy.declarations.flatMap((entry) => entry.paths));
     const findings = input.session.repository.files
         .filter(
             (file) =>

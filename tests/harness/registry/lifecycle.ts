@@ -3,6 +3,7 @@ import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { fileURLToPath } from 'node:url';
 import type { Registry } from '#tests/types/registry.ts';
+import type { SpawnOutcome } from '#tests/types/acceptance.ts';
 import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { environmentVariables } from '#cli/platform/environment.ts';
 
@@ -109,13 +110,16 @@ export async function startRegistry(port = 0, startupMs = STARTUP_MS): Promise<R
 }
 
 /** Publishes built packages only while the owned registry is running. */
-export function publishTo(registry: Registry): number {
+export function publishTo(registry: Registry, version: string): SpawnOutcome {
     registry.assertRunning();
-    const result = Bun.spawnSync(['bun', 'packages/cli/publish.ts', '--tag', 'v0.1.0', '--registry', registry.url], {
-        cwd: root,
-        env: { ...environmentVariables(), NPM_CONFIG_USERCONFIG: registry.npmrc },
-        stdout: 'pipe',
-        stderr: 'pipe',
-    });
-    return result.exitCode;
+    const result = Bun.spawnSync(
+        ['bun', 'packages/cli/publish.ts', '--tag', `v${version}`, '--registry', registry.url],
+        {
+            cwd: root,
+            env: { ...environmentVariables(), NPM_CONFIG_USERCONFIG: registry.npmrc },
+            stdout: 'pipe',
+            stderr: 'pipe',
+        },
+    );
+    return { code: result.exitCode, stdout: result.stdout.toString(), stderr: result.stderr.toString() };
 }

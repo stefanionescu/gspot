@@ -1,6 +1,6 @@
 import type { Profile } from '#types/profile.ts';
 // init, upgrade and uninstall: their options, the selection, the questions, the takeover plan and the carried lists.
-import type { TomlTable, FormatSettings } from '#types/config.ts';
+import type { TomlTable, Policy, EslintSettings } from '#types/config.ts';
 import type { Manifest, Proposal, UnknownLanguage } from '#types/manifest.ts';
 import type { ExistingTooling, ManifestFacts, Repository, ScopeEntry, TrackedFile } from '#types/repository.ts';
 
@@ -10,6 +10,7 @@ export type TakeoverPlan = {
     write: { path: string; note: string }[];
     remove: { path: string; note: string }[];
     unread: { path: string; note: string }[];
+    retained: { path: string; note: string }[];
     carried: { from: string; count: number; into: string }[];
     change: { path: string; note: string }[];
     noLongerRuns: { path: string; note: string }[];
@@ -24,11 +25,11 @@ export type InitOptions = {
     presets?: string[];
     without?: string[];
     scopes?: string[];
-    hooks?: 'gspot' | 'lefthook' | 'husky' | 'none';
-    ci?: 'github' | 'none';
+    hooks?: NonNullable<Policy['hooks']>['tool'] | 'none';
+    ci?: NonNullable<Policy['ci']>['provider'] | 'none';
     rules?: 'yes' | 'no';
     format?: 'keep' | 'shipped';
-    runner?: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none';
+    runner?: NonNullable<Policy['runner']>['tool'] | 'none';
     from?: string;
     profile?: Profile;
     isListExact?: boolean;
@@ -38,10 +39,14 @@ export type InitOptions = {
 
 export type InitResult = { text: string; json: Record<string, unknown>; exitCode: number };
 
-export type CarriedIgnore = { check: string; rule: string; reason: string; paths?: string[] };
+export type CarriedIgnore = { check: string; rule?: string; reason: string; paths?: string[] };
+
+export type CarriedFormatter = { format: Policy['format']; extra?: TomlTable; ignoredPaths?: string[] };
 
 export type CarriedLists = {
-    formatSource?: CarrySource;
+    formatter?: CarriedFormatter;
+    eslintOverrides?: EslintSettings['overrides'];
+    observed: Map<string, FileSnapshot>;
     typosWords: { word: string; reason: string }[];
     typosExcludes: { paths: string[]; reason: string }[];
     /** The paths an old pyrightconfig.json at the root left out of the type check. */
@@ -64,12 +69,13 @@ export type CarriedLists = {
     ignores: CarriedIgnore[];
     removed: { path: string; note: string }[];
     unread: { path: string; note: string }[];
+    retained: { path: string; note: string }[];
 };
 
-export type UninstallPlan = { remove: string[]; blocks: string[]; hooksPath: boolean };
+export type UninstallPlan = { remove: string[]; blocks: string[]; hooks: boolean };
 
 /** gspot uninstall. */
-export type UninstallOptions = { cwd: string; isHooksKept: boolean; yes: boolean; isDryRun: boolean };
+export type UninstallOptions = { cwd: string; yes: boolean; isDryRun: boolean };
 
 export type UpgradeOptions = {
     cwd: string;
@@ -80,7 +86,7 @@ export type UpgradeOptions = {
 };
 
 /** Original takeover text and the parsed settings used by every carry reader. */
-export type CarrySource = { text: string; parsed: TomlTable };
+export type CarrySource = { text: string; parsed: TomlTable; original: FileSnapshot };
 
 /** Adds one carried ignore: a rule the old configuration turned off, with the paths it applied to when it had any. */
 export type CarryPush = (rule: string, paths?: string[]) => void;
@@ -112,11 +118,11 @@ export type PresetReason = 'named' | 'detected' | 'recommended' | 'required';
 
 /** The answers init collects from flags or the terminal. */
 export type InitAnswers = {
-    hooks: 'gspot' | 'lefthook' | 'husky' | 'none';
-    ci: 'github' | 'none';
+    hooks: NonNullable<Policy['hooks']>['tool'] | 'none';
+    ci: NonNullable<Policy['ci']>['provider'] | 'none';
     isRules: boolean;
-    runner: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none';
-    format?: Partial<FormatSettings>;
+    runner: NonNullable<Policy['runner']>['tool'] | 'none';
+    formatter?: CarriedFormatter;
 };
 
 /** Everything init computes before it asks to continue. */
@@ -125,6 +131,7 @@ export type InitPrepared = {
     policyText: string;
     runner: InitAnswers['runner'];
     removed: { path: string }[];
+    observed: Map<string, FileSnapshot>;
 };
 
 /** The inputs to the init plan. */
@@ -137,6 +144,8 @@ export type InitPlanInputs = {
     answers: InitAnswers;
     carried: CarriedLists;
     policyLines: number;
+    /** Instruction destinations resolved from the final proposed policy. */
+    agents: string[];
 };
 
 /** What init selection reads. */
@@ -166,3 +175,74 @@ export type UpgradeReport = {
     presets: { preset: string; evidence: string }[];
     extras: { tool: string; key: string; scope: string }[];
 };
+
+export type FileSnapshot = { bytes: Buffer; mode: number; isLink?: true };
+
+export type ConfinedRoot = {
+    validate(path: string, value: FileSnapshot): void;
+    readEntry(path: string): FileSnapshot | undefined;
+    read(path: string): FileSnapshot | undefined;
+    write(path: string, value: FileSnapshot, expected: FileSnapshot | undefined): void;
+    remove(path: string, expected: FileSnapshot): void;
+    mkdir(path: string, mode: number): void;
+    lock(path: string): void;
+    close(): void;
+};
+
+export type OwnershipState = import('zod').infer<typeof import('#cli/lifecycle/ownership.ts').ownershipSchema>;
+export type OwnershipEntry = OwnershipState['files'][number];
+export type FileProposal = {
+    path: string;
+    current: FileSnapshot | undefined;
+    previous: OwnershipEntry | undefined;
+    status: 'changed' | 'unchanged' | 'preserved';
+    next?: FileSnapshot;
+    entry?: OwnershipEntry;
+    saveOriginal?: boolean;
+};
+
+export type LifecycleOwner = {
+    beginInstallation(kind: 'npm' | 'python'): void;
+    finishInstallation(kind: 'npm' | 'python'): void;
+    proposeConfiguration(
+        path: string,
+        format: 'json' | 'yaml',
+        changes: { path: string[]; value: unknown }[],
+        takeover?: boolean,
+    ): FileProposal;
+    proposeReplacement(
+        path: string,
+        next: FileSnapshot,
+        kind: OwnershipEntry['kind'],
+        takeover?: boolean,
+        expected?: FileSnapshot,
+    ): FileProposal;
+    proposeBlock(path: string, body: string, style: import('#types/emit.ts').BlockStyle): FileProposal;
+    applyProposal(proposal: FileProposal): 'changed' | 'unchanged' | 'preserved';
+    applyProposals(proposals: FileProposal[]): ('changed' | 'unchanged' | 'preserved')[];
+    replaceBlock(
+        path: string,
+        body: string,
+        style: import('#types/emit.ts').BlockStyle,
+    ): 'changed' | 'unchanged' | 'preserved';
+    read(path: string): FileSnapshot | undefined;
+    paths(): string[];
+    installedPaths(): string[];
+    proposeRetirement(path: string, expected: FileSnapshot): FileProposal;
+    replace(
+        path: string,
+        next: FileSnapshot,
+        kind: OwnershipEntry['kind'],
+        takeover?: boolean,
+        expected?: FileSnapshot,
+    ): 'changed' | 'unchanged' | 'preserved';
+    proposeRestoration(path: string, original?: FileSnapshot): FileProposal;
+    restore(path: string, original?: FileSnapshot): 'changed' | 'preserved';
+    close(): void;
+};
+
+export type TakeoverRemovalResult = { removed: string[]; preserved: string[] };
+
+export type PolicyRename = import('zod').infer<typeof import('#cli/lifecycle/upgrade/renames.ts').renameSchema>;
+
+export type HookLocation = { root: string; directory: string; absolute: string };

@@ -1,3 +1,5 @@
+import { parse as parseYaml } from 'yaml';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 // What init lists: configuration at conventional paths, hooks, CI, agent files, home-grown lint folders, the runner.
 import { join } from 'node:path';
 import { readGitSetting } from '#cli/platform/spawn.ts';
@@ -12,6 +14,14 @@ import {
     LINT_FOLDER_NAMES,
     RULES_DIRECTORY_NAMES,
 } from '#config/patterns.ts';
+
+const OTHER_CI_FILES = new Set([
+    'Jenkinsfile',
+    'bitbucket-pipelines.yml',
+    '.circleci/config.yml',
+    'azure-pipelines.yml',
+    '.buildkite/pipeline.yml',
+]);
 
 const MISE_FILES = ['mise.toml', '.mise.toml', '.mise/config.toml', '.tool-versions', 'mise.local.toml'];
 const RUNNER_LOCKS: { file: string; runner: ExistingTooling['runner'] }[] = [
@@ -47,13 +57,17 @@ function isConfigurationPresent(root: string, paths: Set<string>, name: string, 
 
 function conventionalConfigs(root: string, paths: Set<string>, scopes: ScopeEntry[]): ExistingTool[] {
     const prefixes = ['', ...scopes.filter((scope) => scope.path !== '').map((scope) => `${scope.path}/`)];
-    return Object.entries(CONVENTIONAL_CONFIG_PATHS).flatMap(([tool, names]) =>
-        prefixes.flatMap((prefix) =>
+    return Object.entries(CONVENTIONAL_CONFIG_PATHS).flatMap(([tool, names]) => {
+        if (['prettier', 'prettierignore', 'editorconfig', 'eslint'].includes(tool))
+            return [...paths]
+                .filter((path) => names.some((name) => path === name || path.endsWith(`/${name}`)))
+                .map((path): ExistingTool => ({ tool, path }));
+        return prefixes.flatMap((prefix) =>
             names
                 .filter((name) => isConfigurationPresent(root, paths, name, `${prefix}${name}`))
                 .map((name): ExistingTool => ({ tool, path: `${prefix}${name}` })),
-        ),
-    );
+        );
+    });
 }
 
 function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTooling['hooks'][number] | undefined {
@@ -64,7 +78,7 @@ function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTo
 
 function hooksFound(root: string, paths: Set<string>): ExistingTooling['hooks'] {
     const hooksPath = readGitSetting(root, 'core.hooksPath') ?? '';
-    const isForeignPath = hooksPath !== '' && hooksPath !== '.gspot/hooks';
+    const isForeignPath = hooksPath !== '';
     const lefthook = ['lefthook.yml', '.lefthook.yml'].find((name) => paths.has(name));
     return [
         ...(isForeignPath ? [{ kind: 'hooksPath' as const, path: hooksPath, files: listDir(root, hooksPath) }] : []),
@@ -82,7 +96,36 @@ function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; r
 }
 
 function isWorkflow(path: string): boolean {
-    return path.startsWith('.github/workflows/') && (path.endsWith('.yml') || path.endsWith('.yaml'));
+    return (
+        OTHER_CI_FILES.has(path) ||
+        path === '.gitlab-ci.yml' ||
+        ((path.startsWith('.github/workflows/') || path.startsWith('.gitlab/ci/')) &&
+            (path.endsWith('.yml') || path.endsWith('.yaml')))
+    );
+}
+
+/** Find tool configuration keys while preserving their shared package manifests. */
+export function packageConfigurations(root: string, paths: Iterable<string>): ExistingTool[] {
+    const files = openConfinedRoot(root);
+    const candidates = new Set(['package.json', 'package.yaml', ...paths]);
+    try {
+        return [...candidates].flatMap((path): ExistingTool[] => {
+            if (!['package.json', 'package.yaml'].some((name) => path === name || path.endsWith(`/${name}`))) return [];
+            const source = files.read(path);
+            if (source === undefined) return [];
+            const text = source.bytes.toString('utf8');
+            const value: unknown = path.endsWith('.yaml') ? parseYaml(text) : JSON.parse(text);
+            if (typeof value !== 'object' || value === null) return [];
+            return [
+                ...('prettier' in value && Boolean(value.prettier) ? [{ tool: 'prettier', path }] : []),
+                ...(path.endsWith('.json') && 'eslintConfig' in value && Boolean(value.eslintConfig)
+                    ? [{ tool: 'eslint', path }]
+                    : []),
+            ];
+        });
+    } finally {
+        files.close();
+    }
 }
 
 /**
@@ -105,7 +148,7 @@ export function existingTooling(
         .map((fact) => fact.path)
         .toSorted((a, b) => Number(a === 'package.json') - Number(b === 'package.json'));
     return {
-        configs: conventionalConfigs(root, paths, scopes),
+        configs: [...conventionalConfigs(root, paths, scopes), ...packageConfigurations(root, paths)],
         hooks: hooksFound(root, paths),
         ci: [...paths].filter((path) => isWorkflow(path)).toSorted((a, b) => a.localeCompare(b)),
         agentFiles: AGENT_FILE_NAMES.filter((name) => paths.has(name)),
@@ -116,4 +159,47 @@ export function existingTooling(
         lintOnlyManifests,
         ...runnerFound(paths),
     };
+}
+
+/** Identify authored lint jobs before proposing another CI job. */
+export function ciLintJobs(root: string, paths: string[]): string[] {
+    const files = openConfinedRoot(root);
+    try {
+        return paths
+            .filter((path) => !OTHER_CI_FILES.has(path))
+            .flatMap((path) => {
+                const source = files.read(path);
+                if (source === undefined) return [];
+                const document: unknown = parseYaml(source.bytes.toString('utf8'));
+                if (typeof document !== 'object' || document === null) return [];
+                const jobs = path.startsWith('.github/workflows/') && 'jobs' in document ? document.jobs : document;
+                if (typeof jobs !== 'object' || jobs === null) return [];
+                return Object.entries(jobs).flatMap(([name, job]) => {
+                    if (name.startsWith('.')) return [];
+                    if (typeof job !== 'object' || job === null || Array.isArray(job)) return [];
+                    if (!('steps' in job) && !('script' in job) && !('extends' in job)) return [];
+                    const commands =
+                        'script' in job
+                            ? job.script
+                            : 'steps' in job && Array.isArray(job.steps)
+                              ? job.steps.flatMap((step: unknown) =>
+                                    typeof step === 'object' && step !== null && 'run' in step ? [step.run] : [],
+                                )
+                              : [];
+                    const texts = (Array.isArray(commands) ? commands : [commands]).filter(
+                        (command): command is string => typeof command === 'string',
+                    );
+                    const lint =
+                        /(?:^|[-_: ])(?:lint|quality|gspot)(?:$|[-_: ])/iu.test(name) ||
+                        texts.some((command) =>
+                            /(?:^|[\s;&|])(?:gspot\s+check|eslint|biome\s+check|ruff\s+check|(?:npm|pnpm|yarn|bun|mise)\s+(?:run\s+)?(?:lint|gspot:check))(?:$|[\s;&|])/u.test(
+                                command,
+                            ),
+                        );
+                    return lint ? [`${path}: ${name}`] : [];
+                });
+            });
+    } finally {
+        files.close();
+    }
 }

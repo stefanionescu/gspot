@@ -18,6 +18,7 @@ github = {name = "ast-grep/ast-grep", version = "0.45.3"}
 
 [[checks]]
 name = "structure/single-file-folder"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "single-file-folder"
@@ -29,6 +30,7 @@ help = "Move the file up beside its neighbors, or allow the folder with a reason
 
 [[checks]]
 name = "structure/prefix-collisions"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "prefix-collisions"
@@ -41,6 +43,7 @@ help = "Move the files into a folder named after the shared prefix, or allow the
 
 [[checks]]
 name = "structure/file-directory-collision"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "file-directory-collision"
@@ -52,6 +55,7 @@ help = "Rename the file or the folder so their stems differ."
 
 [[checks]]
 name = "structure/folder-names"
+level = "all"
 stage = "commit"
 engine = "structure"
 analysis = "folder-names"
@@ -62,18 +66,8 @@ why = "A folder with no owner collects everything nobody wanted to place, and gr
 help = "Name the folder after what it holds, or allow it with a reason under structure.folder_name_allowed."
 
 [[checks]]
-name = "integrity/baselines-current"
-stage = "commit"
-runs = "per-scope"
-engine = "integrity"
-analysis = "baselines-current"
-coverage = ["consistency"]
-summary = "Checks that every baseline names a check that still runs and that every file in a tool's suppressions file is still tracked."
-why = "A baseline for a check that is gone hides nothing and misleads the reader; a suppression for a deleted file is a count nobody lowered."
-help = "Run gspot apply --baseline to remove the stale baseline or prune the suppressions."
-
-[[checks]]
 name = "integrity/config-purity"
+level = "all"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -85,17 +79,19 @@ help = "Move the logic into a module under src and keep the literal in the confi
 
 [[checks]]
 name = "integrity/suppressions"
+level = "all"
 stage = "commit"
 runs = "once"
 engine = "integrity"
 analysis = "suppressions"
 coverage = ["structure"]
-summary = "Counts every inline suppression by form and reports each one that carries no reason; nosemgrep is refused outright."
-why = "A suppression without a reason is a finding hidden for good; a census that grows without a baseline update is debt nobody agreed to."
+summary = "Checks suppression reasons when require_reasons is enabled; nosemgrep is refused outright."
+why = "The suppression census makes hidden findings visible for review."
 help = "Write the reason in the comment (after two dashes for eslint-disable and gspot-ignore, after a colon for ts-expect-error), or fix the finding and drop the suppression."
 
 [[checks]]
 name = "integrity/allowlists-match"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -107,6 +103,7 @@ help = "Remove the entry, or fix its pattern."
 
 [[checks]]
 name = "integrity/task-policy"
+level = "all"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -118,6 +115,7 @@ help = "Run gspot apply; it rewrites the tasks and the hooks and sets core.hooks
 
 [[checks]]
 name = "integrity/large-files"
+level = "all"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -125,10 +123,11 @@ analysis = "large-files"
 coverage = ["consistency"]
 summary = "Checks that every tracked file over the size limit is stored through LFS or declared with a reason."
 why = "A large file in plain git history stays in every clone for good."
-help = "Track the file with git lfs, declare it with gspot declare <path> --reason, or raise limits.file_size_kb with a reason."
+help = "Track the file with git lfs, classify it with gspot set generated <path> or gspot set vendored <path>, or raise limits.file_size_kb with a reason."
 
 [[checks]]
 name = "integrity/tracked-dependencies"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -370,21 +369,21 @@ name = "limits.duplication.min_lines"
 kind = "number"
 direction = "ceiling"
 default = 8
-summary = "The fewest lines a copied block must have before jscpd reports it."
+summary = "The fewest lines a copied block has before it counts."
 
 [[settings]]
 name = "limits.duplication.min_tokens"
 kind = "number"
 direction = "ceiling"
 default = 40
-summary = "The fewest tokens a copied block must have before jscpd reports it."
+summary = "The fewest tokens a copied block has before it counts."
 
 [[settings]]
 name = "limits.duplication.threshold_percent"
 kind = "number"
 direction = "ceiling"
 default = 4
-summary = "The most duplicated code a repository may hold, as a percentage."
+summary = "The largest share of duplicated lines the check accepts, as a number out of 100."
 
 [[settings]]
 name = "limits.docs.sentence_words"

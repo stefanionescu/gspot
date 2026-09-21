@@ -1,5 +1,9 @@
 # Presets
 
+These pages specify intended behavior; manifest presence is not acceptance evidence.
+[Remaining work](../22-remaining.md) owns implementation status and unresolved preset gaps.
+Directory layouts and naming preferences require opt-in under the level owner.
+
 One page per preset. Each page states what the preset detects and claims, the tools it pins, and the configuration it renders. It also lists the checks it runs with their stage, the settings it exposes, and the rule files it installs. The manifest format is in [../04-presets.md](../04-presets.md).
 
 ## Languages

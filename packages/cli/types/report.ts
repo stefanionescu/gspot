@@ -1,32 +1,14 @@
-// The report of one run: .gspot/report.json and the output of check --json.
-
+// The report schema owns both the public document and its parsed types.
+import type { z } from 'zod';
+import type { Defined } from '#types/config.ts';
 import type { CheckResult } from '#types/finding.ts';
+import type { reportSchema, pushReportSchema } from '#cli/run/report-schema.ts';
 
-export type BaselineVerdict = {
-    check: string;
-    rule: string;
-    count: number;
-    baseline: number;
-    held: boolean;
-    /** How many findings of the rule each file holds in this run, which is what lowering a baseline writes. */
-    paths: Record<string, number>;
+export type RunReport = Defined<Omit<z.infer<typeof reportSchema>, 'checks' | 'ignores'>> & {
+    checks: CheckResult[];
+    ignores: Defined<z.infer<typeof reportSchema.shape.ignores.element>>[];
 };
 
-export type RunReport = {
-    comparison?: { content: 'working-tree'; reference: string };
-    version: string;
-    stage: string;
-    started: string;
-    duration: number;
-    checks: CheckResult[];
-    baselines: BaselineVerdict[];
-    ignores: { check: string; rule?: string; paths?: string[]; reason: string; matched: number }[];
-    skips: { check: string; source: 'local' | 'flag' | 'platform' | 'rules' }[];
-    coverage: { checked: number; unchecked: number };
-    suppressions: Record<string, number>;
-    unstaged: number;
-    /** True when the run read only the staged files or the files a ref does not hold yet, so its counts are partial. */
-    narrowed: boolean;
-    failed: string[];
-    exitCode: number;
+export type PushReport = Omit<z.infer<typeof pushReportSchema>, 'revisions'> & {
+    revisions: (Omit<z.infer<typeof pushReportSchema.shape.revisions.element>, 'report'> & { report: RunReport })[];
 };

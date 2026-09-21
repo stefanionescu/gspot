@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { MergedView } from '#types/config.ts';
 import type { CheckSpec } from '#types/manifest.ts';
@@ -33,7 +33,8 @@ writeFileSync('dist/index.html', hadOutput ? 'second' : 'first');
 
 describe('site build reproducibility', () => {
     test('the second build preserves the output shared with other checks', async () => {
-        await using sandbox = await createSandbox({ 'build.js': BUILD });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'build.js': BUILD });
         const request = input(sandbox.path, ['build.js']);
         const first = await siteBuild(request);
         const before = readFileSync(join(first.output, 'index.html'), 'utf8');
@@ -43,7 +44,8 @@ describe('site build reproducibility', () => {
     });
 
     test('a failed second build reports an error instead of passing', async () => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'local-input.txt': 'Only available in the working tree.',
             'build.js': `import { readFileSync } from 'node:fs';
 readFileSync('local-input.txt');

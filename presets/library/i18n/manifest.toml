@@ -20,7 +20,8 @@ target = ".gspot/eslint.config.mjs"
 fragment = true
 
 [[checks]]
-name = "integrity/locales"
+name = "i18n/locales"
+level = "recommended"
 stage = "push"
 runs = "once"
 engine = "integrity"

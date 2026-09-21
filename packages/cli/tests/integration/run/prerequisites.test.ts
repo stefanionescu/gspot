@@ -2,12 +2,11 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
 import { planRun } from '#cli/run/plan.ts';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
-import { runEngineCheck } from '#cli/run/engines.ts';
 
-const POLICY = 'version = 1\npresets = ["nextjs", "postgres", "xctest", "xcode", "static-site"]\n';
+const POLICY = 'version = 1\nlevel = "all"\npresets = ["nextjs", "postgres", "xctest", "xcode", "static-site"]\n';
 const WAITING = new Map([
     ['nextjs/build', 'tools.next.build_in_gate'],
     ['postgres/migration-docs', 'tools.postgres.migration_docs'],
@@ -17,7 +16,8 @@ const WAITING = new Map([
 ]);
 
 test('disabled settings produce skipped results and enabling a setting runs the check', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': POLICY,
         'Tests/ExampleTests.swift': 'import XCTest\nfinal class ExampleTests: XCTestCase {}\n',
         'App.entitlements':
@@ -27,7 +27,6 @@ test('disabled settings produce skipped results and enabling a setting runs the 
     const options = {
         stage: 'all' as const,
         skips: [],
-        localSkips: [],
         only: WAITING.keys().toArray(),
         fix: false,
         isDryRun: false,
@@ -36,6 +35,7 @@ test('disabled settings produce skipped results and enabling a setting runs the 
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, options);
     expect(new Set(outcome.report.checks.map((check) => check.check))).toEqual(new Set(WAITING.keys()));
+    expect(outcome.report.coverage.checked).toBe(0);
     for (const check of outcome.report.checks) {
         expect(check.status).toBe('skipped');
         expect(check.note).toContain(WAITING.get(check.check));
@@ -54,9 +54,10 @@ test('disabled settings produce skipped results and enabling a setting runs the 
 });
 
 test('a failed site build skips every output consumer and a new session rebuilds', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\npresets = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
+            'version = 1\nlevel = "all"\npresets = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\nsize_limits = [{paths = ["**/*"], kb = 100}]\n',
         'build.js': 'console.error("Planted build failure"); process.exitCode = 1;',
         'page.html': '<!doctype html><html lang="en"><title>Example</title></html>',
     });
@@ -70,17 +71,20 @@ test('a failed site build skips every output consumer and a new session rebuilds
         'static-site/sitemap',
     ]);
     const session = await openSession(sandbox.path);
-    const planned = ['push', 'manual'].flatMap((stage) =>
-        planRun(session, {
-            stage: stage as 'push' | 'manual',
-            skips: [],
-            localSkips: [],
-            only: ['static-site/build', ...consumers],
-        }),
-    );
+    const planned = (
+        await Promise.all(
+            ['push', 'manual'].map((stage) =>
+                planRun(session, {
+                    stage: stage as 'push' | 'manual',
+                    skips: [],
+                    only: ['static-site/build', ...consumers],
+                }),
+            ),
+        )
+    ).flat();
     expect(planned).toHaveLength(consumers.size + 1);
     for (const check of planned) {
-        const result = await runEngineCheck(session, check.spec.engine!, check);
+        const result = await check.run(session, check);
         if (check.check === 'static-site/build') {
             expect(result.status).toBe('fail');
             expect(result.findings[0]?.message).toContain('Planted build failure');
@@ -94,7 +98,7 @@ test('a failed site build skips every output consumer and a new session rebuilds
         'import {mkdirSync, writeFileSync} from "node:fs"; mkdirSync("dist"); writeFileSync("dist/index.html", "built");',
     );
     const next = await openSession(sandbox.path);
-    const [build] = planRun(next, { stage: 'push', skips: [], localSkips: [], only: ['static-site/build'] });
-    const rebuilt = await runEngineCheck(next, build!.spec.engine!, build!);
+    const [build] = await planRun(next, { stage: 'push', skips: [], only: ['static-site/build'] });
+    const rebuilt = await build!.run(next, build!);
     expect(rebuilt.status).toBe('ok');
 });

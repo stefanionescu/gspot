@@ -1,42 +1,65 @@
 ---
 title: Monorepos and scopes
-description: One gspot.toml for the whole repository, with a scope per package.
-sidebar:
-    order: 4
+description: Give nested projects their own presets and settings in one policy file.
 ---
 
-A scope is a folder with its own presets: an API in `api/`, an iOS app in `ios/`, a package under
-`packages/`. `init` reads the workspaces of the package manager and proposes one scope per
-package; `gspot.toml` holds them all.
+Start from a repository with nested projects. Initialization reads supported package-manager
+workspace declarations and proposes scopes. Review their paths and presets before accepting.
+
+A complete example policy:
 
 ```toml
-[[scopes]]
+version = 1
+presets = []
+
+[[scope]]
 path = "api"
 presets = ["typescript", "express", "vitest"]
 
-[[scopes]]
+[scope.limits]
+function_lines = 80
+
+[[scope]]
 path = "ios"
 presets = ["swift", "xcode"]
 ```
 
-## What a scope changes
+Use the singular `[[scope]]` array table. The `[scope.limits]` table belongs to the preceding
+scope, so the example changes the limit for `api`, not `ios`.
 
-- The checks of its presets run over its files, with the generated configuration written under
-  `.gspot/<path>/` when a tool needs one per scope.
-- A file belongs to the nearest scope; a file outside every scope belongs to the root.
-- `gspot check api` selects files and project checks under `api`. `gspot explain <file>` says which scope claims a file and
-  why.
+## Check a project
 
-Use `./` to select a file whose name also identifies a check, preset, or setting.
-For example, `gspot explain bash` explains the preset, and `gspot explain ./bash` explains the file.
-
-## Settings per scope
-
-A scope table overrides the root for its files:
-
-```toml
-[scopes.api.limits]
-function_lines = 80
+```bash
+gspot apply
+gspot check api
 ```
 
-`gspot set --scope api limits.function_lines 80 --reason "..."` writes the same line.
+The deepest containing scope owns a file. Files outside nested scopes belong to the root.
+A project-wide check triggered by a path can inspect other files in that project. Generated
+configuration lives under `.gspot/<path>/` when the owning tool needs a separate scope file.
+
+`gspot explain <file>` reports the scope and claims. Use `./` for a filename that also names a
+preset or check: `gspot explain bash` explains the preset, while `gspot explain ./bash`
+explains the file.
+
+## Change a scoped setting
+
+```bash
+gspot set limits.function_lines 80 --scope api --reason "The parser is one state machine."
+```
+
+The command writes the scoped setting and applies policy. Root settings supply defaults;
+more specific scope settings override them. Keep scope paths relative to the policy root.
+PostgreSQL migration directories are also relative to their scope.
+
+## Put policy below the Git root
+
+Run from the directory containing that policy or select it explicitly:
+
+```bash
+gspot -C api check
+```
+
+The closest enclosing `gspot.toml` determines the policy root. Path selectors are relative to
+the selected working directory. Inspect `gspot explain <file>` when a file is assigned to an
+unexpected scope; do not add duplicate root-wide checks to compensate for a wrong scope path.

@@ -1,10 +1,17 @@
 // The Supabase project: its config file, its function folders and its finding shape.
-import { join } from 'node:path';
+import { join, posix } from 'node:path';
+import { scopeOf } from '#cli/repository/scopes.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { SUPABASE_CONFIG } from '#config/supabase.ts';
-import type { SupabaseProject } from '#types/supabase.ts';
+import { parse } from 'smol-toml';
+import { z } from 'zod';
+
+const projectSchema = z.object({
+    functions: z.record(z.string(), z.unknown()).optional(),
+    storage: z.object({ buckets: z.record(z.string(), z.unknown()).optional() }).optional(),
+});
 
 const DEFAULT_FUNCTIONS = 'supabase/functions';
 const SHARED_PREFIX = '_';
@@ -14,11 +21,12 @@ const SHARED_PREFIX = '_';
  * @param root the repository root
  * @returns the config or the error
  */
-export function readProject(root: string): SupabaseProject | string | undefined {
+export function readProject(root: string): z.infer<typeof projectSchema> | string | undefined {
     const path = join(root, SUPABASE_CONFIG);
     if (!existsSync(path)) return undefined;
+    const text = readFileSync(path, 'utf8');
     try {
-        return Bun.TOML.parse(readFileSync(path, 'utf8'));
+        return projectSchema.parse(parse(text));
     } catch (error) {
         return error instanceof Error ? error.message : 'The file does not parse.';
     }
@@ -31,10 +39,15 @@ export function readProject(root: string): SupabaseProject | string | undefined 
  */
 export function functionFolders(input: EngineInput): string[] {
     const named = input.view.tool('supabase')['functions_dir'];
-    const base = typeof named === 'string' && named !== '' ? named : DEFAULT_FUNCTIONS;
+    const base = posix.join(input.scope, typeof named === 'string' && named !== '' ? named : DEFAULT_FUNCTIONS);
     const folders = input.session.repository.files
         .map((file) => file.path)
-        .filter((path) => path.startsWith(`${base}/`) && /\/index\.tsx?$/u.test(path))
+        .filter(
+            (path) =>
+                scopeOf(path, input.session.repository.scopes).path === input.scope &&
+                path.startsWith(`${base}/`) &&
+                /\/index\.tsx?$/u.test(path),
+        )
         .map((path) => path.slice(0, path.lastIndexOf('/')))
         .filter((folder) => folder.split('/').length === base.split('/').length + 1)
         .filter((folder) => !folder.slice(folder.lastIndexOf('/') + 1).startsWith(SHARED_PREFIX));

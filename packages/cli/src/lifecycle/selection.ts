@@ -135,15 +135,34 @@ function assertNoneRequired(options: InitInputs['options'], named: string[], man
 }
 
 // The presets a selection recommends, minus the ones the person left out; a recommendation recommends nothing further.
-function recommendedAdded(ids: string[], manifests: Map<string, Manifest>, without: Set<string>): string[] {
+function recommendedAdded(
+    ids: string[],
+    manifests: Map<string, Manifest>,
+    without: Set<string>,
+    detected: Set<string>,
+): string[] {
     const recommended = ids.flatMap((id) => manifests.get(id)?.preset.recommends ?? []);
-    return [...new Set([...ids, ...recommended.filter((id) => !without.has(id))])];
+    return [
+        ...new Set([
+            ...ids,
+            ...recommended.filter((id) => {
+                if (without.has(id)) return false;
+                const kind = manifests.get(id)?.preset.kind;
+                return (kind !== 'tool' && kind !== 'library') || detected.has(id);
+            }),
+        ]),
+    ];
 }
 
 // An exact list (a profile that says so, or the answer to the selection question) gains no recommendation.
-function listedPresets(options: InitInputs['options'], ids: string[], manifests: Map<string, Manifest>): string[] {
+function listedPresets(
+    options: InitInputs['options'],
+    ids: string[],
+    manifests: Map<string, Manifest>,
+    detected: Set<string>,
+): string[] {
     const isExact = options.profile?.tables.selection === 'exact' || options.isListExact === true;
-    return isExact ? ids : recommendedAdded(ids, manifests, new Set(options.without));
+    return isExact ? ids : recommendedAdded(ids, manifests, new Set(options.without), detected);
 }
 
 function reasonFor(id: string, sets: { named: Set<string>; chosen: Set<string>; listed: Set<string> }): PresetReason {
@@ -185,7 +204,12 @@ export function selectForInit(inputs: InitInputs): InitSelection {
             scopeProposals.set(scope.path, scopeSelection(context, scope, scopeFlags.get(scope.path), heldAtRoot));
     const inScopes = new Set(scopeProposals.values().toArray().flat());
     const keptRoot = hasScopes ? rootLanguagesKept(context, proposedRoot, scopes, inScopes) : proposedRoot;
-    const rootIds = listedPresets(options, [...keptRoot, ...inScopes], manifests).filter((id) => !inScopes.has(id));
+    const rootIds = listedPresets(
+        options,
+        [...keptRoot, ...inScopes],
+        manifests,
+        new Set(rootProposals.map((proposal) => proposal.preset)),
+    ).filter((id) => !inScopes.has(id));
     assertNoneRequired(options, [...rootIds, ...inScopes], manifests);
     const selectedIds = closure([...rootIds, ...inScopes], manifests);
     const sets = {

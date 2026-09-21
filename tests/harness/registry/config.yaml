@@ -1,5 +1,7 @@
 # A throwaway registry for the launcher test: packages are published here and installed back with --ignore-scripts.
 storage: ./storage
+# Compiled binaries exceed Verdaccio's default 10 MB request limit.
+max_body_size: 200mb
 auth:
     htpasswd:
         file: ./htpasswd

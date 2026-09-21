@@ -90,7 +90,7 @@ export function withoutRequired(name: string, chain: string[]): string {
  */
 export function presetNotListed(name: string, scope: string | undefined): string {
     const where = scope === undefined ? 'the root presets' : `the presets of scope ${scope}`;
-    return `\`${name}\` is not in ${where}, so there is nothing to remove. Run gspot doctor --settings to see the selection.`;
+    return `\`${name}\` is not in ${where}, so there is nothing to remove. Run gspot list settings to see the selection.`;
 }
 
 /**
@@ -121,23 +121,13 @@ export function scopeMissing(path: string): string {
 }
 
 /**
- * One scope inside another.
- * @param outer the enclosing scope
- * @param inner the scope inside it
- * @returns the message
- */
-export function scopesNest(outer: string, inner: string): string {
-    return `The scope \`${inner}\` is inside the scope \`${outer}\`. Scopes do not nest; keep one of them.`;
-}
-
-/**
  * A setting key no selected preset exposes.
  * @param key the key as written
  * @param known the keys that exist under the same table
  * @returns the message
  */
 export function settingNotExposed(key: string, known: string[]): string {
-    return `No selected preset exposes \`${key}\`. The settings that exist under that table are ${list(known)}. Run \`gspot doctor --settings\` to see every one.`;
+    return `No selected preset exposes \`${key}\`. The settings that exist under that table are ${list(known)}. Run \`gspot list settings\` to see every one.`;
 }
 
 /**
@@ -169,22 +159,7 @@ export function extraNeedsReason(tool: string): string {
     return `[tools.${tool}.extra] needs a \`reason\` saying which option has no slot yet. It prints on every run.`;
 }
 
-/**
- * A path selector that names a directory without a glob.
- * @param selector the selector as written
- * @returns the message
- */
-export function bareDirectory(selector: string): string {
-    return `The path \`${selector}\` names a directory. Write \`${selector}/**\` so it is clear that everything under it is meant.`;
-}
-
-/**
- * A key in the local file that belongs in the shared one.
- * @param key the key as written
- * @returns the message
- */
-export function localOnlySkip(key: string): string {
-    return `gspot.local.toml holds only \`skip\`. \`${key}\` belongs in gspot.toml.`;
+/**\` so it is clear that everything under it is meant.`;
 }
 
 /**
@@ -216,7 +191,7 @@ export function loosenNeedsReason(key: string, value: string, shipped: string, c
  * @returns the message
  */
 export function groupNotRemovable(group: string): string {
-    return `The \`${group}\` term group cannot be removed. Allow one name at a time with \`gspot allow naming <name> --reason "..."\`.`;
+    return `The \`${group}\` term group cannot be removed. Allow one name at a time with \`gspot set naming.allowed {"name":"<name>"} --reason "..."\`.`;
 }
 
 /**

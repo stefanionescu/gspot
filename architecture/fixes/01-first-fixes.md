@@ -2,7 +2,7 @@
 
 These rows give a wrong answer, lose a file of the developer, or stop every run. They close
 before any design work. Each fix gets a planted test, because most of these defects lived
-where no test looked. The [CI evidence](../13-roadmap.md#ci-repair) records the completed repair.
+where no test looked. The [CI evidence](../23-repository-audit.md#completion-and-windows-evidence) records the completed repair.
 
 The order inside the step: the four rows that destroy work first (K-36, K-156,
 K-159, K-257). Then the rows where a check passes on work it never did (K-140, K-157, K-254, K-258).

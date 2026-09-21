@@ -1,6 +1,6 @@
 // Planted repository for the bash preset: every check of the preset fires on its planted defect and passes without it.
 import { join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { chmodSync, writeFileSync } from 'node:fs';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
@@ -234,7 +234,8 @@ describe('the bash preset', () => {
     test(
         'every check passes on a clean script and fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'scripts/build.sh': script.replace('main() {', () => '# main: runs the script.\nmain() {'),
             });
             chmodSync(join(sandbox.path, 'scripts/build.sh'), 0o755);
@@ -255,6 +256,8 @@ describe('the bash preset', () => {
                 ],
                 environment,
             );
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const planted of CASES) {
                 const clean = await run(sandbox.path, ['check', '--only', planted.check, '--no-cache'], environment);
                 expect(clean.code, `${planted.check} on the clean repository: ${clean.stdout}`).toBe(0);
@@ -277,8 +280,9 @@ test.each([
     const base = `#!/usr/bin/env bash\n#\n# Prints a greeting.\n# Runtime: Bash ${version}+, macOS and Linux.\nset -euo pipefail\n`;
     const inherited = 'shopt -s inherit_errexit\n';
     const source = (isEnabled: boolean): string => base + (isEnabled ? inherited : '') + MAIN;
-    await using sandbox = await createSandbox({
-        'gspot.toml': 'version = 1\npresets = ["bash"]\n',
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["bash"]\n',
         'greet.sh': source(isInherited),
     });
     const path = join(sandbox.path, 'greet.sh');

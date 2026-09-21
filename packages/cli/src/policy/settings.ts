@@ -1,5 +1,7 @@
+import { scopeAncestors } from '#cli/repository/scopes.ts';
 // The settings surface: every key the selection exposes, its direction, default, and current value with its source.
 import * as messages from '#cli/policy/messages.ts';
+import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schema.ts';
 import type { Manifest, SettingSpec } from '#types/manifest.ts';
 
 import type {
@@ -77,8 +79,7 @@ function toolKeys(policy: Partial<Policy>): string[] {
     const keys: string[] = [];
     const tools = policy.tools ?? {};
     for (const [tool, table] of Object.entries(tools))
-        for (const slot of Object.keys(table))
-            if (slot !== 'extra' && slot !== 'enabled') keys.push(`tools.${tool}.${slot}`);
+        for (const slot of Object.keys(table)) if (slot !== 'extra') keys.push(`tools.${tool}.${slot}`);
     return keys;
 }
 
@@ -95,21 +96,6 @@ function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingS
         return;
     }
     surface.defaults.set(spec.name, { value: spec.default, preset: manifest.preset.name });
-}
-
-function addEnabledSpecs(surface: ExposedSettings, manifest: Manifest): void {
-    for (const tool of manifest.tools) {
-        const enabledKey = `tools.${tool.name}.enabled`;
-        if (surface.specs.has(enabledKey)) continue;
-        surface.specs.set(enabledKey, {
-            name: enabledKey,
-            kind: 'boolean',
-            direction: 'loosening',
-            default: true,
-            summary: `Whether the ${tool.name} checks run. Turning it off needs a reason.`,
-        });
-        surface.defaults.set(enabledKey, { value: true, preset: manifest.preset.name });
-    }
 }
 
 function languageSpec(
@@ -215,11 +201,15 @@ function applyLayers(
     return result;
 }
 
-function layersFor(policy: Policy, scope: string | undefined): PolicyLayer[] {
-    const layers: PolicyLayer[] = [{ table: policy, name: 'gspot.toml' }];
-    const scopeTable = scope === undefined ? undefined : policy.scopeTables[scope];
-    if (scope !== undefined && scopeTable) layers.push({ table: scopeTable, name: `[[scope]] ${scope}` });
-    return layers;
+/** The root policy and applicable scope tables, ordered from outermost to innermost. */
+export function policyTables(policy: Policy, scope: string | undefined): PolicyLayer[] {
+    return [
+        { table: policy, name: 'gspot.toml' },
+        ...scopeAncestors(policy.scopes, scope ?? '').flatMap((entry) => {
+            const table = policy.scopeTables[entry.path];
+            return table === undefined ? [] : [{ table, name: `[[scope]] ${entry.path}` }];
+        }),
+    ];
 }
 
 /**
@@ -248,12 +238,26 @@ export function writtenKeys(policy: Partial<Policy>): string[] {
  */
 export function exposedSettings(selected: Manifest[]): ExposedSettings {
     const surface: ExposedSettings = { specs: new Map(), defaults: new Map(), problems: [] };
+    for (const [name, schema] of Object.entries({
+        ...rootSettingSchemas,
+        ...integrationSettingSchemas,
+    })) {
+        const value = schema.parse(undefined);
+        const spec: SettingSpec = {
+            name,
+            kind: Array.isArray(value) ? 'list' : typeof value === 'boolean' ? 'boolean' : 'string',
+            direction: 'neutral',
+            default: value,
+            summary: schema.description ?? '',
+        };
+        surface.specs.set(name, spec);
+        surface.defaults.set(name, { value: spec.default, preset: 'gspot' });
+    }
     for (const manifest of selected) {
         for (const spec of manifest.settings) {
             if (!surface.specs.has(spec.name)) surface.specs.set(spec.name, spec);
             addDefault(surface, manifest, spec);
         }
-        addEnabledSpecs(surface, manifest);
     }
     return surface;
 }
@@ -280,6 +284,12 @@ export function specFor(surface: ExposedSettings, key: string): SpecMatch | unde
  */
 export function policyValue(policy: Partial<Policy>, key: string): WrittenValue | undefined {
     const [table, ...rest] = key.split('.');
+    if (key === 'generated' || key === 'vendored')
+        return plainIfPresent(
+            policy.declarations?.filter((entry) => entry.nature === key).map(({ nature, ...entry }) => entry),
+        );
+    if (key === 'require_reasons') return plainIfPresent(policy.requireReasons);
+    if (key === 'extra_checks') return plainIfPresent(policy.extraChecks);
     if (table === 'limits') return limitValue(policy, rest);
     if (table === 'naming') return namingValue(policy, rest);
     if (table === undefined) return undefined;
@@ -310,7 +320,7 @@ export function settingValue(
         reason: undefined,
     };
     const candidates = match.language === undefined ? [key] : [spec.name, key];
-    const { value, source, reason } = applyLayers(spec, key, start, layersFor(policy, scope), candidates);
+    const { value, source, reason } = applyLayers(spec, key, start, policyTables(policy, scope), candidates);
     return {
         key,
         spec,
@@ -322,7 +332,7 @@ export function settingValue(
 }
 
 /**
- * Every setting the surface exposes, resolved, for doctor --settings and the docs.
+ * Every setting the surface exposes, resolved, for list settings and the docs.
  * @param surface the surface of the selection
  * @param policy the loaded policy
  * @param scope the scope path whose table applies last, if any

@@ -1,13 +1,14 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
 
 test('hook discovery preserves path whitespace and refuses malformed Git configuration', async () => {
     const hooksPath = ' .custom hooks';
-    await using sandbox = await createSandbox({ [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' });
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { [`${hooksPath}/pre-commit`]: '#!/bin/sh\nexit 0\n' });
     const initialized = runBlocking(['git', 'init', '-q'], { cwd: sandbox.path });
     expect(initialized.code, initialized.stderr).toBe(0);
     const configured = runBlocking(['git', 'config', 'core.hooksPath', hooksPath], { cwd: sandbox.path });

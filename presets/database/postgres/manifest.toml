@@ -26,6 +26,7 @@ target = ".gspot/squawk.toml"
 
 [[checks]]
 name = "postgres/squawk"
+level = "recommended"
 stage = "commit"
 command = ["squawk", "--config", "{config:squawk}", "--reporter", "json", "{files}"]
 coverage = ["security"]
@@ -36,6 +37,7 @@ help = "Follow the help squawk prints for the rule. Turn one rule off with gspot
 
 [[checks]]
 name = "postgres/migration-order"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -47,6 +49,7 @@ help = "Rename the new migration with a version later than the newest committed 
 
 [[checks]]
 name = "postgres/migrations-frozen"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -58,6 +61,7 @@ help = "Restore the file with git checkout, and write the change as a new migrat
 
 [[checks]]
 name = "postgres/rls-present"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -69,6 +73,7 @@ help = "Enable row level security on the table, and add its policies in the same
 
 [[checks]]
 name = "postgres/explicit-grants"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -80,6 +85,7 @@ help = "Name the privileges the role needs, such as `SELECT` alone."
 
 [[checks]]
 name = "postgres/security-definer-search-path"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -91,6 +97,7 @@ help = "Give the function an empty `search_path` in its definition, and qualify 
 
 [[checks]]
 name = "postgres/index-covers-foreign-key"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -102,6 +109,7 @@ help = "Create an index that starts with the foreign key column."
 
 [[checks]]
 name = "postgres/migration-docs"
+level = "all"
 waits_for = "tools.postgres.migration_docs"
 stage = "commit"
 runs = "once"
@@ -131,7 +139,7 @@ name = "tools.postgres.migrations_dir"
 kind = "string"
 direction = "neutral"
 default = ""
-summary = "The migrations folder; empty searches supabase/migrations, db/migrations, and migrations."
+summary = "The migrations folder relative to the scope; empty searches supabase/migrations, db/migrations, and migrations within that scope."
 
 [[settings]]
 name = "tools.postgres.client_schemas"

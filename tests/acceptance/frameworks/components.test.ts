@@ -1,7 +1,7 @@
 import { symlinkSync } from 'node:fs';
 // Planted repositories for the vue and svelte presets: markup set from a string and a list with no key, in each framework.
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
 import type { ComponentShape } from '#tests/types/acceptance.ts';
@@ -27,7 +27,8 @@ const init = (presets: string[]): string[] => [
 ];
 const manifest = (name: string, version: string): string =>
     `{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "${name}": "${version}"\n    }\n}\n`;
-const TSCONFIG = '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "include": ["src"]\n}\n';
+const TSCONFIG =
+    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true\n    },\n    "include": ["src"]\n}\n';
 const SOURCE = '// A value the planted files build on.\n\n/** The answer. */\nexport const answer = 42;\n';
 
 const VUE_CLEAN =
@@ -82,7 +83,8 @@ describe('the vue and svelte presets', () => {
         test(
             `${shape.check} reads a component file and fires on its planted defects`,
             async () => {
-                await using sandbox = await createSandbox({
+                await using sandbox = await testdir();
+                await createFileTree(sandbox.path, {
                     '.gitignore': 'node_modules\n',
                     'tsconfig.json': TSCONFIG,
                     'src/answer.ts': SOURCE,
@@ -94,6 +96,8 @@ describe('the vue and svelte presets', () => {
                     PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
                 };
                 await install(sandbox.path, init(shape.presets), environment);
+                const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+                expect(selected.code, selected.stdout + selected.stderr).toBe(0);
                 const clean = await run(sandbox.path, ['check', '--only', shape.check, '--no-cache'], environment);
                 expect(clean.code, clean.stdout + clean.stderr).toBe(0);
                 expect(clean.stdout).toContain('1 file');
@@ -136,10 +140,11 @@ test.each([
             language === 'typescript'
                 ? '<script lang="ts">\nfunction forward(value: any) { return build(value); }\n</script>\n'
                 : '<script>\nfunction forward(value) { return build(value); }\n</script>\n';
-        await using sandbox = await createSandbox({
-            'gspot.toml': `version = 1\npresets = ["${framework}", "${language}"]\n`,
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `version = 1\nlevel = "all"\npresets = ["${framework}", "${language}"]\n`,
             'package.json': '{"name":"component-policy","private":true,"type":"module"}',
-            'tsconfig.json': '{"compilerOptions":{"strict":true},"include":["src"]}',
+            'tsconfig.json': '{ "compilerOptions": { "strict": true }, "include": ["src"] }\n',
             'src/build.ts': 'export const build = (value: number): number => value + 1;',
             [filename]: before,
         });

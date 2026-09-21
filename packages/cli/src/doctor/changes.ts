@@ -1,3 +1,7 @@
+import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
+import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
+import { join } from 'node:path';
+import { existsSync } from 'node:fs';
 // What changed in the repository after init: presets detected and not selected, configuration not owned, hooks or CI changed by hand, duplicate pins.
 import type { Session } from '#types/run.ts';
 import { emitAll } from '#cli/emit/targets.ts';
@@ -13,9 +17,6 @@ import { existingTooling } from '#cli/repository/existing-tooling.ts';
 import type { ExistingTool, ExistingTooling } from '#types/repository.ts';
 
 const HEAD_BYTES = 600;
-const WORKFLOW_BYTES = 20_000;
-const SHORT_NAME = 3;
-const LINT_WORDS = /\blint\b|gspot check/u;
 
 function detectedNotSelected(
     session: Session,
@@ -53,7 +54,7 @@ function configurationRow(session: Session, config: ExistingTool, selected: Set<
         return {
             path: config.path,
             note: `beside gspot's ${config.tool} configuration`,
-            command: `delete it, or gspot set tools.${config.tool}.enabled false --reason "..."`,
+            command: 'review gspot.toml and carry settings before removing the authored configuration',
         };
     const owner = session.manifests
         .values()
@@ -80,24 +81,20 @@ function hookRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
     return tooling.hooks.flatMap((hook) => {
         if (tool !== 'husky' && hook.kind === 'husky')
             return [{ path: `${hook.path}/`, note: 'hooks added by hand', command: 'gspot apply' }];
-        if (tool === 'gspot' && hook.kind === 'hooksPath' && hook.path !== '.gspot/hooks')
-            return [{ path: hook.path, note: 'core.hooksPath moved by hand', command: 'gspot apply' }];
         return [];
     });
 }
 
 function workflowRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
-    const pinnedNames = everyManifest(session).flatMap((manifest) => manifest.tools.map((tool) => tool.name));
-    return tooling.ci
-        .filter((workflow) => workflow !== '.github/workflows/gspot.yml')
-        .filter((workflow) => {
-            const text = head(session.root, workflow, WORKFLOW_BYTES);
-            return (
-                LINT_WORDS.test(text) ||
-                pinnedNames.some((name) => name.length > SHORT_NAME && text.includes(`${name} `))
-            );
-        })
-        .map((workflow) => ({ path: workflow, note: 'a second lint job', command: 'none; informational' }));
+    const generated = new Set(
+        emitAll(session)
+            .files.filter((file) => file.kind === 'workflow')
+            .map((file) => file.path),
+    );
+    return ciLintJobs(
+        session.root,
+        tooling.ci.filter((path) => !generated.has(path)),
+    ).map((path) => ({ path, note: 'an authored lint job', command: 'none; informational' }));
 }
 
 /**
@@ -112,12 +109,23 @@ export function changeReport(session: Session): ChangeReport {
     return {
         detectedNotSelected: detectedNotSelected(session, facts, selected),
         recommendedNotSelected: recommendedNotSelected(session, selected),
-        configurationNotOwned: configurationNotOwned(session, tooling, selected),
+        configurationNotOwned: [
+            ...configurationNotOwned(session, tooling, selected),
+            ...(existsSync(join(session.root, 'gspot.local.toml'))
+                ? [
+                      {
+                          path: 'gspot.local.toml',
+                          note: 'No command reads this file. Use --skip for one run.',
+                          command: 'gspot check --skip <checks>',
+                      },
+                  ]
+                : []),
+        ],
         changedOutsideGspot: [...hookRows(session, tooling), ...workflowRows(session, tooling)],
         pinnedTwice: pinnedTwice(session.root, everyManifest(session)).map((pin) => ({
             tool: pin.tool,
             version: pin.version,
-            places: [pin.place, '.config/mise/conf.d/gspot.toml'],
+            places: [pin.place, MISE_CONFIG_PATH],
             command: `delete the ${pin.place} line`,
         })),
     };

@@ -1,6 +1,6 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { expect, spyOn, test } from 'bun:test';
 import { readCached } from '#cli/run/cache.ts';
 import type { Stage } from '#types/manifest.ts';
@@ -19,6 +19,7 @@ async function sessionFor(root: string, status: number, stage: Stage = 'commit')
             tools: [],
             checks: [
                 {
+                    level: 'recommended',
                     runs: 'per-scope',
                     coverage: [],
                     summary: 'Reports the planted storage finding.',
@@ -37,25 +38,23 @@ async function sessionFor(root: string, status: number, stage: Stage = 'commit')
     return session;
 }
 
-for (const target of ['cache', 'report.json', 'report.sarif']) {
+for (const target of ['cache', 'report.json', 'report.sarif', 'report.codequality.json']) {
     test.each([0, 1])(`${target} write failure preserves check status %s and findings`, async (status) => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'gspot.toml': 'version = 1\npresets = []\n',
             'source.ts': 'export {};\n',
         });
         const session = await sessionFor(sandbox.path, status);
-        const write = fs.writeFileSync;
-        const failure = Object.assign(new Error('Planted disk failure.\nSecond line.'), { code: 'ENOSPC' });
-        const writes = spyOn(fs, 'writeFileSync').mockImplementation((path, ...args) => {
-            if (String(path).includes(target)) throw failure;
-            write(path, ...args);
-        });
+        fs.mkdirSync(join(sandbox.path, '.gspot'), { recursive: true });
+        const obstruction = join(sandbox.path, '.gspot', target);
+        if (target === 'cache') fs.writeFileSync(obstruction, 'authored obstruction\n');
+        else fs.mkdirSync(obstruction);
         const stderr = spyOn(process.stderr, 'write').mockImplementation(() => true);
         try {
             const outcome = await executeRun(session, {
                 stage: 'commit',
                 skips: [],
-                localSkips: [],
                 fix: false,
                 isDryRun: false,
             });
@@ -66,27 +65,29 @@ for (const target of ['cache', 'report.json', 'report.sarif']) {
             expect(output).toContain(status === 0 ? 'passed:' : 'Retained finding');
             const diagnostics = stderr.mock.calls.map((call) => String(call[0])).join('');
             expect(diagnostics).toContain(target);
-            expect(diagnostics).toContain('Planted disk failure. Second line.');
+            expect(diagnostics).toContain('Could not write');
+            if (target === 'cache') expect(fs.readFileSync(obstruction, 'utf8')).toBe('authored obstruction\n');
+            else expect(fs.statSync(obstruction).isDirectory()).toBe(true);
             expect(diagnostics.trim().split('\n')).toHaveLength(1);
         } finally {
-            writes.mockRestore();
             stderr.mockRestore();
         }
     });
 }
 
 test('the message stage preserves the prior report files', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\npresets = []\n',
         'source.ts': 'export {};\n',
         '.gspot/report.json': 'previous JSON',
         '.gspot/report.sarif': 'previous SARIF',
+        '.gspot/report.codequality.json': 'previous GitLab',
     });
     const session = await sessionFor(sandbox.path, 0, 'message');
     const outcome = await executeRun(session, {
         stage: 'message',
         skips: [],
-        localSkips: [],
         fix: false,
         isDryRun: false,
         noCache: true,
@@ -95,15 +96,17 @@ test('the message stage preserves the prior report files', async () => {
     expect(outcome.report.exitCode).toBe(0);
     expect(fs.readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8')).toBe('previous JSON');
     expect(fs.readFileSync(join(sandbox.path, '.gspot/report.sarif'), 'utf8')).toBe('previous SARIF');
+    expect(fs.readFileSync(join(sandbox.path, '.gspot/report.codequality.json'), 'utf8')).toBe('previous GitLab');
 });
 
 test.each([false, true])('unreadable selected sources reject a run with noCache=%s', async (noCache) => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': 'version = 1\npresets = []\n',
         'source.ts': 'export {};\n',
     });
     const session = await sessionFor(sandbox.path, 0);
-    const options = { stage: 'commit' as const, skips: [], localSkips: [], fix: false, isDryRun: false, noCache };
+    const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false, noCache };
     const original = await executeRun(session, options);
     expect(original.report.exitCode).toBe(0);
     const report = fs.readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8');
@@ -113,54 +116,87 @@ test.each([false, true])('unreadable selected sources reject a run with noCache=
     expect(fs.readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8')).toBe(report);
 });
 
-test('an absent tool baseline is optional but an unreadable baseline rejects the run', async () => {
-    await using sandbox = await createSandbox({
-        'gspot.toml': 'version = 1\npresets = []\n',
-        'source.ts': 'export {};\n',
-    });
-    const session = await sessionFor(sandbox.path, 0);
-    session.scopes[0]!.selected[0]!.checks[0]!.baseline_file = 'tool-baseline.json';
-    const options = { stage: 'commit' as const, skips: [], localSkips: [], fix: false, isDryRun: false };
-    const outcome = await executeRun(session, options);
-    expect(outcome.report.exitCode).toBe(0);
-    fs.mkdirSync(join(sandbox.path, 'tool-baseline.json'));
-    await rejects(executeRun(session, options), { code: 'EISDIR' });
-});
-
 test.each(['{', '{"status":"ok","findings":[]}'])(
-    'invalid cached result %s refuses the run and preserves the prior report',
+    'an edited cached result %s is preserved and the check runs again',
     async (content) => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'gspot.toml': 'version = 1\npresets = []\n',
             'source.ts': 'export {};\n',
         });
         const session = await sessionFor(sandbox.path, 1);
-        const options = { stage: 'commit' as const, skips: [], localSkips: [], fix: false, isDryRun: false };
+        const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false };
         const initial = await executeRun(session, options);
         expect(initial.report.exitCode).toBe(1);
         const reportPath = join(sandbox.path, '.gspot/report.json');
-        const report = fs.readFileSync(reportPath, 'utf8');
         const cache = join(sandbox.path, '.gspot/cache');
         const [entry] = fs.readdirSync(cache);
         fs.writeFileSync(join(cache, entry!), content);
-        await rejects(executeRun(session, options), /Could not read cached check result/);
-        expect(fs.readFileSync(reportPath, 'utf8')).toBe(report);
+        const stderr = spyOn(process.stderr, 'write').mockImplementation(() => true);
+        try {
+            const repeated = await executeRun(session, options);
+            expect(repeated.report.exitCode).toBe(1);
+            expect(repeated.report.checks[0]?.findings[0]?.message).toBe('Retained finding');
+            expect(fs.readFileSync(join(cache, entry!), 'utf8')).toBe(content);
+            expect(JSON.parse(fs.readFileSync(reportPath, 'utf8'))).toEqual(repeated.report);
+            expect(stderr.mock.calls.map((call) => String(call[0])).join('')).toContain(
+                'Preserved edited or unowned cache',
+            );
+        } finally {
+            stderr.mockRestore();
+        }
     },
 );
 
-test('a denied cache read reports its path and cause', async () => {
-    await using sandbox = await createSandbox({ '.gspot/cache/entry.json': '{}' });
-    const path = join(sandbox.path, '.gspot/cache/entry.json');
-    const failure = Object.assign(new Error('Denied cache read'), { code: 'EACCES' });
-    const reads = spyOn(fs, 'readFileSync').mockImplementationOnce(() => {
-        throw failure;
-    });
+test('a denied owned cache read reports its path and cause', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': 'version = 1\npresets = []\n', 'source.ts': 'export {};\n' });
+    const session = await sessionFor(sandbox.path, 0);
+    const initial = await executeRun(session, { stage: 'commit', skips: [], fix: false, isDryRun: false });
+    expect(initial.report.exitCode).toBe(0);
+    const directory = join(sandbox.path, '.gspot/cache');
+    const [entry] = fs.readdirSync(directory);
+    if (entry === undefined) throw new Error('The executed check did not create its cache result.');
+    const path = join(directory, entry);
+    const mode = fs.statSync(path).mode & 0o777;
+    fs.chmodSync(path, 0);
     try {
-        throws(() => readCached(sandbox.path, 'entry'), {
-            message: `Could not read cached check result ${path}: Error: Denied cache read`,
-            cause: failure,
-        });
+        throws(() => readCached(sandbox.path, entry.slice(0, -5)), /Could not read cached check result.*EACCES/u);
     } finally {
-        reads.mockRestore();
+        fs.chmodSync(path, mode);
+    }
+});
+
+test('checks share generated-file hashes within a run and observe edits in the next run', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\npresets = []\n',
+        '.gspot/shared.toml': 'value = 1\n',
+        'source.ts': 'export {};\n',
+    });
+    const session = await sessionFor(sandbox.path, 0);
+    const manifest = session.scopes[0]!.selected[0]!;
+    manifest.checks.push({ ...manifest.checks[0]!, name: 'sandbox/second' });
+    const target = join(sandbox.path, '.gspot/shared.toml');
+    const read = fs.readFileSync;
+    let reads = 0;
+    const observedRead = ((...args: Parameters<typeof read>) => {
+        if (args[0] === target && args[1] === undefined) reads += 1;
+        return read(...args);
+    }) as typeof read;
+    const observation = spyOn(fs, 'readFileSync').mockImplementation(observedRead);
+    const options = { stage: 'commit' as const, skips: [], fix: false, isDryRun: false };
+    try {
+        const first = await executeRun(session, options);
+        expect(first.report.checks.map((check) => check.status)).toEqual(['ok', 'ok']);
+        expect(reads).toBe(1);
+        const unchanged = await executeRun(session, options);
+        expect(unchanged.report.checks.map((check) => check.status)).toEqual(['cache', 'cache']);
+        fs.writeFileSync(target, 'value = 2\n');
+        const changed = await executeRun(session, options);
+        expect(changed.report.checks.map((check) => check.status)).toEqual(['ok', 'ok']);
+        expect(reads).toBe(3);
+    } finally {
+        observation.mockRestore();
     }
 });

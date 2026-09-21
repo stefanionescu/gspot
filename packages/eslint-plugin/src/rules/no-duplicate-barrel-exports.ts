@@ -136,6 +136,7 @@ export const noDuplicateBarrelExports = createRule<[], 'duplicate'>({
     meta: {
         type: 'problem',
         docs: {
+            level: 'recommended',
             summary: 'Finds a name an index file exports twice, including through two export-all lines.',
             why: 'Two exports of one name shadow each other, and which one wins depends on order nobody reads.',
             fix: 'Export the name once, or alias one of the two so both are reachable.',

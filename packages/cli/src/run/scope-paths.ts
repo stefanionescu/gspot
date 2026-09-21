@@ -19,17 +19,6 @@ export function targetInScope(scope: string, config: ConfigurationTarget): strin
 }
 
 /**
- * The baseline file a tool keeps for one scope. A tool that rewrites its whole file on every write names the scope in the
- * path with a placeholder, so two scopes never share a file; the root is written as root, and a slash in a scope path as a dash.
- * @param file the baseline_file of the check
- * @param scope the scope path, empty for the root
- * @returns the repository-relative path
- */
-export function toolBaselineFile(file: string, scope: string): string {
-    return file.replaceAll('{scope}', () => (scope === '' ? 'root' : scope.replaceAll('/', '-')));
-}
-
-/**
  * Whether a scope is a package the package manager knows: a workspace flag names only a folder with a package.json.
  * @param root the repository root
  * @param scope the scope path

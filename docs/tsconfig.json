@@ -1,5 +1,5 @@
 {
-    "extends": "../.gspot/docs/tsconfig.base.json",
+    "extends": "../tsconfig.json",
     "compilerOptions": {
         "jsx": "preserve",
         "module": "ESNext",
@@ -12,7 +12,13 @@
         "../packages/cli/types/modules.d.ts",
         "src/**/*",
         "astro.config.ts",
-        "reference-pages.ts"
+        "reference-pages.ts",
+        "configuration-reference.ts",
+        "plugin-reference.ts",
+        "types/**/*.ts",
+        "links.ts",
+        "source.ts",
+        "verify-release.ts"
     ],
     "exclude": ["dist"]
 }

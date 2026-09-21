@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { sarifText } from '#cli/output/report.ts';
@@ -19,12 +19,12 @@ format = "lines"
 `;
 
 test('serializes check definitions and references without changing external SARIF identifiers', async () => {
-    await using sandbox = await createSandbox({ 'gspot.toml': policy, 'source.txt': 'original' });
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'source.txt': 'original' });
     const session = await openSession(sandbox.path);
     const outcome = await executeRun(session, {
         stage: 'all',
         skips: [],
-        localSkips: [],
         fix: false,
         isDryRun: false,
         noCache: true,

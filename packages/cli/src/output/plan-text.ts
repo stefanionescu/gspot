@@ -52,6 +52,7 @@ export function initPlanText(plan: TakeoverPlan): string {
         ...presetSection(plan.presets),
         ...section('write', plan.write),
         ...section(`delete ${dim('(git keeps them: git show HEAD:<path>)')}`, plan.remove),
+        ...section('kept active', plan.retained),
         ...section('could not read; fix the file and carry its exceptions by hand', plan.unread),
         ...carriedSection(plan.carried),
         ...section('change', plan.change),

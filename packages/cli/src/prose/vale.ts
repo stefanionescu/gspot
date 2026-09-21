@@ -1,13 +1,17 @@
+import { tmpdir } from 'node:os';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { isValePackageFile } from '#cli/repository/natures.ts';
 import { run } from '#cli/platform/spawn.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import type { GeneratedFile } from '#types/emit.ts';
 import { routeGroups } from '#cli/prose/grammars.ts';
 // Vale, driven by gspot: the style files rendered from the limits, the packages synced at setup, every alert a finding.
 import type { SpawnResult } from '#types/platform.ts';
-import { isAbsolute, join, relative } from 'node:path';
+import { dirname, isAbsolute, join, relative } from 'node:path';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import { vocabularyFor } from '#cli/prose/vocabulary.ts';
 import type { MergedView, Policy } from '#types/config.ts';
@@ -61,6 +65,11 @@ async function alertsFor(root: string, binary: string, group: ProseRoute[]): Pro
     }));
 }
 
+/** Names of the bundled Vale styles, shared by configuration and asset generation. */
+export function styleNames(): string[] {
+    return listAssets(STYLE_ASSETS).map((asset) => asset.slice(STYLE_ASSETS.length).replace(/\.yml$/u, ''));
+}
+
 /**
  * The style and vocabulary files apply writes under .gspot/vale/styles.
  * @param policy the repository policy
@@ -68,9 +77,9 @@ async function alertsFor(root: string, binary: string, group: ProseRoute[]): Pro
  * @returns the generated files
  */
 export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
-    const rules = listAssets(STYLE_ASSETS).map((asset): GeneratedFile => {
-        const name = asset.slice(STYLE_ASSETS.length);
-        const stem = name.replace(/\.yml$/u, '');
+    const rules = styleNames().map((stem): GeneratedFile => {
+        const name = `${stem}.yml`;
+        const asset = `${STYLE_ASSETS}${name}`;
         return {
             path: `${STYLES_DIRECTORY}/${GSPOT_STYLE}/${name}`,
             content: renderedRule(stem, readAsset(asset), view),
@@ -117,8 +126,47 @@ export function hasPackages(root: string): boolean {
 export async function installPackages(root: string): Promise<string | undefined> {
     const binary = locateTool(root, 'vale');
     if (binary === undefined) return 'vale is not installed';
-    const result = await run([binary, '--config', join(root, VALE_CONFIG), 'sync'], { cwd: root });
-    return result.code === 0 ? undefined : result.stderr.trim() || result.stdout.trim();
+    return withLifecycleOwner(root, async (owner) => {
+        const work = mkdtempSync(join(tmpdir(), 'gspot-vale-'));
+        try {
+            const inputs = [
+                VALE_CONFIG,
+                ...owner
+                    .installedPaths()
+                    .filter((path) => path.startsWith(`${STYLES_DIRECTORY}/`) && !isValePackageFile(path)),
+            ];
+            for (const path of inputs) {
+                const content = owner.read(path);
+                if (content === undefined) throw new Error(`Vale setup input is missing: ${path}`);
+                mkdirSync(dirname(join(work, path)), { recursive: true });
+                writeFileSync(join(work, path), content.bytes, { mode: 0o600 });
+            }
+            const result = await run([binary, '--config', join(work, VALE_CONFIG), 'sync'], { cwd: work });
+            if (result.code !== 0) return result.stderr.trim() || result.stdout.trim();
+            const staged = openConfinedRoot(work);
+            try {
+                const outputs = readdirSync(join(work, STYLES_DIRECTORY), { recursive: true, withFileTypes: true })
+                    .filter((entry) => !entry.isDirectory())
+                    .map((entry) => {
+                        const path = toPosix(relative(work, join(entry.parentPath, entry.name)));
+                        const content = staged.read(path);
+                        if (content === undefined) throw new Error(`Vale setup output disappeared: ${path}`);
+                        return { path, content };
+                    })
+                    .filter((entry) => isValePackageFile(entry.path));
+                for (const output of outputs) owner.read(output.path);
+                for (const output of outputs) {
+                    const status = owner.replace(output.path, { bytes: output.content.bytes, mode: 0o444 }, 'config');
+                    if (status === 'preserved') return `preserved edited or unowned ${output.path}`;
+                }
+            } finally {
+                staged.close();
+            }
+            return undefined;
+        } finally {
+            rmSync(work, { recursive: true, force: true });
+        }
+    });
 }
 
 /**

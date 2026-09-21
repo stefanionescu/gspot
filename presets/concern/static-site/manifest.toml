@@ -30,6 +30,7 @@ npm = "purgecss"
 
 [[checks]]
 name = "static-site/build"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 requires = "build"
@@ -42,6 +43,7 @@ help = "Run the build command by hand and fix what it prints. Name the command u
 
 [[checks]]
 name = "static-site/build-reproducible"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 requires = "build"
@@ -54,6 +56,7 @@ help = "Take the timestamp, the random value, or the unordered list out of the b
 
 [[checks]]
 name = "static-site/html-validate-built"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 requires = "build"
@@ -66,6 +69,7 @@ help = "Fix the template or the content that writes the markup the rule names."
 
 [[checks]]
 name = "css/dead-selectors"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 requires = "build"
@@ -78,6 +82,7 @@ help = "Delete the rule, or list a name a script adds at run time under tools.pu
 
 [[checks]]
 name = "static-site/links-internal"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 requires = "build"
@@ -90,6 +95,7 @@ help = "Fix the link, or the page it points at."
 
 [[checks]]
 name = "static-site/links-external"
+level = "recommended"
 stage = "manual"
 runs = "per-scope"
 requires = "network"
@@ -102,6 +108,7 @@ help = "Update the link. Skip a host that refuses crawlers under tools.linkinato
 
 [[checks]]
 name = "static-site/size"
+level = "recommended"
 waits_for = "tools.site.size_limits"
 stage = "push"
 runs = "per-scope"
@@ -115,6 +122,7 @@ help = "Remove what the page does not need, or raise the ceiling with a reason."
 
 [[checks]]
 name = "static-site/sitemap"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 requires = "build"
@@ -127,6 +135,7 @@ help = "Add the page to the sitemap, remove the dead entry, or leave a page out 
 
 [[checks]]
 name = "static-site/dead-assets"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"
@@ -138,6 +147,7 @@ help = "Delete the file."
 
 [[checks]]
 name = "static-site/svg"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -152,6 +162,7 @@ help = "Run svgo over the file."
 
 [[checks]]
 name = "static-site/webmanifest"
+level = "recommended"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -163,6 +174,7 @@ help = "Correct the manifest, or add the icon."
 
 [[checks]]
 name = "integrity/security-headers"
+level = "recommended"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"

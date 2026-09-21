@@ -39,13 +39,13 @@ open requirements, historical completion claims, and deferred verification.
 | [10-hooks-ci-runners.md](10-hooks-ci-runners.md)     | Git hooks, staged mode, task runners, the CI workflow                                                                                             |
 | [11-toolchain.md](11-toolchain.md)                   | How gspot itself is installed and pinned per repository; how each tool is obtained, pinned, verified, and upgraded                                |
 | [12-repository-layout.md](12-repository-layout.md)   | gspot's own repository, packages, tests and self-lint                                                                                             |
-| [13-roadmap.md](13-roadmap.md)                       | Phases, the v1 cut, acceptance per phase                                                                                                          |
+| [13-roadmap.md](13-roadmap.md)                       | The v1 scope and link to the current acceptance order                                                                                             |
 | [14-decisions.md](14-decisions.md)                   | The decision log with the rejected alternative for each                                                                                           |
 | [15-prior-art.md](15-prior-art.md)                   | What gspot copies from tools people already use, and which libraries it reuses instead of writing its own                                         |
 | [16-file-tree.md](16-file-tree.md)                   | Repository ownership and the boundaries that justify moves                                                                                        |
 | [17-migration.md](17-migration.md)                   | The two goals; what `init` replaces, carries, deletes and leaves in a repository that has its own linting, with yap-swift-app worked file by file |
 | [18-gaps.md](18-gaps.md)                             | Where the repository differs from this folder, with evidence, and the order in which the gaps close                                               |
-| [19-names.md](19-names.md)                           | The names that change, and the one meaning each word keeps                                                                                        |
+| [19-names.md](19-names.md)                           | Public vocabulary and the reasons to rename a misleading contract                                                                                 |
 | [20-adoption.md](20-adoption.md)                     | What the install in yap-swift-app showed, and the design that answers each defect                                                                 |
 | [21-documentation.md](21-documentation.md)           | What the README, the manual, and the site at gspot.dev hold, and what must be true before launch                                                  |
 | [22-remaining.md](22-remaining.md)                   | Everything that is left, in order, with the linters and the custom rules of every language, and what happens to the ESLint of the developer       |

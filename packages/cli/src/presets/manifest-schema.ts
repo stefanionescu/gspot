@@ -1,5 +1,6 @@
 // The zod schema of manifest.toml, and the refusals the loader applies.
 import { z } from 'zod';
+import { commandSchema } from '#cli/run/command-schema.ts';
 import { outputSchema } from '#cli/presets/output-schema.ts';
 
 const stringList = z.array(z.string()).default([]);
@@ -13,10 +14,16 @@ const claimsSchema = z.strictObject({
     natures: z.array(z.enum(['source', 'generated', 'vendored', 'binary'])).default(['source']),
 });
 
-const installerSchema = z.union([z.string(), z.strictObject({ name: z.string(), version: z.string() })]);
+const MAX_EXIT_CODE = 255;
+const installerDefinition = z.strictObject({ name: z.string(), version: z.string() });
+const installerSchema = z.union([z.string(), installerDefinition]);
+const npmInstallerSchema = z.union([
+    z.string(),
+    installerDefinition.extend({ version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional() }),
+]);
 
 const installerFields = {
-    npm: installerSchema.optional(),
+    npm: npmInstallerSchema.optional(),
     pypi: installerSchema.optional(),
     mise: installerSchema.optional(),
     brew: installerSchema.optional(),
@@ -27,7 +34,17 @@ const installerFields = {
     scoop: installerSchema.optional(),
 };
 
-const MAX_EXIT_CODE = 255;
+const suppressionPattern = z
+    .string()
+    .min(1)
+    .refine((value) => {
+        try {
+            new RegExp(value, 'u');
+            return true;
+        } catch {
+            return false;
+        }
+    }, 'Expected a valid Unicode regular expression.');
 
 const toolSchema = z.strictObject({
     name: z.string(),
@@ -36,9 +53,16 @@ const toolSchema = z.strictObject({
     floor: z.string().optional(),
     provider: z.literal('host').optional(),
     windows: z.boolean().default(true),
-    version_command: z.array(z.string()).optional(),
+    version_command: commandSchema.optional(),
     version_exit_code: z.number().int().min(0).max(MAX_EXIT_CODE).optional(),
     version_regex: z.string().optional(),
+    suppression: z
+        .strictObject({
+            marker: suppressionPattern,
+            reason: suppressionPattern,
+            forbidden: z.boolean().optional(),
+        })
+        .optional(),
     env: z.record(z.string(), z.string()).optional(),
     ...installerFields,
 });
@@ -65,17 +89,15 @@ const sentence = z.string().min(SENTENCE_MIN);
 
 const stringListTable = z.record(z.string(), z.array(z.string()));
 
-const checkSchema = z.strictObject({
+const checkFields = z.strictObject({
     name: z.string().regex(/^[a-z0-9-]+\/[a-z0-9-]+$/),
+    level: z.enum(['recommended', 'all']),
     stage: z.enum(['commit', 'push', 'manual', 'message']),
     runs: z.enum(['per-file-list', 'per-scope', 'once']).default('per-file-list'),
-    command: z.array(z.string()).optional(),
+    command: commandSchema.optional(),
     env: z.record(z.string(), z.string()).optional(),
-    fix_command: z.array(z.string()).min(1).optional(),
+    fix_command: commandSchema.optional(),
     fix_order: z.enum(['codemod', 'imports', 'manifest', 'format']).optional(),
-    baseline_file: z.string().optional(),
-    baseline_command: z.array(z.string()).optional(),
-    prune_command: z.array(z.string()).optional(),
     engine: z.enum(['integrity', 'naming', 'structure', 'prose']).optional(),
     analysis: z.string().optional(),
     reported_by: z.string().optional(),
@@ -97,6 +119,34 @@ const checkSchema = z.strictObject({
     help: sentence,
     searched: z.array(z.string()).optional(),
 });
+
+const absent = z.never().optional();
+const checkSchema = z.union(
+    [
+        checkFields.extend({ command: commandSchema, engine: absent, analysis: absent, reported_by: absent }),
+        checkFields.extend({
+            tool: z.string().min(1),
+            analysis: z.enum(['typescript', 'commit-messages', 'gitleaks-history', 'verified-secrets']),
+            command: absent,
+            engine: absent,
+            reported_by: absent,
+        }),
+        checkFields.extend({
+            engine: z.enum(['integrity', 'naming', 'structure', 'prose']),
+            command: absent,
+            reported_by: absent,
+        }),
+        checkFields.extend({
+            reported_by: z.string().min(1),
+            command: absent,
+            engine: absent,
+            analysis: absent,
+            tool: absent,
+            takes_over: absent,
+        }),
+    ],
+    { error: 'Choose one command, tool analysis, engine, or reported_by owner without combining execution forms.' },
+);
 
 const settingSchema = z.strictObject({
     name: z.string(),

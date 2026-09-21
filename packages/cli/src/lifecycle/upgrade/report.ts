@@ -5,18 +5,17 @@ import { parse as parseToml } from 'smol-toml';
 import type { DriftEntry } from '#types/emit.ts';
 import { computeDrift } from '#cli/emit/drift.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import { misePin } from '#cli/emit/runner-tasks.ts';
+import { MISE_CONFIG_PATH, misePin } from '#cli/emit/runner-tasks.ts';
 import { changeReport } from '#cli/doctor/changes.ts';
 import type { UpgradeReport } from '#types/lifecycle.ts';
 import type { ToolPin, InstallerPin } from '#types/manifest.ts';
 
-const MISE_PATH = '.config/mise/conf.d/gspot.toml';
-const PACKAGE_PATH = 'package.json';
+const PACKAGE_PATH = '.gspot/package.json';
 const RULE_LINE = /^[+-]\s*'([^']+)':/u;
 const DIFF_BODY = /^[+-](?![+-])/u;
 
 function misePins(root: string): [string, string][] {
-    const path = join(root, MISE_PATH);
+    const path = join(root, MISE_CONFIG_PATH);
     if (!existsSync(path)) return [];
     const parsed = parseToml(readFileSync(path, 'utf8')) as { tools?: Record<string, unknown> };
     return Object.entries(parsed.tools ?? {}).flatMap(([key, value]) => {

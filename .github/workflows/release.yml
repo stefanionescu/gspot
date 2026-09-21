@@ -1,46 +1,65 @@
 name: release
+# Automatic release triggers remain disabled during the CI pause.
 on:
-    push:
-        tags: ['v*']
+    workflow_dispatch:
 permissions:
     contents: read
+concurrency:
+    group: release-${{ github.ref }}
+    cancel-in-progress: false
 jobs:
+    acceptance:
+        permissions:
+            contents: read
+            actions: read
+            security-events: write
+        if: vars.GSPOT_CI_ENABLED == 'true'
+        uses: ./.github/workflows/ci.yml
+        with:
+            full: true
+    targets:
+        needs: acceptance
+        runs-on: ubuntu-24.04
+        timeout-minutes: 5
+        outputs:
+            matrix: ${{ steps.targets.outputs.matrix }}
+        steps:
+            - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
+              with:
+                  persist-credentials: false
+            - id: targets
+              shell: bash
+              run: |
+                  matrix="$(jq -c '{include: map(. + {runner: (if .os == "darwin" then "macos-15" else "ubuntu-24.04" end)})}' packages/npm/gspot/targets.json)"
+                  printf 'matrix=%s\n' "$matrix" >> "$GITHUB_OUTPUT"
     build:
+        needs: targets
         permissions:
             contents: read
             id-token: write
             attestations: write
         strategy:
-            matrix:
-                include:
-                    - target: bun-darwin-arm64
-                      os: macos-latest
-                      npm: darwin-arm64
-                    - target: bun-darwin-x64
-                      os: macos-latest
-                      npm: darwin-x64
-                    - target: bun-linux-x64
-                      os: ubuntu-latest
-                      npm: linux-x64
-                    - target: bun-linux-arm64
-                      os: ubuntu-latest
-                      npm: linux-arm64
-                    - target: bun-windows-x64
-                      os: ubuntu-latest
-                      npm: win32-x64
-        runs-on: ${{ matrix.os }}
+            fail-fast: false
+            matrix: ${{ fromJSON(needs.targets.outputs.matrix) }}
+        runs-on: ${{ matrix.runner }}
+        timeout-minutes: 30
         steps:
             - uses: actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5 # v4.3.1
               with:
                   persist-credentials: false
             - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
               with:
+                  version: '2026.8.8'
+                  install: false
                   cache: false
-            - run: bun install --frozen-lockfile
-            - run: test "v$(bun -e 'console.log(require("./packages/cli/package.json").version)')" = "$TAG"
+            - run: mise install bun node
+            - run: mise run --skip-tools repo:setup
+            - name: Validate the release version
+              shell: bash
+              run: test "v$(bun -e 'console.log(require("./packages/cli/package.json").version)')" = "$TAG"
               env:
                   TAG: ${{ github.ref_name }}
-            - run: bun packages/cli/build.ts --target "$TARGET"
+            - run: mise run --skip-tools build -- --target "$TARGET"
               env:
                   TARGET: ${{ matrix.target }}
             - uses: actions/attest-build-provenance@e8998f949152b193b063cb0ec769d69d929409be # v2.4.0
@@ -48,11 +67,15 @@ jobs:
                   subject-path: dist/*
             - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4.6.2
               with:
-                  name: ${{ matrix.npm }}
+                  name: ${{ matrix.binary }}
                   path: dist/*
+                  if-no-files-found: error
+                  retention-days: 14
     publish:
         needs: build
-        runs-on: ubuntu-latest
+        runs-on: ubuntu-24.04
+        timeout-minutes: 60
+        environment: release
         permissions:
             contents: write
             id-token: write
@@ -62,20 +85,35 @@ jobs:
                   persist-credentials: false
             - uses: jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566 # v3.2.0
               with:
+                  version: '2026.8.8'
                   cache: false
             - uses: actions/download-artifact@d3f86a106a0bac45b974a628896c90dbdf5c8093 # v4.3.0
               with:
-                  path: dist
-                  merge-multiple: true
-            - run: bun install --frozen-lockfile
-            - run: bun test tests/release
-              env:
-                  GSPOT_RELEASE_TEST: '1'
-            - run: bun packages/cli/publish.ts --tag "$TAG"
+                  pattern: gspot-*
+                  path: dist/downloads
+            - name: Assemble matching artifacts
+              shell: bash
+              run: |
+                  for directory in dist/downloads/gspot-*; do
+                      for file in LICENSE.md NOTICE.md; do
+                          if [[ -f dist/$file ]]; then
+                              cmp "dist/$file" "$directory/$file"
+                          else
+                              cp "$directory/$file" "dist/$file"
+                          fi
+                      done
+                      cp "$directory"/gspot-* dist/
+                  done
+            - run: mise run --skip-tools repo:setup
+            - run: mise run --skip-tools build:plugin
+            - run: mise run --skip-tools test:release
+            - run: mise run --skip-tools release:publish -- --tag "$TAG"
               env:
                   NPM_CONFIG_PROVENANCE: 'true'
                   TAG: ${{ github.ref_name }}
-            - run: gh release create "$TAG" dist/gspot-* dist/checksums.txt --title "$TAG" --generate-notes
+            - name: Publish release files
+              shell: bash
+              run: gh release create "$TAG" dist/gspot-* dist/checksums.txt dist/LICENSE.md dist/NOTICE.md --title "$TAG" --generate-notes
               env:
                   GH_TOKEN: ${{ github.token }}
                   TAG: ${{ github.ref_name }}

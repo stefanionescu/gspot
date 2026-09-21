@@ -24,16 +24,18 @@ target = ".gspot/vale.ini"
 
 [[checks]]
 name = "prose/vale"
+level = "recommended"
 stage = "commit"
 engine = "prose"
 analysis = "vale"
 coverage = ["prose"]
-summary = "Runs Vale over comments, and documentation with the gspot style, and the upstream packages; every alert is a finding."
+summary = "Checks ambiguous dates with bundled Vale styles at recommended; all adds the complete style and upstream packages."
 why = "Prose that hedges, markets or wanders is read by everyone who reads the code, and nothing else checks it."
-help = "Rewrite the sentence the alert names, add a real name to prose.vocabulary, or turn one rule off with a reason under prose.disabled."
+help = "Rewrite the sentence the alert names, add a real name to prose.vocabulary, or use gspot ignore prose/vale --rule <rule>."
 
 [[checks]]
 name = "prose/source-bans"
+level = "all"
 stage = "commit"
 engine = "prose"
 analysis = "source-bans"
@@ -44,6 +46,7 @@ help = "Delete the directive and change the text, or disable the rule with a rea
 
 [[checks]]
 name = "prose/messages"
+level = "all"
 stage = "commit"
 reported_by = "typescript/eslint"
 coverage = ["prose"]
@@ -53,6 +56,7 @@ help = "Capitalize the message, move the value into its own field, and keep the 
 
 [[checks]]
 name = "prose/doc-tags"
+level = "all"
 stage = "commit"
 reported_by = "typescript/eslint"
 coverage = ["prose"]
@@ -66,13 +70,6 @@ kind = "list"
 direction = "loosening"
 default = []
 summary = "Names Vale accepts as written: products, tools, people."
-
-[[settings]]
-name = "prose.disabled"
-kind = "list"
-direction = "loosening"
-default = []
-summary = "Vale rules this repository turns off, each with a reason."
 
 [rule_files]
 general = ["general/prose/WRITING.md", "general/code/COMMENTS.md"]

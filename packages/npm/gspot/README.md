@@ -1,10 +1,20 @@
 # gspot
 
-CLI to lint and enforce rules for LLM generated code bases. This package is a launcher; the binary for your platform arrives as
-an optional dependency and nothing runs at install time.
+This package launches the gspot binary selected for your operating system, architecture, and
+Linux C library. It requires Node.js 18 or newer and Git on `PATH`.
 
-```bash
-bunx gspot init
+The executable arrives as an optional dependency. Keep optional dependencies enabled.
+Installation works with lifecycle scripts disabled.
+
+```shell
+gspot init
+gspot check
 ```
 
-The manual is at <https://gspot.dev>.
+`init` proposes and applies repository configuration. It runs no checks. `check` runs the
+selected policy, using `recommended` by default. A teammate who clones a configured repository
+runs `gspot install` to install its pinned private tools.
+
+The platform package includes `LICENSE.md` and `NOTICE.md`. Read the
+[manual source](https://github.com/stefanionescu/gspot/tree/main/docs/src/content/docs/guides)
+for setup, scopes, and finding corrections.

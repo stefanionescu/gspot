@@ -22,7 +22,9 @@
         "#plugin-package": "./package.json"
     },
     "files": [
-        "dist"
+        "dist",
+        "README.md",
+        "LICENSE.md"
     ],
     "dependencies": {
         "@typescript-eslint/utils": "8.70.0",
@@ -31,7 +33,7 @@
     "devDependencies": {
         "@typescript-eslint/parser": "8.70.0",
         "@typescript-eslint/rule-tester": "8.70.0",
-        "eslint": "10.10.0",
+        "eslint": "9.39.5",
         "typescript": "5.9.3",
         "@types/picomatch": "4.0.2"
     },

@@ -18,6 +18,7 @@ natures = ["source"]
 
 [[tools]]
 name = "ruff"
+suppression = { marker = "\\bnoqa\\b", reason = "#[^#]*# ?(?<reason>\\S.*)" }
 version = "0.16.8"
 floor = "0.9.0"
 mise = "ruff"
@@ -26,6 +27,7 @@ brew = "ruff"
 
 [[tools]]
 name = "basedpyright"
+suppression = { marker = "\\b(?:type|pyright): ?ignore\\b", reason = "#[^#]*# ?(?<reason>\\S.*)" }
 version = "1.40.1"
 floor = "1.20.0"
 mise = "pipx:basedpyright"
@@ -79,6 +81,7 @@ header = false
 
 [[checks]]
 name = "python/ruff"
+level = "recommended"
 stage = "commit"
 command = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--output-format", "json", "{files}"]
 fix_command = ["ruff", "check", "--config", "{config:ruff}", "--no-cache", "--fix", "--quiet", "{files}"]
@@ -92,6 +95,7 @@ help = "Run gspot check --fix for the rules that fix themselves. Turn one rule o
 
 [[checks]]
 name = "python/ruff-format"
+level = "all"
 stage = "commit"
 command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--check", "--output-format", "concise", "{files}"]
 fix_command = ["ruff", "format", "--config", "{config:ruff}", "--no-cache", "--quiet", "{files}"]
@@ -105,21 +109,21 @@ help = "Run gspot check --fix."
 
 [[checks]]
 name = "python/basedpyright"
+level = "recommended"
 stage = "commit"
 runs = "per-scope"
 cwd = "scope"
-command = ["basedpyright", "--baselinefile", "{baseline}", "--outputjson"]
-baseline_file = ".gspot/baselines/basedpyright.{scope}.json"
-baseline_command = ["basedpyright", "--baselinefile", "{baseline}", "--writebaseline"]
+command = ["basedpyright", "--outputjson"]
 claims = {extensions = [".py", ".pyi"]}
 coverage = ["types"]
 output = {format = "json", items = "generalDiagnostics", line_base = 0, fields = {file = "file", line = "range.start.line", column = "range.start.character", rule = "rule", message = "message"}}
-summary = "Type checks the project with basedpyright in its strictest mode."
+summary = "Type checks the project with standard rules at recommended and all rules at all."
 why = "A type error found here is a crash that never reaches a user."
 help = "Fix the type, or narrow it where the value arrives. Exclude a file that needs another dependency set under tools.basedpyright.exclude with a reason."
 
 [[checks]]
 name = "python/import-linter"
+level = "recommended"
 stage = "commit"
 runs = "per-scope"
 cwd = "scope"
@@ -134,6 +138,7 @@ help = "Move the import to the side the contract allows, or change the contract 
 
 [[checks]]
 name = "python/pydoclint"
+level = "all"
 stage = "commit"
 command = ["pydoclint", "--style", "google", "--allow-init-docstring", "true", "--quiet", "{files}"]
 claims = {extensions = [".py"]}
@@ -145,6 +150,7 @@ help = "Bring the docstring in line with the signature."
 
 [[checks]]
 name = "python/deptry"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 cwd = "scope"
@@ -158,6 +164,7 @@ help = "Declare the dependency, or remove the one nothing imports. Turn one rule
 
 [[checks]]
 name = "python/vulture"
+level = "all"
 stage = "push"
 runs = "per-scope"
 cwd = "scope"
@@ -171,6 +178,7 @@ help = "Delete the code, or list a name a framework calls under tools.vulture.ig
 
 [[checks]]
 name = "python/pyproject"
+level = "recommended"
 stage = "commit"
 command = ["validate-pyproject", "{file}"]
 claims = {filenames = ["pyproject.toml"]}
@@ -183,8 +191,10 @@ help = "Correct the key the message names."
 
 [[checks]]
 name = "integrity/dependency-ownership"
+level = "all"
 stage = "commit"
-runs = "once"
+runs = "per-scope"
+claims = {filenames = ["uv.lock", "poetry.lock", "pdm.lock"], natures = ["source", "generated"]}
 engine = "integrity"
 analysis = "python-dependency-ownership"
 coverage = ["consistency"]
@@ -194,6 +204,7 @@ help = "Export the requirements file from the lockfile and declare it generated,
 
 [[checks]]
 name = "integrity/typecheck-membership"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -205,6 +216,7 @@ help = "Remove the entry from tools.basedpyright.exclude."
 
 [[checks]]
 name = "python/file-length"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -217,6 +229,7 @@ help = "Split the module by the job, or raise limits.file_lines for python with 
 
 [[checks]]
 name = "python/function-length"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -229,6 +242,7 @@ help = "Move one job of the function into a function of its own."
 
 [[checks]]
 name = "python/trivial-function"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -241,6 +255,7 @@ help = "Inline the body at its caller, or allow the name under structure.python.
 
 [[checks]]
 name = "python/call-through"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -253,6 +268,7 @@ help = "Call the other function directly, and delete this one."
 
 [[checks]]
 name = "python/placeholder-docstring"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -265,6 +281,7 @@ help = "Say what the function does that its name does not, or for whom it exists
 
 [[checks]]
 name = "python/private-prefix"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -277,6 +294,7 @@ help = "Add the underscore, or list the name in the export list."
 
 [[checks]]
 name = "python/private-before-public"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -289,6 +307,7 @@ help = "Move the private functions above the first public one."
 
 [[checks]]
 name = "python/exports-at-bottom"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -301,6 +320,7 @@ help = "Move the export list to the end of the module."
 
 [[checks]]
 name = "python/no-lazy-exports"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -313,6 +333,7 @@ help = "Import the names and list them."
 
 [[checks]]
 name = "python/package-exports"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -325,6 +346,7 @@ help = "Split the package, or export fewer names."
 
 [[checks]]
 name = "python/import-cycles"
+level = "recommended"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -337,6 +359,7 @@ help = "Move what both sides need into a third module."
 
 [[checks]]
 name = "python/no-singletons"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"

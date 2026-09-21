@@ -94,8 +94,7 @@ export function fail(text: string): void {
  * @param error the filesystem error
  */
 export function reportStorageFailure(path: string, error: unknown): void {
-    if (!(error instanceof Error && 'code' in error)) throw error;
-    const detail = error.message.replaceAll(/[\r\n]+/gu, ' ');
+    const detail = (error instanceof Error ? error.message : String(error)).replaceAll(/[\r\n]+/gu, ' ');
     fail(`Could not write ${JSON.stringify(path)}: ${detail}`);
 }
 

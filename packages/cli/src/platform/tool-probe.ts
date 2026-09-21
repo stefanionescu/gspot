@@ -1,8 +1,9 @@
-// Locate and version every tool: node_modules/.bin, .venv/bin, PATH, mise shims.
+// Locate and version managed tools under .gspot, project host tools, PATH executables and mise shims.
 import semver from 'semver';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
-import type { ToolPin } from '#types/manifest.ts';
+import type { Manifest, ToolPin } from '#types/manifest.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
 import type { SpawnResult } from '#types/platform.ts';
@@ -15,14 +16,14 @@ const VERSION_TIMEOUT_MS = 15_000;
 // What a mise shim prints when no configuration in reach names a version of the tool.
 const NO_VERSION = 'No version is set for shim';
 
-function candidates(root: string, name: string): string[] {
+function candidates(roots: string[], name: string): string[] {
     const isWindows = process.platform === 'win32';
     const names = isWindows ? [`${name}.cmd`, `${name}.exe`, name] : [name];
-    const directories = [
+    const directories = [...new Set(roots)].flatMap((root) => [
         join(root, 'node_modules', '.bin'),
         join(root, '.venv', 'bin'),
         join(root, '.venv', 'Scripts'),
-    ];
+    ]);
     const found = directories.flatMap((dir) => names.map((file) => join(dir, file))).filter((path) => existsSync(path));
     const onPath = Bun.which(name);
     if (onPath !== null) found.push(onPath);
@@ -70,10 +71,15 @@ function parsedVersion(text: string, tool: ToolPin): string | undefined {
     return match?.[1] ?? match?.[0];
 }
 
-function versionFailure(result: SpawnResult, tool: ToolPin, text: string): VersionObservation | undefined {
+function versionFailure(
+    result: SpawnResult,
+    tool: ToolPin,
+    text: string,
+    expectedExit: number,
+): VersionObservation | undefined {
     if (result.isTimedOut === true) return { state: 'error', note: `${tool.name} version probe timed out.` };
     if (result.missing || text.includes(NO_VERSION)) return { state: 'missing', note: text };
-    if (result.code !== (tool.version_exit_code ?? 0))
+    if (result.code !== expectedExit)
         return { state: 'error', note: `${tool.name} version probe exited ${String(result.code)}: ${text}` };
     return undefined;
 }
@@ -82,12 +88,17 @@ function versionFailure(result: SpawnResult, tool: ToolPin, text: string): Versi
 // A shim that no configuration gives a version starts nothing, whatever mise keeps installed for other repositories.
 function readVersion(root: string, path: string, tool: ToolPin): VersionObservation {
     const npm = tool.installers['npm'];
-    const name = npm !== undefined && npm.version === tool.version ? npm.name : undefined;
+    const installedPackage = packageVersion(path, npm?.name);
+    const expectedExit =
+        (installedPackage === undefined ? undefined : npm?.version_exit_code) ?? tool.version_exit_code ?? 0;
     const result = printedVersion(root, path, tool);
     const text = stripVTControlCharacters(`${result.stdout}\n${result.stderr}`).trim();
-    const failure = versionFailure(result, tool, text);
+    const failure = versionFailure(result, tool, text, expectedExit);
     if (failure !== undefined) return failure;
-    const version = packageVersion(path, name) ?? miseVersion(path, tool) ?? parsedVersion(text, tool);
+    const version =
+        (npm?.version === tool.version ? installedPackage : undefined) ??
+        miseVersion(path, tool) ??
+        parsedVersion(text, tool);
     if (version === undefined || semver.coerce(version) === null)
         return { state: 'error', note: `${tool.name} did not report a valid version: ${text}` };
     return { version };
@@ -104,7 +115,7 @@ function stateFor(found: string, want: string, floor: string): ToolProbe['state'
 
 // A library is imported, never run: its version is the one its package.json holds, in the root or in a scope.
 function libraryVersion(root: string, scopes: string[], name: string): { path: string; version: string } | undefined {
-    for (const scope of ['', ...scopes]) {
+    for (const scope of ['.gspot', '', ...scopes]) {
         const path = join(root, scope, 'node_modules', name, 'package.json');
         if (!existsSync(path)) continue;
         const parsed = JSON.parse(readFileSync(path, 'utf8')) as { version?: string };
@@ -124,8 +135,9 @@ function probeLibrary(root: string, scopes: string[], tool: ToolPin): ToolProbe 
     return { name: tool.name, state, path: found.path, found: found.version, hint, floor, ...want };
 }
 
-function probeUncached(root: string, tool: ToolPin): ToolProbe {
-    const [path] = candidates(root, tool.name);
+function probeUncached(root: string, cwd: string, tool: ToolPin): ToolProbe {
+    const roots = tool.provider === 'host' ? [cwd, root] : [join(root, '.gspot'), cwd, root];
+    const [path] = candidates(roots, tool.name);
     const hint = installHint(tool);
     if (path === undefined)
         return {
@@ -134,8 +146,14 @@ function probeUncached(root: string, tool: ToolPin): ToolProbe {
             hint,
             ...(tool.version === undefined ? {} : { want: tool.version }),
         };
-    if (tool.provider === 'host' || tool.version === undefined) return { name: tool.name, state: 'host', path, hint };
-    const observed = readVersion(root, path, tool);
+    if (tool.provider === 'host' || tool.version === undefined) {
+        if (tool.version_command === undefined) return { name: tool.name, state: 'host', path, hint };
+        const observed = readVersion(cwd, path, tool);
+        return 'state' in observed
+            ? { name: tool.name, path, hint, ...observed }
+            : { name: tool.name, state: 'host', path, hint, found: observed.version };
+    }
+    const observed = readVersion(cwd, path, tool);
     if ('state' in observed) return { name: tool.name, path, hint, want: tool.version, ...observed };
     const found = observed.version;
     const floor = tool.floor ?? tool.version;
@@ -157,7 +175,9 @@ function probeUncached(root: string, tool: ToolPin): ToolProbe {
  * @returns the first path found
  */
 export function locateTool(root: string, name: string): string | undefined {
-    return candidates(root, name)[0];
+    if ((readOwnership(root).installations?.length ?? 0) > 0)
+        throw new Error('Tool installation is incomplete. Run: gspot install');
+    return candidates([join(root, '.gspot'), root], name)[0];
 }
 
 /**
@@ -169,10 +189,32 @@ export function locateTool(root: string, name: string): string | undefined {
  */
 export function probeTool(context: ToolContext, tool: ToolPin, scopes: string[] = []): ToolProbe {
     const { root, probes } = context;
-    const key = JSON.stringify([root, tool, scopes]);
+    const pending = readOwnership(root).installations;
+    if (
+        tool.provider !== 'host' &&
+        ((pending?.includes('npm') === true && tool.installers['npm'] !== undefined) ||
+            (pending?.includes('python') === true && tool.installers['pypi'] !== undefined))
+    )
+        return {
+            name: tool.name,
+            state: 'error',
+            hint: 'Run: gspot install',
+            note: 'Tool installation is incomplete. Run: gspot install',
+        };
+    const cwd = context.cwd ?? root;
+    const key = JSON.stringify([root, cwd, tool, scopes]);
     const cached = probes.get(key);
     if (cached) return cached;
-    const probe = tool.kind === 'library' ? probeLibrary(root, scopes, tool) : probeUncached(root, tool);
+    const probe = tool.kind === 'library' ? probeLibrary(root, scopes, tool) : probeUncached(root, cwd, tool);
     probes.set(key, probe);
     return probe;
+}
+
+/** Resolve a declared executable pin, or a repository-owned host command. */
+export function toolPin(manifests: Iterable<Manifest>, name: string): ToolPin {
+    for (const manifest of manifests) {
+        const pin = manifest.tools.find((tool) => tool.name === name);
+        if (pin !== undefined) return pin;
+    }
+    return { name, provider: 'host', windows: true, installers: {} };
 }

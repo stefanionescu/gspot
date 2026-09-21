@@ -38,6 +38,7 @@ needs = "security"
 
 [[checks]]
 name = "supabase/config"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -49,6 +50,7 @@ help = "Correct the file at the place the message names, or remove the table of 
 
 [[checks]]
 name = "supabase/migration-names"
+level = "all"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -60,6 +62,7 @@ help = "Create the migration with supabase migration new <name>, which writes th
 
 [[checks]]
 name = "supabase/storage-policies"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -71,6 +74,7 @@ help = "Add a policy on storage.objects for the bucket in a migration."
 
 [[checks]]
 name = "supabase/admin-key-containment"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -82,6 +86,7 @@ help = "Move the code to a server path, or add the path to tools.supabase.admin_
 
 [[checks]]
 name = "supabase/deno-lint"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -94,6 +99,7 @@ help = "Change the code the way the rule says; deno lint --rules explains each o
 
 [[checks]]
 name = "supabase/deno-check"
+level = "recommended"
 stage = "push"
 runs = "once"
 engine = "integrity"
@@ -106,6 +112,7 @@ help = "Fix the first error Deno prints; later ones are often the same mistake."
 
 [[checks]]
 name = "supabase/types-fresh"
+level = "recommended"
 stage = "push"
 runs = "once"
 engine = "integrity"
@@ -121,14 +128,14 @@ name = "tools.supabase.types_file"
 kind = "string"
 direction = "neutral"
 default = ""
-summary = "The committed database types file; empty turns the comparison off."
+summary = "The committed database types file, relative to the scope; empty turns the comparison off."
 
 [[settings]]
 name = "tools.supabase.functions_dir"
 kind = "string"
 direction = "neutral"
 default = "supabase/functions"
-summary = "The folder that holds one folder for each edge function."
+summary = "The folder relative to the scope that holds one folder for each edge function."
 
 [[settings]]
 name = "tools.supabase.admin_key_paths"

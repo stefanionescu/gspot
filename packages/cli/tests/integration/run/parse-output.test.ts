@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { CheckSpec } from '#types/manifest.ts';
 import { isToolBroken } from '#cli/run/broken-tool.ts';
@@ -8,7 +8,8 @@ import { presetManifests } from '#cli/presets/read-manifests.ts';
 
 describe('tool output across platforms', () => {
     test('ShellCheck diagnostics retain their path, position, and rule with either line ending', async () => {
-        await using sandbox = await createSandbox({ 'scripts/café build.sh': 'echo $1\n' });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'scripts/café build.sh': 'echo $1\n' });
         const spec = presetManifests()
             .get('bash')!
             .checks.find((check) => check.name === 'bash/shellcheck')!;
@@ -23,7 +24,8 @@ describe('tool output across platforms', () => {
     });
 
     test('XML diagnostics with carriage returns remain findings on real files', async () => {
-        await using sandbox = await createSandbox({ 'settings/feed.xml': '<feed><entry></feed>\n' });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'settings/feed.xml': '<feed><entry></feed>\n' });
         const spec = presetManifests()
             .get('config-files')!
             .checks.find((check) => check.name === 'config-files/xml')!;
@@ -39,7 +41,8 @@ describe('tool output across platforms', () => {
     });
 
     test('Taplo reports one finding from a diff, a log entry, or both', async () => {
-        await using sandbox = await createSandbox({ 'settings/café.toml': 'a=1\n' });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
         const spec = presetManifests()
             .get('config-files')!
             .checks.find((check) => check.name === 'config-files/toml-format')!;
@@ -59,7 +62,8 @@ describe('tool output across platforms', () => {
     });
 
     test('grouped output strips line endings and relativizes native absolute paths', async () => {
-        await using sandbox = await createSandbox({ 'settings/café.toml': 'a=1\n' });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
         const base = presetManifests()
             .get('config-files')!
             .checks.find((check) => check.name === 'config-files/toml-format')!;
@@ -69,4 +73,22 @@ describe('tool output across platforms', () => {
         expect(findings).toHaveLength(1);
         expect(findings[0]).toMatchObject({ file: 'settings/café.toml', line: 1, message: 'Incorrect spacing' });
     });
+});
+
+test('a syntax diagnostic cannot promise an automatic fix when its check has no fixer', () => {
+    const spec = presetManifests()
+        .get('config-files')!
+        .checks.find((check) => check.name === 'config-files/toml')!;
+    const findings = parseOutput(spec, '', '  ┌─ settings.toml:2:1\n', '/repository');
+    expect(findings).toEqual([
+        {
+            check: 'config-files/toml',
+            file: 'settings.toml',
+            line: 2,
+            column: 1,
+            message: 'The file does not parse as TOML.',
+            help: 'Fix the line taplo names.',
+            fixable: false,
+        },
+    ]);
 });

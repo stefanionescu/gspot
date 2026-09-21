@@ -14,6 +14,7 @@ natures = ["source", "binary"]
 
 [[checks]]
 name = "xctest/disabled"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -26,6 +27,7 @@ help = "Say why the test is off and what turns it back on, or delete the test."
 
 [[checks]]
 name = "xctest/no-sleep"
+level = "all"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -38,6 +40,7 @@ help = "Wait on an expectation or a confirmation, or poll a condition with a tim
 
 [[checks]]
 name = "xctest/recording"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -50,6 +53,7 @@ help = "Take the recording flag out, and commit the references it wrote after lo
 
 [[checks]]
 name = "xctest/reference-images"
+level = "all"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -61,6 +65,7 @@ help = "Delete the references of the test that is gone, or rename the folder aft
 
 [[checks]]
 name = "xctest/coverage"
+level = "recommended"
 waits_for = "tools.xctest.coverage"
 stage = "push"
 runs = "per-scope"

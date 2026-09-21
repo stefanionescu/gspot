@@ -1,11 +1,14 @@
+import { prettierConfig, editorconfigOverrides } from '#cli/emit/format.ts';
+import { eslintRuleBlocks } from '#cli/emit/eslint.ts';
 // Render a preset template with the merged settings; prepend the generated-file header.
 import { Eta } from 'eta';
+import { styleNames } from '#cli/prose/vale.ts';
 import { readFileSync } from 'node:fs';
 import { stringify as stringifyYaml } from 'yaml';
 import { jsonText } from '#cli/emit/json-format.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { policyValue } from '#cli/policy/settings.ts';
-import { targetInScope } from '#cli/run/scope-paths.ts';
+import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#config/typescript.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
 import { dirname, join, relative, resolve } from 'node:path';
@@ -69,27 +72,11 @@ function packageAliases(root: string, prefix: string): Record<string, string> {
     return aliases;
 }
 
-function generatedTsconfigs(session: Session): Map<string, string> {
-    const generated = new Map<string, string>();
-    for (const selection of session.scopes) {
-        const manifest = selection.selected.find((entry) => entry.preset.name === 'typescript');
-        const config = manifest?.configs.find((entry) => entry.stub?.path === 'tsconfig.json');
-        if (manifest === undefined || config === undefined) continue;
-        const target = targetInScope(selection.scope.path, config);
-        const inputs = templateInputs(session, selection);
-        generated.set(
-            join(session.root, target),
-            emitTarget(`${manifest.dir}/${config.template}`, target, inputs, config.header),
-        );
-    }
-    return generated;
-}
-
 function tsconfigAliases(session: Session, prefix: string): Record<string, string> {
     const { root } = session;
     const aliases: Record<string, string> = {};
     const path = join(root, prefix, 'tsconfig.json');
-    const options = getTsconfig(path, generatedTsconfigs(session))?.options;
+    const options = getTsconfig(path)?.options;
     if (options === undefined) return aliases;
     const paths = Object.entries(options.paths ?? {});
     const inheritedBase = options['pathsBasePath'];
@@ -220,7 +207,14 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
             .filter((file) => file.path.endsWith(extension) && file.nature === 'source')
             .map((file) => file.path);
     return {
+        prettierConfig: (targetPath) => prettierConfig(session, targetPath, view.extra('prettier')),
+        editorconfigOverrides: () => editorconfigOverrides(session),
+        eslintPolicy: eslintRuleBlocks(session.policyFiles.policy),
+        isAll: session.policyFiles.policy.level === 'all',
+        typescriptOptions:
+            session.policyFiles.policy.level === 'all' ? ALL_COMPILER_OPTIONS : RECOMMENDED_COMPILER_OPTIONS,
         prose: {
+            styles: styleNames(),
             blockIgnores: BLOCK_IGNORES,
             tokenIgnores: TOKEN_IGNORES,
         },
@@ -240,7 +234,6 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
         fragments,
         tool: view.tool,
         entryFiles: (scope) => knipEntries(session, scope),
-        toolEnabled: view.toolEnabled,
         limit: view.limit,
         rulesOff: view.rulesOff,
         ignoresFor: view.ignoresFor,
@@ -290,7 +283,7 @@ export function emitTarget(
     inputs: TemplateInputs,
     isHeaderWanted = true,
 ): string {
-    const rendered = templateText(readAsset(templatePath), inputs);
+    const rendered = templateText(readAsset(templatePath), { ...inputs, targetPath });
     if (JSON_EXTENSIONS.has(extensionOf(targetPath))) {
         const format = { width: inputs.format.print_width, indent: inputs.format.indent_width };
         if (!isHeaderWanted) return jsonText(JSON.parse(rendered), format);

@@ -9,6 +9,7 @@ from_languages = true
 
 [[checks]]
 name = "naming/identifiers"
+level = "all"
 stage = "commit"
 engine = "naming"
 analysis = "identifiers"
@@ -16,10 +17,11 @@ coverage = ["naming"]
 searched = ["eslint-plugin-unicorn prevent-abbreviations", "ls-lint", "ruff N", "swiftlint identifier_name"]
 summary = "Checks every identifier against the naming policy: banned terms, case, length, and word count."
 why = "Slop announces itself in the name: `enhancedHandler`, `ensureConfigIfNeeded` and `utils` are the sign of code that adds nothing."
-help = "Rename after what the thing is or does. Allow one exact name with gspot allow naming <name> --reason, or adjust a ceiling with gspot set naming.<language>.max_words."
+help = "Rename after what the thing is or does. Set naming.allowed to an entry with name and reason, or adjust a ceiling with gspot set naming.<language>.max_words."
 
 [[checks]]
 name = "naming/paths"
+level = "all"
 stage = "commit"
 engine = "naming"
 analysis = "paths"
@@ -31,6 +33,7 @@ help = "Rename the file or folder, or add a path rule under [[naming.rules]] wit
 
 [[checks]]
 name = "naming/policy-schema"
+level = "recommended"
 stage = "commit"
 engine = "naming"
 analysis = "policy-schema"

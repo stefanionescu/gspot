@@ -1,0 +1,89 @@
+[tasks."repo:setup"]
+description = "Install frozen workspace dependencies and synchronize Astro types."
+run = "bun install --frozen-lockfile"
+depends_post = ["docs:sync"]
+
+[tasks."repo:install-checks"]
+description = "Install the locked repository check environment."
+run = "bun packages/cli/src/main.ts install"
+
+[tasks.build]
+description = "Build the host CLI, or targets supplied as arguments, with licenses and notices."
+run = "bun packages/cli/build.ts"
+
+[tasks."build:plugin"]
+description = "Build the standalone ESLint plugin and stage its license."
+run = "bun packages/eslint-plugin/build.ts"
+
+[tasks.test]
+description = "Run CLI unit tests and standalone plugin tests."
+run = "bun test ./packages/cli/tests/unit ./packages/eslint-plugin/tests"
+
+[tasks."test:coverage"]
+description = "Run CLI unit and plugin tests with coverage."
+run = "bun test --coverage ./packages/cli/tests/unit ./packages/eslint-plugin/tests"
+
+[tasks."test:integration"]
+description = "Run integration tests."
+run = "bun test ./packages/cli/tests/integration ./tests/integration"
+
+[tasks."test:acceptance"]
+description = "Run behavioral acceptance tests."
+run = "bun test ./tests/acceptance"
+
+[tasks."test:release"]
+description = "Exercise built release artifacts and installed consumers through an isolated registry."
+env = {GSPOT_RELEASE_TEST = "1"}
+run = "bun test ./tests/release"
+
+[tasks."check:types"]
+description = "Check workspace and documentation TypeScript types."
+depends = ["docs:sync"]
+run = ["bunx tsc --noEmit -p tsconfig.json", "bunx tsc --noEmit -p docs/tsconfig.json"]
+
+[tasks."docs:sync"]
+description = "Generate Astro content and TypeScript metadata."
+dir = "{{config_root}}/docs"
+run = "bun --bun astro sync"
+
+[tasks."docs:reference"]
+description = "Generate documentation references from validated definitions."
+run = "bun docs/reference-pages.ts"
+
+[tasks."docs:build"]
+description = "Build the documentation site and validate its links and fragments."
+depends = ["docs:reference"]
+dir = "{{config_root}}/docs"
+run = ["bun --bun astro build", "bun links.ts"]
+
+[tasks."docs:dev"]
+alias = "dev"
+description = "Generate references and serve the documentation locally."
+depends = ["docs:reference"]
+dir = "{{config_root}}/docs"
+run = "bun --bun astro dev"
+
+[tasks."ci:affected"]
+description = "Check the exact revision against the CI base."
+run = "bun tests/ci-affected.ts"
+
+[tasks."ci:swiftformat"]
+description = "Prepare and exercise SwiftFormat on Windows."
+run = "bun tests/harness/swiftformat.ts"
+
+[tasks."site:verify-release"]
+description = "Verify that documentation describes a published stable release."
+run = "bun docs/verify-release.ts"
+
+[tasks."release:publish"]
+description = "Validate and publish packages to the selected registry."
+run = "bun packages/cli/publish.ts"
+
+[tasks."generate:schema"]
+description = "Generate the configuration schema, or validate it with --check."
+run = "bun packages/cli/schemas.ts"
+
+[tasks."build:grammar"]
+description = "Build the pinned Swift grammar using Docker, or compare it with --check."
+tools = {tree-sitter = "0.25.10"}
+run = "bun packages/cli/grammars/swift.build.ts"

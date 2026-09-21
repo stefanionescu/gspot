@@ -9,8 +9,8 @@ Every finding is one line: the file, the line, the check, the message, and a `he
 says what to do.
 
 ```text
-src/routes/turn.ts:41:3  gspot/no-call-through  This function passes its arguments straight through to buildTurn.
-    help: Call buildTurn directly and delete this function, or give it real work.
+greet.sh:1  bash/syntax  syntax error near unexpected token `then'
+    help: Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about.
 ```
 
 ## Read it
@@ -46,8 +46,9 @@ set `fix_command` to its argument list and `fix_order` to `codemod`, `imports`, 
 gspot ignore typescript/eslint --rule no-console --paths "scripts/**" --reason "Scripts print to the terminal on purpose."
 ```
 
-An ignore without a reason is refused. Every ignore prints on every run, so nobody forgets it is
-there. `gspot ignore --remove` takes it back out.
+An ignore without a reason is refused when `require_reasons` is enabled. Reports include ignore information; text output shows
+the count, and `--verbose` expands the entries and matched counts. Remove the same scoped
+exception with `gspot ignore typescript/eslint --rule no-console --paths "scripts/**" --remove`.
 
 ## Loosen a limit
 
@@ -55,7 +56,7 @@ there. `gspot ignore --remove` takes it back out.
 gspot set limits.function_lines 80 --reason "The parser is one state machine."
 ```
 
-A loosening takes a reason; a tightening does not.
+When `require_reasons` is enabled, a loosening takes a reason; a tightening does not.
 
 For a repository command that prints JSON, set `format = "json"` under `[check.output]`.
 Use `items` to select its diagnostic array and `children` for nested arrays. Map the source
@@ -65,8 +66,10 @@ Set `line_base = 0` when the tool counts lines and columns from zero.
 ## Machine-readable reports
 
 `gspot check --json` prints the check report. A run also writes `.gspot/report.json` and
-`.gspot/report.sarif`. The JSON schema is published at
-[`report.schema.json`](/schema/report.schema.json). Check results refer to their check through
+`.gspot/report.sarif`. It writes located findings to `.gspot/report.codequality.json` in
+[GitLab Code Quality format](https://docs.gitlab.com/ci/testing/code_quality/). Findings without
+file locations remain in JSON and SARIF. Repeated identical findings share a fingerprint.
+Check results refer to their check through
 `check`; `coverage` reports check coverage, not test coverage. The report has no repository
 root field.
 

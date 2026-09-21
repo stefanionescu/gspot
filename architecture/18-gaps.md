@@ -1,9 +1,9 @@
-# Open Gaps
+# Historical Gap Evidence
 
-This document lists where the repository differs from the specification in this folder, and the
-order in which the gaps close. Each row names the evidence, so a reader can run the same command
-and see the same result. Read on September 18, 2026. A row leaves this document in the commit
-that closes it.
+Dated observations from September 18–20, 2026. Rows preserve original failure evidence,
+not current implementation status. [Remaining work](22-remaining.md) owns actionable
+requirements, and fix documents record repair or retirement. A historical path or count
+is not a request to reconstruct that source layout.
 
 ## What holds
 
@@ -12,7 +12,7 @@ that closes it.
 - knip reports no unused file, no unused export, and no unused dependency.
 - Bun is the only runtime and the only package manager. The manual uses Astro Starlight, which
   Bun runs.
-- `packages/npm/platform/README.md` is the template that `publish.ts` copies into each platform
+- `packages/npm/gspot/README.md` is the README that `publish.ts` copies into each platform
   package.
 - `rules/templates/docs/` holds the document shapes that the docs rules name.
 
@@ -25,8 +25,7 @@ Phase 7 shape is owed.
 gspot runs on yap-swift-app: branch `chore/gspot` of that repository holds the migration (D-97),
 and [17-migration.md](17-migration.md) lists the defects it exposed. The defects of the engine that
 the run exposed are fixed with a test. The defects of the install itself are not:
-[20-adoption.md](20-adoption.md) lists them, and the Adoption phase of
-[13-roadmap.md](13-roadmap.md) orders the work.
+[20-adoption.md](20-adoption.md) lists them, and [the remaining-work order](22-remaining.md#the-order) governs further implementation.
 
 The first form of the hooks work is not in the tree. It is kept in the git stash named
 `hooks-existing`. D-114 moves the hook line into the task the hook calls, the test of that work
@@ -403,7 +402,7 @@ What closes each one, with no exception added anywhere:
 
 - S-1, S-2: one check writes every template of every preset into the cache, with the shipped
   defaults. It then runs the parser and the formatter of each kind over what it wrote.
-- S-3: `bun test` with a coverage floor is a `[[check]]` of this repository at the push stage.
+- S-3: `mise run test` is the unit/plugin push check; coverage is measured without a fixed quota.
 - S-4: the three folder exemptions go. A setting names the other repositories this folder writes
   about, and the path check leaves alone a path that starts with one of those names. Every other
   path in every document is checked.
@@ -424,7 +423,7 @@ and this repository installs them for itself before it writes a rule of its own.
 | Kind of gap                                                                    | Rows                                                | What catches it                                                                                                                                                                                      |
 | ------------------------------------------------------------------------------ | --------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | A test that cannot fail                                                        | T-4, T-5, T-14 to T-18, S-8                         | `eslint-plugin-jest` (`expect-expect`, `no-conditional-expect`, `valid-expect`, `no-disabled-tests`). Mutation testing with Stryker finds the rest: a test that still passes when the code is broken |
-| A test that skips itself                                                       | S-7, T-8                                            | the ESLint core rule `no-restricted-properties` on `skipIf`, with the five allowed places named                                                                                                      |
+| A test that skips itself                                                       | S-7, T-8                                            | explicitly run required suites with their prerequisites; platform and release conditions remain valid                                                                                                |
 | A check that writes or deletes in the tree of the developer                    | K-154, K-156, K-159                                 | `no-restricted-syntax` and `no-restricted-imports` over the folders that hold checks: no `git clean`, `checkout`, `reset` or `stash`, and no write outside the cache                                 |
 | A check that reads the whole repository and ignores its scope                  | K-149, K-155                                        | `no-restricted-properties` on `session.repository.files` inside the engine folders                                                                                                                   |
 | The core names a preset or imports a language folder                           | K-38, K-39, K-79, K-113                             | `eslint-plugin-boundaries`, which the javascript preset already pins: the core folders may not import a language folder                                                                              |
@@ -500,56 +499,10 @@ current acceptance. The [remaining index](22-remaining.md) and
 
 ## What has been read
 
-Read line by line:
-
-- `commands/` (all 17 files), `program.ts` and `main.ts`;
-- `types/config.ts`, `manifest.ts`, `run.ts`, `lifecycle.ts`, `emit.ts`, `finding.ts`, `record.ts`, `repository.ts`, `doctor.ts`, `commands.ts`, `structure.ts`, `integrity.ts` and `output.ts`;
-- `lifecycle/`;
-- `run/`;
-- `emit/`;
-- `integrity/`;
-- `platform/tool-probe.ts`, `spawn.ts`, `install-hints.ts` and `assets.ts`;
-- `doctor/`;
-- `output/`;
-- `policy/schema.ts`, `settings.ts`, `normalize.ts`, `messages.ts`, `propose.ts`, `write.ts`, `loosening.ts`, `audit.ts`, `problems.ts`, `merge.ts`, `read-policy.ts`, `set-command.ts`, `ignore-command.ts` and `add-command.ts`;
-- `repository/`, and `presets/detect.ts`;
-- `structure/`, every file;
-- `apple/` except `structure/bodies.ts`;
-- `pyproject/`;
-- `web/` except `html-checks.ts`;
-- `packages/cli/build.ts`, `publish.ts` and `schemas.ts`;
-- `postgres/`, `supabase/`, `sql/` and `express/`;
-- `naming/` except `extractors/sql.ts`;
-- `config/` except `prose.ts`;
-- `packages/eslint-plugin/src`, every file, and the tests of its rules by their cases;
-- `checks/express/routes.ts`, `checks/html.ts`, `structure/swift/bodies.ts`, and the rest of `sql/`;
-- `profile/`, `prose/`, `config/prose.ts` and `naming/extractors/sql.ts`;
-- `rules/`, `presets/`, and `packages/cli/rules-lint/`;
-- the six guides and the two READMEs whole, with their TOML run through gspot;
-- 39 rule files whole (K-229 to K-232, K-241, K-242). They are the files of svelte, vue, react-native, nestjs, react, and express, and the four language files `TYPESCRIPT.md`, `JAVASCRIPT.md`, `PYTHON.md`, and `SWIFT.md`. They are also every file of `general/agent` and `general/code`, and `DOCS-REVIEW.md` and `DOCS-SURFACES.md`;
-- `nextjs/NEXTJS.md` whole, and the naming files of TypeScript, JavaScript, CSS, HTML, Swift, and Python;
-- the 12 rule files the owner chose, whole (K-260 to K-262): `nextjs/SECURITY.md`, the two fastapi files, the seven library guides, `I18N.md`, and `DOCKER.md`;
-- nine tool guides, the five runtime files, `shared/http/HTTP.md`, and `repository/static-site/STATIC-SITE.md` whole (K-253);
-- `architecture/01` to `12`, `15`, and `16` whole, each beside the code it describes (S-15 to S-18, K-246 to K-250);
-- the 48 preset pages whole, each beside its manifest and its templates (S-18, K-254 to K-256);
-- every template and rule pack under `presets/` whole, except those of the four presets D-136 deletes (K-218 to K-224);
-- the test harness, the three release tests, the guard test, and eleven repository tests whole: `hooks`, `upgrade`, `takeover`, `uninstall`, `reference`, and the five read before;
-- every file under `tests/repositories/` whole, except the four that D-136 deletes (`golang`, `cargo`, `bundler`, `pyproject/django`), and every file under `packages/cli/tests/unit` whole (T-27 to T-35).
-
-Read by measurement:
-
-- every config key and every declared setting, for a reader (K-99, K-100);
-- every flag, for a use in a test or a guide (K-95, K-97);
-- every test file, for expectations that cannot fail (T-14 to T-18);
-- the 52 manifests, by a script over every tool, stage, default and setting (K-195, K-196, K-200);
-- the command, `summary` and `fix` of every check of the 48 presets that stay, by eye (K-225 to K-228). The `why` texts were searched for removed words and not read one by one.
-
-Not read:
-
-- The September 19 review left 33 of its 107 rule files unread by a person. The [implementation reconciliation](23-repository-audit.md#implementation-reconciliation) records the retained guides reviewed and their open defect owners.
-
-The rows above describe the historical review. They do not certify every current source file
-or close any acceptance criterion without implementation and verification evidence.
+The old file inventory is retired. It did not prove behavior and became stale after ownership
+changes. Retained rule-guide failures and their named review evidence live in
+[implementation reconciliation](23-repository-audit.md#implementation-reconciliation).
+Current source owners, tests, and fix criteria determine what remains to verify.
 
 ## Architecture review, September 20, 2026
 
@@ -567,6 +520,7 @@ and K-293 also have amended fixes. Their prior targets were insufficient.
 
 ## Scripts and reference review, September 20, 2026
 
+These are historical observations, not current open status. K-303 and the source conversion in K-306 are resolved locally; native-platform acceptance remains K-263.
 The owner fixes are in [25-simplification.md](fixes/25-simplification.md). Existing K-205,
 K-164, K-263, and S-14 are amended rather than counted again.
 

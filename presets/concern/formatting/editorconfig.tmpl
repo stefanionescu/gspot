@@ -25,3 +25,7 @@ indent_style = tab
 [<%= key %>]
 <% for (const [option, setting] of Object.entries(value)) { %><%= option %> = <%= setting %>
 <% } } } } %>
+<% for (const entry of editorconfigOverrides()) { %>
+[<%= entry.path %>]
+<% for (const [key, value] of Object.entries(entry.options)) { %><%= key %> = <%= value %>
+<% } } %>

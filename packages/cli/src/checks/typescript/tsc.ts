@@ -1,11 +1,42 @@
 // Selects compiler project mode and confines build metadata to a disposable copy.
-import { join } from 'node:path';
-import { rmSync } from 'node:fs';
+import ts from 'typescript';
+import { dirname, isAbsolute, join, relative, sep } from 'node:path';
+import { lstatSync, realpathSync, rmSync } from 'node:fs';
 import type { CheckResult } from '#types/finding.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
 import { scratchCopy } from '#cli/run/scratch-copy.ts';
+import { targetInScope } from '#cli/run/scope-paths.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 import type { Session, PlannedCheck } from '#types/run.ts';
+
+function assertProjectPath(root: string, path: string): void {
+    const local = relative(root, path);
+    if (local === '..' || local.startsWith(`..${sep}`) || isAbsolute(local))
+        throw new Error(`TypeScript path points outside the disposable project: ${path}`);
+    let existing = path;
+    while (lstatSync(existing, { throwIfNoEntry: false }) === undefined) existing = dirname(existing);
+    const canonical = relative(root, realpathSync(existing));
+    if (canonical === '..' || canonical.startsWith(`..${sep}`) || isAbsolute(canonical))
+        throw new Error(`TypeScript path follows a symbolic link outside the disposable project: ${path}`);
+}
+
+function validateBuild(root: string, path: string, visited = new Set<string>()): void {
+    assertProjectPath(root, path);
+    if (visited.has(path)) return;
+    visited.add(path);
+    const config = getTsconfig(path);
+    if (config === undefined) throw new Error(`Missing TypeScript project: ${path}`);
+    for (const file of config.fileNames) {
+        assertProjectPath(root, file);
+        if (config.options.noEmit) continue;
+        for (const output of ts.getOutputFileNames(config, file, !ts.sys.useCaseSensitiveFileNames))
+            assertProjectPath(root, output);
+    }
+    const metadata = ts.getTsBuildInfoEmitOutputFilePath(config.options);
+    if (metadata !== undefined) assertProjectPath(root, metadata);
+    for (const reference of config.projectReferences ?? [])
+        validateBuild(root, ts.resolveProjectReferencePath(reference), visited);
+}
 
 /**
  * Checks ordinary projects and every project named by a solution configuration.
@@ -17,16 +48,19 @@ export async function checkTypescript(session: Session, planned: PlannedCheck): 
     const config = getTsconfig(join(session.root, planned.scope.scope.path, 'tsconfig.json'));
     const references = (config?.projectReferences?.length ?? 0) > 0;
     const command = references
-        ? ['tsc', '-b', '--noEmit', '--pretty', 'false']
-        : ['tsc', '--noEmit', '-p', 'tsconfig.json', '--pretty', 'false'];
-    const check = { ...planned, spec: { ...planned.spec, command } };
-    if (!references) return runToolCheck(session, check);
-    const scratch = scratchCopy(
-        session,
-        session.repository.files.map((file) => file.path),
-    );
+        ? ['tsc', '-b', '--pretty', 'false']
+        : ['tsc', '--noEmit', '-p', '{config:tsconfig}', '--pretty', 'false'];
+    const scratch = scratchCopy(session, [
+        ...session.repository.files.map((file) => file.path),
+        ...(planned.manifest?.configs ?? [])
+            .filter((entry) => entry.target === '.gspot/tsconfig.check.json')
+            .map((entry) => targetInScope(planned.scope.scope.path, entry)),
+    ]);
     try {
-        const result = await runToolCheck({ ...session, root: scratch }, check);
+        if (references) validateBuild(scratch, join(scratch, planned.scope.scope.path, 'tsconfig.json'));
+        else if (config?.options.incremental || config?.options.composite)
+            command.push('--tsBuildInfoFile', join(scratch, '.gspot', 'tsconfig.check.tsbuildinfo'));
+        const result = await runToolCheck({ ...session, root: scratch }, planned, command);
         if (result.command !== undefined)
             result.command = result.command.map((part) => part.replace(scratch, () => session.root));
         return result;

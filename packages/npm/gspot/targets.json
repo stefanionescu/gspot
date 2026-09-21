@@ -1,0 +1,58 @@
+[
+    {
+        "os": "darwin",
+        "cpu": "arm64",
+        "libc": null,
+        "target": "bun-darwin-arm64",
+        "binary": "gspot-darwin-arm64",
+        "package": "@gspot/cli-darwin-arm64"
+    },
+    {
+        "os": "darwin",
+        "cpu": "x64",
+        "libc": null,
+        "target": "bun-darwin-x64-baseline",
+        "binary": "gspot-darwin-x64",
+        "package": "@gspot/cli-darwin-x64"
+    },
+    {
+        "os": "linux",
+        "cpu": "x64",
+        "libc": "glibc",
+        "target": "bun-linux-x64-baseline",
+        "binary": "gspot-linux-x64",
+        "package": "@gspot/cli-linux-x64"
+    },
+    {
+        "os": "linux",
+        "cpu": "arm64",
+        "libc": "glibc",
+        "target": "bun-linux-arm64",
+        "binary": "gspot-linux-arm64",
+        "package": "@gspot/cli-linux-arm64"
+    },
+    {
+        "os": "linux",
+        "cpu": "x64",
+        "libc": "musl",
+        "target": "bun-linux-x64-musl-baseline",
+        "binary": "gspot-linux-x64-musl",
+        "package": "@gspot/cli-linux-x64-musl"
+    },
+    {
+        "os": "linux",
+        "cpu": "arm64",
+        "libc": "musl",
+        "target": "bun-linux-arm64-musl",
+        "binary": "gspot-linux-arm64-musl",
+        "package": "@gspot/cli-linux-arm64-musl"
+    },
+    {
+        "os": "win32",
+        "cpu": "x64",
+        "libc": null,
+        "target": "bun-windows-x64-baseline",
+        "binary": "gspot-windows-x64.exe",
+        "package": "@gspot/cli-win32-x64"
+    }
+]

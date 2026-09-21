@@ -3,7 +3,7 @@
 import { join } from 'node:path';
 // The Vale packages of this repository are linked in, so the prose check runs offline.
 import { fileURLToPath } from 'node:url';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
 import type { FindingCase } from '#tests/types/acceptance.ts';
@@ -99,7 +99,8 @@ describe('the markdown, docs and prose presets', () => {
     test(
         'every check passes on clean documents and fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'README.md': README,
                 'docs/guide.md': GUIDE,
                 'docs/second.md': GUIDE,
@@ -127,6 +128,8 @@ describe('the markdown, docs and prose presets', () => {
                 ],
                 environment,
             );
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const whole = await run(sandbox.path, ['check', '--no-cache'], environment);
             expect(whole.code, whole.stdout).toBe(0);
             for (const planted of CASES) {

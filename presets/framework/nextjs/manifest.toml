@@ -3,7 +3,7 @@ name = "nextjs"
 kind = "framework"
 title = "Next.js"
 requires = ["typescript", "react"]
-recommends = ["css", "config-files"]
+recommends = ["css", "config-files", "i18n"]
 description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. Route segments serve one thing, the configuration turns no build check off, and message files parse."
 
 [detect]
@@ -12,6 +12,10 @@ dependencies = ["next"]
 [claims]
 paths = ["**/next.config.js", "**/next.config.mjs", "**/next.config.ts", "next.config.js", "next.config.mjs", "next.config.ts"]
 natures = ["source"]
+
+[[tools]]
+name = "next"
+provider = "host"
 
 [[tools]]
 name = "@next/eslint-plugin-next"
@@ -26,6 +30,7 @@ fragment = true
 
 [[checks]]
 name = "nextjs/typecheck"
+level = "recommended"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -38,6 +43,7 @@ help = "Read the first error tsc prints and fix that file; later errors are ofte
 
 [[checks]]
 name = "nextjs/build"
+level = "recommended"
 waits_for = "tools.next.build_in_gate"
 stage = "push"
 runs = "per-scope"
@@ -51,6 +57,7 @@ help = "Run next build and read the first error it prints."
 
 [[checks]]
 name = "integrity/route-segments"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -62,6 +69,7 @@ help = "Move the route handler into a segment of its own, such as an api folder.
 
 [[checks]]
 name = "integrity/next-config"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -73,6 +81,7 @@ help = "Remove the switch, and read the secret on the server."
 
 [[checks]]
 name = "integrity/dependency-alignment"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -81,17 +90,6 @@ coverage = ["consistency"]
 summary = "Checks that packages that ship together sit on one version: the framework with its lint package, and react with react-dom."
 why = "A lint package a version behind flags what the framework allows and allows what it removed."
 help = "Move both packages to the same version."
-
-[[checks]]
-name = "integrity/locales"
-stage = "push"
-runs = "once"
-engine = "integrity"
-analysis = "locale-files"
-coverage = ["consistency"]
-summary = "Checks the message files under tools.next.translations: each message parses, none is empty, no key holds a dot, and every locale holds every key of the base."
-why = "A message that does not parse throws when its screen renders, in the one language nobody on the team reads."
-help = "Correct the message, or add the missing key to the locale."
 
 [[settings]]
 name = "tools.next.build_in_gate"
@@ -106,12 +104,6 @@ kind = "list"
 direction = "neutral"
 default = []
 summary = "The flags next build runs with, such as --webpack for an app that does not build with Turbopack."
-
-[[settings]]
-name = "tools.next.translations"
-kind = "table"
-direction = "neutral"
-summary = "Where the message files live and which locale is the base: directory and base."
 
 [rule_files]
 framework = ["framework/nextjs/NEXTJS.md"]

@@ -1,7 +1,6 @@
-#:schema https://gspot.dev/schema/gspot.schema.json
+#:schema ./gspot.schema.json
 
-# The policy of this repository under gspot. Every setting has a command that writes it:
-# gspot set, allow, ignore, declare, add, remove. Run gspot explain <anything> for what it means.
+# Run gspot apply after changing policy. Use gspot explain <name> to inspect a setting.
 
 version = 1
 presets = ["bash", "spelling", "typescript", "markdown", "prose", "commits", "config-files", "naming", "formatting", "docs", "secrets", "dependencies", "licenses", "duplication", "security"]
@@ -20,9 +19,6 @@ presets = ["typescript"]
 
 [hooks]
 tool = "gspot"
-
-[ci]
-provider = "github"
 
 [rules]
 install = true
@@ -77,20 +73,11 @@ reason = "Xcode writes this key in a string file, and the type spells it as the 
 [architecture]
 roles = {env = "packages/cli/src/platform/environment.ts"}
 
-[tools.typescript]
-types = ["bun"]
-
-[tools.typescript.extra]
-reason = "Bun runs TypeScript from source and imports .ts paths, so the compiler accepts them and emits nothing; Bun and Node 22 ship the ES2025 iterator helpers the code uses."
-allowImportingTsExtensions = true
-noEmit = true
-target = "ESNext"
-lib = ["ESNext"]
-
 [tools.eslint]
 import_style = {"**/*" = "ts"}
 script_files = ["packages/npm/**", "packages/cli/build.ts", "packages/cli/publish.ts", "packages/cli/schemas.ts", "packages/cli/src/rules/command.ts", "packages/eslint-plugin/build.ts", "docs/reference-pages.ts"]
 globals = {"packages/npm/**" = "commonjs"}
+node_version = ">=24.2.0"
 
 [tools.knip]
 entry = ["**/build.ts", "**/publish.ts", "packages/cli/schemas.ts", "packages/cli/src/rules/command.ts", "packages/npm/gspot/gspot.js", "docs/reference-pages.ts", "docs/astro.config.ts", "docs/src/content.config.ts"]
@@ -101,29 +88,20 @@ folder_name_allowed = [{paths = ["packages/cli/src/checks/python", "packages/cli
 single_file_folder_allowed = [{paths = ["packages/npm/gspot"], reason = "The npm launcher package is one file by design: it runs the platform package that installed."}]
 prefix_collision_allowed = [{paths = ["packages/eslint-plugin/src/rules/**", "packages/eslint-plugin/tests/rules/**"], reason = "ESLint rule ids are the file names, and the ids share their first word by convention."}, {paths = ["docs/src"], reason = "Astro fixes the name of the content configuration file beside the content folder."}]
 
-# The reference pages of the manual are written from the binary's own data; this says whether they still match.
-[[check]]
-name = "docs/generated"
-command = ["bun", "docs/reference-pages.ts", "--check"]
-paths = ["docs/src/content/docs/reference/**", "presets/**", "architecture/14-decisions.md", "packages/cli/src/commands/**"]
-stage = "commit"
-summary = "Checks that the reference pages of the manual match what the binary carries."
-
-[[declare]]
-paths = ["packages/cli/grammars/swift.wasm"]
-vendored = true
-reason = "The Swift grammar has no npm package with a prebuilt WASM file, so the build of tree-sitter-swift is kept in the tree."
+[[vendored]]
+paths = ["packages/cli/grammars/swift.wasm", "packages/cli/grammars/swift.LICENSE", "LICENSES/*.txt", "LICENSES/bun.md"]
+reason = "Pinned upstream grammar and license text are retained with source records; bun packages/cli/grammars/swift.build.ts owns the Swift outputs."
 
 # The published JSON schemas are written from the zod schemas; this says whether they still match.
 [[check]]
 name = "schema/generated"
 command = ["bun", "packages/cli/schemas.ts", "--check"]
-paths = ["gspot.schema.json", "report.schema.json", "docs/public/schema/**", "packages/cli/src/policy/schema.ts", "packages/cli/src/run/report-schema.ts"]
+paths = ["gspot.schema.json", "packages/cli/src/policy/schema.ts", "packages/cli/src/run/report-schema.ts"]
 stage = "commit"
 summary = "Checks that the published JSON schemas match the zod schemas the binary reads with."
 
-[[declare]]
-paths = ["gspot.schema.json", "report.schema.json", "docs/public/schema/**"]
+[[generated]]
+paths = ["gspot.schema.json"]
 produced_by = "bun packages/cli/schemas.ts"
 
 # The rule corpus is this repository's product; its lint is this repository's check and ships in no binary.

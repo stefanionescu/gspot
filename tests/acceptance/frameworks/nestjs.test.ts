@@ -1,6 +1,6 @@
 // Planted repository for the nestjs preset: a small module that lints and type-checks as written, a controller that injects a repository, a circular import, and a tsconfig with decorators off.
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, symlinkSync } from 'node:fs';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
@@ -27,7 +27,8 @@ const INIT = [
 ];
 const PACKAGE =
     '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "@nestjs/common": "11.2.3",\n        "@nestjs/core": "11.2.3",\n        "reflect-metadata": "0.2.2",\n        "rxjs": "7.8.2"\n    }\n}\n';
-const TSCONFIG = '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "include": ["src"]\n}\n';
+const TSCONFIG =
+    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "NodeNext",\n        "moduleResolution": "NodeNext",\n        "types": [],\n        "skipLibCheck": true,\n        "experimentalDecorators": true,\n        "emitDecoratorMetadata": true\n    },\n    "include": ["src"]\n}\n';
 const GREETER =
     "// The greetings the service knows.\nimport { Injectable } from '@nestjs/common';\n\n/** Builds greetings. */\n@Injectable()\nexport class GreetingService {\n    /**\n     * Greets one person.\n     * @param name the person\n     * @returns the greeting\n     */\n    greet(name: string): string {\n        return `hello ${name}`;\n    }\n}\n";
 const CONTROLLER =
@@ -64,12 +65,9 @@ const CASES: PlantedCase[] = [
     {
         check: 'integrity/tsconfig-options',
         files: {
-            'tsconfig.json': TSCONFIG.replace(
-                '"include"',
-                () => '"compilerOptions": { "emitDecoratorMetadata": false },\n    "include"',
-            ),
+            'tsconfig.json': TSCONFIG.replace('"strict": true', '"strict": false'),
         },
-        expected: 'emitDecoratorMetadata is not on',
+        expected: 'strict is not on',
     },
 ];
 
@@ -77,7 +75,8 @@ describe('the nestjs preset', () => {
     test(
         'a module written the Nest way lints and type-checks, and the boundary rules fire on their planted defects',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 '.gitignore': 'node_modules\n',
                 'package.json': PACKAGE,
                 'tsconfig.json': TSCONFIG,
@@ -91,6 +90,8 @@ describe('the nestjs preset', () => {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             // Nothing the framework asks for is held in a baseline: the module passes as written, file names included.
             const held = await run(sandbox.path, ['check', '--stage', 'commit', '--no-cache'], environment);
             expect(held.code, held.stdout + held.stderr).toBe(0);

@@ -6,12 +6,11 @@ import type { TrackedFile, Repository, ScopeEntry } from '#types/repository.ts';
 import type { CheckSpec, Manifest, OutputFormat, ToolPin } from '#types/manifest.ts';
 import type { IgnoreEntry, PolicyFiles, MergedView, ExposedSettings } from '#types/config.ts';
 
-export type BaselineFile = {
-    check: string;
-    rule: string;
-    count: number;
-    recorded: string;
-    paths: Record<string, number>;
+/** File observations shared by cached checks within one execution pass. */
+export type RunHashes = {
+    policy: string;
+    files: Map<string, string>;
+    generated?: string;
 };
 
 export type CacheKeyInput = {
@@ -28,6 +27,7 @@ export type CheckOptions = {
     only?: string[];
     paths: string[];
     staged: boolean;
+    push?: { input: string; remote?: string };
     changed?: string;
     fix: boolean;
     isDryRun: boolean;
@@ -41,6 +41,8 @@ export type CheckOptions = {
 
 export type CommandResult = { text: string; json: unknown; exitCode: number };
 
+export type CheckCommandResult = CommandResult & { report?: RunReport };
+
 export type EngineInput = {
     session: Session;
     root: string;
@@ -53,9 +55,15 @@ export type EngineInput = {
 
 export type Engine = (input: EngineInput) => Promise<Finding[]>;
 
-export type ToolAnalysis = (session: Session, planned: PlannedCheck) => Promise<CheckResult>;
+export type CheckRunner = (session: Session, planned: PlannedCheck, staged?: Set<string>) => Promise<CheckResult>;
 
-export type RunOptions = PlanOptions & { fix: boolean; isDryRun: boolean; noCache?: boolean; comparison?: string };
+export type RunOptions = PlanOptions & {
+    fix: boolean;
+    isDryRun: boolean;
+    noCache?: boolean;
+    comparison?: NonNullable<RunReport['comparison']>;
+    cancelSignal?: AbortSignal;
+};
 
 export type RunOutcome = { report: RunReport; planned: PlannedCheck[]; fixes?: FixReport };
 
@@ -73,6 +81,8 @@ export type InlineIgnore = { line: number; check: string; reason?: string };
 export type StageFilter = 'all' | 'commit' | 'push' | 'manual' | 'message';
 
 export type PlanOptions = {
+    commits?: string[];
+    historyComplete?: boolean;
     stage: StageFilter;
     staged?: string[];
     changed?: string[];
@@ -80,18 +90,19 @@ export type PlanOptions = {
     /** Root-relative paths selected by positional file and directory arguments. */
     paths?: string[];
     skips: string[];
-    localSkips: string[];
     messageFile?: string;
 };
 
 export type PlannedCheck = {
+    commits?: string[];
+    run: CheckRunner;
     check: string;
     scope: ScopeSelection;
     spec: CheckSpec;
     manifest?: Manifest;
     files: TrackedFile[];
     tool?: ToolPin;
-    skip?: { source: 'local' | 'flag' | 'platform' | 'rules'; note: string };
+    skip?: { source: RunReport['skips'][number]['source']; note: string };
     projectWide: boolean;
     /** Changed paths absent from the readable tree that still trigger a project check. */
     triggerPaths: string[];
@@ -106,6 +117,8 @@ export type ScopeSelection = {
 };
 
 export type Session = ToolContext & {
+    packageManager?: import('zod').infer<typeof import('#cli/emit/tool-packages.ts').packageManagerSchema>;
+    cancelSignal?: AbortSignal;
     version: string;
     policyFiles: PolicyFiles;
     manifests: Map<string, Manifest>;
@@ -129,7 +142,6 @@ export type Substitutions = {
     scope: string;
     root: string;
     messageFile?: string;
-    mergeBase?: string;
     indent: number;
 };
 
@@ -151,8 +163,8 @@ export type PreparedCommand = {
 /** What the regex output parser needs per line: the format, the compiled fixable pattern and the help text. */
 export type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; help: string };
 
-/** What the run filters findings through: the baseline files, the [[ignore]] entries and the staged paths. */
-export type FilterInputs = { baselines: BaselineFile[]; ignores: IgnoreEntry[]; staged: Set<string> | undefined };
+/** Policy entries that filter reported findings. */
+export type FilterInputs = { ignores: IgnoreEntry[] };
 
 /** What filtering one check's findings produced. */
 /** One result on its way through the filters: the check, its result, and the findings no ignore took. */
@@ -170,6 +182,3 @@ export type PlanContext = {
     narrow: Set<string> | undefined;
     children: string[];
 };
-
-/** Findings of one check and rule, counted per path. */
-export type RuleCount = { check: string; rule: string; count: number; paths: Record<string, number> };

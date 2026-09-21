@@ -1,5 +1,5 @@
 // Planted repository for the docker preset: a careless Dockerfile, a missing ignore file, and a container that runs as root.
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -44,7 +44,8 @@ describe('the docker preset', () => {
     test(
         'every docker check fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'api/Dockerfile': CLEAN,
                 'api/.dockerignore': IGNORES,
                 'api/compose.yml': 'services:\n    api:\n        build: .\n        env_file: .env\n',
@@ -53,6 +54,8 @@ describe('the docker preset', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['hadolint', 'trivy', 'typos', 'ec', 'taplo', 'yamllint']) };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
                 const clean = await run(sandbox.path, ['check', '--only', id, '--no-cache'], environment);

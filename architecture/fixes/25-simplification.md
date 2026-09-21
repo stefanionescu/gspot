@@ -7,21 +7,15 @@ replacement behavior and its acceptance checks exist.
 
 ## K-303: The reference generator deletes more than it owns
 
-**What is wrong.** `docs/reference-pages.ts` is used by the docs build and dev commands. Its `write()` recursively removes the whole reference directory before writing any page. It neither distinguishes authored files nor keeps the previous page intact on a failed write. Its `quote()` only forwards to `JSON.stringify`.
+**Resolved locally.** The generator renders and formats before mutation, refuses authored
+collisions, stages replacement bytes, and prunes only obsolete marked pages. It rejects unsafe
+paths and linked output ancestry. Generated pages are ignored and built on demand under K-205.
+The forwarding-only `quote` helper and public decision-log mirror are absent.
 
-**Target.** Keep one reference generator and remove unsafe output replacement and redundant forwarding. The filename describes its job and does not need a cosmetic rename.
-
-**Files.** `docs/reference-pages.ts`, `docs/package.json`, `.gitignore`, and the docs build checks.
-
-**Logic.** Keep K-205: untrack generated reference pages and delete the stale-copy check mode. Render and format all pages before changing output. Mark generated pages, replace each page atomically, and prune only obsolete marked outputs. Refuse collisions with authored files.
-
-Keep guides outside generated output. Call `JSON.stringify` directly instead of `quote`; retain front-matter and table formatting functions because they own output grammar.
-
-**What goes.** Recursive removal of the reference root, tracked generated-page churn, the `docs/generated` gate, `--check`, and the forwarding-only `quote` function.
-
-**Tests.** A clean build generates every public reference. An authored sentinel in the output directory survives. A formatting or write failure does not truncate an existing page. Obsolete marked pages disappear. An unknown argument fails before writing (K-305).
-
-**Done when.** The generator is one build step, changes only owned outputs, and requires no committed generated reference copies.
+[Retained reference tests](../../tests/integration/reference-pages.test.ts) exercise unchanged
+output, authored sentinels, marker quotations, collisions, formatting and write failures,
+unsafe paths, and symlink confinement. Script-argument tests reject malformed calls before writes.
+Reference completeness remains separate under K-304; this resolution does not accept the site.
 
 ## K-304: Generated reference pages are not automatically correct
 
@@ -43,29 +37,14 @@ Delete the decision-log mirror and its URL-rewrite regexes; keep a clearly label
 
 ## K-306: File URLs are used as filesystem paths
 
-**What is wrong.** The docs generator, build scripts, schema generator, publisher, asset reader, and test harness use `new URL(...).pathname`. For a checkout containing a space, pathname retains `%20`, while the actual filesystem path contains a space. The same conversion also needs platform-correct drive handling.
+**Source conversion resolved locally.** Filesystem consumers use `fileURLToPath`; URL route
+paths remain URLs. The September 20 encoded-checkout run used `workspace % café` and passed
+schema/reference validation, both package builds, and source asset lookup. Retained asset and
+plugin tests exercise encoded file URLs. No decoding wrapper is needed.
 
-**Target.** Convert file URLs through the standard file-URL API, and keep URL paths separate from filesystem paths.
-
-**Files.** `docs/reference-pages.ts`, both package build scripts, `packages/cli/schemas.ts`, `packages/cli/publish.ts`, `packages/cli/src/platform/assets.ts`, `packages/cli/rules-lint/command.ts`, and affected tests.
-
-**Logic.** Use `fileURLToPath` for file URLs before filesystem access. Use ordinary path operations afterwards. Do not invent a decoding helper or replace pathname uses that genuinely describe HTTP URL routes. Include this work in K-263's platform verification.
-
-**What goes.** Filesystem-root derivation from raw URL pathname and ad hoc URL-decoding replacements.
-
-**Tests.** A checkout path with spaces, a literal `%` character, and Unicode resolves exactly. Build/docs/schema entry points and source asset lookup run in that checkout. Windows drive-path cases run on Windows CI.
-
-**Done when.** No repository script mistakes URL encoding for a local directory name.
-
-**Implementation evidence, September 20, 2026.** Scripts, source, and tests use
-`fileURLToPath` for filesystem paths. The development-asset regression test reproduces
-an encoded-path failure before this change and passes after it. A checkout named
-`workspace % café` passes schema and reference validation, both package builds, and a
-source CLI explanation. The encoded-checkout asset test also passes on Windows.
-
-The plugin uses the same
-conversion for file URLs, with a regression test that reads the original encoded path.
-Complete Windows acceptance remains part of K-263.
+Native Windows execution of the complete current candidate remains with
+[K-263](22-launch.md#k-263-windows-and-packaged-platform-acceptance-remain-incomplete), rather than a second actionable file-URL defect.
+Historical encoded-asset evidence does not establish native Windows lifecycle acceptance.
 
 ## K-307: Failure-to-empty helpers hide incomplete checks
 
@@ -232,7 +211,7 @@ passes 116 affected unit tests (557 assertions), seven planted profile and repos
 tests (40 assertions), TypeScript, schema validation, and all reference pages.
 
 Check execution produces a `RunReport` and writes `.gspot/report.json` and
-`.gspot/report.sarif`. The report schema is `report.schema.json`; producers, consumers,
+`.gspot/report.sarif`. The runtime report schema validates reports; producers, consumers,
 generated ignore entries, and workflow artifact paths use these names. GitLab output and
 report isolation remain open.
 

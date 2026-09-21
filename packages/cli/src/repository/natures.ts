@@ -1,7 +1,7 @@
 // Every tracked path has one nature: source, generated, vendored, binary.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { DeclareEntry } from '#types/config.ts';
+import type { FileDeclaration } from '#types/config.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import type { Attribute, NatureVerdict } from '#types/repository.ts';
 
@@ -35,12 +35,16 @@ function attributesFor(rules: Attribute[], path: string): string[] {
     return rules.filter((rule) => rule.matcher(path)).flatMap((rule) => rule.attributes);
 }
 
-function declaredNature(path: string, declares: DeclareEntry[]): NatureVerdict | undefined {
-    for (const entry of declares) {
+function declaredNature(path: string, declarations: FileDeclaration[]): NatureVerdict | undefined {
+    for (const entry of declarations) {
         if (!pathMatcher(entry.paths)(path)) continue;
-        if (entry.produced_by !== undefined)
-            return { nature: 'generated', source: 'declare', producedBy: entry.produced_by };
-        if (entry.vendored === true) return { nature: 'vendored', source: 'declare' };
+        return {
+            nature: entry.nature,
+            source: entry.nature,
+            ...(entry.nature === 'generated' && entry.produced_by !== undefined
+                ? { producedBy: entry.produced_by }
+                : {}),
+        };
     }
     return undefined;
 }
@@ -97,7 +101,7 @@ export function isValePackageFile(path: string): boolean {
 /**
  * Decides the nature of one path in the order the design fixes: declarations, .gitattributes, the gspot installs, banners, vendored directories, the binary sniff.
  * @param path the file, relative to the root
- * @param declares the [[declare]] entries
+ * @param declarations the generated and vendored declarations
  * @param isBinary whether the content sniff found binary bytes
  * @param prefix the captured first bytes
  * @param attributes the captured attribute rules
@@ -105,12 +109,12 @@ export function isValePackageFile(path: string): boolean {
  */
 export function natureOf(
     path: string,
-    declares: DeclareEntry[],
+    declarations: FileDeclaration[],
     isBinary: boolean,
     prefix: Buffer,
     attributes: Attribute[],
 ): NatureVerdict {
-    const declared = declaredNature(path, declares) ?? attributeNature(attributesFor(attributes, path));
+    const declared = declaredNature(path, declarations) ?? attributeNature(attributesFor(attributes, path));
     if (declared) return declared;
     if (isBinary) return { nature: 'binary', source: 'content' };
     const managed = managedNature(path);

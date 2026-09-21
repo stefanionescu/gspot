@@ -1,3 +1,4 @@
+import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 // Every path-shaped token in Markdown names a tracked file or folder, and every `mise run` or `bun run` names a task that exists.
@@ -18,7 +19,7 @@ import {
     TOKEN_SEPARATORS,
 } from '#config/docs.ts';
 
-const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', '.config/mise/conf.d/gspot.toml'];
+const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', MISE_CONFIG_PATH];
 const TRAILING_PUNCTUATION = '.,;:';
 
 function knownPaths(input: EngineInput): Set<string> {

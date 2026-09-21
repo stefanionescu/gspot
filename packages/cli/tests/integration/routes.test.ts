@@ -1,20 +1,20 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { writeFileSync } from 'node:fs';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 
 const OPTIONS = {
     stage: 'all' as const,
     skips: [],
-    localSkips: [],
     only: ['express/routes-tested'],
     fix: false,
     isDryRun: false,
     noCache: true,
 };
 const POLICY = `version = 1
+level = "all"
 presets = ["express"]
 [tools.express]
 route_glob = ["routes/*.ts"]
@@ -25,7 +25,8 @@ presets = ["express"]
 const ROUTE = 'export const users = () => [];\n';
 
 test('route imports must resolve to the route in the same scope', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': POLICY,
         'routes/users.ts': ROUTE,
         'api/routes/users.ts': ROUTE,
@@ -57,8 +58,10 @@ test.each([
     "import { users } from '#routes/users'; users();",
     "import { users } from '@routes/users'; users();",
 ])('a route test resolves its module through %s', async (source) => {
-    await using sandbox = await createSandbox({
-        'gspot.toml': 'version = 1\npresets = ["express"]\n[tools.express]\nroute_glob = ["routes/*.ts"]\n',
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml':
+            'version = 1\nlevel = "all"\npresets = ["express"]\n[tools.express]\nroute_glob = ["routes/*.ts"]\n',
         'package.json': '{"imports":{"#routes/*":"./routes/*.ts"}}',
         'tsconfig.json': '{"compilerOptions":{"paths":{"@routes/*":["./routes/*"]}}}',
         'routes/users.ts': ROUTE,

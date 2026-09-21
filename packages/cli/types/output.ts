@@ -21,8 +21,7 @@ export type PathExplanation = {
     tags: string[];
     presets: string[];
     checks: { check: string; stage: string; preset: string }[];
-    baselines: { check: string; rule: string; count: number }[];
-    ignores: { check: string; rule?: string; reason: string }[];
+    ignores: { check: string; rule?: string; reason?: string }[];
     unchecked?: string;
     remedy?: string;
 };

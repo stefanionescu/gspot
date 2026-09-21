@@ -3,7 +3,7 @@ import { ESLintUtils } from '@typescript-eslint/utils';
 import type { TSESLint } from '@typescript-eslint/utils';
 import type { RuleSpec, RuleDocs } from '#plugin-types/plugin.ts';
 
-const base = ESLintUtils.RuleCreator<RuleDocs>((name) => `https://gspot.dev/rules/gspot/${name}`);
+const base = ESLintUtils.RuleCreator<RuleDocs>((name) => `https://gspot.dev/reference/plugin/${name}/`);
 
 /**
  * Creates a rule whose docs description is its summary.
@@ -15,7 +15,11 @@ export function createRule<Options extends readonly unknown[], MessageIds extend
 ): TSESLint.RuleModule<MessageIds, Options, RuleDocs> {
     return base<Options, MessageIds>({
         name: spec.name,
-        meta: { ...spec.meta, docs: { description: spec.meta.docs.summary, ...spec.meta.docs } },
+        meta: {
+            ...spec.meta,
+            defaultOptions: spec.defaultOptions,
+            docs: { level: 'all', description: spec.meta.docs.summary, ...spec.meta.docs },
+        },
         defaultOptions: spec.defaultOptions,
         create: spec.create,
     });

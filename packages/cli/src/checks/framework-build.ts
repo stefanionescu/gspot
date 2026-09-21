@@ -1,25 +1,16 @@
 // The Next.js checks that run the framework: the type check after the framework wrote its types, and the build.
 import { join } from 'node:path';
-import { run } from '#cli/platform/spawn.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
-import { locateTool } from '#cli/platform/tool-probe.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { rmSync } from 'node:fs';
+import { scratchCopy } from '#cli/run/scratch-copy.ts';
 
-const TYPES_TIMEOUT_MS = 300_000;
-const BUILD_TIMEOUT_MS = 1_800_000;
 const SHOWN_LINES = 3;
 const TSC_LINE = /^(?<file>[^(]+)\((?<line>\d+),(?<column>\d+)\): error (?<rule>TS\d+): (?<text>.*)$/u;
 // A Next.js before 15.5 has no typegen command and reads the word as a project folder.
 const NO_TYPEGEN = ['Invalid project directory', 'unknown command'];
-
-function located(input: EngineInput, name: string): string {
-    const binary = locateTool(join(input.root, input.scope), name) ?? locateTool(input.root, name);
-    if (binary === undefined) throw new MissingToolError(`The ${name} command is not installed.`);
-    return binary;
-}
 
 function inScope(input: EngineInput, path: string): string {
     return input.scope === '' ? path : `${input.scope}/${path}`;
@@ -36,17 +27,13 @@ function lastLines(text: string): string {
 }
 
 // next typegen writes next-env.d.ts and the route types, which a fresh clone lacks and tsc needs.
-// CI=1 stops the framework installing packages it misses, and the tsconfig.json it rewrites is put back as committed.
+// CI=1 stops the framework installing packages it misses; generated files stay in the scratch copy.
 async function writeFrameworkTypes(input: EngineInput): Promise<void> {
     const cwd = join(input.root, input.scope);
-    const tsconfig = join(cwd, 'tsconfig.json');
-    const committed = existsSync(tsconfig) ? readFileSync(tsconfig, 'utf8') : undefined;
-    const result = await run([located(input, 'next'), 'typegen'], {
+    const result = await runCheckCommand(input, ['next', 'typegen'], {
         cwd,
-        timeoutMs: TYPES_TIMEOUT_MS,
         env: { CI: '1' },
     });
-    if (committed !== undefined) writeFileSync(tsconfig, committed);
     const said = `${result.stdout}${result.stderr}`;
     const isAbsent = NO_TYPEGEN.some((phrase) => said.includes(phrase));
     if (!isAbsent && result.code !== 0) throw new Error(`The next typegen command failed: ${lastLines(said)}`);
@@ -74,13 +61,23 @@ function typeFinding(input: EngineInput, line: string): Finding[] {
  * @returns one finding for each type error
  */
 export async function frameworkTypes(input: EngineInput): Promise<Finding[]> {
-    await writeFrameworkTypes(input);
-    const cwd = join(input.root, input.scope);
-    const command = [located(input, 'tsc'), '--noEmit', '-p', 'tsconfig.json', '--pretty', 'false'];
-    const result = await run(command, { cwd, timeoutMs: TYPES_TIMEOUT_MS });
-    const found = result.stdout.split('\n').flatMap((line) => typeFinding(input, line));
-    if (result.code !== 0 && found.length === 0) throw new Error(`The tsc command failed: ${lastLines(result.stdout)}`);
-    return found;
+    const scratch = scratchCopy(
+        input.session,
+        input.session.repository.files.map((file) => file.path),
+    );
+    const isolated = { ...input, root: scratch, session: { ...input.session, root: scratch } };
+    try {
+        await writeFrameworkTypes(isolated);
+        const cwd = join(scratch, input.scope);
+        const command = ['tsc', '--noEmit', '-p', 'tsconfig.json', '--pretty', 'false'];
+        const result = await runCheckCommand(isolated, command, { cwd });
+        const found = result.stdout.split('\n').flatMap((line) => typeFinding(input, line));
+        if (result.code !== 0 && found.length === 0)
+            throw new Error(`The tsc command failed: ${lastLines(`${result.stdout}\n${result.stderr}`)}`);
+        return found;
+    } finally {
+        rmSync(scratch, { recursive: true, force: true });
+    }
 }
 
 /**
@@ -89,20 +86,29 @@ export async function frameworkTypes(input: EngineInput): Promise<Finding[]> {
  * @returns one finding for a build that fails
  */
 export async function frameworkBuild(input: EngineInput): Promise<Finding[]> {
-    const cwd = join(input.root, input.scope);
-    const flags = (input.view.tool('next')['build_flags'] as string[] | undefined) ?? [];
-    const command = [located(input, 'next'), 'build', ...flags];
-    const result = await run(command, { cwd, timeoutMs: BUILD_TIMEOUT_MS, env: { CI: '1' } });
-    if (result.code === 0) return [];
-    const said = lastLines(`${result.stdout}${result.stderr}`);
-    return [
-        {
-            check: input.spec.name,
-            file: inScope(input, 'package.json'),
-            line: 1,
-            rule: 'build',
-            message: `next build failed: ${said}`,
-            fixable: false,
-        },
-    ];
+    const scratch = scratchCopy(
+        input.session,
+        input.session.repository.files.map((file) => file.path),
+    );
+    const isolated = { ...input, root: scratch, session: { ...input.session, root: scratch } };
+    try {
+        const cwd = join(scratch, input.scope);
+        const flags = (input.view.tool('next')['build_flags'] as string[] | undefined) ?? [];
+        const command = ['next', 'build', ...flags];
+        const result = await runCheckCommand(isolated, command, { cwd, env: { CI: '1' } });
+        if (result.code === 0) return [];
+        const said = lastLines(`${result.stdout}${result.stderr}`);
+        return [
+            {
+                check: input.spec.name,
+                file: inScope(input, 'package.json'),
+                line: 1,
+                rule: 'build',
+                message: `next build failed: ${said}`,
+                fixable: false,
+            },
+        ];
+    } finally {
+        rmSync(scratch, { recursive: true, force: true });
+    }
 }

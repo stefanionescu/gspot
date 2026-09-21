@@ -10,6 +10,7 @@ from_languages = true
 
 [[tools]]
 name = "semgrep"
+suppression = { marker = "\\bnosemgrep\\b", reason = "(?<reason>never)", forbidden = true }
 version = "1.152.0"
 floor = "1.100.0"
 pypi = "semgrep"
@@ -37,6 +38,7 @@ target = ".semgrepignore"
 
 [[checks]]
 name = "security/semgrep"
+level = "recommended"
 stage = "push"
 runs = "per-file-list"
 platform = ["macos", "linux"]
@@ -49,6 +51,7 @@ help = "Change the code the way the message says. Turn one rule off for a path w
 
 [[checks]]
 name = "security/semgrep-registry"
+level = "recommended"
 stage = "manual"
 runs = "per-file-list"
 requires = "network"
@@ -63,6 +66,7 @@ help = "Change the code the way the message says, or turn the rule off for a pat
 
 [[checks]]
 name = "security/codeql"
+level = "recommended"
 stage = "manual"
 runs = "once"
 engine = "integrity"

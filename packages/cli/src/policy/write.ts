@@ -1,10 +1,11 @@
 // The one writer the six commands share: patch gspot.toml keeping comments and order, validate as load does, write.
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { patch } from '@decimalturn/toml-patch';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { readFileSync } from 'node:fs';
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 import type { TomlTable, Mutation, WriteResult } from '#types/config.ts';
-import { parsePolicyText, policyPath } from '#cli/policy/read-policy.ts';
-import { parse as parseToml, stringify as stringifyToml } from 'smol-toml';
+import { parsePolicyText, policyPath, parseTomlText } from '#cli/policy/read-policy.ts';
+import { stringify as stringifyToml } from 'smol-toml';
 
 function isTable(value: unknown): value is TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
@@ -68,16 +69,14 @@ export function tableAt(raw: TomlTable, path: string[], canCreate: boolean): Tom
 }
 
 /**
- * Applies a mutation to the raw document and returns the new text and policy; writes when the run is not dry.
+ * Propose a policy mutation in memory and validate its resulting document.
  * @param root the repository root
  * @param mutate the change to apply to the parsed document
- * @param isDryRun when true the file is left as it was
+ * @param text the original policy text
  * @returns the new text, the parsed policy and whether the text changed
  */
-export function writePolicy(root: string, mutate: Mutation, isDryRun = false): WriteResult {
-    const path = policyPath(root);
-    const text = readFileSync(path, 'utf8');
-    const raw = parseToml(text) as TomlTable;
+export function proposePolicy(root: string, text: string, mutate: Mutation): WriteResult {
+    const raw = parseTomlText(text, 'gspot.toml');
     const before = new Set(Object.keys(raw));
     mutate(raw);
     // toml-patch cannot add an array of tables that was not there; seed the text with it first.
@@ -89,9 +88,27 @@ export function writePolicy(root: string, mutate: Mutation, isDryRun = false): W
     const next = patch(seed, raw, { inlineTableStart: 2, bracketSpacing: false });
     const policy = parsePolicyText(next, 'gspot.toml', root);
     assertPolicyComplete(policy);
-    const isChanged = next !== text;
-    if (isChanged && !isDryRun) writeFileSync(path, next);
-    return { text: next, policy, changed: isChanged };
+    return { text: next, policy, changed: next !== text };
+}
+
+/** Apply a validated policy proposal through lifecycle ownership. */
+export function writePolicy(root: string, mutate: Mutation, isDryRun = false): WriteResult {
+    const text = readFileSync(policyPath(root), 'utf8');
+    const proposal = proposePolicy(root, text, mutate);
+    if (proposal.changed && !isDryRun)
+        withLifecycleOwner(root, (owner) => {
+            const previous = owner.read('gspot.toml');
+            if (previous?.bytes.toString('utf8') !== text)
+                throw new Error('gspot.toml changed while the edit was prepared. Retry the command.');
+            const status = owner.replace(
+                'gspot.toml',
+                { bytes: Buffer.from(proposal.text), mode: previous.mode },
+                'policy',
+                true,
+            );
+            if (status === 'preserved') throw new Error('The policy edit could not preserve the current input.');
+        });
+    return proposal;
 }
 
 /**

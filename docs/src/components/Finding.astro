@@ -1,0 +1,18 @@
+---
+import example from '../../../examples/bash-syntax.json';
+---
+<figure class="terminal" aria-label="Bash syntax finding and correction">
+    <p class="terminal-label">Command · select the Bash syntax check</p>
+    <pre tabindex="0" aria-label="Check command"><code>gspot check --only bash/syntax --no-cache</code></pre>
+    <p class="terminal-label">Output · failed check</p>
+    <pre tabindex="0" aria-label="Failure output"><code>{example.failed}</code></pre>
+    <p class="terminal-label">Correction · replace the contents of greet.sh</p>
+    <pre tabindex="0" aria-label="Corrected Bash source"><code>{example.corrected}</code></pre>
+    <p class="terminal-label">Run the same command again · output</p>
+    <pre tabindex="0" aria-label="Successful rerun"><code>{example.passed}</code></pre>
+</figure>
+<p class="muted">Captured with gspot {example.version}, macOS arm64, Bash on PATH, and caching disabled.
+    This selects one check. The unchecked-file notice remains visible; it is not a whole-repository pass.
+    <a href="/guides/quick-start/">Reproduce the example.</a></p>
+
+<style>figure { margin: 0; }</style>

@@ -73,10 +73,8 @@ function trimTrailingSlashes(path: string): string {
 
 function normalizeScalars(raw: RawPolicy): Pick<Policy, 'hooks' | 'ci' | 'rules' | 'coverage' | 'runner'> {
     return {
-        ...(raw.hooks === undefined ? {} : { hooks: { tool: raw.hooks.tool } }),
-        ...(raw.ci === undefined
-            ? {}
-            : { ci: { provider: raw.ci.provider, platforms: raw.ci.platforms ?? ['ubuntu'] } }),
+        ...(raw.hooks === undefined ? {} : { hooks: raw.hooks }),
+        ...(raw.ci === undefined ? {} : { ci: raw.ci }),
         rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
         coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
         ...(raw.runner === undefined ? {} : { runner: { tool: raw.runner.tool } }),
@@ -195,9 +193,13 @@ export function normalizeStructure(raw: RawPolicy['structure']): Policy['structu
 export function normalize(raw: RawPolicy): Policy {
     const scopeTables: Record<string, Partial<Policy>> = {};
     const scopes = raw.scope ?? [];
-    for (const scope of scopes) scopeTables[scope.path] = normalizeScopeTables(scope);
+    for (const scope of scopes) scopeTables[trimTrailingSlashes(scope.path)] = normalizeScopeTables(scope);
     return {
         version: raw.version,
+        level: raw.level,
+        requireReasons: raw.require_reasons,
+        extraChecks: raw.extra_checks,
+        exclude: raw.exclude,
         presets: raw.presets ?? [],
         scopes: scopes.map((scope) => ({ path: trimTrailingSlashes(scope.path), presets: scope.presets ?? [] })),
         limits: normalizeLimits(raw.limits),
@@ -205,10 +207,13 @@ export function normalize(raw: RawPolicy): Policy {
         architecture: normalizeArchitecture(raw.architecture),
         structure: normalizeStructure(raw.structure),
         format: compact(raw.format ?? {}),
-        prose: defaulted<Policy['prose']>(raw.prose, { vocabulary: [], disabled: [] }),
+        prose: defaulted<Policy['prose']>(raw.prose, { vocabulary: [] }),
         tools: (raw.tools ?? {}) as Policy['tools'],
         ignores: compactAll(raw.ignore),
-        declares: compactAll(raw.declare),
+        declarations: [
+            ...raw.generated.map((entry) => ({ ...entry, nature: 'generated' as const })),
+            ...raw.vendored.map((entry) => ({ ...entry, nature: 'vendored' as const })),
+        ],
         checks: (raw.check ?? []).map((entry) => compact({ ...entry, output: entry.output && compact(entry.output) })),
         ...normalizeScalars(raw),
         scopeTables,

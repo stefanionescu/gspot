@@ -1,4 +1,5 @@
 // What the xcode checks share: the tracked files by ending, their text, and the finding shape.
+import { scopeOf } from '#cli/repository/scopes.ts';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#types/run.ts';
@@ -12,7 +13,12 @@ import type { Finding } from '#types/finding.ts';
  */
 export function trackedEnding(input: EngineInput, endings: string[]): string[] {
     return input.session.repository.files
-        .filter((file) => file.nature === 'source' && endings.some((ending) => file.path.endsWith(ending)))
+        .filter(
+            (file) =>
+                file.nature === 'source' &&
+                scopeOf(file.path, input.session.repository.scopes).path === input.scope &&
+                endings.some((ending) => file.path.endsWith(ending)),
+        )
         .map((file) => file.path);
 }
 

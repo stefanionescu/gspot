@@ -1,7 +1,7 @@
 // Planted repository for the xcode preset: a project with a source in no target, a catalog with a hole, and a plist that opens the network.
 import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -106,7 +106,8 @@ describe('the xcode preset', () => {
     test(
         'every xcode check fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'App.xcodeproj/project.pbxproj': PROJECT,
                 'App.xcodeproj/xcshareddata/xcschemes/App.xcscheme':
                     '<Scheme>\n    <TestAction>\n        <TestPlans><TestPlanReference reference="container:App.xctestplan"/></TestPlans>\n    </TestAction>\n</Scheme>\n',
@@ -123,6 +124,8 @@ describe('the xcode preset', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['typos', 'ec', 'taplo', 'yamllint']) };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             commitAll(sandbox.path);
             const checkIds = new Set(CASES.map((planted) => planted.check));
             for (const id of checkIds) {
@@ -153,7 +156,8 @@ describe('init in a repository with an Xcode project', () => {
     test(
         'writes the project and the first shared scheme into the scope that holds them',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'ios/App.xcodeproj/project.pbxproj': PROJECT,
                 'ios/App.xcodeproj/xcshareddata/xcschemes/App.xcscheme': '<Scheme/>\n',
                 'ios/App/Home.swift': HOME,

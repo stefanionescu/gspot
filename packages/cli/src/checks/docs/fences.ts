@@ -8,7 +8,7 @@ import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { parserFor } from '#cli/naming/parsers.ts';
 import type { GrammarName } from '#types/naming.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { FencedBlock } from '#types/integrity.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { ANGLE_PLACEHOLDER, ELLIPSIS_ARGUMENTS, ELLIPSIS_LINE, FENCE_PARSERS } from '#config/docs.ts';
@@ -68,14 +68,16 @@ async function treeProblem(grammar: GrammarName, body: string): Promise<string |
     }
 }
 
-function bashProblem(root: string, body: string): string | undefined {
-    const result = runBlocking(['bash', '-n'], { cwd: root, stdin: body });
-    return result.code === 0 ? undefined : result.stderr.trim().split('\n', 1)[0];
+async function bashProblem(input: EngineInput, body: string): Promise<string | undefined> {
+    const result = await runCheckCommand(input, ['bash', '-n'], { cwd: input.root, stdin: body });
+    if (result.code === 0) return undefined;
+    const detail = result.stderr.trim().split('\n', 1)[0] ?? '';
+    return detail === '' ? `bash exited ${String(result.code)}` : detail;
 }
 
-function problemFor(root: string, parser: string, body: string): Promise<string | undefined> {
+function problemFor(input: EngineInput, parser: string, body: string): Promise<string | undefined> {
     if (STRUCTURED_PARSERS.has(parser)) return Promise.resolve(structuredProblem(parser, body));
-    if (parser === 'bash') return Promise.resolve(bashProblem(root, body));
+    if (parser === 'bash') return bashProblem(input, body);
     if (TREE_PARSERS.has(parser)) return treeProblem(parser as GrammarName, body);
     return Promise.resolve(undefined);
 }
@@ -86,7 +88,7 @@ async function fileFindings(input: EngineInput, path: string): Promise<Finding[]
     for (const fence of blocks) {
         const parser = FENCE_PARSERS[fence.language];
         if (parser === undefined || fence.body.trim() === '') continue;
-        const problem = await problemFor(input.root, parser, withoutPlaceholders(fence.body, parser));
+        const problem = await problemFor(input, parser, withoutPlaceholders(fence.body, parser));
         if (problem !== undefined)
             findings.push({
                 check: input.spec.name,

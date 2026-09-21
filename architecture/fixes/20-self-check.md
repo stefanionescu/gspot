@@ -44,7 +44,7 @@ presets skips itself when the Vale packages are absent, and the workflow fetches
 too late. The ESLint rules that catch a weak test are off here, because the template turns them
 on with the vitest preset alone. Nobody read a run on GitHub, so 92 red runs went unseen.
 
-**Target.** The unit tests run at the push stage with a coverage floor. No test skips itself. The
+**Target.** The unit and plugin tests run at the push stage. Coverage measures missing behavioral evidence without an arbitrary percentage quota. Conditional platform and release suites retain explicit prerequisites. The
 work of a change follows the [active CI bypass](../22-remaining.md#active-ci-bypass).
 While it is active, local verification permits continued implementation without a GitHub run.
 
@@ -52,15 +52,15 @@ While it is active, local verification permits continued implementation without 
 `.github/workflows/ci.yml`, `tests/repositories/docs.test.ts`, `presets/language/javascript/eslint.config.js.tmpl`,
 `CONTRIBUTING.md`.
 
-**Logic.** The check runs `bun test packages --coverage` and fails under the floor in
-`bunfig.toml`. The docs test fetches the Vale packages in its setup, or fails with the command
+**Logic.** The check runs `mise run test`. Use `mise run test:coverage` for measurement with shared settings in
+`bunfig.toml`. Candidate acceptance explicitly runs integration, acceptance, and opted-in release suites. The docs test fetches the Vale packages in its setup, or fails with the command
 that fetches them. The jest preset of [08-frameworks.md](08-frameworks.md) reads `bun:test`
 through `globalPackage`, and this repository selects it. This repository sets `level = "all"` and `[coverage] strict = true`.
 
 `CONTRIBUTING.md` explains local verification and how to read CI results when CI is enabled.
 It must not require a GitHub run while the active bypass applies.
 
-**What goes.** `describe.skipIf` in the docs test.
+**What goes.** Silent acceptance when a required tool is absent. Conditional suite syntax itself is not a defect.
 
 **Tests.** These are the tests.
 

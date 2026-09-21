@@ -15,10 +15,12 @@ filenames = ["package.json"]
 name = "license-checker-rseidelsohn"
 version = "5.0.1"
 npm = "license-checker-rseidelsohn"
+version_exit_code = 1
 mise = "npm:license-checker-rseidelsohn"
 
 [[checks]]
 name = "licenses/npm"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"
@@ -27,7 +29,7 @@ claims = {filenames = ["package.json"]}
 coverage = ["licenses"]
 summary = "Compares the license every installed npm package reports with the allowed list and the exceptions."
 why = "A license the project cannot accept arrives silently with a transitive dependency."
-help = "Replace the package, or record it with gspot allow licenses <name@version> --license <id> --reason. An exception holds only while the package reports that license."
+help = "Replace the package, or add an entry to tools.licenses.exceptions with gspot set. Include package (name@version), license, and reason. An exception holds only while the package reports that license."
 
 [[settings]]
 name = "tools.licenses.allow"

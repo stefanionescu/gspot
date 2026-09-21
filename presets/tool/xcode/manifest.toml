@@ -19,6 +19,7 @@ provider = "host"
 
 [[checks]]
 name = "xcode/plist"
+level = "recommended"
 stage = "commit"
 platform = ["macos"]
 tool = "plutil"
@@ -32,6 +33,7 @@ help = "Correct the file at the line plutil names."
 
 [[checks]]
 name = "xcode/xcconfig"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -44,6 +46,7 @@ help = "Write the line as a name, an equals sign, and a value."
 
 [[checks]]
 name = "xcode/xcstrings"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -56,6 +59,7 @@ help = "Add the translation, or mark the string as not translated in the catalog
 
 [[checks]]
 name = "xcode/asset-catalogues"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -68,6 +72,7 @@ help = "Add the image, or delete the asset. Set tools.xcode.orphan_assets to fal
 
 [[checks]]
 name = "xcode/test-plan"
+level = "all"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -79,6 +84,7 @@ help = "Add the target to a test plan, and point the scheme at the plan."
 
 [[checks]]
 name = "xcode/orphan-sources"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -91,6 +97,7 @@ help = "Add the file to a target or delete it, and remove the reference to a fil
 
 [[checks]]
 name = "xcode/symlinks"
+level = "all"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -102,6 +109,7 @@ help = "Replace the symlink with the folder it points at, or ignore the path wit
 
 [[checks]]
 name = "xcode/entitlements-policy"
+level = "recommended"
 waits_for = "tools.xcode.allowed_entitlements"
 stage = "commit"
 runs = "once"
@@ -115,6 +123,7 @@ help = "Remove the entitlement, or add it to tools.xcode.allowed_entitlements."
 
 [[checks]]
 name = "xcode/ats"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"

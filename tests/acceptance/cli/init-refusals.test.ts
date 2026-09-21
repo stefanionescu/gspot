@@ -1,7 +1,7 @@
 // Planted repositories: what init refuses before it writes, and that every hook runs under the Bash macOS ships.
 import { delimiter, join } from 'node:path';
 import { hookBody } from '#cli/emit/hooks.ts';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { chmodSync, existsSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { treeContents } from '#tests/harness/contents.ts';
@@ -15,7 +15,8 @@ describe('init refusals', () => {
     test(
         'a choice flag outside its list exits 2 and names the allowed values',
         async () => {
-            await using sandbox = await createSandbox({ 'scripts/a.sh': script });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             commitAll(sandbox.path);
             const result = await run(sandbox.path, ['init', '--yes', '--hooks', 'foo']);
             expect(result.code).toBe(2);
@@ -30,7 +31,8 @@ describe('init refusals', () => {
     test(
         'an unknown preset names the near match, and a required preset cannot be left out',
         async () => {
-            await using sandbox = await createSandbox({ 'scripts/a.sh': script });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             commitAll(sandbox.path);
             const unknown = await run(sandbox.path, ['init', '--yes', '--presets', 'bassh', ...QUIET]);
             expect(unknown.code).toBe(2);
@@ -54,7 +56,8 @@ describe('init refusals', () => {
     test(
         'uncommitted changes stop init until --allow-dirty is given',
         async () => {
-            await using sandbox = await createSandbox({ 'scripts/a.sh': script });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             commitAll(sandbox.path);
             await Bun.write(join(sandbox.path, 'notes.txt'), 'draft\n');
             const refused = await run(sandbox.path, ['init', '--yes', '--presets', 'bash', ...QUIET]);
@@ -70,7 +73,8 @@ describe('init refusals', () => {
     );
 
     test.skipIf(!existsSync(SYSTEM_BASH))('every hook body runs under the system Bash', async () => {
-        await using sandbox = await createSandbox({ 'README.md': '# Hook test\n' });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'README.md': '# Hook test\n' });
         commitAll(sandbox.path);
         const remote = 'https://example.com/planted.git';
         expect(git(sandbox.path, ['remote', 'add', 'origin', remote]).code).toBe(0);
@@ -85,7 +89,7 @@ describe('init refusals', () => {
             chmodSync(path, 0o755);
             const result = Bun.spawnSync([SYSTEM_BASH, path, ...argumentsByHook[name]], {
                 cwd: sandbox.path,
-                env: { PATH: toolsPath([]), GSPOT_BIN: '' },
+                env: { PATH: toolsPath([]) },
                 stdin: 'ignore',
                 stdout: 'pipe',
                 stderr: 'pipe',
@@ -99,7 +103,8 @@ describe('init refusals', () => {
     test(
         'a recommended preset is installed unless --without names it',
         async () => {
-            await using sandbox = await createSandbox({ 'scripts/a.sh': script });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt']) };
             await run(
@@ -120,7 +125,8 @@ describe('init refusals', () => {
     test(
         'one --scope flag writes both scopes with their presets',
         async () => {
-            await using sandbox = await createSandbox({ 'tools/a.sh': script, 'jobs/b.sh': script });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'tools/a.sh': script, 'jobs/b.sh': script });
             commitAll(sandbox.path);
             const argv = ['init', '--yes', '--no-hooks', '--scope', 'tools=bash', 'jobs=bash', ...QUIET];
             const init = await run(sandbox.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
@@ -134,7 +140,8 @@ describe('init refusals', () => {
 });
 
 test('initialization flags control integrations and formatter carryover in the proposal', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'source.js': 'export const port = 8080;\n',
         '.prettierrc.json': '{"semi":false,"tabWidth":8}\n',
     });
@@ -176,7 +183,8 @@ test.each([
     ['pyproject.toml', '[project'],
     ['pyproject.toml', '[tool.uv.workspace]\nmembers = [7]\n'],
 ])('init reports invalid %s content %s before writing', async (path, content) => {
-    await using sandbox = await createSandbox({ [path]: content, 'source.ts': 'export {};\n' });
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { [path]: content, 'source.ts': 'export {};\n' });
     const before = treeContents(sandbox.path);
     const result = await run(sandbox.path, ['init', '--yes', '--no-hooks', ...QUIET]);
     expect(result.code, result.stdout + result.stderr).not.toBe(0);

@@ -29,6 +29,7 @@ target = ".gspot/gixy.cfg"
 
 [[checks]]
 name = "nginx/gixy"
+level = "recommended"
 stage = "commit"
 platform = ["macos", "linux"]
 command = ["gixy", "--config", "{config:gixy}", "--format", "json", "{file}"]
@@ -40,6 +41,7 @@ help = "Change the block the way the rule's page says. Turn one rule off with gs
 
 [[checks]]
 name = "nginx/config-test"
+level = "recommended"
 stage = "push"
 runs = "once"
 requires = "docker"

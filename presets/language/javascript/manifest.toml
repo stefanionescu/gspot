@@ -16,14 +16,15 @@ tags = ["shebang:node"]
 
 [[tools]]
 name = "eslint"
-version = "10.10.0"
+suppression = { marker = "\\beslint-disable(?:-next-line|-line)?\\b", reason = " -- (?<reason>\\S.*)" }
+version = "9.39.5"
 npm = "eslint"
 floor = "9.38.0"
 
 [[tools]]
 name = "@eslint/js"
 kind = "library"
-version = "10.0.1"
+version = "9.39.5"
 npm = "@eslint/js"
 
 [[tools]]
@@ -42,7 +43,7 @@ floor = "3.0.0"
 [[tools]]
 name = "eslint-plugin-unicorn"
 kind = "library"
-version = "74.0.0"
+version = "65.0.1"
 npm = "eslint-plugin-unicorn"
 floor = "63.0.0"
 
@@ -137,12 +138,10 @@ header = false
 
 [[checks]]
 name = "javascript/eslint"
+level = "all"
 stage = "commit"
 runs = "per-file-list"
-command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{suppressions}", "--format", "json", "{files}"]
-baseline_file = ".gspot/baselines/eslint.json"
-baseline_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--suppress-all", "--suppressions-location", "{baseline}", "{files}"]
-prune_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--prune-suppressions", "--suppressions-location", "{baseline}", "{files}"]
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
 claims = {extensions = [".js", ".jsx", ".mjs", ".cjs"], tags = ["shebang:node"]}
@@ -155,6 +154,7 @@ help = "Run gspot check --fix for the rules that fix themselves, then read each 
 
 [[checks]]
 name = "javascript/checkjs"
+level = "recommended"
 stage = "commit"
 runs = "once"
 command = ["tsc", "-p", "{config:jsconfig}", "--pretty", "false"]
@@ -168,6 +168,7 @@ help = "Add or fix the JSDoc type the checker names; gspot explain tsc/TS2345 li
 
 [[checks]]
 name = "javascript/knip"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 command = ["knip", "--config", "{config:knip}", "--no-progress", "--reporter", "compact", "{workspace:--workspace}"]
@@ -184,6 +185,13 @@ kind = "table"
 direction = "per-rule"
 default = {}
 summary = "Rule options and rules turned on, by ESLint rule id; a rule turned off is a gspot ignore --rule."
+
+[[settings]]
+name = "tools.eslint.overrides"
+kind = "list"
+direction = "per-rule"
+default = []
+summary = "Ordered enabled rule settings for config-root paths, bounded by the scope declaring them. Explicit ignores apply last."
 
 [[settings]]
 name = "tools.eslint.import_style"
@@ -256,6 +264,7 @@ summary = "Dependencies knip does not report as unused, each with a reason: pack
 
 [[checks]]
 name = "integrity/required-rules"
+level = "all"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"

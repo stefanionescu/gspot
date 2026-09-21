@@ -10,20 +10,20 @@ import { directoryOf, listFlag, textEntry } from '#cli/commands/flags.ts';
  */
 export function registerIgnore(program: Command): void {
     program
-        .command('ignore <check-id>')
-        .description('Turn a check, or one rule in it, off for some paths or everywhere, with a reason')
+        .command('ignore <check>')
+        .description('Turn a check, or one rule in it, off for some paths or everywhere')
         .option('--paths <glob...>', 'The paths the ignore applies to; none means the whole scope')
         .option('--rule <rule>', 'One rule inside the check')
-        .option('--reason <text>', 'Why; required, and printed on every run')
+        .option('--reason <text>', 'Optional explanation; required when require_reasons is true')
         .option('--remove', 'Delete the matching entry instead')
-        .action(async (checkId: string, flags: Record<string, unknown>, command: Command) => {
+        .action(async (check: string, flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             const paths = listFlag(flags, 'paths');
             await printCommand(
                 () =>
                     ignoreCommand({
                         cwd: directoryOf(global),
-                        check: checkId,
+                        check,
                         remove: flags['remove'] === true,
                         ...(paths === undefined ? {} : { paths }),
                         ...textEntry(flags, 'rule', 'rule'),

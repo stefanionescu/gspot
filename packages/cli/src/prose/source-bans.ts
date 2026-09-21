@@ -20,7 +20,7 @@ function lineFindings(input: EngineInput, path: string, lines: string[]): Findin
                     line: index + 1,
                     rule: 'vale-directive',
                     message:
-                        'A Vale directive turns a rule off in the text; change the text or disable the rule with a reason under prose.disabled.',
+                        'A Vale directive turns a rule off in the text; change the text or record an exception with gspot ignore prose/vale --rule <rule>.',
                     fixable: false,
                 },
             ];

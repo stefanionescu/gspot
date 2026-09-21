@@ -1,4 +1,4 @@
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { MergedView } from '#types/config.ts';
 import type { CheckSpec } from '#types/manifest.ts';
@@ -28,19 +28,22 @@ function input(root: string, paths: string[], docs: Record<string, unknown> = {}
 
 describe('readme shape', () => {
     test('a README with one H1, an opening paragraph and a setup section passes', async () => {
-        await using sandbox = await createSandbox({ 'README.md': '# Thing\n\nWhat it is.\n\n## Setup\n\nRun it.\n' });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'README.md': '# Thing\n\nWhat it is.\n\n## Setup\n\nRun it.\n' });
         expect(await readmeShape(input(sandbox.path, ['README.md']))).toEqual([]);
     });
 
     test('a README missing the pieces names each one', async () => {
-        await using sandbox = await createSandbox({ 'README.md': '# A\n# B\n## Table of contents\n\nx\n' });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'README.md': '# A\n# B\n## Table of contents\n\nx\n' });
         const found = await readmeShape(input(sandbox.path, ['README.md']));
         expect(found.map((finding) => finding.rule)).toEqual(['one-h1', 'opening-paragraph', 'start-section']);
         const headings = await docsHeadings(input(sandbox.path, ['README.md']));
         expect(headings.map((finding) => finding.line)).toEqual([3]);
     });
     test('setext and formatted headings count, while fenced headings do not', async () => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'README.md':
                 'Thing\n=====\n\nWhat it is.\n\nSetup\n-----\n\n~~~md\n# Example\n## Project structure\n~~~~\n',
             'guide.md': '~~~md\n# Project structure\n~~~\n\n**Project structure**\n---------------------\n',
@@ -52,7 +55,8 @@ describe('readme shape', () => {
     });
 
     test('a list before the setup section does not supply an opening paragraph', async () => {
-        await using sandbox = await createSandbox({ 'README.md': '# Thing\n\n- An item.\n\n## Setup\n' });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'README.md': '# Thing\n\n- An item.\n\n## Setup\n' });
         const found = await readmeShape(input(sandbox.path, ['README.md']));
         expect(found.map((finding) => finding.rule)).toEqual(['opening-paragraph']);
     });

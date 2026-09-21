@@ -27,7 +27,7 @@ function coverSource(session: Session, file: TrackedFile, report: CoverageReport
         report.unchecked.push({
             path: file.path,
             reason: 'no preset claims it',
-            remedy: 'gspot declare, or gspot add <preset>',
+            remedy: 'gspot set generated <path>, gspot set vendored <path>, or gspot add <preset>',
         });
         return;
     }

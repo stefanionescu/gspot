@@ -1,9 +1,10 @@
 // The OpenAPI document of an express service: it lints, and it matches the code that writes it.
 import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { readFileSync, rmSync } from 'node:fs';
+import { scratchCopy } from '#cli/run/scratch-copy.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
-import { git, run } from '#cli/platform/spawn.ts';
+import { run } from '#cli/platform/spawn.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
@@ -60,21 +61,25 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
     const document = setting(input, 'openapi', 'document');
     const command = setting(input, 'openapi', 'produced_by');
     if (document === '' || command === '') return [];
-    const before = readFileSync(join(input.root, document), 'utf8');
-    const result = await run(command.split(' '), { cwd: input.root, timeoutMs: TOOL_TIMEOUT_MS });
-    if (result.code !== 0)
-        throw new Error(
-            `The command that writes the OpenAPI document failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
-        );
-    const after = readFileSync(join(input.root, document), 'utf8');
-    if (before === after) return [];
-    git(input.root, ['checkout', '--', document]);
-    return [
-        finding(
-            input,
-            { file: document, line: 1 },
-            'stale',
-            `Running ${command} changes this document; commit what it writes.`,
-        ),
-    ];
+    const before = readFileSync(join(input.root, document));
+    const scratch = scratchCopy(input.session, [...input.session.repository.files.map((file) => file.path), document]);
+    try {
+        const result = await run(command.split(' '), { cwd: scratch, timeoutMs: TOOL_TIMEOUT_MS });
+        if (result.code !== 0)
+            throw new Error(
+                `The command that writes the OpenAPI document failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
+            );
+        const after = readFileSync(join(scratch, document));
+        if (before.equals(after)) return [];
+        return [
+            finding(
+                input,
+                { file: document, line: 1 },
+                'stale',
+                `Running ${command} changes this document; commit what it writes.`,
+            ),
+        ];
+    } finally {
+        rmSync(scratch, { recursive: true, force: true });
+    }
 }

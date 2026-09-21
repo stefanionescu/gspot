@@ -1,27 +1,14 @@
 # Plain Words and Renames
 
-Row 18 of the build order. gspot bans made-up words in the code it checks, and its own code and
-output hold several. [19-names.md](../19-names.md) holds the table of every rename, with the
-count of places. A rename replaces the old name everywhere in one commit, and the old name is
-then an unknown word (D-134).
+Public names must describe the implemented contract. Internal names do not need global
+synonym replacement. [19-names.md](../19-names.md) owns the shared vocabulary.
 
 ## K-54: `render` and `synced`
 
-**What is wrong.** The naming policy gspot ships refuses `render` for writing a file and `sync`
-for applying. The source holds `render` in 108 places and `synced` in 15.
-
-**Target.** `emit` and `applied`, as D-92 decides.
-
-**Files.** `emit/templates.ts`, `emit/targets.ts`, `emit/apply-command.ts`, their types and tests,
-and every template helper named `render`.
-
-**Logic.** Renames only, by the language server, one word in one commit.
-
-**What goes.** 123 uses.
-
-**Tests.** `naming/identifiers` on gspot with no exception for either word.
-
-**Done when.** A search of `packages/` for both words finds only what a library names.
+**Retired.** Occurrence counts and synonym replacement do not establish a defect.
+Keep precise existing names, including native tool and library terms. Rename only when
+a name misstates a public contract or hides an effect, under
+[the names owner](../19-names.md#names-that-hide-effects). No rename campaign remains.
 
 ## K-66: made-up words a person reads
 
@@ -29,7 +16,7 @@ and every template helper named `render`.
 `Re-render`, and `idempotent` reach a person through messages, help text, guides, and rule files.
 
 **Target.** The words of [19-names.md](../19-names.md). `[runner] surface` becomes `[runner] tool`.
-The run record becomes the report: `.gspot/report.json` and `report.schema.json`.
+The run record becomes the report: `.gspot/report.json`.
 
 `[inspection] strict` becomes `[coverage] strict`. `[[declare]]` becomes `[[generated]]` with `paths`,
 and `[[vendored]]`. Policy becomes config in text a person reads.

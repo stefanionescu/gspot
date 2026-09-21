@@ -4,9 +4,14 @@ import type { CacheKeyInput } from '#types/run.ts';
 import type { CheckResult } from '#types/finding.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
-import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { lstatSync, readFileSync } from 'node:fs';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
-const CACHE_FORMAT = 3;
+const CACHE_FORMAT = 5;
+// Thirty days in milliseconds.
+const RETENTION_MS = 2_592_000_000;
+const CACHE_ENTRY = /^\.gspot\/cache\/[a-f0-9]{64}\.json$/u;
 
 function cacheDir(root: string): string {
     return join(root, '.gspot', 'cache');
@@ -27,10 +32,7 @@ export function textHash(text: string): string {
  * @returns the key
  */
 export function cacheKey(input: CacheKeyInput): string {
-    const files = input.files.map((file) => `${file.path}:${file.hash}`).join('\n');
-    return textHash(
-        `${String(CACHE_FORMAT)}\n${input.check}\n${input.scope}\n${input.toolVersion}\n${input.configurationHash}\n${input.extra ?? ''}\n${files}`,
-    );
+    return textHash(JSON.stringify({ format: CACHE_FORMAT, ...input }));
 }
 
 /**
@@ -40,7 +42,7 @@ export function cacheKey(input: CacheKeyInput): string {
  * @returns the digest
  */
 export function fileHash(root: string, path: string): string {
-    return textHash(readFileSync(join(root, path)).toString('base64'));
+    return new Bun.CryptoHasher('sha256').update(readFileSync(join(root, path))).digest('hex');
 }
 
 /**
@@ -52,11 +54,25 @@ export function fileHash(root: string, path: string): string {
 export function readCached(root: string, key: string): CheckResult | undefined {
     const path = join(cacheDir(root), `${key}.json`);
     try {
-        const result: unknown = JSON.parse(readFileSync(path, 'utf8'));
+        const relative = `.gspot/cache/${key}.json`;
+        const recorded = readOwnership(root).files.find((entry) => entry.path === relative && entry.kind === 'runtime');
+        if (recorded?.installed === undefined) return undefined;
+        const confined = openConfinedRoot(root);
+        let file;
+        try {
+            file = confined.read(relative);
+        } finally {
+            confined.close();
+        }
+        if (
+            file?.mode !== recorded.installed.mode ||
+            new Bun.CryptoHasher('sha256').update(file.bytes).digest('hex') !== recorded.installed.hash
+        )
+            return undefined;
+        const result: unknown = JSON.parse(file.bytes.toString('utf8'));
         reportSchema.shape.checks.element.parse(result);
         return result as CheckResult;
     } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return undefined;
         throw new Error(`Could not read cached check result ${path}: ${String(error)}`, { cause: error });
     }
 }
@@ -72,9 +88,38 @@ export function writeCached(root: string, key: string, result: CheckResult): voi
     const status = result.status === 'cache' ? 'ok' : result.status;
     const text = JSON.stringify({ ...result, status });
     try {
-        mkdirSync(cacheDir(root), { recursive: true });
-        writeFileSync(path, text);
+        withLifecycleOwner(root, (owner) => {
+            const status = owner.replace(
+                `.gspot/cache/${key}.json`,
+                { bytes: Buffer.from(text), mode: 0o600 },
+                'runtime',
+            );
+            if (status === 'preserved') throw new Error(`Preserved edited or unowned cache result ${path}.`);
+        });
     } catch (error) {
         reportStorageFailure(path, error);
+    }
+}
+
+/**
+ * Retire expired, recorded cache results without removing authored or subsequently edited files.
+ * @param root the repository root
+ */
+export function pruneCache(root: string): void {
+    const cutoff = Date.now() - RETENTION_MS;
+    try {
+        withLifecycleOwner(root, (owner) => {
+            const proposals = readOwnership(root)
+                .files.filter((entry) => entry.kind === 'runtime' && CACHE_ENTRY.test(entry.path))
+                .filter((entry) => {
+                    const status = lstatSync(join(root, entry.path), { throwIfNoEntry: false });
+                    return status !== undefined && status.isFile() && status.mtimeMs < cutoff;
+                })
+                .map((entry) => owner.proposeRestoration(entry.path))
+                .filter((proposal) => proposal.status !== 'preserved');
+            owner.applyProposals(proposals);
+        });
+    } catch (error) {
+        reportStorageFailure(cacheDir(root), error);
     }
 }

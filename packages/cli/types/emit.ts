@@ -1,5 +1,7 @@
+import type { FileSnapshot } from '#types/lifecycle.ts';
+import type { PathExpressions } from '#types/repository.ts';
 // What apply renders and writes: generated files, blocks, merges, package edits, the workflow and the hooks.
-import type { Policy, MergedView } from '#types/config.ts';
+import type { Policy, MergedView, FormatSettings } from '#types/config.ts';
 import type { ScopeSelection, Session } from '#types/run.ts';
 import type { ConfigurationTarget, Manifest } from '#types/manifest.ts';
 
@@ -8,7 +10,8 @@ export type GeneratedFile = {
     content: string;
     readOnly: boolean;
     executable?: boolean;
-    kind: 'config' | 'stub' | 'hook' | 'runner' | 'workflow' | 'rules' | 'baseline' | 'managed-block';
+    observed?: FileSnapshot;
+    kind: 'lock' | 'config' | 'stub' | 'hook' | 'runner' | 'workflow' | 'rules' | 'managed-block';
     preset?: string;
 };
 
@@ -23,6 +26,7 @@ export type HookName = 'pre-commit' | 'pre-push' | 'commit-msg';
 export type BlockStyle = 'markdown' | 'hash';
 
 export type ApplyReport = {
+    preserved: string[];
     written: string[];
     unchanged: string[];
     removed: string[];
@@ -33,10 +37,7 @@ export type ApplyReport = {
 
 export type ApplyOptions = {
     cwd: string;
-    check: boolean;
-    lowerBaselines: boolean;
-    /** The check that gets its first baseline, when the flag is given. */
-    baseline?: string | undefined;
+    isDryRun: boolean;
 };
 
 export type BlockOutput = { path: string; block: string; style: 'markdown' | 'hash' };
@@ -49,11 +50,12 @@ export type MergeOutput = {
     stub: ConfigurationTarget['stub'] & object;
 };
 
-export type PackageOutput = { path: string; devDependencies: Record<string, string>; scripts: Record<string, string> };
+export type PackageOutput = { path: string; scripts: Record<string, string> };
 
 export type LefthookOutput = { path: string; block: LefthookBlock };
 
-export type RenderedSet = {
+export type GeneratedProposal = {
+    notes: string[];
     files: GeneratedFile[];
     blocks: BlockOutput[];
     merges: MergeOutput[];
@@ -61,8 +63,19 @@ export type RenderedSet = {
     lefthook?: LefthookOutput;
 };
 
+export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
+
+export type ScopedFormat = { scope: string; paths: string[]; format: Partial<FormatSettings> };
+export type EditorconfigOverride = { path: string; options: Record<string, string | number | boolean> };
+
 export type TemplateInputs = {
-    prose: { blockIgnores: string[]; tokenIgnores: string[] };
+    targetPath?: string;
+    prettierConfig: (targetPath: string) => Record<string, unknown>;
+    editorconfigOverrides: () => EditorconfigOverride[];
+    eslintPolicy: EslintRuleBlock[];
+    isAll: boolean;
+    typescriptOptions: Record<string, boolean>;
+    prose: { blockIgnores: string[]; tokenIgnores: string[]; styles: string[] };
     version: string;
     scope: string;
     scopes: { path: string; presets: string[] }[];
@@ -74,7 +87,6 @@ export type TemplateInputs = {
     fragments: string;
     tool: (name: string) => Record<string, unknown>;
     entryFiles: (scope: string) => string[];
-    toolEnabled: (name: string) => boolean;
     limit: (key: string, language?: string) => number | undefined;
     rulesOff: (check: string) => string[];
     ignoresFor: MergedView['ignoresFor'];
@@ -97,7 +109,7 @@ export type TemplateInputs = {
 export type PackageImports = { imports?: Record<string, unknown> };
 
 /** The part of package.json apply reads and writes. */
-export type PackageContent = { devDependencies?: Record<string, string>; scripts?: Record<string, string> };
+export type PackageContent = { scripts?: Record<string, string> };
 
 /** What rendering one manifest's files in one scope needs. */
 export type EmitContext = { session: Session; selection: ScopeSelection; manifest: Manifest };
@@ -105,6 +117,8 @@ export type EmitContext = { session: Session; selection: ScopeSelection; manifes
 /** What the workflow emitter needs to know. */
 export type WorkflowShape = {
     version: string;
+    run?: NonNullable<Policy['ci']>['run'];
+    sarif?: NonNullable<Policy['ci']>['sarif'];
     platforms: string[];
     /** The Swift scope path, or undefined when no scope selects swift. */
     swiftScope: string | undefined;

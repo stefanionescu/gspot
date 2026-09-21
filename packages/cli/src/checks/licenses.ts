@@ -1,17 +1,17 @@
 // The license every installed npm package reports, against the allowed list and the exceptions.
 import { join } from 'node:path';
-import { existsSync } from 'node:fs';
+import { statSync } from 'node:fs';
+import { z } from 'zod';
 import satisfies from 'spdx-satisfies';
-import { run } from '#cli/platform/spawn.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import parseExpression from 'spdx-expression-parse';
-import { locateTool } from '#cli/platform/tool-probe.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import type { LicenseException, LicenseReport } from '#types/integrity.ts';
+import type { LicenseException } from '#types/integrity.ts';
 
 const TOOL = 'license-checker-rseidelsohn';
-const SCAN_TIMEOUT_MS = 300_000;
+const licenseSchema = z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() });
+const reportSchema = z.record(z.string(), licenseSchema);
 
 // A license expression passes when every part of a conjunction, or one part of a choice, is allowed.
 function isAllowed(license: string, allow: Set<string>): boolean {
@@ -23,7 +23,7 @@ function isAllowed(license: string, allow: Set<string>): boolean {
     return satisfies(license, [...allow]);
 }
 
-function reported(entry: LicenseReport[string]): string {
+function reported(entry: z.infer<typeof licenseSchema>): string {
     return Array.isArray(entry.licenses) ? entry.licenses.join(' OR ') : (entry.licenses ?? 'UNKNOWN');
 }
 
@@ -40,16 +40,14 @@ function verdict(name: string, license: string, exception: LicenseException | un
  */
 export async function licensesNpm(input: EngineInput): Promise<Finding[]> {
     const start = join(input.root, input.scope);
-    if (!existsSync(join(start, 'node_modules'))) return [];
-    const binary = locateTool(input.root, TOOL);
-    if (binary === undefined)
-        throw new MissingToolError(`${TOOL} is not installed; run the install of the task runner.`);
-    const result = await run([binary, '--json', '--excludePrivatePackages', '--start', start], {
+    const dependencies = statSync(join(start, 'node_modules'), { throwIfNoEntry: false });
+    if (dependencies?.isDirectory() !== true)
+        throw new Error('Dependency licenses cannot be checked before installing the project dependencies.');
+    const result = await runCheckCommand(input, [TOOL, '--json', '--excludePrivatePackages', '--start', start], {
         cwd: start,
-        timeoutMs: SCAN_TIMEOUT_MS,
     });
     if (result.code !== 0) throw new Error(`${TOOL} did not run: ${result.stderr.trim().split('\n', 1)[0] ?? ''}`);
-    const report = JSON.parse(result.stdout) as LicenseReport;
+    const report = reportSchema.parse(JSON.parse(result.stdout));
     const manifest = input.scope === '' ? 'package.json' : `${input.scope}/package.json`;
     const tool = input.view.tool('licenses');
     const allow = new Set(tool['allow'] as string[] | undefined);

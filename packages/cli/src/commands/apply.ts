@@ -11,22 +11,15 @@ import { printCommand } from '#cli/commands/print-result.ts';
 export function registerApply(program: Command): void {
     program
         .command('apply')
-        .description('Re-render every generated file from gspot.toml; idempotent')
-        .option('--check', 'Render in memory and fail with a diff when a generated file differs')
-        .option('--lower-baselines', "Lower every baseline to the last run's counts; never raise one")
-        .option(
-            '--baseline <check-id>',
-            'Write the first baseline of one check; a baseline that exists is never raised',
-        )
+        .description('Generate configuration from gspot.toml')
+        .option('--dry-run', 'Preview proposed changes without writing project files')
         .action(async (flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(
                 () =>
                     applyCommand({
                         cwd: directoryOf(global),
-                        check: flags['check'] === true,
-                        lowerBaselines: flags['lowerBaselines'] === true,
-                        baseline: typeof flags['baseline'] === 'string' ? flags['baseline'] : undefined,
+                        isDryRun: flags['dryRun'] === true,
                     }),
                 global,
             );

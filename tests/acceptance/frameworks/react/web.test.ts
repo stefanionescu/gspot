@@ -1,7 +1,7 @@
 import { symlinkSync } from 'node:fs';
 // Planted repository for the react preset: a hook inside a condition, a list with no keys, and markup set from a string.
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
@@ -26,7 +26,7 @@ const INIT = [
 const PACKAGE =
     '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module",\n    "dependencies": {\n        "react": "19.1.1",\n        "react-dom": "19.1.1"\n    }\n}\n';
 const TSCONFIG =
-    '{\n    "extends": "./.gspot/tsconfig.base.json",\n    "compilerOptions": { "jsx": "react-jsx", "module": "ESNext", "moduleResolution": "Bundler", "lib": ["DOM", "ES2022"] },\n    "include": ["src"]\n}\n';
+    '{\n    "compilerOptions": {\n        "strict": true,\n        "noFallthroughCasesInSwitch": true,\n        "noUncheckedIndexedAccess": true,\n        "noImplicitOverride": true,\n        "exactOptionalPropertyTypes": true,\n        "target": "ES2022",\n        "module": "ESNext",\n        "moduleResolution": "Bundler",\n        "types": [],\n        "skipLibCheck": true,\n        "jsx": "react-jsx",\n        "lib": ["DOM", "ES2022"]\n    },\n    "include": ["src"]\n}\n';
 const head = (text: string): string => `// A planted component.\nimport type { ReactNode } from 'react';\n\n${text}`;
 const CLEAN = head(
     '/**\n * Greets one person.\n * @param props the person\n * @param props.name the name\n * @returns the greeting\n */\nexport function Greeting({ name }: Readonly<{ name: string }>): ReactNode {\n    return <p>{name}</p>;\n}\n',
@@ -58,7 +58,8 @@ describe('the react preset', () => {
     test(
         'the hooks rules and the React rules fire on their planted components, with no Next.js in the repository',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 '.gitignore': 'node_modules\n',
                 'package.json': PACKAGE,
                 'tsconfig.json': TSCONFIG,
@@ -70,6 +71,8 @@ describe('the react preset', () => {
                 PATH: `${join(MODULES, '.bin')}${delimiter}${toolsPath(['typos', 'ec', 'ast-grep'])}`,
             };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const written = await Bun.file(join(sandbox.path, '.gspot/eslint.config.mjs')).text();
             expect(written).toContain("from 'eslint-plugin-react-hooks'");
             expect(written).not.toContain('@next/eslint-plugin-next');

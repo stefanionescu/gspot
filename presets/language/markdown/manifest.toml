@@ -15,6 +15,7 @@ natures = ["source"]
 
 [[tools]]
 name = "markdownlint-cli2"
+suppression = { marker = "\\bmarkdownlint-disable(?:-line|-next-line|-file)?\\b", reason = " -- (?<reason>\\S.*)" }
 version = "0.23.2"
 npm = "markdownlint-cli2"
 mise = "npm:markdownlint-cli2"
@@ -29,6 +30,7 @@ stub = {path = ".markdownlint-cli2.jsonc", body = "{\n    \"config\": { \"extend
 
 [[checks]]
 name = "markdown/markdownlint"
+level = "all"
 stage = "commit"
 runs = "per-file-list"
 command = ["markdownlint-cli2", "--no-globs", "--config", "{config:markdownlint}", "{files}"]
@@ -42,6 +44,7 @@ help = "Run gspot check --fix for the rules that fix themselves; read the rule n
 
 [[checks]]
 name = "markdown/prettier"
+level = "all"
 stage = "commit"
 reported_by = "formatting/prettier"
 coverage = ["format"]
@@ -51,6 +54,7 @@ help = "Run gspot check --fix, or prettier --write on the file."
 
 [[checks]]
 name = "markdown/fences"
+level = "recommended"
 stage = "commit"
 engine = "integrity"
 analysis = "fences"

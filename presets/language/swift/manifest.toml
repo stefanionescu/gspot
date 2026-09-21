@@ -17,6 +17,7 @@ natures = ["source"]
 
 [[tools]]
 name = "swiftlint"
+suppression = { marker = "\\bswiftlint:disable\\b", reason = " - (?<reason>\\S.*)" }
 windows = false
 version = "0.63.2"
 floor = "0.57.0"
@@ -65,6 +66,7 @@ per_scope = true
 
 [[checks]]
 name = "swift/swiftlint"
+level = "all"
 stage = "commit"
 command = ["swiftlint", "lint", "--strict", "--quiet", "--no-cache", "--config", "{config:swiftlint}", "--reporter", "json", "{files}"]
 fix_command = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "--config", "{config:swiftlint}", "{files}"]
@@ -78,6 +80,7 @@ help = "Run gspot check --fix for the rules that fix themselves. Turn one rule o
 
 [[checks]]
 name = "swift/swiftformat"
+level = "all"
 stage = "commit"
 command = ["swiftformat", "--lint", "--config", "{config:swiftformat}", "{files}"]
 fix_command = ["swiftformat", "--quiet", "--config", "{config:swiftformat}", "{files}"]
@@ -91,6 +94,7 @@ help = "Run gspot check --fix."
 
 [[checks]]
 name = "swift/build"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 requires = "build"
@@ -98,13 +102,14 @@ platform = ["macos"]
 engine = "integrity"
 analysis = "swift-build"
 coverage = ["build"]
-summary = "Builds the package or the Xcode scheme, and keeps the compiler log for the analyzer."
+summary = "Builds the package or Xcode scheme incrementally to report compiler errors."
 why = "Swift has no type check without a build, so the build is the type check."
 help = "Fix the first compiler error; later ones are often the same mistake."
 
 [[checks]]
 name = "swift/swiftlint-analyze"
-stage = "push"
+level = "recommended"
+stage = "manual"
 runs = "per-scope"
 requires = "build"
 platform = ["macos"]
@@ -118,6 +123,7 @@ help = "Remove what the rule names. Keep an import the analyzer misjudges under 
 
 [[checks]]
 name = "swift/periphery"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 requires = "build"
@@ -132,6 +138,7 @@ help = "Delete the declaration, or mark it with a periphery:ignore comment that 
 
 [[checks]]
 name = "swift/call-through"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -144,6 +151,7 @@ help = "Call the inner function where the outer one is called, and delete the ou
 
 [[checks]]
 name = "swift/trivial-function"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -156,6 +164,7 @@ help = "Write the body at its caller, or allow the name under structure.swift.tr
 
 [[checks]]
 name = "swift/duplicate-functions"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -168,6 +177,7 @@ help = "Keep one of the functions and call it from both places."
 
 [[checks]]
 name = "swift/private-before-public"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"
@@ -180,6 +190,7 @@ help = "Move the file-local declarations above the first internal, public, or op
 
 [[checks]]
 name = "swift/env-access-owner"
+level = "all"
 stage = "commit"
 runs = "per-scope"
 engine = "integrity"

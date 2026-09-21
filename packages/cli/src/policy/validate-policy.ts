@@ -14,14 +14,18 @@ import { presetManifests } from '#cli/presets/read-manifests.ts';
 export function assertPolicyComplete(policy: Policy): void {
     const manifests = presetManifests();
     const problems: string[] = [];
-    const rootSelected = selectForScope(policy.presets, [], manifests);
+    const rootSelected = selectForScope(policy, '', manifests);
     // A scope table is read against the settings of the presets that scope selects, the root presets included.
     const scopeSurfaces = new Map(
-        policy.scopes.map((scope) => [
-            scope.path,
-            exposedSettings(selectForScope(policy.presets, scope.presets, manifests)),
-        ]),
+        policy.scopes.map((scope) => [scope.path, exposedSettings(selectForScope(policy, scope.path, manifests))]),
     );
+    const selectedNames = new Set(
+        [...rootSelected, ...policy.scopes.flatMap((scope) => selectForScope(policy, scope.path, manifests))].flatMap(
+            (manifest) => manifest.checks.map((check) => check.name),
+        ),
+    );
+    for (const name of policy.extraChecks)
+        if (!selectedNames.has(name)) problems.push(`extra_checks names an unselected or unknown check: ${name}.`);
     problems.push(
         ...excludeProblems(policy.rules.exclude),
         ...validateAgainstSurface(exposedSettings(rootSelected), policy, scopeSurfaces),

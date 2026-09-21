@@ -2,7 +2,7 @@ import type { z } from 'zod';
 // The shape of gspot.toml after load: every reasoned key is normalized to { value, reason }.
 import type { CarriedLists } from '#types/lifecycle.ts';
 import type { policySchema, scopeSchema } from '#cli/policy/schema.ts';
-import type { OutputFormat, SettingSpec, FixOrder } from '#types/manifest.ts';
+import type { SettingSpec } from '#types/manifest.ts';
 
 export type Reasoned<T> = { value: T; reason?: string };
 
@@ -38,10 +38,10 @@ export type NamingRule = {
 
 export type NamingSettings = {
     banned_terms: string[];
-    allowed: { name: string; reason: string }[];
+    allowed: { name: string; reason?: string }[];
     external: string[];
     reserved: { term: string; allowed_for: string[] }[];
-    remove_groups: { group: string; reason: string }[];
+    remove_groups: { group: string; reason?: string }[];
     contract_properties: { file: string; names: string[] }[];
     languages: Record<string, NamingLanguageTable>;
     rules: NamingRule[];
@@ -60,88 +60,58 @@ export type ArchitectureSettings = {
 
 export type StructureSettings = {
     reexports: 'none' | 'index-only';
-    call_through_allowed: { file: string; name: string; reason: string }[];
-    trivial_allowed: { language?: string; path: string; names: string[]; reason: string }[];
-    single_file_folder_allowed: { paths: string[]; reason: string }[];
-    prefix_collision_allowed: { paths: string[]; reason: string }[];
-    folder_name_allowed: { paths: string[]; reason: string }[];
+    call_through_allowed: { file: string; name: string; reason?: string }[];
+    trivial_allowed: { language?: string; path: string; names: string[]; reason?: string }[];
+    single_file_folder_allowed: { paths: string[]; reason?: string }[];
+    prefix_collision_allowed: { paths: string[]; reason?: string }[];
+    folder_name_allowed: { paths: string[]; reason?: string }[];
     python: Record<string, unknown>;
 };
 
-export type FormatSettings = {
-    indent_style: 'space' | 'tab';
-    indent_width: number;
-    print_width: number;
-    line_ending: 'lf' | 'crlf';
-    newline_at_end: boolean;
-    quotes: 'single' | 'double';
-    trailing_comma: 'all' | 'es5' | 'none';
-    semicolons: boolean;
-};
+export type FormatSettings = Required<Defined<Omit<NonNullable<RawPolicy['format']>, 'overrides'>>>;
 
 export type ToolTable = Record<string, unknown> & {
-    enabled?: Reasoned<boolean>;
-    extra?: Record<string, unknown> & { reason: string };
+    extra?: Record<string, unknown> & { reason?: string };
 };
 
-export type IgnoreEntry = {
-    check: string;
-    rule?: string;
-    paths?: string[];
-    reason: string;
-};
+export type IgnoreEntry = NonNullable<RawPolicy['ignore']>[number];
 
-export type DeclareEntry = {
-    paths: string[];
-    produced_by?: string;
-    vendored?: boolean;
-    reason?: string;
-};
+export type FileDeclaration =
+    | (RawPolicy['generated'][number] & { nature: 'generated' })
+    | (RawPolicy['vendored'][number] & { nature: 'vendored' });
 
-export type RepositoryCheck = {
-    name: string;
-    command: string[];
-    paths: string[];
-    stage: 'commit' | 'push' | 'manual';
-    help?: string;
-    fix_command?: string[];
-    fix_order?: FixOrder;
-    count_regex?: string;
-    requires?: 'build' | 'docker' | 'network';
-    platform?: string[];
-    summary?: string;
-    output?: OutputFormat;
-};
+export type RepositoryCheck = Defined<NonNullable<RawPolicy['check']>[number]>;
 
 export type ScopeEntry = { path: string; presets: string[] };
 
 export type Policy = {
     version: number;
+    level: RawPolicy['level'];
+    requireReasons: RawPolicy['require_reasons'];
+    extraChecks: string[];
+    exclude: RawPolicy['exclude'];
     presets: string[];
     scopes: ScopeEntry[];
     limits: Limits;
     naming: NamingSettings;
     architecture: ArchitectureSettings;
     structure: StructureSettings;
-    format: Partial<FormatSettings>;
-    prose: { vocabulary: string[]; disabled: { rule: string; reason: string }[] };
+    format: Defined<NonNullable<RawPolicy['format']>>;
+    prose: { vocabulary: string[] };
     tools: Record<string, ToolTable>;
     ignores: IgnoreEntry[];
-    declares: DeclareEntry[];
+    declarations: FileDeclaration[];
     checks: RepositoryCheck[];
-    hooks?: { tool: 'gspot' | 'lefthook' | 'husky' };
-    ci?: { provider: 'github'; platforms: string[] };
-    rules: { install: boolean; directory: string; project?: string; exclude: string[] };
+    hooks?: Defined<NonNullable<RawPolicy['hooks']>>;
+    ci?: NonNullable<RawPolicy['ci']>;
+    rules: { install: boolean; directory: string; project?: string; exclude: string[]; agents?: string[] };
     coverage: { strict: boolean };
-    runner?: { tool: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' };
+    runner?: Defined<NonNullable<RawPolicy['runner']>>;
     scopeTables: Record<string, Partial<Policy>>;
 };
 
-export type LocalPolicy = { skip: string[] };
-
 export type PolicyFiles = {
     policy: Policy;
-    local: LocalPolicy;
     path: string;
     text: string;
 };
@@ -158,7 +128,6 @@ export type MergedView = {
     format: FormatSettings;
     limit: (key: string, language?: string) => number | undefined;
     tool: (name: string) => Record<string, unknown>;
-    toolEnabled: (name: string) => boolean;
     ignoresFor: (check: string) => IgnoreEntry[];
     rulesOff: (check: string) => string[];
     extra: (name: string) => Record<string, unknown> | undefined;
@@ -169,11 +138,12 @@ export type Proposal = {
     presets: string[];
     scopes: { path: string; presets: string[] }[];
     carried: CarriedLists;
-    hooks: 'gspot' | 'lefthook' | 'husky' | 'none';
-    ci: 'github' | 'none';
+    hooks: NonNullable<RawPolicy['hooks']>['tool'] | 'none';
+    ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
     rules: boolean;
-    runner: 'mise' | 'npm' | 'bun' | 'pnpm' | 'uv' | 'none';
-    format?: Partial<FormatSettings>;
+    runner: NonNullable<RawPolicy['runner']>['tool'] | 'none';
+    format?: Policy['format'];
+    prettierExtra?: TomlTable;
     typesDirectory?: string;
     /** The Xcode project and scheme init found, for the tools.xcode table. */
     xcode?: { scope: string; project: string; scheme?: string };
@@ -239,3 +209,23 @@ export type RunnerTool = NonNullable<Policy['runner']>['tool'];
 
 /** What resolving a value for one scope needs. */
 export type PolicyScopeLayer = { surface: ExposedSettings; policy: Policy; scope: string };
+
+export type SettingRow = {
+    key: string;
+    value: unknown;
+    source: string;
+    direction: string;
+    scope?: string;
+};
+
+/** One `[tools.<tool>.extra]` table: the keys it sets and why. */
+export type ExtraRow = { tool: string; keys: string[]; reason?: string; scope: string };
+
+/** The settings listing. */
+export type SettingsListing = { rows: SettingRow[]; extras: ExtraRow[] };
+
+/** The `[tools.<tool>]` tables of one policy layer, as the settings listing reads them. */
+export type ToolTables = Record<string, { extra?: Record<string, unknown> & { reason?: string } }>;
+
+/** ESLint settings retain the validation shape of their policy owner. */
+export type EslintSettings = NonNullable<NonNullable<RawPolicy['tools']>['eslint']>;

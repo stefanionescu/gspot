@@ -11,12 +11,14 @@ filenames = ["conftest.py", "pytest.ini"]
 
 [[tools]]
 name = "pytest"
+suppression = { marker = "\\bpragma: ?no cover\\b", reason = "#[^#]*# ?(?<reason>\\S.*)" }
 floor = "7.0.0"
 pypi = "pytest"
 version_regex = "(\\d+\\.\\d+\\.\\d+)"
 
 [[checks]]
 name = "pytest/coverage"
+level = "recommended"
 stage = "push"
 runs = "per-scope"
 cwd = "scope"

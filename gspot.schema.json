@@ -10,6 +10,89 @@
             "minimum": -9007199254740991,
             "maximum": 9007199254740991
         },
+        "level": {
+            "default": "recommended",
+            "description": "Recommended runs defect checks. All also runs style and layout checks.",
+            "type": "string",
+            "enum": [
+                "recommended",
+                "all"
+            ]
+        },
+        "require_reasons": {
+            "default": false,
+            "description": "Require a reason for ignores and loosened settings.",
+            "type": "boolean"
+        },
+        "extra_checks": {
+            "default": [],
+            "description": "Checks at level all to run individually at level recommended.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "exclude": {
+            "default": [],
+            "description": "Paths and directory patterns excluded before reading source content.",
+            "type": "array",
+            "items": {
+                "type": "string"
+            }
+        },
+        "generated": {
+            "default": [],
+            "description": "Generated files excluded from source checks.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "paths": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1
+                        }
+                    },
+                    "produced_by": {
+                        "type": "string"
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "paths"
+                ],
+                "additionalProperties": false
+            }
+        },
+        "vendored": {
+            "default": [],
+            "description": "Upstream files excluded from source checks.",
+            "type": "array",
+            "items": {
+                "type": "object",
+                "properties": {
+                    "paths": {
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1
+                        }
+                    },
+                    "reason": {
+                        "type": "string"
+                    }
+                },
+                "required": [
+                    "paths"
+                ],
+                "additionalProperties": false
+            }
+        },
         "presets": {
             "type": "array",
             "items": {
@@ -116,8 +199,7 @@
                                         }
                                     },
                                     "required": [
-                                        "name",
-                                        "reason"
+                                        "name"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -163,8 +245,7 @@
                                         }
                                     },
                                     "required": [
-                                        "group",
-                                        "reason"
+                                        "group"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -200,7 +281,8 @@
                                             "minItems": 1,
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
+                                                "type": "string",
+                                                "minLength": 1
                                             }
                                         },
                                         "languages": {
@@ -524,8 +606,7 @@
                                     },
                                     "required": [
                                         "file",
-                                        "name",
-                                        "reason"
+                                        "name"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -553,8 +634,7 @@
                                     },
                                     "required": [
                                         "path",
-                                        "names",
-                                        "reason"
+                                        "names"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -568,7 +648,8 @@
                                             "minItems": 1,
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
+                                                "type": "string",
+                                                "minLength": 1
                                             }
                                         },
                                         "reason": {
@@ -576,8 +657,7 @@
                                         }
                                     },
                                     "required": [
-                                        "paths",
-                                        "reason"
+                                        "paths"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -591,7 +671,8 @@
                                             "minItems": 1,
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
+                                                "type": "string",
+                                                "minLength": 1
                                             }
                                         },
                                         "reason": {
@@ -599,8 +680,7 @@
                                         }
                                     },
                                     "required": [
-                                        "paths",
-                                        "reason"
+                                        "paths"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -614,7 +694,8 @@
                                             "minItems": 1,
                                             "type": "array",
                                             "items": {
-                                                "type": "string"
+                                                "type": "string",
+                                                "minLength": 1
                                             }
                                         },
                                         "reason": {
@@ -622,8 +703,7 @@
                                         }
                                     },
                                     "required": [
-                                        "paths",
-                                        "reason"
+                                        "paths"
                                     ],
                                     "additionalProperties": false
                                 }
@@ -640,35 +720,161 @@
                     },
                     "tools": {
                         "type": "object",
-                        "propertyNames": {
-                            "type": "string"
+                        "properties": {
+                            "eslint": {
+                                "type": "object",
+                                "properties": {
+                                    "extra": {
+                                        "type": "object",
+                                        "properties": {
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": {}
+                                    },
+                                    "rules": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                            "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                            "anyOf": [
+                                                {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string",
+                                                            "const": "warn"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "const": "error"
+                                                        },
+                                                        {
+                                                            "type": "number",
+                                                            "const": 1
+                                                        },
+                                                        {
+                                                            "type": "number",
+                                                            "const": 2
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string",
+                                                                    "const": "warn"
+                                                                },
+                                                                {
+                                                                    "type": "string",
+                                                                    "const": "error"
+                                                                },
+                                                                {
+                                                                    "type": "number",
+                                                                    "const": 1
+                                                                },
+                                                                {
+                                                                    "type": "number",
+                                                                    "const": 2
+                                                                }
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "items": {},
+                                                    "minItems": 1
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "overrides": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "paths": {
+                                                    "minItems": 1,
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "minLength": 1
+                                                    }
+                                                },
+                                                "rules": {
+                                                    "type": "object",
+                                                    "propertyNames": {
+                                                        "type": "string"
+                                                    },
+                                                    "additionalProperties": {
+                                                        "anyOf": [
+                                                            {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "type": "string",
+                                                                        "const": "warn"
+                                                                    },
+                                                                    {
+                                                                        "type": "string",
+                                                                        "const": "error"
+                                                                    },
+                                                                    {
+                                                                        "type": "number",
+                                                                        "const": 1
+                                                                    },
+                                                                    {
+                                                                        "type": "number",
+                                                                        "const": 2
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "type": "array",
+                                                                "prefixItems": [
+                                                                    {
+                                                                        "anyOf": [
+                                                                            {
+                                                                                "type": "string",
+                                                                                "const": "warn"
+                                                                            },
+                                                                            {
+                                                                                "type": "string",
+                                                                                "const": "error"
+                                                                            },
+                                                                            {
+                                                                                "type": "number",
+                                                                                "const": 1
+                                                                            },
+                                                                            {
+                                                                                "type": "number",
+                                                                                "const": 2
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ],
+                                                                "items": {},
+                                                                "minItems": 1
+                                                            }
+                                                        ]
+                                                    }
+                                                }
+                                            },
+                                            "required": [
+                                                "paths",
+                                                "rules"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    }
+                                },
+                                "additionalProperties": {}
+                            }
                         },
                         "additionalProperties": {
                             "type": "object",
                             "properties": {
-                                "enabled": {
-                                    "anyOf": [
-                                        {
-                                            "type": "boolean"
-                                        },
-                                        {
-                                            "type": "object",
-                                            "properties": {
-                                                "value": {
-                                                    "type": "boolean"
-                                                },
-                                                "reason": {
-                                                    "type": "string"
-                                                }
-                                            },
-                                            "required": [
-                                                "value",
-                                                "reason"
-                                            ],
-                                            "additionalProperties": false
-                                        }
-                                    ]
-                                },
                                 "extra": {
                                     "type": "object",
                                     "properties": {
@@ -676,9 +882,6 @@
                                             "type": "string"
                                         }
                                     },
-                                    "required": [
-                                        "reason"
-                                    ],
                                     "additionalProperties": {}
                                 }
                             },
@@ -732,6 +935,72 @@
                             },
                             "semicolons": {
                                 "type": "boolean"
+                            },
+                            "overrides": {
+                                "type": "array",
+                                "items": {
+                                    "type": "object",
+                                    "properties": {
+                                        "indent_style": {
+                                            "type": "string",
+                                            "enum": [
+                                                "space",
+                                                "tab"
+                                            ]
+                                        },
+                                        "indent_width": {
+                                            "type": "integer",
+                                            "minimum": 1,
+                                            "maximum": 8
+                                        },
+                                        "print_width": {
+                                            "type": "integer",
+                                            "minimum": 40,
+                                            "maximum": 400
+                                        },
+                                        "line_ending": {
+                                            "type": "string",
+                                            "enum": [
+                                                "lf",
+                                                "crlf"
+                                            ]
+                                        },
+                                        "newline_at_end": {
+                                            "type": "boolean"
+                                        },
+                                        "quotes": {
+                                            "type": "string",
+                                            "enum": [
+                                                "single",
+                                                "double"
+                                            ]
+                                        },
+                                        "trailing_comma": {
+                                            "type": "string",
+                                            "enum": [
+                                                "all",
+                                                "es5",
+                                                "none"
+                                            ]
+                                        },
+                                        "semicolons": {
+                                            "type": "boolean"
+                                        },
+                                        "paths": {
+                                            "minItems": 1,
+                                            "type": "array",
+                                            "items": {
+                                                "type": "string",
+                                                "minLength": 1
+                                            }
+                                        }
+                                    },
+                                    "required": [
+                                        "paths"
+                                    ],
+                                    "additionalProperties": false,
+                                    "minProperties": 2
+                                }
                             }
                         },
                         "additionalProperties": false
@@ -827,8 +1096,7 @@
                             }
                         },
                         "required": [
-                            "name",
-                            "reason"
+                            "name"
                         ],
                         "additionalProperties": false
                     }
@@ -874,8 +1142,7 @@
                             }
                         },
                         "required": [
-                            "group",
-                            "reason"
+                            "group"
                         ],
                         "additionalProperties": false
                     }
@@ -911,7 +1178,8 @@
                                 "minItems": 1,
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "minLength": 1
                                 }
                             },
                             "languages": {
@@ -1235,8 +1503,7 @@
                         },
                         "required": [
                             "file",
-                            "name",
-                            "reason"
+                            "name"
                         ],
                         "additionalProperties": false
                     }
@@ -1264,8 +1531,7 @@
                         },
                         "required": [
                             "path",
-                            "names",
-                            "reason"
+                            "names"
                         ],
                         "additionalProperties": false
                     }
@@ -1279,7 +1545,8 @@
                                 "minItems": 1,
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "minLength": 1
                                 }
                             },
                             "reason": {
@@ -1287,8 +1554,7 @@
                             }
                         },
                         "required": [
-                            "paths",
-                            "reason"
+                            "paths"
                         ],
                         "additionalProperties": false
                     }
@@ -1302,7 +1568,8 @@
                                 "minItems": 1,
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "minLength": 1
                                 }
                             },
                             "reason": {
@@ -1310,8 +1577,7 @@
                             }
                         },
                         "required": [
-                            "paths",
-                            "reason"
+                            "paths"
                         ],
                         "additionalProperties": false
                     }
@@ -1325,7 +1591,8 @@
                                 "minItems": 1,
                                 "type": "array",
                                 "items": {
-                                    "type": "string"
+                                    "type": "string",
+                                    "minLength": 1
                                 }
                             },
                             "reason": {
@@ -1333,8 +1600,7 @@
                             }
                         },
                         "required": [
-                            "paths",
-                            "reason"
+                            "paths"
                         ],
                         "additionalProperties": false
                     }
@@ -1351,35 +1617,161 @@
         },
         "tools": {
             "type": "object",
-            "propertyNames": {
-                "type": "string"
+            "properties": {
+                "eslint": {
+                    "type": "object",
+                    "properties": {
+                        "extra": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": {}
+                        },
+                        "rules": {
+                            "type": "object",
+                            "propertyNames": {
+                                "type": "string"
+                            },
+                            "additionalProperties": {
+                                "anyOf": [
+                                    {
+                                        "anyOf": [
+                                            {
+                                                "type": "string",
+                                                "const": "warn"
+                                            },
+                                            {
+                                                "type": "string",
+                                                "const": "error"
+                                            },
+                                            {
+                                                "type": "number",
+                                                "const": 1
+                                            },
+                                            {
+                                                "type": "number",
+                                                "const": 2
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "array",
+                                        "prefixItems": [
+                                            {
+                                                "anyOf": [
+                                                    {
+                                                        "type": "string",
+                                                        "const": "warn"
+                                                    },
+                                                    {
+                                                        "type": "string",
+                                                        "const": "error"
+                                                    },
+                                                    {
+                                                        "type": "number",
+                                                        "const": 1
+                                                    },
+                                                    {
+                                                        "type": "number",
+                                                        "const": 2
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "items": {},
+                                        "minItems": 1
+                                    }
+                                ]
+                            }
+                        },
+                        "overrides": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "paths": {
+                                        "minItems": 1,
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "minLength": 1
+                                        }
+                                    },
+                                    "rules": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                            "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                            "anyOf": [
+                                                {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string",
+                                                            "const": "warn"
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "const": "error"
+                                                        },
+                                                        {
+                                                            "type": "number",
+                                                            "const": 1
+                                                        },
+                                                        {
+                                                            "type": "number",
+                                                            "const": 2
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string",
+                                                                    "const": "warn"
+                                                                },
+                                                                {
+                                                                    "type": "string",
+                                                                    "const": "error"
+                                                                },
+                                                                {
+                                                                    "type": "number",
+                                                                    "const": 1
+                                                                },
+                                                                {
+                                                                    "type": "number",
+                                                                    "const": 2
+                                                                }
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "items": {},
+                                                    "minItems": 1
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                "required": [
+                                    "paths",
+                                    "rules"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "additionalProperties": {}
+                }
             },
             "additionalProperties": {
                 "type": "object",
                 "properties": {
-                    "enabled": {
-                        "anyOf": [
-                            {
-                                "type": "boolean"
-                            },
-                            {
-                                "type": "object",
-                                "properties": {
-                                    "value": {
-                                        "type": "boolean"
-                                    },
-                                    "reason": {
-                                        "type": "string"
-                                    }
-                                },
-                                "required": [
-                                    "value",
-                                    "reason"
-                                ],
-                                "additionalProperties": false
-                            }
-                        ]
-                    },
                     "extra": {
                         "type": "object",
                         "properties": {
@@ -1387,9 +1779,6 @@
                                 "type": "string"
                             }
                         },
-                        "required": [
-                            "reason"
-                        ],
                         "additionalProperties": {}
                     }
                 },
@@ -1443,6 +1832,72 @@
                 },
                 "semicolons": {
                     "type": "boolean"
+                },
+                "overrides": {
+                    "type": "array",
+                    "items": {
+                        "type": "object",
+                        "properties": {
+                            "indent_style": {
+                                "type": "string",
+                                "enum": [
+                                    "space",
+                                    "tab"
+                                ]
+                            },
+                            "indent_width": {
+                                "type": "integer",
+                                "minimum": 1,
+                                "maximum": 8
+                            },
+                            "print_width": {
+                                "type": "integer",
+                                "minimum": 40,
+                                "maximum": 400
+                            },
+                            "line_ending": {
+                                "type": "string",
+                                "enum": [
+                                    "lf",
+                                    "crlf"
+                                ]
+                            },
+                            "newline_at_end": {
+                                "type": "boolean"
+                            },
+                            "quotes": {
+                                "type": "string",
+                                "enum": [
+                                    "single",
+                                    "double"
+                                ]
+                            },
+                            "trailing_comma": {
+                                "type": "string",
+                                "enum": [
+                                    "all",
+                                    "es5",
+                                    "none"
+                                ]
+                            },
+                            "semicolons": {
+                                "type": "boolean"
+                            },
+                            "paths": {
+                                "minItems": 1,
+                                "type": "array",
+                                "items": {
+                                    "type": "string",
+                                    "minLength": 1
+                                }
+                            }
+                        },
+                        "required": [
+                            "paths"
+                        ],
+                        "additionalProperties": false,
+                        "minProperties": 2
+                    }
                 }
             },
             "additionalProperties": false
@@ -1454,25 +1909,6 @@
                     "type": "array",
                     "items": {
                         "type": "string"
-                    }
-                },
-                "disabled": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "rule": {
-                                "type": "string"
-                            },
-                            "reason": {
-                                "type": "string"
-                            }
-                        },
-                        "required": [
-                            "rule",
-                            "reason"
-                        ],
-                        "additionalProperties": false
                     }
                 }
             },
@@ -1500,36 +1936,7 @@
                     }
                 },
                 "required": [
-                    "check",
-                    "reason"
-                ],
-                "additionalProperties": false
-            }
-        },
-        "declare": {
-            "type": "array",
-            "items": {
-                "type": "object",
-                "properties": {
-                    "paths": {
-                        "minItems": 1,
-                        "type": "array",
-                        "items": {
-                            "type": "string"
-                        }
-                    },
-                    "produced_by": {
-                        "type": "string"
-                    },
-                    "vendored": {
-                        "type": "boolean"
-                    },
-                    "reason": {
-                        "type": "string"
-                    }
-                },
-                "required": [
-                    "paths"
+                    "check"
                 ],
                 "additionalProperties": false
             }
@@ -1547,13 +1954,30 @@
                         "type": "array",
                         "items": {
                             "type": "string"
-                        }
+                        },
+                        "prefixItems": [
+                            {
+                                "type": "string",
+                                "minLength": 1
+                            }
+                        ]
                     },
                     "paths": {
                         "minItems": 1,
                         "type": "array",
                         "items": {
-                            "type": "string"
+                            "type": "string",
+                            "minLength": 1
+                        }
+                    },
+                    "inputs": {
+                        "description": "Root-relative file globs read by the command, including ignored files. Omit to disable caching.",
+                        "minItems": 1,
+                        "type": "array",
+                        "items": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
                         }
                     },
                     "stage": {
@@ -1572,7 +1996,13 @@
                         "type": "array",
                         "items": {
                             "type": "string"
-                        }
+                        },
+                        "prefixItems": [
+                            {
+                                "type": "string",
+                                "minLength": 1
+                            }
+                        ]
                     },
                     "fix_order": {
                         "type": "string",
@@ -1617,6 +2047,7 @@
                                     "regex",
                                     "grouped",
                                     "eslint-json",
+                                    "trufflehog-json",
                                     "json",
                                     "lines",
                                     "none"
@@ -1711,6 +2142,16 @@
                         "gspot",
                         "lefthook",
                         "husky"
+                    ],
+                    "description": "The tool that owns repository hooks."
+                },
+                "push": {
+                    "default": "changed",
+                    "description": "Check affected paths or the full tree of each pushed revision.",
+                    "type": "string",
+                    "enum": [
+                        "changed",
+                        "all"
                     ]
                 }
             },
@@ -1724,9 +2165,18 @@
             "properties": {
                 "provider": {
                     "type": "string",
-                    "const": "github"
+                    "enum": [
+                        "github",
+                        "gitlab"
+                    ],
+                    "description": "The CI provider that receives generated jobs."
                 },
                 "platforms": {
+                    "default": [
+                        "ubuntu"
+                    ],
+                    "description": "Platforms for GitHub check and manual jobs.",
+                    "minItems": 1,
                     "type": "array",
                     "items": {
                         "type": "string",
@@ -1736,6 +2186,20 @@
                             "windows"
                         ]
                     }
+                },
+                "run": {
+                    "default": "changed",
+                    "description": "Check changed inputs or the full checked-out tree in CI.",
+                    "type": "string",
+                    "enum": [
+                        "changed",
+                        "all"
+                    ]
+                },
+                "sarif": {
+                    "default": true,
+                    "description": "Upload SARIF through a separate GitHub code-scanning job.",
+                    "type": "boolean"
                 }
             },
             "required": [
@@ -1747,20 +2211,37 @@
             "type": "object",
             "properties": {
                 "install": {
+                    "default": true,
+                    "description": "Install rule files and agent instructions.",
                     "type": "boolean"
                 },
                 "directory": {
+                    "default": ".gspot/rules",
+                    "description": "Repository-relative destination for installed rules.",
                     "type": "string",
                     "minLength": 1,
                     "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
                 },
                 "project": {
+                    "description": "Repository-relative project rule layer linked from agent instructions.",
                     "type": "string"
                 },
                 "exclude": {
+                    "default": [],
+                    "description": "Rule file patterns excluded from the installed selection.",
                     "type": "array",
                     "items": {
                         "type": "string"
+                    }
+                },
+                "agents": {
+                    "default": [],
+                    "description": "Additional repository-relative agent instruction files; AGENTS.md and detected supported files are included automatically.",
+                    "type": "array",
+                    "items": {
+                        "type": "string",
+                        "minLength": 1,
+                        "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
                     }
                 }
             },
@@ -1786,7 +2267,8 @@
                         "bun",
                         "pnpm",
                         "uv"
-                    ]
+                    ],
+                    "description": "The runner that receives generated tasks."
                 }
             },
             "required": [

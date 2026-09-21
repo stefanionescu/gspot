@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { renameSync } from 'node:fs';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { expect, spyOn, test } from 'bun:test';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
@@ -8,7 +8,7 @@ import * as processes from '#cli/platform/spawn.ts';
 import { astGrepMatches } from '#cli/structure/ast-grep.ts';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
-    await using sandbox = await createSandbox({});
+    await using sandbox = await testdir();
     const files = Array.from(
         { length: 5000 },
         (_, index) => `scripts/long path with spaces/source-${String(index)}.sh`,
@@ -38,7 +38,7 @@ test('ast-grep batches all file arguments and retains matches from every batch',
 });
 
 test('ast-grep rejects a failed scan even when stdout contains partial JSON', async () => {
-    await using sandbox = await createSandbox({});
+    await using sandbox = await testdir();
     const search = spyOn(Bun, 'which').mockReturnValue(process.execPath);
     const processRun = spyOn(processes, 'runBlocking').mockReturnValue({
         code: 2,
@@ -58,9 +58,10 @@ test('ast-grep rejects a failed scan even when stdout contains partial JSON', as
 });
 
 test('folder checks count code files and preserve allowed and nested directories', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml':
-            'version = 1\npresets = ["typescript"]\n[structure]\nsingle_file_folder_allowed = [{ paths = ["allowed/**"], reason = "Required entry directory." }]\n',
+            'version = 1\nlevel = "all"\npresets = ["typescript"]\n[structure]\nsingle_file_folder_allowed = [{ paths = ["allowed/**"], reason = "Required entry directory." }]\n',
         'lone/only.ts': '',
         'typed/one.ts': '',
         'typed/one.d.ts': '',
@@ -75,7 +76,6 @@ test('folder checks count code files and preserve allowed and nested directories
     const result = await executeRun(await openSession(sandbox.path), {
         stage: 'all',
         skips: [],
-        localSkips: [],
         fix: false,
         isDryRun: false,
         noCache: true,
@@ -89,8 +89,9 @@ test('folder checks count code files and preserve allowed and nested directories
 });
 
 test('prefix checks group files and directories once and honor allowances and the threshold', async () => {
-    const policy = 'version = 1\npresets = ["typescript"]\n';
-    await using sandbox = await createSandbox({
+    const policy = 'version = 1\nlevel = "all"\npresets = ["typescript"]\n';
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         'cards/asset-card.ts': '',
         'cards/asset-list.ts': '',
@@ -107,7 +108,6 @@ test('prefix checks group files and directories once and honor allowances and th
     const options = {
         stage: 'all' as const,
         skips: [],
-        localSkips: [],
         fix: false,
         isDryRun: false,
         noCache: true,
@@ -154,8 +154,9 @@ test.each([
     const lone = `feature/only.${extension}`;
     const card = `cards/asset-card.${extension}`;
     const list = `cards/asset-list.${extension}`;
-    await using sandbox = await createSandbox({
-        'gspot.toml': `version = 1\npresets = ["${preset}", "${language}", "structure"]\n`,
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': `version = 1\nlevel = "all"\npresets = ["${preset}", "${language}", "structure"]\n`,
         [lone]: '',
         [card]: '',
         [list]: '',
@@ -163,7 +164,6 @@ test.each([
     const options = {
         stage: 'all' as const,
         skips: [],
-        localSkips: [],
         fix: false,
         isDryRun: false,
         noCache: true,

@@ -1,15 +1,13 @@
 // Trivy over every image a Compose file names, on request.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import { run } from '#cli/platform/spawn.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { capturedLines } from '#cli/run/captured-lines.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { COMPOSE_FILES, COMPOSE_IMAGE } from '#config/integrity.ts';
 
-const SCAN_TIMEOUT_MS = 1_800_000;
 const SHOWN_LINES = 20;
 
 async function scanned(input: EngineInput, file: string, image: string): Promise<Finding[]> {
@@ -23,8 +21,7 @@ async function scanned(input: EngineInput, file: string, image: string): Promise
         '1',
         image,
     ];
-    const result = await run(argv, { cwd: input.root, timeoutMs: SCAN_TIMEOUT_MS });
-    if (result.missing) throw new MissingToolError('Trivy is not installed.');
+    const result = await runCheckCommand(input, argv, { cwd: input.root });
     if (result.code === 0) return [];
     const said = `${result.stdout}\n${result.stderr}`.split('\n').filter((line) => line.trim() !== '');
     return [

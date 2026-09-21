@@ -1,16 +1,17 @@
 // Checks of two libraries that read files: what client code imports from the server, and Drizzle tables with their relations and migrations.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { basename, dirname, join } from 'node:path';
+import { globbySync } from 'globby';
+import { readFileSync, rmSync } from 'node:fs';
+import { scratchCopy } from '#cli/run/scratch-copy.ts';
 import type { EngineInput } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
-import { git, run } from '#cli/platform/spawn.ts';
+import { run } from '#cli/platform/spawn.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 // The source of an import statement that is no type import, read from a line that starts with import and holds its from.
 const IMPORT_SOURCE = /from ['"](?<source>[^'"]+)['"]/u;
-const PORCELAIN_PREFIX = 3;
 const TABLE = /export const (?<name>\w+) = \w*[tT]able\(/gu;
 const KIT_TIMEOUT_MS = 300_000;
 
@@ -37,27 +38,18 @@ function isServerSource(source: string, isServer: (path: string) => boolean): bo
     return isServer(`x/${bare}/x`) || source.split('/').includes('server');
 }
 
-// The SQL files git sees as new under the scope, which are the migrations drizzle-kit just wrote.
-function untrackedSqlFiles(input: EngineInput): string[] {
-    const listed =
-        git(input.root, [
-            'status',
-            '--porcelain',
-            '--untracked-files=all',
-            '--',
-            input.scope === '' ? '.' : input.scope,
-        ]) ?? '';
-    return listed
-        .split('\n')
-        .filter((line) => line.startsWith('??') && line.endsWith('.sql'))
-        .map((line) => line.slice(PORCELAIN_PREFIX).trim());
+function generatedContents(cwd: string): Map<string, Buffer> {
+    const paths = globbySync(['**/*', '!**/node_modules/**', '!**/.venv/**', '!**/.gspot/**'], {
+        cwd,
+        dot: true,
+        followSymbolicLinks: false,
+    });
+    return new Map(paths.map((path) => [path, readFileSync(join(cwd, path))]));
 }
 
 function hasDrizzleFile(input: EngineInput): boolean {
     return input.session.repository.files.some(
-        (file) =>
-            file.path.startsWith(input.scope) &&
-            file.path.slice(file.path.lastIndexOf('/') + 1).startsWith('drizzle.config.'),
+        (file) => dirname(file.path) === (input.scope || '.') && basename(file.path).startsWith('drizzle.config.'),
     );
 }
 
@@ -121,7 +113,7 @@ export function drizzleRelations(input: EngineInput): Promise<Finding[]> {
 }
 
 /**
- * Asks drizzle-kit for migrations and reports the files it writes, then takes them out again.
+ * Generates migrations in an isolated copy and reports changed output.
  * @param input the engine input
  * @returns the findings
  */
@@ -130,18 +122,36 @@ export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> 
     const cwd = join(input.root, input.scope);
     const binary = locateTool(cwd, 'drizzle-kit') ?? locateTool(input.root, 'drizzle-kit');
     if (binary === undefined) throw new MissingToolError('The drizzle-kit command is not installed.');
-    const result = await run([binary, 'generate'], { cwd, timeoutMs: KIT_TIMEOUT_MS });
-    if (result.code !== 0)
-        throw new Error(`The drizzle-kit generate command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-    const written = untrackedSqlFiles(input);
-    for (const path of written) git(input.root, ['clean', '-fq', '--', path]);
-    return written.map((path) =>
-        finding(
-            input,
-            path,
-            1,
-            'missing-migration',
-            'drizzle-kit writes this migration, so the schema changed and no migration was committed.',
-        ),
+    const scratch = scratchCopy(
+        input.session,
+        input.session.repository.files.map((file) => file.path),
     );
+    const isolated = join(scratch, input.scope);
+    try {
+        const before = generatedContents(isolated);
+        const result = await run([binary, 'generate'], { cwd: isolated, timeoutMs: KIT_TIMEOUT_MS });
+        if (result.code !== 0)
+            throw new Error(
+                `The drizzle-kit generate command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
+            );
+        const after = generatedContents(isolated);
+        const changed = [...new Set([...before.keys(), ...after.keys()])]
+            .filter((path) => {
+                const was = before.get(path);
+                const now = after.get(path);
+                return was === undefined || now === undefined || !was.equals(now);
+            })
+            .toSorted();
+        return changed.map((path) =>
+            finding(
+                input,
+                input.scope === '' ? path : `${input.scope}/${path}`,
+                1,
+                'missing-migration',
+                'drizzle-kit changes this file when generating migrations; regenerate and commit the migration output.',
+            ),
+        );
+    } finally {
+        rmSync(scratch, { recursive: true, force: true });
+    }
 }

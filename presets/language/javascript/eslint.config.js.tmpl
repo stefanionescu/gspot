@@ -1,6 +1,5 @@
+import { relative, sep } from 'node:path';
 import { fileURLToPath } from 'node:url';
-<% if (has('react')) { %>import { readFileSync } from 'node:fs';
-<% } %>
 import eslint from '@eslint/js';
 import gspot from '@gspot/eslint-plugin';
 import eslintComments from '@eslint-community/eslint-plugin-eslint-comments';
@@ -37,13 +36,7 @@ const architecture = policy.architecture;
 const structure = policy.structure;
 const scopePaths = scopes.map((entry) => entry.path);
 const limitOf = (key, language) => limit(key, language) ?? limit(key);
-const tsPaths = tool('typescript').paths ?? {};
-const aliases = { ...importAliases('') };
-for (const [pattern, targets] of Object.entries(tsPaths)) {
-    const target = Array.isArray(targets) ? targets[0] : targets;
-    if (typeof target !== 'string') continue;
-    aliases[pattern.replace(/\*$/, '')] = target.replace(/^\.\//, '').replace(/\*$/, '');
-}
+const aliases = importAliases('');
 const importStyle = eslintTool.import_style && Object.keys(eslintTool.import_style).length > 0 ? eslintTool.import_style : { '**/*': has('nextjs') || has('static-site') ? 'extensionless' : 'js' };
 const testFiles = settings['tools.eslint.test_files'] ?? [];
 const scriptFiles = settings['tools.eslint.script_files'] ?? [];
@@ -62,31 +55,16 @@ const directionRoles = {
     env: envOwners,
     runtime: roleGlobs('runtime', ['src/**']),
 };
-const scopeRules = scopes.map((scope) => {
+const scopeRules = (isAll ? scopes : []).map((scope) => {
     const scoped = importAliases(scope.path);
     const imports = Object.keys(scoped).length === 0 ? {} : { 'gspot/no-cross-folder-imports': ['error', { aliases: scoped }], 'gspot/import-direction': ['error', { roles: directionRoles, aliases: scoped, scope: scope.path }] };
     return { files: [`${scope.path}/**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}`], rules: { ...imports, 'gspot/no-trivial-files': ['error', { entryFiles: entryFiles(scope.path) }] } };
 });
-const rulesOffList = rulesOff(has('typescript') ? 'typescript/eslint' : 'javascript/eslint').concat(has('typescript') ? rulesOff('javascript/eslint') : []);
 const restricted = settings['tools.eslint.restricted_imports'] ?? [];
-const ignoredPaths = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '.gspot/**', ...policy.declares.flatMap((entry) => entry.paths)];
+const ignoredPaths = ['**/node_modules/**', '**/dist/**', '**/build/**', '**/coverage/**', '.gspot/**', ...policy.declarations.flatMap((entry) => entry.paths)];
 const testOverrides = has('vitest');
 %>
 const root = fileURLToPath(new URL('..', import.meta.url));
-<% if (has('react')) { %>
-// The React plugin finds the installed version through an ESLint function that ESLint 10 took out, so the version is read here.
-function installedReact() {
-    const folders = ['', <%~ scopePaths.filter((path) => path !== '').map((path) => json(`${path}/`)).join(', ') %>];
-    for (const folder of folders) {
-        try {
-            return JSON.parse(readFileSync(`${root}${folder}node_modules/react/package.json`, 'utf8')).version;
-        } catch {
-            // The next folder may hold it.
-        }
-    }
-    return '19.0';
-}
-<% } %>
 const CODE = ['**/*.{js,mjs,cjs,jsx,ts,tsx,mts,cts}'<% if (has('vue')) { %>, '**/*.vue'<% } %><% if (has('svelte')) { %>, '**/*.svelte'<% } %>];
 const TYPESCRIPT_SOURCE = ['**/*.{ts,tsx,mts,cts}'];
 const TYPESCRIPT = [...TYPESCRIPT_SOURCE<% if (has('vue')) { %>, '**/*.vue'<% } %><% if (has('svelte')) { %>, '**/*.svelte'<% } %>];
@@ -185,6 +163,8 @@ const coreRules = {
 };
 
 const gspotRules = {
+    ...gspot.configs.recommended.rules,
+<% if (isAll) { %>
     'gspot/no-call-through': ['error', { allow: <%= json(structure.call_through_allowed.map((entry) => `${entry.file}:${entry.name}`)) %> }],
     'gspot/no-trivial-files': ['error', { entryFiles: <%= json(entryFiles('')) %> }],
     'gspot/no-export-only-files': 'error',
@@ -203,6 +183,7 @@ const gspotRules = {
 <% if (structure.reexports === 'none') { %>    'gspot/no-reexports': 'error',
 <% } else { %>    'gspot/no-reexports': ['error', { allowIndex: true }],
     'gspot/max-barrel-reexports': ['error', { max: limits.barrelReexports }],
+<% } %>
 <% } %>};
 
 // sonarjs recommended is the base. no-empty-test-file is off because a test that registers its cases through a
@@ -249,27 +230,19 @@ const sonarRules = {
     'sonarjs/no-redundant-assignments': 'error',
 };
 
-// unicorn recommended is the base. prevent-abbreviations, name-replacements and filename-case are the naming
-// engine's job; no-null is off because null is what the platform APIs return; single-line-block-comment-style is
-// off because a one-line JSDoc is the documented form; consistent-conditional-object-spread is off because its
-// rewrite spreads a boolean, which TypeScript refuses; no-useless-undefined is off because noImplicitReturns needs
-// the explicit return; import-style is off because the shape of an import is not a slop signal; prefer-ternary
-// stays single-line only.
+// Naming checks own abbreviations and filename case. Platform APIs can return null.
+// Explicit undefined returns satisfy noImplicitReturns. Import shape is not a naming defect.
+// Conditional expressions remain on one line.
 const unicornRules = {
-    // Boolean types do not distinguish stored values, predicates, and actions.
-    'unicorn/consistent-boolean-name': 'off',
     'unicorn/prevent-abbreviations': 'off',
-    'unicorn/name-replacements': 'off',
     'unicorn/filename-case': 'off',
     'unicorn/no-null': 'off',
-    'unicorn/single-line-block-comment-style': 'off',
-    'unicorn/consistent-conditional-object-spread': 'off',
     'unicorn/no-useless-undefined': 'off',
     'unicorn/import-style': 'off',
     'unicorn/prefer-ternary': ['error', 'only-single-line'],
     'unicorn/expiring-todo-comments': ['error', { allowWarningComments: false }],
     'unicorn/no-array-reduce': 'off',
-    'unicorn/no-for-each': 'error',
+    'unicorn/no-array-for-each': 'error',
     'unicorn/prefer-node-protocol': 'error',
     'unicorn/no-useless-spread': 'error',
     'unicorn/no-useless-promise-resolve-reject': 'error',
@@ -370,14 +343,15 @@ const regexpRules = {
 
 const importRules = {
     'import-x/export': 'error',
-    'import-x/first': 'error',
+<% if (isAll) { %>    'import-x/first': 'error',
     'import-x/newline-after-import': ['error', { count: 1 }],
+    'import-x/exports-last': 'error',
+<% } %>
     'import-x/no-cycle': ['error', { maxDepth: Infinity, ignoreExternal: true }],
     'import-x/no-self-import': 'error',
     'import-x/no-useless-path-segments': ['error', { noUselessIndex: false }],
     'import-x/no-empty-named-blocks': 'error',
     'import-x/no-duplicates': 'error',
-    'import-x/exports-last': 'error',
 };
 
 const commentRules = {
@@ -407,6 +381,16 @@ const boundaryConfigs = [
 
 const scopeRules = <%= json(scopeRules) %>;
 
+const policyRules = <%= json(eslintPolicy) %>.map(({ scope, includes, excludes, rules }) => {
+    const included = includes.map((source) => new RegExp(source));
+    const excluded = excludes.map((source) => new RegExp(source));
+    const matches = (file) => {
+        const path = relative(root, file).split(sep).join('/');
+        return (scope === '' || path.startsWith(`${scope}/`)) && included.some((pattern) => pattern.test(path)) && !excluded.some((pattern) => pattern.test(path));
+    };
+    return { files: CODE.map((pattern) => [pattern, matches]), rules };
+});
+
 export default [
     { ignores: <%= json(ignoredPaths) %> },
     { files: CODE, ...eslint.configs.recommended },
@@ -421,10 +405,12 @@ export default [
         rules: { ...sizeRules, ...coreRules, ...gspotRules, ...sonarRules, ...unicornRules, ...securityRules, ...nodeRules, ...jsdocRules, ...regexpRules, ...importRules, ...commentRules },
     },
     { files: JAVASCRIPT, rules: { 'no-unused-vars': ['error', { args: 'none', argsIgnorePattern: '^_', varsIgnorePattern: '^_', destructuredArrayIgnorePattern: '^_' }] } },
-    ...importStyleOverrides,
+<% if (isAll) { %>    ...importStyleOverrides,
+<% } %>
     ...scopeRules,
     ...runtimeOverrides,
-    ...boundaryConfigs,
+<% if (isAll) { %>    ...boundaryConfigs,
+<% } %>
 <%~ fragments %>
     ...librarySelectorBlocks,
     { files: CODE, ignores: [...TESTS, ...SCRIPTS], rules: { 'no-console': 'error' } },
@@ -446,7 +432,8 @@ export default [
             'max-lines': 'off',
             'max-statements': 'off',
             'max-nested-callbacks': ['error', limits.nestedCallbacks + 2],
-            'gspot/no-harness-barrel-imports': ['error', { barrels: <%= json(Object.keys(aliases).filter((prefix) => /tests?\//.test(aliases[prefix]) || prefix.includes('tests')).map((prefix) => prefix.replace(/\/$/, ''))) %> }],
+<% if (isAll) { %>            'gspot/no-harness-barrel-imports': ['error', { barrels: <%= json(Object.keys(aliases).filter((prefix) => /tests?\//.test(aliases[prefix]) || prefix.includes('tests')).map((prefix) => prefix.replace(/\/$/, ''))) %> }],
+<% } %>
 <% if (testOverrides) { %>            ...vitest.configs.recommended.rules,
             'vitest/no-focused-tests': ['error', { fixable: false }],
             'vitest/no-disabled-tests': 'error',
@@ -464,10 +451,7 @@ export default [
 <% if (restricted.length > 0) { %>    { files: CODE, rules: { 'no-restricted-imports': ['error', { paths: <%= json(restricted) %> }] } },
 <% } %>    { files: ['**/package.json'], ...packageJson.configs.recommended },
     { files: CODE, ...prettierConfig },
-<% if (rulesOffList.length > 0) { %>    // turned off through [[ignore]] entries in gspot.toml; each carries a reason there
-    { files: CODE, rules: <%= json(Object.fromEntries(rulesOffList.map((rule) => [rule, 'off']))) %> },
-<% } %><% const eslintRules = eslintTool.rules ?? {}; if (Object.keys(eslintRules).length > 0) { %>    // rule options from [tools.eslint] rules
-    { files: CODE, rules: <%= json(eslintRules) %> },
-<% } %><% const extras = extra('eslint'); if (extras) { const entries = Object.fromEntries(Object.entries(extras).filter(([key]) => key !== 'reason')); if (Object.keys(entries).length > 0) { %>    // [tools.eslint.extra]: <%= json(extras.reason, 0) %>
+<% const extras = extra('eslint'); if (extras) { const entries = Object.fromEntries(Object.entries(extras).filter(([key]) => key !== 'reason')); if (Object.keys(entries).length > 0) { %>    // [tools.eslint.extra]: <%= json(extras.reason, 0) %>
     <%= json(entries) %>,
-<% } } %>];
+<% } } %>    ...policyRules,
+];

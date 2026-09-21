@@ -15,6 +15,7 @@ natures = ["source"]
 
 [[tools]]
 name = "html-validate"
+suppression = { marker = "\\bhtml-validate-disable(?:-next|-block)?\\b", reason = "(?: -- |: )(?<reason>\\S.*)" }
 version = "11.6.1"
 floor = "11.6.1"
 npm = "html-validate"
@@ -32,6 +33,7 @@ header = false
 
 [[checks]]
 name = "html/html-validate"
+level = "all"
 stage = "commit"
 command = ["html-validate", "--config", "{config:html-validate-templates}", "--formatter", "json", "{files}"]
 coverage = ["syntax", "style", "accessibility"]
@@ -42,6 +44,7 @@ help = "Change the markup the way the rule page says. Turn one rule off with gsp
 
 [[checks]]
 name = "html/scripts"
+level = "all"
 stage = "commit"
 engine = "integrity"
 analysis = "html-scripts"
@@ -52,6 +55,7 @@ help = "Move the script into a file, and attach the handler from that file. Stru
 
 [[checks]]
 name = "html/copy"
+level = "all"
 stage = "commit"
 engine = "integrity"
 analysis = "html-copy"

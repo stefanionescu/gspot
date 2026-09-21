@@ -9,16 +9,22 @@
     },
     "files": [
         "gspot.js",
-        "README.md"
+        "targets.json",
+        "LICENSE.md"
     ],
     "optionalDependencies": {
         "@gspot/cli-darwin-arm64": "0.1.0",
         "@gspot/cli-darwin-x64": "0.1.0",
-        "@gspot/cli-linux-arm64": "0.1.0",
         "@gspot/cli-linux-x64": "0.1.0",
+        "@gspot/cli-linux-arm64": "0.1.0",
+        "@gspot/cli-linux-x64-musl": "0.1.0",
+        "@gspot/cli-linux-arm64-musl": "0.1.0",
         "@gspot/cli-win32-x64": "0.1.0"
     },
     "engines": {
         "node": ">=18"
+    },
+    "dependencies": {
+        "detect-libc": "2.1.2"
     }
 }

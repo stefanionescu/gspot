@@ -33,12 +33,10 @@ fragment = true
 
 [[checks]]
 name = "vue/eslint"
+level = "all"
 stage = "commit"
 runs = "per-file-list"
-command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "{suppressions}", "--format", "json", "{files}"]
-baseline_file = ".gspot/baselines/eslint.json"
-baseline_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--suppress-all", "--suppressions-location", "{baseline}", "{files}"]
-prune_command = ["eslint", "--no-warn-ignored", "--config", "{config:eslint}", "--prune-suppressions", "--suppressions-location", "{baseline}", "{files}"]
+command = ["eslint", "--max-warnings", "0", "--no-warn-ignored", "--config", "{config:eslint}", "--format", "json", "{files}"]
 fix_command = ["eslint", "--fix", "--config", "{config:eslint}", "{files}"]
 fix_order = "codemod"
 tool = "eslint"

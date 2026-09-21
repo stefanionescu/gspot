@@ -1,101 +1,54 @@
+import { HOOK_FILES } from '#config/integrity.ts';
 import { HOOK_HEADER } from '#config/markers.ts';
-// .gspot/hooks/*, core.hooksPath, the husky and lefthook forms.
-import { git, readGitSetting } from '#cli/platform/spawn.ts';
-import type { HookName, GeneratedFile, LefthookBlock } from '#types/emit.ts';
+import type { HookName, LefthookBlock } from '#types/emit.ts';
 
-const RUNTIME_LINE = '# Runtime: Bash 3.2+, macOS and Linux.';
-const HOOK_NAMES: HookName[] = ['pre-commit', 'pre-push', 'commit-msg'];
 const HOOK_ARGS: Record<HookName, string> = {
     'pre-commit': 'check --staged',
-    'pre-push': 'check',
-    'commit-msg': 'check --stage message --message-file',
+    'pre-push': 'check --push -- "$@"',
+    'commit-msg': 'check --stage message --message-file "$1"',
 };
 const RUNNER_EXEC: Record<string, string> = {
     mise: 'mise exec -- gspot',
-    bun: 'bunx gspot',
-    npm: 'npx gspot',
+    bun: 'bun run --no-install gspot',
+    npm: 'npm exec --no -- gspot',
     pnpm: 'pnpm exec gspot',
+    yarn: 'yarn exec gspot',
 };
 
-/**
- * The command that resolves the pinned gspot for a runner.
- * @param runner the task runner
- * @param binaryPath the gspot binary to call when there is no runner
- * @returns the command prefix
- */
+/** Resolve gspot locally, without downloading a missing launcher. */
 export function runnerExec(runner: string | undefined, binaryPath?: string): string {
-    return RUNNER_EXEC[runner ?? ''] ?? binaryPath ?? 'gspot';
+    return (
+        RUNNER_EXEC[runner ?? ''] ?? (binaryPath === undefined ? 'gspot' : `'${binaryPath.replaceAll("'", "'\"'\"'")}'`)
+    );
 }
 
-/**
- * The body of one hook.
- * @param name the hook
- * @param runner the task runner
- * @param binaryPath the gspot binary to call when there is no runner
- * @returns the script text; only commit-msg forwards an argument (the message file), because git hands pre-push the remote name and URL
- */
-export function hookBody(name: HookName, runner: string | undefined, binaryPath?: string): string {
-    const lfs =
-        name === 'pre-push'
-            ? ['    if command -v git-lfs >/dev/null 2>&1; then', '        git lfs pre-push "$@"', '    fi']
-            : [];
-    const exec = runnerExec(runner, binaryPath)
-        .split(' ')
-        .map((word) => `'${word}'`)
-        .join(' ');
+/** Execute an existing hook as a subprocess before checking the same Git input. */
+export function hookBody(name: HookName, runner: string | undefined, binaryPath?: string, original = false): string {
+    const push = name === 'pre-push';
     return [
         '#!/usr/bin/env bash',
-        '#',
         HOOK_HEADER,
-        RUNTIME_LINE,
+        '# Runtime: Bash 3.2+, macOS, Linux, and Git for Windows.',
         'set -euo pipefail',
-        '',
-        'main() {',
-        '    local -a gspot_command',
-        '    read -ra gspot_command <<<"${GSPOT_BIN-}"',
-        '    if [[ ${#gspot_command[@]} -eq 0 ]]; then',
-        `        gspot_command=(${exec})`,
-        '    fi',
-        ...lfs,
-        `    exec "\${gspot_command[@]}" ${HOOK_ARGS[name]}${name === 'commit-msg' ? ' "$1"' : ''}`,
-        '}',
-        '',
-        'main "$@"',
+        ...(push && original
+            ? [
+                  'input=$(mktemp "${TMPDIR:-/tmp}/gspot-push.XXXXXXXX")',
+                  `trap 'rm -f "\${input}"' EXIT`,
+                  `trap 'exit 129' HUP`,
+                  `trap 'exit 130' INT`,
+                  `trap 'exit 143' TERM`,
+                  'cat >"${input}"',
+              ]
+            : []),
+        ...(original ? [`"$0.gspot-original" "$@"${push ? ' <"${input}"' : ''}`] : []),
+        'status=0',
+        `GSPOT_HOOK=${name} ${runnerExec(runner, binaryPath)} ${HOOK_ARGS[name]}${push && original ? ' <"${input}"' : ''} || status=$?`,
+        'if [[ ${status} -eq 126 || ${status} -eq 127 ]]; then',
+        '    printf "%s\\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2',
+        'fi',
+        'exit "${status}"',
         '',
     ].join('\n');
-}
-
-/**
- * The three gspot hook files.
- * @param runner the task runner
- * @param binaryPath the gspot binary to call when there is no runner
- * @returns the executable hook files under .gspot/hooks
- */
-export function gspotHooks(runner: string | undefined, binaryPath?: string): GeneratedFile[] {
-    return HOOK_NAMES.map((name) => ({
-        path: `.gspot/hooks/${name}`,
-        content: hookBody(name, runner, binaryPath),
-        readOnly: false,
-        executable: true,
-        kind: 'hook',
-    }));
-}
-
-/**
- * Points core.hooksPath at .gspot/hooks.
- * @param root the repository root
- */
-export function installHooksPath(root: string): void {
-    git(root, ['config', 'core.hooksPath', '.gspot/hooks']);
-}
-
-/**
- * Removes core.hooksPath when it points at gspot.
- * @param root the repository root
- */
-export function removeHooksPath(root: string): void {
-    const current = readGitSetting(root, 'core.hooksPath');
-    if (current === '.gspot/hooks') git(root, ['config', '--unset', 'core.hooksPath']);
 }
 
 /**
@@ -106,9 +59,9 @@ export function removeHooksPath(root: string): void {
  */
 export function huskyLines(runner: string | undefined, binaryPath?: string): { path: string; line: string }[] {
     const exec = runnerExec(runner, binaryPath);
-    return HOOK_NAMES.map((name) => ({
+    return HOOK_FILES.map((name) => ({
         path: `.husky/${name}`,
-        line: `${exec} ${HOOK_ARGS[name]}${name === 'commit-msg' ? ' "$1"' : ''}`,
+        line: `${exec} ${HOOK_ARGS[name]}`,
     }));
 }
 
@@ -122,7 +75,7 @@ export function lefthookBlock(runner: string | undefined, binaryPath?: string): 
     const exec = runnerExec(runner, binaryPath);
     return {
         'pre-commit': { commands: { gspot: { run: `${exec} check --staged` } } },
-        'pre-push': { commands: { gspot: { run: `${exec} check` } } },
+        'pre-push': { commands: { gspot: { run: `${exec} check --push -- {1} {2}` } } },
         'commit-msg': { commands: { gspot: { run: `${exec} check --stage message --message-file {1}` } } },
     };
 }

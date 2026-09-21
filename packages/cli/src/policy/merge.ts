@@ -1,7 +1,7 @@
 // The merged view a renderer reads for one scope: every setting resolved, limits and naming by language, tool slots by tool.
 import type { Manifest } from '#types/manifest.ts';
 import { shippedFormat } from '#cli/presets/listing.ts';
-import { listSettings, settingValue } from '#cli/policy/settings.ts';
+import { listSettings, settingValue, policyTables } from '#cli/policy/settings.ts';
 
 import type {
     MergedView,
@@ -13,10 +13,13 @@ import type {
 } from '#types/config.ts';
 
 const TOOL_PREFIX = 'tools.';
-const RESERVED_SLOTS = new Set(['extra', 'enabled']);
+const RESERVED_SLOTS = new Set(['extra']);
 
 function groupedLimit(policy: Policy, scope: string, key: string, language: string): number | undefined {
-    const grouped = policy.scopeTables[scope]?.limits?.groups[language]?.[key] ?? policy.limits.groups[language]?.[key];
+    const grouped = policyTables(policy, scope)
+        .toReversed()
+        .map(({ table }) => table.limits?.groups[language]?.[key])
+        .find((value) => value !== undefined);
     return grouped?.value;
 }
 
@@ -35,7 +38,7 @@ function limitOf(layer: PolicyScopeLayer, key: string, language?: string): numbe
 }
 
 function toolTables(policy: Policy, scope: string, name: string): Record<string, unknown>[] {
-    return [policy.tools[name] ?? {}, policy.scopeTables[scope]?.tools?.[name] ?? {}];
+    return policyTables(policy, scope).map(({ table }) => table.tools?.[name] ?? {});
 }
 
 function settingSlots(settings: Record<string, unknown>, name: string): Record<string, unknown> {
@@ -92,10 +95,12 @@ export function mergeForScope(
         presets: selected.map((manifest) => manifest.preset.name),
         settings,
         reasons,
-        format: { ...(shippedFormat() as FormatSettings), ...policy.format, ...policy.scopeTables[scope]?.format },
+        format: Object.assign(
+            shippedFormat() as FormatSettings,
+            ...policyTables(policy, scope).map(({ table }) => table.format ?? {}),
+        ),
         limit: (key, language) => limitOf(layer, key, language),
         tool: (name) => toolSlots(settings, toolTables(policy, scope, name), name),
-        toolEnabled: (name) => settingValue(surface, policy, `tools.${name}.enabled`, scope)?.value !== false,
         ignoresFor,
         rulesOff: (check) =>
             ignoresFor(check)

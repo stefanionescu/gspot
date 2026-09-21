@@ -169,9 +169,13 @@ tracked with no record of its source.
 
 **Logic.** K-305 validates all script arguments before any writes or registry operations. Both scripts throw at the first missing file. `publish.ts` verifies every package
 with `npm pack --dry-run` before it publishes the first, and each `files` list names
-`LICENSE.md` and `NOTICE.md`. `build.ts` writes `NOTICE.md` from the license field and file of
-every bundled dependency and grammar. The file ships beside each binary of the release and in
-every package, so no flag prints it (D-163).
+`LICENSE.md` at each package root. Platform packages also include `NOTICE.md` for bundled
+inputs. The launcher and external-dependency plugin do not inherit unrelated CLI notices.
+The CLI build reads actual bundler inputs and embedded grammar sources. Its notice assembler
+lives beside the build entry point; pinned upstream supplements and provenance live under
+root `LICENSES/`. Retain upstream text until installed dependencies supply the required
+material. Include the Bun runtime and vendored Swift grammar provenance. A dependency-tree
+scanner is not a substitute: installed dependencies are not necessarily bundled inputs.
 
 `swift.build.ts` builds the grammar from a pinned commit of `tree-sitter-swift`. An install hint
 names Homebrew only for a tool with no pin, and a `github` installer takes the tag form its

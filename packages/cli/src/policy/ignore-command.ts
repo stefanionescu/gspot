@@ -6,17 +6,17 @@ import * as messages from '#cli/policy/messages.ts';
 import { allChecks } from '#cli/presets/listing.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import type { IgnoreOptions } from '#types/commands.ts';
-import { PolicyError } from '#cli/policy/read-policy.ts';
+import { readPolicy, PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import { appendEntry, removeEntries } from '#cli/policy/write.ts';
 import { commitPolicy, requireReason } from '#cli/policy/commit-policy.ts';
 
-function knownCheck(checkName: string): void {
-    if (allChecks().has(checkName)) {
+function knownCheck(checkName: string, repositoryChecks: string[]): void {
+    if (allChecks().has(checkName) || repositoryChecks.includes(checkName)) {
         return;
     }
 
-    const known = allChecks().keys().toArray();
+    const known = [...allChecks().keys(), ...repositoryChecks];
     throw new PolicyError([messages.unknownCheck(checkName, nearMatches(checkName, known))]);
 }
 
@@ -41,8 +41,10 @@ function ignoreEntry(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {
         entry['paths'] = o.paths;
         lines.push(`paths  = ${JSON.stringify(o.paths)}`);
     }
-    entry['reason'] = o.reason;
-    lines.push(`reason = ${JSON.stringify(o.reason)}`);
+    if (o.reason !== undefined) {
+        entry['reason'] = o.reason;
+        lines.push(`reason = ${JSON.stringify(o.reason)}`);
+    }
     return { entry, lines };
 }
 
@@ -70,9 +72,13 @@ async function removeIgnore(root: string, o: IgnoreOptions): Promise<CommandResu
 export async function ignoreCommand(o: IgnoreOptions): Promise<CommandResult> {
     const root = findRoot(o.cwd);
     assertPinMatches(root);
-    knownCheck(o.check);
+    const { policy } = readPolicy(root);
+    knownCheck(
+        o.check,
+        policy.checks.map((check) => check.name),
+    );
     if (o.remove) return removeIgnore(root, o);
-    requireReason(o.reason, `gspot ignore ${o.check}`, ignoreCommandLine(o));
+    if (policy.requireReasons) requireReason(o.reason, `gspot ignore ${o.check}`, ignoreCommandLine(o));
     const { entry, lines } = ignoreEntry(o);
     return commitPolicy(root, appendEntry('ignore', entry), false, lines.join('\n'));
 }

@@ -3,10 +3,12 @@ import { z } from 'zod';
 import { policySchema } from '#cli/policy/schema.ts';
 
 /** The tables a profile never holds, because each one belongs to one repository. */
-export const REPOSITORY_TABLES = ['scope', 'declare', 'check'] as const;
+export const REPOSITORY_TABLES = ['scope', 'generated', 'vendored', 'check', 'exclude'] as const;
 
 /** A profile as written. */
-export const profileSchema = policySchema.omit({ scope: true, declare: true, check: true }).extend({
-    profile: z.string().min(1),
-    selection: z.enum(['exact', 'detect']),
-});
+export const profileSchema = policySchema
+    .omit({ scope: true, generated: true, vendored: true, check: true, exclude: true })
+    .extend({
+        profile: z.string().min(1),
+        selection: z.enum(['exact', 'detect']),
+    });

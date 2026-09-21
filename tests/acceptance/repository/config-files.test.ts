@@ -1,7 +1,7 @@
 // The config-files preset: TOML that does not parse, YAML with a duplicated key, and an environment key read after init that no template names.
 import { chmodSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#types/report.ts';
 import { describe, expect, test } from 'bun:test';
 import type { FindingCase } from '#tests/types/acceptance.ts';
@@ -80,7 +80,8 @@ describe('the config-files preset', () => {
     test(
         'a tool crash reports both output streams and its exit code',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'settings/layout.toml': 'a = 1\n',
                 'bin/taplo': `#!/usr/bin/env bun
 if (process.argv.includes('--version')) {
@@ -99,6 +100,8 @@ process.exit(2);
                 PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
             };
             await install(sandbox.path, [...INIT, '--no-hooks'], environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const result = await run(
                 sandbox.path,
                 ['check', '--only', 'config-files/toml-format', '--no-cache'],
@@ -115,7 +118,8 @@ process.exit(2);
     test(
         'action pin verification reports a rejected commit and preserves the workflow',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'README.md': '# Action pins\n',
                 'bin/pinact': PINACT_STUB,
                 'bin/pinact.cmd': '@echo off\r\nbun "%~dp0pinact" %*\r\n',
@@ -126,6 +130,8 @@ process.exit(2);
                 PATH: `${join(sandbox.path, 'bin')}${delimiter}${environmentVariables()['PATH'] ?? ''}`,
             };
             await install(sandbox.path, [...INIT, '--no-hooks'], environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const path = join(sandbox.path, '.github/workflows/broken.yml');
             const workflow = `${WORKFLOW_HEAD}            - uses: actions/checkout@0000000000000000000000000000000000000000\n`;
             await Bun.write(path, workflow);
@@ -144,10 +150,13 @@ process.exit(2);
     test(
         'GitHub initialization writes a workflow accepted by actionlint',
         async () => {
-            await using sandbox = await createSandbox({ 'README.md': '# Workflow test\n' });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'README.md': '# Workflow test\n' });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['actionlint']) };
             await install(sandbox.path, [...INIT, '--ci', 'github', '--no-hooks'], environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             expect(await Bun.file(join(sandbox.path, '.github/workflows/gspot.yml')).exists()).toBe(true);
             const result = Bun.spawnSync(['actionlint', '-no-color', '.github/workflows/gspot.yml'], {
                 cwd: sandbox.path,
@@ -163,12 +172,15 @@ process.exit(2);
     test(
         'each remaining check fires on its planted defect, and the two that others report say so',
         async () => {
-            await using sandbox = await createSandbox({ 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
             commitAll(sandbox.path);
             const environment = {
                 PATH: toolsPath(['taplo', 'yamllint', 'actionlint', 'zizmor', 'dotenv-linter', 'typos', 'ec']),
             };
             await run(sandbox.path, [...INIT, '--no-hooks'], environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             for (const planted of CASES) {
                 const outcome = await runPlanted(sandbox.path, planted, environment);
                 expect(outcome.code, `${planted.check}: ${outcome.stdout}`).toBe(1);
@@ -198,7 +210,8 @@ process.exit(2);
     test.skipIf(process.platform !== 'darwin')(
         'config-files/plist reports a property list that does not parse',
         async () => {
-            await using sandbox = await createSandbox({ 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/a.sh': script, 'settings/clean.toml': 'a = 1\n' });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['taplo', 'typos', 'ec']) };
             await run(sandbox.path, [...INIT, '--no-hooks'], environment);
@@ -219,7 +232,8 @@ process.exit(2);
     test(
         'broken TOML, a duplicated YAML key and a missing environment key are reported',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'scripts/a.sh': script,
                 'settings.toml': 'a = 1\n[x\n',
                 'config.yaml': 'key: 1\nkey: 2\n',
@@ -229,7 +243,10 @@ process.exit(2);
             git(sandbox.path, ['add', '-A']);
             git(sandbox.path, ['commit', '-qm', 'init']);
             const initialized = await run(sandbox.path, INIT);
+            expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
             expect(initialized.stdout).toContain('write');
+            const selected = await run(sandbox.path, ['set', 'level', 'all']);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const environment = { PATH: toolsPath(['taplo', 'yamllint']) };
             const toml = await run(sandbox.path, ['check', '--only', 'config-files/toml'], environment);
             expect(toml.code).toBe(1);
@@ -254,7 +271,8 @@ process.exit(2);
 test(
     'Schema validation finds nested Unicode paths through the real tool',
     async () => {
-        await using sandbox = await createSandbox({
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'README.md': '# Schema validation\n',
             'schema.json': JSON.stringify({
                 type: 'object',
@@ -265,6 +283,8 @@ test(
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['v8r']) };
         await install(sandbox.path, [...INIT, '--no-hooks'], environment);
+        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         const mapping = JSON.stringify({ pattern: 'settings/café.json', schema: 'schema.json' });
         const setting = await run(sandbox.path, ['set', 'tools.v8r.schemas', mapping], environment);
         expect(setting.code, setting.stdout + setting.stderr).toBe(0);
@@ -293,10 +313,13 @@ test(
 test(
     'The dotenv fixer corrects tracked environment files with the pinned tool',
     async () => {
-        await using sandbox = await createSandbox({ '.env.example': 'lowercase=value\n' });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { '.env.example': 'lowercase=value\n' });
         commitAll(sandbox.path);
         const environment = { PATH: toolsPath(['dotenv-linter']) };
         await install(sandbox.path, [...INIT, '--no-hooks'], environment);
+        const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+        expect(selected.code, selected.stdout + selected.stderr).toBe(0);
         const fixed = await run(
             sandbox.path,
             ['check', '--only', 'config-files/dotenv', '--fix', '--no-cache'],

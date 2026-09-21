@@ -1,14 +1,12 @@
 // The build of a Swift scope, the analyzer over its log, and Periphery over the project.
 import { join } from 'node:path';
-import { run } from '#cli/platform/spawn.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { Finding } from '#types/finding.ts';
 import type { EngineInput, Session } from '#types/run.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { SwiftBuildPlan, SwiftBuildOutput } from '#types/swift.ts';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
-const BUILD_TIMEOUT_MS = 3_600_000;
 const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
 const RESPONSE_FILE = /@(?<path>\/\S+)/gu;
 const PRIVATE_PREFIX = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
@@ -72,11 +70,10 @@ function expanded(log: string): string {
         .join('\n');
 }
 
-async function ranBuild(plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
+async function ranBuild(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
+    if (input.session.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     if (plan.scratch !== undefined) rmSync(plan.scratch, { recursive: true, force: true });
-    const result = await run(plan.argv, { cwd: plan.cwd, timeoutMs: BUILD_TIMEOUT_MS });
-    if (result.missing) throw new MissingToolError(`The ${plan.argv[0] ?? 'build'} command is not installed.`);
-    if (result.isTimedOut === true) throw new Error('The Swift build timed out.');
+    const result = await runCheckCommand(input, plan.argv, { cwd: plan.cwd });
     mkdirSync(plan.folder, { recursive: true });
     const output = expanded(`${result.stdout}\n${result.stderr}`);
     writeFileSync(plan.log, output);
@@ -84,11 +81,12 @@ async function ranBuild(plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
 }
 
 // Share the compiler log within a command; a later command must observe the current source.
-function buildOutput(session: Session, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
+function buildOutput(input: EngineInput, plan: SwiftBuildPlan): Promise<SwiftBuildOutput> {
+    const { session } = input;
     const scopes = builds.get(session) ?? new Map<string, Promise<SwiftBuildOutput>>();
     builds.set(session, scopes);
-    const running = scopes.get(plan.cwd) ?? ranBuild(plan);
-    scopes.set(plan.cwd, running);
+    const running = scopes.get(plan.folder) ?? ranBuild(input, plan);
+    scopes.set(plan.folder, running);
     return running;
 }
 
@@ -98,7 +96,7 @@ function buildOutput(session: Session, plan: SwiftBuildPlan): Promise<SwiftBuild
  * @returns the findings
  */
 export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
-    const { output, code } = await buildOutput(input.session, swiftBuildPlan(input));
+    const { output, code } = await buildOutput(input, swiftBuildPlan(input));
     const found = diagnostics(input, output, new Set(['error']), 'compiler');
     if (code === 0 || found.length > 0) return found;
     const detail = output.trim().split('\n').at(-1) ?? '';
@@ -112,14 +110,12 @@ export async function swiftBuild(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function swiftAnalyze(input: EngineInput): Promise<Finding[]> {
-    const plan = swiftBuildPlan(input);
-    const build = await buildOutput(input.session, plan);
+    const plan = swiftBuildPlan(input, 'analyze');
+    const build = await buildOutput(input, plan);
     if (build.code !== 0) throw new Error(`Cannot analyze Swift because the build exited ${String(build.code)}.`);
     const config = join(input.root, '.gspot', input.scope, 'swiftlint.yml');
     const argv = ['swiftlint', 'analyze', '--strict', '--quiet', '--config', config, '--compiler-log-path', plan.log];
-    const result = await run(argv, { cwd: plan.cwd, timeoutMs: BUILD_TIMEOUT_MS });
-    if (result.missing) throw new MissingToolError('SwiftLint is not installed.');
-    if (result.isTimedOut === true) throw new Error('The SwiftLint analyzer timed out.');
+    const result = await runCheckCommand(input, argv, { cwd: plan.cwd });
     const found = diagnostics(input, `${result.stdout}\n${result.stderr}`, new Set(['error', 'warning']), 'analyzer');
     if (found.length === 0 && result.code !== 0)
         throw new Error(`The SwiftLint analyzer exited ${String(result.code)}: ${result.stderr.trim()}`);
@@ -145,8 +141,7 @@ export async function swiftPeriphery(input: EngineInput): Promise<Finding[]> {
         'xcode',
         '--disable-update-check',
     ];
-    const result = await run(argv, { cwd: plan.cwd, timeoutMs: BUILD_TIMEOUT_MS });
-    if (result.missing) throw new MissingToolError('Periphery is not installed.');
+    const result = await runCheckCommand(input, argv, { cwd: plan.cwd });
     const found = diagnostics(input, `${result.stdout}\n${result.stderr}`, new Set(['error', 'warning']), 'unused');
     if (found.length === 0 && result.code !== 0)
         throw new Error(`Periphery failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);

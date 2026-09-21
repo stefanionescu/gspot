@@ -21,6 +21,7 @@ header = false
 
 [[checks]]
 name = "duplication/jscpd"
+level = "all"
 stage = "push"
 runs = "per-scope"
 engine = "integrity"
@@ -35,14 +36,14 @@ help = "Move the shared block into one function both callers use, or raise limit
 [[settings]]
 name = "limits.duplication.min_lines"
 kind = "number"
-direction = "floor"
+direction = "ceiling"
 default = 8
 summary = "The fewest lines a copied block has before it counts."
 
 [[settings]]
 name = "limits.duplication.min_tokens"
 kind = "number"
-direction = "floor"
+direction = "ceiling"
 default = 40
 summary = "The fewest tokens a copied block has before it counts."
 

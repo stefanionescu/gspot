@@ -40,6 +40,7 @@ header = false
 
 [[checks]]
 name = "dependencies/osv"
+level = "recommended"
 stage = "push"
 runs = "once"
 requires = "network"
@@ -48,10 +49,11 @@ coverage = ["advisories"]
 output = {format = "json", items = "results", children = "packages.vulnerabilities", fields = {file = "source.path", rule = "id", message = "package.name package.version summary"}}
 summary = "Looks up every locked dependency in the Open Source Vulnerabilities (OSV) advisory database."
 why = "A dependency with a published advisory is an attack someone already wrote down."
-help = "Upgrade the package the finding names. When no fix exists, record the advisory with gspot allow osv <id> --reason, and a date to look again."
+help = "Upgrade the package the finding names. When no fix exists, use gspot set tools.osv.ignore with an entry containing id and reason, and record a date to review it."
 
 [[checks]]
 name = "dependencies/syncpack"
+level = "all"
 stage = "push"
 runs = "once"
 command = ["syncpack", "lint", "--config", "{config:syncpack}"]
@@ -65,6 +67,7 @@ help = "Run syncpack fix-mismatches with the gspot configuration, or align the v
 
 [[checks]]
 name = "integrity/manifest-policy"
+level = "all"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -77,6 +80,7 @@ help = "Pin the version the lockfile holds, name one packageManager, mark a work
 
 [[checks]]
 name = "integrity/lockfile-fresh"
+level = "recommended"
 stage = "push"
 runs = "once"
 engine = "integrity"
@@ -88,6 +92,7 @@ help = "Run the install of the package manager once and commit the lockfile it w
 
 [[checks]]
 name = "integrity/install-policy"
+level = "all"
 stage = "commit"
 runs = "once"
 engine = "integrity"
@@ -100,6 +105,7 @@ help = "Set [install] minimumReleaseAge in bunfig.toml to the seconds the messag
 
 [[checks]]
 name = "integrity/lockfile-hosts"
+level = "recommended"
 stage = "commit"
 runs = "once"
 engine = "integrity"

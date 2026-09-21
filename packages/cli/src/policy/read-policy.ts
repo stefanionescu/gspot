@@ -1,4 +1,4 @@
-// Read, parse and validate gspot.toml and gspot.local.toml; normalize into the Policy shape.
+// Read, parse and validate gspot.toml; normalize into the Policy shape.
 import type { z } from 'zod';
 import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
@@ -7,9 +7,8 @@ import * as messages from '#cli/policy/messages.ts';
 import { normalize } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import { knownKeysAt } from '#cli/policy/json-schema.ts';
-import { localSchema } from '#cli/policy/local-schema.ts';
 import { reasonProblems, scopeProblems } from '#cli/policy/problems.ts';
-import type { PolicyFiles, LocalPolicy, PathSegment, Policy } from '#types/config.ts';
+import type { PolicyFiles, PathSegment, Policy } from '#types/config.ts';
 
 function issueText(issue: z.core.$ZodIssue): string {
     const where = issue.path.map(String).join('.');
@@ -24,7 +23,7 @@ function issueText(issue: z.core.$ZodIssue): string {
     return messages.invalidValue(shown, issue.message);
 }
 
-function parseTomlText(text: string, path: string): unknown {
+export function parseTomlText(text: string, path: string): Record<string, unknown> {
     try {
         return parseToml(text);
     } catch (error) {
@@ -65,24 +64,6 @@ export function parsePolicyText(text: string, path: string, root?: string): Poli
 }
 
 /**
- * Parses gspot.local.toml. Any key but skip is refused.
- * @param text the file's text
- * @returns the local policy
- */
-export function parseLocalText(text: string): LocalPolicy {
-    const result = localSchema.safeParse(parseTomlText(text, 'gspot.local.toml'));
-    if (!result.success)
-        throw new PolicyError(
-            result.error.issues.map((issue) =>
-                issue.code === 'unrecognized_keys'
-                    ? issue.keys.map((key) => messages.localOnlySkip(key)).join('\n')
-                    : issueText(issue),
-            ),
-        );
-    return { skip: result.data.skip ?? [] };
-}
-
-/**
  * The path of gspot.toml under a root.
  * @param root the repository root
  * @returns the absolute path
@@ -101,16 +82,14 @@ export function hasPolicy(root: string): boolean {
 }
 
 /**
- * Loads gspot.toml and gspot.local.toml from a repository root.
+ * Loads gspot.toml from a repository root.
  * @param root the repository root
- * @returns the policy, the local policy, and the file's path and text
+ * @returns the policy and the file's path and text
  */
 export function readPolicy(root: string): PolicyFiles {
     const path = policyPath(root);
     if (!existsSync(path)) throw new PolicyError([messages.fileMissing('gspot.toml')]);
     const text = readFileSync(path, 'utf8');
     const policy = parsePolicyText(text, 'gspot.toml', root);
-    const localPath = join(root, 'gspot.local.toml');
-    const local = existsSync(localPath) ? parseLocalText(readFileSync(localPath, 'utf8')) : { skip: [] };
-    return { policy, local, path, text };
+    return { policy, path, text };
 }

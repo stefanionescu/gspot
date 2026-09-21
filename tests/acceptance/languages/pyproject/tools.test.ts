@@ -1,6 +1,7 @@
 // Planted repository for the python preset: a lint finding, a layout finding, a type error, a stale docstring, a requirements file.
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+import type { RunReport } from '#types/report.ts';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
 
@@ -22,14 +23,14 @@ const INIT = [
 ];
 const PROJECT = '[project]\nname = "planted"\nversion = "1.0.0"\nrequires-python = ">=3.12"\ndependencies = []\n';
 const CLEAN =
-    '"""Arithmetic the planted tests call."""\n\n\ndef double(value: int) -> int:\n    """Double a number.\n\n    Args:\n        value: The number.\n\n    Returns:\n        Twice the number.\n    """\n    return value * 2\n';
+    '"""Arithmetic the planted tests call."""\n\n\ndef double(value: int) -> int:\n    """Double a number.\n\n    Args:\n        value (int): The number.\n\n    Returns:\n        int: Twice the number.\n\n    """\n    return value * 2\n';
 const MODULE = 'planted/math.py';
 
 const CASES: PlantedCase[] = [
     {
         check: 'python/ruff',
         files: {
-            [MODULE]: `${CLEAN}\n\ndef run(code: str) -> object:\n    """Run code.\n\n    Args:\n        code: The code.\n\n    Returns:\n        What it gave.\n    """\n    return eval(code)\n`,
+            [MODULE]: `${CLEAN}\n\ndef run(code: str) -> object:\n    """Run code.\n\n    Args:\n        code (str): The code.\n\n    Returns:\n        object: What it gave.\n\n    """\n    return eval(code)\n`,
         },
         expected: 'S307',
     },
@@ -45,7 +46,9 @@ const CASES: PlantedCase[] = [
     },
     {
         check: 'python/pydoclint',
-        files: { [MODULE]: CLEAN.replace('        value: The number.\n', () => '        amount: The number.\n') },
+        files: {
+            [MODULE]: CLEAN.replace('        value (int): The number.\n', () => '        amount (int): The number.\n'),
+        },
         expected: 'DOC',
     },
     {
@@ -60,12 +63,12 @@ const CASES: PlantedCase[] = [
     },
     {
         check: 'integrity/dependency-ownership',
-        files: { 'requirements.txt': 'requests==2.32.0\n' },
+        files: { 'requirements.txt': 'requests==2.32.0\n', 'uv.lock': 'version = 1\n' },
         expected: 'a second owner of the dependencies',
     },
     {
         check: 'integrity/dependency-ownership',
-        files: { 'scripts/setup.sh': '#!/usr/bin/env bash\npip install requests\n' },
+        files: { 'scripts/setup.sh': '#!/usr/bin/env bash\npip install requests\n', 'uv.lock': 'version = 1\n' },
         expected: 'installs versions nobody reviewed',
     },
     {
@@ -80,7 +83,8 @@ describe('the python preset', () => {
     test(
         'every python check fires on its planted defect',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'pyproject.toml': PROJECT,
                 'planted/__init__.py': '"""The planted package."""\n',
                 [MODULE]: CLEAN,
@@ -88,6 +92,8 @@ describe('the python preset', () => {
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const checkIds = new Set([
                 ...CASES.map((planted) => planted.check),
                 'python/import-linter',
@@ -107,10 +113,11 @@ describe('the python preset', () => {
     );
 
     test(
-        'a type error that init finds is held in a baseline of the scope, and the old excludes are carried',
+        'init carries exclusions without hiding a type error in an automatic baseline',
         async () => {
             const typed = `${CLEAN}\n\nTOTAL: int = "three"\n`;
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'pyproject.toml': PROJECT,
                 'pyrightconfig.json':
                     '{\n    "typeCheckingMode": "basic",\n    "exclude": [".venv", "planted/skipped.py"]\n}\n',
@@ -120,24 +127,34 @@ describe('the python preset', () => {
             });
             commitAll(sandbox.path);
             const environment = { PATH: toolsPath(['ruff', 'basedpyright', 'typos', 'ec']) };
-            // The structure preset ships the check that reads a tool's own baseline file, so this install keeps it.
-            const kept = INIT.map((part) => (part.startsWith('naming,') ? 'naming,spelling,dependencies' : part));
-            await install(sandbox.path, kept, environment);
+            await install(sandbox.path, INIT, environment);
             const stub = await Bun.file(`${sandbox.path}/pyrightconfig.json`).text();
             expect(stub).toContain('"extends": "./.gspot/basedpyrightconfig.json"');
             expect(stub).not.toContain('basic');
             const policy = await Bun.file(`${sandbox.path}/gspot.toml`).text();
             expect(policy).toContain('planted/skipped.py');
             expect(policy).not.toContain('.venv');
-            expect(await Bun.file(`${sandbox.path}/.gspot/baselines/basedpyright.root.json`).exists()).toBe(true);
-            const held = await run(sandbox.path, ['check', '--only', 'python/basedpyright', '--no-cache'], environment);
-            expect(held.code, held.stdout + held.stderr).toBe(0);
-            const current = await run(
-                sandbox.path,
-                ['check', '--only', 'integrity/baselines-current', '--no-cache'],
-                environment,
+            expect(await Bun.file(`${sandbox.path}/.gspot/baselines/basedpyright.root.json`).exists()).toBe(false);
+            const command = ['check', '--only', 'python/basedpyright', '--no-cache', '--json'];
+            const refused = await run(sandbox.path, command, environment);
+            expect(refused.code, refused.stdout + refused.stderr).toBe(1);
+            const report = JSON.parse(refused.stdout) as RunReport;
+            expect(report.checks.map((check) => [check.check, check.status])).toEqual([
+                ['python/basedpyright', 'fail'],
+            ]);
+            expect(report.checks[0]?.findings).toContainEqual(
+                expect.objectContaining({
+                    file: MODULE,
+                    rule: 'reportAssignmentType',
+                }),
             );
-            expect(current.code, current.stdout + current.stderr).toBe(0);
+            await Bun.write(`${sandbox.path}/${MODULE}`, `${CLEAN}\n\nTOTAL: int = 3\n`);
+            const corrected = await run(sandbox.path, command, environment);
+            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+            const accepted = JSON.parse(corrected.stdout) as RunReport;
+            expect(accepted.checks.map((check) => [check.check, check.status])).toEqual([
+                ['python/basedpyright', 'ok'],
+            ]);
         },
         PLANTED_TIMEOUT_MS * 4,
     );

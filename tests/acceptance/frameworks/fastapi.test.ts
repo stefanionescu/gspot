@@ -1,5 +1,5 @@
 // Planted repositories for the pytest and fastapi presets: coverage under the floor, a test name the prefix allows, a sleep inside an async route.
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -18,7 +18,8 @@ describe('the pytest preset', () => {
     test(
         'coverage under the floor fails, and a test function keeps its prefix',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'pyproject.toml': PROJECT('pytest'),
                 'planted/__init__.py': '"""The package."""\n',
                 'planted/math.py': MATH,
@@ -71,7 +72,8 @@ describe('the fastapi preset', () => {
     test(
         'a sleep inside an async route is a finding, and the awaited one is not',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'pyproject.toml': PROJECT('fastapi'),
                 'planted/__init__.py': '"""The package."""\n',
                 'planted/health.py': ROUTE('    await asyncio.sleep(0)\n'),

@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { pathToFileURL } from 'node:url';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/harness/planted.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
@@ -29,7 +29,8 @@ format = "lines"
 `;
 
 test('changed selection uses a merge base, labels its source, and keeps a following folder positional', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         '.gitignore': '.gspot/\n',
         'api/source.txt': 'before',
@@ -65,7 +66,8 @@ test('changed selection uses a merge base, labels its source, and keeps a follow
 });
 
 test('changed selection resolves the remote default and refuses absent upstream objects', async () => {
-    await using sandbox = await createSandbox({
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
         'gspot.toml': policy,
         '.gitignore': '.gspot/\n',
         'api/source.txt': 'before',
@@ -90,14 +92,16 @@ test('changed selection resolves the remote default and refuses absent upstream 
 });
 
 test.each(['--changed', '--staged'])('%s reports a setup error outside Git', async (flag) => {
-    await using sandbox = await createSandbox({ 'gspot.toml': policy, 'api/source.txt': 'before' });
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.txt': 'before' });
     const result = await run(sandbox.path, ['check', flag, '--json']);
     expect(result.code).toBe(2);
     expect((JSON.parse(result.stdout) as { message: string }).message).toContain('requires a Git repository');
 });
 
 test('a shallow comparison failure explains how to fetch the missing history', async () => {
-    await using sandbox = await createSandbox({ 'source/gspot.toml': policy, 'source/api/source.txt': 'before' });
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'source/gspot.toml': policy, 'source/api/source.txt': 'before' });
     const source = join(sandbox.path, 'source');
     git(source, 'init', '-b', 'main');
     commit(source);

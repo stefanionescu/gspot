@@ -1,6 +1,6 @@
 // The history of the migrations folder: versions that never repeat, new files that sort last, and old files that never change.
-import { git } from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#types/run.ts';
+import { committedEntries, gitBlobs } from '#cli/repository/snapshot.ts';
+import type { EngineInput, Session } from '#types/run.ts';
 import type { Finding } from '#types/finding.ts';
 import type { Migration } from '#types/postgres.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
@@ -12,8 +12,35 @@ function report(input: EngineInput, migration: Migration, rule: string, text: st
     return { check: input.spec.name, file: migration.path, line: 1, rule, message: text, fixable: false };
 }
 
-function committedText(input: EngineInput, path: string): string | undefined {
-    return git(input.root, ['show', `HEAD:${path}`]);
+const history = new WeakMap<Session, Promise<Map<string, string>>>();
+
+async function readCommittedText(input: EngineInput): Promise<Map<string, string>> {
+    if (!input.session.repository.hasGit) return new Map();
+    const committed = await committedEntries(input.root, input.session.cancelSignal);
+    const entries = committed.filter(
+        (entry) => entry.path.endsWith('.sql') && (entry.mode === '100644' || entry.mode === '100755'),
+    );
+    const blobs = await gitBlobs(
+        input.root,
+        entries.map((entry) => entry.object),
+        input.session.cancelSignal,
+    );
+    return new Map(
+        entries.map((entry) => {
+            const content = blobs.get(entry.object);
+            if (content === undefined) throw new Error('A requested Git blob was not returned.');
+            return [entry.path, content.toString('utf8')];
+        }),
+    );
+}
+
+function committedText(input: EngineInput): Promise<Map<string, string>> {
+    let observed = history.get(input.session);
+    if (observed === undefined) {
+        observed = readCommittedText(input);
+        history.set(input.session, observed);
+    }
+    return observed;
 }
 
 /**
@@ -40,12 +67,11 @@ export async function migrationOrder(input: EngineInput): Promise<Finding[]> {
             );
         seen.set(migration.version, migration.name);
     }
-    const committed = migrations.filter((migration) => committedText(input, migration.path) !== undefined);
+    const texts = await committedText(input);
+    const committed = migrations.filter((migration) => texts.has(migration.path));
     const newest = committed.at(-1);
     if (newest === undefined) return findings;
-    const late = migrations.filter(
-        (migration) => migration.version < newest.version && committedText(input, migration.path) === undefined,
-    );
+    const late = migrations.filter((migration) => migration.version < newest.version && !texts.has(migration.path));
     return [
         ...findings,
         ...late.map((migration) =>
@@ -69,10 +95,11 @@ export async function migrationsFrozen(input: EngineInput): Promise<Finding[]> {
     const through = typeof named === 'string' ? named : FROZEN_NONE;
     if (through === FROZEN_NONE) return [];
     const migrations = await migrationsOf(input);
+    const texts = await committedText(input);
     return migrations
         .filter((migration) => through === FROZEN_ALL || migration.version <= through)
         .flatMap((migration): Finding[] => {
-            const committed = committedText(input, migration.path);
+            const committed = texts.get(migration.path);
             if (committed === undefined || committed === migration.text) return [];
             return [
                 report(

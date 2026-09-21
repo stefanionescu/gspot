@@ -1,10 +1,11 @@
 // Where the gspot data lives: the repository during development, embedded files in the binary.
+import { globbySync } from 'globby';
 import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
-import { dirname, join, relative } from 'node:path';
+import { existsSync, readFileSync } from 'node:fs';
 import { GRAMMAR_SOURCES } from '#config/grammars.ts';
 import type { EmbeddedIndex } from '#types/platform.ts';
-import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs';
 
 const ROOT_SEARCH_DEPTH = 6;
 
@@ -20,15 +21,6 @@ function findRepoRoot(): string {
         dir = dirname(dir);
     }
     throw new Error('The presets folder is not beside the source tree.');
-}
-
-function walk(dir: string, out: string[]): string[] {
-    for (const entry of readdirSync(dir)) {
-        const full = join(dir, entry);
-        if (statSync(full).isDirectory()) walk(full, out);
-        else out.push(full);
-    }
-    return out;
 }
 
 function embeddedIndex(): EmbeddedIndex | undefined {
@@ -105,7 +97,7 @@ export function listAssets(prefix: string): string[] {
             .toSorted((a, b) => a.localeCompare(b));
     const dir = join(developmentRoot(), prefix);
     if (!existsSync(dir)) return [];
-    return walk(dir, [])
-        .map((full) => toPosix(join(prefix, relative(dir, full))))
+    return globbySync('**/*', { cwd: dir, dot: true })
+        .map((path) => toPosix(join(prefix, path)))
         .toSorted((a, b) => a.localeCompare(b));
 }

@@ -55,7 +55,7 @@ Every shared rule and every limit holds in a Next.js app as it does anywhere els
 
 | Setting                                            | Default                                                             |
 | -------------------------------------------------- | ------------------------------------------------------------------- |
-| `tools.next.translations` (directory, base locale) | detected from next-intl configuration                               |
+| `tools.i18n.translations` (directory, base locale) | detected from next-intl configuration                               |
 | `tools.next.build_in_gate`                         | false                                                               |
 | `tools.next.build_flags`                           | `[]`; `["--webpack"]` for an app that does not build with Turbopack |
 | `tools.eslint.restricted_imports` (name, message)  | none; the reference picture-component rule is one entry             |

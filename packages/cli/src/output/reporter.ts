@@ -1,3 +1,4 @@
+import { invokingHook } from '#cli/platform/environment.ts';
 // Check lines, findings, help lines, reproduce lines, the summary; columns from the longest id.
 import { paint } from '#cli/output/messages.ts';
 import type { RunReport } from '#types/report.ts';
@@ -94,17 +95,6 @@ function checkLines(check: CheckResult, columns: Columns, options: ReportOptions
     return lines;
 }
 
-function baselineLines(report: RunReport, colors: Painter): string[] {
-    const exceeded = report.baselines.filter((verdict) => !verdict.held);
-    const held = report.baselines.filter((verdict) => verdict.held);
-    const count = (verdict: RunReport['baselines'][number]): string =>
-        `${verdict.check}:${verdict.rule}  ${String(verdict.count)} of ${String(verdict.baseline)}`;
-    return [
-        ...exceeded.map((verdict) => `${colors.red('baseline exceeded')}  ${count(verdict)}`),
-        ...held.map((verdict) => `baselines  ${count(verdict)}`),
-    ];
-}
-
 function ignoreLines(report: RunReport, options: ReportOptions, colors: Painter): string[] {
     if (report.ignores.length === 0) return [];
     if (!options.verbose) return [`ignores    ${String(report.ignores.length)} (printed with --verbose)`];
@@ -112,7 +102,7 @@ function ignoreLines(report: RunReport, options: ReportOptions, colors: Painter)
         const rule = ignore.rule === undefined ? '' : ` ${ignore.rule}`;
         const paths = ignore.paths === undefined ? '' : ` ${ignore.paths.join(' ')}`;
         const matched = `(${String(ignore.matched)} matched)`;
-        return `ignore     ${ignore.check}${rule}${paths}  ${colors.dim(ignore.reason)}  ${matched}`;
+        return `ignore     ${ignore.check}${rule}${paths}  ${ignore.reason === undefined ? '' : colors.dim(ignore.reason)}  ${matched}`;
     });
 }
 
@@ -123,14 +113,15 @@ function skipLine(check: string, source: string, colors: Painter): string {
 
 function tailLines(report: RunReport, options: ReportOptions, colors: Painter): string[] {
     const lines = [
-        ...baselineLines(report, colors),
         ...ignoreLines(report, options, colors),
         ...report.skips.map((skip) => skipLine(skip.check, skip.source, colors)),
     ];
     if (report.coverage.unchecked > 0) lines.push(`unchecked  ${fileCount(report.coverage.unchecked)} (gspot doctor)`);
     if (report.unstaged > 0) {
         const verb = report.unstaged === 1 ? ' has' : 's have';
-        lines.push(`checked working tree; ${String(report.unstaged)} file${verb} unstaged changes`);
+        lines.push(
+            `checked ${report.comparison?.content === 'index' ? 'index' : 'working tree'}; ${String(report.unstaged)} file${verb} unstaged changes`,
+        );
     }
     return lines;
 }
@@ -162,9 +153,17 @@ export function runText(report: RunReport, options: ReportOptions): string {
     const lines = [...body, ...(isSeparated ? [''] : []), ...tail];
     if (lines.length > 0) lines.push('');
     lines.push(summaryLine(report, options, shown.length, colors));
+    const hook = invokingHook();
+    if (hook !== undefined && report.exitCode !== 0) {
+        const reproduce = report.checks.find((check) => check.reproduce !== undefined)?.reproduce;
+        if (reproduce !== undefined) lines.push(`reproduce: ${reproduce}`);
+        lines.push(`Bypass this hook once: git ${hook === 'pre-push' ? 'push' : 'commit'} --no-verify`);
+    }
     const comparison =
         report.comparison === undefined || options.quiet
             ? ''
-            : `Working tree compared with the merge base of ${report.comparison.reference}.\n`;
+            : report.comparison.content === 'working-tree'
+              ? `Working tree compared with the merge base of ${report.comparison.reference}.\n`
+              : `${report.comparison.content === 'index' ? 'Staged index' : 'Committed tree'} ${report.comparison.reference}.\n`;
     return `${comparison}${lines.join('\n')}\n`;
 }

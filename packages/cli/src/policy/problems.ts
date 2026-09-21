@@ -2,11 +2,8 @@
 import { join } from 'node:path';
 import { existsSync, statSync } from 'node:fs';
 import * as messages from '#cli/policy/messages.ts';
-import { toReasoned } from '#cli/policy/normalize.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import type { Policy, Reasoned, ToolTable } from '#types/config.ts';
-
-const GLOB_CHARS = /[*?{}[\]!]/u;
 
 function needReason(where: string, reason: string | undefined, command: string): string | undefined {
     if (reason === undefined) return messages.missingReason(where, command);
@@ -26,48 +23,33 @@ function isDirectory(full: string): boolean {
     return existsSync(full) && statSync(full).isDirectory();
 }
 
-function isBareDirectory(selector: string): boolean {
-    const last = selector.split('/').pop() ?? selector;
-    return !GLOB_CHARS.test(selector) && !last.includes('.') && !selector.endsWith('/');
-}
-
-function selectorProblems(selectors: string[], where: string): string[] {
-    return selectors
-        .filter((selector) => isBareDirectory(selector))
-        .map((selector) => `${where}: ${messages.bareDirectory(selector)}`);
-}
-
 function ignoreProblems(policy: Policy): string[] {
     const problems: string[] = [];
     for (const [index, entry] of policy.ignores.entries()) {
         const where = `[[ignore]] entry ${String(index + 1)} (${entry.check})`;
         problems.push(
-            ...present([needReason(where, entry.reason, `gspot ignore ${entry.check} --reason "..."`)]),
-            ...selectorProblems(entry.paths ?? [], `[[ignore]] ${entry.check}`),
+            ...present([
+                policy.requireReasons
+                    ? needReason(where, entry.reason, `gspot ignore ${entry.check} --reason "..."`)
+                    : undefined,
+            ]),
         );
     }
     return problems;
 }
 
-function declareProblems(policy: Policy): string[] {
-    const problems: string[] = [];
-    for (const [index, entry] of policy.declares.entries()) {
-        const first = entry.paths[0] ?? '';
-        problems.push(...selectorProblems(entry.paths, `[[declare]] entry ${String(index + 1)}`));
-        if (entry.vendored === true) {
-            const where = `[[declare]] entry ${String(index + 1)} (vendored)`;
-            problems.push(
-                ...present([needReason(where, entry.reason, `gspot declare ${first} --vendored --reason "..."`)]),
-            );
-        }
-        const isExplained = entry.produced_by !== undefined || entry.vendored === true || entry.reason !== undefined;
-        if (!isExplained)
-            problems.push(messages.checkEntryIncomplete(`declare ${first}`, 'produced_by, vendored or reason'));
-    }
-    return problems;
+function declarationProblems(policy: Policy): string[] {
+    return present(
+        policy.declarations.map((entry) => {
+            if (!policy.requireReasons) return undefined;
+            const where = `[[${entry.nature}]] ${entry.paths.join(', ')}`;
+            return needReason(where, entry.reason, `gspot set ${entry.nature} "${entry.paths[0]}" --reason "..."`);
+        }),
+    );
 }
 
 function limitProblems(policy: Policy): string[] {
+    if (!policy.requireReasons) return [];
     const problems: (string | undefined)[] = [];
     for (const [key, value] of Object.entries(policy.limits.root))
         problems.push(reasonedProblem(`limits.${key}`, value));
@@ -78,22 +60,27 @@ function limitProblems(policy: Policy): string[] {
 }
 
 function namingProblems(policy: Policy): string[] {
+    const explanation = (where: string, reason: string | undefined, command: string): string | undefined =>
+        policy.requireReasons ? needReason(where, reason, command) : undefined;
     const problems: (string | undefined)[] = Array.from(policy.naming.allowed, (entry) =>
-        needReason(`naming.allowed ${entry.name}`, entry.reason, `gspot allow naming ${entry.name} --reason "..."`),
+        explanation(
+            `naming.allowed ${entry.name}`,
+            entry.reason,
+            `gspot set naming.allowed '${JSON.stringify({ name: entry.name })}' --reason "..."`,
+        ),
     );
     for (const entry of policy.naming.remove_groups)
         problems.push(
-            needReason(
+            explanation(
                 `naming.remove_groups ${entry.group}`,
                 entry.reason,
                 `gspot set naming.remove_groups ${entry.group} --reason "..."`,
             ),
         );
     for (const rule of policy.naming.rules) {
-        problems.push(...selectorProblems(rule.paths, '[[naming.rules]]'));
         if (rule.exclude === true)
             problems.push(
-                needReason(
+                explanation(
                     `[[naming.rules]] excluding ${(rule.names ?? []).join(', ')}`,
                     rule.reason,
                     'add reason = "..."',
@@ -101,23 +88,13 @@ function namingProblems(policy: Policy): string[] {
             );
     }
     for (const entry of policy.structure.call_through_allowed)
-        problems.push(needReason(`structure.call_through_allowed ${entry.name}`, entry.reason, 'add reason = "..."'));
+        problems.push(explanation(`structure.call_through_allowed ${entry.name}`, entry.reason, 'add reason = "..."'));
     return present(problems);
 }
 
 function isOff(option: unknown): boolean {
-    return option === 'off' || (Array.isArray(option) && option[0] === 'off');
-}
-
-function enabledProblem(tool: string, table: ToolTable): string | undefined {
-    if (table.enabled === undefined) return undefined;
-    const enabled = toReasoned(table.enabled as boolean | { value: boolean; reason: string });
-    if (enabled.value) return undefined;
-    return needReason(
-        `tools.${tool}.enabled = false`,
-        enabled.reason,
-        `gspot set tools.${tool}.enabled false --reason "..."`,
-    );
+    const severity = Array.isArray(option) ? option[0] : option;
+    return severity === 'off' || severity === 0;
 }
 
 function ruleOffProblems(tool: string, rules: unknown): string[] {
@@ -127,19 +104,18 @@ function ruleOffProblems(tool: string, rules: unknown): string[] {
         .map(([rule]) => messages.ruleOffRefused(`<check that runs ${tool}>`, rule));
 }
 
-function toolProblems(tool: string, table: ToolTable): string[] {
+function toolProblems(tool: string, table: ToolTable, requireReasons: boolean): string[] {
     const extra =
-        table.extra !== undefined && !isReasonAccepted(table.extra.reason)
+        requireReasons && table.extra !== undefined && !isReasonAccepted(table.extra.reason)
             ? messages.extraNeedsReason(tool)
             : undefined;
-    return [...present([extra, enabledProblem(tool, table)]), ...ruleOffProblems(tool, table['rules'])];
+    return [...present([extra]), ...ruleOffProblems(tool, table['rules'])];
 }
 
 function checkProblems(policy: Policy): string[] {
     const problems: string[] = [];
     for (const entry of policy.checks) {
         if (entry.paths.length === 0) problems.push(messages.checkEntryIncomplete(entry.name, 'paths'));
-        problems.push(...selectorProblems(entry.paths, `[[check]] ${entry.name}`));
     }
     return problems;
 }
@@ -150,10 +126,12 @@ function checkProblems(policy: Policy): string[] {
  * @returns the problems in plain English
  */
 export function reasonProblems(policy: Policy): string[] {
-    const tools = Object.entries(policy.tools).flatMap(([tool, table]) => toolProblems(tool, table));
+    const tools = [policy, ...Object.values(policy.scopeTables)].flatMap((scope) =>
+        Object.entries(scope.tools ?? {}).flatMap(([tool, table]) => toolProblems(tool, table, policy.requireReasons)),
+    );
     return [
         ...ignoreProblems(policy),
-        ...declareProblems(policy),
+        ...declarationProblems(policy),
         ...limitProblems(policy),
         ...namingProblems(policy),
         ...tools,
@@ -162,7 +140,7 @@ export function reasonProblems(policy: Policy): string[] {
 }
 
 /**
- * Scopes that name a missing directory or sit inside another scope.
+ * Scopes that name a missing directory or repeat the same path.
  * @param root the repository root
  * @param policy the normalized policy
  * @returns the problems in plain English
@@ -170,10 +148,12 @@ export function reasonProblems(policy: Policy): string[] {
 export function scopeProblems(root: string, policy: Policy): string[] {
     const paths = policy.scopes.map((scope) => scope.path);
     const missing = paths.filter((path) => !isDirectory(join(root, path))).map((path) => messages.scopeMissing(path));
-    const nested = paths.flatMap((outer) =>
-        paths
-            .filter((inner) => inner !== outer && inner.startsWith(`${outer}/`))
-            .map((inner) => messages.scopesNest(outer, inner)),
-    );
-    return [...missing, ...nested];
+    const seen = new Set<string>();
+    const duplicates: string[] = [];
+    for (const path of paths) {
+        const key = path.normalize('NFC').toLowerCase();
+        if (seen.has(key)) duplicates.push(`Scope path is declared more than once: ${path}.`);
+        seen.add(key);
+    }
+    return [...missing, ...duplicates];
 }

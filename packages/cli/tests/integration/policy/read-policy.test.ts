@@ -1,7 +1,7 @@
 import { stringify } from 'smol-toml';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import { readPolicy, parseLocalText, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
+import { readPolicy, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
 
 const minimal = 'version = 1\npresets = ["bash"]\n';
 
@@ -56,16 +56,18 @@ describe('parsePolicyText', () => {
 
     test('an ignore without a reason that says something is refused', () => {
         for (const reason of ['', 'N/A', 'TBD', '-', 'because']) {
-            const found = problems(`${minimal}[[ignore]]\ncheck = "bash/shellcheck"\nreason = "${reason}"\n`);
+            const found = problems(
+                `${minimal}require_reasons = true\n[[ignore]]\ncheck = "bash/shellcheck"\nreason = "${reason}"\n`,
+            );
             expect(found[0]).toContain('needs a reason that says something');
         }
     });
 
-    test('a bare directory in a selector is refused with the glob to write', () => {
+    test('a directory selector is accepted', () => {
         const found = problems(
             `${minimal}[[ignore]]\ncheck = "bash/shellcheck"\npaths = ["scripts"]\nreason = "One launcher script per environment."\n`,
         );
-        expect(found[0]).toContain('Write `scripts/**`');
+        expect(found).toEqual([]);
     });
 
     test('a rule slot set to off names the ignore line', () => {
@@ -75,9 +77,9 @@ describe('parsePolicyText', () => {
     });
 
     test('an extra table needs a reason', () => {
-        expect(problems(`${minimal}[tools.markdownlint.extra]\nMD044 = false\nreason = ""\n`)[0]).toContain(
-            '[tools.markdownlint.extra] needs a `reason`',
-        );
+        expect(
+            problems(`${minimal}require_reasons = true\n[tools.markdownlint.extra]\nMD044 = false\nreason = ""\n`)[0],
+        ).toContain('[tools.markdownlint.extra] needs a `reason`');
     });
 
     test('a version other than 1 is refused', () => {
@@ -88,43 +90,36 @@ describe('parsePolicyText', () => {
         expect(problems('version = \n')[0]).toContain('is not valid TOML');
     });
 
-    test('a scope must exist and scopes do not nest', async () => {
-        await using sandbox = await createSandbox({ 'api/a.txt': '', 'api/inner/b.txt': '' });
+    test('nested scopes are accepted and a missing scope is refused', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'api/a.txt': '', 'api/inner/b.txt': '' });
         const found = problems(
             `${minimal}[[scope]]\npath = "api"\n[[scope]]\npath = "api/inner"\n[[scope]]\npath = "missing"\n`,
             sandbox.path,
         );
         expect(found.some((problem) => problem.includes('`missing` names a directory that does not exist'))).toBe(true);
-        expect(found.some((problem) => problem.includes('`api/inner` is inside the scope `api`'))).toBe(true);
+        expect(found).toHaveLength(1);
     });
 
-    test('a vendored declaration needs a reason', () => {
-        expect(problems(`${minimal}[[declare]]\npaths = ["vendor/**"]\nvendored = true\n`)[0]).toContain(
+    test('a vendored declaration needs a reason when required', () => {
+        expect(problems(`${minimal}require_reasons = true\n[[vendored]]\npaths = ["vendor/**"]\n`)[0]).toContain(
             'needs a reason',
         );
     });
 });
 
-describe('parseLocalText', () => {
-    test('accepts skip and refuses every other key', () => {
-        expect(parseLocalText('skip = ["docker/hadolint"]\n')).toEqual({ skip: ['docker/hadolint'] });
-        expect(() => parseLocalText('presets = ["bash"]\n')).toThrow('belongs in gspot.toml');
-    });
-});
-
 describe('readPolicy', () => {
-    test('reads gspot.toml and gspot.local.toml from a root', async () => {
-        await using sandbox = await createSandbox({
+    test('reads gspot.toml from a root', async () => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
             'gspot.toml': minimal,
-            'gspot.local.toml': 'skip = ["bash/shfmt"]\n',
         });
         const files = readPolicy(sandbox.path);
         expect(files.policy.presets).toEqual(['bash']);
-        expect(files.local.skip).toEqual(['bash/shfmt']);
     });
 
     test('a missing gspot.toml points at init', async () => {
-        await using sandbox = await createSandbox({});
+        await using sandbox = await testdir();
         expect(() => readPolicy(sandbox.path)).toThrow('Run `gspot init`');
     });
 });
@@ -177,7 +172,8 @@ describe('configuration directory boundaries', () => {
 
     test('accepts relative directories containing spaces, percent signs, and Unicode', async () => {
         const path = 'apps/café 100%';
-        await using sandbox = await createSandbox({ [`${path}/source.ts`]: 'export const count = 1;\n' });
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { [`${path}/source.ts`]: 'export const count = 1;\n' });
         const policy = parsePolicyText(
             stringify({ version: 1, scope: [{ path }], rules: { directory: 'agent rules/café 100%' } }),
             'gspot.toml',
@@ -186,4 +182,31 @@ describe('configuration directory boundaries', () => {
         expect(policy.scopes[0]?.path).toBe(path);
         expect(policy.rules.directory).toBe('agent rules/café 100%');
     });
+});
+
+for (const scoped of [false, true]) {
+    test.each(['"off"', '0', '["off"]', '[0]'])(
+        `disabled ESLint severity %s is refused in ${scoped ? 'scoped' : 'root'} rule settings`,
+        (severity) => {
+            const prefix = scoped ? '[[scope]]\npath = "src"\n[scope.tools.eslint.rules]' : '[tools.eslint.rules]';
+            expect(() =>
+                parsePolicyText(
+                    `version = 1\npresets = ["javascript"]\n${prefix}\n"no-console" = ${severity}\n`,
+                    'gspot.toml',
+                ),
+            ).toThrow('gspot ignore');
+        },
+    );
+}
+
+test.each([
+    'paths = []\nrules = {eqeqeq = "error"}',
+    'paths = ["src"]\nrules = {eqeqeq = 0}',
+    'paths = ["src"]\nrules = {eqeqeq = ["off"]}',
+    'paths = ["src"]\nrules = {eqeqeq = true}',
+    'paths = ["src"]\nrulez = {eqeqeq = "error"}',
+])('invalid ESLint override refuses configuration: %s', (entry) => {
+    expect(() =>
+        parsePolicyText(`version = 1\npresets = ["javascript"]\n[[tools.eslint.overrides]]\n${entry}\n`, 'gspot.toml'),
+    ).toThrow();
 });

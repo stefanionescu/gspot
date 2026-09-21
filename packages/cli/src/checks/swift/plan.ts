@@ -14,27 +14,35 @@ function text(input: EngineInput, key: string): string {
 /**
  * The build of one scope: the command, the folder it runs in, and where its log goes.
  * @param input the engine input
+ * @param purpose whether the compiler must emit a complete analyzer log
  * @returns the plan
  */
-export function swiftBuildPlan(input: EngineInput): SwiftBuildPlan {
+export function swiftBuildPlan(input: EngineInput, purpose: 'compile' | 'analyze' = 'compile'): SwiftBuildPlan {
     const cwd = join(input.root, input.scope);
     const folder = join(
         input.root,
         '.gspot',
         'cache',
         'swift',
-        input.scope === '' ? 'root' : input.scope.replaceAll('/', '-'),
+        input.scope === '' ? 'root' : `scope-${Buffer.from(input.scope).toString('hex')}`,
+        purpose,
     );
     const log = join(folder, 'build.log');
     const project = text(input, 'tools.xcode.project');
     if (project === '') {
         const scratch = join(folder, 'package');
-        return { cwd, folder, log, scratch, argv: ['swift', 'build', '-v', '--scratch-path', scratch] };
+        return {
+            cwd,
+            folder,
+            log,
+            ...(purpose === 'analyze' ? { scratch } : {}),
+            argv: ['swift', 'build', '-v', '--scratch-path', scratch],
+        };
     }
     const container = project.endsWith(WORKSPACE_SUFFIX) ? '-workspace' : '-project';
     const argv = [
         'xcodebuild',
-        'clean',
+        ...(purpose === 'analyze' ? ['clean'] : []),
         'build-for-testing',
         container,
         project,

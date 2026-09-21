@@ -1,19 +1,17 @@
+import type { MergedView } from '#types/config.ts';
+import { MissingToolError } from '#cli/platform/missing-tool.ts';
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
-import { mkdirSync } from 'node:fs';
-import { dirname, join } from 'node:path';
+import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { isCrash } from '#cli/run/broken-tool.ts';
-import { pushBase } from '#cli/repository/staged.ts';
-import type { SpawnResult } from '#types/platform.ts';
+import { executionFailure, checkedFindings, toolOutputDetail } from '#cli/run/broken-tool.ts';
+import type { SpawnResult, SpawnOptions } from '#types/platform.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
-import { parseOutput } from '#cli/run/parse-output.ts';
-import { probeTool } from '#cli/platform/tool-probe.ts';
+import { ToolOutputError } from '#cli/run/parse-output.ts';
+import { probeTool, toolPin } from '#cli/platform/tool-probe.ts';
 import type { ToolPin, CheckSpec } from '#types/manifest.ts';
 import type { CheckResult, Finding } from '#types/finding.ts';
-import { baselinePath, substitute, perFileCommands, substituteValue } from '#cli/run/command-parts.ts';
-import type { ToolRunState, PreparedCommand, Substitutions, Session, PlannedCheck } from '#types/run.ts';
-
-const TAIL_LINES = 20;
+import { substitute, perFileCommands, substituteValue } from '#cli/run/command-parts.ts';
+import type { EngineInput, ToolRunState, PreparedCommand, Substitutions, Session, PlannedCheck } from '#types/run.ts';
 
 const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
 
@@ -33,26 +31,12 @@ function firstLine(result: SpawnResult, placeholder: string): string {
     return text.split('\n').find((line) => !isBanner(line)) ?? placeholder;
 }
 
-function tailLines(result: SpawnResult, placeholder: string): string {
-    const output = [result.stderr, result.stdout]
-        .map((stream) => stream.trim().split('\n').slice(0, TAIL_LINES).join('\n'))
-        .filter((stream) => stream !== '');
-    return output.length === 0 ? placeholder : output.join('\n');
-}
-
-function missingResult(
-    base: CheckResult,
-    tool: ToolPin,
-    probe: { found?: string; floor?: string; hint?: string },
-    state: string,
-): CheckResult {
+function missingNote(tool: ToolPin, probe: { found?: string; floor?: string; hint?: string }, state: string): string {
     const hint = probe.hint ?? 'install it';
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
-    const note =
-        state === 'outdated'
-            ? `${tool.name} ${probe.found ?? '?'} is below ${probe.floor ?? '?'}. Run: ${hint}`
-            : `${tool.name}${version} is not installed. Run: ${hint}`;
-    return { ...base, status: 'missing', note };
+    return state === 'outdated'
+        ? `${tool.name} ${probe.found ?? '?'} is below ${probe.floor ?? '?'}. Run: ${hint}`
+        : `${tool.name}${version} is not installed. Run: ${hint}`;
 }
 
 function workingDirectory(session: Session, planned: PlannedCheck): string {
@@ -79,14 +63,9 @@ function countMatches(spec: CheckSpec, result: SpawnResult): number {
     return `${result.stdout}\n${result.stderr}`.matchAll(pattern).toArray().length;
 }
 
-function isBroken(spec: CheckSpec, result: SpawnResult): boolean {
-    if (spec.tool_errors === undefined) return false;
-    return new RegExp(spec.tool_errors, 'mu').test(`${result.stdout}\n${result.stderr}`);
-}
-
 function unexplainedFailure(spec: CheckSpec, tool: ToolPin, result: SpawnResult, file: string | undefined): Finding {
     const placeholder = `${tool.name} exited ${String(result.code)}`;
-    const text = file === undefined ? tailLines(result, placeholder) : firstLine(result, placeholder);
+    const text = file === undefined ? toolOutputDetail(result, placeholder) : firstLine(result, placeholder);
     const { name, help } = spec;
     return { check: name, file: file?.replaceAll('\\', '/') ?? '', message: text, help, fixable: false };
 }
@@ -113,13 +92,14 @@ function isPerFile(spec: CheckSpec): boolean {
 
 function collect(
     planned: PlannedCheck,
-    tool: ToolPin,
     command: string[],
     result: SpawnResult,
     state: ToolRunState,
+    parsed: Finding[],
 ): void {
     const { spec, scope } = planned;
-    const parsed = parseOutput(spec, result.stdout, result.stderr, state.root);
+    const tool = planned.tool;
+    if (tool === undefined) throw new Error('Cannot collect tool output without a selected tool.');
     if (parsed.length === 0 && result.code !== 0 && isPerFile(spec))
         parsed.push(unexplainedFailure(spec, tool, result, command.at(-1) ?? ''));
     if (scope.scope.path !== '' && state.cwd !== state.root) prefixScope(parsed, scope.scope.path);
@@ -154,7 +134,8 @@ function finished(
     argv: string[],
     started: number,
 ): CheckResult {
-    const isEveryFindingKept = state.isFailed || spec.count_regex !== undefined;
+    const isEveryFindingKept =
+        state.isFailed || spec.count_regex !== undefined || spec.output?.format === 'trufflehog-json';
     const findings = isEveryFindingKept
         ? state.findings
         : state.findings.filter((finding) => finding.file !== '' || finding.line !== undefined);
@@ -163,6 +144,7 @@ function finished(
 }
 
 async function runCommands(
+    session: Session,
     planned: PlannedCheck,
     tool: ToolPin,
     prepared: PreparedCommand,
@@ -174,22 +156,23 @@ async function runCommands(
     const started = performance.now();
     for (const command of prepared.commands) {
         const seconds = planned.scope.view.limit('tool_seconds') ?? DEFAULT_TOOL_SECONDS;
-        const result = await runToolCommand(planned, command, prepared);
-        if (result.isTimedOut === true) {
-            const note = `${tool.name} ran past ${String(seconds)} seconds and was stopped; raise limits.tool_seconds with a reason, or run it at a later stage`;
-            return { ...base, status: 'error', duration: performance.now() - started, note, command: argv };
+        const result = await runToolCommand(planned.scope.view, command, prepared, session.cancelSignal);
+        const failure = executionFailure(result, tool.name, seconds);
+        if (failure !== undefined) return { ...base, ...failure, duration: performance.now() - started, command: argv };
+        let parsed: Finding[];
+        try {
+            parsed = checkedFindings(planned, result, [cwd, state.root]);
+        } catch (error) {
+            if (!(error instanceof ToolOutputError)) throw error;
+            return {
+                ...base,
+                status: 'error',
+                duration: performance.now() - started,
+                note: error.message,
+                command: argv,
+            };
         }
-        if (result.missing)
-            return { ...base, status: 'missing', note: `${tool.name} could not be started: ${result.stderr.trim()}` };
-        const parsed = parseOutput(spec, result.stdout, result.stderr, state.root);
-        // A check the repository declares prints what its author chose, so only a shipped check is read for a crash.
-        const isShipped = planned.manifest !== undefined;
-        if (isBroken(spec, result) || (isShipped && isCrash(spec, result, parsed, [cwd, state.root]))) {
-            const detail = tailLines(result, `${tool.name} exited ${String(result.code)}`);
-            const note = `${tool.name} broke: exit ${String(result.code)}\n${detail}`;
-            return { ...base, status: 'error', duration: performance.now() - started, note, command: argv };
-        }
-        collect(planned, tool, command, result, state);
+        collect(planned, command, result, state, parsed);
     }
     return finished(base, spec, state, argv, started);
 }
@@ -219,8 +202,6 @@ export function prepareCommand(
         indent: scope.view.format.indent_width,
     };
     if (planned.messageFile !== undefined) sub.messageFile = planned.messageFile;
-    const parts = [...command, ...Object.values({ ...planned.tool?.env, ...planned.spec.env })];
-    if (parts.some((part) => part.includes('{merge_base}'))) sub.mergeBase = pushBase(session.root);
     const argv = substitute(session, planned, command, sub);
     if (toolPath !== undefined) argv[0] = toolPath;
     const commands = command.includes(FILES_PLACEHOLDER)
@@ -239,9 +220,14 @@ export function prepareCommand(
  * Runs one planned tool check: probes the tool, expands the command, spawns it once or per file, parses the output.
  * @param session the session
  * @param planned the check to run
+ * @param command the command prepared by an adapter, or the command of the definition
  * @returns the check result with its findings
  */
-export async function runToolCheck(session: Session, planned: PlannedCheck): Promise<CheckResult> {
+export async function runToolCheck(
+    session: Session,
+    planned: PlannedCheck,
+    command = planned.spec.command,
+): Promise<CheckResult> {
     const { spec, tool, scope } = planned;
     const base: CheckResult = {
         check: spec.name,
@@ -250,59 +236,89 @@ export async function runToolCheck(session: Session, planned: PlannedCheck): Pro
         files: planned.files.length,
         duration: 0,
         findings: [],
-        baselined: 0,
     };
-    if (tool === undefined || spec.command === undefined)
+    if (tool === undefined || command === undefined)
         return { ...base, status: 'error', note: 'this check has no command to run' };
-    const { env } = prepareCommand(session, planned, spec.command);
-    const probe = probeTool(session, { ...tool, env });
+    const { env, cwd } = prepareCommand(session, planned, command);
+    const probe = probeTool({ ...session, cwd }, { ...tool, env });
     if (probe.state === 'error') return { ...base, status: 'error', note: probe.note ?? 'The version probe failed.' };
-    if (probe.state === 'missing' || probe.state === 'outdated') return missingResult(base, tool, probe, probe.state);
-    const prepared = prepareCommand(session, planned, spec.command, probe.path);
-    return runCommands(planned, tool, prepared, base);
-}
-
-/**
- * Runs one of a check's side commands (its baseline or prune command) once over every file it claims.
- * @param session the session
- * @param planned the check
- * @param command the command with its placeholders
- * @returns the spawn result, or undefined when the tool is missing
- */
-export async function runSideCommand(
-    session: Session,
-    planned: PlannedCheck,
-    command: string[],
-): Promise<SpawnResult | undefined> {
-    const { tool } = planned;
-    if (tool === undefined) return undefined;
-    const { env } = prepareCommand(session, planned, command);
-    const probe = probeTool(session, { ...tool, env });
-    if (probe.state === 'error')
-        return { code: 1, stdout: '', stderr: probe.note ?? 'The version probe failed.', missing: false, duration: 0 };
-    if (probe.state === 'missing' || probe.state === 'outdated') return undefined;
+    if (probe.state === 'missing' || probe.state === 'outdated')
+        return { ...base, status: 'missing', note: missingNote(tool, probe, probe.state) };
     const prepared = prepareCommand(session, planned, command, probe.path);
-    const baseline = baselinePath(session, planned);
-    if (baseline !== undefined) mkdirSync(dirname(baseline), { recursive: true });
-    return runToolCommand(planned, prepared.argv, prepared);
+    return runCommands(session, planned, tool, prepared, base);
 }
 
 /**
  * Runs a tool command with the shared output environment and configured deadline.
- * @param plannedCheck the check whose limits apply
+ * @param view the policy view whose limits apply
  * @param command the expanded argument vector
  * @param prepared the command directory and expanded environment
+ * @param cancelSignal cancellation for the command session
  * @returns the completed process result
  */
 export async function runToolCommand(
-    plannedCheck: PlannedCheck,
+    view: Pick<MergedView, 'limit'> | undefined,
     command: string[],
-    prepared: PreparedCommand,
+    prepared: Pick<SpawnOptions, 'cwd' | 'env' | 'stdin'> & { captureFd3?: boolean },
+    cancelSignal?: AbortSignal,
 ): Promise<SpawnResult> {
-    const seconds = plannedCheck.scope.view.limit('tool_seconds') ?? DEFAULT_TOOL_SECONDS;
+    if (cancelSignal?.aborted === true)
+        return {
+            code: 1,
+            stdout: '',
+            stderr: 'The command was canceled.',
+            missing: false,
+            duration: 0,
+            isCanceled: true,
+        };
+    const seconds = view?.limit('tool_seconds') ?? DEFAULT_TOOL_SECONDS;
     return run(command, {
-        cwd: prepared.cwd,
+        ...prepared,
         env: { ...TOOL_ENV, ...prepared.env },
         timeoutMs: seconds * MILLISECONDS,
+        ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
+}
+
+/**
+ * Run an adapter command through the shared execution boundaries.
+ * @param input the check and its command session
+ * @param command the executable name and arguments
+ * @param options the working directory, environment, and standard input
+ * @returns captured output after checking process failures
+ */
+export async function runCheckCommand(
+    input: EngineInput,
+    command: string[],
+    options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>> & Pick<SpawnOptions, 'stdin'>,
+): Promise<SpawnResult> {
+    if (input.session.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
+    const name = command[0];
+    if (name === undefined) throw new Error('An empty command cannot run.');
+    const { path, env } = adapterTool(input, name, options);
+    const result = await runToolCommand(
+        input.view,
+        [path, ...command.slice(1)],
+        { ...options, env },
+        input.session.cancelSignal,
+    );
+    const failure = executionFailure(result, name, input.view.limit('tool_seconds') ?? DEFAULT_TOOL_SECONDS);
+    if (failure?.status === 'missing') throw new MissingToolError(failure.note);
+    if (failure !== undefined) throw new Error(failure.note);
+    return result;
+}
+
+function adapterTool(
+    input: EngineInput,
+    name: string,
+    options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>>,
+): { path: string; env: Record<string, string> } {
+    const tool = toolPin(input.session.manifests.values(), name);
+    const env = { ...tool.env, ...input.spec.env, ...options.env };
+    const probe = probeTool({ ...input.session, cwd: options.cwd }, { ...tool, env });
+    if (probe.state === 'error') throw new Error(probe.note ?? `${name} version probe failed.`);
+    if (probe.state === 'missing' || probe.state === 'outdated' || probe.path === undefined) {
+        throw new MissingToolError(missingNote(tool, probe, probe.state));
+    }
+    return { path: probe.path, env };
 }

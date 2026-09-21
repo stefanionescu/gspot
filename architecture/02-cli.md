@@ -137,7 +137,7 @@ write
   .gspot/                          generated configuration, lint tools, version pin
   .mise/conf.d/gspot-tools.toml    9 tool pins, gspot 0.5.0
   .editorconfig                    written by gspot, with its mark
-  CLAUDE.md  AGENTS.md  .gitignore  .gitattributes    one managed block each
+  AGENTS.md  detected agent files  .gitignore  .gitattributes    one managed block each
   .gspot/rules/                    14 rule files
 
 change, after your yes

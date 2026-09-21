@@ -8,7 +8,7 @@ Historical failures below remain evidence; current cleanup status lives in
 Tests exercise real current behavior, not wrappers, deleted logic, source tokens, or filename
 inventories. Delete obsolete assertions and move surviving behavioral regressions to their
 new owner. Assert intended findings and corrected behavior. A test must not preserve a known
-bug or weaken a rule to keep its fixture green.
+bug or weaken a rule to make the test pass.
 
 Reference acceptance requires successful init, expected checks actually executed, reviewed
 findings, and preserved worktrees. Worktree setup and cleanup failures are failures.
@@ -17,7 +17,17 @@ Exercise embedded assets and plugin execution.
 
 Checkout dependency symlinks and source entry
 points cannot establish packaged acceptance. Metadata and version responses alone are insufficient.
-Keep registry isolation, restoration, serialization, malformed-input, and process tests.
+Keep product restoration, serialization, malformed-input, and process tests. Registry setup
+and cleanup support the installed-consumer journey; they do not need their own test suite.
+Do not add tests of test directories, test helpers, repository layout, or test inventories.
+Tests of gspot layout rules must demonstrate findings on user input and corrected-input success.
+
+Temporary test directories use `testdirs` directly. Register disposal before calling
+`createFileTree` so partial setup is cleaned. No private testing package or forwarding API
+is required. Do not maintain a separate suite that tests this dependency.
+Evaluate the [infrastructure reuse candidates](../15-prior-art.md#infrastructure-reuse-candidates)
+before adding custom support. If a candidate fails a required case, record the failure and retain
+only the unsupported behavior. Do not create a test framework or an internal filesystem API.
 
 ## T-27: the harness lets a failed `init` pass
 
@@ -55,7 +65,8 @@ planted folder, and the four tests use it.
 
 **What goes.** The casts, the seven bare `run` calls, and the repeated literals.
 
-**Tests.** A unit test of the harness: a crashing `init` fails `install`.
+**Tests.** Product acceptance checks the actual init exit and resulting policy. Do not add
+a unit test of the harness or mock its assertions.
 
 **Done when.** Failed initialization and missing tools fail setup, and restoration preserves
 the original files after partial setup or execution failure.
@@ -72,8 +83,7 @@ selection is never run. No test installs the pinned npm tools into an empty fold
 once. One install starts from a repository that has hooks and mise tasks. One default `init` runs
 in every test run.
 
-**Files.** New `tests/acceptance/cli/installs.test.ts`. `tests/release/pins.test.ts` gains the
-install of K-206.
+**Files.** The owning CLI installation acceptance and `tests/release/install.test.ts`.
 
 **Logic.** Exercise six installs in the owning suite: mise with GitHub CI, npm, pnpm,
 bun, no runner with GitLab CI, and the default with no flag. Each holds the files written, a
@@ -128,7 +138,7 @@ inventory assertions are also removed. Real input, process, and storage failure 
 
 The disabled-Boolean-rule test is removed: its unrelated `no-var` finding did not
 establish the naming contract. Swift build regressions sit with CLI integration tests,
-process regressions are named `spawn`, and shared harness tests are named `harness`.
+process regressions are named `spawn`. Standalone harness tests are removed.
 Emission tests are grouped by selection, serialization, and alias discovery. Swift
 error assertions use the existing assertion library instead of repeated catch blocks.
 
@@ -218,7 +228,7 @@ is unmeasured.
 
 **Files.** Extend root command acceptance and package-owned naming tests. Keep actual generated
 project inputs beside the consuming acceptance cases with their generator versions recorded.
-Create fixture directories only for exercised projects, not every possible generator.
+Create test directories only for exercised projects, not every possible generator.
 
 **Logic.** For each generated project and representative established multi-package project, run `init --yes` and `check`. Review each recommended finding for a demonstrated defect and false positives before accepting any message or count snapshot (K-301). Include valid API wrappers, framework adapters, and identifiers containing `generate` or `service`. A count alone is not an acceptance criterion. The naming test runs the shipped policy over one short file for each
 language and framework, and expects no finding.
@@ -273,7 +283,7 @@ serialization assertion, rather than merely appearing as a changed snapshot line
 **Target.** Two ceilings, held in CI: a staged check of ten files in a planted repository of
 5,000 files, and `init --yes` on the same repository.
 
-**Files.** New `tests/release/timing.test.ts`, `tests/config/timeouts.ts`.
+**Files.** New `tests/release/timing.test.ts`, the timing suite's local limits.
 
 **Logic.** The test writes the 5,000 files from a generator, and runs warm and cold. The staged
 check has 5 seconds warm and 30 cold, and `init` has 60.
@@ -312,28 +322,10 @@ in the bash and the zsh script. The release tests read `version` of
 
 ## T-31: test files named after folders that are gone
 
-Closes T-31, T-11, and T-34.
-
-**What is wrong.** `golang.test.ts`, `handheld.test.ts`, `components.test.ts`,
-`documents.test.ts`, `repository-check.test.ts`, and `scope-languages.test.ts` do not carry the name
-of the preset they test. The Xcode project of the xcode test is nine lines written by hand, so
-the reader never meets a `project.pbxproj` that Xcode wrote.
-
-**Target.** A repository test carries the name of its preset (D-128). The xcode test repository is a
-project Xcode generated, with groups, build phases, and synchronized folders.
-
-**Files.** Renames: `handheld` to `react-native`, `components` to `vue` and `svelte`, `documents`
-to `docs` and `markdown`, `repository-check` to `declared-check`, `scope-languages` to `scope-presets` (D-113). New
-`tests/repositories/samples/xcode/`.
-
-**Logic.** Renames and one tracked test repository.
-
-**What goes.** The hand-written project text.
-
-**Tests.** The xcode tests run on the test repository.
-
-**Done when.** Every file under `tests/repositories/` is named after a preset name or after what
-it installs.
+**Partly retired.** T-11 and filename-only renames are retired: a suite can cover multiple
+presets without matching a preset directory name. T-34 remains actionable where the Xcode
+fixture is not a valid project. Exercise a valid Xcode project through the pinned consumer;
+keep setup data beside the suite. Directory naming is not acceptance evidence.
 
 ## T-20: tests that change with their subject
 
@@ -369,7 +361,7 @@ A fetch has no request deadline, so the polling count does not bound a stalled r
 Startup, request and shutdown deadlines are bounded. Failed startup releases owned resources
 and preserves useful process output without exposing credentials.
 
-**Files.** `tests/harness/registry.ts` and release harness tests under T-24 and K-164.
+**Files.** `tests/harness/registry/` and installed-consumer release acceptance.
 
 **Logic.** Use a supported isolated listen address/port allocation, observe child startup and
 exit, and verify readiness belongs to the child before returning a registry. An occupied port
@@ -377,10 +369,9 @@ must not allow publication into the existing service. Always await owned-child t
 clean temporary storage, including failure before a registry object is returned. Keep retries
 limited to documented startup readiness; never retry failed publication into another registry.
 
-**Tests.** Cover an occupied port with a healthy unrelated HTTP responder, missing executable,
-early child exit, a stalled ping, parallel registries, startup timeout, and normal shutdown.
-Assert no publication reaches the unrelated responder and no owned child or temporary folder
-survives each completed failure path. Run on supported platforms when CI is re-enabled.
+**Tests.** Publish and install built packages through the isolated consumer journey.
+Fail that journey on unsuccessful startup, publication, installation, or cleanup.
+Do not recreate a standalone registry-harness suite.
 
 **Done when.** Readiness identifies the owned server and all setup/teardown paths release it.
 
@@ -389,7 +380,8 @@ under `tests/harness/registry/` uses a dedicated child interprocess communicatio
 its bound loopback port. Readiness requests have a deadline. Child output is captured, termination is awaited,
 and partial setup removes owned storage. Publication rejects an exited child.
 
-Eight local regressions cover an occupied healthy responder, separate registries, missing executable,
+Historical evidence from the subsequently removed harness suite: eight local regressions covered
+an occupied healthy responder, separate registries, missing executable,
 early exit, startup timeout, stalled readiness, and writes failing before and after launch.
 They assert released storage and terminated children. Bun signal termination is identified
 through `signalCode` as well as `exitCode`. Supported Windows and Linux execution is deferred

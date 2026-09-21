@@ -1,19 +1,19 @@
-import { runProse } from '#cli/prose/engine.ts';
-import { runNaming } from '#cli/naming/engine.ts';
+import { resolveProse } from '#cli/prose/engine.ts';
+import { resolveNaming } from '#cli/naming/engine.ts';
 // Dispatch to the built-in engines by `engine =` in the manifest.
 import type { CheckSpec } from '#types/manifest.ts';
 import type { CheckResult } from '#types/finding.ts';
-import { runIntegrity } from '#cli/checks/dispatch.ts';
-import { runStructure } from '#cli/structure/engine.ts';
+import { resolveIntegrity } from '#cli/checks/dispatch.ts';
+import { resolveStructure } from '#cli/structure/engine.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 import type { EngineInput, Engine, Session, PlannedCheck } from '#types/run.ts';
 
-const engines: Record<NonNullable<CheckSpec['engine']>, Engine> = {
-    integrity: runIntegrity,
-    naming: runNaming,
-    structure: runStructure,
-    prose: runProse,
+const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Engine> = {
+    integrity: resolveIntegrity,
+    naming: resolveNaming,
+    structure: resolveStructure,
+    prose: resolveProse,
 };
 
 // Classify missing tools and unmet prerequisites separately from engine errors.
@@ -26,14 +26,14 @@ function failureOf(name: string, error: unknown): Pick<CheckResult, 'status' | '
 /**
  * Runs one planned engine check.
  * @param session the session
- * @param name the validated engine name
+ * @param engine the implementation selected during planning
  * @param planned the check to run
  * @param staged the staged paths, in staged mode
  * @returns the check result with its findings
  */
 export async function runEngineCheck(
     session: Session,
-    name: NonNullable<CheckSpec['engine']>,
+    engine: Engine,
     planned: PlannedCheck,
     staged?: Set<string>,
 ): Promise<CheckResult> {
@@ -45,9 +45,8 @@ export async function runEngineCheck(
         files: planned.files.length,
         duration: 0,
         findings: [],
-        baselined: 0,
     };
-    const engine = engines[name];
+    const name = spec.engine;
     const started = performance.now();
     try {
         const input: EngineInput = {
@@ -61,7 +60,7 @@ export async function runEngineCheck(
         if (staged) input.staged = staged;
         const findings = await engine(input);
         for (const finding of findings) {
-            finding.engine = name;
+            if (name !== undefined) finding.engine = name;
             finding.help ??= spec.help;
         }
         return {
@@ -71,6 +70,11 @@ export async function runEngineCheck(
             findings,
         };
     } catch (error) {
-        return { ...base, duration: performance.now() - started, ...failureOf(name, error) };
+        return { ...base, duration: performance.now() - started, ...failureOf(name ?? spec.name, error) };
     }
+}
+
+/** Resolve a built-in implementation without executing its preparation or inspecting source files. */
+export function resolveEngine(spec: CheckSpec & { engine: NonNullable<CheckSpec['engine']> }): Engine {
+    return engines[spec.engine](spec);
 }

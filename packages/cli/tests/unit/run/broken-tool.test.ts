@@ -2,14 +2,17 @@ import { describe, expect, test } from 'bun:test';
 import type { CheckSpec } from '#types/manifest.ts';
 import { isToolBroken } from '#cli/run/broken-tool.ts';
 
-const base: Omit<CheckSpec, 'name' | 'output'> = {
+const base = {
+    name: 'sandbox/diagnostic',
+    command: ['tool'],
+    level: 'recommended',
     stage: 'commit',
     runs: 'per-file-list',
     coverage: [],
     summary: '',
     why: '',
     help: '',
-};
+} satisfies CheckSpec;
 const here = import.meta.dir;
 
 describe('isToolBroken', () => {

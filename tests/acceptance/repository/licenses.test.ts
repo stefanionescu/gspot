@@ -1,6 +1,6 @@
 // Planted repository for the licenses preset: a package under a license outside the list, and an exception that went stale.
 import { delimiter, join } from 'node:path';
-import { createSandbox } from '@gspot/testing';
+import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
 
@@ -26,7 +26,8 @@ describe('the licenses preset', () => {
     test(
         'a license outside the list fails, an exception that names it passes, and one that names another fails',
         async () => {
-            await using sandbox = await createSandbox({
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, {
                 'package.json': ROOT,
                 '.gitignore': 'node_modules/\n',
                 'node_modules/kind/package.json': installed('kind', 'MIT'),
@@ -36,6 +37,8 @@ describe('the licenses preset', () => {
             commitAll(sandbox.path);
             const environment = { PATH: `${NPM_BIN}${delimiter}${toolsPath(['typos', 'ec'])}` };
             await install(sandbox.path, INIT, environment);
+            const selected = await run(sandbox.path, ['set', 'level', 'all'], environment);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
             const clean = await run(sandbox.path, ['check', '--only', 'licenses/npm', '--no-cache'], environment);
             expect(clean.code, clean.stdout + clean.stderr).toBe(0);
             await Bun.write(

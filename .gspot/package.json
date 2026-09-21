@@ -1,0 +1,28 @@
+{
+    "name": "gspot-tools",
+    "private": true,
+    "type": "module",
+    "packageManager": "bun@1.3.11",
+    "devDependencies": {
+        "@eslint-community/eslint-plugin-eslint-comments": "4.8.0",
+        "@eslint/js": "9.39.5",
+        "@gspot/eslint-plugin": "0.1.0",
+        "eslint": "9.39.5",
+        "eslint-config-prettier": "10.1.8",
+        "eslint-import-resolver-typescript": "4.4.5",
+        "eslint-plugin-boundaries": "7.2.0",
+        "eslint-plugin-import-x": "4.17.1",
+        "eslint-plugin-jsdoc": "64.3.9",
+        "eslint-plugin-n": "18.3.0",
+        "eslint-plugin-package-json": "1.8.0",
+        "eslint-plugin-regexp": "3.3.0",
+        "eslint-plugin-security": "4.0.1",
+        "eslint-plugin-sonarjs": "4.2.0",
+        "eslint-plugin-unicorn": "65.0.1",
+        "globals": "17.12.0",
+        "knip": "6.35.1",
+        "prettier": "3.8.1",
+        "typescript": "5.9.3",
+        "typescript-eslint": "8.70.0"
+    }
+}

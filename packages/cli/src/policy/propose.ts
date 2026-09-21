@@ -2,6 +2,7 @@
 import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { SCHEMA_LINE } from '#config/markers.ts';
+import { policySchema } from '#cli/policy/schema.ts';
 import type { CarriedLists } from '#types/lifecycle.ts';
 import type { TomlTable, Proposal } from '#types/config.ts';
 
@@ -9,7 +10,7 @@ const PREFACE = [
     SCHEMA_LINE,
     '',
     '# The policy of this repository under gspot. Every setting has a command that writes it:',
-    '# gspot set, allow, ignore, declare, add, remove. Run gspot explain <anything> for what it means.',
+    '# gspot set, ignore, add, remove. Run gspot explain <anything> for what it means.',
     '',
     '',
 ].join('\n');
@@ -37,6 +38,7 @@ function xcodeTable(xcode: Proposal['xcode']): TomlTable | undefined {
 function toolTables(carried: CarriedLists, commitScopes: string[] | undefined, xcode?: Proposal['xcode']): TomlTable {
     const tables: Record<string, TomlTable | undefined> = {
         typos: typosTable(carried),
+        eslint: carried.eslintOverrides === undefined ? undefined : { overrides: carried.eslintOverrides },
         gitleaks: nonEmpty({ allow: carried.gitleaksAllow }),
         basedpyright: nonEmpty({ exclude: carried.pyrightExcludes }),
         sqlfluff: nonEmpty({ exclude: carried.sqlfluffExcludes }),
@@ -50,7 +52,11 @@ function toolTables(carried: CarriedLists, commitScopes: string[] | undefined, x
 }
 
 function headTables(proposal: Proposal): TomlTable {
-    const document: TomlTable = { version: 1, presets: proposal.presets };
+    const document: TomlTable = {
+        version: 1,
+        level: policySchema.shape.level.parse(undefined),
+        presets: proposal.presets,
+    };
     if (proposal.scopes.length > 0)
         document['scope'] = proposal.scopes.map((scope) => ({
             path: scope.path,
@@ -65,7 +71,7 @@ function headTables(proposal: Proposal): TomlTable {
 function ignoreTables(carried: CarriedLists): TomlTable[] {
     return carried.ignores.map((entry) => ({
         check: entry.check,
-        rule: entry.rule,
+        ...(entry.rule === undefined ? {} : { rule: entry.rule }),
         ...(entry.paths === undefined ? {} : { paths: entry.paths }),
         reason: entry.reason,
     }));
@@ -108,6 +114,7 @@ function bodyText(document: TomlTable): string {
 export function proposeText(proposal: Proposal): string {
     const document = headTables(proposal);
     const tools = toolTables(proposal.carried, proposal.commitScopes, proposal.xcode);
+    if (proposal.prettierExtra !== undefined) tools['prettier'] = { extra: proposal.prettierExtra };
     if (Object.keys(tools).length > 0) document['tools'] = tools;
     mergeProfile(document, proposal.profileTables);
     if (proposal.carried.ignores.length > 0)

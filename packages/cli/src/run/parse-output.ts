@@ -1,3 +1,4 @@
+import { z } from 'zod';
 import { parseJson } from '#cli/output/json.ts';
 import type { Finding } from '#types/finding.ts';
 // Findings from a tool's output: one parser per output format a manifest can declare.
@@ -11,6 +12,34 @@ const DEFAULT_FILE_PATTERN = String.raw`^(?<file>[^\s].*):$`;
 const DEFAULT_GROUPED_PATTERN = String.raw`^\s+(?<line>\d+): (?<message>.*)$`;
 const TRAILING_BRACKET_RULE = /\[(?<rule>[\w:/@.-]+)\]$/u;
 const TRAILING_PAREN_RULE = /\((?<rule>[a-z0-9_:/@.-]+)\)$/u;
+
+const trufflehogFinding = z.object({
+    DetectorName: z.string().min(1),
+    Verified: z.literal(true),
+    SourceMetadata: z.object({ Data: z.object({ JsonEnumerator: z.object({ metadata: z.string() }) }) }),
+});
+const historyMetadata = z.object({ commit: z.string().regex(/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u), file: z.string() });
+
+function trufflehogFindings(check: string, stdout: string, help: string): Finding[] {
+    const findings: Finding[] = [];
+    for (const line of stdout.split('\n').filter((line) => line.trim() !== '')) {
+        try {
+            const result = trufflehogFinding.parse(JSON.parse(line));
+            const metadata = historyMetadata.parse(JSON.parse(result.SourceMetadata.Data.JsonEnumerator.metadata));
+            findings.push({
+                check,
+                file: metadata.file,
+                rule: result.DetectorName,
+                message: `Verified ${result.DetectorName} credential in commit ${metadata.commit}.`,
+                help,
+                fixable: false,
+            });
+        } catch {
+            throw new ToolOutputError('TruffleHog returned invalid structured findings; raw output was withheld.');
+        }
+    }
+    return findings;
+}
 
 const DEFAULT_OUTPUT: OutputFormat = { format: 'regex', pattern: DEFAULT_PATTERN };
 
@@ -162,6 +191,9 @@ function parseRaw(spec: CheckSpec, stdout: string, stderr: string, root: string)
         case 'json': {
             return parseJson(spec.name, output, stdout, spec.help);
         }
+        case 'trufflehog-json': {
+            return trufflehogFindings(spec.name, stdout, spec.help);
+        }
         case 'eslint-json': {
             return parseEslintJson(spec.name, stdout, spec.help, root);
         }
@@ -193,6 +225,12 @@ function relativeTo(root: string, file: string): string {
 export function parseOutput(spec: CheckSpec, stdout: string, stderr: string, root: string): Finding[] {
     return parseRaw(spec, stdout, stderr, root).map((finding) => ({
         ...finding,
+        fixable: spec.fix_command !== undefined && finding.fixable,
         file: relativeTo(toPosix(root), toPosix(finding.file)),
     }));
+}
+
+/** A tool response that cannot be interpreted safely as findings. */
+export class ToolOutputError extends Error {
+    override name = 'ToolOutputError';
 }
