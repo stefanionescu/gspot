@@ -1,4 +1,4 @@
-import type { Finding } from '#types/finding.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { describe, expect, test } from 'bun:test';
 import { applyIgnores } from '#cli/run/ignores.ts';
 

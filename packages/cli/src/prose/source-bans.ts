@@ -1,10 +1,10 @@
 // What a source file may not say to Vale: an in-text directive in Markdown, a block comment in SQL.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import { CODE_SPAN, SQL_BLOCK_COMMENT, VALE_DIRECTIVE } from '#config/prose.ts';
+import { CODE_SPAN, SQL_BLOCK_COMMENT, VALE_DIRECTIVE } from '#cli/prose/prose-definitions.ts';
 
 const MARKDOWN = new Set(['.md', '.mdx']);
 const SQL = new Set(['.sql', '.pgsql', '.psql']);

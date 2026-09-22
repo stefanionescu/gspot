@@ -1,8 +1,8 @@
 // The file set: what git tracks or is about to track, or a gitignore-honoring walk without git.
 import { globby } from 'globby';
 import { dirname, join, resolve } from 'node:path';
-import type { SpawnResult } from '#types/platform.ts';
-import type { RawEntry } from '#types/repository.ts';
+import type { SpawnResult } from '#cli/platform/types.ts';
+import type { RawEntry } from '#cli/repository/types.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { existsSync, lstatSync, statSync, openSync, readSync, closeSync } from 'node:fs';
 
@@ -10,16 +10,12 @@ const EXECUTABLE_BITS = 0o111;
 const HEAD_BYTES = 2048;
 const NOT_REPOSITORY_CODE = 128;
 
-function isMissingFile(error: unknown): boolean {
-    return error instanceof Error && 'code' in error && error.code === 'ENOENT';
-}
-
 function symlinkEntry(full: string, path: string): RawEntry | undefined {
     try {
         const target = statSync(full);
         return target.isDirectory() ? undefined : { path, size: target.size, executable: false, symlink: true };
     } catch (error) {
-        if (!isMissingFile(error)) throw error;
+        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
         return { path, size: 0, executable: false, symlink: true };
     }
 }
@@ -30,7 +26,7 @@ function entryFor(root: string, path: string): RawEntry | undefined {
     try {
         stat = lstatSync(full);
     } catch (error) {
-        if (!isMissingFile(error)) throw error;
+        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
         return undefined;
     }
     if (stat.isSymbolicLink()) return symlinkEntry(full, path);
@@ -44,7 +40,7 @@ function hasGitEntry(directory: string): boolean {
         lstatSync(join(directory, '.git'));
         return true;
     } catch (error) {
-        if (!isMissingFile(error)) throw error;
+        if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
     }
     const parent = dirname(directory);
     return parent !== directory && hasGitEntry(parent);

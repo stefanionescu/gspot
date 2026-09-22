@@ -2,7 +2,7 @@ import { scopeAncestors } from '#cli/repository/scopes.ts';
 // The settings surface: every key the selection exposes, its direction, default, and current value with its source.
 import * as messages from '#cli/policy/messages.ts';
 import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schema.ts';
-import type { Manifest, SettingSpec } from '#types/manifest.ts';
+import type { Manifest, SettingSpec } from '#cli/presets/types.ts';
 
 import type {
     WrittenValue,
@@ -15,7 +15,7 @@ import type {
     Reasoned,
     ResolvedSetting,
     ExposedSettings,
-} from '#types/config.ts';
+} from '#cli/policy/types.ts';
 
 const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 

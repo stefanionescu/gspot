@@ -1,6 +1,6 @@
 // The underscore on shell functions no other file calls. Searched: shellcheck; it has no notion of a file set.
-import type { Analysis } from '#types/structure.ts';
-import { ENTRY_FUNCTIONS } from '#config/structure.ts';
+import type { Analysis } from '#cli/structure/types.ts';
+import { ENTRY_FUNCTIONS } from '#cli/structure/structure-definitions.ts';
 import { outsideCallers } from '#cli/structure/cross-file-index.ts';
 
 /**

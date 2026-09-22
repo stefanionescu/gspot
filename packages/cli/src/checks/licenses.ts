@@ -4,10 +4,10 @@ import { statSync } from 'node:fs';
 import { z } from 'zod';
 import satisfies from 'spdx-satisfies';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import parseExpression from 'spdx-expression-parse';
-import type { LicenseException } from '#types/integrity.ts';
+import type { LicenseException } from '#cli/checks/types.ts';
 
 const TOOL = 'license-checker-rseidelsohn';
 const licenseSchema = z.object({ licenses: z.union([z.string(), z.array(z.string())]).optional() });

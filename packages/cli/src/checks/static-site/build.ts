@@ -2,10 +2,10 @@
 import { join } from 'node:path';
 import { createHash } from 'node:crypto';
 import { run } from '#cli/platform/spawn.ts';
-import type { SiteBuild } from '#types/web.ts';
-import type { Finding } from '#types/finding.ts';
-import { scratchCopy } from '#cli/run/scratch-copy.ts';
-import type { EngineInput, Session } from '#types/run.ts';
+import type { SiteBuild } from '#cli/checks/static-site/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import { scratchCopy } from '#cli/run/fixers.ts';
+import type { EngineInput, Session } from '#cli/run/types.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 import { existsSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
 

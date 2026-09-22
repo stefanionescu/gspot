@@ -1,10 +1,9 @@
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 import { staticString } from '#plugin/files.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 // An import path that names an index file or a barrel.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/options.ts';
-import type { NoIndexImportsOptions } from '#plugin-types/options.ts';
+import { optionsSchema, stringList } from '#plugin/rules/options.ts';
 
 const DEFAULT_PATTERNS = [
     String.raw`^[@#][\w./-]*/.+/index(?:\.[cm]?[jt]sx?)?$`,
@@ -65,3 +64,5 @@ export const noIndexImports = createRule<NoIndexImportsOptions, 'index'>({
         };
     },
 });
+
+export type NoIndexImportsOptions = [{ allow?: string[]; patterns?: string[] }];

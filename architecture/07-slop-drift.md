@@ -3,7 +3,7 @@
 This document decides the enforcement gspot adds beyond the reference repositories: what
 machine-written slop looks like, what repository drift looks like, and the mechanism that catches
 each. Every row names a check of a preset, a rule of a pinned tool, or a rule of the gspot plugin. Python, Swift, and SQL
-list a shared idea under an id of their own, such as `python/call-through` (D-98, D-149).
+list a shared idea under an id of their own, such as `python/trivial-function`.
 
 ## Slop
 
@@ -28,29 +28,44 @@ name. One term list serves identifiers, file names, and prose.
 
 ### Slop in structure
 
-| Pattern                                                                                | Check                                                                                                           |
-| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------- |
-| A function that forwards its arguments to one call                                     | `gspot/no-call-through`, `structure/call-through`                                                               |
-| A file that only re-exports                                                            | `gspot/no-export-only-files`, `python/package-exports`                                                          |
-| A file that only calls imports                                                         | `gspot/no-trivial-files`                                                                                        |
-| A constant that renames another                                                        | `gspot/no-exported-alias-constants`, `python/package-exports`                                                   |
-| A folder with one file                                                                 | `structure/single-file-folder`, at the level `all`                                                              |
-| A barrel that grows without bound                                                      | `gspot/max-barrel-reexports`, `python/package-exports`                                                          |
-| Two identical function bodies                                                          | `sonarjs/no-identical-functions`, the duplicate-functions idea in each language, jscpd                          |
-| A singleton with a getter                                                              | `python/no-singletons`                                                                                          |
-| A module with a lazy `__getattr__`                                                     | `python/no-lazy-exports`                                                                                        |
-| A compatibility wrapper or forwarding script                                           | `structure/bash-script-policy`, the `compat` and `forward` name ban                                             |
-| A re-export kept for a renamed symbol                                                  | `gspot/no-reexports` with `allowIndex`, knip `unused exports`                                                   |
-| Dead code                                                                              | knip, vulture, Periphery, `structure/unused-functions`, `sonarjs/no-dead-store`                                 |
-| A file or function past the size limit                                                 | `[limits]` through every language's tool                                                                        |
-| Deep nesting and nested callbacks                                                      | `max-nested-callbacks`, `max-depth`, SwiftLint `nesting`, Ruff `PLR1702`, shell nesting count                   |
-| Cognitive complexity past the limit                                                    | `sonarjs/cognitive-complexity`, Ruff `C901`, SwiftLint                                                          |
-| Public declarations scattered among private ones, so a reader cannot find the contract | `structure/private-before-public`, `import-x/exports-last`: private first, public last, in every language       |
-| A private function without the `_` that says so (Python, Bash)                         | `structure/private-prefix`, basedpyright `reportPrivateUsage`                                                   |
-| A type declared beside the value it describes, so the contract lives in forty files    | `gspot/types-placement`: type aliases under the `types/` directory, type-only imports, no runtime exports there |
-| A test importing a runtime module's internals, or source importing test code           | `boundaries/element-types`                                                                                      |
-| Environment variables read from anywhere                                               | `gspot/env-access-owner`, `structure/env-access-owner`: one configuration owner                                 |
-| A re-export that exists to shorten an import path                                      | `gspot/no-reexports` with `[structure] reexports = "none"`                                                      |
+`limits.trivial_statements` defaults to 2 and accepts a positive integer. Increasing it tightens
+enforcement. Report every implemented function at or below the threshold, including methods,
+constructors, accessors, nested functions, anonymous functions, callbacks, and closures. Count
+nested executable statements; exclude comments, blank lines, type-only declarations, and nested
+function bodies. Inspect nested functions independently. Expression bodies count as one statement.
+No caller-count, physical-line, forwarding, visibility, decorator, framework, or entrypoint exemption
+applies. Both recommended and all enable the rule. Required external APIs use narrow, reasoned
+suppressions. Findings never delete code or justify filler statements.
+
+Use the existing ESLint, Tree-sitter, and PostgreSQL parsers for JavaScript/TypeScript, Python,
+Swift, Bash, and SQL/PL/pgSQL. Files containing only forwarding, aliases, re-exports, or trivial
+functions are findings; one substantial implementation or meaningful owned schema is sufficient.
+The shared declared-parameter maximum is 7, with explicit per-language overrides. ESLint, Ruff,
+SwiftLint, and SQL enforce it. Bash positional arguments are variadic, not declared parameters.
+
+| Pattern                                                                                | Check                                                                                                     |
+| -------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------- |
+| A function that forwards its arguments to one call                                     | `gspot/no-trivial-functions`, `structure/trivial-function`                                                |
+| A file that only re-exports                                                            | `gspot/no-export-only-files`, `python/package-exports`                                                    |
+| A file that only calls imports                                                         | `gspot/no-trivial-files`                                                                                  |
+| A constant that renames another                                                        | `gspot/no-exported-alias-constants`, `python/package-exports`                                             |
+| A folder with one file                                                                 | `structure/single-file-folder`, at the level `all`                                                        |
+| A barrel that grows without bound                                                      | `gspot/max-barrel-reexports`, `python/package-exports`                                                    |
+| Two identical function bodies                                                          | `sonarjs/no-identical-functions`, the duplicate-functions idea in each language, jscpd                    |
+| A singleton with a getter                                                              | `python/no-singletons`                                                                                    |
+| A module with a lazy `__getattr__`                                                     | `python/no-lazy-exports`                                                                                  |
+| A compatibility wrapper or forwarding script                                           | `structure/bash-script-policy`, the `compat` and `forward` name ban                                       |
+| A re-export kept for a renamed symbol                                                  | `gspot/no-reexports` with `allowIndex`, knip `unused exports`                                             |
+| Dead code                                                                              | knip, vulture, Periphery, `structure/unused-functions`, `sonarjs/no-dead-store`                           |
+| A file or function past the size limit                                                 | `[limits]` through every language's tool                                                                  |
+| Deep nesting and nested callbacks                                                      | `max-nested-callbacks`, `max-depth`, SwiftLint `nesting`, Ruff `PLR1702`, shell nesting count             |
+| Cognitive complexity past the limit                                                    | `sonarjs/cognitive-complexity`, Ruff `C901`, SwiftLint                                                    |
+| Public declarations scattered among private ones, so a reader cannot find the contract | `structure/private-before-public`, `import-x/exports-last`: private first, public last, in every language |
+| A private function without the `_` that says so (Python, Bash)                         | `structure/private-prefix`, basedpyright `reportPrivateUsage`                                             |
+| Types separated from their behavioral owner                                            | Keep types, constants, and schemas with their owner; no mandatory top-level types or config bucket.       |
+| A test importing a runtime module's internals, or source importing test code           | `boundaries/element-types`                                                                                |
+| Environment variables read from anywhere                                               | `gspot/env-access-owner`, `structure/env-access-owner`: one configuration owner                           |
+| A re-export that exists to shorten an import path                                      | `gspot/no-reexports` with `[structure] reexports = "none"`                                                |
 
 ### Slop in defensive code
 

@@ -1,11 +1,11 @@
-import { LIFECYCLE_PRIVATE_PATH } from '#config/patterns.ts';
+import { LIFECYCLE_PRIVATE_PATH } from '#cli/lifecycle/patterns-definitions.ts';
 // Builds the Repository record: the file set with natures and tags, and the scopes.
 import { tagEntry } from '#cli/repository/tags.ts';
-import type { FileDeclaration } from '#types/config.ts';
-import { FILE_PREFIX_BYTES } from '#config/file-tags.ts';
+import type { FileDeclaration } from '#cli/policy/types.ts';
+import { FILE_PREFIX_BYTES } from '#cli/repository/file-tags-definitions.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { policyScopes } from '#cli/repository/scopes.ts';
-import type { Repository, TrackedFile } from '#types/repository.ts';
+import type { Repository, TrackedFile } from '#cli/repository/types.ts';
 import { natureOf, readAttributes } from '#cli/repository/natures.ts';
 import { isGitRepository, trackedEntries, readPrefix } from '#cli/repository/tracked.ts';
 

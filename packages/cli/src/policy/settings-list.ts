@@ -1,7 +1,7 @@
 // The settings listing: every setting, its value, and where it came from.
-import type { Session } from '#types/run.ts';
+import type { Session } from '#cli/run/types.ts';
 import { listSettings } from '#cli/policy/settings.ts';
-import type { ExtraRow, SettingRow, SettingsListing, ToolTables } from '#types/config.ts';
+import type { ExtraRow, SettingRow, SettingsListing, ToolTables } from '#cli/policy/types.ts';
 
 function rowsFor(session: Session): SettingRow[] {
     return session.scopes.flatMap((selection) => {

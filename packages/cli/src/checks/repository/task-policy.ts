@@ -2,8 +2,8 @@ import { MISE_CONFIG_PATH, MISE_TASKS, npmScripts } from '#cli/emit/runner-tasks
 // The task runner holds the tasks gspot writes, and the hooks gspot installs are in place and call it.
 import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
 
 function finding(input: EngineInput, file: string, rule: string, text: string): Finding {

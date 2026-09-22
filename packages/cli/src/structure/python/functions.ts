@@ -1,101 +1,30 @@
-// What a function body says about the function: it forwards, it is used once and tiny, its docstring says nothing, or it is long.
-import type { Node } from 'web-tree-sitter';
 import { docstringOf } from '#cli/structure/python/modules.ts';
-import type { PythonFunction, PythonModule, StructureProblem } from '#types/pyproject.ts';
+import type { PythonFunction, PythonModule, StructureProblem } from '#cli/structure/python/types.ts';
 
-const TRIVIAL_STATEMENTS = 2;
-const TRIVIAL_LINES = 3;
-// The name followed by a bracket appears once where the function is defined and once where its one caller calls it.
-const ONE_CALLER_COUNT = 2;
+import { executableStatements } from '#cli/structure/statements.ts';
 const PLACEHOLDERS = new Set(['todo', 'docstring', 'tbd', 'fixme', 'description', 'summary']);
-const RUNNER_NAMES = /^(?:main|test_\w*|__\w+__)$/u;
-
 function problem(fn: PythonFunction, rule: string, text: string): StructureProblem {
     return { file: fn.path, line: fn.node.startPosition.row + 1, rule, text };
 }
 
-function parameterNames(fn: PythonFunction): string[] {
-    const parameters = fn.node.childForFieldName('parameters')?.namedChildren ?? [];
-    return parameters
-        .map((parameter) => (parameter.childForFieldName('name') ?? parameter.namedChildren[0] ?? parameter).text)
-        .filter((name) => name !== 'self' && name !== 'cls');
-}
-
-// The call a body forwards to when it is one return of one call, or undefined.
-function forwardedCall(fn: PythonFunction): Node | undefined {
-    const [only, ...rest] = fn.body;
-    if (only === undefined || rest.length > 0 || only.type !== 'return_statement') return undefined;
-    const value = only.namedChildren[0];
-    return value?.type === 'call' ? value : undefined;
-}
-
-function callCount(modules: PythonModule[], name: string): number {
-    const pattern = new RegExp(String.raw`(?<![\w.])${name}\(`, 'gu');
-    return modules.reduce((sum, module) => sum + module.lines.join('\n').matchAll(pattern).toArray().length, 0);
+/** Report every implemented function at or below the configured statement threshold. */
+export function trivialFunctions(functions: PythonFunction[], threshold: number): StructureProblem[] {
+    return functions.flatMap((fn) => {
+        const count = fn.node.type === 'lambda' ? 1 : executableStatements(fn.body, 'python');
+        return count <= threshold
+            ? [
+                  problem(
+                      fn,
+                      'trivial-function',
+                      `${fn.name} has ${count} executable statements, at most ${threshold}. Inline it or suppress its required API with a reason.`,
+                  ),
+              ]
+            : [];
+    });
 }
 
 function codeLines(lines: string[], from: number, to: number): number {
     return lines.slice(from, to).filter((line) => line.trim() !== '' && !line.trimStart().startsWith('#')).length;
-}
-
-function isForwarding(fn: PythonFunction, call: Node): boolean {
-    const names = parameterNames(fn);
-    const given = (call.childForFieldName('arguments')?.namedChildren ?? []).map((argument) => argument.text);
-    return names.length > 0 && given.join(',') === names.join(',');
-}
-
-// An if or a match is one statement and many lines, and a body of many lines is no two-line detour.
-function bodyLines(fn: PythonFunction): number {
-    return fn.body.reduce((sum, statement) => sum + statement.endPosition.row - statement.startPosition.row + 1, 0);
-}
-
-function isInlineCandidate(fn: PythonFunction, allowed: Set<string>): boolean {
-    if (!fn.isTopLevel || fn.isDecorated || RUNNER_NAMES.test(fn.name) || allowed.has(fn.name)) return false;
-    const isTiny = fn.body.length > 0 && fn.body.length <= TRIVIAL_STATEMENTS && bodyLines(fn) <= TRIVIAL_LINES;
-    return isTiny && fn.body.every((statement) => statement.type !== 'raise_statement');
-}
-
-/**
- * Functions that pass their parameters straight to one other call.
- * @param functions every function of the run
- * @returns the problems
- */
-export function callThroughs(functions: PythonFunction[]): StructureProblem[] {
-    return functions.flatMap((fn) => {
-        const call = forwardedCall(fn);
-        if (call === undefined || fn.isDecorated || RUNNER_NAMES.test(fn.name) || !isForwarding(fn, call)) return [];
-        const callee = call.childForFieldName('function')?.text ?? 'another function';
-        return [
-            problem(
-                fn,
-                'call-through',
-                `${fn.name} passes its parameters straight to ${callee}. Call ${callee} directly.`,
-            ),
-        ];
-    });
-}
-
-/**
- * Top-level functions of one or two statements that one place calls: the body belongs at that place.
- * @param modules every module of the run
- * @param functions every function of the run
- * @param allowed the names the policy allows
- * @returns the problems
- */
-export function trivialFunctions(
-    modules: PythonModule[],
-    functions: PythonFunction[],
-    allowed: Set<string>,
-): StructureProblem[] {
-    return functions
-        .filter((fn) => isInlineCandidate(fn, allowed) && callCount(modules, fn.name) === ONE_CALLER_COUNT)
-        .map((fn) =>
-            problem(
-                fn,
-                'trivial-function',
-                `${fn.name} holds ${String(fn.body.length)} statements and one place calls it. Inline it there.`,
-            ),
-        );
 }
 
 /**

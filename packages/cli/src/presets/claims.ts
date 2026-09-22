@@ -1,8 +1,8 @@
 // Which selected preset claims which file, per scope.
 import picomatch from 'picomatch';
 import { sourcePresets } from '#cli/presets/select.ts';
-import type { PathExpressions, TrackedFile } from '#types/repository.ts';
-import type { Claims, Manifest } from '#types/manifest.ts';
+import type { PathExpressions, TrackedFile } from '#cli/repository/types.ts';
+import type { Claims, Manifest } from '#cli/presets/types.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 
 const GLOB_CHARS = /[*?{]/u;

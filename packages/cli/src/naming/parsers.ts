@@ -1,7 +1,8 @@
+import { readFileSync } from 'node:fs';
 // The tree-sitter parsers the extractors use, loaded once per process from the embedded grammars.
 import { Language, Parser } from 'web-tree-sitter';
-import type { GrammarName } from '#types/naming.ts';
-import { grammarBytes } from '#cli/platform/assets.ts';
+import type { GrammarName } from '#cli/naming/types.ts';
+import { grammarPath } from '#cli/platform/assets.ts';
 
 const DECLARATION_FILE = /\.d\.[cm]?ts$/u;
 
@@ -11,13 +12,13 @@ const state: { isReady: Promise<void> | undefined; parsers: Map<GrammarName, Pro
 };
 
 function ready(): Promise<void> {
-    state.isReady ??= Parser.init({ wasmBinary: grammarBytes('web-tree-sitter.wasm') });
+    state.isReady ??= Parser.init({ wasmBinary: readFileSync(grammarPath('web-tree-sitter.wasm')) });
     return state.isReady;
 }
 
 async function build(name: GrammarName): Promise<Parser> {
     await ready();
-    const language = await Language.load(grammarBytes(`${name}.wasm`));
+    const language = await Language.load(readFileSync(grammarPath(`${name}.wasm`)));
     const parser = new Parser();
     parser.setLanguage(language);
     return parser;

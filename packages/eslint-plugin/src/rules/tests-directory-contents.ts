@@ -1,20 +1,12 @@
 // A file that is not a test, sitting beside test files.
 import { posix } from 'node:path';
-import { createRule } from '#plugin/rule.ts';
-import { optionsSchema, stringList } from '#plugin/options.ts';
-import type { TestsDirectoryContentsOptions } from '#plugin-types/options.ts';
+import { createRule } from '#plugin/rules/definition.ts';
+import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+
 import { lintedFile, lintedRoot, isAnyGlobMatch, readDirectory, relativeToRoot } from '#plugin/files.ts';
 
 const DEFAULT_TEST = String.raw`\.(?:test|spec)\.[cm]?[jt]sx?$`;
 const CODE_FILE = /\.[cm]?[jt]sx?$/u;
-
-function isCandidate(name: string, test: RegExp): boolean {
-    return !test.test(name) && !name.endsWith('.d.ts') && CODE_FILE.test(name);
-}
-
-function isInTestDirectory(relative: string, options: TestsDirectoryContentsOptions[0]): boolean {
-    return isAnyGlobMatch(relative, options.testDirectories ?? []) && !isAnyGlobMatch(relative, options.excluded ?? []);
-}
 
 export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 'misplaced'>({
     name: 'tests-directory-contents',
@@ -49,7 +41,14 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
         const relative = relativeToRoot(lintedRoot(context), file);
         const test = new RegExp(options.testPattern ?? DEFAULT_TEST, 'u');
         const name = posix.basename(relative);
-        if (!isCandidate(name, test) || !isInTestDirectory(relative, options)) return {};
+        if (
+            !(!test.test(name) && !name.endsWith('.d.ts') && CODE_FILE.test(name)) ||
+            !(
+                isAnyGlobMatch(relative, options.testDirectories ?? []) &&
+                !isAnyGlobMatch(relative, options.excluded ?? [])
+            )
+        )
+            return {};
         return {
             Program(node) {
                 const siblings = readDirectory(posix.dirname(file));
@@ -63,3 +62,7 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
         };
     },
 });
+
+export type TestsDirectoryContentsOptions = [
+    { testPattern?: string; testDirectories?: string[]; harnessDirectory?: string; excluded?: string[] },
+];

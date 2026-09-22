@@ -1,6 +1,6 @@
-import type { ToolPin } from '#types/manifest.ts';
+import type { ToolPin } from '#cli/presets/types.ts';
 // Managed tools use the clone installer; host tools retain platform guidance.
-import { MISE_BACKENDS } from '#config/installers.ts';
+import { MISE_BACKENDS } from '#cli/platform/installers-definitions.ts';
 
 const HOST_HINTS: Record<string, string> = {
     xcodebuild: 'install Xcode from the App Store',

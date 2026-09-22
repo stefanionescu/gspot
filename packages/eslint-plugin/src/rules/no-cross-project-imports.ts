@@ -1,9 +1,9 @@
 // A relative import that escapes the scope.
 import { posix } from 'node:path';
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/options.ts';
-import type { CrossProjectImportsOptions } from '#plugin-types/options.ts';
+import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+
 import { lintedFile, lintedRoot, normalizePath, relativeToRoot, staticString } from '#plugin/files.ts';
 
 export const noCrossProjectImports = createRule<CrossProjectImportsOptions, 'escape'>({
@@ -67,3 +67,5 @@ export const noCrossProjectImports = createRule<CrossProjectImportsOptions, 'esc
         };
     },
 });
+
+export type CrossProjectImportsOptions = [{ scopes?: string[]; allowedEscapes?: string[] }];

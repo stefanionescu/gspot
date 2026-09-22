@@ -3,7 +3,7 @@ import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 // What changed in the repository after init: presets detected and not selected, configuration not owned, hooks or CI changed by hand, duplicate pins.
-import type { Session } from '#types/run.ts';
+import type { Session } from '#cli/run/types.ts';
 import { emitAll } from '#cli/emit/targets.ts';
 import { head } from '#cli/repository/tracked.ts';
 import { hasHeader } from '#cli/emit/templates.ts';
@@ -12,9 +12,9 @@ import { detectPresets } from '#cli/presets/detect.ts';
 import { everyManifest } from '#cli/presets/select.ts';
 import { pinnedTwice } from '#cli/emit/runner-tasks.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
-import type { ChangeReport, ChangeRow } from '#types/doctor.ts';
+import type { ChangeReport, ChangeRow } from '#cli/doctor/types.ts';
 import { existingTooling } from '#cli/repository/existing-tooling.ts';
-import type { ExistingTool, ExistingTooling } from '#types/repository.ts';
+import type { ExistingTool, ExistingTooling } from '#cli/repository/types.ts';
 
 const HEAD_BYTES = 600;
 
@@ -27,7 +27,7 @@ function detectedNotSelected(
         .filter((proposal) => !selected.has(proposal.preset))
         .filter((proposal) => {
             const manifest = session.manifests.get(proposal.preset);
-            return manifest?.preset.default !== true && manifest?.preset.kind !== 'concern';
+            return manifest?.preset.default !== true && manifest?.preset.kind !== 'policy';
         })
         .map((proposal) => ({
             preset: proposal.preset,

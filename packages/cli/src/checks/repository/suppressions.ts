@@ -2,14 +2,14 @@
 import { join } from 'node:path';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
 import { readFileSync } from 'node:fs';
-import type { EngineInput, Session } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import type { TrackedFile } from '#types/repository.ts';
-import { GSPOT_SUPPRESSION } from '#config/suppressions.ts';
+import type { EngineInput, Session } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { TrackedFile } from '#cli/repository/types.ts';
+import { GSPOT_SUPPRESSION } from '#cli/suppressions/suppressions-definitions.ts';
 import { claimedByClaims } from '#cli/presets/claims.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { SuppressionComment } from '#types/integrity.ts';
-import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#config/markers.ts';
+import type { SuppressionComment } from '#cli/checks/types.ts';
+import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/emit/markers-definitions.ts';
 
 function styleOf(file: TrackedFile): string | undefined {
     const dot = file.path.lastIndexOf('.');

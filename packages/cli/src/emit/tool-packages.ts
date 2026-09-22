@@ -6,8 +6,8 @@ import { dirname, join } from 'node:path';
 import { runToolCommand } from '#cli/run/tool-runner.ts';
 import { npmPins } from '#cli/emit/runner-tasks.ts';
 import { everyManifest } from '#cli/presets/select.ts';
-import type { Session } from '#types/run.ts';
-import type { GeneratedFile } from '#types/emit.ts';
+import type { Session } from '#cli/run/types.ts';
+import type { GeneratedFile } from '#cli/emit/types.ts';
 
 export const packageManagerSchema = z.strictObject({
     name: z.enum(['npm', 'bun', 'pnpm', 'yarn']),

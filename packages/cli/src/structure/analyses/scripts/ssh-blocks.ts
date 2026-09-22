@@ -1,7 +1,12 @@
 import { functionAt } from '#cli/structure/parser.ts';
 // Multi-line ssh blocks: named, documented, inside a function. Searched: shellcheck; it does not read intent.
-import type { Analysis, ScriptFile } from '#types/structure.ts';
-import { CLOSING_QUOTE_LINE, RUN_SSH_START, SSH_BLOCK_MIN_LINES, SSH_HEREDOC } from '#config/structure.ts';
+import type { Analysis, ScriptFile } from '#cli/structure/types.ts';
+import {
+    CLOSING_QUOTE_LINE,
+    RUN_SSH_START,
+    SSH_BLOCK_MIN_LINES,
+    SSH_HEREDOC,
+} from '#cli/structure/structure-definitions.ts';
 
 function unescapedQuotes(text: string, quote: string): number {
     let count = 0;
@@ -18,10 +23,6 @@ function isBlockStart(line: string): boolean {
     return unescapedQuotes(after, quote) % 2 === 0;
 }
 
-function isBlockEnd(trimmed: string): boolean {
-    return trimmed === '"' || trimmed === "'" || CLOSING_QUOTE_LINE.test(trimmed);
-}
-
 function quotedBlocks(file: ScriptFile): { start: number; length: number }[] {
     const blocks: { start: number; length: number }[] = [];
     let open: { start: number; length: number } | undefined;
@@ -32,7 +33,7 @@ function quotedBlocks(file: ScriptFile): { start: number; length: number }[] {
             continue;
         }
         open.length += 1;
-        if (isBlockEnd(trimmed)) {
+        if (trimmed === '"' || trimmed === "'" || CLOSING_QUOTE_LINE.test(trimmed)) {
             blocks.push(open);
             open = undefined;
         }

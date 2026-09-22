@@ -1,9 +1,9 @@
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 // process.env, import.meta.env, Bun.env and Deno.env read outside the declared configuration owner.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/options.ts';
-import type { EnvAccessOwnerOptions } from '#plugin-types/options.ts';
+import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 const ENVIRONMENT_HOSTS = new Set(['process', 'Bun', 'Deno']);
@@ -56,3 +56,5 @@ export const envAccessOwner = createRule<EnvAccessOwnerOptions, 'owner'>({
         };
     },
 });
+
+export type EnvAccessOwnerOptions = [{ owners?: string[] }];

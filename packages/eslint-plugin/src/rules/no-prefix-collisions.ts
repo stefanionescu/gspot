@@ -1,8 +1,8 @@
 // Two or more entries in one directory sharing a name prefix, at or above the threshold.
 import { posix } from 'node:path';
-import { createRule } from '#plugin/rule.ts';
-import type { NoPrefixCollisionsOptions } from '#plugin-types/options.ts';
-import { optionsSchema, positiveInteger, stringList } from '#plugin/options.ts';
+import { createRule } from '#plugin/rules/definition.ts';
+
+import { optionsSchema, positiveInteger, stringList } from '#plugin/rules/options.ts';
 
 import {
     isIndexFile,
@@ -22,12 +22,6 @@ function isInScope(relative: string, scope: string[], ignored: string[]): boolea
     const segments = relative.split('/');
     if (ignored.some((segment) => segments.includes(segment))) return false;
     return scope.length === 0 || scope.some((segment) => segments.slice(0, -1).includes(segment));
-}
-
-function isCovered(relative: string, options: NoPrefixCollisionsOptions[0], ignored: string[]): boolean {
-    return (
-        isInScope(relative, options.scope ?? [], ignored) && !isAllowed(posix.dirname(relative), options.allow ?? [])
-    );
 }
 
 function isAllowed(directory: string, allow: string[]): boolean {
@@ -64,7 +58,14 @@ export const noPrefixCollisions = createRule<NoPrefixCollisionsOptions, 'collisi
         const relative = relativeToRoot(lintedRoot(context), file);
         const ignored = options.ignorePaths ?? DEFAULT_IGNORED;
         const prefix = prefixOf(stemOf(file));
-        if (prefix === '' || !isCovered(relative, options, ignored)) return {};
+        if (
+            prefix === '' ||
+            !(
+                isInScope(relative, options.scope ?? [], ignored) &&
+                !isAllowed(posix.dirname(relative), options.allow ?? [])
+            )
+        )
+            return {};
         const threshold = options.threshold ?? DEFAULT_THRESHOLD;
         return {
             Program(node) {
@@ -91,3 +92,7 @@ export const noPrefixCollisions = createRule<NoPrefixCollisionsOptions, 'collisi
         };
     },
 });
+
+export type NoPrefixCollisionsOptions = [
+    { threshold?: number; scope?: string[]; ignorePaths?: string[]; allow?: string[] },
+];

@@ -1,5 +1,5 @@
 // Does a name have the case its category asks for? Digits are left out on purpose: the digit ban reports them.
-import { MIGRATION_TIMESTAMP_DIGITS } from '#config/cases.ts';
+import { MIGRATION_TIMESTAMP_DIGITS } from '#cli/naming/cases-definitions.ts';
 
 const LOWER_WORD = /^[a-z]+$/u;
 const CAMEL_WORD = /^[a-z][A-Za-z]*$/u;

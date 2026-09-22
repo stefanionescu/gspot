@@ -5,14 +5,14 @@ import { isValePackageFile } from '#cli/repository/natures.ts';
 import { computeDrift } from '#cli/emit/drift.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { generatedSnapshot, readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { FileProposal, FileSnapshot, LifecycleOwner } from '#types/lifecycle.ts';
+import type { FileProposal, FileSnapshot, LifecycleOwner } from '#cli/lifecycle/types.ts';
 import { openSession } from '#cli/run/session.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
-import { assertPinMatches } from '#cli/run/version-pin.ts';
-import type { Session, CommandResult } from '#types/run.ts';
+import { writePin, GSPOT_VERSION, pinnedVersion } from '#cli/run/version-pin.ts';
+import type { Session, CommandResult } from '#cli/run/types.ts';
 import { emitAll } from '#cli/emit/targets.ts';
 import { hasPackages, installPackages } from '#cli/prose/vale.ts';
-import type { ApplyReport, ApplyOptions, DriftEntry, GeneratedProposal } from '#types/emit.ts';
+import type { ApplyReport, ApplyOptions, DriftEntry, GeneratedProposal } from '#cli/emit/types.ts';
 
 function configurationProposals(owner: LifecycleOwner, generated: GeneratedProposal, takeover: boolean) {
     const proposals: { proposal: FileProposal; package: boolean }[] = [];
@@ -69,7 +69,12 @@ function previewApply(session: Session): CommandResult {
     const drift = computeDrift(session, proposal);
     const summary = drift.length === 0 ? 'every generated file matches its proposal\n' : driftText(drift);
     const text = summary + proposal.notes.map((note) => `note     ${note}\n`).join('');
-    return { text, json: { isDryRun: true, drift, notes: proposal.notes }, exitCode: 0 };
+    const pin = { from: pinnedVersion(session.root), to: GSPOT_VERSION };
+    return {
+        text: `version ${pin.from ?? 'unpinned'} -> ${pin.to}\n${text}`,
+        json: { isDryRun: true, pin, drift, notes: proposal.notes },
+        exitCode: 0,
+    };
 }
 
 async function installProsePackages(session: Session, report: ApplyReport): Promise<void> {
@@ -210,6 +215,11 @@ export async function applyAll(session: Session, takeover?: ReadonlyMap<string, 
         );
         if (report.written.some((path) => toolInputs.has(path)))
             report.notes.push('Tool dependencies changed. Run: gspot install');
+        if (report.preserved.length > 0)
+            throw new Error(
+                `Apply preserved edited outputs: ${report.preserved.join(', ')}. Resolve them and retry; the version pin was not changed.`,
+            );
+        writePin(session.root);
         return report;
     });
 }
@@ -221,7 +231,6 @@ export async function applyAll(session: Session, takeover?: ReadonlyMap<string, 
  */
 export async function applyCommand(options: ApplyOptions): Promise<CommandResult> {
     const root = findRoot(options.cwd);
-    assertPinMatches(root);
     const session = await openSession(root);
     if (options.isDryRun) return previewApply(session);
     const report = await applyAll(session);

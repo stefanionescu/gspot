@@ -64,7 +64,7 @@ The command exits 0 and reports `passed: 1 check`. This is a manual correction. 
 does not claim the syntax error has an automatic fixer.
 
 The inputs and captured output live in
-[examples/bash-syntax.json](https://github.com/stefanionescu/gspot/blob/main/examples/bash-syntax.json).
+[docs/src/components/bash-syntax.json](https://github.com/stefanionescu/gspot/blob/main/docs/src/components/bash-syntax.json).
 To reproduce in your own project, keep the project files and run `gspot init` without the
 example-specific exclusions. Run `gspot install` before checks that need the locked tools.
 

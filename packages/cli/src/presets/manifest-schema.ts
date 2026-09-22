@@ -161,7 +161,7 @@ const settingSchema = z.strictObject({
 export const manifestSchema = z.strictObject({
     preset: z.strictObject({
         name: z.string().regex(/^[a-z0-9-]+$/),
-        kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'concern']),
+        kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'policy']),
         title: z.string(),
         requires: stringList,
         recommends: stringList,

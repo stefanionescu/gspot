@@ -1,11 +1,11 @@
 // Unchecked and partial files: what no preset claims, and what falls short of its required check kinds.
-import type { Manifest } from '#types/manifest.ts';
+import type { Manifest } from '#cli/presets/types.ts';
 import { claimants } from '#cli/presets/claims.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
-import type { CoverageReport } from '#types/doctor.ts';
-import type { TrackedFile } from '#types/repository.ts';
-import type { ScopeSelection, Session } from '#types/run.ts';
+import type { CoverageReport } from '#cli/doctor/types.ts';
+import type { TrackedFile } from '#cli/repository/types.ts';
+import type { ScopeSelection, Session } from '#cli/run/types.ts';
 
 function selectionFor(session: Session, file: TrackedFile): ScopeSelection | undefined {
     const scope = scopeOf(file.path, session.repository.scopes);

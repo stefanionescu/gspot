@@ -4,15 +4,15 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { expect, test } from 'bun:test';
-import { validateSiteLinks } from '../../docs/links';
+import { validateSiteLinks } from '../../docs/scripts/links';
 
 test('built-site validation covers landing fragments, relative manual links, encoded paths, and assets', async () => {
     await using sandbox = await testdir();
     await createFileTree(sandbox.path, {
-        'index.html': '<h1 id="finding">Finding</h1><a href="/guide/">Guide</a><img src="/brand/spot.png">',
-        'guide/index.html': '<a href="/#finding">Finding</a><a href="../caf%C3%A9.html#example">Example</a>',
+        'index.html': '<h1 id="finding">Finding</h1><a href="/guide/">Guide</a><img src="/assets/diagram.png">',
+        'guide/index.html': `<a href="/#finding">Finding</a><a href="../${encodeURIComponent('café.html')}#example">Example</a>`,
         'café.html': '<h1 id="example">Example</h1>',
-        'brand/spot.png': 'fixture',
+        'assets/diagram.png': 'fixture',
     });
     const directory = pathToFileURL(`${sandbox.path}/`);
     await validateSiteLinks(directory, 'https://gspot.dev');
@@ -20,7 +20,7 @@ test('built-site validation covers landing fragments, relative manual links, enc
     await rejects(validateSiteLinks(directory, 'https://gspot.dev'), { message: /fragment #missing does not exist/u });
     writeFileSync(join(sandbox.path, 'index.html'), '<h1 id="finding">Finding</h1><a href="/absent/">Missing page</a>');
     await rejects(validateSiteLinks(directory, 'https://gspot.dev'), { message: /destination does not exist/u });
-    writeFileSync(join(sandbox.path, 'index.html'), '<h1 id="finding">Finding</h1><img src="/brand/missing.png">');
+    writeFileSync(join(sandbox.path, 'index.html'), '<h1 id="finding">Finding</h1><img src="/assets/missing.png">');
     await rejects(validateSiteLinks(directory, 'https://gspot.dev'), {
         message: /missing.png: destination does not exist/u,
     });

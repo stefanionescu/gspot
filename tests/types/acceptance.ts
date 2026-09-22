@@ -1,4 +1,4 @@
-import type { Finding } from '#types/finding.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import type { reportSchema } from '#cli/run/report-schema.ts';
 
 /** What a spawned command left behind, for tests. */

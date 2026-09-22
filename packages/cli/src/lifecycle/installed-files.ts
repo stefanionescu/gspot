@@ -1,7 +1,7 @@
 import { readdirSync, lstatSync, readFileSync, readlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import { mutationTarget } from '#cli/lifecycle/confined.ts';
-import type { FileSnapshot, LifecycleOwner } from '#types/lifecycle.ts';
+import type { FileSnapshot, LifecycleOwner } from '#cli/lifecycle/types.ts';
 
 /** Publish an isolated native installation through the shared ownership journal. */
 export function publishInstalledFiles(owner: LifecycleOwner, directory: string, kind: 'npm' | 'python'): void {

@@ -1,8 +1,8 @@
 // The interpreter contract of a Bash script: the header, strict mode, the entry point, the library shape, the directory constants, mktemp cleanup.
 import semver from 'semver';
-import type { Finding } from '#types/finding.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { functionAt } from '#cli/structure/parser.ts';
-import type { Analysis, CodeLine, ScriptFile, ScriptReport, StructureContext } from '#types/structure.ts';
+import type { Analysis, CodeLine, ScriptFile, ScriptReport, StructureContext } from '#cli/structure/types.ts';
 import { codeLines, isDirectoryConstant, withoutComment, withoutDeclaration } from '#cli/structure/code-lines.ts';
 
 import {
@@ -17,15 +17,11 @@ import {
     SOURCE_STATEMENT,
     STRICT_MODE,
     TOP_LEVEL_ASSIGNMENT,
-} from '#config/structure.ts';
+} from '#cli/structure/structure-definitions.ts';
 
 const EXIT_CALL = /\bexit(?:\s|$)/u;
 const REMOVE_CALL = /\brm\b/u;
 const READONLY_WORD = 'readonly';
-
-function isDescriptionLine(line: string): boolean {
-    return line.startsWith('# ') && line.slice('# '.length).trim() !== '';
-}
 
 function shebangProblem(file: ScriptFile, report: ScriptReport): void {
     if (!BASH_SHEBANGS.includes(file.lines[0] ?? ''))
@@ -34,7 +30,11 @@ function shebangProblem(file: ScriptFile, report: ScriptReport): void {
 
 function headerProblem(file: ScriptFile, report: ScriptReport): void {
     const [, second = '', third = ''] = file.lines;
-    if (second !== '#' || file.lines.length < HEADER_LINES || !isDescriptionLine(third))
+    if (
+        second !== '#' ||
+        file.lines.length < HEADER_LINES ||
+        !(third.startsWith('# ') && third.slice('# '.length).trim() !== '')
+    )
         report(2, 'header', 'Lines 2 and 3 are a bare "#" and then "# <what this script does>".');
 }
 

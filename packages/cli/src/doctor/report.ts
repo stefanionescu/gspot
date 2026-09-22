@@ -1,7 +1,7 @@
 import { hookStatus } from '#cli/lifecycle/hooks.ts';
 // What doctor prints, as data and as text.
-import type { Session } from '#types/run.ts';
-import type { Painter } from '#types/output.ts';
+import type { Session } from '#cli/run/types.ts';
+import type { Painter } from '#cli/output/types.ts';
 import { paint } from '#cli/output/messages.ts';
 import { changeReport } from '#cli/doctor/changes.ts';
 import { everyManifest } from '#cli/presets/select.ts';
@@ -9,7 +9,7 @@ import { collectPins } from '#cli/emit/runner-tasks.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import { coverageReport } from '#cli/doctor/coverage.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
-import type { ChangeKey, ChangeReport, DoctorReport, ToolProbe } from '#types/doctor.ts';
+import type { ChangeKey, ChangeReport, DoctorReport, ToolProbe } from '#cli/doctor/types.ts';
 
 const LABEL_WIDTH = 9;
 const VERSION_GAP = 4;

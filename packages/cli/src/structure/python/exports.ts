@@ -1,14 +1,10 @@
 // What a module shows the world: the names in __all__, where that list sits, and how private names are marked and ordered.
 import type { Node } from 'web-tree-sitter';
 import { exportedNames } from '#cli/structure/python/modules.ts';
-import type { PythonModule, StructureProblem } from '#types/pyproject.ts';
+import type { PythonModule, StructureProblem } from '#cli/structure/python/types.ts';
 
 const DEFINITIONS = new Set(['function_definition', 'class_definition']);
 const PACKAGE_FILE = '__init__.py';
-
-function nameOf(statement: Node): string | undefined {
-    return DEFINITIONS.has(statement.type) ? statement.childForFieldName('name')?.text : undefined;
-}
 
 function at(module: PythonModule, node: Node, rule: string, text: string): StructureProblem {
     return { file: module.path, line: node.startPosition.row + 1, rule, text };
@@ -26,7 +22,7 @@ export function privatePrefixes(modules: PythonModule[]): StructureProblem[] {
         const listed = new Set(exported.names);
         const unmarked = module.statements
             .filter((statement) => {
-                const name = nameOf(statement);
+                const name = DEFINITIONS.has(statement.type) ? statement.childForFieldName('name')?.text : undefined;
                 return name !== undefined && !listed.has(name) && !name.startsWith('_');
             })
             .map((statement) =>
@@ -34,7 +30,7 @@ export function privatePrefixes(modules: PythonModule[]): StructureProblem[] {
                     module,
                     statement,
                     'private-prefix',
-                    `${nameOf(statement) ?? ''} is not in __all__, so its name starts with an underscore.`,
+                    `${(DEFINITIONS.has(statement.type) ? statement.childForFieldName('name')?.text : undefined) ?? ''} is not in __all__, so its name starts with an underscore.`,
                 ),
             );
         const leaked = exported.names
@@ -59,7 +55,12 @@ export function privatePrefixes(modules: PythonModule[]): StructureProblem[] {
 export function privateBeforePublic(modules: PythonModule[]): StructureProblem[] {
     return modules.flatMap((module) => {
         const names = module.statements.flatMap((statement) => {
-            const name = statement.type === 'function_definition' ? nameOf(statement) : undefined;
+            const name =
+                statement.type === 'function_definition'
+                    ? DEFINITIONS.has(statement.type)
+                        ? statement.childForFieldName('name')?.text
+                        : undefined
+                    : undefined;
             return name === undefined ? [] : [{ name, statement }];
         });
         const firstPublic = names.findIndex((entry) => !entry.name.startsWith('_'));
@@ -112,7 +113,11 @@ export function exportsAtBottom(modules: PythonModule[]): StructureProblem[] {
 export function lazyExports(modules: PythonModule[]): StructureProblem[] {
     return modules.flatMap((module) =>
         module.statements
-            .filter((statement) => nameOf(statement) === '__getattr__')
+            .filter(
+                (statement) =>
+                    (DEFINITIONS.has(statement.type) ? statement.childForFieldName('name')?.text : undefined) ===
+                    '__getattr__',
+            )
             .map((statement) =>
                 at(
                     module,

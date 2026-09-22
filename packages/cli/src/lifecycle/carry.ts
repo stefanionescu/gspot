@@ -1,18 +1,18 @@
 import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 // The carry readers of takeover: the exception lists and disabled rules that old configuration files hold.
 import { extname } from 'node:path';
+import { z } from 'zod';
 import { parse as parseYaml } from 'yaml';
 import { parse as parseToml } from 'smol-toml';
-import type { TomlTable } from '#types/config.ts';
-import { CARRIED_REASON } from '#config/reasons.ts';
+import type { TomlTable } from '#cli/policy/types.ts';
+import { CARRIED_REASON } from '#cli/policy/reasons-definitions.ts';
 import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { ignoreFileEntries } from '#cli/lifecycle/ignore-files.ts';
-import { CHECK_BY_TOOL, TYPOS_DEFAULT_EXCLUDES } from '#config/carry.ts';
-import type { CarryPush, CarriedLists, CarrySource, FileSnapshot } from '#types/lifecycle.ts';
+import { CHECK_BY_TOOL } from '#cli/lifecycle/carry-definitions.ts';
+import type { CarryPush, CarriedLists, CarrySource, FileSnapshot } from '#cli/lifecycle/types.ts';
 
 const DATE_LENGTH = 10;
 const COMMENT_MARK = /^(?:#|\/\/)\s?/u;
-const PYRIGHT_DEFAULT_EXCLUDES = new Set(['__pycache__', 'node_modules', 'build', 'dist']);
 
 function reasonFor(file: string): string {
     return CARRIED_REASON.replaceAll('{{file}}', () => file);
@@ -76,10 +76,6 @@ function isKeyLine(line: string, key: string): boolean {
     return after.startsWith('"') ? after.slice(1).trimStart().startsWith('=') : after.startsWith('=');
 }
 
-function isDefaultExclude(pattern: string): boolean {
-    return TYPOS_DEFAULT_EXCLUDES.some((known) => pattern.includes(known));
-}
-
 function carryTyposWords(lines: string[], words: TomlTable, path: string, lists: CarriedLists): void {
     for (const word of Object.keys(words)) {
         const index = lines.findIndex((line) => isKeyLine(line, word));
@@ -96,7 +92,7 @@ function carryTypos(source: CarrySource, path: string, lists: CarriedLists): voi
     lists.typosLocale = asText(defaults?.['locale']) ?? 'en';
     carryTyposWords(text.split('\n'), asRaw(defaults?.['extend-words']) ?? {}, path, lists);
     const excludes = asStrings(asRaw(parsed['files'])?.['extend-exclude']);
-    const kept = excludes.filter((pattern) => !isDefaultExclude(pattern));
+    const kept = excludes;
     if (kept.length === 0) return;
     lists.typosExcludes.push({
         paths: kept.map((pattern) => (pattern.endsWith('/') ? `${pattern}**` : pattern)),
@@ -200,12 +196,8 @@ function disabledFromRulesTable(tool: string, parsed: TomlTable, push: CarryPush
     for (const [rule, value] of Object.entries(table)) if (value === false || value === null) push(rule);
 }
 
-function ruffLintTable(parsed: TomlTable): TomlTable {
-    return asRaw(asRaw(asRaw(parsed['tool'])?.['ruff'])?.['lint']) ?? asRaw(parsed['lint']) ?? parsed;
-}
-
 function disabledRuff(parsed: TomlTable, push: CarryPush): void {
-    const lint = ruffLintTable(parsed);
+    const lint = asRaw(asRaw(asRaw(parsed['tool'])?.['ruff'])?.['lint']) ?? asRaw(parsed['lint']) ?? parsed;
     disabledFromList(lint, 'ignore', push);
     const perFile = Object.entries(asRaw(lint['per-file-ignores']) ?? {});
     for (const [glob, codes] of perFile) for (const code of asStrings(codes)) push(code, [glob]);
@@ -241,24 +233,18 @@ const DISABLED_READERS: Record<string, (source: CarrySource, push: CarryPush) =>
 function carryDisabled(source: CarrySource, tool: string, path: string, lists: CarriedLists): void {
     const check = CHECK_BY_TOOL[tool];
     const reader = DISABLED_READERS[tool];
-    if (check === undefined || reader === undefined) return;
+    if (check === undefined || reader === undefined)
+        throw new Error(`No complete ${tool} configuration importer is available for ${path}.`);
     const push: CarryPush = (rule, paths) => {
         lists.ignores.push({ check, rule, reason: reasonFor(path), ...(paths ? { paths } : {}) });
     };
     reader(source, push);
 }
 
-// The folders the preset leaves out on its own, and dot folders, which hold caches and environments git does not track.
-function isShippedExclude(entry: string): boolean {
-    const last = entry.split('/').at(-1) ?? entry;
-    return last.startsWith('.') || PYRIGHT_DEFAULT_EXCLUDES.has(last);
-}
-
-// Only a file at the root is carried: its paths start at the root, which is where tools.basedpyright.exclude starts.
 function carryPyright(source: CarrySource, path: string, lists: CarriedLists): void {
-    if (path.includes('/')) return;
+    if (path.includes('/')) throw new Error(`Scoped Pyright configuration ${path} requires explicit conversion.`);
     const parsed = source.parsed;
-    const kept = asStrings(parsed['exclude']).filter((entry) => !isShippedExclude(entry));
+    const kept = asStrings(parsed['exclude']);
     if (kept.length > 0) lists.pyrightExcludes.push({ paths: kept, reason: reasonFor(path) });
 }
 
@@ -306,6 +292,85 @@ export function parseCarrySource(original: FileSnapshot, tool: string, path: str
  * @param lists the lists the entries are added to
  */
 export function carryFrom(source: CarrySource, tool: string, path: string, lists: CarriedLists): void {
+    const strings = z.array(z.string());
+    const disabled = z.record(z.string(), z.union([z.literal(false), z.null()]));
+    const lint = z.strictObject({
+        ignore: strings.optional(),
+        'per-file-ignores': z.record(z.string(), strings).optional(),
+    });
+    const allowlist = z.strictObject({
+        description: z.string().optional(),
+        paths: strings.optional(),
+        regexes: strings.optional(),
+        regexTarget: z.string().optional(),
+        condition: z.string().optional(),
+    });
+    const schemas: Record<string, z.ZodType> = {
+        typos: z.strictObject({
+            default: z
+                .strictObject({
+                    locale: z.string().optional(),
+                    'extend-words': z
+                        .record(z.string(), z.string())
+                        .refine(
+                            (words) => Object.entries(words).every(([word, replacement]) => word === replacement),
+                            'Spelling replacements require explicit conversion.',
+                        )
+                        .optional(),
+                })
+                .optional(),
+            files: z.strictObject({ 'extend-exclude': strings.optional() }).optional(),
+        }),
+        gitleaks: z.strictObject({
+            allowlist: allowlist.optional(),
+            allowlists: z.array(allowlist).optional(),
+            extend: z.strictObject({ useDefault: z.literal(true) }).optional(),
+        }),
+        osv: z.strictObject({
+            IgnoredVulns: z
+                .array(
+                    z.strictObject({
+                        id: z.string(),
+                        reason: z.string().optional(),
+                        ignoreUntil: z.union([z.string(), z.date()]).optional(),
+                    }),
+                )
+                .optional(),
+        }),
+        pyright: z.strictObject({ exclude: strings.optional() }),
+        licenses: z.strictObject({
+            excludePackages: z.union([z.string(), strings]).optional(),
+            onlyAllow: z.union([z.string(), strings]).optional(),
+        }),
+        ruff: z.union([lint, z.strictObject({ lint })]),
+        markdownlint: z.union([disabled, z.strictObject({ config: disabled })]),
+        stylelint: z.strictObject({ rules: disabled }),
+        squawk: z.strictObject({ excluded_rules: strings.optional() }),
+        swiftlint: z.strictObject({ disabled_rules: strings.optional() }),
+        hadolint: z.strictObject({ ignored: strings.optional() }),
+    };
+    if (tool === 'shellcheck' || tool === 'sqlfluff') {
+        const key = tool === 'shellcheck' ? 'disable' : 'exclude_rules';
+        const unsupported = source.text.split('\n').find((line) => {
+            const content = line.trim();
+            return (
+                content !== '' &&
+                !content.startsWith('#') &&
+                !(tool === 'sqlfluff' && content === '[sqlfluff]') &&
+                valueOfKeyLine(line, key) === undefined
+            );
+        });
+        if (unsupported !== undefined)
+            throw new Error(`${path}: unsupported configuration line ${JSON.stringify(unsupported)}.`);
+    } else if (tool !== 'sqlfluffignore' && tool !== 'semgrepignore') {
+        const schema = schemas[tool];
+        if (schema === undefined) throw new Error(`${path}: no complete ${tool} configuration importer is available.`);
+        const parsed = schema.safeParse(source.parsed);
+        if (!parsed.success)
+            throw new Error(
+                `${path}: unsupported settings: ${parsed.error.issues.map((issue) => `${issue.path.join('.')}: ${issue.message}`).join('; ')}`,
+            );
+    }
     const carrier = CARRIERS[tool];
     if (carrier) carrier(source, path, lists);
     else carryDisabled(source, tool, path, lists);

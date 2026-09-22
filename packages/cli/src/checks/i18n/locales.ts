@@ -1,9 +1,9 @@
 // Message files: every one parses as ICU MessageFormat, none is empty, and every locale holds every key of the base.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import type { Translations } from '#types/web.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { Translations } from '#cli/checks/static-site/types.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
 
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.

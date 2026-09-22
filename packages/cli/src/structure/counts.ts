@@ -1,9 +1,9 @@
 // The ast-grep counts per function: branches, nesting and mutable assignments against [limits.bash].
-import type { Finding } from '#types/finding.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { functionAt } from '#cli/structure/parser.ts';
 import { astGrepMatches } from '#cli/structure/ast-grep.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import type { AstGrepMatch, ScriptIndex, StructureContext } from '#types/structure.ts';
+import type { AstGrepMatch, ScriptIndex, StructureContext } from '#cli/structure/types.ts';
 
 const RULES: Record<string, { limit: string; noun: string; isDepth: boolean }> = {
     'bash-branches': { limit: 'function_branches', noun: 'branches', isDepth: false },
@@ -40,7 +40,7 @@ export function countFindings(analysis: string, context: StructureContext, index
     if (rule === undefined || ceiling === undefined) return [];
     const matches = astGrepMatches(
         context.input.root,
-        `presets/language/bash/rules/${analysis}.yml`,
+        `presets/bash/rules/${analysis}.yml`,
         index.files.map((file) => file.path),
     );
     if (matches === undefined)

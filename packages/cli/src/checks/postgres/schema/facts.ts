@@ -1,8 +1,8 @@
 // What the migrations declare, gathered across every file: tables, row security, policies, foreign keys and indexes.
-import { DEFAULT_SCHEMA } from '#config/postgres.ts';
-import type { SqlNode, SqlStatementView } from '#types/sql.ts';
+import { DEFAULT_SCHEMA } from '#cli/checks/postgres/postgres-definitions.ts';
+import type { SqlNode, SqlStatementView } from '#cli/readers/sql/types.ts';
 import { nodesOf, partsOf, textOf } from '#cli/readers/sql/tree.ts';
-import type { FactReader, Migration, SchemaFacts } from '#types/postgres.ts';
+import type { FactReader, Migration, SchemaFacts } from '#cli/checks/postgres/types.ts';
 
 function qualified(relation: unknown): string {
     const node = (relation ?? {}) as SqlNode;

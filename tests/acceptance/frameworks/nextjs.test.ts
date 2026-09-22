@@ -3,8 +3,8 @@ import { randomUUID } from 'node:crypto';
 import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { chmodSync, symlinkSync, writeFileSync } from 'node:fs';
-import type { TakeoverPlan } from '#types/lifecycle.ts';
-import type { RunReport } from '#types/report.ts';
+import type { TakeoverPlan } from '#cli/lifecycle/types.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 import { describe, expect, test } from 'bun:test';
 import type { PlantedCase } from '#tests/types/acceptance.ts';
 import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/harness/planted.ts';
@@ -56,7 +56,7 @@ const INIT = [
     'naming',
     'spelling',
     'css',
-    'config-files',
+    'configs',
     '--no-runner',
     '--no-ci',
     '--no-hooks',

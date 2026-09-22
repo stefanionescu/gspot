@@ -8,7 +8,7 @@ import { normalize } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import { knownKeysAt } from '#cli/policy/json-schema.ts';
 import { reasonProblems, scopeProblems } from '#cli/policy/problems.ts';
-import type { PolicyFiles, PathSegment, Policy } from '#types/config.ts';
+import type { PolicyFiles, PathSegment, Policy } from '#cli/policy/types.ts';
 
 function issueText(issue: z.core.$ZodIssue): string {
     const where = issue.path.map(String).join('.');

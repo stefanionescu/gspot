@@ -1,4 +1,4 @@
-import type { Analysis } from '#types/structure.ts';
+import type { Analysis } from '#cli/structure/types.ts';
 // Environment variables the owner declares are read elsewhere only through it. Searched: shellcheck; it has no ownership notion.
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { withoutComment } from '#cli/structure/code-lines.ts';

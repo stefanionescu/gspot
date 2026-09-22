@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { readGitSetting } from '#cli/platform/spawn.ts';
 import { existsSync, readdirSync, statSync } from 'node:fs';
 import { isLintOnlyManifest } from '#cli/repository/scopes.ts';
-import type { ExistingTool, ExistingTooling, ManifestFacts, ScopeEntry, TrackedFile } from '#types/repository.ts';
+import type { ExistingTool, ExistingTooling, ManifestFacts, ScopeEntry, TrackedFile } from '#cli/repository/types.ts';
 
 import {
     AGENT_FILE_NAMES,
@@ -13,7 +13,7 @@ import {
     HOOK_DIRECTORIES,
     LINT_FOLDER_NAMES,
     RULES_DIRECTORY_NAMES,
-} from '#config/patterns.ts';
+} from '#cli/lifecycle/patterns-definitions.ts';
 
 const OTHER_CI_FILES = new Set([
     'Jenkinsfile',
@@ -43,16 +43,8 @@ function listDir(root: string, rel: string): string[] {
         .toSorted((a, b) => a.localeCompare(b));
 }
 
-function hasFiles(root: string, rel: string): boolean {
-    return listDir(root, rel).length > 0;
-}
-
-function isBareDirectoryName(name: string): boolean {
-    return name.startsWith('.') && !name.includes('.', 1);
-}
-
 function isConfigurationPresent(root: string, paths: Set<string>, name: string, path: string): boolean {
-    return paths.has(path) || (isBareDirectoryName(name) && hasFiles(root, path));
+    return paths.has(path) || (name.startsWith('.') && !name.includes('.', 1) && listDir(root, path).length > 0);
 }
 
 function conventionalConfigs(root: string, paths: Set<string>, scopes: ScopeEntry[]): ExistingTool[] {
@@ -71,7 +63,7 @@ function conventionalConfigs(root: string, paths: Set<string>, scopes: ScopeEntr
 }
 
 function hookDirectory(root: string, dir: string, hooksPath: string): ExistingTooling['hooks'][number] | undefined {
-    if (hooksPath === dir || !hasFiles(root, dir)) return undefined;
+    if (hooksPath === dir || !(listDir(root, dir).length > 0)) return undefined;
     if (dir === '.husky') return { kind: 'husky', path: dir, files: listDir(root, dir) };
     return { kind: 'githooks', path: dir, files: listDir(root, dir) };
 }
@@ -93,15 +85,6 @@ function runnerFound(paths: Set<string>): { runner: ExistingTooling['runner']; r
     const lock = RUNNER_LOCKS.find(({ file }) => paths.has(file));
     if (lock === undefined) return { runner: 'none' };
     return { runner: lock.runner, runnerFile: lock.runner === 'uv' ? 'pyproject.toml' : 'package.json' };
-}
-
-function isWorkflow(path: string): boolean {
-    return (
-        OTHER_CI_FILES.has(path) ||
-        path === '.gitlab-ci.yml' ||
-        ((path.startsWith('.github/workflows/') || path.startsWith('.gitlab/ci/')) &&
-            (path.endsWith('.yml') || path.endsWith('.yaml')))
-    );
 }
 
 /** Find tool configuration keys while preserving their shared package manifests. */
@@ -150,12 +133,20 @@ export function existingTooling(
     return {
         configs: [...conventionalConfigs(root, paths, scopes), ...packageConfigurations(root, paths)],
         hooks: hooksFound(root, paths),
-        ci: [...paths].filter((path) => isWorkflow(path)).toSorted((a, b) => a.localeCompare(b)),
+        ci: [...paths]
+            .filter(
+                (path) =>
+                    OTHER_CI_FILES.has(path) ||
+                    path === '.gitlab-ci.yml' ||
+                    ((path.startsWith('.github/workflows/') || path.startsWith('.gitlab/ci/')) &&
+                        (path.endsWith('.yml') || path.endsWith('.yaml'))),
+            )
+            .toSorted((a, b) => a.localeCompare(b)),
         agentFiles: AGENT_FILE_NAMES.filter((name) => paths.has(name)),
         rulesDirectories: RULES_DIRECTORY_NAMES.filter((name) =>
             listDir(root, name).some((entry) => entry.endsWith('.md')),
         ),
-        lintFolders: LINT_FOLDER_NAMES.filter((name) => hasFiles(root, name)),
+        lintFolders: LINT_FOLDER_NAMES.filter((name) => listDir(root, name).length > 0),
         lintOnlyManifests,
         ...runnerFound(paths),
     };

@@ -1,5 +1,7 @@
 # Product
 
+gspot is unreleased and has no users. Names and configuration change directly without compatibility aliases or version migrations. Package managers update the binary.
+
 This document decides who gspot serves, what it promises, and what it refuses to do.
 
 ## The problem
@@ -31,7 +33,7 @@ These arrive together, pinned to one version, in every repository that runs gspo
 The primary user is a developer who did not write gspot and does not read this folder. They may
 not read code at all: they describe what they want to an AI agent and check the result. They
 run `gspot init` in a repository nobody at gspot has seen, answer the questions it asks (or pass
-`--yes`), and get a working gate. They change one line to adjust it. They run `gspot upgrade` and
+`--yes`), and get a working gate. They change one line to adjust it. They run `gspot apply` and
 read a short diff.
 
 The secondary user is an AI agent working in that repository. It reads the installed rule files
@@ -39,20 +41,20 @@ and gets findings from the hooks with a message it can act on.
 
 ## Promises
 
-Each promise names the test that holds it. A promise with no test is a row of
-[18-gaps.md](18-gaps.md).
+These are target promises, not claims that every implementation already passes. Required
+evidence appears below; [remaining work](22-remaining.md) owns current dispositions.
 
 | Promise                                                  | What it means                                                                                                                                                     | Held by                                                                   |
 | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------- |
-| One command installs it                                  | `gspot init --yes` detects, writes the config, and installs the tools. It runs no check, and the developer decides when to lint (D-165)                           | the six planted installs, and one generated project for each generator    |
-| Initialization preserves application build configuration | gspot edits no `tsconfig.json`, no `package.json` beyond its launcher and explicitly accepted lint-task entries, and no `pyproject.toml` (D-126, D-145)           | the planted installs compare every file of the developer before and after |
+| One command installs it                                  | `gspot init --yes` detects, writes the config, and installs the tools. It runs no check, and the developer decides when to lint                                   | the six planted installs, and one generated project for each generator    |
+| Initialization preserves application build configuration | gspot edits no `tsconfig.json`, no `package.json` beyond its launcher and explicitly accepted lint-task entries, and no `pyproject.toml`                          | the planted installs compare every file of the developer before and after |
 | gspot deletes only what it owns                          | takeover saves originals; lifecycle deletion requires confinement and unchanged owned content; unowned or edited files survive, and no check writes into the tree | the takeover cases, and the planted cases for untracked files             |
 | One file configures it                                   | `gspot.toml` holds repository choices; CLI edits cover supported settings and complex entries can be edited directly                                              | the completion test and the settings test over the manifests              |
 | Nothing is silent                                        | an ignore prints with `--verbose`; a reason is required only with `require_reasons`, a skipped check prints why, and a check whose tool is absent fails           | the failing case of every check, and the report shape test                |
 | Nothing is hidden in the ignore file of a tool           | gspot hands every tool a file list, and `doctor` names a file or a kind of file no check reads                                                                    | the coverage tests of `doctor`                                            |
-| An upgrade is a diff                                     | generated configuration is tracked, and `upgrade --dry-run` lists every rule that changes, for every tool                                                         | the upgrade test repository                                               |
+| An upgrade is a diff                                     | generated configuration is tracked, and `apply --dry-run` lists every rule that changes, for every tool                                                           | the upgrade test repository                                               |
 | The rules an agent reads match the checks                | a rule file follows the level, names no tool of another preset, and its good examples pass their linter                                                           | the rules lint                                                            |
-| gspot obeys its own rules                                | this repository runs gspot at the level `all` with no `[[ignore]]` entry                                                                                          | the gate of this repository, green on GitHub                              |
+| gspot obeys its own rules                                | this repository runs gspot at the level `all` with no `[[ignore]]` entry                                                                                          | local candidate acceptance; remote evidence deferred while CI is paused   |
 
 ## The developer's day
 
@@ -71,7 +73,7 @@ Each promise names the test that holds it. A promise with no test is a row of
   and the command that adds it. The new checks are on from the next run.
 - Wonder what a finding means. `gspot explain <check>` says what the check looks for, what goes
   wrong without it, and what to do, in plain words.
-- Upgrade. Run `gspot upgrade`. Read the plan: new rules for every tool, tool pins, and rule
+- Upgrade. Run `gspot apply`. Read the plan: new rules for every tool, tool pins, and rule
   file changes. Say yes. Commit the diff. Nothing you wrote is touched.
 
 ## Principles
@@ -108,4 +110,4 @@ Each promise names the test that holds it. A promise with no test is a row of
 - gspot does not manage product configuration. A check that needs a product fact reads the
   product's file.
 - gspot does not host every linter for every language. It covers the languages in
-  [presets/README.md](presets/README.md) completely and adds one when a repository needs it.
+  [preset catalog](04-presets.md#catalog) through the agreed ledger. Additional integrations require a concrete product requirement.

@@ -1,13 +1,13 @@
 // The integrity engine: one function per check, chosen by `analysis =` in the manifest.
-import type { Engine } from '#types/run.ts';
-import type { CheckSpec } from '#types/manifest.ts';
+import type { Engine } from '#cli/run/types.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
 import { localeFiles } from '#cli/checks/i18n/locales.ts';
 import { cssModuleUsage } from '#cli/checks/css.ts';
 import { fences } from '#cli/checks/docs/fences.ts';
 import { ansibleLint } from '#cli/checks/ansible.ts';
 import { licensesNpm } from '#cli/checks/licenses.ts';
 import { codeql } from '#cli/checks/security/codeql.ts';
-import type { IntegrityCheck } from '#types/integrity.ts';
+import type { IntegrityCheck } from '#cli/checks/types.ts';
 import { htmlCopy, htmlScripts } from '#cli/checks/html.ts';
 import { adminKey } from '#cli/checks/supabase/admin-key.ts';
 import { envFiles } from '#cli/checks/security/env/files.ts';
@@ -45,7 +45,7 @@ import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';
 import { tsconfigOptions } from '#cli/checks/typescript/tsconfig-options.ts';
 import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
 import { frameworkBuild, frameworkTypes } from '#cli/checks/framework-build.ts';
-import { sqlBlockComments, sqlFileLength, sqlSyntax } from '#cli/checks/sql.ts';
+import { sqlBlockComments, sqlFileLength, sqlSyntax, sqlFunctions } from '#cli/checks/sql.ts';
 import { buildReproducible, siteBuilds } from '#cli/checks/static-site/build.ts';
 import { migrationOrder, migrationsFrozen } from '#cli/checks/postgres/history.ts';
 import { trackedDependencies } from '#cli/checks/repository/tracked-dependencies.ts';
@@ -164,6 +164,7 @@ const checks: Record<string, IntegrityCheck> = {
     'postgres-order': migrationOrder,
     'postgres-frozen': migrationsFrozen,
     'postgres-docs': migrationDocs,
+    'sql-functions': sqlFunctions,
     'sql-syntax': sqlSyntax,
     'sql-block-comments': sqlBlockComments,
     'sql-file-length': sqlFileLength,

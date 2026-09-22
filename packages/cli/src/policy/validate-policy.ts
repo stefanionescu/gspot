@@ -1,5 +1,5 @@
 // The whole validation a read performs: schema, structural rules, then the selection and the settings surface.
-import type { Policy } from '#types/config.ts';
+import type { Policy } from '#cli/policy/types.ts';
 import { selectForScope } from '#cli/presets/select.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { excludeProblems } from '#cli/rules/assemble.ts';

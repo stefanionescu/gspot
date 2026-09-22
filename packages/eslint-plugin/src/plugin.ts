@@ -1,6 +1,5 @@
 import { noReexports } from '#plugin/rules/no-reexports.ts';
 import { importLayout } from '#plugin/rules/import-layout.ts';
-import { noCallThrough } from '#plugin/rules/no-call-through.ts';
 import { typesPlacement } from '#plugin/rules/types-placement.ts';
 import { noIndexImports } from '#plugin/rules/no-index-imports.ts';
 import { noTrivialFiles } from '#plugin/rules/no-trivial-files.ts';
@@ -34,7 +33,6 @@ const rules = {
     'import-layout': importLayout,
     'import-path-style': importPathStyle,
     'max-barrel-reexports': maxBarrelReexports,
-    'no-call-through': noCallThrough,
     'no-client-environment': noClientEnvironment,
     'no-cross-folder-imports': noCrossFolderImports,
     'no-cross-project-imports': noCrossProjectImports,
@@ -58,15 +56,13 @@ const rules = {
 
 // Alternative re-export policies are selected explicitly.
 const INDEX_ONLY_RULES = new Set(['max-barrel-reexports', 'no-reexports-outside-index']);
-// no-call-through covers the forwarding policy in the default configs.
-const ALTERNATIVE_RULES = new Set(['no-trivial-functions']);
 
 const base = { meta: { name: packageManifest.name, version: packageManifest.version }, rules };
 
 const allRules = Object.fromEntries(
     Object.keys(rules)
         // The Next.js preset selects server files. Standalone callers select them explicitly.
-        .filter((name) => !INDEX_ONLY_RULES.has(name) && !ALTERNATIVE_RULES.has(name) && name !== 'require-server-only')
+        .filter((name) => !INDEX_ONLY_RULES.has(name) && name !== 'require-server-only')
         .map((name) => [`gspot/${name}`, 'error' as const]),
 );
 
@@ -81,7 +77,7 @@ const plugin = {
     configs: {
         /** Default rules for standalone use. */
         recommended: { name: 'gspot/recommended', plugins: { gspot: base }, rules: recommendedRules },
-        /** Adds layout, ordering, and forwarding-function preferences. */
+        /** Adds layout and ordering rules. */
         all: { name: 'gspot/all', plugins: { gspot: base }, rules: allRules },
     },
 };

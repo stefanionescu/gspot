@@ -1,6 +1,6 @@
 // gspot.schema.json from the zod schema, published with each release and submitted to SchemaStore.
 import { z } from 'zod';
-import type { SchemaNode } from '#types/config.ts';
+import type { SchemaNode } from '#cli/policy/types.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 
 const JSON_INDENT = 4;

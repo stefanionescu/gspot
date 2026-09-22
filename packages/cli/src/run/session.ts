@@ -1,4 +1,4 @@
-import type { PolicyFiles } from '#types/config.ts';
+import type { PolicyFiles } from '#cli/policy/types.ts';
 import { toolPackageManager } from '#cli/emit/tool-packages.ts';
 import { npmPins } from '#cli/emit/runner-tasks.ts';
 import { mergeForScope } from '#cli/policy/merge.ts';
@@ -8,7 +8,7 @@ import { readPolicy } from '#cli/policy/read-policy.ts';
 import { selectForScope } from '#cli/presets/select.ts';
 import { readRepository } from '#cli/repository/tree.ts';
 import { exposedSettings } from '#cli/policy/settings.ts';
-import type { ScopeSelection, Session } from '#types/run.ts';
+import type { ScopeSelection, Session } from '#cli/run/types.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 

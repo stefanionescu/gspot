@@ -209,7 +209,7 @@ describe('the bash planted repository', () => {
             const check = await run(sandbox.path, ['check']);
             expect(check.code).toBe(2);
             expect(check.stderr).toContain('mise install');
-            expect(check.stderr).toContain('gspot upgrade --to');
+            expect(check.stderr).toContain('gspot apply');
             const doctor = await run(sandbox.path, ['doctor']);
             expect(doctor.code).not.toBe(2);
         },

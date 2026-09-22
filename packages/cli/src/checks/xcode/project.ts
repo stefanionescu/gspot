@@ -1,9 +1,9 @@
 // The project file against the tree: test plans, sources in no target, references to files that are gone, and symlinks.
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { gitBlobs, gitEntries } from '#cli/repository/snapshot.ts';
-import type { TestPlan } from '#types/apple.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { TestPlan } from '#cli/checks/xcode/types.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
 
 const PROJECT_FILE = '.xcodeproj/project.pbxproj';

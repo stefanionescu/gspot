@@ -3,7 +3,7 @@ import { compileTerms } from '#cli/naming/match.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { shippedPolicy } from '#cli/naming/policy.ts';
 import { nameProblems } from '#cli/naming/validate-name.ts';
-import type { EffectivePolicy, Identifier } from '#types/naming.ts';
+import type { EffectivePolicy, Identifier } from '#cli/naming/types.ts';
 
 function caseFor(language: string, category: string): string[] {
     if (category === 'types') return ['pascal'];

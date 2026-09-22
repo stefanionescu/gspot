@@ -1,19 +1,11 @@
+import type { TSESTree } from '@typescript-eslint/utils';
 // The four shipped direction rules: types import only types; runtime never imports tests or harness; tests and harness reach runtime only through contracts or types; config and env never import runtime.
 import { posix } from 'node:path';
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { ImportDirectionOptions } from '#plugin-types/options.ts';
-import { aliasMap, optionsSchema, stringList } from '#plugin/options.ts';
-import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, importFile, staticString } from '#plugin/files.ts';
 
-import type {
-    ImportDirectionRoles,
-    ImportDirectionRole,
-    ImportDirectionMessages,
-    ImportEdge,
-    ImportNode,
-    ImportVerdict,
-} from '#plugin-types/plugin.ts';
+import { aliasMap, optionsSchema, stringList } from '#plugin/rules/options.ts';
+import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, importFile, staticString } from '#plugin/files.ts';
 
 const DEFAULT_ROLES: Required<ImportDirectionRoles> = {
     types: ['**/types/**'],
@@ -138,3 +130,32 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
         };
     },
 });
+
+export type ImportDirectionRoles = {
+    types?: string[];
+    tests?: string[];
+    harness?: string[];
+    config?: string[];
+    env?: string[];
+    runtime?: string[];
+};
+
+export type ImportDirectionRole = 'types' | 'tests' | 'harness' | 'config' | 'env' | 'runtime' | 'other';
+
+export type ImportDirectionMessages = 'typesOnlyTypes' | 'runtimeToTests' | 'testsToInternals' | 'configToRuntime';
+
+export type ImportEdge = {
+    role: ImportDirectionRole;
+    targetRole: ImportDirectionRole;
+    source: string;
+    target: string;
+    isTypeOnly: boolean;
+};
+
+export type ImportNode = TSESTree.ImportDeclaration | TSESTree.ExportAllDeclaration | TSESTree.ExportNamedDeclaration;
+
+export type ImportVerdict = { messageId: ImportDirectionMessages; data: Record<string, string> };
+
+export type ImportDirectionOptions = [
+    { roles?: ImportDirectionRoles; aliases?: Record<string, string>; contracts?: string[]; scope?: string },
+];

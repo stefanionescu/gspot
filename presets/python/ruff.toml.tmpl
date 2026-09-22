@@ -1,0 +1,40 @@
+<% const at = (key, otherwise) => limit(key, 'python') ?? limit(key) ?? otherwise; const off = rulesOff('python/ruff'); const families = [...(isAll ? ["A", "ANN", "ARG", "ASYNC", "B", "BLE", "C4", "C90", "COM", "D", "DTZ", "E", "EM", "ERA", "EXE", "F", "FA", "FBT", "FIX", "FLY", "FURB", "G", "ICN", "INP", "ISC", "LOG", "N", "PERF", "PGH", "PIE", "PL", "PT", "PTH", "PYI", "Q", "RET", "RSE", "RUF", "S", "SIM", "SLF", "SLOT", "T10", "T20", "TC", "TD", "TRY", "UP", "W", "YTT"] : ["E4", "E7", "E9", "F", "B", "S", "ASYNC", "UP", "PLE", "PLR0913"]), ...(has('fastapi') ? ["FAST"] : [])]; const perFile = ignoresFor('python/ruff').filter((entry) => entry.rule !== undefined && (entry.paths ?? []).length > 0); -%>
+line-length = <%= format.print_width %>
+indent-width = <%= format.indent_width %>
+exclude = [".git", ".venv", "__pycache__", ".ruff_cache", ".pytest_cache", "build", "dist", "node_modules", ".gspot"]
+
+[format]
+indent-style = "<%= format.indent_style === 'tab' ? 'tab' : 'space' %>"
+quote-style = "double"
+line-ending = "lf"
+docstring-code-format = true
+
+[lint]
+<%~ toml({ select: isAll ? [...families, "ANN401", "PLR2004", "PLR1702", "PLR0917"] : families, ignore: [...(isAll ? ["COM812", "D203", "D213"] : []), ...off] }).trimEnd() %>
+fixable = ["ALL"]
+unfixable = []
+preview = <%= isAll %>
+explicit-preview-rules = true
+
+[lint.mccabe]
+max-complexity = <%= at('cyclomatic_complexity', 8) %>
+
+[lint.pep8-naming]
+extend-ignore-names = ["setUp", "setUpClass", "tearDown", "tearDownClass"]
+
+[lint.pylint]
+max-args = <%= at('function_parameters', 7) %>
+max-positional-args = <%= at('positional_arguments', at('function_parameters', 7)) %>
+max-bool-expr = <%= at('boolean_expressions', 4) %>
+max-branches = <%= at('branches', 8) %>
+max-locals = <%= at('locals', 10) %>
+max-public-methods = <%= at('public_methods', 12) %>
+max-returns = <%= at('returns', 4) %>
+max-statements = <%= at('statements', 30) %>
+max-nested-blocks = <%= at('nested_blocks', 3) %>
+<% const testRules = has('pytest') ? ['S101', 'ARG', 'PLR2004'] : []; if (perFile.length > 0 || testRules.length > 0) { -%>
+
+[lint.per-file-ignores]
+<% const byPath = new Map(testRules.length > 0 ? [['**/tests/**', testRules], ['**/test_*.py', testRules], ['**/*_test.py', testRules], ['**/conftest.py', testRules]] : []); for (const entry of perFile) for (const path of entry.paths) byPath.set(path, [...(byPath.get(path) ?? []), entry.rule]); -%>
+<%~ toml(Object.fromEntries(byPath)).trimEnd() %>
+<% } -%>

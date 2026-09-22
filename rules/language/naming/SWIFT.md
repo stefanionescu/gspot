@@ -119,7 +119,7 @@ Rules:
   or a framework collision makes the prefix unavoidable.
 - Directories are PascalCase and mirror the type or feature they group: `Features/Login/`,
   `Platform/Networking/`.
-- Test files are `<Type>Tests.swift` in the test target, mirroring the source directory.
+- Test files are `<Type>Tests.swift` in the test target, grouped by the behavior they verify.
 
 Bad:
 

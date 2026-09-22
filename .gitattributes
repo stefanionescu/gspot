@@ -1,1 +1,6 @@
 * text=auto eol=lf
+
+# >>> gspot managed >>>
+.gspot/** linguist-generated
+.gspot/** text eol=lf
+# <<< gspot managed <<<

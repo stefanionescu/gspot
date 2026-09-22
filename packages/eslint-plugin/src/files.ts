@@ -1,10 +1,10 @@
+import type { TSESLint } from '@typescript-eslint/utils';
 // Index and barrel detection, file classes, directory reads and the small glob matcher the rules share.
 import picomatch from 'picomatch';
 import { posix } from 'node:path';
 import { readdirSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { DirectoryEntry, RuleContextOf } from '#plugin-types/plugin.ts';
 
 const INDEX_BASENAMES = new Set([
     'index.ts',
@@ -183,3 +183,7 @@ export function staticString(node: unknown): string | undefined {
     const literal = node as { type?: string; value?: unknown } | null | undefined;
     return literal?.type === AST_NODE_TYPES.Literal && typeof literal.value === 'string' ? literal.value : undefined;
 }
+
+export type DirectoryEntry = { name: string; kind: 'file' | 'dir' };
+
+export type RuleContextOf = Readonly<TSESLint.RuleContext<string, unknown[]>>;

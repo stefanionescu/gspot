@@ -13,7 +13,7 @@ const INIT = [
     'spelling',
     'naming',
     'security',
-    'config-files',
+    'configs',
     '--no-runner',
     '--no-ci',
     '--no-hooks',

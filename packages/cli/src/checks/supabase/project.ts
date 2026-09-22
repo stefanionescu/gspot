@@ -1,10 +1,10 @@
 // The Supabase project: its config file, its function folders and its finding shape.
 import { join, posix } from 'node:path';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import { SUPABASE_CONFIG } from '#config/supabase.ts';
+import { SUPABASE_CONFIG } from '#cli/checks/supabase/supabase-definitions.ts';
 import { parse } from 'smol-toml';
 import { z } from 'zod';
 

@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { parseDocument } from 'yaml';
 import { existsSync, readFileSync } from 'node:fs';
-import type { LefthookBlock } from '#types/emit.ts';
+import type { LefthookBlock } from '#cli/emit/types.ts';
 
 /**
  * True when the file already holds every gspot command.

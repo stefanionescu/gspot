@@ -4,7 +4,7 @@ import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import prettier from 'prettier';
 import { run, PLANTED_TIMEOUT_MS } from '#tests/harness/planted.ts';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 
 const SOURCE = 'const greeting="hello";if(greeting){console.log(greeting);}';
 const FILES = [
@@ -60,7 +60,7 @@ test.each([
     ['prettier.config.cts', `module.exports = ${JSON.stringify(CONFIG)} satisfies import('prettier').Config;\n`],
     ['.prettierrc.yaml', YAML],
 ])(
-    'init captures current Prettier overrides from %s and retains future selectors',
+    'init represents Prettier selectors from %s or refuses unsupported input',
     async (path, text) => {
         await using repository = await testdir();
         await createFileTree(repository.path, {
@@ -93,10 +93,21 @@ test.each([
             '--no-rules',
             '--no-install',
         ]);
+        if (path.endsWith('.json5')) {
+            expect(initialized.code, initialized.stdout + initialized.stderr).toBe(2);
+            expect(initialized.stdout).toContain(`Formatting conversion does not support ${path}`);
+            expect(readFileSync(original, 'utf8')).toBe(text);
+            expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
+            return;
+        }
         expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
-        expect(initialized.stdout).toContain('original Prettier selectors remain active');
-        expect(readFileSync(original, 'utf8')).toBe(text);
-        expect(statSync(original).mode & 0o777).toBe(0o640);
+        expect(initialized.stdout).toContain('selectors are represented in gspot configuration');
+        if (path.startsWith('package.')) {
+            expect(readFileSync(original, 'utf8')).toBe(text);
+            expect(statSync(original).mode & 0o777).toBe(0o640);
+        } else if (path === '.prettierrc.json') {
+            expect(readFileSync(original, 'utf8')).not.toBe(text);
+        } else expect(existsSync(original)).toBe(false);
         for (const file of FILES) {
             const filepath = join(repository.path, file);
             const carried = await prettier.resolveConfig(filepath, {
@@ -131,9 +142,13 @@ test.each([
         for (const file of FILES) expect(readFileSync(join(repository.path, file), 'utf8')).toBe(expected.get(file)!);
         const future = join(repository.path, 'tests/future.js');
         writeFileSync(future, SOURCE);
-        const options = await prettier.resolveConfig(future, { editorconfig: true, useCache: false });
+        const options = await prettier.resolveConfig(future, {
+            config: join(repository.path, '.gspot/prettier.json'),
+            editorconfig: false,
+            useCache: false,
+        });
         expect(await prettier.format(SOURCE, { ...options, filepath: future })).toBe(expected.get('tests/future.js')!);
-        expect(readFileSync(original, 'utf8')).toBe(text);
+        if (path.startsWith('package.')) expect(readFileSync(original, 'utf8')).toBe(text);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
         expect(JSON.parse(repeated.stdout).drift).toEqual([]);
@@ -165,7 +180,8 @@ test.each([false, true])(
         expect(() => JSON.parse(result.stdout)).not.toThrow();
         expect(result.stdout).not.toContain('formatter stdout');
         expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(!fails);
-        expect(readFileSync(join(repository.path, 'prettier.config.mjs'), 'utf8')).toBe(configuration);
+        if (fails) expect(readFileSync(join(repository.path, 'prettier.config.mjs'), 'utf8')).toBe(configuration);
+        else expect(existsSync(join(repository.path, 'prettier.config.mjs'))).toBe(false);
         if (fails) expect(result.stdout + result.stderr).toContain('authored formatter failure');
         else expect(JSON.parse(readFileSync(join(repository.path, '.gspot/prettier.json'), 'utf8')).semi).toBe(false);
     },
@@ -173,7 +189,7 @@ test.each([false, true])(
 );
 
 test(
-    'init resolves nested Prettier precedence and preserves every configuration',
+    'init refuses unsupported nested formatting and preserves every configuration',
     async () => {
         await using repository = await testdir();
         const configs = {
@@ -213,31 +229,19 @@ test(
             '--no-rules',
             '--no-install',
         ]);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(() => JSON.parse(result.stdout)).not.toThrow();
-        for (const file of files) {
-            const filepath = join(repository.path, file);
-            const options = await prettier.resolveConfig(filepath, {
-                config: join(repository.path, '.gspot/prettier.json'),
-                editorconfig: false,
-                useCache: false,
-            });
-            expect(await prettier.format(SOURCE, { ...options, filepath })).toBe(expected.get(file)!);
-            expect(readFileSync(filepath, 'utf8')).toBe(SOURCE);
-        }
+        expect(result.code, result.stdout + result.stderr).toBe(2);
+        expect(result.stdout).toContain('Formatting conversion does not support');
+        expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
         for (const [path, text] of Object.entries(configs)) {
             expect(readFileSync(join(repository.path, path), 'utf8')).toBe(text);
             expect(statSync(join(repository.path, path)).mode & 0o777).toBe(0o640);
         }
-        const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
-        expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(JSON.parse(repeated.stdout).drift).toEqual([]);
     },
     PLANTED_TIMEOUT_MS,
 );
 
 test(
-    'init refuses a nested formatter input changed during native evaluation',
+    'init refuses nested formatter inputs before executing configuration',
     async () => {
         await using repository = await testdir();
         const authored =
@@ -261,9 +265,9 @@ test(
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(result.stdout + result.stderr).toContain('changed after takeover was planned');
+        expect(result.stdout + result.stderr).toContain('Formatting conversion does not support');
         expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
-        expect(readFileSync(join(repository.path, 'src/.prettierrc.json'), 'utf8')).toBe('{"semi":true}\n');
+        expect(readFileSync(join(repository.path, 'src/.prettierrc.json'), 'utf8')).toBe('{"semi":false}\n');
         expect(readFileSync(join(repository.path, 'prettier.config.mjs'), 'utf8')).toBe(authored);
     },
     PLANTED_TIMEOUT_MS,

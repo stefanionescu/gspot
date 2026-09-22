@@ -1,9 +1,9 @@
 import { stringify } from 'smol-toml';
 import { collectPins } from '#cli/emit/runner-tasks.ts';
 import { everyManifest } from '#cli/presets/select.ts';
-import type { Session } from '#types/run.ts';
-import type { Manifest } from '#types/manifest.ts';
-import type { GeneratedFile } from '#types/emit.ts';
+import type { Session } from '#cli/run/types.ts';
+import type { Manifest } from '#cli/presets/types.ts';
+import type { GeneratedFile } from '#cli/emit/types.ts';
 
 /** Select exact Python tool requirements from their implementation owners. */
 export function pythonPins(manifests: Manifest[]): string[] {

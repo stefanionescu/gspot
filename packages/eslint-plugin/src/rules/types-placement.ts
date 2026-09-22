@@ -1,11 +1,10 @@
 // Type aliases and enum replacements live under the types directory; that directory holds type-only imports and no runtime exports.
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/options.ts';
-import type { TypesPlacementOptions } from '#plugin-types/options.ts';
+import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
-import type { TypesPlacementMessages, TypesPlacementReporter } from '#plugin-types/plugin.ts';
 
 const TYPE_DECLARATIONS = new Set([
     'TSTypeAliasDeclaration',
@@ -13,7 +12,6 @@ const TYPE_DECLARATIONS = new Set([
     'TSModuleDeclaration',
     'TSDeclareFunction',
 ]);
-const DEFAULT_DIRECTORY = 'types';
 
 function isConstAssertion(init: TSESTree.Expression | null): init is TSESTree.TSAsExpression {
     return (
@@ -102,9 +100,8 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
     meta: {
         type: 'problem',
         docs: {
-            summary:
-                'Keeps every type alias and enum-replacement object under the types directory, and keeps that directory free of runtime code.',
-            why: 'A type declared beside the value it describes spreads the contract across forty files; one directory holds it.',
+            summary: 'Enforces an explicitly configured type-only directory.',
+            why: 'A repository can explicitly designate a type-only public contract directory. Types otherwise live beside their behavioral owners.',
             fix: 'Move the type under the types directory and import it with import type. Exceptions go through gspot ignore with a reason.',
         },
         schema: [
@@ -124,13 +121,14 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
             valueImportInside: 'Files under {{directory}} import types only. Write import type for "{{source}}".',
         },
     },
-    defaultOptions: [{ typesDirectory: DEFAULT_DIRECTORY, allowInterface: false, exempt: [] }],
+    defaultOptions: [{ allowInterface: false, exempt: [] }],
     create(context, [options]) {
+        if (options.typesDirectory === undefined) return {};
         const file = lintedFile(context);
         if (file === undefined || file.endsWith('.d.ts')) return {};
         const relative = relativeToRoot(lintedRoot(context), file);
         if (isAnyGlobMatch(relative, options.exempt ?? [])) return {};
-        const directory = (options.typesDirectory ?? DEFAULT_DIRECTORY).replace(/\/$/u, '');
+        const directory = options.typesDirectory.replace(/\/$/u, '');
         const isInside = relative.startsWith(`${directory}/`) || relative.includes(`/${directory}/`);
         const report: TypesPlacementReporter = (node, id, extra = {}) => {
             context.report({ node, messageId: id, data: { directory, ...extra } });
@@ -138,3 +136,19 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
         return isInside ? insideListeners(report) : outsideListeners(report, options.allowInterface === true);
     },
 });
+
+export type TypesPlacementMessages =
+    | 'interface'
+    | 'aliasOutside'
+    | 'enumOutside'
+    | 'runtimeInside'
+    | 'defaultInside'
+    | 'valueImportInside';
+
+export type TypesPlacementReporter = (
+    node: TSESTree.Node,
+    messageId: TypesPlacementMessages,
+    extra?: Record<string, string>,
+) => void;
+
+export type TypesPlacementOptions = [{ typesDirectory?: string; allowInterface?: boolean; exempt?: string[] }];

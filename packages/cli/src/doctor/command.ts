@@ -1,9 +1,9 @@
 // Reports problems with the configured repository.
 import { openSession } from '#cli/run/session.ts';
-import type { DoctorOptions } from '#types/doctor.ts';
+import type { DoctorOptions } from '#cli/doctor/types.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { pinnedVersion } from '#cli/run/version-pin.ts';
-import type { CommandResult } from '#types/run.ts';
+import type { CommandResult } from '#cli/run/types.ts';
 import { doctorReport, doctorText } from '#cli/doctor/report.ts';
 
 /**

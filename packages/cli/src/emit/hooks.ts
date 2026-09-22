@@ -1,6 +1,6 @@
-import { HOOK_FILES } from '#config/integrity.ts';
-import { HOOK_HEADER } from '#config/markers.ts';
-import type { HookName, LefthookBlock } from '#types/emit.ts';
+import { HOOK_FILES } from '#cli/checks/integrity-definitions.ts';
+import { HOOK_HEADER } from '#cli/emit/markers-definitions.ts';
+import type { HookName, LefthookBlock } from '#cli/emit/types.ts';
 
 const HOOK_ARGS: Record<HookName, string> = {
     'pre-commit': 'check --staged',

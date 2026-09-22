@@ -30,16 +30,16 @@ test('inline ignores apply to Swift findings across repeated runs and changed so
     const options = {
         stage: 'all' as const,
         skips: [],
-        only: ['swift/call-through'],
+        only: ['swift/trivial-function'],
         fix: false,
         isDryRun: false,
     };
     const failed = await executeRun(await openSession(sandbox.path), options);
     expect(failed.report.exitCode).toBe(1);
     expect(failed.report.checks[0]!.findings[0]!.engine).toBe('integrity');
-    expect(reportSchema.parse(failed.report).checks[0]!.findings).toHaveLength(1);
+    expect(reportSchema.parse(failed.report).checks[0]!.findings).toHaveLength(2);
     const path = join(sandbox.path, 'Sources/Welcome.swift');
-    writeFileSync(path, '// gspot-ignore swift/call-through -- Required protocol entry point.\n' + source);
+    writeFileSync(path, '// gspot-ignore swift/trivial-function -- Required protocol entry point.\n' + source);
     const session = await openSession(sandbox.path);
     const allowed = await executeRun(session, options);
     expect(allowed.report.exitCode).toBe(0);
@@ -47,7 +47,7 @@ test('inline ignores apply to Swift findings across repeated runs and changed so
     const repeated = await executeRun(session, options);
     expect(repeated.report.exitCode).toBe(0);
     expect(repeated.report.checks[0]?.findings).toHaveLength(0);
-    writeFileSync(path, '// gspot-ignore swift/call-through\n' + source);
+    writeFileSync(path, '// gspot-ignore swift/trivial-function\n' + source);
     const unexplained = await executeRun(await openSession(sandbox.path), options);
     expect(unexplained.report.exitCode).toBe(0);
     expect(unexplained.report.checks[0]!.findings).toEqual([]);

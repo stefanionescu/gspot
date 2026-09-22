@@ -2,11 +2,11 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { capturedLines } from '#cli/run/captured-lines.ts';
-import { COMPOSE_FILES, COMPOSE_IMAGE } from '#config/integrity.ts';
+import { COMPOSE_FILES, COMPOSE_IMAGE } from '#cli/checks/integrity-definitions.ts';
 
 const SHOWN_LINES = 20;
 

@@ -10,6 +10,8 @@
         "commander": "15.0.0",
         "starlight-llms-txt": "0.11.0",
         "htmlparser2": "10.1.0",
-        "zod": "4.6.2"
+        "zod": "4.6.2",
+        "yaml": "2.9.0",
+        "execa": "9.6.1"
     }
 }

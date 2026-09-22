@@ -1,10 +1,10 @@
 // Selection: the presets named plus every preset they require, dependencies first, in order of first mention.
-import type { Policy } from '#types/config.ts';
+import type { Policy } from '#cli/policy/types.ts';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
-import type { Session } from '#types/run.ts';
+import type { Session } from '#cli/run/types.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Manifest, SelectionWalk } from '#types/manifest.ts';
+import type { Manifest, SelectionWalk } from '#cli/presets/types.ts';
 
 function visit(walk: SelectionWalk, presetName: string): void {
     if (walk.seen.has(presetName)) return;

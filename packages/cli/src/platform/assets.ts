@@ -4,8 +4,8 @@ import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import { GRAMMAR_SOURCES } from '#config/grammars.ts';
-import type { EmbeddedIndex } from '#types/platform.ts';
+import { GRAMMAR_SOURCES } from '#cli/naming/grammars-definitions.ts';
+import type { EmbeddedIndex } from '#cli/platform/types.ts';
 
 const ROOT_SEARCH_DEPTH = 6;
 
@@ -50,7 +50,7 @@ export function isEmbedded(): boolean {
 }
 
 /**
- * Reads one asset by its repository-relative path (`presets/language/bash/manifest.toml`).
+ * Reads one asset by its repository-relative path (`presets/bash/manifest.toml`).
  * @param path the asset path
  * @returns the text
  */
@@ -65,23 +65,23 @@ export function readAsset(path: string): string {
 }
 
 /**
- * The bytes of a grammar file: embedded in the binary, or read from its npm package during development.
+ * The installed path of a grammar file: embedded in the binary, or read from its npm package during development.
  * @param name the file name under grammars/, such as `bash.wasm`
- * @returns the WASM bytes
+ * @returns the WASM asset path
  */
-export function grammarBytes(name: string): Uint8Array {
+export function grammarPath(name: string): string {
     const index = embeddedIndex();
     const embedded = index?.[`grammars/${name}`];
-    if (embedded !== undefined) return new Uint8Array(readFileSync(embedded));
+    if (embedded !== undefined) return embedded;
     const root = developmentRoot();
     const vendored = join(root, 'packages', 'cli', 'grammars', name);
     const source = GRAMMAR_SOURCES[name];
-    if (source === undefined && existsSync(vendored)) return new Uint8Array(readFileSync(vendored));
+    if (source === undefined && existsSync(vendored)) return vendored;
     if (source === undefined) throw new Error(`No grammar is called ${name}.`);
     const candidates = [join(root, 'packages', 'cli', 'node_modules', source), join(root, 'node_modules', source)];
     const found = candidates.find((candidate) => existsSync(candidate));
     if (found === undefined) throw new Error(`The grammar package for ${name} is not installed; run bun install.`);
-    return new Uint8Array(readFileSync(found));
+    return found;
 }
 
 /**

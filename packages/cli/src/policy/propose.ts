@@ -1,10 +1,10 @@
 // The proposed gspot.toml at init: the selection, the scopes, the carried lists, the choices.
 import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
-import { SCHEMA_LINE } from '#config/markers.ts';
+import { SCHEMA_LINE } from '#cli/emit/markers-definitions.ts';
 import { policySchema } from '#cli/policy/schema.ts';
-import type { CarriedLists } from '#types/lifecycle.ts';
-import type { TomlTable, Proposal } from '#types/config.ts';
+import type { CarriedLists } from '#cli/lifecycle/types.ts';
+import type { TomlTable, Proposal } from '#cli/policy/types.ts';
 
 const PREFACE = [
     SCHEMA_LINE,
@@ -38,7 +38,11 @@ function xcodeTable(xcode: Proposal['xcode']): TomlTable | undefined {
 function toolTables(carried: CarriedLists, commitScopes: string[] | undefined, xcode?: Proposal['xcode']): TomlTable {
     const tables: Record<string, TomlTable | undefined> = {
         typos: typosTable(carried),
-        eslint: carried.eslintOverrides === undefined ? undefined : { overrides: carried.eslintOverrides },
+        prettier:
+            carried.formatter?.ignorePatterns === undefined
+                ? undefined
+                : { ignore_patterns: carried.formatter.ignorePatterns },
+        eslint: carried.eslintAdopted === undefined ? undefined : { adopted: carried.eslintAdopted },
         gitleaks: nonEmpty({ allow: carried.gitleaksAllow }),
         basedpyright: nonEmpty({ exclude: carried.pyrightExcludes }),
         sqlfluff: nonEmpty({ exclude: carried.sqlfluffExcludes }),
@@ -64,7 +68,6 @@ function headTables(proposal: Proposal): TomlTable {
             ...(proposal.xcode?.scope === scope.path ? { tools: { xcode: xcodeTable(proposal.xcode) } } : {}),
         }));
     if (proposal.format !== undefined && Object.keys(proposal.format).length > 0) document['format'] = proposal.format;
-    if (proposal.typesDirectory !== undefined) document['architecture'] = { types_directory: proposal.typesDirectory };
     return document;
 }
 
@@ -114,7 +117,8 @@ function bodyText(document: TomlTable): string {
 export function proposeText(proposal: Proposal): string {
     const document = headTables(proposal);
     const tools = toolTables(proposal.carried, proposal.commitScopes, proposal.xcode);
-    if (proposal.prettierExtra !== undefined) tools['prettier'] = { extra: proposal.prettierExtra };
+    if (proposal.prettierExtra !== undefined)
+        tools['prettier'] = { ...(tools['prettier'] as TomlTable), extra: proposal.prettierExtra };
     if (Object.keys(tools).length > 0) document['tools'] = tools;
     mergeProfile(document, proposal.profileTables);
     if (proposal.carried.ignores.length > 0)

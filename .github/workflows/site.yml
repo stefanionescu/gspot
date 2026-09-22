@@ -34,6 +34,7 @@ jobs:
               with:
                   version: '2026.8.8'
                   install: false
+                  cache: false
             - run: mise install bun node
             - run: mise run --skip-tools repo:setup
             - name: Verify released documentation source

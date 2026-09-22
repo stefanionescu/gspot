@@ -20,8 +20,8 @@ import { runToolCommand } from '#cli/run/tool-runner.ts';
 import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { publishInstalledFiles } from '#cli/lifecycle/installed-files.ts';
-import type { GeneratedFile } from '#types/emit.ts';
-import type { LifecycleOwner } from '#types/lifecycle.ts';
+import type { GeneratedFile } from '#cli/emit/types.ts';
+import type { LifecycleOwner } from '#cli/lifecycle/types.ts';
 
 const PROJECT = '.gspot/pyproject.toml';
 const LOCK = '.gspot/uv.lock';

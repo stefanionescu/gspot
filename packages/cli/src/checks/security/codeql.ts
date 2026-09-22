@@ -2,12 +2,12 @@
 import { join } from 'node:path';
 import { tmpdir } from 'node:os';
 import { run } from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import type { AcceptedResult, SarifLog, SarifResult } from '#types/integrity.ts';
+import type { AcceptedResult, SarifLog, SarifResult } from '#cli/checks/types.ts';
 
 const TOOL = 'codeql';
 const SCAN_TIMEOUT_MS = 3_600_000;
@@ -48,16 +48,6 @@ function placeOf(result: SarifResult): { file: string; line: number } {
     return { file: place.artifactLocation?.uri ?? '', line: place.region?.startLine ?? 1 };
 }
 
-function located(result: SarifResult, check: string): Finding {
-    return {
-        check,
-        ...placeOf(result),
-        rule: result.ruleId ?? TOOL,
-        message: result.message?.text ?? 'CodeQL reports a result here.',
-        fixable: false,
-    };
-}
-
 /**
  * The findings of one SARIF log, minus the results the policy accepts.
  * @param log the parsed log
@@ -68,7 +58,13 @@ function located(result: SarifResult, check: string): Finding {
 export function sarifFindings(log: SarifLog, check: string, accepted: AcceptedResult[]): Finding[] {
     const results = (log.runs ?? []).flatMap((entry) => entry.results ?? []);
     return results
-        .map((result) => located(result, check))
+        .map((result) => ({
+            check: check,
+            ...placeOf(result),
+            rule: result.ruleId ?? TOOL,
+            message: result.message?.text ?? 'CodeQL reports a result here.',
+            fixable: false,
+        }))
         .filter((finding) => !isAccepted(accepted, finding.rule ?? '', finding.file));
 }
 

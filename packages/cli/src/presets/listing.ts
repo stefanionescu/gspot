@@ -1,6 +1,6 @@
 // The list explain <preset> and the docs generator read.
 import { presetManifests } from '#cli/presets/read-manifests.ts';
-import type { ListingRow, CheckSpec, Manifest } from '#types/manifest.ts';
+import type { ListingRow, CheckSpec, Manifest } from '#cli/presets/types.ts';
 
 const FORMAT_PREFIX = 'format.';
 
@@ -32,8 +32,10 @@ export function toRow(manifest: Manifest): ListingRow {
 export function allChecks(): Map<string, { check: CheckSpec; preset: Manifest }> {
     const checks = new Map<string, { check: CheckSpec; preset: Manifest }>();
     for (const manifest of presetManifests().values())
-        for (const check of manifest.checks)
-            if (!checks.has(check.name)) checks.set(check.name, { check, preset: manifest });
+        for (const check of manifest.checks) {
+            if (checks.has(check.name)) throw new Error(`Duplicate check identity: ${check.name}`);
+            checks.set(check.name, { check, preset: manifest });
+        }
     return checks;
 }
 

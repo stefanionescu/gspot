@@ -1,6 +1,6 @@
 ---
 layer: tool
-preset: config-files
+preset: configs
 title: Task Runner
 ---
 

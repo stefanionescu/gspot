@@ -1,8 +1,7 @@
-import { createRule } from '#plugin/rule.ts';
-import { optionsSchema } from '#plugin/options.ts';
+import { createRule } from '#plugin/rules/definition.ts';
+import { optionsSchema } from '#plugin/rules/options.ts';
 // Any re-export in application source when the reexports setting is none.
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
-import type { NoReexportsOptions } from '#plugin-types/options.ts';
 
 export const noReexports = createRule<NoReexportsOptions, 'from' | 'star' | 'local'>({
     name: 'no-reexports',
@@ -35,3 +34,5 @@ export const noReexports = createRule<NoReexportsOptions, 'from' | 'star' | 'loc
         };
     },
 });
+
+export type NoReexportsOptions = [{ allowIndex?: boolean }];

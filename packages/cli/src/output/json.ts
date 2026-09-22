@@ -1,7 +1,7 @@
 // Findings from a tool that prints JSON: the manifest names where the list is and which field holds what.
-import type { Finding } from '#types/finding.ts';
-import { UNPARSED_LIMIT } from '#config/markers.ts';
-import type { OutputFormat } from '#types/manifest.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import { UNPARSED_LIMIT } from '#cli/emit/markers-definitions.ts';
+import type { OutputFormat } from '#cli/presets/types.ts';
 
 const JSON_INDENT = 2;
 

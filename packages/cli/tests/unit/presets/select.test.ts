@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import type { Manifest } from '#types/manifest.ts';
+import type { Manifest } from '#cli/presets/types.ts';
 import { selectPresets } from '#cli/presets/select.ts';
 import { parseManifest, presetManifests, validateManifests } from '#cli/presets/read-manifests.ts';
 

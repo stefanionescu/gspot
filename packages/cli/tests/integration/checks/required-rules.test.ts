@@ -6,7 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/emit/targets.ts';
 import { openSession } from '#cli/run/session.ts';
 import { requiredRules } from '#cli/checks/typescript/required-rules.ts';
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 
 test('required ESLint rules inspect later file overrides and accept their correction', async () => {
     await using sandbox = await testdir();

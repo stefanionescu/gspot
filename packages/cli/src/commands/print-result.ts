@@ -1,6 +1,6 @@
 // What every command does with its result: print text or JSON, set the exit code, turn errors into exit 2.
 import { printJson } from '#cli/output/json.ts';
-import type { CommandResult } from '#types/run.ts';
+import type { CommandResult } from '#cli/run/types.ts';
 import { fail, print } from '#cli/output/messages.ts';
 
 const KNOWN_ERRORS = new Set([

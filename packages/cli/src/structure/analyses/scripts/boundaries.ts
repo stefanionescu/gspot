@@ -1,8 +1,8 @@
 // Scripts under the architecture roots declare their boundary and their sources. Searched: shellcheck source=; it resolves, it does not require.
 import { posix } from 'node:path';
-import type { Finding } from '#types/finding.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import type { Analysis, ScriptFile, ScriptIndex, StructureContext } from '#types/structure.ts';
+import type { Analysis, ScriptFile, ScriptIndex, StructureContext } from '#cli/structure/types.ts';
 
 import {
     BOUNDARY_HEADER,
@@ -10,7 +10,7 @@ import {
     BOUNDARY_MIN_WORDS,
     SOURCE_ANNOTATION,
     SOURCE_STATEMENT,
-} from '#config/structure.ts';
+} from '#cli/structure/structure-definitions.ts';
 
 function hasBoundary(file: ScriptFile): boolean {
     return file.lines.slice(0, BOUNDARY_HEADER_WINDOW).some((line) => {

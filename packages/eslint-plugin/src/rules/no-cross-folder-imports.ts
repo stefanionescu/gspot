@@ -1,9 +1,9 @@
 // A relative import that crosses a sibling top-level folder; use the alias.
 import { posix } from 'node:path';
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { aliasMap, optionsSchema, stringList } from '#plugin/options.ts';
-import type { CrossFolderImportsOptions } from '#plugin-types/options.ts';
+import { aliasMap, optionsSchema, stringList } from '#plugin/rules/options.ts';
+
 import { lintedFile, lintedRoot, normalizePath, relativeToRoot, staticString } from '#plugin/files.ts';
 
 function aliasFor(target: string, aliases: Record<string, string>): string | undefined {
@@ -94,3 +94,5 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross
         };
     },
 });
+
+export type CrossFolderImportsOptions = [{ scope?: string[]; aliases?: Record<string, string> }];

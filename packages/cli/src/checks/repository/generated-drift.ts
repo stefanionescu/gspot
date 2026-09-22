@@ -1,6 +1,6 @@
 // Does every generated file match its render? Runs apply --dry-run in memory.
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { computeDrift } from '#cli/emit/drift.ts';
 
 const MESSAGES: Record<string, string> = {
@@ -8,7 +8,8 @@ const MESSAGES: Record<string, string> = {
     missing: 'This generated file is missing.',
     stray: 'This file carries the gspot header but nothing in the selection renders it.',
 };
-const MOVE_HELP = 'Change policy in gspot.toml, then run gspot apply. Edited outputs are preserved; move them aside to regenerate.';
+const MOVE_HELP =
+    'Change policy in gspot.toml, then run gspot apply. Edited outputs are preserved; move them aside to regenerate.';
 const STRAY_HELP = 'Delete the file, or add the preset that renders it.';
 
 /**

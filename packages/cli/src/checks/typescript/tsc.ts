@@ -2,12 +2,12 @@
 import ts from 'typescript';
 import { dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { lstatSync, realpathSync, rmSync } from 'node:fs';
-import type { CheckResult } from '#types/finding.ts';
+import type { CheckResult } from '#cli/output/finding.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
-import { scratchCopy } from '#cli/run/scratch-copy.ts';
+import { scratchCopy } from '#cli/run/fixers.ts';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import type { Session, PlannedCheck } from '#types/run.ts';
+import type { Session, PlannedCheck } from '#cli/run/types.ts';
 
 function assertProjectPath(root: string, path: string): void {
     const local = relative(root, path);

@@ -1,16 +1,16 @@
 import { parse as parseToml } from 'smol-toml';
 import { openSession } from '#cli/run/session.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { SetOptions } from '#types/commands.ts';
-import type { SettingSpec } from '#types/manifest.ts';
+import type { SetOptions } from '#cli/commands/types.ts';
+import type { SettingSpec } from '#cli/presets/types.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { isLoosening } from '#cli/policy/loosening.ts';
 // gspot set: one setting at a time, checked against the surface, with a reason when the change loosens.
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
-import type { TomlTable, Mutation } from '#types/config.ts';
+import type { TomlTable, Mutation } from '#cli/policy/types.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
-import type { CommandResult, ScopeSelection, Session } from '#types/run.ts';
+import type { CommandResult, ScopeSelection, Session } from '#cli/run/types.ts';
 import { commitPolicy, refuseBadReason, requireReason } from '#cli/policy/commit-policy.ts';
 import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
 

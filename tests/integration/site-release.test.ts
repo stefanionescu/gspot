@@ -8,7 +8,7 @@ import { run } from '#cli/platform/spawn.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 
-const entry = fileURLToPath(new URL('../../docs/verify-release.ts', import.meta.url));
+const entry = fileURLToPath(new URL('../../docs/scripts/verify-release.ts', import.meta.url));
 
 test('site release validation accepts a published tag and docs correction but refuses product changes and draft releases', async () => {
     await using sandbox = await testdir();

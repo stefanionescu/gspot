@@ -1,5 +1,5 @@
 // The Swift test files of a repository, read line by line.
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 import { textOf, trackedEnding } from '#cli/checks/xcode/files.ts';
 
 const TEST_FOLDER = /(?:^|\/)[^/]*Tests\//u;

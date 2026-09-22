@@ -1,14 +1,27 @@
 // Corrections run in order; dry runs use a scratch copy and return diffs.
-import { join } from 'node:path';
+import { dirname, join, relative, isAbsolute, sep } from 'node:path';
+import { tmpdir } from 'node:os';
 import { createTwoFilesPatch } from 'diff';
-import { readFileSync, rmSync } from 'node:fs';
-import type { ToolPin } from '#types/manifest.ts';
+import {
+    constants,
+    cpSync,
+    existsSync,
+    mkdirSync,
+    mkdtempSync,
+    readFileSync,
+    realpathSync,
+    readdirSync,
+    statSync,
+    unlinkSync,
+    symlinkSync,
+    rmSync,
+} from 'node:fs';
+import type { ToolPin } from '#cli/presets/types.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
 import { byFixOrder } from '#cli/run/concurrency.ts';
-import { scratchCopy } from '#cli/run/scratch-copy.ts';
 import { probeTool, toolPin } from '#cli/platform/tool-probe.ts';
 import { prepareCommand, runToolCommand } from '#cli/run/tool-runner.ts';
-import type { FixReport, FixResult, Session, PlannedCheck, PreparedCommand } from '#types/run.ts';
+import type { FixReport, FixResult, Session, PlannedCheck, PreparedCommand } from '#cli/run/types.ts';
 
 const DIFF_CONTEXT = 3;
 
@@ -34,12 +47,6 @@ function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string
             return was === undefined || now === undefined ? was !== now : !was.equals(now);
         })
         .toArray();
-}
-
-function isSkipped(plannedCheck: PlannedCheck): boolean {
-    return (
-        plannedCheck.skip !== undefined || (plannedCheck.files.length === 0 && plannedCheck.triggerPaths.length === 0)
-    );
 }
 
 function correctionTool(session: Session, plannedCheck: PlannedCheck): ToolPin | undefined {
@@ -104,7 +111,12 @@ export async function runFixer(
     const { spec } = plannedCheck;
     const tool = correctionTool(session, plannedCheck);
     const check = plannedCheck.check;
-    if (spec.fix_command === undefined || isSkipped(plannedCheck)) return { check, status: 'skipped', changed: [] };
+    if (
+        spec.fix_command === undefined ||
+        plannedCheck.skip !== undefined ||
+        (plannedCheck.files.length === 0 && plannedCheck.triggerPaths.length === 0)
+    )
+        return { check, status: 'skipped', changed: [] };
     if (tool === undefined) return { check, status: 'failed', changed: [], note: 'No correction tool is configured.' };
     const { env, cwd } = prepareCommand(session, { ...plannedCheck, tool }, spec.fix_command);
     const probe = probeTool({ ...session, cwd }, { ...tool, env });
@@ -147,5 +159,93 @@ export async function applyFixers(session: Session, planned: PlannedCheck[], isD
         return { results, changed, diffs };
     } finally {
         if (scratch !== undefined) rmSync(scratch, { recursive: true, force: true });
+    }
+}
+
+const SCRATCH_EXTRAS = ['gspot.toml', 'package.json', 'tsconfig.json', 'pyproject.toml'];
+const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
+
+/**
+ * Copies selected source and configuration files for commands run outside the working tree.
+ * @param session the repository session
+ * @param paths the source paths relative to the repository root
+ * @returns the temporary directory, which the caller must remove
+ */
+export function scratchCopy(session: Session, paths: string[]): string {
+    const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'gspot-fix-')));
+    try {
+        const owned = session.repository.files.map((file) => file.path);
+        const dependencies = [
+            ...new Set(
+                session.scopes.flatMap(({ scope }) => SCRATCH_DIRECTORIES.map((name) => join(scope.path, name))),
+            ),
+        ];
+        const copied = new Set(
+            [...paths, ...owned, ...SCRATCH_EXTRAS].filter(
+                (path) => !dependencies.some((dir) => path === dir || path.startsWith(`${dir}/`)),
+            ),
+        );
+        for (const path of copied) {
+            const source = join(session.root, path);
+            if (!existsSync(source)) continue;
+            mkdirSync(dirname(join(scratch, path)), { recursive: true });
+            cpSync(source, join(scratch, path), { dereference: true });
+        }
+        const copies = new Map<string, string>([[realpathSync(session.root), scratch]]);
+        const pending: { source: string; target: string }[] = [];
+        const fileLinks: { source: string; target: string }[] = [];
+        for (const dir of dependencies) {
+            if (!existsSync(join(session.root, dir))) continue;
+            const source = realpathSync(join(session.root, dir));
+            const target = join(scratch, dir);
+            copies.set(source, target);
+            cpSync(source, target, { recursive: true, verbatimSymlinks: true, mode: constants.COPYFILE_FICLONE });
+            pending.push({ source, target });
+        }
+        const relocated = (source: string): string | undefined => {
+            for (const [original, copied] of [...copies].sort(([left], [right]) => right.length - left.length)) {
+                const local = relative(original, source);
+                if (!isAbsolute(local) && local !== '..' && !local.startsWith(`..${sep}`)) return join(copied, local);
+            }
+            return undefined;
+        };
+        for (let directory = pending.pop(); directory !== undefined; directory = pending.pop()) {
+            for (const entry of readdirSync(directory.source, { withFileTypes: true })) {
+                const source = join(directory.source, entry.name);
+                const target = join(directory.target, entry.name);
+                if (entry.isDirectory()) pending.push({ source, target });
+                else if (entry.isSymbolicLink()) {
+                    const original = realpathSync(source);
+                    if (statSync(original).isFile()) {
+                        fileLinks.push({ source: original, target });
+                        continue;
+                    }
+                    const destination = relocated(original);
+                    unlinkSync(target);
+                    if (destination !== undefined && existsSync(destination)) {
+                        symlinkSync(relative(dirname(target), destination), target, 'dir');
+                    } else {
+                        copies.set(original, target);
+                        cpSync(original, target, {
+                            recursive: true,
+                            verbatimSymlinks: true,
+                            mode: constants.COPYFILE_FICLONE,
+                        });
+                        pending.push({ source: original, target });
+                    }
+                }
+            }
+        }
+        for (const { source, target } of fileLinks) {
+            const destination = relocated(source);
+            unlinkSync(target);
+            if (destination !== undefined && existsSync(destination))
+                symlinkSync(relative(dirname(target), destination), target, 'file');
+            else cpSync(source, target);
+        }
+        return scratch;
+    } catch (error) {
+        rmSync(scratch, { recursive: true, force: true });
+        throw error;
     }
 }

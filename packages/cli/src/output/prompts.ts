@@ -1,4 +1,4 @@
-import type { Choice } from '#types/output.ts';
+import type { Choice } from '#cli/output/types.ts';
 import { isCi } from '#cli/platform/environment.ts';
 // The clack questions, asked only in a terminal and never under --yes.
 import { confirm, multiselect, select } from '@clack/prompts';

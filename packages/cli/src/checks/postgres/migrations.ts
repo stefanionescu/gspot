@@ -1,11 +1,11 @@
 // The migrations of a repository: where they live, their versions, and their parsed statements.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { EngineInput, Session } from '#types/run.ts';
-import type { Migration } from '#types/postgres.ts';
+import type { EngineInput, Session } from '#cli/run/types.ts';
+import type { Migration } from '#cli/checks/postgres/types.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { sqlFile } from '#cli/readers/sql/statements.ts';
-import { MIGRATION_FOLDERS, MIGRATION_VERSION } from '#config/postgres.ts';
+import { MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/checks/postgres/postgres-definitions.ts';
 
 const observations = new WeakMap<Session, Map<string, Promise<Migration[]>>>();
 

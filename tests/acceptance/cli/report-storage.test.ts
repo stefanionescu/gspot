@@ -13,7 +13,7 @@ import {
 } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { run } from '#tests/harness/planted.ts';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 
 test.skipIf(process.platform === 'win32')(
     'a read-only report directory preserves CLI findings and verdict',

@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
 import { join, toNamespacedPath } from 'node:path';
-import type { CloneReport } from '#types/integrity.ts';
+import type { CloneReport } from '#cli/checks/types.ts';
 import { cloneFindings } from '#cli/checks/docs/copied-blocks.ts';
 
 describe('clone findings', () => {

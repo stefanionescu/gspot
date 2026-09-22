@@ -1,12 +1,12 @@
 // The shell scripts of one scope, read once per run: functions, references and top-level assignments, and who owns each function.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
-import type { TrackedFile } from '#types/repository.ts';
-import { TOP_LEVEL_ASSIGNMENT } from '#config/structure.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { TrackedFile } from '#cli/repository/types.ts';
+import { TOP_LEVEL_ASSIGNMENT } from '#cli/structure/structure-definitions.ts';
 import { functionAt, scriptFunctions } from '#cli/structure/parser.ts';
 import { withoutComment, withoutDeclaration } from '#cli/structure/code-lines.ts';
-import type { ScriptFile, ScriptFunction, ScriptIndex } from '#types/structure.ts';
+import type { ScriptFile, ScriptFunction, ScriptIndex } from '#cli/structure/types.ts';
 
 const IDENTIFIER = /[A-Za-z_]\w*/gu;
 const cache = new WeakMap<object, Map<string, Promise<ScriptIndex>>>();

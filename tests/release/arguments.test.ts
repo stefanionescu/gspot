@@ -7,14 +7,8 @@ import { environmentVariables } from '#cli/platform/environment.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync } from 'node:fs';
 
 const ROOT = fileURLToPath(new URL('../..', import.meta.url));
-const ENTRIES = ['packages/cli/schemas.ts', 'docs/reference-pages.ts'];
-const LINKS = [
-    'node_modules',
-    'docs/node_modules',
-    'packages/cli/node_modules',
-    'packages/cli/src',
-    'packages/cli/config',
-];
+const ENTRIES = ['packages/cli/schemas.ts'];
+const LINKS = ['node_modules', 'docs/node_modules', 'packages/cli/node_modules', 'packages/cli/src'];
 const SOURCES = [...ENTRIES, 'packages/cli/package.json', 'docs/package.json'];
 
 const OUTPUTS = ['gspot.schema.json', 'docs/public/schema', 'docs/src/content/docs/reference'];
@@ -81,18 +75,28 @@ describe('build script arguments', () => {
         await createFileTree(sandbox.path, {
             'packages/cli/build.ts': readFileSync(join(ROOT, 'packages/cli/build.ts'), 'utf8'),
             'packages/cli/package.json': readFileSync(join(ROOT, 'packages/cli/package.json'), 'utf8'),
-            'packages/cli/config/grammars.ts': readFileSync(join(ROOT, 'packages/cli/config/grammars.ts'), 'utf8'),
-            'packages/cli/config/targets.ts': readFileSync(join(ROOT, 'packages/cli/config/targets.ts'), 'utf8'),
+            'packages/cli/src/naming/grammars-definitions.ts': readFileSync(
+                join(ROOT, 'packages/cli/src/naming/grammars-definitions.ts'),
+                'utf8',
+            ),
+            'packages/cli/src/emit/targets-definitions.ts': readFileSync(
+                join(ROOT, 'packages/cli/src/emit/targets-definitions.ts'),
+                'utf8',
+            ),
             'packages/npm/gspot/targets.json': readFileSync(join(ROOT, 'packages/npm/gspot/targets.json'), 'utf8'),
             ...Object.fromEntries(
                 [
                     'LICENSE.md',
                     'packages/cli/notices.ts',
+                    'packages/cli/notices.json',
+                    'packages/cli/src/platform/assets.ts',
+                    'packages/cli/src/platform/paths.ts',
                     'packages/cli/grammars/swift.json',
                     'packages/cli/grammars/swift.LICENSE',
                 ].map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]),
             ),
             'packages/cli/build/entry.ts': '// existing entry\n',
+            'presets/fixture.txt': 'asset fixture\n',
             'dist/gspot-linux-arm64': 'existing binary',
             'bin/bun':
                 `#!${process.execPath}\n` +
@@ -108,7 +112,7 @@ const argv = process.argv.slice(2);
             join(ROOT, 'packages/cli/grammars/swift.wasm'),
             join(sandbox.path, 'packages/cli/grammars/swift.wasm'),
         );
-        for (const path of ['node_modules', 'packages/cli/node_modules', 'LICENSES'])
+        for (const path of ['node_modules', 'packages/cli/node_modules'])
             symlinkSync(join(ROOT, path), join(sandbox.path, path), 'dir');
         chmodSync(join(sandbox.path, 'bin/bun'), 0o755);
         const outputs = ['packages/cli/grammars', 'packages/cli/build', 'dist'];
@@ -184,7 +188,7 @@ describe('publish script arguments', () => {
                         'packages/npm/gspot/package.json',
                         'packages/npm/gspot/gspot.js',
                         'packages/npm/gspot/targets.json',
-                        'packages/cli/config/targets.ts',
+                        'packages/cli/src/emit/targets-definitions.ts',
                     ].map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]),
                 ),
                 ...Object.fromEntries(

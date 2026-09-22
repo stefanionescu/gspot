@@ -14,33 +14,6 @@ import * as processes from '#cli/platform/spawn.ts';
 import { applyAll } from '#cli/emit/apply-command.ts';
 import { initCommand } from '#cli/lifecycle/init/command.ts';
 import { installCommand } from '#cli/lifecycle/install-command.ts';
-import { upgradeCommand } from '#cli/lifecycle/upgrade/command.ts';
-
-test('an unavailable native installer leaves upgraded configuration pinned and offers an independent install retry', async () => {
-    await using sandbox = await testdir();
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\npresets = []\n[runner]\ntool = "mise"\n',
-        '.gspot/version': '0.0.1\n',
-        'package.json': '{"private":true}',
-    });
-    const installer = spyOn(processes, 'run').mockResolvedValue({
-        code: 1,
-        missing: false,
-        duration: 1,
-        stdout: '',
-        stderr: 'Planted installation failure.',
-    });
-    try {
-        const result = await upgradeCommand({ cwd: sandbox.path, yes: true, install: true, isDryRun: false });
-        expect(result.exitCode).toBe(1);
-        expect(result.text).toContain('Install mise');
-        expect(result.text).toContain('Run: gspot install');
-        expect(result.json).toMatchObject({ applied: true, installed: false, pinned: GSPOT_VERSION });
-    } finally {
-        installer.mockRestore();
-    }
-    expect(readFileSync(join(sandbox.path, '.gspot/version'), 'utf8').trim()).toBe(GSPOT_VERSION);
-});
 
 test.each([undefined, 'custom-hooks'])(
     'apply preserves Git and package configuration without integrations (%s)',

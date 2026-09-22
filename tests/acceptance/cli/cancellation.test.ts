@@ -4,7 +4,7 @@ import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { git, run } from '#tests/harness/planted.ts';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 
 const CLI = join(import.meta.dir, '../../../packages/cli/src/main.ts');
 

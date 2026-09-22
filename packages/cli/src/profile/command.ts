@@ -1,6 +1,6 @@
 // Saves a reusable policy profile.
 import { resolve } from 'node:path';
-import type { CommandResult } from '#types/run.ts';
+import type { CommandResult } from '#cli/run/types.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { exportedProfile } from '#cli/profile/export.ts';

@@ -2,12 +2,12 @@ import { join } from 'node:path';
 // The shape of a README: one H1, an opening paragraph, a Contents list when it is long, a section on getting started, no banned heading.
 import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import type { ShapeProblem } from '#types/integrity.ts';
+import type { ShapeProblem } from '#cli/checks/types.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#config/docs.ts';
+import { CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#cli/checks/docs/docs-definitions.ts';
 
 function titleProblem(nodes: RootContent[]): ShapeProblem[] {
     const titles = nodes.filter((node) => node.type === 'heading' && node.depth === 1);

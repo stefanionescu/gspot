@@ -23,24 +23,43 @@ tester().run('types-placement', typesPlacement, {
     ],
     invalid: [
         {
+            options: [{ typesDirectory: 'types' }],
             code: 'type A = string;',
             filename: '/repo/src/a.ts',
             errors: [{ messageId: 'aliasOutside', data: { directory: 'types', name: 'A' } }],
         },
-        { code: 'interface A { a: string }', filename: '/repo/src/a.ts', errors: [{ messageId: 'interface' }] },
         {
+            options: [{ typesDirectory: 'types' }],
+            code: 'interface A { a: string }',
+            filename: '/repo/src/a.ts',
+            errors: [{ messageId: 'interface' }],
+        },
+        {
+            options: [{ typesDirectory: 'types' }],
             code: "export const Mode = { on: 'on' } as const;",
             filename: '/repo/src/a.ts',
             errors: [{ messageId: 'enumOutside', data: { directory: 'types', name: 'Mode' } }],
         },
         {
+            options: [{ typesDirectory: 'types' }],
             code: 'export function a() {}',
             filename: '/repo/types/a.ts',
             errors: [{ messageId: 'runtimeInside', data: { directory: 'types', name: 'a' } }],
         },
-        { code: 'export const a = 1;', filename: '/repo/types/a.ts', errors: [{ messageId: 'runtimeInside' }] },
-        { code: 'export default 1;', filename: '/repo/types/a.ts', errors: [{ messageId: 'defaultInside' }] },
         {
+            options: [{ typesDirectory: 'types' }],
+            code: 'export const a = 1;',
+            filename: '/repo/types/a.ts',
+            errors: [{ messageId: 'runtimeInside' }],
+        },
+        {
+            options: [{ typesDirectory: 'types' }],
+            code: 'export default 1;',
+            filename: '/repo/types/a.ts',
+            errors: [{ messageId: 'defaultInside' }],
+        },
+        {
+            options: [{ typesDirectory: 'types' }],
             code: "import { b } from './b';\nexport type A = typeof b;",
             filename: '/repo/types/a.ts',
             errors: [{ messageId: 'valueImportInside', data: { directory: 'types', source: './b' } }],

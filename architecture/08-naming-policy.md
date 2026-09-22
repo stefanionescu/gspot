@@ -21,7 +21,7 @@ the declaration is redundant or that its abstraction is wrong.
 
 ## Schema
 
-The shipped policy is `presets/concern/naming/policy.json`. The repository extends it through
+The shipped policy is `presets/naming/policy.json`. The repository extends it through
 `[naming]` in `gspot.toml`. Both use one schema.
 
 ```json
@@ -119,7 +119,7 @@ and `visit_*` visitor methods, `setUp`, `setUpClass`, `tearDown`, `tearDownClass
 variable names a runtime fixes (`HF_TOKEN`, `CUDA_MODULE_LOADING`, `CODEQL_*`).
 
 The shared policy names no framework. A framework preset carries the names its framework fixes
-as `[[naming.rules]]` in its manifest (D-112). The nextjs preset holds the exports of Next.js
+as `[[naming.rules]]` in its manifest. The nextjs preset holds the exports of Next.js
 and its route file names. The react preset holds the hooks of React, and PascalCase for a
 component and its file. Vue, Svelte, and React Native do the same.
 
@@ -131,7 +131,7 @@ external`.
 Property keys fixed by a protocol, a package option or a data format are exempt when a named file lists them. Examples: HTTP headers (`Content-Type`, `Retry-After`), ARIA attributes, key names (`ArrowUp`), locale tags (`en-GB`), card brands. A repository lists them under
 `[naming] contract_properties = [{ file = "...", names = [...] }]`. A property signature in a
 type or interface whose name is snake_case or UPPER_SNAKE describes a shape another format
-fixes (TOML keys, a JSON API, a generated type). It is exempt from the case check without a listing; a class field is not (D-69).
+fixes (TOML keys, a JSON API, a generated type). It is exempt from the case check without a listing; a class field is not.
 
 ## Per-language tables
 
@@ -181,7 +181,7 @@ meaning, such as `defaultAnswer`, `useDefaults`, or `didChange`; they do not all
 prefix. SQL boolean columns remain bare predicates such as `enabled` and `retryable`.
 
 These house-style checks run at `all`. The action and parameter contract in
-[19-names.md](19-names.md) also applies to the naming rules and lint configuration of gspot itself.
+[public vocabulary](README.md#glossary) also applies to the naming rules and lint configuration of gspot itself.
 
 `handle` as a leading verb is a `verbs` finding in the shared policy. A preset whose framework
 uses the word allows it in its own rules: react for an event prop (`handleSubmit`), express and
@@ -302,11 +302,13 @@ not. Every loosening entry prints in every run.
 Each key has a writing command: `gspot set naming.banned_terms dispatcher`,
 `gspot set naming.python.parameters.max_words 3`, `gspot set naming.allowed createServiceRoleClient
 --reason "..."`, `gspot set naming.remove_groups verbs-strict --reason "..."`. The `marketing`
-and `defensive` groups refuse removal by command and by hand alike (D-13).
+and `defensive` groups refuse removal by command and by hand alike.
 
 ## Prose shares the list
 
 The Vale `gspot` style bans the words of the `marketing` and `defensive` groups in prose, so a
 comment cannot say what an identifier cannot say. The style holds its own lists under
-`presets/concern/prose/styles/gspot/`, and a unit test holds each list equal to its group of
-`presets/concern/naming/policy.json`.
+`presets/prose/styles/gspot/`, and a unit test holds each list equal to its group of
+`presets/naming/policy.json`.
+
+Names follow their behavioral owners. Do not require top-level `config` or `types` buckets, forwarding modules, or source/test directory symmetry. Rename consumers directly without aliases.

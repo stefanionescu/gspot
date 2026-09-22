@@ -2,15 +2,9 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 import { parserFor } from '#cli/naming/parsers.ts';
-import type { PythonFunction, PythonModule } from '#types/pyproject.ts';
-
-function definitionOf(statement: Node): Node {
-    return statement.type === 'decorated_definition'
-        ? (statement.childForFieldName('definition') ?? statement)
-        : statement;
-}
+import type { PythonFunction, PythonModule } from '#cli/structure/python/types.ts';
 
 function isDocstring(statement: Node | undefined): boolean {
     return statement?.type === 'expression_statement' && statement.namedChildren[0]?.type === 'string';
@@ -41,7 +35,9 @@ export async function pythonModules(input: EngineInput): Promise<PythonModule[]>
             path: file.path,
             lines: text.split('\n'),
             tree,
-            statements: statements.map((node) => definitionOf(node)),
+            statements: statements.map((node) =>
+                node.type === 'decorated_definition' ? (node.childForFieldName('definition') ?? node) : node,
+            ),
         });
     }
     return modules;
@@ -77,15 +73,18 @@ export function docstringOf(definition: Node): string | undefined {
  * @returns the functions
  */
 export function functionsOf(module: PythonModule): PythonFunction[] {
-    return module.tree.rootNode.descendantsOfType('function_definition').map((node) => ({
-        path: module.path,
-        name: node.childForFieldName('name')?.text ?? '',
-        node,
-        isDecorated: node.parent?.type === 'decorated_definition',
-        isTopLevel:
-            (node.parent?.type === 'decorated_definition' ? node.parent.parent : node.parent)?.type === 'module',
-        body: bodyOf(node),
-    }));
+    return module.tree.rootNode
+        .descendantsOfType(['function_definition', 'lambda'])
+        .filter((node) => node.isNamed)
+        .map((node) => ({
+            path: module.path,
+            name: node.childForFieldName('name')?.text ?? '<anonymous>',
+            node,
+            isDecorated: node.parent?.type === 'decorated_definition',
+            isTopLevel:
+                (node.parent?.type === 'decorated_definition' ? node.parent.parent : node.parent)?.type === 'module',
+            body: bodyOf(node),
+        }));
 }
 
 /**

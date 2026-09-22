@@ -2,7 +2,7 @@
 import pc from 'picocolors';
 import { createConsola } from 'consola';
 import type { ConsolaInstance } from 'consola';
-import type { OutputOptions, Painter } from '#types/output.ts';
+import type { OutputOptions, Painter } from '#cli/output/types.ts';
 import { isCi, isColorRefused } from '#cli/platform/environment.ts';
 
 const LEVELS: Record<OutputOptions['verbosity'], number> = { quiet: 1, normal: 3, verbose: 4 };

@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { expect, spyOn, test } from 'bun:test';
 import { readCached } from '#cli/run/cache.ts';
-import type { Stage } from '#types/manifest.ts';
+import type { Stage } from '#cli/presets/types.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { runText } from '#cli/output/reporter.ts';

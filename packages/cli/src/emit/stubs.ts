@@ -1,9 +1,9 @@
 // One-line stubs at conventional paths, so editors and bare tool invocations find the gspot configuration.
 import { toPosix } from '#cli/platform/paths.ts';
-import type { StubSpec } from '#types/manifest.ts';
+import type { StubSpec } from '#cli/presets/types.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { headerFor } from '#cli/emit/templates.ts';
-import type { GeneratedFile } from '#types/emit.ts';
+import type { GeneratedFile } from '#cli/emit/types.ts';
 import { join, relative, dirname } from 'node:path';
 import { applyEdits, modify, parse as parseJsonc } from 'jsonc-parser';
 

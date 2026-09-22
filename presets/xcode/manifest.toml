@@ -1,0 +1,173 @@
+[preset]
+name = "xcode"
+kind = "tool"
+title = "Xcode"
+requires = ["configs"]
+recommends = ["swift"]
+description = "An Xcode project: property lists that parse, build settings files, and complete string catalogs. Asset catalogs hold their images, test targets sit in a plan, sources belong to a target, and entitlements stay on a list."
+
+[detect]
+paths = ["**/*.xcodeproj/project.pbxproj", "*.xcodeproj/project.pbxproj"]
+
+[claims]
+paths = ["**/project.pbxproj", "**/*.xcscheme", "**/*.xctestplan", "**/*.xcassets/**/Contents.json"]
+natures = ["source"]
+
+[[tools]]
+name = "plutil"
+provider = "host"
+
+[[checks]]
+name = "xcode/plist"
+level = "recommended"
+stage = "commit"
+platform = ["macos"]
+tool = "plutil"
+command = ["plutil", "-lint", "{files}"]
+claims = {extensions = [".plist", ".entitlements"]}
+coverage = ["syntax"]
+output = {format = "regex", pattern = "^(?<file>.+?): (?!OK$)(?<message>.+)$"}
+summary = "Asks plutil whether every property list and entitlements file parses."
+why = "A property list that does not parse stops the build at the signing step, far from the edit that broke it."
+help = "Correct the file at the line plutil names."
+
+[[checks]]
+name = "xcode/xcconfig"
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xcode-xcconfig"
+claims = {extensions = [".xcconfig"]}
+coverage = ["syntax"]
+summary = "Checks that every line of a build settings file is a setting, an include, or a comment."
+why = "Xcode ignores a line it cannot read, so a typo turns a setting off without a word."
+help = "Write the line as a name, an equals sign, and a value."
+
+[[checks]]
+name = "xcode/xcstrings"
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xcode-xcstrings"
+claims = {extensions = [".xcstrings"]}
+coverage = ["consistency"]
+summary = "Checks that every string catalog parses, and that every string has a translation for every locale the catalog uses."
+why = "A string with no translation shows its source language in the middle of a translated screen."
+help = "Add the translation, or mark the string as not translated in the catalog."
+
+[[checks]]
+name = "xcode/asset-catalogues"
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xcode-assets"
+claims = {paths = ["**/*.xcassets/**"], extensions = [".swift"]}
+coverage = ["consistency"]
+summary = "Checks that every asset Contents.json parses, that every image set holds the images it names, and that some source names every asset."
+why = "An image set with no image draws nothing at run time, and an asset nobody names ships in the app for nothing."
+help = "Add the image, or delete the asset. Set tools.xcode.orphan_assets to false when assets are named at run time."
+
+[[checks]]
+name = "xcode/test-plan"
+level = "all"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xcode-test-plans"
+coverage = ["tests"]
+summary = "Checks that every shared scheme that runs tests names a test plan, and that every test target is in a plan."
+why = "A test target outside every plan never runs in CI, and its tests rot while they look present."
+help = "Add the target to a test plan, and point the scheme at the plan."
+
+[[checks]]
+name = "xcode/orphan-sources"
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xcode-orphan-sources"
+claims = {extensions = [".swift"], paths = ["**/project.pbxproj"]}
+coverage = ["consistency"]
+summary = "Compares the Swift files in the tree with the files the project names: a file in no target, and a target file that is gone."
+why = "A Swift file in no target is never compiled, so it breaks without anyone seeing it."
+help = "Add the file to a target or delete it, and remove the reference to a file that is gone."
+
+[[checks]]
+name = "xcode/symlinks"
+level = "all"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xcode-symlinks"
+coverage = ["consistency"]
+summary = "Reports every tracked symlink beside or under an Xcode project, with where it points."
+why = "Xcode, git, and each lint tool follow a symlink their own way, so one file is checked twice or never."
+help = "Replace the symlink with the folder it points at, or ignore the path with a reason."
+
+[[checks]]
+name = "xcode/entitlements-policy"
+level = "recommended"
+waits_for = "tools.xcode.allowed_entitlements"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xcode-entitlements"
+claims = {extensions = [".entitlements"]}
+coverage = ["security"]
+summary = "Checks that every entitlement is on tools.xcode.allowed_entitlements, when the policy holds that list."
+why = "An entitlement is a capability the system grants the app, and a new one deserves a review of its own."
+help = "Remove the entitlement, or add it to tools.xcode.allowed_entitlements."
+
+[[checks]]
+name = "xcode/ats"
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "xcode-ats"
+claims = {extensions = [".plist"]}
+coverage = ["security"]
+summary = "Refuses a property list that allows arbitrary loads, which turns transport security off for every host."
+why = "With arbitrary loads the app speaks plain HTTP to anyone, and one forgotten debug setting ships it."
+help = "Remove the key, and add an exception for the one host that needs it."
+
+[[settings]]
+name = "tools.xcode.project"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The Xcode project or workspace, relative to the scope; empty builds the Swift package."
+
+[[settings]]
+name = "tools.xcode.scheme"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The shared scheme the build, the analyzer, and Periphery use."
+
+[[settings]]
+name = "tools.xcode.destination"
+kind = "string"
+direction = "neutral"
+default = "generic/platform=iOS Simulator"
+summary = "The xcodebuild destination."
+
+[[settings]]
+name = "tools.xcode.allowed_entitlements"
+kind = "list"
+direction = "tightening"
+default = []
+summary = "The entitlements the app may hold; empty turns the check off."
+
+[[settings]]
+name = "tools.xcode.orphan_assets"
+kind = "boolean"
+direction = "tightening"
+default = true
+summary = "Whether an asset no source names is a finding."
+
+[rule_files]
+tool = ["tool/xcode/XCODE.md"]

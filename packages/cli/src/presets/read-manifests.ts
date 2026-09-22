@@ -5,7 +5,7 @@ import { compact } from '#cli/policy/normalize.ts';
 import { configurationName } from '#cli/run/scope-paths.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { manifestSchema, INSTALLER_KEYS } from '#cli/presets/manifest-schema.ts';
-import type { RawCheck, RawManifest, RawTool, CheckSpec, Manifest, ToolPin } from '#types/manifest.ts';
+import type { RawCheck, RawManifest, RawTool, CheckSpec, Manifest, ToolPin } from '#cli/presets/types.ts';
 
 const CONFIG_PLACEHOLDER = /\{config:([a-z0-9-]+)\}/gu;
 
@@ -52,15 +52,6 @@ function toCheck(raw: RawCheck): CheckSpec {
     return check;
 }
 
-function isIdleManual(check: RawCheck): boolean {
-    return (
-        check.stage === 'manual' &&
-        check.requires === undefined &&
-        check.runs === 'per-file-list' &&
-        check.command === undefined
-    );
-}
-
 function checkProblems(check: RawCheck): string[] {
     const problems: (string | undefined)[] = [
         check.reported_by !== undefined && (check.fix_command !== undefined || check.fix_order !== undefined)
@@ -72,7 +63,12 @@ function checkProblems(check: RawCheck): string[] {
         check.requires !== undefined && check.stage === 'commit'
             ? `check ${check.name} requires ${check.requires} and cannot run at the commit stage.`
             : undefined,
-        isIdleManual(check) ? `check ${check.name} is manual with nothing that makes it slow.` : undefined,
+        check.stage === 'manual' &&
+        check.requires === undefined &&
+        check.runs === 'per-file-list' &&
+        check.command === undefined
+            ? `check ${check.name} is manual with nothing that makes it slow.`
+            : undefined,
     ];
     return problems.filter((problem) => problem !== undefined);
 }

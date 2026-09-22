@@ -2,7 +2,7 @@
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { join } from 'node:path';
 import * as messages from '#cli/policy/messages.ts';
-import { VERSION_FILE_LINE } from '#config/markers.ts';
+import { VERSION_FILE_LINE } from '#cli/emit/markers-definitions.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { existsSync, readFileSync } from 'node:fs';
 
@@ -48,7 +48,7 @@ export function writePin(root: string, version = GSPOT_VERSION): void {
             true,
         );
         if (status === 'preserved')
-            throw new Error('The version pin was edited; preserve or restore it before upgrading.');
+            throw new Error('The version pin was edited; preserve or restore it before applying.');
     });
 }
 

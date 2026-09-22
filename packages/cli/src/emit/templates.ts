@@ -8,15 +8,15 @@ import { stringify as stringifyYaml } from 'yaml';
 import { jsonText } from '#cli/emit/json-format.ts';
 import { readAsset } from '#cli/platform/assets.ts';
 import { policyValue } from '#cli/policy/settings.ts';
-import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#config/typescript.ts';
+import { ALL_COMPILER_OPTIONS, RECOMMENDED_COMPILER_OPTIONS } from '#cli/checks/typescript/typescript-definitions.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
-import type { ScopeSelection, Session } from '#types/run.ts';
+import type { ScopeSelection, Session } from '#cli/run/types.ts';
 import { dirname, join, relative, resolve } from 'node:path';
 import { extensionOf, toPosix } from '#cli/platform/paths.ts';
-import { BLOCK_IGNORES, TOKEN_IGNORES } from '#config/prose.ts';
+import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/prose/prose-definitions.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
-import { GENERATED_HEADER_LINES, GENERATED_JSON_KEY } from '#config/markers.ts';
-import type { JsonFormat, PackageImports, TemplateInputs } from '#types/emit.ts';
+import { GENERATED_HEADER_LINES, GENERATED_JSON_KEY } from '#cli/emit/markers-definitions.ts';
+import type { JsonFormat, PackageImports, TemplateInputs } from '#cli/emit/types.ts';
 
 const JSON_INDENT = 4;
 
@@ -289,7 +289,7 @@ export function emitTarget(
         if (!isHeaderWanted) return jsonText(JSON.parse(rendered), format);
         return jsonHeaderAdded(rendered, inputs.version, format);
     }
-    const body = rendered.replace(LEADING_NEWLINES, '');
+    const body = rendered.replace(LEADING_NEWLINES, '').trimEnd() + '\n';
     if (!isHeaderWanted) return body;
     const ended = body.endsWith('\n') ? body : `${body}\n`;
     return `${headerFor(targetPath, inputs.version)}${ended}`;

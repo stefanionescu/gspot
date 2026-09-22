@@ -2,7 +2,7 @@ import { symlinkSync } from 'node:fs';
 // Planted repositories for the vue and svelte presets: markup set from a string and a list with no key, in each framework.
 import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 import { describe, expect, test } from 'bun:test';
 import type { ComponentShape } from '#tests/types/acceptance.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
@@ -158,11 +158,11 @@ test.each([
         expect(
             report.checks
                 .flatMap((check) => check.findings)
-                .filter((finding) => finding.rule === 'gspot/no-call-through')
+                .filter((finding) => finding.rule === 'gspot/no-trivial-functions')
                 .map(({ check, rule, file, line, column }) => ({ check, rule, file, line, column })),
             broken.stdout + broken.stderr,
         ).toEqual([
-            { check: `${framework}/eslint`, rule: 'gspot/no-call-through', file: filename, line: 2, column: 1 },
+            { check: `${framework}/eslint`, rule: 'gspot/no-trivial-functions', file: filename, line: 2, column: 1 },
         ]);
         if (language === 'typescript')
             expect(
@@ -184,7 +184,7 @@ test.each([
                 .flatMap((check) => check.findings)
                 .filter(
                     (finding) =>
-                        finding.rule === 'gspot/no-call-through' ||
+                        finding.rule === 'gspot/no-trivial-functions' ||
                         finding.rule === '@typescript-eslint/no-explicit-any',
                 ),
         ).toEqual([]);

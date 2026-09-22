@@ -1,5 +1,5 @@
 // A shell function over the code-line ceiling. Searched: shellcheck, shfmt; neither counts lines.
-import type { Analysis } from '#types/structure.ts';
+import type { Analysis } from '#cli/structure/types.ts';
 import { codeLineCount } from '#cli/structure/code-lines.ts';
 
 /**

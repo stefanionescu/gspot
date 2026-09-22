@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { unlinkSync, renameSync, symlinkSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 import { describe, expect, test } from 'bun:test';
 import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
 

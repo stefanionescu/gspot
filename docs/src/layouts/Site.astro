@@ -1,5 +1,5 @@
 ---
-import type { SiteProps as Props } from '../../types/site';
+type Props = { title: string; description: string };
 import '../styles/theme.css';
 const { title, description } = Astro.props;
 const canonical = new URL(Astro.url.pathname.replace(/^\/404\/?$/u, '/404.html'), Astro.site);
@@ -17,8 +17,7 @@ const canonical = new URL(Astro.url.pathname.replace(/^\/404\/?$/u, '/404.html')
         <meta property="og:description" content={description} />
         <meta property="og:type" content="website" />
         <meta property="og:url" content={canonical} />
-        <meta property="og:image" content={new URL('/brand/social.png', Astro.site)} />
-        <meta name="twitter:card" content="summary_large_image" />
+        <meta name="twitter:card" content="summary" />
         <script is:inline>
             try {
                 const saved = localStorage.getItem('starlight-theme');
@@ -30,7 +29,7 @@ const canonical = new URL(Astro.url.pathname.replace(/^\/404\/?$/u, '/404.html')
     <body class="landing">
         <a class="skip" href="#main">Skip to content</a>
         <header class="site-header frame">
-            <a class="brand" href="/" aria-label="gspot home">gspot<span aria-hidden="true">●</span></a>
+            <a class="brand" href="/" aria-label="gspot home">gspot</a>
             <nav aria-label="Main navigation">
                 <a href="/guides/install/">Get started</a>
                 <a href="/reference/commands/check/">Reference</a>
@@ -42,7 +41,7 @@ const canonical = new URL(Astro.url.pathname.replace(/^\/404\/?$/u, '/404.html')
         </header>
         <main id="main" class="frame"><slot /></main>
         <footer class="frame">
-            <a class="brand" href="/">gspot<span aria-hidden="true">●</span></a>
+            <a class="brand" href="/">gspot</a>
             <nav aria-label="Footer navigation">
                 <a href="/guides/install/">Get started</a>
                 <a href="/reference/commands/check/">Reference</a>
@@ -71,39 +70,37 @@ const canonical = new URL(Astro.url.pathname.replace(/^\/404\/?$/u, '/404.html')
     </body>
 </html>
 <style is:global>
-    .landing { margin: 0; background: var(--spot-canvas); color: var(--spot-text); font: 18px/1.6 system-ui, sans-serif; }
+    .landing { margin: 0; background: var(--site-canvas); color: var(--site-text); font: 18px/1.6 system-ui, sans-serif; }
     .landing * { box-sizing: border-box; }
     .landing .frame { max-width: 1160px; margin-inline: auto; padding-inline: 20px; }
-    .landing a { color: var(--spot-accent); text-underline-offset: 0.2em; }
+    .landing a { color: var(--site-accent); text-underline-offset: 0.2em; }
     .landing a:hover { text-decoration-thickness: 2px; }
     .landing h1, .landing h2, .landing h3 { line-height: 1.15; letter-spacing: -0.035em; text-wrap: balance; }
     .landing h1 { font-size: clamp(2.4rem, 5.5vw, 4.6rem); margin: 16px 0 24px; }
     .landing h2 { font-size: clamp(1.8rem, 3.4vw, 2.6rem); }
     .landing p { max-width: 65ch; }
-    .landing .brand { color: var(--spot-text); font: 700 1.55rem ui-monospace, monospace; text-decoration: none; display: inline-flex; gap: 8px; align-items: center; }
-    .landing .brand span { color: var(--spot-accent); font-size: 0.6em; }
-    .landing .site-header { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding-block: 24px; border-bottom: 1px solid var(--spot-border); }
+    .landing .brand { color: var(--site-text); font: 700 1.55rem ui-monospace, monospace; text-decoration: none; display: inline-flex; gap: 8px; align-items: center; }
+    .landing .site-header { display: flex; justify-content: space-between; align-items: center; gap: 24px; padding-block: 24px; border-bottom: 1px solid var(--site-border); }
     .landing nav { display: flex; flex-wrap: wrap; align-items: center; gap: 8px 24px; }
     .landing nav a { min-height: 44px; display: inline-flex; align-items: center; font-size: 0.9rem; }
     .landing .theme-control { font-size: 0.8rem; }
-    .landing select, .landing button { font: inherit; color: var(--spot-text); background: var(--spot-panel); border: 1px solid var(--spot-border); border-radius: 8px; min-height: 44px; padding: 8px 12px; }
-    .landing .skip { position: fixed; inset: 8px auto auto 8px; transform: translateY(-200%); background: var(--spot-panel); padding: 12px; z-index: 10; }
+    .landing select, .landing button { font: inherit; color: var(--site-text); background: var(--site-panel); border: 1px solid var(--site-border); border-radius: 8px; min-height: 44px; padding: 8px 12px; }
+    .landing .skip { position: fixed; inset: 8px auto auto 8px; transform: translateY(-200%); background: var(--site-panel); padding: 12px; z-index: 10; }
     .landing .skip:focus { transform: none; }
-    .landing .muted { color: var(--spot-muted); font-size: 0.9rem; }
-    .landing .eyebrow { color: var(--spot-lilac); font: 0.85rem ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; }
+    .landing .muted { color: var(--site-muted); font-size: 0.9rem; }
+    .landing .eyebrow { color: var(--site-lilac); font: 0.85rem ui-monospace, monospace; letter-spacing: 0.08em; text-transform: uppercase; }
     .landing pre { font: 0.875rem/1.65 ui-monospace, monospace; overflow-x: auto; padding: 20px; margin: 0; white-space: pre; }
     .landing code { font-family: ui-monospace, monospace; }
-    .landing .terminal, .landing .panel { min-width: 0; background: var(--spot-panel); border: 1px solid var(--spot-border); border-radius: 8px; overflow: hidden; }
-    .landing .terminal-label { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--spot-border); color: var(--spot-muted); font: 0.8rem ui-monospace, monospace; }
+    .landing .terminal, .landing .panel { min-width: 0; background: var(--site-panel); border: 1px solid var(--site-border); border-radius: 8px; overflow: hidden; }
+    .landing .terminal-label { margin: 0; padding: 12px 20px; border-bottom: 1px solid var(--site-border); color: var(--site-muted); font: 0.8rem ui-monospace, monospace; }
     .landing section { padding-block: 64px; }
     .landing .split { display: grid; grid-template-columns: 1fr 1fr; gap: 48px; align-items: start; }
     .landing .split > * { min-width: 0; }
     .landing .actions { display: flex; flex-wrap: wrap; gap: 12px; margin-block: 24px; }
-    .landing .button { display: inline-flex; min-height: 48px; align-items: center; padding: 10px 20px; border: 1px solid var(--spot-accent); border-radius: 8px; text-decoration: none; }
+    .landing .button { display: inline-flex; min-height: 48px; align-items: center; padding: 10px 20px; border: 1px solid var(--site-accent); border-radius: 8px; text-decoration: none; }
     .landing .primary { background: #b7f36b; color: #182015; border-color: #365d13; font-weight: 650; }
-    .landing footer { display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; align-items: center; padding-block: 40px; border-top: 1px solid var(--spot-border); }
-    .landing .sign-off { color: var(--spot-muted); font-family: ui-monospace, monospace; }
-    .landing img { max-width: 100%; height: auto; }
+    .landing footer { display: flex; flex-wrap: wrap; gap: 24px; justify-content: space-between; align-items: center; padding-block: 40px; border-top: 1px solid var(--site-border); }
+    .landing .sign-off { color: var(--site-muted); font-family: ui-monospace, monospace; }
     @media (max-width: 800px) { .landing .split { grid-template-columns: 1fr; gap: 24px; } .landing .site-header { align-items: start; flex-direction: column; gap: 8px; } .landing section { padding-block: 40px; } .landing nav { gap: 8px 16px; } }
     @media (prefers-reduced-motion: reduce) { *, *::before, *::after { scroll-behavior: auto !important; } }
 </style>

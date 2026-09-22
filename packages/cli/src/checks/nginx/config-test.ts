@@ -2,8 +2,8 @@ import { join } from 'node:path';
 // nginx -t in a container over every main configuration file.
 import { tmpdir } from 'node:os';
 import { run } from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { nginxTestArguments } from '#cli/checks/nginx/test-plan.ts';
 

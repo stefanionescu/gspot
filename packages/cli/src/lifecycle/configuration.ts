@@ -1,4 +1,4 @@
-import type { MergedView } from '#types/config.ts';
+import type { MergedView } from '#cli/policy/types.ts';
 import type { z } from 'zod';
 import { isEmbedded, readAsset } from '#cli/platform/assets.ts';
 import { runToolCommand } from '#cli/run/tool-runner.ts';

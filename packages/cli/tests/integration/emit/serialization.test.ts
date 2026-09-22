@@ -76,7 +76,7 @@ test('TOML tool configurations round-trip dynamic strings and option keys', asyn
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: ['secrets', 'dependencies', 'config-files', 'docs', 'python', 'postgres'],
+            presets: ['secrets', 'dependencies', 'configs', 'docs', 'python', 'postgres'],
             format: { indent_style: 'tab' },
             tools: {
                 gitleaks: { allow: [{ description: text, paths: [path], regexes: [text], reason }] },
@@ -191,7 +191,7 @@ test('JSON option keys and YAML values keep their literal structure', async () =
     await createFileTree(sandbox.path, {
         'gspot.toml': stringify({
             version: 1,
-            presets: ['typescript', 'formatting', 'markdown', 'config-files', 'docker', 'swift'],
+            presets: ['typescript', 'formatting', 'markdown', 'configs', 'docker', 'swift'],
             tools: {
                 prettier: { extra },
                 knip: { extra },

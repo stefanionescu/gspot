@@ -4,13 +4,6 @@ gspot checks repository policy across code, configuration, documentation, and Gi
 Presets select checks and pinned tools. `gspot.toml` owns the policy; `gspot apply` generates
 the files those tools read. Rule files give coding agents the selected repository instructions.
 
-This is prerelease software. Public packages and release binaries are not available yet.
-Local development evidence is from macOS arm64. Windows lifecycle commands currently refuse
-because their secure filesystem boundary is not implemented. Native platform acceptance remains
-open; cross-compilation does not establish that a platform works.
-
-![Spot, the gspot mascot, holding a magnifying lens.](docs/public/brand/spot-compact.png)
-
 A real finding from the [reproducible example](docs/src/content/docs/guides/quick-start.md):
 
 ```text
@@ -99,11 +92,11 @@ presets = ["bash"]
 [[ignore]]
 check = "bash/shellcheck"
 rule = "SC2034"
-paths = ["scripts/env.sh"]
+paths = ["<script-path>"]
 reason = "These variables are read by the script that sources this file."
 ```
 
-The check name selects the integration; `SC2034` selects the tool diagnostic. Apply the policy
+Replace `<script-path>` with the repository-relative Bash file. The check name selects the integration; `SC2034` selects the tool diagnostic. Apply the policy
 after editing it. Prefer a specific path and reason to disabling an entire check. Read
 [customization](docs/src/content/docs/guides/customize.md),
 [scopes](docs/src/content/docs/guides/scopes.md), and

@@ -1,10 +1,8 @@
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 import { staticString } from '#plugin/files.ts';
 // An internal import using the wrong suffix style for its runtime boundary.
 import type { TSESTree } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/options.ts';
-import type { ImportPathStyleName } from '#plugin-types/plugin.ts';
-import type { ImportPathStyleOptions } from '#plugin-types/options.ts';
+import { optionsSchema, stringList } from '#plugin/rules/options.ts';
 
 const DEFAULT_PREFIXES = ['./', '../', '@/', '#'];
 
@@ -62,3 +60,7 @@ export const importPathStyle = createRule<ImportPathStyleOptions, 'js' | 'ts' | 
         };
     },
 });
+
+export type ImportPathStyleName = 'js' | 'ts' | 'extensionless';
+
+export type ImportPathStyleOptions = [{ style: ImportPathStyleName; internalPrefixes?: string[] }];

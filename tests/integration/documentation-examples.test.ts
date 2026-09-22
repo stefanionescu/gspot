@@ -6,7 +6,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
 import { run } from '#tests/harness/planted.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import example from '../../examples/bash-syntax.json';
+import example from '../../docs/src/components/bash-syntax.json';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const guides = join(root, 'docs/src/content/docs/guides');

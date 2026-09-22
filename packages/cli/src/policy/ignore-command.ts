@@ -1,11 +1,11 @@
 // gspot ignore: one [[ignore]] entry with its reason, or the removal of the entries that match.
-import type { TomlTable } from '#types/config.ts';
+import type { TomlTable } from '#cli/policy/types.ts';
 import { nearMatches } from '#cli/policy/near.ts';
-import type { CommandResult } from '#types/run.ts';
+import type { CommandResult } from '#cli/run/types.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { allChecks } from '#cli/presets/listing.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
-import type { IgnoreOptions } from '#types/commands.ts';
+import type { IgnoreOptions } from '#cli/commands/types.ts';
 import { readPolicy, PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import { appendEntry, removeEntries } from '#cli/policy/write.ts';

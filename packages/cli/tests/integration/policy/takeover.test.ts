@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { symlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import type { ExistingTooling } from '#types/repository.ts';
+import type { ExistingTooling } from '#cli/repository/types.ts';
 import { collectCarried } from '#cli/lifecycle/takeover.ts';
 import { askInitQuestions } from '#cli/lifecycle/questions.ts';
 

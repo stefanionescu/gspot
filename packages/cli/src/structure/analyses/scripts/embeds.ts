@@ -1,6 +1,6 @@
 // Inline Python, Node and generated-script heredocs. Searched: shellcheck, semgrep; neither has the rule.
-import type { Analysis } from '#types/structure.ts';
-import { RUNTIME_EMBEDS } from '#config/structure.ts';
+import type { Analysis } from '#cli/structure/types.ts';
+import { RUNTIME_EMBEDS } from '#cli/structure/structure-definitions.ts';
 
 /**
  * One finding per line that embeds another runtime.

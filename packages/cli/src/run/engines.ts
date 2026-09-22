@@ -1,13 +1,13 @@
 import { resolveProse } from '#cli/prose/engine.ts';
 import { resolveNaming } from '#cli/naming/engine.ts';
 // Dispatch to the built-in engines by `engine =` in the manifest.
-import type { CheckSpec } from '#types/manifest.ts';
-import type { CheckResult } from '#types/finding.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
+import type { CheckResult } from '#cli/output/finding.ts';
 import { resolveIntegrity } from '#cli/checks/dispatch.ts';
 import { resolveStructure } from '#cli/structure/engine.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
-import type { EngineInput, Engine, Session, PlannedCheck } from '#types/run.ts';
+import type { EngineInput, Engine, Session, PlannedCheck } from '#cli/run/types.ts';
 
 const engines: Record<NonNullable<CheckSpec['engine']>, (spec: CheckSpec) => Engine> = {
     integrity: resolveIntegrity,

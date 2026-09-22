@@ -2,10 +2,10 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import type { MergedView } from '#types/config.ts';
-import type { CheckSpec } from '#types/manifest.ts';
-import type { Repository } from '#types/repository.ts';
-import type { EngineInput, Session } from '#types/run.ts';
+import type { MergedView } from '#cli/policy/types.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
+import type { Repository } from '#cli/repository/types.ts';
+import type { EngineInput, Session } from '#cli/run/types.ts';
 import { buildReproducible, siteBuild } from '#cli/checks/static-site/build.ts';
 
 function input(root: string, paths: string[]): EngineInput {
@@ -19,7 +19,7 @@ function input(root: string, paths: string[]): EngineInput {
     }));
     const view: Partial<MergedView> = { tool: () => ({ build: 'bun build.js' }) };
     const repository: Partial<Repository> = { files, scopes: [] };
-    const session: Partial<Session> = { root, repository: repository as Repository };
+    const session: Partial<Session> = { root, repository: repository as Repository, scopes: [] };
     const spec: Partial<CheckSpec> = { name: 'static-site/build-reproducible' };
     return { root, scope: '', files, view: view as MergedView, session: session as Session, spec: spec as CheckSpec };
 }

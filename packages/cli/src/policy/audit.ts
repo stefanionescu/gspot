@@ -3,7 +3,7 @@ import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { shippedPolicy } from '#cli/naming/policy.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { WrittenValue, Policy, ExposedSettings } from '#types/config.ts';
+import type { WrittenValue, Policy, ExposedSettings } from '#cli/policy/types.ts';
 import { asRecord, policyValue, specFor, writtenKeys } from '#cli/policy/settings.ts';
 
 const LIMITS_PREFIX = 'limits.';
@@ -97,9 +97,7 @@ function extraProblems(surface: ExposedSettings, table: Partial<Policy>): string
     for (const [tool, toolTable] of Object.entries(tools)) {
         const extra = toolTable.extra ?? {};
         for (const key of Object.keys(extra)) {
-            if (tool === 'prettier' && key === 'overrides')
-                problems.push('Use [[format.overrides]] for path-specific formatter settings.');
-            else if (key !== 'reason' && surface.specs.has(`tools.${tool}.${key}`))
+            if (key !== 'reason' && surface.specs.has(`tools.${tool}.${key}`))
                 problems.push(messages.extraCoversSlot(tool, key));
         }
     }

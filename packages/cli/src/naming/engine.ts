@@ -1,19 +1,19 @@
-import type { CheckSpec } from '#types/manifest.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
 // The naming engine: identifiers, paths and the policy schema, as one function per analysis.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { Engine, EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { Engine, EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { isKnownCase } from '#cli/naming/cases.ts';
 import { identifiersOf } from '#cli/naming/extract.ts';
-import type { TrackedFile } from '#types/repository.ts';
+import type { TrackedFile } from '#cli/repository/types.ts';
 import { languagePresets } from '#cli/presets/select.ts';
 import { nameFinding } from '#cli/naming/name-finding.ts';
 import { nameProblems } from '#cli/naming/validate-name.ts';
 import { isClaimed, pathMatcher } from '#cli/presets/claims.ts';
 import { effectivePolicy, shippedPolicy } from '#cli/naming/policy.ts';
 import { directoryIdentifiers, fileIdentifier } from '#cli/naming/paths.ts';
-import type { EffectivePolicy, Identifier, NamingContext } from '#types/naming.ts';
+import type { EffectivePolicy, Identifier, NamingContext } from '#cli/naming/types.ts';
 
 const REACT_FILE = /\.[jt]sx$/u;
 const TEST_FILE = /(?:(?:^|\/)(?:tests?|__tests__)\/)|(?:\.(?:test|spec)\.[^./]+$)/u;

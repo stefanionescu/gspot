@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { evaluateConfiguration } from '#cli/lifecycle/configuration.ts';
-import { ignoredPathsResponse } from '#cli/lifecycle/format-request.ts';
-import type { PlannedCheck, Session } from '#types/run.ts';
+import { ignoredPathsResponse } from '#cli/lifecycle/format-evaluation.ts';
+import type { PlannedCheck, Session } from '#cli/run/types.ts';
 
 /** Resolve native ignore patterns before either the checker or its fixer receives file arguments. */
 export async function prettierInputs(session: Session, check: PlannedCheck): Promise<PlannedCheck> {

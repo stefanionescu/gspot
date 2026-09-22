@@ -13,10 +13,40 @@ install script runs, so `npx`, `--ignore-scripts`, proxies, and offline mirrors 
 
 ## Ownership
 
-[Implementation boundaries](16-file-tree.md) define responsibilities without prescribing a
-folder inventory. The configuration schema supports editor completion; the runtime report
-schema validates actual reports. Release staging produces notices for bundled dependencies.
-Examples exercise implemented usage, and tests protect behavior rather than repository layout.
+gspot is unreleased and has no users. Change names and configuration directly. Do not maintain
+compatibility aliases, version migrations, Changesets, or release-PR promises. Presets live at
+`presets/<name>`; the data/configuration preset and its public check prefix are `configs`.
+
+The CLI owns command behavior, planning, execution, and lifecycle operations. Commands translate
+arguments and present results; output renders the statuses and findings computed by the runner.
+Generators return proposals. Lifecycle owns collisions, recorded ownership, recovery, and removal.
+A generated header or directory name does not authorize deletion.
+
+The independent ESLint plugin owns editor enforcement and its public exports. The npm launcher
+selects an installed platform artifact. Presets own shipped policy, pins, templates, styles, and
+vocabulary; rule guides own instructions for agents. Documentation renders released definitions
+and authored guides. Tests exercise these behaviors and installed consumer journeys.
+
+Group source by behavior and ownership. Extract a shared module only when it owns shared behavior
+or a shared contract. Keep local types, schemas, constants, and functions beside their consumers.
+Do not require a file per type, constant, forwarding function, or check. Test locations follow
+the behavior they exercise; source/test directory symmetry is not required.
+
+Use the preset kind `policy` for cross-language checks. It groups preset
+selection and planning; it does not prescribe the taxonomy of commands, tests, docs,
+or unrelated source directories. Configurable shipped naming and placement policies remain
+available at their specified levels. They are not blanket instructions to reorganize gspot.
+
+Repository tooling stays separate from shipped runtime behavior. Keep Bun and mise. Do not
+introduce Nx, Turborepo, a task framework, or private workspace packages to copy their layouts.
+Retain schemas where editor, runtime, or documentation consumers need them. Retain WASM grammars,
+platform definitions, and provenance with their actual consumers. Stage generated distribution
+copies in ignored build output. Notice assembly belongs to packaging; plugin dependencies stay
+external. The launcher, plugin, and platform packages each carry the required license.
+
+Domain checks share parsers and preparation where useful and preserve language semantics.
+Infrastructure must not import an entire check catalog for a basic operation. Change an owner
+with its callers, assets, and build inputs in the same implementation batch. Update all consumers directly when moving or deleting implementations.
 
 Use `testdirs` directly for temporary test directories. Register disposal before creating files
 so setup failures are cleaned up. Keep test-only types with tests and exercise harness behavior
@@ -46,8 +76,9 @@ acceptance, and release directories; direct `bun test` has broader discovery. Re
 and artifact prerequisites remain. Do not add Vitest, Jest, or a custom coordinator for this
 repository. Framework presets can still use their own test tools.
 
-Package-root `LICENSE.md` files follow npm packaging conventions. CLI notices describe actual
-bundled inputs, embedded grammars, and Bun; root `LICENSES/` retains pinned supplements.
+The root `LICENSE.md` is the authored project license. Builds copy it into distribution output,
+including `packages/eslint-plugin/dist/LICENSE.md`. CLI notices describe actual bundled inputs,
+embedded grammars, and Bun; `packages/cli/notices.json` owns pinned supplemental text and provenance.
 The plugin leaves dependencies external and does not copy unrelated CLI notices. Native
 packaging does not assemble licenses for a compiled binary, so the small build-owned notice
 assembler remains. Do not replace it with a scanner of the entire dependency tree.
@@ -70,15 +101,15 @@ package metadata, and dependencies together. The
 [infrastructure candidates](15-prior-art.md#infrastructure-reuse-candidates) apply to test support,
 processes, filesystem mutation, and the remaining architecture work.
 
-Nothing here renders a terminal user interface. Commands print lines; init and upgrade ask
+Nothing here renders a terminal user interface. Commands print lines; init and apply ask
 questions when interactive input is available.
 
 | Job                                                   | Library                                                                | Note                                                                                                                                                       |
 | ----------------------------------------------------- | ---------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Temporary test directories                            | `testdirs`                                                             | Call `testdir()` with no files, register async disposal, then call `createFileTree`. This order preserves cleanup after setup failure.                     |
-| Render a preset template                              | `eta`                                                                  | every `*.tmpl` under `presets/`; the generated-file header is prepended by gspot (D-63)                                                                    |
-| Command parsing, `--help`, unknown-command suggestion | commander                                                              | the help text is the command reference; `docs/` is generated from it                                                                                       |
-| The questions in `init` and `upgrade`                 | `@clack/prompts`                                                       | imported by those two commands only; never under `--yes`, `CI` or no terminal                                                                              |
+| Render a preset template                              | `eta`                                                                  | every `*.tmpl` under `presets/`; the generated-file header is prepended by gspot                                                                           |
+| Command parsing, `--help`, unknown-command suggestion | commander                                                              | the public command definition feeds the reference content loader                                                                                           |
+| The questions in `init`                               | `@clack/prompts`                                                       | imported by those two commands only; never under `--yes`, `CI` or no terminal                                                                              |
 | Color                                                 | picocolors                                                             | off under `NO_COLOR`, `CI`, `--no-color` or no terminal                                                                                                    |
 | Schemas for `gspot.toml`, manifests, the report       | zod                                                                    | error messages rewritten into plain English before printing                                                                                                |
 | Read TOML                                             | smol-toml                                                              |                                                                                                                                                            |
@@ -89,15 +120,14 @@ questions when interactive input is available.
 | SARIF for CI                                          | `node-sarif-builder`                                                   | the `.gspot/report.sarif` rendering                                                                                                                        |
 | Shell completions                                     | `@bomb.sh/tab` with its commander adapter                              | `gspot completion <shell>`; the same library Wrangler, Nuxt, Astro, and Vitest use                                                                         |
 | JSON schema for `gspot.toml`                          | zod v4 `z.toJSONSchema`                                                | `gspot.schema.json`, published to SchemaStore each release                                                                                                 |
-| Split identifiers into parts                          | `scule` (`splitByCase`, the case functions)                            | the naming engine's splitter; the whole-part matcher stays gspot's (D-08)                                                                                  |
+| Split identifiers into parts                          | `scule` (`splitByCase`, the case functions)                            | the naming engine's splitter; the whole-part matcher stays gspot's                                                                                         |
 | Find workspace packages                               | `@manypkg/tools`                                                       | Root-local npm, pnpm, yarn, bun, Lerna, and Rush workspace resolution; failures remain errors                                                              |
 | Read and write JSON with comments                     | `jsonc-parser` (`modify`, `applyEdits`)                                | the `extends` pointer of `tsconfig.json`, without losing a comment                                                                                         |
 | Read and write YAML keeping comments                  | `yaml` (the `Document` API)                                            | the `lefthook.yml` block, workflow rendering                                                                                                               |
-| Edit `package.json` keeping its indent                | `jsonc-parser`                                                         | the tasks a developer accepted and the `gspot` launcher; no lint tool is written there (D-145)                                                             |
+| Edit `package.json` keeping its indent                | `jsonc-parser`                                                         | the tasks a developer accepted and the `gspot` launcher; no lint tool is written there                                                                     |
 | License expressions                                   | `spdx-expression-parse`, `spdx-satisfies`                              | matching `MIT OR Apache-2.0` against the allowlist                                                                                                         |
 | Markdown structure                                    | `mdast-util-from-markdown`, `mdast-util-to-string`, `unist-util-visit` | Headings, README structure, fenced examples, and free-text path exclusions.                                                                                |
 | Unified diffs                                         | `diff` (jsdiff)                                                        | `check --fix --dry-run` output, and `integrity/generated-drift`                                                                                            |
-| Newer-version lookup                                  | `latest-version`                                                       | the one lookup `upgrade --dry-run` makes                                                                                                                   |
 | Concurrency                                           | `p-limit`                                                              | the tool runner's per-stage limit                                                                                                                          |
 | Messages on stderr                                    | `consola`                                                              | levels for `--quiet` and `--verbose`, TTY and CI detection, a JSON reporter under `--json`; findings on stdout stay gspot's reporter                       |
 | Process execution                                     | `execa`                                                                | Synchronous and asynchronous capture, deadlines, cancellation, and platform command shims; gspot maps results and terminates its child when capture fails. |
@@ -106,7 +136,6 @@ questions when interactive input is available.
 | Parsing for the structure and naming engines          | `web-tree-sitter` with embedded grammars; `libpg-query` WASM for SQL   | no native modules                                                                                                                                          |
 | ICU messages                                          | `@formatjs/icu-messageformat-parser`                                   | `i18n/locales`                                                                                                                                             |
 | CSS selectors and class names                         | `postcss`, `postcss-scss`, `postcss-selector-parser`                   | Stylesheet syntax and decoded selector classes; no regex over CSS.                                                                                         |
-| Spawning tools                                        | `Bun.spawn`                                                            | no shell; explicit argument arrays                                                                                                                         |
 
 Not used: any terminal UI framework, table renderer, spinner library outside clack, logging
 framework, or dependency-injection container. Columns are computed from the longest id.
@@ -122,19 +151,19 @@ an entire gspot workflow before reusing the part it already solves.
 
 - `bun build --compile --target=bun-<os>-<arch>` per platform, with the grammar WASM files,
   presets, rules and prose embedded through the file embedding of Bun. Output: `gspot-darwin-arm64`,
-  `gspot-darwin-x64`, `gspot-linux-x64`, `gspot-linux-arm64`, `gspot-windows-x64.exe`.
-- The version comes from the release tag and is written into every generated file header.
+  `gspot-darwin-x64`, `gspot-linux-x64`, `gspot-linux-arm64`, `gspot-windows-x64.exe`, plus Linux x64 and ARM64 musl targets from the same platform definition.
+- The release tag must match the package version source; generated file headers use that version.
 - The npm release publishes one platform package per target plus the launcher package, all at one version.
 - The launcher resolves the installed platform package by `process.platform` and `process.arch`, and fails with the install hint when none is present.
 - `@gspot/eslint-plugin` builds with `bun build` to ESM and CommonJS, versioned with the binary.
 - The plugin exports `configs.recommended` for standalone use. `configs.all` also rejects
-  forwarding functions. Each uses shipped options (D-88).
+  forwarding functions. Each uses shipped options.
 - The plugin matches paths with `picomatch`, the matcher the binary uses, so one pattern in
   `gspot.toml` means one thing.
 
 ## Release
 
-The version has one source: `version` in `packages/cli/package.json` (D-84). The build passes it
+The version has one source: `version` in `packages/cli/package.json`. The build passes it
 to the binary with `--define`, the plugin build writes it into `meta.version`, and `publish.ts`
 reads it for every npm manifest. The release workflow fails when the tag differs from it. The
 workflow sets `GSPOT_RELEASE_TEST=1` and runs `tests/release` against the binaries it built,
@@ -145,7 +174,7 @@ Native tools own release operations. gspot retains artifact staging and bundled-
 
 | Step                   | Tool                                                                                                                                                     |
 | ---------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Version and changelog  | `changesets`: every change lands with a changeset file; the release PR bumps the version and writes the changelog                                        |
+| Package versions       | Edit package versions directly. Keep release packaging without release-PR machinery.                                                                     |
 | Build                  | a GitHub Actions matrix runs `bun build --compile` per target; the report of the build is the tool table of the release note                             |
 | Provenance             | `actions/attest` signs every binary and the npm packages carry `--provenance` from trusted publishing, so `doctor` and a person can verify what they run |
 | GitHub release         | `softprops/action-gh-release` uploads the binaries and checksums                                                                                         |
@@ -202,7 +231,7 @@ tool absence fails acceptance; unit tests need not download tools. Check coverag
 executed behavior, not finding a check name in test source. Coverage reports complement this
 contract and cannot replace it. No arbitrary percentage floor applies. Conditional platform
 and release suites are valid; required candidate suites must be explicitly enabled and run. The actionable cleanup is in
-[22-remaining.md](22-remaining.md#cleanup-acceptance-backlog).
+[22-remaining.md](22-remaining.md#grouped-dispositions).
 
 ## Self-lint
 
@@ -210,31 +239,19 @@ gspot runs gspot at full strictness with no `[[ignore]]` entries. When a rule is
 decision. An ignore for gspot itself is not a choice.
 
 Run affected checks after each coherent batch. Run complete self-lint at `all` against the
-frozen candidate under [the acceptance gate](22-remaining.md#implementation-gate-before-touching-the-app).
+frozen candidate under [the acceptance gate](22-remaining.md#candidate-gate).
 
 The self-lint includes the prose. Every check `summary`, `why`, and `help`, every help string, every message template and every page under `docs/` runs through the prose engine with the `gspot` style. The Vale `Readability` package runs at a stated ceiling: Flesch reading ease 60 or above, the level of plain consumer writing. A message a person without a coding background
 cannot follow fails the gate the same way a long function does.
 
 ## Documentation
 
-`docs/` is the user manual. Two kinds of page:
-
-- **Generated**, from the same validated definitions the binary uses, with completeness tests because a generator can still omit or misstate a contract. The docs build runs `docs/reference-pages.ts` first, and git ignores the pages it writes (D-153).
-    - the command reference, from commander;
-    - the settings reference, from the schema (`gspot list settings` prints the same keys);
-    - one page per preset, from its manifest;
-    - one page per check, from its `summary`, `why`, and `help` (`explain` prints the same text);
-- **Written by hand**, six guides, each a task in plain English. Each guide is under two pages and every step is one command.
-    - _Install gspot_;
-    - _Run it in a repository you already have_ (what `init` deletes, carries and leaves alone);
-    - _You got a finding, now what_ (read it, `explain` it, fix it, or `ignore` it with a reason);
-    - _Monorepos and scopes_;
-    - _Without mise_ (the package-manager surface and its limits).
-
-The manual also publishes `llms.txt` at its root, the index of every page in plain text (qlty and the Astral tools publish one too). One more page, _Working with an agent_, says how an agent reads a finding, runs `explain`, changes policy with the writing commands, and never edits `.gspot/`. The managed block in `CLAUDE.md` links to it.
-
-`architecture/` stays the design and is linked from the manual. `docs/` is linted by gspot like
-any other Markdown in the repository, plus the readability ceiling above.
+The existing Astro/Starlight site renders validated reference definitions through content
+loaders and keeps authored task guides separate. Preserve released URLs, complete public
+settings, inherited options, plugin exports, search, source links, and `llms.txt`.
+[Documentation](21-documentation.md) owns the replacement acceptance for the existing Markdown
+writer, the plain text site design, and release-aligned deployment and rollback. Guide length
+follows the task; no page quota, separate fixture system, or universal prose parser is required.
 
 ## Contribution rule
 
@@ -246,3 +263,187 @@ One question, in order, for every addition:
 3. Can a documented plugin API do it? Write inside their framework.
 4. Only then write an analysis, record the search in the manifest, and expect the question at
    review.
+
+## Acceptance contracts
+
+These clauses specify required behavior. [Remaining work](22-remaining.md) owns status and evidence.
+
+### Acceptance K-300
+
+Each contract has one architecture owner and each unfinished behavior has one status owner in remaining work. Keep help, schemas, references, and behavior consistent. Verify no-check initialization, read-only previews, immutable installation, reachable hook chains, application across changed version pins, and manual build/test stages.
+
+### Acceptance K-73
+
+The implementation prescription is retired. Preserve the behavioral contract of this owner; no cosmetic move, global synonym replacement, or file inventory is required.
+
+### Acceptance K-55
+
+Use one platform definition for build targets, launcher selection, package names, and release assets. Preserve genuinely shared policy contracts; keep algorithm constants with their consumers. Verify installed artifacts against the same target definition.
+
+### Acceptance K-24
+
+Share proven parsing, line counting, and extraction operations without forcing language-specific analyses into one abstraction. Retain accurate finding locations and language semantics. Verify defects and corrected inputs through the consuming analyses.
+
+### Acceptance G-13
+
+Colocate constants with the behavior that uses them. Share a literal contract only
+when multiple consumers need it. Presets own shipped tool pins and policy. The package layout
+need not match between CLI and plugin.
+
+Remove unrelated central tables and forwarding accessors. Keep algorithm constants
+with their algorithm and preserve legitimate shared contracts.
+
+Exercise the behavior that consumes a shared contract. Moving a local constant alone
+does not justify a new test.
+
+### Acceptance K-306
+
+Convert file URLs through the platform API, including encoded characters, spaces, Unicode, and native Windows paths. Verify source scripts and installed consumers without treating local POSIX execution as native Windows acceptance.
+
+### Acceptance T-27
+
+A harness that fails early, with a message about the machine or about `init`.
+
+`install` expects exit 0 when every tool of the install is on the `PATH` it was given.
+`toolsPath` throws and names the tool it cannot find and the command that installs it. `plant`
+fails when the pattern it replaces is absent. `engineInput(overrides)` builds a whole input from a
+planted folder, and the four tests use it.
+
+Product acceptance checks the actual init exit and resulting policy. Do not add
+a unit test of the harness or mock its assertions.
+
+### Acceptance T-24
+
+Each value of `--runner`, of the hooks choice, and of the CI choice is installed
+once. One install starts from a repository that has hooks and mise tasks. One default `init` runs
+in every test run.
+
+Exercise six installs in the owning suite: mise with GitHub CI, npm, pnpm,
+bun, no runner with GitLab CI, and the default with no flag. Each holds the files written, a
+passing `gspot check --staged`, and a commit through the hook. The release test installs
+`.gspot/package.json` of every npm preset with each package manager and runs one check there.
+
+### Acceptance T-3
+
+Exercise adoption defects with focused product journeys: preserved hooks and tasks, lossless configuration carryover, local ownership and recovery, readable scopes, fresh clone installation, strictness choices, and generated-file handling. Integrate cases with the behavior they verify, without a separate scenario inventory.
+
+### Acceptance T-28
+
+Every shipped check has one planted defect that makes it fail, with the message of
+its own rule.
+
+Execute each planted defect and assert the failing check, its rule or diagnostic,
+and the affected location. A check that needs the network or Docker runs in the `manual` job
+of CI. No source-text guard or separate test inventory establishes this behavior.
+
+The planted cases for the checks described above.
+
+### Acceptance T-29
+
+A case expects the rule name or the sentence of its finding, and the exit code.
+
+Assert the structured report's check, failing status, affected file, and rule or
+diagnostic. Include line and column where the tool supplies them.
+
+The owning command acceptance suites.
+
+### Acceptance T-23
+
+Retained analyses have meaningful invalid and valid cases at their real boundary.
+Pure text logic needs no tool or repository; filesystem and process behavior use their actual
+boundaries. Do not invent a universal input abstraction solely to make every test look alike.
+
+Test actual consumed inputs, relevant limit boundaries, and valid inputs that must
+not match. Share established setup behavior without forcing every analysis through a test adapter.
+
+Exercise each retained analysis with a demonstrated defect and valid code
+that must pass. Group related cases by behavior; source filenames do not define test cases.
+
+### Acceptance T-19
+
+The shipped defaults are measured on ordinary code.
+
+For each generated project and representative established multi-package project, run `init --yes` and `check`. Review each recommended finding for a demonstrated defect and false positives before accepting any message or count snapshot (K-301). Include valid API wrappers, framework adapters, and identifiers containing `generate` or `service`. A count alone is not an acceptance criterion. The naming test runs the shipped policy over one short file for each
+language and framework, and expects no finding.
+
+### Acceptance K-28
+
+Resolve generated ESLint configuration for source, tests, scripts, configuration, and framework components. Execute defects and corrections under the resolved rules. Preserve meaningful format and selector assertions; a rule-count snapshot does not establish enforcement.
+
+### Acceptance T-36
+
+Test generated behavior with the actual pinned consumer. Preserve exact-byte assertions where serialization, escaping, authored content, or recovery requires them. A snapshot directory for every preset is not required.
+
+### Acceptance T-12
+
+Two ceilings, held in CI: a staged check of ten files in a planted repository of
+5,000 files, and `init --yes` on the same repository.
+
+The test writes the 5,000 files from a generator, and runs warm and cold. The staged
+check has 5 seconds warm and 30 cold, and `init` has 60.
+[05-engines.md](05-engines.md) holds the ceiling of a single check (K-196).
+
+### Acceptance T-22
+
+A test reads what it checks from its one source.
+
+The completion test walks the commander program, and looks for each command and flag
+in the bash and the zsh script. The release tests read `version` of
+`packages/cli/package.json`.
+
+### Acceptance T-31
+
+The implementation prescription is retired. Preserve the behavioral contract of this owner; no cosmetic move, global synonym replacement, or file inventory is required.
+
+### Acceptance T-20
+
+Keep surviving behavioral regressions with their implementation owner when internals change. Delete tests of removed implementation details; test filenames and commit narratives are not acceptance criteria.
+
+### Acceptance K-310
+
+Package tests publish and install only against their own isolated local registry.
+Startup, request and shutdown deadlines are bounded. Failed startup releases owned resources
+and preserves useful process output without exposing credentials.
+
+Use a supported isolated listen address/port allocation, observe child startup and
+exit, and verify readiness belongs to the child before returning a registry. An occupied port
+must not allow publication into the existing service. Always await owned-child termination and
+clean temporary storage, including failure before a registry object is returned. Keep retries
+limited to documented startup readiness; never retry failed publication into another registry.
+
+Publish and install built packages through the isolated consumer journey.
+Fail that journey on unsuccessful startup, publication, installation, or cleanup.
+Do not recreate a standalone registry-harness suite.
+
+### Acceptance S-1
+
+One repository check writes every template of every preset into the cache, at both
+levels, and runs the parser and the formatter of each kind over the result.
+
+The script renders each preset with its planted policy, then runs `prettier --check`,
+`taplo check`, `yamllint`, and `eslint --no-config-lookup` over the files of its kind. It shares
+its renders with the snapshot test (T-36).
+
+A template with a broken TOML line fails the check.
+
+### Acceptance S-3
+
+The unit and plugin tests run at the push stage. Coverage measures missing behavioral evidence without an arbitrary percentage quota. Conditional platform and release suites retain explicit prerequisites. The
+work of a change follows the [active CI bypass](22-remaining.md#active-ci-bypass).
+While it is active, local verification permits continued implementation without a GitHub run.
+
+The check runs `mise run test`. Use `mise run test:coverage` for measurement with shared settings in
+`bunfig.toml`. Candidate acceptance explicitly runs integration, acceptance, and opted-in release suites. The docs test fetches the Vale packages in its setup, or fails with the command
+that fetches them. The jest preset of [06-enforcement-ledger.md](06-enforcement-ledger.md) reads `bun:test`
+through `globalPackage`, and this repository selects it. This repository sets `level = "all"` and `[coverage] strict = true`.
+
+`CONTRIBUTING.md` explains local verification and how to read CI results when CI is enabled.
+It must not require a GitHub run while the active bypass applies.
+
+### Acceptance K-61
+
+The implementation prescription is retired. Preserve the behavioral contract of this owner; no cosmetic move, global synonym replacement, or file inventory is required.
+
+Documentation content loading belongs in `docs/src/content/reference.ts`. The executable checks
+for built links and release-aligned deployment belong in `docs/scripts/`. Plugin rule metadata
+and common option schemas belong in `packages/eslint-plugin/src/rules/` beside their consumers.

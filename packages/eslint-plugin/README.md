@@ -37,10 +37,8 @@ it globally.
 
 ## Rules and options
 
-The [plugin reference](https://gspot.dev/reference/plugin/no-call-through/) describes each rule
+The [plugin reference](https://gspot.dev/reference/plugin/no-trivial-functions/) describes each rule
 and its options. Individual rules remain available through `gspot.rules`, including alternative
 re-export and trivial-function policies that the bundled configurations do not enable together.
 
-The package uses the Apache-2.0 license in `LICENSE.md`. Runtime npm dependencies remain external
-to the plugin bundles and retain their own package licenses. CLI binary notices do not describe
-this package.
+Licensed under Apache-2.0.

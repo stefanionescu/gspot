@@ -1,11 +1,11 @@
 // The [[ignore]] filter, the inline gspot-ignore syntax, and the suppression census input.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { Finding } from '#types/finding.ts';
-import type { IgnoreEntry } from '#types/config.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { IgnoreEntry } from '#cli/policy/types.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import type { IgnoreUse, InlineIgnore } from '#types/run.ts';
+import type { IgnoreUse, InlineIgnore } from '#cli/run/types.ts';
 
 import {
     COMMENT_OPENERS,
@@ -13,16 +13,12 @@ import {
     HTML_COMMENT_CLOSE,
     INLINE_IGNORE,
     REASON_INTRODUCER,
-} from '#config/markers.ts';
-
-function isPathMatch(entry: IgnoreEntry, finding: Finding): boolean {
-    return entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(finding.file);
-}
+} from '#cli/emit/markers-definitions.ts';
 
 function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
     if (entry.check !== finding.check) return false;
     if (entry.rule !== undefined && entry.rule !== finding.rule) return false;
-    return isPathMatch(entry, finding);
+    return entry.paths === undefined || entry.paths.length === 0 || pathMatcher(entry.paths)(finding.file);
 }
 
 function existingText(root: string, path: string): string {

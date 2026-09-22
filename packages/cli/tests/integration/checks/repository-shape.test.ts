@@ -2,13 +2,13 @@
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import type { CheckSpec } from '#types/manifest.ts';
-import type { EngineInput, Session } from '#types/run.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
+import type { EngineInput, Session } from '#cli/run/types.ts';
 import { readAttributes } from '#cli/repository/natures.ts';
 import { largeFiles } from '#cli/checks/repository/large-files.ts';
-import type { Repository, TrackedFile } from '#types/repository.ts';
+import type { Repository, TrackedFile } from '#cli/repository/types.ts';
 import { suppressions } from '#cli/checks/repository/suppressions.ts';
-import type { MergedView, NamingSettings, Policy } from '#types/config.ts';
+import type { MergedView, NamingSettings, Policy } from '#cli/policy/types.ts';
 import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
 import { configurationPurity } from '#cli/checks/repository/config-purity.ts';
 
@@ -44,8 +44,6 @@ const policy: Partial<Policy> = {
     declarations: [{ paths: ['data/**'], nature: 'generated' }],
     structure: {
         reexports: 'none',
-        call_through_allowed: [],
-        trivial_allowed: [],
         single_file_folder_allowed: [{ paths: ['src'], reason: 'A test reason.' }],
         prefix_collision_allowed: [],
         folder_name_allowed: [],

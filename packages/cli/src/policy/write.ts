@@ -3,16 +3,12 @@ import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { patch } from '@decimalturn/toml-patch';
 import { readFileSync } from 'node:fs';
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
-import type { TomlTable, Mutation, WriteResult } from '#types/config.ts';
+import type { TomlTable, Mutation, WriteResult } from '#cli/policy/types.ts';
 import { parsePolicyText, policyPath, parseTomlText } from '#cli/policy/read-policy.ts';
 import { stringify as stringifyToml } from 'smol-toml';
 
 function isTable(value: unknown): value is TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value);
-}
-
-function isTableArrayAdded(value: unknown): boolean {
-    return Array.isArray(value) && value.length > 0 && typeof value[0] === 'object';
 }
 
 function splitKey(key: string): { path: string[]; name: string } {
@@ -82,7 +78,7 @@ export function proposePolicy(root: string, text: string, mutate: Mutation): Wri
     // toml-patch cannot add an array of tables that was not there; seed the text with it first.
     let seed = text;
     for (const [key, value] of Object.entries(raw))
-        if (!before.has(key) && isTableArrayAdded(value))
+        if (!before.has(key) && Array.isArray(value) && value.length > 0 && typeof value[0] === 'object')
             seed = `${seed.trimEnd()}\n\n${stringifyToml({ [key]: value })}`;
     // No padding inside array brackets: the style taplo formats to, so a hand edit and a written entry agree.
     const next = patch(seed, raw, { inlineTableStart: 2, bracketSpacing: false });

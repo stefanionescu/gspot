@@ -3,12 +3,16 @@ import { ciSchema, hooksSchema, runnerSchema } from '#cli/policy/schema.ts';
 // gspot init
 import { Option } from 'commander';
 import type { Command } from 'commander';
-import type { InitOptions } from '#types/lifecycle.ts';
+import type { InitOptions } from '#cli/lifecycle/types.ts';
 import { initCommand } from '#cli/lifecycle/init/command.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
 import { directoryOf, listFlag, textEntry, textFlag } from '#cli/commands/flags.ts';
 
-function integrationChoice<Value extends string>(flags: Record<string, unknown>, name: string, schema: z.ZodType<Value>): Value | 'none' | undefined {
+function integrationChoice<Value extends string>(
+    flags: Record<string, unknown>,
+    name: string,
+    schema: z.ZodType<Value>,
+): Value | 'none' | undefined {
     return flags[name] === false ? 'none' : schema.optional().parse(textFlag(flags, name));
 }
 

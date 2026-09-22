@@ -1,6 +1,6 @@
 // Identifiers a TypeScript or JavaScript file declares, by category, through tree-sitter. Object literal keys are not declarations.
 import type { Node } from 'web-tree-sitter';
-import type { ExtractSink, Identifier } from '#types/naming.ts';
+import type { ExtractSink, Identifier } from '#cli/naming/types.ts';
 
 const FUNCTION_NODES = ['function_declaration', 'generator_function_declaration', 'function_expression'];
 const METHOD_NODES = ['method_definition', 'method_signature', 'abstract_method_signature'];
@@ -78,15 +78,6 @@ function addParameters(sink: ExtractSink, node: Node): void {
     addPattern(sink, node.childForFieldName('parameter'), 'parameters');
 }
 
-function isConstructor(node: Node): boolean {
-    return node.childForFieldName('name')?.text === 'constructor';
-}
-
-// A method of an object literal is a key another party names (an ESLint visitor, an option table), not a declaration.
-function isLiteralMember(node: Node): boolean {
-    return node.parent?.type === 'object';
-}
-
 // A property signature written in snake_case or UPPER_SNAKE describes a shape another format fixes: TOML keys, a JSON API.
 function isContractSignature(node: Node): boolean {
     const name = node.childForFieldName('name')?.text ?? '';
@@ -109,8 +100,10 @@ function addNamed(sink: ExtractSink, root: Node): void {
             .descendantsOfType(types)
             .filter(
                 (node) =>
-                    !(category === 'methods' && (isConstructor(node) || isLiteralMember(node))) &&
-                    !isContractSignature(node),
+                    !(
+                        category === 'methods' &&
+                        (node.childForFieldName('name')?.text === 'constructor' || node.parent?.type === 'object')
+                    ) && !isContractSignature(node),
             );
         for (const node of nodes) add(sink, node.childForFieldName('name'), category);
     }

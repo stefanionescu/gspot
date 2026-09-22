@@ -1,6 +1,6 @@
 // The loosening-needs-a-reason rule.
-import type { SettingSpec } from '#types/manifest.ts';
-import { MINIMUM_REASON_WORDS, REFUSED_REASONS } from '#config/reasons.ts';
+import type { SettingSpec } from '#cli/presets/types.ts';
+import { MINIMUM_REASON_WORDS, REFUSED_REASONS } from '#cli/policy/reasons-definitions.ts';
 
 function isNumberLoosening(direction: 'ceiling' | 'floor', value: unknown, shipped: unknown): boolean {
     if (typeof value !== 'number' || typeof shipped !== 'number') return false;

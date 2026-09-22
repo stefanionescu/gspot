@@ -46,20 +46,14 @@ description = "Generate Astro content and TypeScript metadata."
 dir = "{{config_root}}/docs"
 run = "bun --bun astro sync"
 
-[tasks."docs:reference"]
-description = "Generate documentation references from validated definitions."
-run = "bun docs/reference-pages.ts"
-
 [tasks."docs:build"]
 description = "Build the documentation site and validate its links and fragments."
-depends = ["docs:reference"]
 dir = "{{config_root}}/docs"
-run = ["bun --bun astro build", "bun links.ts"]
+run = ["bun --bun astro build", "bun scripts/links.ts"]
 
 [tasks."docs:dev"]
 alias = "dev"
 description = "Generate references and serve the documentation locally."
-depends = ["docs:reference"]
 dir = "{{config_root}}/docs"
 run = "bun --bun astro dev"
 
@@ -73,7 +67,7 @@ run = "bun tests/harness/swiftformat.ts"
 
 [tasks."site:verify-release"]
 description = "Verify that documentation describes a published stable release."
-run = "bun docs/verify-release.ts"
+run = "bun docs/scripts/verify-release.ts"
 
 [tasks."release:publish"]
 description = "Validate and publish packages to the selected registry."

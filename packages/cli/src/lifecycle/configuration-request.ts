@@ -1,6 +1,6 @@
 import { z } from 'zod';
-import { formatRequest, prettierIgnoreRequest } from './format-request.ts';
-import { eslintRequest } from './eslint-request.ts';
+import { formatRequest, prettierIgnoreRequest } from './format-evaluation.ts';
+import { eslintRequest } from './eslint-evaluation.ts';
 
 export const configurationRequest = z.discriminatedUnion('operation', [
     formatRequest.extend({ tool: z.literal('prettier'), operation: z.literal('format') }),

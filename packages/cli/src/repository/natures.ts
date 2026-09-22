@@ -1,9 +1,9 @@
 // Every tracked path has one nature: source, generated, vendored, binary.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { FileDeclaration } from '#types/config.ts';
+import type { FileDeclaration } from '#cli/policy/types.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import type { Attribute, NatureVerdict } from '#types/repository.ts';
+import type { Attribute, NatureVerdict } from '#cli/repository/types.ts';
 
 import {
     GENERATED_BANNERS,
@@ -12,7 +12,7 @@ import {
     VALE_OWN_PREFIXES,
     VALE_STYLES_PREFIX,
     VENDORED_DIRECTORIES,
-} from '#config/patterns.ts';
+} from '#cli/lifecycle/patterns-definitions.ts';
 
 const BANNER_BYTES = 1024;
 

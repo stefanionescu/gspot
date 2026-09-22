@@ -64,7 +64,7 @@ prerequisites, missing tools, and delegated coverage accurately. Validate `repor
 `takes_over` ownership so descriptive coverage never impersonates an executed check.
 Infrastructure stays independent of domain check catalogs.
 
-[16-file-tree.md](16-file-tree.md) assigns implementation ownership. Structure, naming, and
+[implementation ownership](12-repository-layout.md#ownership) assigns implementation ownership. Structure, naming, and
 prose each own their analysis; domain checks own project and artifact checks. The runner
 produces one result model and aggregate status. Output renders that model for terminals and
 structured reports without repeating analysis or reclassifying success.
@@ -97,7 +97,7 @@ Runs external tools. Owns nothing about what they find.
   passed to tools in the platform's form. On Windows, npm-installed tools are `.cmd` shims that
   a plain spawn cannot run; `cross-spawn` resolves them without a shell and without quoting by gspot.
 - **Missing tool.** The check reports `missing` with the install hint and fails.
-- **Skips.** `--skip` prints and records, and no file holds a skip for one machine (D-173). A `docker` requirement with
+- **Skips.** `--skip` prints and records, and no file holds a skip for one machine. A `docker` requirement with
   no daemon fails; a platform requirement (`macos`, `linux`) that does not hold passes as
   skipped.
 
@@ -111,18 +111,17 @@ Executed findings establish coverage; a fixed number of plugin rules does not.
 The following plugin exports remain available. Generated CLI configuration may select the
 listed owner to avoid duplicate findings; standalone plugin coverage remains required.
 
-| Retained plugin rule                | Enforcement owner                      | Behavior retained                                                                                                          |
-| ----------------------------------- | -------------------------------------- | -------------------------------------------------------------------------------------------------------------------------- |
-| `gspot/no-trivial-functions`        | `gspot/no-call-through`                | Forwarding declarations, expressions, arrows, and methods, including anonymous block bodies, with the configured allowlist |
-| `gspot/no-duplicate-barrel-exports` | `import-x/export`                      | Duplicate exported names, including local declarations and nested star exports                                             |
-| `gspot/no-reexports-outside-index`  | `gspot/no-reexports` with `allowIndex` | Re-exports outside index files when the policy permits index barrels                                                       |
-| `gspot/no-single-file-folders`      | `structure/single-file-folder`         | Leaf folders holding one code file across Swift, JavaScript, TypeScript, Python, and framework source                      |
-| `gspot/no-prefix-collisions`        | `structure/prefix-collisions`          | Files sharing a name prefix, with the configured threshold and allowances                                                  |
+| Retained plugin rule                | Enforcement owner                      | Behavior retained                                                                                     |
+| ----------------------------------- | -------------------------------------- | ----------------------------------------------------------------------------------------------------- |
+| `gspot/no-duplicate-barrel-exports` | `import-x/export`                      | Duplicate exported names, including local declarations and nested star exports                        |
+| `gspot/no-reexports-outside-index`  | `gspot/no-reexports` with `allowIndex` | Re-exports outside index files when the policy permits index barrels                                  |
+| `gspot/no-single-file-folders`      | `structure/single-file-folder`         | Leaf folders holding one code file across Swift, JavaScript, TypeScript, Python, and framework source |
+| `gspot/no-prefix-collisions`        | `structure/prefix-collisions`          | Files sharing a name prefix, with the configured threshold and allowances                             |
 
 | Rule                                   | Reports                                                                                                                                                           |
 | -------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `gspot/no-call-through`                | A function that calls one other function or constructor with its own parameters unchanged and in order                                                            |
-| `gspot/no-trivial-files`               | A file whose only runtime behavior is calling imported values; generated files exempt by banner                                                                   |
+| `gspot/no-trivial-functions`           | Every implemented function at or below the executable statement threshold                                                                                         |
+| `gspot/no-trivial-files`               | A file containing only forwarding, aliases, re-exports, or trivial functions                                                                                      |
 | `gspot/no-export-only-files`           | A non-index file that only re-exports                                                                                                                             |
 | `gspot/no-exported-alias-constants`    | `export const A = B` where B is an identifier or member                                                                                                           |
 | `import-x/export`                      | A name exported twice, including through two `export *`                                                                                                           |
@@ -166,10 +165,10 @@ For every language that is not JavaScript or TypeScript, and for repository-leve
 - **Cross-file index.** Before any analysis runs, the engine builds one index for each scope:
   declarations by file, calls and references by name, and imports by module.
 - **One analysis for each idea.** An analysis asks a small table of its language for node
-  kinds, and names no language (D-149).
+  kinds, and names no language.
 - **An id for each language.** The manifest of each language lists the idea under an id of its
-  own, such as `python/call-through`. An ignore then holds one language (D-98).
-- **TypeScript in the editor.** TypeScript keeps its ESLint rules (D-02). One table of cases
+  own, such as `python/trivial-function`. An ignore then holds one language.
+- **TypeScript in the editor.** TypeScript keeps its ESLint rules. One table of cases
   holds both implementations to the same answers.
 - **One count.** Every line limit gspot owns counts code lines, through one function.
 
@@ -210,7 +209,7 @@ extractors per language, no emission into other tools.
   external-name and contract-property exemptions.
 - **Levels:** house-style case, length, word-count, digit, ordering, banned-term, reserved-term, and folder-name rules run at `all`
   only. Prose and tool-template copies follow the same level. `generate` and `service` are
-  permitted (D-174). Single-file-folder checks also run at `all`.
+  permitted. Single-file-folder checks also run at `all`.
 - **Recommended findings:** a naming check must demonstrate an actual external-contract
   violation, not a spelling preference.
 - **Matching:** split the identifier into parts at case boundaries, underscores and hyphens;
@@ -280,3 +279,243 @@ writes no analysis a maintained tool already ships.
   import ordering, type checking, and formatting belong to the tools.
 - No engine reads a tool's ignore file to guess coverage. gspot hands the list.
 - No engine returns success when it failed to run.
+
+## Acceptance contracts
+
+These clauses specify required behavior. [Remaining work](22-remaining.md) owns status and evidence.
+
+### Acceptance K-207
+
+The pin is the newest ESLint that every shipped plugin supports, which is 9
+today. `@eslint/js` and unicorn are pinned at their last version for ESLint 9.
+
+The registry test reads `peerDependencies.eslint` of every pinned plugin and fails a
+pin outside one of them. The react setting is `version: 'detect'`.
+
+That registry test.
+
+### Acceptance K-208
+
+The list of code files holds the endings a framework claims, and one ESLint check
+reads it. A framework turns a shared rule off in its manifest, with a reason.
+Type check, format, style, and names reach a component file.
+
+`CODE` in the template is built from the `claims.extensions` of the selected presets.
+A manifest takes `[[rules_off]]` with `rule` and `reason`, and the template renders that list.
+
+`vue/eslint` and `svelte/eslint` go, because `javascript/eslint` reads their files. The vue preset
+runs `vue-tsc` and the svelte preset `svelte-check` through `takes_over` of `typescript/tsc`. The
+formatting manifest gains `prettier-plugin-svelte` where svelte is selected. Stylelint gains
+`postcss-html` for component files. The naming extractor reads the script block of a component
+through the offsets its parser gives.
+
+A unit test builds the final ESLint config for `a.ts` and for `A.vue`, and holds that
+they differ by exactly the `rules_off` list. A planted Vue file with a long function is a
+finding.
+
+### Acceptance K-102
+
+Preserve `no-trivial-functions`, `no-single-file-folders`,
+`no-prefix-collisions`, `no-duplicate-barrel-exports`, `no-reexports-outside-index`, and interface
+enforcement in `types-placement`, with their public options. Retain the improved
+`no-trivial-functions` handling of every implemented function, nested statements, and expression bodies
+arguments. Default configs select one forwarding check; alternate exports remain usable.
+
+Generated CLI configuration can use `import-x/export`, TypeScript's interface rule,
+`no-reexports` with `allowIndex`, and structure-engine folder checks without double reporting.
+These selections do not remove standalone plugin capabilities. Preserve narrow Next.js
+index-only exceptions without exempting the policy that forbids all re-exports.
+
+Shared policies apply to Swift, JavaScript, TypeScript, Python, and
+all their supported frameworks. Language-only file claims missed Vue and Svelte components.
+Shared selection must include framework source. Component parsers must receive shared language
+rules as well as their framework-specific rules. See
+[05-engines.md](#shared-enforcement-across-languages-and-frameworks).
+
+Execute invalid and corrected inputs through the standalone plugin and generated
+CLI configurations. Assert check or rule, diagnostic, file, and location. Cover aliases,
+type-only imports, approved exemptions, valid code, and repeated runs after files change.
+Folder tests cover all four languages and framework source. Preserve process and parser fixes;
+do not restore stale global observations merely to restore a rule.
+
+K-188 remains open for import direction and harness imports. Their public rules and policies
+stay; any internal consolidation requires equivalent behavior on every shipped surface.
+
+### Acceptance K-307
+
+Keep real boundary validation, but do not turn failed observation into valid empty input or a clean verdict.
+
+Use the existing structured process result to distinguish no Git repository from a failed Git operation. Fall back to a directory walk only after the no-Git case is established. Report permission, corruption, parse, and unexpected I/O errors with their path or command.
+
+Treat `ENOENT` as optional only where the caller's contract permits absence. A tracked deletion remains a change trigger, not an unreadable source to hide. Make one takeover reader return parsed content or its error; retain unsupported formats explicitly instead of a second suffix-based preflight.
+
+No-Git folders still work. A failed Git listing inside a repository does not silently walk a different file set. Unreadable or malformed package JSON reports a failure. Takeover keeps originals after read errors. Missing optional files and deleted tracked paths retain their documented behavior.
+
+### Acceptance K-308
+
+Definitions use `name`; references retain `check`, `preset`, or `rule`. Keep external wire names and existing internal `Policy` terminology. Distinguish actions from predicates, executable `fix_command` from `help`, and failed fixes from unchanged output. Retire synonym replacement campaigns and cosmetic source renames.
+
+### Acceptance K-43
+
+A cache key holds the hashes of the config files its check names, computed once for
+a run. The verdict cache drops entries older than 30 days. A build folder of a tool sits in the
+cache folder of the platform.
+
+`Session` gains `configHashes`, a map filled on first use. `cacheKey` takes the
+`{config:<name>}` parts of the check command, and for an engine check the config names of its
+manifest. `fileHash` hashes the bytes through `Bun.hash`. `pruneCache` runs at the end of a full
+run and removes entries whose file time is over 30 days. `platform/paths.ts` gains
+`buildFolder(root)`: `~/Library/Caches/gspot/<hash of root>` on macOS, and `$XDG_CACHE_HOME/gspot` on Linux.
+
+A unit test edits `.gspot/ruff.toml` and holds that the cached verdict of
+`bash/shellcheck` still stands. A second one ages an entry and holds that it is gone.
+
+### Acceptance K-53
+
+Initialization detects and proposes once, validates the accepted proposal, then applies it through the lifecycle owner. It runs no checks and has no accidental second application. Verify read-only preview, unchanged authored files, final selection, and absence of check execution.
+
+### Acceptance K-125
+
+One read of the first 4 KB of a file, shared by the three.
+
+`head(path)` opens the file, reads 4,096 bytes, and keeps them on the `TrackedFile`.
+`sniff` and `hasBanner` take that buffer.
+
+A unit test with a 50 MB file holds that opening a session reads under 1 MB.
+
+### Acceptance K-138
+
+Share parsing of the same file and grammar within its scope and command session. Naming and structural analyses consume that shared observation while preserving language-specific semantics and source locations. A later session must observe changed content. Verify cross-analysis findings and corrected inputs without requiring a particular helper filename or parser-call count.
+
+### Acceptance K-143
+
+Retain incremental compiler state across command sessions. Manual Swift analysis uses separate clean build state and logs. Verify an unchanged compile preserves its object files, a later defect is reported, and analyzer cleanup never removes incremental state. Native Xcode behavior and platform cache locations need their own acceptance; host timing ratios are not correctness tests.
+
+### Acceptance K-162
+
+Batch committed SQL observations and reuse them within a command session. Respect the deepest scope and configured migration root. Verify immutable migration findings, corrected input, unusual filenames, corrupt Git input, and refresh in a subsequent session. A fixed number of subprocess calls is not the contract.
+
+### Acceptance K-176
+
+Vale runs once for each extension, over paths.
+
+`vale.ini` maps a borrowed extension under `[formats]`, the key Vale has for this:
+`sh = py` style lines for the languages Vale does not read. Python, CSS, and every other language
+Vale reads go by their own extension. `alerts` takes paths in batches through `fileBatches`.
+
+A unit test with a spy holds one Vale spawn for ten Python files. The prose planted
+test holds a finding in a CSS comment.
+
+### Acceptance K-196
+
+A check is at `commit` when it takes the staged files, or when it ends within five
+seconds on the planted repository of its preset. Every other check is at `push` or `manual`.
+
+The test runs each commit-stage check on the planted repository of its preset, warm,
+and fails one that takes over five seconds with no file list. The type checkers move to `push`.
+The commit hook still runs a whole-project check of a project that holds a staged file, where the
+manifest marks it `runs = "per-scope"` and it passes the test.
+
+That test. The timed test of a large repository is in [12-repository-layout.md](12-repository-layout.md).
+
+### Acceptance K-156
+
+A check never writes into the tree, never runs `git clean`, and never runs
+`git checkout`.
+
+`scratchCopy(input, paths)` copies the named paths into `.gspot/cache/scratch/<check>/`
+and returns that folder. The drizzle check copies the schema, the config, and the migrations
+folder, runs `generate` there, and compares the two folders. The OpenAPI check runs its command
+with the output path inside the scratch folder, and compares the text.
+
+A planted drizzle repository with an untracked `0009_manual.sql` holds that the file
+exists after `gspot check --stage push`. The same for an edited, uncommitted `openapi.json`.
+
+### Acceptance K-140
+
+A check whose tool is absent reports `missing`, as every tool check does.
+
+`astGrepMatches` returns `undefined` for an absent tool, and `counts.ts` turns that
+into the `missing` status through `platform/missing-tool.ts`. The file list goes through
+`fileBatches`, the batching every tool run uses.
+
+A unit test runs the three checks with an empty `PATH` and holds `missing`.
+
+### Acceptance K-157
+
+A check that waits for a setting reports `skipped` and names the setting.
+
+A check in a manifest takes `waits_for = "<setting>"`. `plan.ts` marks the check
+`skipped` with the note `set <setting> to turn this on` when the setting is unset, false, or
+empty. A static-site check takes `requires = "build"`, which already exists, and a failed build
+marks its six checks `skipped` with the note `the site did not build`.
+
+A unit test over the manifests holds that every check that reads a setting with an
+empty default declares `waits_for`. A planted Next.js repository holds the `skipped` line.
+
+### Acceptance K-114
+
+The comment works for every check an engine of gspot runs.
+
+A finding carries `engine`, set by `runEngineCheck`. The filter reads that field.
+
+A planted Swift file with `// gspot-ignore swift/... -- reason` holds no finding.
+
+### Acceptance K-246
+
+`integrity/generated-drift` ships in the structure preset at the commit stage. The
+name `generated-fresh` leaves every document.
+
+The workflow runs `gspot check`, and the drift check fails a generated file that
+differs from what the policy writes.
+
+A planted repository with an edited file under `.gspot/` holds the finding.
+
+### Acceptance K-42
+
+Every spawn of a tool with a file list goes through `fileBatches`, and a fixer that
+fails is a line of the fix report.
+
+`run/tool-runner.ts` returns a list of commands for a file list, and the fixer, the
+checks, and ast-grep all take their commands from it. Rename the executing function to `runFixer`; return a `FixResult` instead of mutating a caller-owned failure list. Its `plannedCheck` and `workingDirectory` parameters follow [public vocabulary](README.md#glossary). A successful invocation without byte changes is unchanged, not changed.
+
+A unit test with 20,000 long paths holds more than one command, and a planted fixer
+that exits 3 holds its line in the report.
+
+## Actions and their results
+
+Use `fixer` for an executable source-correction operation. Use `help` for advice a person
+reads. A successful tool invocation does not prove a file changed.
+
+| Concept                                                 | Canonical name                                                          |
+| ------------------------------------------------------- | ----------------------------------------------------------------------- |
+| Advice on a check or finding                            | `help`; printed as `help:`                                              |
+| Executable correction in a manifest or repository check | `fix_command`, with `fix_order`                                         |
+| Run one correction                                      | `runFixer(session, plannedCheck, workingDirectory)`                     |
+| Result of one correction                                | `FixResult`, with status `changed`, `unchanged`, `failed`, or `skipped` |
+| Result of the complete fix pass                         | `FixReport`                                                             |
+| Produce generated text in memory                        | `emit` or a specific formatting function                                |
+| Write bytes to a destination                            | `write`                                                                 |
+| Apply repository configuration                          | `apply`                                                                 |
+| Install recorded tools and clone-local hooks            | `install`                                                               |
+| Complete results of a check run                         | `report`; one check's execution is a `CheckResult`                      |
+
+`fixable` means a supported correction is available. It does not mean that the correction ran or changed bytes.
+`runFixer` returns its result instead of mutating a caller-owned `failed` string array.
+The caller builds the report. Define changed status by the checked output bytes, not merely
+exit zero. Missing tools and failed execution are failures, not an unchanged result.
+
+Reserve `command` for an argument vector and `commandText` for a displayed shell line.
+Use `filePaths` for resolved path strings and `patterns` for selectors inside code.
+The public `paths` selector field keeps its established spelling. Distinguish absolute
+filesystem paths from config-relative paths at their boundary; do not pass either as an
+unqualified `root` when both config and Git roots are in scope.
+
+`config` is the repository's settings in public prose. Existing internal `Policy` types and
+`policy/` paths remain explicitly identified implementation names, not new public terminology.
+A naming policy is the specific naming-rule data, not another name for the complete config.
+
+`coverage` means check coverage when discussing `[coverage]`; use `test coverage` for tests.
+A manifest's `[coverage]` table declares required check kinds by extension, and a check's
+`coverage` list names the kinds it supplies. Local code calls that list `coverageKinds`.
+These replace manifest `[inspections]` and check `inspection` without changing their meaning.

@@ -1,9 +1,9 @@
 // A tracked file above the size limit is under LFS or declared, or it is a finding.
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { isUnderLfs } from '#cli/repository/natures.ts';
-import { FILE_SIZE_KB_DEFAULT } from '#config/integrity.ts';
+import { FILE_SIZE_KB_DEFAULT } from '#cli/checks/integrity-definitions.ts';
 
 const KILOBYTE = 1024;
 

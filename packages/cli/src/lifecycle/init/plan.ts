@@ -3,15 +3,14 @@ import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import { pythonPins } from '#cli/emit/tool-environment.ts';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import type { Proposal } from '#types/config.ts';
-import type { Manifest } from '#types/manifest.ts';
-import type { ScopeEntry } from '#types/repository.ts';
+import type { Proposal } from '#cli/policy/types.ts';
+import type { Manifest } from '#cli/presets/types.ts';
+import type { ScopeEntry } from '#cli/repository/types.ts';
 import { noLongerRuns } from '#cli/lifecycle/takeover.ts';
 import { xcodeProposal } from '#cli/lifecycle/xcode-proposal.ts';
 import { pinnedTwice, misePins, npmPins, MISE_CONFIG_PATH, MISE_TASKS } from '#cli/emit/runner-tasks.ts';
-import type { CarriedLists, InitAnswers, InitPlanInputs, InitSelection, TakeoverPlan } from '#types/lifecycle.ts';
+import type { CarriedLists, InitAnswers, InitPlanInputs, InitSelection, TakeoverPlan } from '#cli/lifecycle/types.ts';
 
-const TYPES_DIRECTORIES = ['types', 'src/types', 'api/types'];
 const PACKAGE_RUNNERS = new Set(['bun', 'npm', 'pnpm']);
 
 function carriedRows(carried: CarriedLists): TakeoverPlan['carried'] {
@@ -80,8 +79,6 @@ export function buildProposal(
     const scopes: ScopeEntry[] = selection.scopes.filter((scope) => scope.path !== '');
     const hasCommitScopes = scopes.length > 0 && selection.selectedIds.has('commits');
     const commitScopes = hasCommitScopes ? [...scopes.map((scope) => scope.name), 'root', 'hooks', 'deps'] : undefined;
-    const typesDirectory = TYPES_DIRECTORIES.find((dir) => existsSync(join(root, dir)));
-    const hasTypes = typesDirectory !== undefined && selection.selectedIds.has('typescript');
     const xcode = xcodeFor(root, selection);
     return {
         presets: selection.rootIds,
@@ -94,7 +91,6 @@ export function buildProposal(
         ...(answers.formatter === undefined ? {} : { format: answers.formatter.format }),
         ...(answers.formatter?.extra === undefined ? {} : { prettierExtra: answers.formatter.extra }),
         ...(commitScopes ? { commitScopes } : {}),
-        ...(hasTypes ? { typesDirectory } : {}),
         ...(xcode ? { xcode } : {}),
     };
 }

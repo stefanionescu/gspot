@@ -1,6 +1,6 @@
 // Prose analyses are selected while planning the run.
-import type { Engine } from '#types/run.ts';
-import type { CheckSpec } from '#types/manifest.ts';
+import type { Engine } from '#cli/run/types.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
 import { valeFindings } from '#cli/prose/vale.ts';
 import { sourceBans } from '#cli/prose/source-bans.ts';
 

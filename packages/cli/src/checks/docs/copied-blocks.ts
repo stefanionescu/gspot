@@ -1,11 +1,11 @@
 import { tmpdir } from 'node:os';
 import { run } from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import type { ClonePlace, CloneReport } from '#types/integrity.ts';
+import type { ClonePlace, CloneReport } from '#cli/checks/types.ts';
 // Copied blocks through jscpd: every clone is a finding that names both places, once the duplicated share passes the ceiling.
 import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
 import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';

@@ -4,8 +4,8 @@ import { existsSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { z } from 'zod';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { functionFolders, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 const lintReport = z.object({

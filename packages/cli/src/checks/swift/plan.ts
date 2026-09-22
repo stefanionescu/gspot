@@ -1,7 +1,7 @@
 // What a Swift scope builds: an Xcode scheme when the policy names a project, or the Swift package.
 import { join } from 'node:path';
-import type { EngineInput } from '#types/run.ts';
-import type { SwiftBuildPlan } from '#types/swift.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { SwiftBuildPlan } from '#cli/structure/swift/types.ts';
 
 const DEFAULT_DESTINATION = 'generic/platform=iOS Simulator';
 const WORKSPACE_SUFFIX = '.xcworkspace';

@@ -5,8 +5,8 @@ import { isDeepStrictEqual } from 'node:util';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { Profile } from '#types/profile.ts';
-import type { TomlTable } from '#types/config.ts';
+import type { Profile } from '#cli/profile/types.ts';
+import type { TomlTable } from '#cli/policy/types.ts';
 import { openSession } from '#cli/run/session.ts';
 import { compact } from '#cli/policy/normalize.ts';
 import { readProfile } from '#cli/profile/read.ts';
@@ -42,7 +42,7 @@ import type {
     InitResult,
     InitSelection,
     TakeoverPlan,
-} from '#types/lifecycle.ts';
+} from '#cli/lifecycle/types.ts';
 
 const ALREADY_INSTALLED =
     'This repository already has a gspot.toml. Run `gspot doctor` to see what changed since the install and the command that applies each change.\n';
@@ -65,12 +65,8 @@ function profileAnswers(profile: Profile): Partial<InitOptions> {
         hooks: tables.hooks === undefined ? 'none' : tables.hooks.tool,
         ci: tables.ci === undefined ? 'none' : tables.ci.provider,
         runner: tables.runner === undefined ? 'none' : tables.runner.tool,
-        rules: install === undefined ? undefined : toChoice(install),
+        rules: install === undefined ? undefined : install ? 'yes' : 'no',
     });
-}
-
-function toChoice(isInstalled: boolean): 'yes' | 'no' {
-    return isInstalled ? 'yes' : 'no';
 }
 
 function optionsFromProfile(options: InitOptions, profile: Profile): InitOptions {

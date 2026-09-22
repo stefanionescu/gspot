@@ -4,10 +4,10 @@ import { join } from 'node:path';
 import { parse as parseToml } from 'smol-toml';
 import { existsSync, readFileSync } from 'node:fs';
 import { headerFor } from '#cli/emit/templates.ts';
-import type { GeneratedFile } from '#types/emit.ts';
+import type { GeneratedFile } from '#cli/emit/types.ts';
 import { isEmbedded } from '#cli/platform/assets.ts';
-import { MISE_BACKENDS, UV_INSTALLER } from '#config/installers.ts';
-import type { Manifest, ToolPin, InstallerPin } from '#types/manifest.ts';
+import { MISE_BACKENDS, UV_INSTALLER } from '#cli/platform/installers-definitions.ts';
+import type { Manifest, ToolPin, InstallerPin } from '#cli/presets/types.ts';
 
 const HOST_ONLY = new Set(['bash', 'git', 'docker', 'xcodebuild', 'plutil', 'xcstringstool', 'swift', 'xmllint']);
 const BARE_KEY = /^[\w-]+$/u;
@@ -22,10 +22,6 @@ const MISE_TASKS = [
 
 function tomlKey(name: string): string {
     return BARE_KEY.test(name) ? name : JSON.stringify(name);
-}
-
-function isPinnedInPackage(tool: ToolPin, isPackagePinned: boolean): boolean {
-    return isPackagePinned && tool.installers['npm'] !== undefined && tool.installers['mise'] === undefined;
 }
 
 /**
@@ -65,7 +61,11 @@ export function collectPins(manifests: Manifest[]): ToolPin[] {
 export function misePins(manifests: Manifest[], isPackagePinned: boolean): (InstallerPin & { version: string })[] {
     const tools = collectPins(manifests);
     const pins = tools.flatMap((tool) => {
-        if (isPinnedInPackage(tool, isPackagePinned) || tool.installers['pypi'] !== undefined) return [];
+        if (
+            (isPackagePinned && tool.installers['npm'] !== undefined && tool.installers['mise'] === undefined) ||
+            tool.installers['pypi'] !== undefined
+        )
+            return [];
         const pin = misePin(tool);
         return pin?.version === undefined ? [] : [{ name: pin.name, version: pin.version }];
     });

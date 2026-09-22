@@ -1,9 +1,8 @@
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 // `process.env` in a client module beyond NEXT_PUBLIC_* and NODE_ENV (Next.js).
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/options.ts';
+import { optionsSchema, stringList } from '#plugin/rules/options.ts';
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import type { NoClientEnvironmentOptions } from '#plugin-types/options.ts';
 
 function memberName(node: TSESTree.MemberExpression): string | undefined {
     if (node.computed) return node.property.type === AST_NODE_TYPES.Literal ? String(node.property.value) : undefined;
@@ -85,3 +84,5 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
         };
     },
 });
+
+export type NoClientEnvironmentOptions = [{ clientModule?: boolean; publicPrefixes?: string[]; allowed?: string[] }];

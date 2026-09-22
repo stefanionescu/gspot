@@ -117,8 +117,34 @@
                     },
                     "limits": {
                         "type": "object",
-                        "propertyNames": {
-                            "type": "string"
+                        "properties": {
+                            "trivial_statements": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "exclusiveMinimum": 0,
+                                                "maximum": 9007199254740991
+                                            },
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "value",
+                                            "reason"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                ]
+                            }
                         },
                         "additionalProperties": {
                             "anyOf": [
@@ -147,8 +173,34 @@
                                 },
                                 {
                                     "type": "object",
-                                    "propertyNames": {
-                                        "type": "string"
+                                    "properties": {
+                                        "trivial_statements": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "integer",
+                                                    "exclusiveMinimum": 0,
+                                                    "maximum": 9007199254740991
+                                                },
+                                                {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "value": {
+                                                            "type": "integer",
+                                                            "exclusiveMinimum": 0,
+                                                            "maximum": 9007199254740991
+                                                        },
+                                                        "reason": {
+                                                            "type": "string"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "value",
+                                                        "reason"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            ]
+                                        }
                                     },
                                     "additionalProperties": {
                                         "anyOf": [
@@ -589,56 +641,6 @@
                                     "index-only"
                                 ]
                             },
-                            "call_through_allowed": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "file": {
-                                            "type": "string"
-                                        },
-                                        "name": {
-                                            "type": "string"
-                                        },
-                                        "reason": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "file",
-                                        "name"
-                                    ],
-                                    "additionalProperties": false
-                                }
-                            },
-                            "trivial_allowed": {
-                                "type": "array",
-                                "items": {
-                                    "type": "object",
-                                    "properties": {
-                                        "language": {
-                                            "type": "string"
-                                        },
-                                        "path": {
-                                            "type": "string"
-                                        },
-                                        "names": {
-                                            "type": "array",
-                                            "items": {
-                                                "type": "string"
-                                            }
-                                        },
-                                        "reason": {
-                                            "type": "string"
-                                        }
-                                    },
-                                    "required": [
-                                        "path",
-                                        "names"
-                                    ],
-                                    "additionalProperties": false
-                                }
-                            },
                             "single_file_folder_allowed": {
                                 "type": "array",
                                 "items": {
@@ -732,6 +734,176 @@
                                             }
                                         },
                                         "additionalProperties": {}
+                                    },
+                                    "adopted": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "name": {
+                                                    "type": "string"
+                                                },
+                                                "files": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "string"
+                                                            },
+                                                            {
+                                                                "minItems": 1,
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string",
+                                                                    "minLength": 1
+                                                                }
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                "ignores": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "rules": {
+                                                    "type": "object",
+                                                    "propertyNames": {
+                                                        "type": "string"
+                                                    },
+                                                    "additionalProperties": {
+                                                        "anyOf": [
+                                                            {
+                                                                "anyOf": [
+                                                                    {
+                                                                        "anyOf": [
+                                                                            {
+                                                                                "type": "string",
+                                                                                "const": "warn"
+                                                                            },
+                                                                            {
+                                                                                "type": "string",
+                                                                                "const": "error"
+                                                                            },
+                                                                            {
+                                                                                "type": "number",
+                                                                                "const": 1
+                                                                            },
+                                                                            {
+                                                                                "type": "number",
+                                                                                "const": 2
+                                                                            }
+                                                                        ]
+                                                                    },
+                                                                    {
+                                                                        "type": "string",
+                                                                        "const": "off"
+                                                                    },
+                                                                    {
+                                                                        "type": "number",
+                                                                        "const": 0
+                                                                    }
+                                                                ]
+                                                            },
+                                                            {
+                                                                "type": "array",
+                                                                "prefixItems": [
+                                                                    {
+                                                                        "anyOf": [
+                                                                            {
+                                                                                "anyOf": [
+                                                                                    {
+                                                                                        "type": "string",
+                                                                                        "const": "warn"
+                                                                                    },
+                                                                                    {
+                                                                                        "type": "string",
+                                                                                        "const": "error"
+                                                                                    },
+                                                                                    {
+                                                                                        "type": "number",
+                                                                                        "const": 1
+                                                                                    },
+                                                                                    {
+                                                                                        "type": "number",
+                                                                                        "const": 2
+                                                                                    }
+                                                                                ]
+                                                                            },
+                                                                            {
+                                                                                "type": "string",
+                                                                                "const": "off"
+                                                                            },
+                                                                            {
+                                                                                "type": "number",
+                                                                                "const": 0
+                                                                            }
+                                                                        ]
+                                                                    }
+                                                                ],
+                                                                "items": {
+                                                                    "$ref": "#/$defs/__schema0"
+                                                                },
+                                                                "minItems": 1
+                                                            }
+                                                        ]
+                                                    }
+                                                },
+                                                "plugins": {
+                                                    "type": "object",
+                                                    "propertyNames": {
+                                                        "type": "string"
+                                                    },
+                                                    "additionalProperties": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "module": {
+                                                                "type": "string",
+                                                                "minLength": 1
+                                                            },
+                                                            "export": {
+                                                                "type": "string",
+                                                                "minLength": 1
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "module",
+                                                            "export"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                "languageOptions": {
+                                                    "type": "object",
+                                                    "propertyNames": {
+                                                        "type": "string"
+                                                    },
+                                                    "additionalProperties": {
+                                                        "$ref": "#/$defs/__schema1"
+                                                    }
+                                                },
+                                                "linterOptions": {
+                                                    "type": "object",
+                                                    "propertyNames": {
+                                                        "type": "string"
+                                                    },
+                                                    "additionalProperties": {
+                                                        "$ref": "#/$defs/__schema2"
+                                                    }
+                                                },
+                                                "settings": {
+                                                    "type": "object",
+                                                    "propertyNames": {
+                                                        "type": "string"
+                                                    },
+                                                    "additionalProperties": {
+                                                        "$ref": "#/$defs/__schema3"
+                                                    }
+                                                }
+                                            },
+                                            "additionalProperties": false
+                                        }
                                     },
                                     "rules": {
                                         "type": "object",
@@ -866,6 +1038,27 @@
                                                 "rules"
                                             ],
                                             "additionalProperties": false
+                                        }
+                                    }
+                                },
+                                "additionalProperties": {}
+                            },
+                            "prettier": {
+                                "type": "object",
+                                "properties": {
+                                    "extra": {
+                                        "type": "object",
+                                        "properties": {
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": {}
+                                    },
+                                    "ignore_patterns": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
                                         }
                                     }
                                 },
@@ -1014,8 +1207,34 @@
         },
         "limits": {
             "type": "object",
-            "propertyNames": {
-                "type": "string"
+            "properties": {
+                "trivial_statements": {
+                    "anyOf": [
+                        {
+                            "type": "integer",
+                            "exclusiveMinimum": 0,
+                            "maximum": 9007199254740991
+                        },
+                        {
+                            "type": "object",
+                            "properties": {
+                                "value": {
+                                    "type": "integer",
+                                    "exclusiveMinimum": 0,
+                                    "maximum": 9007199254740991
+                                },
+                                "reason": {
+                                    "type": "string"
+                                }
+                            },
+                            "required": [
+                                "value",
+                                "reason"
+                            ],
+                            "additionalProperties": false
+                        }
+                    ]
+                }
             },
             "additionalProperties": {
                 "anyOf": [
@@ -1044,8 +1263,34 @@
                     },
                     {
                         "type": "object",
-                        "propertyNames": {
-                            "type": "string"
+                        "properties": {
+                            "trivial_statements": {
+                                "anyOf": [
+                                    {
+                                        "type": "integer",
+                                        "exclusiveMinimum": 0,
+                                        "maximum": 9007199254740991
+                                    },
+                                    {
+                                        "type": "object",
+                                        "properties": {
+                                            "value": {
+                                                "type": "integer",
+                                                "exclusiveMinimum": 0,
+                                                "maximum": 9007199254740991
+                                            },
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "required": [
+                                            "value",
+                                            "reason"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                ]
+                            }
                         },
                         "additionalProperties": {
                             "anyOf": [
@@ -1486,56 +1731,6 @@
                         "index-only"
                     ]
                 },
-                "call_through_allowed": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "file": {
-                                "type": "string"
-                            },
-                            "name": {
-                                "type": "string"
-                            },
-                            "reason": {
-                                "type": "string"
-                            }
-                        },
-                        "required": [
-                            "file",
-                            "name"
-                        ],
-                        "additionalProperties": false
-                    }
-                },
-                "trivial_allowed": {
-                    "type": "array",
-                    "items": {
-                        "type": "object",
-                        "properties": {
-                            "language": {
-                                "type": "string"
-                            },
-                            "path": {
-                                "type": "string"
-                            },
-                            "names": {
-                                "type": "array",
-                                "items": {
-                                    "type": "string"
-                                }
-                            },
-                            "reason": {
-                                "type": "string"
-                            }
-                        },
-                        "required": [
-                            "path",
-                            "names"
-                        ],
-                        "additionalProperties": false
-                    }
-                },
                 "single_file_folder_allowed": {
                     "type": "array",
                     "items": {
@@ -1629,6 +1824,176 @@
                                 }
                             },
                             "additionalProperties": {}
+                        },
+                        "adopted": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "name": {
+                                        "type": "string"
+                                    },
+                                    "files": {
+                                        "type": "array",
+                                        "items": {
+                                            "anyOf": [
+                                                {
+                                                    "type": "string"
+                                                },
+                                                {
+                                                    "minItems": 1,
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "minLength": 1
+                                                    }
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "ignores": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "rules": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                            "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                            "anyOf": [
+                                                {
+                                                    "anyOf": [
+                                                        {
+                                                            "anyOf": [
+                                                                {
+                                                                    "type": "string",
+                                                                    "const": "warn"
+                                                                },
+                                                                {
+                                                                    "type": "string",
+                                                                    "const": "error"
+                                                                },
+                                                                {
+                                                                    "type": "number",
+                                                                    "const": 1
+                                                                },
+                                                                {
+                                                                    "type": "number",
+                                                                    "const": 2
+                                                                }
+                                                            ]
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "const": "off"
+                                                        },
+                                                        {
+                                                            "type": "number",
+                                                            "const": 0
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "anyOf": [
+                                                                {
+                                                                    "anyOf": [
+                                                                        {
+                                                                            "type": "string",
+                                                                            "const": "warn"
+                                                                        },
+                                                                        {
+                                                                            "type": "string",
+                                                                            "const": "error"
+                                                                        },
+                                                                        {
+                                                                            "type": "number",
+                                                                            "const": 1
+                                                                        },
+                                                                        {
+                                                                            "type": "number",
+                                                                            "const": 2
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "type": "string",
+                                                                    "const": "off"
+                                                                },
+                                                                {
+                                                                    "type": "number",
+                                                                    "const": 0
+                                                                }
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "items": {
+                                                        "$ref": "#/$defs/__schema0"
+                                                    },
+                                                    "minItems": 1
+                                                }
+                                            ]
+                                        }
+                                    },
+                                    "plugins": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                            "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                            "type": "object",
+                                            "properties": {
+                                                "module": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                },
+                                                "export": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                }
+                                            },
+                                            "required": [
+                                                "module",
+                                                "export"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "languageOptions": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                            "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                            "$ref": "#/$defs/__schema1"
+                                        }
+                                    },
+                                    "linterOptions": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                            "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                            "$ref": "#/$defs/__schema2"
+                                        }
+                                    },
+                                    "settings": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                            "type": "string"
+                                        },
+                                        "additionalProperties": {
+                                            "$ref": "#/$defs/__schema3"
+                                        }
+                                    }
+                                },
+                                "additionalProperties": false
+                            }
                         },
                         "rules": {
                             "type": "object",
@@ -1763,6 +2128,27 @@
                                     "rules"
                                 ],
                                 "additionalProperties": false
+                            }
+                        }
+                    },
+                    "additionalProperties": {}
+                },
+                "prettier": {
+                    "type": "object",
+                    "properties": {
+                        "extra": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": {}
+                        },
+                        "ignore_patterns": {
+                            "type": "array",
+                            "items": {
+                                "type": "string"
                             }
                         }
                     },
@@ -2280,5 +2666,131 @@
     "required": [
         "version"
     ],
-    "additionalProperties": false
+    "additionalProperties": false,
+    "$defs": {
+        "__schema0": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/__schema0"
+                    }
+                },
+                {
+                    "type": "object",
+                    "propertyNames": {
+                        "type": "string"
+                    },
+                    "additionalProperties": {
+                        "$ref": "#/$defs/__schema0"
+                    }
+                }
+            ]
+        },
+        "__schema1": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/__schema1"
+                    }
+                },
+                {
+                    "type": "object",
+                    "propertyNames": {
+                        "type": "string"
+                    },
+                    "additionalProperties": {
+                        "$ref": "#/$defs/__schema1"
+                    }
+                }
+            ]
+        },
+        "__schema2": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/__schema2"
+                    }
+                },
+                {
+                    "type": "object",
+                    "propertyNames": {
+                        "type": "string"
+                    },
+                    "additionalProperties": {
+                        "$ref": "#/$defs/__schema2"
+                    }
+                }
+            ]
+        },
+        "__schema3": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/__schema3"
+                    }
+                },
+                {
+                    "type": "object",
+                    "propertyNames": {
+                        "type": "string"
+                    },
+                    "additionalProperties": {
+                        "$ref": "#/$defs/__schema3"
+                    }
+                }
+            ]
+        }
+    }
 }

@@ -2,11 +2,11 @@
 import { join } from 'node:path';
 import { mkdirSync, rmSync } from 'node:fs';
 import { run } from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import type { CoverageFloor, CoverageReport } from '#types/apple.ts';
+import type { CoverageFloor, CoverageReport } from '#cli/checks/xcode/types.ts';
 
 const TEST_TIMEOUT_MS = 3_600_000;
 const PERCENT = 100;

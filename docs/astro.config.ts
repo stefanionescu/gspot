@@ -1,8 +1,7 @@
-import { sourceRevision } from './source';
+import { sourceRevision } from './src/content/reference';
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import starlightLlmsTxt from 'starlight-llms-txt';
-// The manual: Starlight over the generated reference and the hand-written guides, with llms.txt from the same pages.
 import { copyFileSync, mkdirSync } from 'node:fs';
 
 export default defineConfig({
@@ -26,7 +25,6 @@ export default defineConfig({
             editLink: { baseUrl: `https://github.com/stefanionescu/gspot/edit/${sourceRevision}/docs/` },
             description: 'Repository checks and coding-agent rules, configured together.',
             customCss: ['./src/styles/theme.css'],
-            head: [{ tag: 'meta', attrs: { property: 'og:image', content: 'https://gspot.dev/brand/social.png' } }],
             social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/stefanionescu/gspot' }],
             plugins: [starlightLlmsTxt()],
             disable404Route: true,

@@ -2,15 +2,15 @@
 import Site from '../layouts/Site.astro';
 import Finding from '../components/Finding.astro';
 ---
-<Site title="gspot · One place for your repository checks" description="Run repository checks, configure your tools, and give coding agents the rules to follow. Explore the prerelease CLI and a real finding.">
+<Site title="gspot · One place for your repository checks" description="Run repository checks, configure your tools, and give coding agents the rules to follow. Read a real finding and run your first check.">
     <section class="split hero" aria-labelledby="hero-title">
         <div>
-            <p class="eyebrow">Repository checks, with a curious eye</p>
+            <p class="eyebrow">Repository checks</p>
             <h1 id="hero-title">One place for your repository checks.</h1>
             <p>gspot runs your checks and gives coding agents the rules to follow.
                 Presets generate configuration for existing tools. <code>gspot.toml</code> keeps the policy in your repository.</p>
             <div class="actions"><a class="button primary" href="/guides/install/">Get started</a><a class="button" href="#finding">See a finding</a></div>
-            <p class="muted"><strong>Prerelease.</strong> Public packages are not available. Start from a source checkout with Bun 1.3.11.</p>
+            <p class="muted">Start from a source checkout with Bun 1.3.11.</p>
             <div class="panel install">
                 <pre id="install-command" tabindex="0" aria-label="Contributor checkout command"><code>bun packages/cli/src/main.ts --help</code></pre>
                 <button type="button" id="copy-install" hidden>Copy</button>
@@ -19,16 +19,9 @@ import Finding from '../components/Finding.astro';
             <p class="muted">Run from the checkout after <code>bun install --frozen-lockfile</code>.
                 <a href="/guides/install/">Read the complete setup.</a></p>
         </div>
-        <div class="spot-note">
-            <img src="/brand/spot-hero.webp" width="584" height="640" alt="" fetchpriority="high" />
-            <p class="eyebrow">Meet Spot.</p>
-            <p class="muted">A soft spot for readable code.</p>
-            <p class="platforms">Local development verified on macOS arm64.
-                Linux and Windows candidate acceptance remains open. Windows lifecycle mutations currently refuse securely.
-                <a href="/guides/install/">Platform details</a></p>
-        </div>
+        <div id="finding"><Finding /></div>
     </section>
-    <section id="finding" aria-labelledby="finding-title" class="split section-line">
+    <section aria-labelledby="finding-title" class="section-line">
         <div>
             <p class="eyebrow">Read. Correct. Run again.</p>
             <h2 id="finding-title">A finding you can act on.</h2>
@@ -40,7 +33,6 @@ import Finding from '../components/Finding.astro';
                 it does not run checks.</p>
             <a href="/guides/you-got-a-finding/">Understand findings and exceptions →</a>
         </div>
-        <div><Finding /></div>
     </section>
     <section class="split section-line" aria-labelledby="review-title">
         <div>
@@ -91,7 +83,7 @@ level = "recommended"</code></pre></div>
         <h2 id="tools-title">A shared policy around specialist checks.</h2>
         <div class="tool-links"><a href="/reference/presets/bash/">Bash</a><a href="/reference/presets/typescript/">TypeScript</a><a href="/reference/presets/python/">Python</a><a href="/reference/presets/swift/">Swift</a><a href="/reference/presets/postgres/">Postgres</a></div>
         <p>Presets declare tools and checks. Their references show the level, stage, and purpose of each check;
-            a preset name alone is not a claim that every platform has passed acceptance.</p>
+            open a check reference for its configuration and supported platforms.</p>
         <p>Use <a href="/guides/hooks-and-ci/">hooks and CI</a> for automated checks, and
             <a href="/guides/agents/">agent rule files</a> for coding guidance. Instructions guide behavior.
             Checks enforce the parts that tools can measure.</p>
@@ -112,15 +104,11 @@ level = "recommended"</code></pre></div>
     }
 </script>
 <style>
-    .spot-note { text-align: center; align-self: center; }
-    .spot-note img { width: min(70%, 280px); }
-    .spot-note .platforms { font-size: 0.85rem; max-width: 38ch; margin: 24px auto 0; color: var(--spot-muted); }
-    .section-line { border-top: 1px solid var(--spot-border); }
+    .section-line { border-top: 1px solid var(--site-border); }
     .install { display: flex; align-items: center; padding-right: 12px; }
     .install pre { flex: 1; }
     .plan-note { padding: 0 20px 12px; }
     .choices { padding-top: 24px; }
     .tool-links { display: flex; gap: 16px 32px; flex-wrap: wrap; }
     .tool-links a { min-height: 44px; display: inline-flex; align-items: center; font-family: ui-monospace, monospace; }
-    @media (max-width: 800px) { .spot-note img { width: 160px; } .spot-note { display: grid; grid-template-columns: 160px 1fr; align-items: center; gap: 8px 16px; text-align: left; } .spot-note img { grid-row: span 3; } .spot-note p { margin: 0; } .spot-note .platforms { grid-column: 1 / -1; max-width: none; margin: 8px 0 0; } }
 </style>

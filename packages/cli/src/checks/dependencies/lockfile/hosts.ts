@@ -1,9 +1,9 @@
 // Every URL a lockfile resolves from: HTTPS, and a host on the allowed list.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import { LOCKFILES, LOCKFILE_URL } from '#config/integrity.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import { LOCKFILES, LOCKFILE_URL } from '#cli/checks/integrity-definitions.ts';
 
 function problem(url: URL, hosts: Set<string>): string | undefined {
     if (url.protocol !== 'https:') return `${url.href} is not HTTPS.`;

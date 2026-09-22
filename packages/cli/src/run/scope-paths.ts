@@ -1,7 +1,7 @@
 // Where a scope keeps what a command names: its own copy of a configuration, and whether the package manager knows it.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import type { ConfigurationTarget } from '#types/manifest.ts';
+import type { ConfigurationTarget } from '#cli/presets/types.ts';
 
 const GSPOT_DIRECTORY = '.gspot/';
 

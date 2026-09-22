@@ -1,28 +1,28 @@
 import { toolEnvironment } from '#cli/emit/tool-environment.ts';
 import { toolPackages } from '#cli/emit/tool-packages.ts';
 import { retainedConfigurationPaths } from '#cli/emit/retained-config.ts';
-import type { FileSnapshot } from '#types/lifecycle.ts';
+import type { FileSnapshot } from '#cli/lifecycle/types.ts';
 import { mutationTarget } from '#cli/lifecycle/confined.ts';
 import { join } from 'node:path';
 import { styleFiles } from '#cli/prose/vale.ts';
-import type { MergedView } from '#types/config.ts';
+import type { MergedView } from '#cli/policy/types.ts';
 import { existsSync, readFileSync } from 'node:fs';
 // Every generated file for the selection: path, template, stub; the managed blocks and the merge stubs beside them.
 import { workflowFile, gitlabFile } from '#cli/emit/workflow.ts';
 import { assembleRules } from '#cli/rules/assemble.ts';
 import { everyManifest } from '#cli/presets/select.ts';
-import { GENERATED_JSON_KEY } from '#config/markers.ts';
+import { GENERATED_JSON_KEY } from '#cli/emit/markers-definitions.ts';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { bodyStub, mergeStub } from '#cli/emit/stubs.ts';
 import { agentFiles, managedBlock } from '#cli/rules/managed-block.ts';
-import type { ScopeSelection, Session } from '#types/run.ts';
+import type { ScopeSelection, Session } from '#cli/run/types.ts';
 import { applyBlock, gitignoreBlock } from '#cli/emit/managed-blocks.ts';
 import { binaryPath, readAsset } from '#cli/platform/assets.ts';
-import type { ConfigurationTarget, Manifest } from '#types/manifest.ts';
+import type { ConfigurationTarget, Manifest } from '#cli/presets/types.ts';
 import { huskyLines, lefthookBlock } from '#cli/emit/hooks.ts';
 import { miseTasks, npmScripts } from '#cli/emit/runner-tasks.ts';
 import { emitTarget, templateText, templateInputs } from '#cli/emit/templates.ts';
-import type { EmitContext, GeneratedFile, PackageContent, PackageOutput, GeneratedProposal } from '#types/emit.ts';
+import type { EmitContext, GeneratedFile, PackageContent, PackageOutput, GeneratedProposal } from '#cli/emit/types.ts';
 
 const JSON_INDENT = 4;
 const NPM_RUNNERS = new Set(['bun', 'npm', 'pnpm']);
@@ -81,12 +81,6 @@ function isWanted(config: ConfigurationTarget, session: Session): boolean {
     return session.scopes.some((entry) => entry.selected.some((manifest) => manifest.preset.name === wanted));
 }
 
-// A target that is not written for each scope is written once, by the first scope that selects its preset.
-// The set of targets already seen keeps the root first, so a preset the root selects is rendered with the root settings.
-function isRenderedHere(config: ConfigurationTarget): boolean {
-    return !config.fragment;
-}
-
 function configurationFiles(
     session: Session,
     selection: ScopeSelection,
@@ -95,7 +89,7 @@ function configurationFiles(
     seen: Set<string>,
 ): void {
     for (const config of manifest.configs) {
-        if (!isRenderedHere(config) || !isWanted(config, session)) continue;
+        if (!!config.fragment || !isWanted(config, session)) continue;
         const target = targetInScope(selection.scope.path, config);
         if (seen.has(target)) continue;
         seen.add(target);

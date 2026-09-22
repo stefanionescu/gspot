@@ -3,14 +3,14 @@ import semver from 'semver';
 import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { homedir } from 'node:os';
 import { dirname, join } from 'node:path';
-import type { Manifest, ToolPin } from '#types/manifest.ts';
+import type { Manifest, ToolPin } from '#cli/presets/types.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { stripVTControlCharacters } from 'node:util';
-import type { SpawnResult } from '#types/platform.ts';
+import type { SpawnResult } from '#cli/platform/types.ts';
 import { miseHome } from '#cli/platform/environment.ts';
 import { installHint } from '#cli/platform/install-hints.ts';
 import { existsSync, readFileSync, realpathSync } from 'node:fs';
-import type { PackageFacts, ToolProbe, VersionObservation, ToolContext } from '#types/doctor.ts';
+import type { PackageFacts, ToolProbe, VersionObservation, ToolContext } from '#cli/doctor/types.ts';
 
 const VERSION_TIMEOUT_MS = 15_000;
 // What a mise shim prints when no configuration in reach names a version of the tool.

@@ -1,8 +1,8 @@
 // Every path pattern in the policy matches at least one tracked file or folder: an ignore, a declaration, an allowance or an exclusion that matches nothing is a leftover.
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import type { PathPattern } from '#types/integrity.ts';
+import type { PathPattern } from '#cli/checks/types.ts';
 
 const POLICY_FILE = 'gspot.toml';
 

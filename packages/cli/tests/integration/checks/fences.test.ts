@@ -4,11 +4,11 @@ import { join } from 'node:path';
 import { openSession } from '#cli/run/session.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import type { MergedView } from '#types/config.ts';
-import type { CheckSpec } from '#types/manifest.ts';
+import type { MergedView } from '#cli/policy/types.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
 import { fences } from '#cli/checks/docs/fences.ts';
-import type { Repository } from '#types/repository.ts';
-import type { EngineInput, Session } from '#types/run.ts';
+import type { Repository } from '#cli/repository/types.ts';
+import type { EngineInput, Session } from '#cli/run/types.ts';
 import { stalePaths } from '#cli/checks/docs/stale-paths.ts';
 
 function input(root: string, paths: string[], tracked = paths): EngineInput {

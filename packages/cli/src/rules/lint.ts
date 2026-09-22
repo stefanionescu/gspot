@@ -1,6 +1,6 @@
 // Lints the rule files: front matter, links, size, layer boundary, fences, corruption.
 import { frontMatterFindings, layerOfPath } from '#cli/rules/front-matter.ts';
-import type { RuleText, RuleFinding, RulesLintReport, FenceWalk } from '#types/rules.ts';
+import type { RuleText, RuleFinding, RulesLintReport, FenceWalk } from '#cli/rules/types.ts';
 
 import {
     BOUNDARY_LAYERS,
@@ -20,10 +20,6 @@ const EM_DASH = '—';
 const layerNames = new Set(RULE_LAYERS);
 const fenceLanguages = new Set(FENCE_LANGUAGES);
 const boundaryLayers = new Set(BOUNDARY_LAYERS);
-
-function isTemplate(path: string): boolean {
-    return path.startsWith('templates/');
-}
 
 function fenceOpening(line: string): { ticks: string; language: string } | undefined {
     const trimmed = line.trimStart();
@@ -100,7 +96,7 @@ function fenceWalk(file: string, lines: string[], onProse: (line: string, number
 }
 
 function lineFindings(file: string, lines: string[]): RuleFinding[] {
-    const layer = isTemplate(file) ? 'template' : layerOfPath(file);
+    const layer = file.startsWith('templates/') ? 'template' : layerOfPath(file);
     const prose: RuleFinding[] = [];
     const fences = fenceWalk(file, lines, (line, number) => {
         prose.push(...proseLineFindings(file, line, number, layer));
@@ -109,7 +105,7 @@ function lineFindings(file: string, lines: string[]): RuleFinding[] {
 }
 
 function sizeFindings(file: string, lines: string[]): RuleFinding[] {
-    if (isTemplate(file) || lines.length <= RULE_FILE_LINE_CEILING) return [];
+    if (file.startsWith('templates/') || lines.length <= RULE_FILE_LINE_CEILING) return [];
     return [
         {
             file,

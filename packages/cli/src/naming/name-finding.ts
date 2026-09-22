@@ -1,6 +1,6 @@
 // A naming problem as a finding: the identifier, what fired, and where the policy said so.
-import type { Finding } from '#types/finding.ts';
-import type { Identifier, NameProblem } from '#types/naming.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { Identifier, NameProblem } from '#cli/naming/types.ts';
 
 /**
  * One finding per problem.

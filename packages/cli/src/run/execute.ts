@@ -2,14 +2,14 @@ import { globby } from 'globby';
 // The orchestrator: plan, run, filter through ignores, report, decide the exit code.
 import { isActive, planRun } from '#cli/run/plan.ts';
 import { applyFixers } from '#cli/run/fixers.ts';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 import { writeReport } from '#cli/output/report.ts';
 import { reproduceLine } from '#cli/run/reproduce.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import type { TrackedFile } from '#types/repository.ts';
+import type { TrackedFile } from '#cli/repository/types.ts';
 import { stageLimiter } from '#cli/run/concurrency.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
-import type { CheckResult, Finding } from '#types/finding.ts';
+import type { CheckResult, Finding } from '#cli/output/finding.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
 import { prepareCommand } from '#cli/run/tool-runner.ts';
 import { textHash, cacheKey, fileHash, readCached, writeCached, pruneCache } from '#cli/run/cache.ts';
@@ -24,16 +24,12 @@ import type {
     Session,
     PlannedCheck,
     Sifted,
-} from '#types/run.ts';
+} from '#cli/run/types.ts';
 
 const NEVER_CACHED = new Set(['integrity/generated-drift', 'commits/commitlint', 'commits/range']);
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
 const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
 const DOCKER = { name: 'docker', provider: 'host' as const, windows: true, installers: {} };
-
-function configurationHash(session: Session): RunHashes {
-    return { policy: textHash(session.policyFiles.text), files: new Map() };
-}
 
 function toolVersionOf(session: Session, planned: PlannedCheck): string {
     if (!planned.tool) return 'engine';
@@ -225,7 +221,7 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
     const started = new Date();
     const planned = await planRun(session, options);
     const fixes = options.fix ? await applyFixers(session, planned, options.isDryRun) : undefined;
-    const config = configurationHash(session);
+    const config = { policy: textHash(session.policyFiles.text), files: new Map() };
     const staged = options.staged ? new Set(options.staged) : undefined;
     const limiter = stageLimiter();
     const active = planned.filter((check) => isActive(check));

@@ -57,8 +57,7 @@ Rules:
   barrels. Import the module that declares the symbol.
 - Private declarations first, public last: every non-exported function, constant, and class
   precedes the first `export`.
-- JSDoc `@typedef` declarations live in `types/*.js`; source files reference them with
-  `@import` or `import('./types/orders.js').Order`. No `@typedef` outside `types/`.
+- Keep JSDoc `@typedef` declarations beside their behavioral owner. Share them through type imports when another owner needs the contract.
 
 Production code must not import quality tooling. Browser scripts must not import server-only code, config modules, middleware, or quality tooling.
 

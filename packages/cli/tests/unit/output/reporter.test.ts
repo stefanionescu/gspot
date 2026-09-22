@@ -1,5 +1,5 @@
 import { main } from '#cli/program.ts';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 import { describe, expect, test } from 'bun:test';
 import { runText } from '#cli/output/reporter.ts';
 

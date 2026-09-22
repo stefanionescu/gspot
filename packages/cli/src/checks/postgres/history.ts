@@ -1,8 +1,8 @@
 // The history of the migrations folder: versions that never repeat, new files that sort last, and old files that never change.
 import { committedEntries, gitBlobs } from '#cli/repository/snapshot.ts';
-import type { EngineInput, Session } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import type { Migration } from '#types/postgres.ts';
+import type { EngineInput, Session } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { Migration } from '#cli/checks/postgres/types.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 
 const FROZEN_NONE = 'none';

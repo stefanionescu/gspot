@@ -1,4 +1,4 @@
-import type { TakeoverPlan } from '#types/lifecycle.ts';
+import type { TakeoverPlan } from '#cli/lifecycle/types.ts';
 import { join } from 'node:path';
 import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
 import { expect, test } from 'bun:test';

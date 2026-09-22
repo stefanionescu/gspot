@@ -16,8 +16,8 @@ import { runToolCommand } from '#cli/run/tool-runner.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { publishInstalledFiles } from '#cli/lifecycle/installed-files.ts';
-import type { LifecycleOwner } from '#types/lifecycle.ts';
-import type { GeneratedFile } from '#types/emit.ts';
+import type { LifecycleOwner } from '#cli/lifecycle/types.ts';
+import type { GeneratedFile } from '#cli/emit/types.ts';
 
 const PROJECT = '.gspot/package.json';
 const SETUP = 'Run: gspot apply, then gspot install';

@@ -1,7 +1,7 @@
 // The per-stage limit, and the fixer order under --fix.
 import pLimit from 'p-limit';
 import { cpus } from 'node:os';
-import type { FixOrder } from '#types/manifest.ts';
+import type { FixOrder } from '#cli/presets/types.ts';
 import { jobsWanted } from '#cli/platform/environment.ts';
 
 export const FIX_ORDER: FixOrder[] = ['codemod', 'imports', 'manifest', 'format'];

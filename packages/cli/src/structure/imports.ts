@@ -2,8 +2,8 @@ import { readFileSync } from 'node:fs';
 import { toPosix } from '#cli/platform/paths.ts';
 import { isInScope } from '#cli/presets/claims.ts';
 import { dirname, join, relative } from 'node:path';
-import type { ImportIndex } from '#types/structure.ts';
-import type { EngineInput, Session } from '#types/run.ts';
+import type { ImportIndex } from '#cli/structure/types.ts';
+import type { EngineInput, Session } from '#cli/run/types.ts';
 
 const SOURCE = /\.[cm]?[jt]sx?$/u;
 const IMPORT_KINDS = new Set(['import-statement', 'require-call', 'dynamic-import']);

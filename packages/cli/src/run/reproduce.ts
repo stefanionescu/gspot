@@ -1,4 +1,4 @@
-import type { CheckOptions } from '#types/run.ts';
+import type { CheckOptions } from '#cli/run/types.ts';
 
 function quoted(value: string): string {
     if (/^[a-zA-Z0-9_./-]+$/u.test(value)) return value;

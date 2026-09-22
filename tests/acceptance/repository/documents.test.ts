@@ -4,7 +4,7 @@ import { join } from 'node:path';
 // The Vale packages of this repository are linked in, so the prose check runs offline.
 import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 import { describe, expect, test } from 'bun:test';
 import type { FindingCase } from '#tests/types/acceptance.ts';
 import { mkdirSync, readdirSync, symlinkSync, unlinkSync } from 'node:fs';

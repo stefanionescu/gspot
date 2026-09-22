@@ -5,10 +5,10 @@ import { createFileTree, testdir } from 'testdirs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
-import type { Session, PlannedCheck } from '#types/run.ts';
-import { applyFixers, runFixer } from '#cli/run/fixers.ts';
+import type { Session, PlannedCheck } from '#cli/run/types.ts';
+import { applyFixers, runFixer, scratchCopy } from '#cli/run/fixers.ts';
 import { prepareCommand, runToolCheck } from '#cli/run/tool-runner.ts';
-import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdirSync, readFileSync, readdirSync, rmSync, symlinkSync, writeFileSync } from 'node:fs';
 
 const policy = `version = 1
 presets = []
@@ -229,5 +229,42 @@ test('a failed version probe blocks a check and its correction without changing 
         expect(readFileSync(join(sandbox.path, 'source.txt'), 'utf8')).toBe('original');
     } finally {
         which.mockRestore();
+    }
+});
+
+test('preview copies workspace dependencies and preserves executable links without writing through either', async () => {
+    await using repository = await testdir();
+    await using external = await testdir();
+    await createFileTree(repository.path, {
+        'gspot.toml': 'version = 1\npresets = []\n',
+        'package.json': '{"private":true,"workspaces":["packages/*"]}',
+        'packages/core/package.json': '{"name":"core"}',
+        'packages/core/value.js': 'export default "original";',
+        'node_modules/tool/package.json': '{"name":"tool"}',
+        'node_modules/tool/bin/tool.js': 'console.log(require("../lib/value.cjs"));',
+        'node_modules/tool/lib/value.cjs': 'module.exports = "tool works";',
+    });
+    await createFileTree(external.path, { 'value.js': 'external original' });
+    mkdirSync(join(repository.path, 'node_modules/.bin'));
+    symlinkSync('../tool/bin/tool.js', join(repository.path, 'node_modules/.bin/tool'));
+    symlinkSync('../packages/core', join(repository.path, 'node_modules/core'));
+    symlinkSync(external.path, join(repository.path, 'node_modules/external'));
+    const scratch = scratchCopy(await openSession(repository.path), ['packages/core/value.js']);
+    try {
+        const result = Bun.spawnSync(['node', 'node_modules/.bin/tool'], {
+            cwd: scratch,
+            stdout: 'pipe',
+            stderr: 'pipe',
+        });
+        expect(result.exitCode, result.stderr.toString()).toBe(0);
+        expect(result.stdout.toString().trim()).toBe('tool works');
+        writeFileSync(join(scratch, 'node_modules/core/value.js'), 'preview edit');
+        writeFileSync(join(scratch, 'node_modules/external/value.js'), 'external preview edit');
+        expect(readFileSync(join(repository.path, 'packages/core/value.js'), 'utf8')).toBe(
+            'export default "original";',
+        );
+        expect(readFileSync(join(external.path, 'value.js'), 'utf8')).toBe('external original');
+    } finally {
+        rmSync(scratch, { recursive: true, force: true });
     }
 });

@@ -3,24 +3,24 @@ import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { isValePackageFile } from '#cli/repository/natures.ts';
 import { run } from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { existsSync, readFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
-import type { GeneratedFile } from '#types/emit.ts';
+import type { GeneratedFile } from '#cli/emit/types.ts';
 import { routeGroups } from '#cli/prose/grammars.ts';
 // Vale, driven by gspot: the style files rendered from the limits, the packages synced at setup, every alert a finding.
-import type { SpawnResult } from '#types/platform.ts';
+import type { SpawnResult } from '#cli/platform/types.ts';
 import { dirname, isAbsolute, join, relative } from 'node:path';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import { vocabularyFor } from '#cli/prose/vocabulary.ts';
-import type { MergedView, Policy } from '#types/config.ts';
-import type { ProseRoute, ValeAlert } from '#types/prose.ts';
+import type { MergedView, Policy } from '#cli/policy/types.ts';
+import type { ProseRoute, ValeAlert } from '#cli/prose/types.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY, VALE_LINE, VALE_STDIN } from '#config/prose.ts';
+import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY, VALE_LINE, VALE_STDIN } from '#cli/prose/prose-definitions.ts';
 
-const STYLE_ASSETS = 'presets/concern/prose/styles/gspot/';
+const STYLE_ASSETS = 'presets/prose/styles/gspot/';
 
 const VALE_CONFIG = '.gspot/vale.ini';
 

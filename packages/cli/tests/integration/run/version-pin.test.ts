@@ -14,6 +14,6 @@ describe('the version pin', () => {
         writePin(sandbox.path, '9.9.9');
         expect(() => {
             assertPinMatches(sandbox.path);
-        }).toThrow('gspot upgrade --to');
+        }).toThrow('gspot apply');
     });
 });

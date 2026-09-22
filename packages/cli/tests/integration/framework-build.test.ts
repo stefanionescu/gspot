@@ -4,7 +4,7 @@ import { describe, expect, spyOn, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { commitAll } from '../../../../tests/harness/planted.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 import * as processes from '#cli/platform/spawn.ts';
 import { frameworkBuild, frameworkTypes } from '#cli/checks/framework-build.ts';
 

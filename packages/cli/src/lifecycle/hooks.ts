@@ -3,11 +3,11 @@ import { isDeepStrictEqual } from 'node:util';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { binaryPath } from '#cli/platform/assets.ts';
 import { hookBody } from '#cli/emit/hooks.ts';
-import { HOOK_FILES } from '#config/integrity.ts';
+import { HOOK_FILES } from '#cli/checks/integrity-definitions.ts';
 import { withLifecycleOwner, readOwnership } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import type { Session } from '#types/run.ts';
-import type { HookLocation, FileProposal } from '#types/lifecycle.ts';
+import type { Session } from '#cli/run/types.ts';
+import type { HookLocation, FileProposal } from '#cli/lifecycle/types.ts';
 
 /** Ask Git for the actual clone-local destination, including worktrees and core.hooksPath. */
 export function hookLocation(root: string): HookLocation {

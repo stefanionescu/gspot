@@ -1,6 +1,6 @@
 // Every check one identifier goes through: exclusion, structural prefix, case, digits, length, words, duplicates, terms.
 import { hasCase } from '#cli/naming/cases.ts';
-import { CALLBACK_VERB } from '#config/cases.ts';
+import { CALLBACK_VERB } from '#cli/naming/cases-definitions.ts';
 import { limitsUnderRules, rulesFor } from '#cli/naming/policy.ts';
 import { repeatedPart, splitParts, wordsOf } from '#cli/naming/split.ts';
 import { bannedTerm, isExempt, isReservedUseAllowed } from '#cli/naming/match.ts';
@@ -12,7 +12,7 @@ import type {
     NameProblem,
     NamingContext,
     PathRule,
-} from '#types/naming.ts';
+} from '#cli/naming/types.ts';
 
 const DIGIT = /\d/u;
 const TEST_GROUP = 'test group';

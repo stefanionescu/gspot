@@ -7,12 +7,18 @@ import { isMap, parseDocument } from 'yaml';
 import { applyEdits, findNodeAtLocation, getNodeValue, modify, parseTree, type ParseError } from 'jsonc-parser';
 import { applyBlock, blockSpan } from '#cli/emit/managed-blocks.ts';
 import { mutationTarget, openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import type { GeneratedFile } from '#types/emit.ts';
-import type { FileSnapshot, LifecycleOwner, OwnershipEntry, OwnershipState, FileProposal } from '#types/lifecycle.ts';
+import type { GeneratedFile } from '#cli/emit/types.ts';
+import type {
+    FileSnapshot,
+    LifecycleOwner,
+    OwnershipEntry,
+    OwnershipState,
+    FileProposal,
+} from '#cli/lifecycle/types.ts';
 
 const RECORD = '.gspot/ownership.json';
 const RECOVERY = '.gspot/recovery';
-const LOCK = '.gspot/mutation.lock';
+const LOCK = '.gspot/writer.lock';
 const hashSchema = z.string().regex(/^[a-f0-9]{64}$/u);
 const modeSchema = z.number().int().min(0).max(0o7777);
 const identitySchema = z.strictObject({ hash: hashSchema, mode: modeSchema, isLink: z.literal(true).optional() });

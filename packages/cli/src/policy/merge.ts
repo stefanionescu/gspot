@@ -1,5 +1,5 @@
 // The merged view a renderer reads for one scope: every setting resolved, limits and naming by language, tool slots by tool.
-import type { Manifest } from '#types/manifest.ts';
+import type { Manifest } from '#cli/presets/types.ts';
 import { shippedFormat } from '#cli/presets/listing.ts';
 import { listSettings, settingValue, policyTables } from '#cli/policy/settings.ts';
 
@@ -10,7 +10,7 @@ import type {
     Policy,
     PolicyScopeLayer,
     ExposedSettings,
-} from '#types/config.ts';
+} from '#cli/policy/types.ts';
 
 const TOOL_PREFIX = 'tools.';
 const RESERVED_SLOTS = new Set(['extra']);

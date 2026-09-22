@@ -1,9 +1,9 @@
-import type { Manifest } from '#types/manifest.ts';
+import type { Manifest } from '#cli/presets/types.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { TrackedFile } from '#types/repository.ts';
-import type { ScopeSelection, Session } from '#types/run.ts';
+import type { TrackedFile } from '#cli/repository/types.ts';
+import type { ScopeSelection, Session } from '#cli/run/types.ts';
 // File explanations: claims, checks, and ignores within the selected scope.
-import type { Explanation, PathExplanation } from '#types/output.ts';
+import type { Explanation, PathExplanation } from '#cli/output/types.ts';
 import { claimants, claimedByClaims, pathMatcher } from '#cli/presets/claims.ts';
 
 function uncheckedNote(file: TrackedFile): string | undefined {

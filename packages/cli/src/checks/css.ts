@@ -2,8 +2,8 @@ import { parse } from 'postcss';
 // CSS modules against the code that imports them: every class defined is read, and every class read is defined.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { parse as parseScss } from 'postcss-scss';
 import selectorParser from 'postcss-selector-parser';
 

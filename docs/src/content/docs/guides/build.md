@@ -16,7 +16,7 @@ mise run build:plugin
 
 The CLI build selects the host target. Binaries, `LICENSE.md`, and `NOTICE.md` go under
 `dist/`. The plugin build writes its modules and declarations under
-`packages/eslint-plugin/dist/` and stages `LICENSE.md` at the package root.
+`packages/eslint-plugin/dist/`, including its copy of `LICENSE.md`.
 Plugin dependencies remain separate npm packages with their own licenses.
 The plugin build runs independently of the CLI build.
 
@@ -59,7 +59,7 @@ names, npm identities, and libc selection. macOS builds run `codesign` when buil
 Use macOS for signed macOS artifacts. Building another target does not execute it.
 
 The build reads bundler metadata to collect the licenses of bundled dependencies. Pinned
-upstream records under `LICENSES/` cover packages that omit a separate license file. `NOTICE.md` also records
+upstream records in `packages/cli/notices.json` cover packages that omit a separate license file. `NOTICE.md` also records
 the Swift grammar provenance and Bun runtime notices. Missing grammars, mismatched grammar
 hashes, and unrecorded license notices fail the build.
 
@@ -138,7 +138,7 @@ Cold and warm CI timings require actual runs after the owner re-enables CI.
 
 The site workflow builds from a published stable release tag. The CLI version must match that
 tag. A documentation correction can name an exact descendant commit, but changes outside
-`docs/`, `examples/`, the root README, and the site workflow are refused. Generated references
+`docs/`, the root README, and the site workflow are refused. Generated references
 show the product version and link to their definitions at the recorded source commit.
 
 The build records product version and source revision in `source.json`. It retains the complete

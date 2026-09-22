@@ -4,7 +4,7 @@ import { valid } from 'semver';
 import { execaSync } from 'execa';
 import { fileURLToPath } from 'node:url';
 import { dirname, join } from 'node:path';
-import { releaseTargets } from '#config/targets.ts';
+import { releaseTargets } from '#cli/emit/targets-definitions.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
 // Usage: bun packages/cli/publish.ts --tag v0.1.0 [--registry <url>] [--dry-run]

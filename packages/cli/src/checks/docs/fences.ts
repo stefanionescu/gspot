@@ -4,14 +4,19 @@ import { parseAllDocuments } from 'yaml';
 // Every fenced code block with a language tag parses in that language.
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { parserFor } from '#cli/naming/parsers.ts';
-import type { GrammarName } from '#types/naming.ts';
+import type { GrammarName } from '#cli/naming/types.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { FencedBlock } from '#types/integrity.ts';
+import type { FencedBlock } from '#cli/checks/types.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import { ANGLE_PLACEHOLDER, ELLIPSIS_ARGUMENTS, ELLIPSIS_LINE, FENCE_PARSERS } from '#config/docs.ts';
+import {
+    ANGLE_PLACEHOLDER,
+    ELLIPSIS_ARGUMENTS,
+    ELLIPSIS_LINE,
+    FENCE_PARSERS,
+} from '#cli/checks/docs/docs-definitions.ts';
 
 const STRUCTURED_PARSERS = new Set(['json', 'toml', 'yaml']);
 const TREE_PARSERS = new Set(['typescript', 'javascript', 'python']);

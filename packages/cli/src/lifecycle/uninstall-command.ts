@@ -3,8 +3,8 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { uninstallHooks, hookLocation } from '#cli/lifecycle/hooks.ts';
 import { askConfirmation } from '#cli/output/prompts.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { Session, CommandResult } from '#types/run.ts';
-import type { UninstallOptions, UninstallPlan, OwnershipState } from '#types/lifecycle.ts';
+import type { Session, CommandResult } from '#cli/run/types.ts';
+import type { UninstallOptions, UninstallPlan, OwnershipState } from '#cli/lifecycle/types.ts';
 
 function planText(plan: UninstallPlan): string {
     return [

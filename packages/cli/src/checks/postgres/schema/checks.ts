@@ -1,11 +1,11 @@
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 // The checks that read the schema the migrations build: row security, grants, definer functions and foreign key indexes.
-import type { Finding } from '#types/finding.ts';
-import type { Declared } from '#types/postgres.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { Declared } from '#cli/checks/postgres/types.ts';
 import { nodesOf } from '#cli/readers/sql/tree.ts';
-import { DEFAULT_SCHEMA } from '#config/postgres.ts';
+import { DEFAULT_SCHEMA } from '#cli/checks/postgres/postgres-definitions.ts';
 import { positionAt } from '#cli/readers/sql/statements.ts';
-import type { SqlNode, SqlStatementView } from '#types/sql.ts';
+import type { SqlNode, SqlStatementView } from '#cli/readers/sql/types.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
 import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
 

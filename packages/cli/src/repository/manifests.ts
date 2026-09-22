@@ -3,14 +3,10 @@ import { z } from 'zod';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { parse as parseToml } from 'smol-toml';
-import type { DependencyMap, ManifestFacts, TrackedFile, PackageManifest } from '#types/repository.ts';
+import type { DependencyMap, ManifestFacts, TrackedFile, PackageManifest } from '#cli/repository/types.ts';
 
 const REQUIREMENT_NAME_END = /[\s<>=!~;[]/u;
 const SWIFT_PACKAGE_URL = /url:\s*"([^"]+)"/gu;
-
-function bareFacts(path: string, kind: ManifestFacts['kind']): ManifestFacts {
-    return { path, kind, dependencies: {}, installed: {}, scripts: {}, workspaces: [], engines: {} };
-}
 
 function packageJsonFacts(root: string, path: string): ManifestFacts {
     const parsed = readPackageManifest(root, path);
@@ -21,7 +17,15 @@ function packageJsonFacts(root: string, path: string): ManifestFacts {
         ...parsed.optionalDependencies,
     };
     const facts: ManifestFacts = {
-        ...bareFacts(path, 'package.json'),
+        ...{
+            path: path,
+            kind: 'package.json',
+            dependencies: {},
+            installed: {},
+            scripts: {},
+            workspaces: [],
+            engines: {},
+        },
         dependencies,
         installed,
         scripts: parsed.scripts ?? {},
@@ -61,7 +65,15 @@ function pyprojectFacts(root: string, path: string): ManifestFacts {
     const requiresPython = project['requires-python'];
     const engines: Record<string, string> = typeof requiresPython === 'string' ? { python: requiresPython } : {};
     return {
-        ...bareFacts(path, 'pyproject.toml'),
+        ...{
+            path: path,
+            kind: 'pyproject.toml',
+            dependencies: {},
+            installed: {},
+            scripts: {},
+            workspaces: [],
+            engines: {},
+        },
         dependencies,
         installed: dependencies,
         scripts: project.scripts ?? {},
@@ -78,7 +90,19 @@ function swiftFacts(root: string, path: string): ManifestFacts {
         const last = url.slice(url.lastIndexOf('/') + 1);
         dependencies[last.endsWith('.git') ? last.slice(0, -'.git'.length) : last] = url;
     }
-    return { ...bareFacts(path, 'Package.swift'), dependencies, installed: dependencies };
+    return {
+        ...{
+            path: path,
+            kind: 'Package.swift',
+            dependencies: {},
+            installed: {},
+            scripts: {},
+            workspaces: [],
+            engines: {},
+        },
+        dependencies,
+        installed: dependencies,
+    };
 }
 
 const READERS: Record<string, (root: string, path: string) => ManifestFacts> = {

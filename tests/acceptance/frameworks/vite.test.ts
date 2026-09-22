@@ -1,7 +1,7 @@
 import { expect, test } from 'bun:test';
 import { dirname, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { symlinkSync, writeFileSync, readdirSync } from 'node:fs';
 import { commitAll, PLANTED_TIMEOUT_MS, run } from '#tests/harness/planted.ts';

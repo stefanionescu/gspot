@@ -7,8 +7,8 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import { installTools } from '#cli/lifecycle/install-tools.ts';
 import { packageInstallSteps } from '#cli/lifecycle/package-project.ts';
-import type { CommandResult } from '#types/run.ts';
-import type { InstallOptions } from '#types/commands.ts';
+import type { CommandResult } from '#cli/run/types.ts';
+import type { InstallOptions } from '#cli/commands/types.ts';
 
 /** Preview or install this clone's locked tools without regenerating tracked configuration. */
 export async function installCommand(options: InstallOptions): Promise<CommandResult> {
@@ -34,7 +34,10 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
         }
         const runner = session.policyFiles.policy.runner?.tool;
         if (runner === 'mise') steps.unshift(['mise', 'trust', MISE_CONFIG_PATH], ['mise', 'install']);
-        const hooks = session.repository.hasGit && session.policyFiles.policy.hooks?.tool === 'gspot' ? hookLocation(root).absolute : undefined;
+        const hooks =
+            session.repository.hasGit && session.policyFiles.policy.hooks?.tool === 'gspot'
+                ? hookLocation(root).absolute
+                : undefined;
         if (options.isDryRun && failures.length > 0) throw new Error([...new Set(failures)].join('\n'));
         if (options.isDryRun)
             return {

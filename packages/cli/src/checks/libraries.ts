@@ -2,9 +2,9 @@
 import { basename, dirname, join } from 'node:path';
 import { globbySync } from 'globby';
 import { readFileSync, rmSync } from 'node:fs';
-import { scratchCopy } from '#cli/run/scratch-copy.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import { scratchCopy } from '#cli/run/fixers.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { run } from '#cli/platform/spawn.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';

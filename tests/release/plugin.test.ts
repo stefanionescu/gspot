@@ -36,10 +36,8 @@ for (const published of [plugin, commonjs.default ?? commonjs]) {
         assert.deepEqual(layout[0].messages.filter(({ ruleId }) => ruleId === 'gspot/private-before-public').map(({ ruleId, line }) => ({ ruleId, line })), level === 'recommended' ? [] : [{ ruleId: 'gspot/private-before-public', line: 2 }]);
         const forwarding = await eslint.lintText('function forward(value) { return build(value); }\n', { filePath: 'example.js' });
         assert.equal(forwarding.length, 1);
-        assert.deepEqual(forwarding[0].messages.map(({ ruleId, line, column, message }) => ({ ruleId, line, column, message })), level === 'recommended' ? [] : [{
-            ruleId: 'gspot/no-call-through', line: 1, column: 1,
-            message: 'forward passes its arguments straight through to build. Call build directly and delete forward, or give it real work.',
-        }]);
+        assert.deepEqual(forwarding[0].messages.map(({ ruleId }) => ruleId).sort(), ['gspot/no-trivial-files', 'gspot/no-trivial-functions']);
+        assert.equal(forwarding[0].messages.find(({ ruleId }) => ruleId === 'gspot/no-trivial-functions').message, 'This function has 1 executable statements, at most 2. Inline it or explain its required API with a narrow suppression.');
     }
     const server = new ESLint({ overrideConfigFile: true, overrideConfig: [{
         files: ['**/server.js'], plugins: { gspot: published }, rules: { 'gspot/require-server-only': 'error' },
@@ -74,7 +72,7 @@ const DECLARATIONS = `
 import plugin from '@gspot/eslint-plugin';
 import type { TSESLint } from '@typescript-eslint/utils';
 const configs: TSESLint.FlatConfig.Config[] = [plugin.configs.recommended, plugin.configs.all];
-const rule: TSESLint.RuleModule<string, readonly unknown[]> | undefined = plugin.rules['no-call-through'];
+const rule: TSESLint.RuleModule<string, readonly unknown[]> | undefined = plugin.rules['no-trivial-functions'];
 console.log(configs, rule);
 `;
 
@@ -154,7 +152,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed ESLint plugin', () => {
                     false,
                 );
                 const installedPlugin = join(consumer, 'node_modules', '@gspot', 'eslint-plugin');
-                expect(readFileSync(join(installedPlugin, 'LICENSE.md'), 'utf8')).toBe(
+                expect(readFileSync(join(installedPlugin, 'dist/LICENSE.md'), 'utf8')).toBe(
                     readFileSync(join(root, 'LICENSE.md'), 'utf8'),
                 );
                 expect(existsSync(join(installedPlugin, 'NOTICE.md'))).toBe(false);

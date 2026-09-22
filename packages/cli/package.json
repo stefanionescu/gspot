@@ -6,8 +6,6 @@
     "type": "module",
     "imports": {
         "#cli/*": "./src/*",
-        "#config/*": "./config/*",
-        "#types/*": "./types/*",
         "#package": "./package.json"
     },
     "dependencies": {
@@ -26,7 +24,6 @@
         "execa": "9.6.1",
         "globby": "16.2.4",
         "jsonc-parser": "3.3.1",
-        "latest-version": "9.0.0",
         "libpg-query": "18.1.4",
         "linguist-languages": "9.5.0",
         "mdast-util-from-markdown": "2.0.3",

@@ -225,3 +225,20 @@ Before you run the checks of the repository, read the change against these quest
 - Are framework and external contract names preserved?
 - Does the file belong with the feature or tooling responsibility it serves?
 - Do the naming checks pass without exceptions that cover unrelated names?
+
+## Structural ownership
+
+Keep constants, types, and schemas with their behavioral owner. Do not require top-level config
+or types buckets, forwarding modules, one declaration per file, or mirrored source/test directories.
+
+Report every implemented function with at most `limits.trivial_statements` executable statements.
+The default is 2; the setting accepts positive integers and increasing it tightens enforcement.
+Count nested statements, excluding comments, blank lines, type-only declarations, and nested
+function bodies. Inspect nested functions independently. An expression body counts as one statement.
+Methods, constructors, accessors, callbacks, closures, and anonymous functions follow this rule.
+Caller counts, physical lines, visibility, decorators, frameworks, and entrypoints grant no exemption.
+Use a narrow, reasoned suppression for a required external API. Do not add filler statements.
+
+A file containing only forwarding, aliases, re-exports, or trivial functions needs consolidation.
+One substantial implementation or meaningful owned schema is sufficient. The shared maximum is
+7 declared parameters, with explicit language overrides. Bash has no formal parameter count.

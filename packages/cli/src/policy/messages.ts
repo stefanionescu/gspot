@@ -204,7 +204,7 @@ export function versionMismatch(pinned: string, running: string): string {
     return [
         `This repository pins gspot ${pinned} and this binary is ${running}.`,
         "Two ways forward: install the pinned version (mise install, or your package manager's install),",
-        `or move the pin to this version: gspot upgrade --to ${running}`,
+        `or move the pin to this version: gspot apply`,
     ].join('\n');
 }
 
@@ -235,7 +235,7 @@ export function invalidValue(where: string, detail: string): string {
  * @returns the message
  */
 export function versionUnsupported(version: number): string {
-    return `gspot.toml says \`version = ${String(version)}\`, and this gspot reads version 1. Run \`gspot upgrade --dry-run\` to see the way forward.`;
+    return `gspot.toml says \`version = ${String(version)}\`, and this gspot reads version 1. Run \`gspot apply --dry-run\` to see the way forward.`;
 }
 
 /**

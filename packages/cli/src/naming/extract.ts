@@ -1,4 +1,4 @@
-import type { Identifier } from '#types/naming.ts';
+import type { Identifier } from '#cli/naming/types.ts';
 import { grammarFor, parserFor } from '#cli/naming/parsers.ts';
 // The identifiers of one file: parse it with the grammar its language names and run that language's extractor.
 import { sqlIdentifiers } from '#cli/naming/extractors/sql.ts';

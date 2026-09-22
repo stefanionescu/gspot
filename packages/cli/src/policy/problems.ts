@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { existsSync, statSync } from 'node:fs';
 import * as messages from '#cli/policy/messages.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { Policy, Reasoned, ToolTable } from '#types/config.ts';
+import type { Policy, Reasoned, ToolTable } from '#cli/policy/types.ts';
 
 function needReason(where: string, reason: string | undefined, command: string): string | undefined {
     if (reason === undefined) return messages.missingReason(where, command);
@@ -87,8 +87,6 @@ function namingProblems(policy: Policy): string[] {
                 ),
             );
     }
-    for (const entry of policy.structure.call_through_allowed)
-        problems.push(explanation(`structure.call_through_allowed ${entry.name}`, entry.reason, 'add reason = "..."'));
     return present(problems);
 }
 

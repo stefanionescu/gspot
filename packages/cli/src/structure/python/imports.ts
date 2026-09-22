@@ -1,6 +1,6 @@
 // The import graph of the first-party modules, and objects built at import time.
 import type { Node } from 'web-tree-sitter';
-import type { PythonModule, StructureProblem } from '#types/pyproject.ts';
+import type { PythonModule, StructureProblem } from '#cli/structure/python/types.ts';
 
 const SINGLETONS_ALLOWED = new Set(['app', 'router', 'logger', 'log', 'settings']);
 const CLASS_CALL = /^[A-Z][A-Za-z\d]*\(/u;
@@ -58,14 +58,6 @@ function reached(start: string, graph: Map<string, string[]>): Map<string, strin
     return trails;
 }
 
-function cycleFrom(start: string, graph: Map<string, string[]>): string[] | undefined {
-    return reached(start, graph).get(start);
-}
-
-function isClassCall(node: Node | null | undefined): boolean {
-    return node?.type === 'call' && CLASS_CALL.test(node.text);
-}
-
 function assignmentOf(statement: Node): Node | undefined {
     const first = statement.type === 'expression_statement' ? statement.namedChildren[0] : undefined;
     return first?.type === 'assignment' ? first : undefined;
@@ -76,7 +68,7 @@ function builtAtImport(statement: Node): string | undefined {
     const assignment = assignmentOf(statement);
     const name = assignment?.childForFieldName('left');
     const built = assignment?.childForFieldName('right');
-    if (name?.type !== 'identifier' || !isClassCall(built)) return undefined;
+    if (name?.type !== 'identifier' || !(built?.type === 'call' && CLASS_CALL.test(built.text))) return undefined;
     return name.text === name.text.toUpperCase() ? undefined : name.text;
 }
 
@@ -100,7 +92,7 @@ export function importCycles(modules: PythonModule[]): StructureProblem[] {
         ]),
     );
     return [...names].flatMap(([name, module]) => {
-        const cycle = cycleFrom(name, graph);
+        const cycle = reached(name, graph).get(name);
         const first = cycle?.toSorted((a, b) => a.localeCompare(b))[0];
         if (cycle === undefined || first !== name) return [];
         return [

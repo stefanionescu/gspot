@@ -4,8 +4,9 @@ import { globbySync } from 'globby';
 import { familySync } from 'detect-libc';
 import { fileURLToPath } from 'node:url';
 import { dirname, join, relative } from 'node:path';
-import { releaseTargets } from '#config/targets.ts';
-import { GRAMMAR_SOURCES } from '#config/grammars.ts';
+import { releaseTargets } from '#cli/emit/targets-definitions.ts';
+import { grammarPath } from '#cli/platform/assets.ts';
+import { GRAMMAR_SOURCES } from '#cli/naming/grammars-definitions.ts';
 import packageManifest from '#package' with { type: 'json' };
 import { binaryNotices, dependencyNotices } from './notices.ts';
 import { Command, CommanderError, InvalidArgumentError } from 'commander';
@@ -18,44 +19,24 @@ const TARGETS = Object.fromEntries(releaseTargets.map((target) => [target.target
 
 const ASSET_FOLDERS = ['presets', 'rules'];
 
-function packageFile(relativePath: string): string | undefined {
-    const candidates = [join(here, 'node_modules', relativePath), join(root, 'node_modules', relativePath)];
-    return candidates.find((candidate) => existsSync(candidate));
-}
-
-// Copies the grammar WASM files from their packages into grammars/. The Swift grammar is vendored by hand.
-function collectGrammars(): string[] {
-    const dir = join(here, 'grammars');
-    mkdirSync(dir, { recursive: true });
-    const sources: string[] = [];
-    for (const [name, source] of Object.entries(GRAMMAR_SOURCES)) {
-        const found = packageFile(source);
-        if (found === undefined) throw new Error(`Missing required grammar: ${name}.`);
-        copyFileSync(found, join(dir, name));
-        sources.push(found);
-    }
-    return sources;
-}
+const grammarAssets = new Map(
+    [...Object.keys(GRAMMAR_SOURCES), 'swift.wasm'].map((name) => [grammarPath(name), `grammars/${name}`]),
+);
 
 function assetKey(file: string): string {
-    const key = file.startsWith(join(here, 'grammars') + '/')
-        ? `grammars/${relative(join(here, 'grammars'), file)}`
-        : relative(root, file);
+    const key = grammarAssets.get(file) ?? relative(root, file);
     return key.replaceAll('\\', '/');
 }
 
 // Writes the entry module that embeds every asset and starts the CLI.
 function writeEntry(): string {
-    const grammars = [...Object.keys(GRAMMAR_SOURCES), 'swift.wasm']
-        .toSorted((a, b) => a.localeCompare(b))
-        .map((name) => join(here, 'grammars', name));
     const assets = [
         ...globbySync(
             ASSET_FOLDERS.map((folder) => `${folder}/**/*`),
             { cwd: root, absolute: true, dot: true },
         ).toSorted((left, right) => left.localeCompare(right)),
         join(root, 'gspot.schema.json'),
-        ...grammars,
+        ...grammarAssets.keys(),
         join(here, 'build/configuration-process.js'),
     ];
     const buildDir = join(here, 'build');
@@ -84,7 +65,7 @@ function writeEntry(): string {
 }
 
 function build(targets: string[], out: string): void {
-    const grammarSources = collectGrammars();
+    const grammarSources = [...grammarAssets.keys()].filter((path) => path !== join(here, 'grammars/swift.wasm'));
     if (!existsSync(join(here, 'grammars/swift.wasm'))) throw new Error('Missing required grammar: swift.wasm.');
     binaryNotices('', join(here, 'grammars'));
     mkdirSync(join(here, 'build'), { recursive: true });

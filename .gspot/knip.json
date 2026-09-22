@@ -6,7 +6,7 @@
         "packages/cli/schemas.ts",
         "packages/cli/src/rules/command.ts",
         "packages/npm/gspot/gspot.js",
-        "docs/reference-pages.ts",
+        "docs/src/content/reference.ts",
         "docs/astro.config.ts",
         "docs/src/content.config.ts",
         "src/main.{ts,js}",
@@ -22,10 +22,10 @@
     "ignore": [
         ".gspot/**",
         "eslint.config.{js,mjs,cjs}",
-        "packages/cli/grammars/swift.wasm",
         "gspot.schema.json",
-        "report.schema.json",
-        "docs/public/schema/**"
+        "packages/cli/grammars/swift.wasm",
+        "packages/cli/grammars/swift.LICENSE",
+        "packages/cli/notices.json"
     ],
     "ignoreDependencies": [
         "@gspot/eslint-plugin",
@@ -168,7 +168,7 @@
                 "packages/cli/schemas.ts",
                 "packages/cli/src/rules/command.ts",
                 "packages/npm/gspot/gspot.js",
-                "docs/reference-pages.ts",
+                "docs/src/content/reference.ts",
                 "docs/astro.config.ts",
                 "docs/src/content.config.ts",
                 "src/main.{ts,js}",
@@ -215,7 +215,7 @@
             "entry": [
                 "**/build.ts",
                 "**/publish.ts",
-                "reference-pages.ts",
+                "src/content/reference.ts",
                 "astro.config.ts",
                 "src/content.config.ts",
                 "src/main.{ts,js}",

@@ -1,11 +1,11 @@
 // The Next.js checks that run the framework: the type check after the framework wrote its types, and the build.
 import { join } from 'node:path';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { stripVTControlCharacters } from 'node:util';
 import { rmSync } from 'node:fs';
-import { scratchCopy } from '#cli/run/scratch-copy.ts';
+import { scratchCopy } from '#cli/run/fixers.ts';
 
 const SHOWN_LINES = 3;
 const TSC_LINE = /^(?<file>[^(]+)\((?<line>\d+),(?<column>\d+)\): error (?<rule>TS\d+): (?<text>.*)$/u;

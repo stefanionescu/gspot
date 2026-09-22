@@ -15,8 +15,8 @@ describe('shell parsing', () => {
             '#!/usr/bin/env bash\n_one() {\n    echo 1\n}\n\nmain() {\n    _one "$@"\n}\n',
         );
         expect(found).toEqual([
-            { name: '_one', start: 2, end: 4, body: ['    echo 1'] },
-            { name: 'main', start: 6, end: 8, body: ['    _one "$@"'] },
+            { name: '_one', start: 2, end: 4, body: ['    echo 1'], statements: 1 },
+            { name: 'main', start: 6, end: 8, body: ['    _one "$@"'], statements: 1 },
         ]);
     });
 });

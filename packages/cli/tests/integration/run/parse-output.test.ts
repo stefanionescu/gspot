@@ -1,7 +1,7 @@
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import type { CheckSpec } from '#types/manifest.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
 import { isToolBroken } from '#cli/run/broken-tool.ts';
 import { parseOutput } from '#cli/run/parse-output.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
@@ -27,8 +27,8 @@ describe('tool output across platforms', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'settings/feed.xml': '<feed><entry></feed>\n' });
         const spec = presetManifests()
-            .get('config-files')!
-            .checks.find((check) => check.name === 'config-files/xml')!;
+            .get('configs')!
+            .checks.find((check) => check.name === 'configs/xml')!;
         const findings = parseOutput(
             spec,
             '',
@@ -44,8 +44,8 @@ describe('tool output across platforms', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
         const spec = presetManifests()
-            .get('config-files')!
-            .checks.find((check) => check.name === 'config-files/toml-format')!;
+            .get('configs')!
+            .checks.find((check) => check.name === 'configs/toml-format')!;
         const path = join(sandbox.path, 'settings', 'café.toml');
         const diff = `--- a/${path}\n+++ b/${path}\n@@ -1 +1 @@\n-a=1\n+a = 1\n`;
         const log = `ERROR taplo:format_files: the file is not properly formatted path="${path}"\n`;
@@ -65,8 +65,8 @@ describe('tool output across platforms', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'settings/café.toml': 'a=1\n' });
         const base = presetManifests()
-            .get('config-files')!
-            .checks.find((check) => check.name === 'config-files/toml-format')!;
+            .get('configs')!
+            .checks.find((check) => check.name === 'configs/toml-format')!;
         const spec: CheckSpec = { ...base, output: { format: 'grouped' } };
         const output = `${join(sandbox.path, 'settings', 'café.toml')}:\r\n  1: Incorrect spacing\r\n`;
         const findings = parseOutput(spec, output, '', sandbox.path);
@@ -77,12 +77,12 @@ describe('tool output across platforms', () => {
 
 test('a syntax diagnostic cannot promise an automatic fix when its check has no fixer', () => {
     const spec = presetManifests()
-        .get('config-files')!
-        .checks.find((check) => check.name === 'config-files/toml')!;
+        .get('configs')!
+        .checks.find((check) => check.name === 'configs/toml')!;
     const findings = parseOutput(spec, '', '  ┌─ settings.toml:2:1\n', '/repository');
     expect(findings).toEqual([
         {
-            check: 'config-files/toml',
+            check: 'configs/toml',
             file: 'settings.toml',
             line: 2,
             column: 1,

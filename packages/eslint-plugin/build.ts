@@ -31,7 +31,7 @@ async function build(): Promise<void> {
         join(distribution, 'plugin.d.ts'),
         "import type { TSESLint } from '@typescript-eslint/utils';\n\ndeclare const plugin: { meta: { name: string; version: string }; rules: Record<string, TSESLint.RuleModule<string, readonly unknown[]>>; configs: { recommended: TSESLint.FlatConfig.Config; all: TSESLint.FlatConfig.Config } };\nexport default plugin;\n",
     );
-    copyFileSync(join(here, '../..', 'LICENSE.md'), join(here, 'LICENSE.md'));
+    copyFileSync(join(here, '../..', 'LICENSE.md'), join(distribution, 'LICENSE.md'));
     console.log('built packages/eslint-plugin/dist/plugin.js and plugin.cjs');
 }
 

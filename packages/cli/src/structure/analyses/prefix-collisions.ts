@@ -1,7 +1,7 @@
 // Sibling entries sharing a name prefix at or above the limit. Searched: ls-lint, eslint-plugin-unicorn; neither compares siblings.
 import { pathMatcher } from '#cli/presets/claims.ts';
-import type { Analysis, DirectoryEntry } from '#types/structure.ts';
-import { HOOK_DIRECTORIES, HOOK_PREFIX, IGNORED_FOLDERS } from '#config/structure.ts';
+import type { Analysis, DirectoryEntry } from '#cli/structure/types.ts';
+import { HOOK_DIRECTORIES, HOOK_PREFIX, IGNORED_FOLDERS } from '#cli/structure/structure-definitions.ts';
 import { directoryOf, directoryTree, prefixOf, stemOf } from '#cli/structure/directories.ts';
 
 const DEFAULT_THRESHOLD = 2;

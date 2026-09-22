@@ -1,8 +1,8 @@
 // The Next.js checks that read files: route segments, the framework configuration, and versions that move together.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 
 const SEGMENT_NAME = /^(?<kind>page|route)\.[jt]sx?$/u;
 const CONFIG_FILE = /(?:^|\/)next\.config\.(?:js|mjs|cjs|ts|mts)$/u;

@@ -1,6 +1,7 @@
+import { executableStatements } from '#cli/structure/statements.ts';
 // Shell scripts through tree-sitter: the functions with their line ranges and bodies.
 import { parserFor } from '#cli/naming/parsers.ts';
-import type { ScriptFunction } from '#types/structure.ts';
+import type { ScriptFunction } from '#cli/structure/types.ts';
 
 /**
  * The functions a shell script declares, in order.
@@ -18,7 +19,15 @@ export async function scriptFunctions(text: string): Promise<ScriptFunction[]> {
             if (name === '') return [];
             const start = node.startPosition.row + 1;
             const end = node.endPosition.row + 1;
-            return [{ name, start, end, body: lines.slice(start, end - 1) }];
+            return [
+                {
+                    name,
+                    start,
+                    end,
+                    body: lines.slice(start, end - 1),
+                    statements: executableStatements(node.childForFieldName('body')?.namedChildren ?? [], 'bash'),
+                },
+            ];
         });
     } finally {
         tree.delete();

@@ -1,12 +1,12 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { planRun } from '#cli/run/plan.ts';
-import type { Session } from '#types/run.ts';
+import type { Session } from '#cli/run/types.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { applyFixers } from '#cli/run/fixers.ts';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { CheckSpec } from '#types/manifest.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { changedFiles, stagedFiles } from '#cli/repository/staged.ts';

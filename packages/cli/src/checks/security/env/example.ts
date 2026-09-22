@@ -1,11 +1,16 @@
 // Every environment variable the code reads appears in the environment template.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import type { EnvRead } from '#types/integrity.ts';
-import type { TrackedFile } from '#types/repository.ts';
-import { ENV_KEY_LINE, ENV_READ_EXTENSIONS, ENV_READ_PATTERNS, ENV_TEMPLATE_NAMES } from '#config/env-files.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { EnvRead } from '#cli/checks/types.ts';
+import type { TrackedFile } from '#cli/repository/types.ts';
+import {
+    ENV_KEY_LINE,
+    ENV_READ_EXTENSIONS,
+    ENV_READ_PATTERNS,
+    ENV_TEMPLATE_NAMES,
+} from '#cli/repository/env-files-definitions.ts';
 
 const KEY_GROUP = 1;
 

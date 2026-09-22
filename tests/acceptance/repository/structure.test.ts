@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { mkdirSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 import { describe, expect, test } from 'bun:test';
 import type { FindingCase } from '#tests/types/acceptance.ts';
 import { commitAll, git, PLANTED_TIMEOUT_MS, run, runPlanted, script, toolsPath } from '#tests/harness/planted.ts';

@@ -2,9 +2,9 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import type { MarkupProblem } from '#types/web.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { MarkupProblem } from '#cli/checks/static-site/types.ts';
 import { parserFor } from '#cli/naming/parsers.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 

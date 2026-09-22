@@ -1,6 +1,6 @@
 // A shell function no script calls. Searched: shellcheck (SC2329 sees one file), knip (no shell); neither reads the set.
-import type { Analysis } from '#types/structure.ts';
-import { ENTRY_FUNCTIONS } from '#config/structure.ts';
+import type { Analysis } from '#cli/structure/types.ts';
+import { ENTRY_FUNCTIONS } from '#cli/structure/structure-definitions.ts';
 
 /**
  * One finding per function that no script references, outside the entry functions.

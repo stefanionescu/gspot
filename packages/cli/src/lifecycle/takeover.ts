@@ -1,12 +1,12 @@
 import { evaluateConfiguration } from './configuration.ts';
-import { eslintResponse } from './eslint-request.ts';
+import { eslintResponse } from './eslint-evaluation.ts';
 // Observe configuration carryover before retiring supported inputs through the lifecycle owner.
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { FileSnapshot, TakeoverRemovalResult } from '#types/lifecycle.ts';
-import type { ExistingTooling } from '#types/repository.ts';
-import { carryResolvedFormat, carryPrettier } from '#cli/lifecycle/format.ts';
+import type { FileSnapshot, TakeoverRemovalResult } from '#cli/lifecycle/types.ts';
+import type { ExistingTooling } from '#cli/repository/types.ts';
+import { carryFormat } from '#cli/lifecycle/format-evaluation.ts';
 import { carryFrom, observeConfiguration, parseCarrySource } from '#cli/lifecycle/carry.ts';
-import type { CarriedLists, TakeoverPlan } from '#types/lifecycle.ts';
+import type { CarriedLists, TakeoverPlan } from '#cli/lifecycle/types.ts';
 
 const DELETED_ALONGSIDE_OWNER: Record<string, string> = {
     sqlfluffignore: 'sql',
@@ -42,8 +42,8 @@ const OWNER_PRESET: Record<string, string[]> = {
     jscpd: ['duplication'],
     pyright: ['python'],
     ruff: ['python'],
-    yamllint: ['config-files'],
-    taplo: ['config-files'],
+    yamllint: ['configs'],
+    taplo: ['configs'],
     vale: ['prose'],
     trivy: ['docker'],
     linkinator: ['static-site'],
@@ -74,46 +74,42 @@ async function collectFormatting(
 ): Promise<void> {
     const [first] = configs;
     if (first === undefined) return;
-    const staticRoot =
-        configs.length === 1 &&
-        first.tool === 'prettier' &&
-        !first.path.includes('/') &&
-        !/\.(?:[cm]?[jt]s|json5)$/u.test(first.path) &&
-        !/^package\.(?:json|yaml)$/u.test(first.path);
     try {
-        if (staticRoot) {
-            const source = parseCarrySource(lists.observed.get(first.path)!, first.tool, first.path);
-            lists.formatter = await carryPrettier(root, source, first.path, paths);
-            if (source.parsed['overrides'] === undefined) {
-                lists.removed.push({ path: first.path, note: "replaced by gspot's prettier configuration" });
-                return;
-            }
-        } else {
-            lists.formatter = await carryResolvedFormat(
-                root,
-                paths,
-                first.path,
-                configs.find(({ tool, path }) => tool === 'prettierignore' && path === '.prettierignore')?.path,
+        const unsupported = configs.find(
+            ({ tool, path }) => tool === 'editorconfig' || path.includes('/') || path.endsWith('.json5'),
+        );
+        if (unsupported !== undefined)
+            throw new Error(
+                `Formatting conversion does not support ${unsupported.path}. Its configuration remains intact.`,
             );
+        const format = configs.filter(({ tool }) => tool === 'prettier');
+        if (format.length > 1) throw new Error('Multiple active Prettier configurations require explicit conversion.');
+        const input = format[0];
+        const source =
+            input === undefined
+                ? { parsed: {}, text: '', original: { bytes: Buffer.alloc(0), mode: 0o644 } }
+                : /\.[cm]?[jt]s$/u.test(input.path) || /^package\./u.test(input.path)
+                  ? undefined
+                  : parseCarrySource(lists.observed.get(input.path)!, input.tool, input.path);
+        lists.formatter = await carryFormat(
+            root,
+            paths,
+            input?.path ?? first.path,
+            source,
+            configs.find(({ tool }) => tool === 'prettierignore')?.path,
+        );
+        for (const { path } of configs) {
+            if (/^package\./u.test(path))
+                lists.retained.push({
+                    path,
+                    note: 'Package metadata retained; formatter options and selectors are represented in gspot configuration',
+                });
+            else
+                lists.removed.push({
+                    path,
+                    note: 'Formatting options and ordered selectors are represented in gspot configuration',
+                });
         }
-        if (lists.formatter.ignoredPaths?.length)
-            lists.ignores.push({
-                check: 'formatting/prettier',
-                paths: lists.formatter.ignoredPaths,
-                reason: 'carried from .prettierignore at init',
-            });
-        for (const { tool, path } of configs)
-            lists.retained.push({
-                path,
-                note:
-                    tool === 'prettierignore'
-                        ? path === '.prettierignore'
-                            ? 'original Prettier ignore patterns remain active; captured ignores describe current files only'
-                            : 'nested ignore file remains in place; gspot Prettier commands read only the root .prettierignore'
-                        : tool === 'editorconfig'
-                          ? 'original EditorConfig remains active; captured formatting overrides describe current files only'
-                          : 'original Prettier selectors remain active; captured formatting overrides describe current files only',
-            });
     } catch (error) {
         lists.unread.push({ path: first.path, note: `not read and not deleted: ${(error as Error).message}` });
     }
@@ -123,12 +119,15 @@ async function collectEslint(
     root: string,
     configs: ExistingTooling['configs'],
     paths: string[],
-    selected: Set<string>,
     lists: CarriedLists,
 ): Promise<void> {
     const [first] = configs;
     if (first === undefined) return;
     try {
+        if (configs.length !== 1 || first.path.includes('/') || !/^eslint\.config\.[cm]?[jt]s$/u.test(first.path))
+            throw new Error(
+                `ESLint conversion requires one root flat configuration. Convert ${configs.map(({ path }) => path).join(', ')} before adoption.`,
+            );
         const carried = eslintResponse.parse(
             await evaluateConfiguration({
                 tool: 'eslint',
@@ -138,19 +137,12 @@ async function collectEslint(
                 flat: configs.some(({ path }) => /(?:^|\/)eslint\.config\./u.test(path)),
             }),
         );
-        if (carried.overrides.length > 0) lists.eslintOverrides = carried.overrides;
-        const checks = ['javascript', 'typescript']
-            .filter((preset) => selected.has(preset))
-            .map((preset) => `${preset}/eslint`);
-        for (const check of checks)
-            for (const entry of carried.ignores)
-                lists.ignores.push({
-                    check,
-                    paths: entry.paths,
-                    ...(entry.rule === undefined ? {} : { rule: entry.rule }),
-                    reason: `carried from ${first.path} at init`,
-                });
-        for (const { path } of configs) lists.retained.push({ path, note: carried.notes.join('; ') });
+        lists.eslintAdopted = carried.adopted;
+        for (const { path } of configs)
+            lists.removed.push({
+                path,
+                note: 'ESLint selectors, options, and module registrations are represented in gspot configuration',
+            });
     } catch (error) {
         lists.unread.push({ path: first.path, note: `not read and not deleted: ${(error as Error).message}` });
     }
@@ -205,7 +197,6 @@ export async function collectCarried(
         root,
         owned.filter(({ tool }) => tool === 'eslint'),
         paths,
-        selected,
         lists,
     );
     for (const { tool, path } of owned) {

@@ -7,7 +7,7 @@ import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 
 describe('the plugin', () => {
-    test.each(['recommended', 'all'] as const)('%s applies its forwarding-function preference', async (level) => {
+    test.each(['recommended', 'all'] as const)('%s applies its trivial-function rule', async (level) => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'src/orders/forward.js': '', 'src/orders/client.js': '' });
         const linter = new Linter({ configType: 'flat', cwd: sandbox.path });
@@ -15,17 +15,15 @@ describe('the plugin', () => {
         const messages = linter.verify('function forward(a, b) { return build(a, b); }\nforward(1, 2);\n', [config], {
             filename: join(sandbox.path, 'src/orders/forward.js'),
         });
-        const findings = messages.filter((entry) => entry.ruleId === 'gspot/no-call-through');
-        if (level === 'recommended') expect(findings).toEqual([]);
-        else
-            expect(
-                findings.map((entry) => ({
-                    ruleId: entry.ruleId,
-                    messageId: entry.messageId,
-                    line: entry.line,
-                    column: entry.column,
-                })),
-            ).toEqual([{ ruleId: 'gspot/no-call-through', messageId: 'callThrough', line: 1, column: 1 }]);
+        const findings = messages.filter((entry) => entry.ruleId === 'gspot/no-trivial-functions');
+        expect(
+            findings.map((entry) => ({
+                ruleId: entry.ruleId,
+                messageId: entry.messageId,
+                line: entry.line,
+                column: entry.column,
+            })),
+        ).toEqual([{ ruleId: 'gspot/no-trivial-functions', messageId: 'trivial', line: 1, column: 1 }]);
     });
 
     test('recommended reports private environment access in a client module', async () => {
@@ -69,11 +67,7 @@ test.each(['recommended', 'all'] as const)(
                 line: 1,
                 column: 1,
             });
-            expect(findings.find((finding) => finding.ruleId === 'gspot/types-placement')).toMatchObject({
-                messageId: 'interface',
-                line: 1,
-                column: 1,
-            });
+            expect(findings.find((finding) => finding.ruleId === 'gspot/types-placement')).toBeUndefined();
         }
         const card = join(sandbox.path, 'cards/asset-card.ts');
         const collisions = linter.verify('export const value = 1;', config, { filename: card });

@@ -1,7 +1,7 @@
 import * as fs from 'node:fs';
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 import { openSession } from '#cli/run/session.ts';
 import { describe, expect, spyOn, test } from 'bun:test';
 import { manifestPolicy } from '#cli/checks/dependencies/manifest-policy.ts';

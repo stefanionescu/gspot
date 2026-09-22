@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { z } from 'zod';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 
 const ESLINT_FILE = '.gspot/eslint.config.mjs';
 const resolvedConfig = z.object({ rules: z.record(z.string(), z.unknown()).optional() });

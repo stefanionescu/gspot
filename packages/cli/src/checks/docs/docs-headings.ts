@@ -3,9 +3,9 @@ import { readFileSync } from 'node:fs';
 // A Markdown heading from the banned list: an inventory where an explanation belongs.
 import { visit } from 'unist-util-visit';
 import { toString } from 'mdast-util-to-string';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import { BANNED_HEADINGS } from '#config/docs.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import { BANNED_HEADINGS } from '#cli/checks/docs/docs-definitions.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 
 /**

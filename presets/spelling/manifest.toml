@@ -1,0 +1,61 @@
+[preset]
+name = "spelling"
+kind = "policy"
+title = "Spelling"
+default = true
+description = "typos over every text file, with the words this repository allows and the reason for each."
+
+[claims]
+paths = ["**"]
+natures = ["source"]
+
+[[tools]]
+name = "typos"
+version = "1.43.5"
+mise = "typos"
+brew = "typos-cli"
+cargo = "typos-cli"
+winget = "crate-ci.typos"
+scoop = "typos"
+github = {name = "crate-ci/typos", version = "v1.43.5"}
+
+[[configs]]
+template = "typos.toml.tmpl"
+target = ".gspot/typos.toml"
+stub = {path = "typos.toml", copy = true}
+
+[[checks]]
+name = "spelling/typos"
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["typos", "--config", "{config:typos}", "--force-exclude", "--format", "brief", "--color", "never", "{files}"]
+fix_command = ["typos", "--config", "{config:typos}", "--force-exclude", "--write-changes", "--color", "never", "{files}"]
+fix_order = "codemod"
+coverage = ["spelling"]
+exclude_setting = "tools.typos.exclude"
+output = {format = "regex", pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<column>\\d+): (?<message>.*)$"}
+summary = "Finds misspelled words in code, comments, and documentation."
+why = "A typo in an identifier spreads to every caller; in prose it costs the reader a second look."
+help = "Fix the spelling, or use gspot set tools.typos.words with a word entry when it is a real name."
+
+[[settings]]
+name = "tools.typos.words"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Words typos flags that this repository uses on purpose, each with a reason (the word itself counts)."
+
+[[settings]]
+name = "tools.typos.exclude"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Paths typos skips, each with a reason."
+
+[[settings]]
+name = "tools.typos.locale"
+kind = "string"
+direction = "neutral"
+default = "en-us"
+summary = "The English locale typos checks against."

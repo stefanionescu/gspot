@@ -8,7 +8,7 @@ import { detectPresets } from '#cli/presets/detect.ts';
 import { everyManifest } from '#cli/presets/select.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { settingRows } from '#cli/policy/settings-list.ts';
-import type { Session, CommandResult } from '#types/run.ts';
+import type { Session, CommandResult } from '#cli/run/types.ts';
 
 const KEY_GAP = 2;
 const VALUE_WIDTH = 28;

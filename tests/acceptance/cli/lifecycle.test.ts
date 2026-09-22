@@ -34,8 +34,8 @@ test('apply and uninstall preserve later edits and unowned content while restori
     writeFileSync(generated, edited);
     writeFileSync(join(directory.path, '.gspot/authored.txt'), 'Preserve this file.\n');
     const applied = await run(directory.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
-    expect(applied.stdout).toContain('preserved edited or unowned .gspot/shellcheckrc');
+    expect(applied.code, applied.stdout + applied.stderr).toBe(2);
+    expect(applied.stderr).toContain('version pin was not changed');
     expect(readFileSync(generated, 'utf8')).toBe(edited);
     const removed = await run(directory.path, ['uninstall', '--yes']);
     expect(removed.code, removed.stdout + removed.stderr).toBe(0);

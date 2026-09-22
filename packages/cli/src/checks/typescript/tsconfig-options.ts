@@ -1,9 +1,9 @@
 // Are the required compiler options on in every tsconfig the scope's TypeScript files belong to?
 import { join } from 'node:path';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import type { CompilerOptions } from 'typescript';
-import { ALL_COMPILER_OPTIONS } from '#config/typescript.ts';
+import { ALL_COMPILER_OPTIONS } from '#cli/checks/typescript/typescript-definitions.ts';
 import { getTsconfig } from '#cli/repository/tsconfig.ts';
 
 function isTsconfigName(path: string): boolean {

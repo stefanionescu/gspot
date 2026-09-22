@@ -12,7 +12,7 @@ import type {
     NamingLanguageTable,
     Policy,
     Reasoned,
-} from '#types/config.ts';
+} from '#cli/policy/types.ts';
 
 const NAMING_LIST_KEYS = new Set([
     'banned_terms',
@@ -71,16 +71,6 @@ function trimTrailingSlashes(path: string): string {
     return path.slice(0, end);
 }
 
-function normalizeScalars(raw: RawPolicy): Pick<Policy, 'hooks' | 'ci' | 'rules' | 'coverage' | 'runner'> {
-    return {
-        ...(raw.hooks === undefined ? {} : { hooks: raw.hooks }),
-        ...(raw.ci === undefined ? {} : { ci: raw.ci }),
-        rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
-        coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
-        ...(raw.runner === undefined ? {} : { runner: { tool: raw.runner.tool } }),
-    };
-}
-
 /**
  * Drops the undefined entries of an object, so exact optional types hold.
  * @param value any object
@@ -120,7 +110,8 @@ export function normalizeLimits(raw: RawLimits | undefined): Limits {
     for (const [key, value] of entries) {
         if (isTable(value) && !('value' in value)) {
             const group: Record<string, Reasoned<number>> = {};
-            for (const [inner, entry] of Object.entries(value)) group[inner] = toReasoned(entry);
+            for (const [inner, entry] of Object.entries(value))
+                if (entry !== undefined) group[inner] = toReasoned(entry);
             limits.groups[key] = group;
         } else limits.root[key] = toReasoned(value as number | { value: number; reason: string });
     }
@@ -175,14 +166,12 @@ export function normalizeArchitecture(raw: RawPolicy['architecture']): Policy['a
 export function normalizeStructure(raw: RawPolicy['structure']): Policy['structure'] {
     const filled = defaulted<Policy['structure']>(raw, {
         reexports: 'none',
-        call_through_allowed: [],
-        trivial_allowed: [],
         single_file_folder_allowed: [],
         prefix_collision_allowed: [],
         folder_name_allowed: [],
         python: {},
     });
-    return { ...filled, trivial_allowed: compactAll(filled.trivial_allowed) };
+    return filled;
 }
 
 /**
@@ -215,7 +204,13 @@ export function normalize(raw: RawPolicy): Policy {
             ...raw.vendored.map((entry) => ({ ...entry, nature: 'vendored' as const })),
         ],
         checks: (raw.check ?? []).map((entry) => compact({ ...entry, output: entry.output && compact(entry.output) })),
-        ...normalizeScalars(raw),
+        ...{
+            ...(raw.hooks === undefined ? {} : { hooks: raw.hooks }),
+            ...(raw.ci === undefined ? {} : { ci: raw.ci }),
+            rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
+            coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
+            ...(raw.runner === undefined ? {} : { runner: { tool: raw.runner.tool } }),
+        },
         scopeTables,
     };
 }

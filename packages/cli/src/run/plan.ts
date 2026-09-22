@@ -9,9 +9,9 @@ import { resolveEngine, runEngineCheck } from '#cli/run/engines.ts';
 import { checkTypescript } from '#cli/checks/typescript/tsc.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
 // The check graph for a run: stage, scope, file sets, requirements, skips.
-import type { RepositoryCheck } from '#types/config.ts';
-import type { TrackedFile } from '#types/repository.ts';
-import type { CheckSpec, Manifest, Stage, ToolPin } from '#types/manifest.ts';
+import type { RepositoryCheck } from '#cli/policy/types.ts';
+import type { TrackedFile } from '#cli/repository/types.ts';
+import type { CheckSpec, Manifest, Stage, ToolPin } from '#cli/presets/types.ts';
 import { claimedByClaims, claimedFiles, isInScope, pathMatcher } from '#cli/presets/claims.ts';
 
 import type {
@@ -23,7 +23,7 @@ import type {
     ScopeSelection,
     Session,
     StageFilter,
-} from '#types/run.ts';
+} from '#cli/run/types.ts';
 
 const PLATFORM_NAMES: Record<string, string> = { darwin: 'macos', linux: 'linux', win32: 'windows' };
 
@@ -74,12 +74,9 @@ function fromRepoCheck(entry: RepositoryCheck): CheckSpec {
     };
 }
 
-function isRepositoryWide(manifest: Manifest): boolean {
-    return manifest.preset.kind === 'concern' && !manifest.claims.from_languages;
-}
-
 function manifestEntries(manifest: Manifest, seenRepoChecks: Set<string>): PlanEntry[] {
-    if (!isRepositoryWide(manifest)) return manifest.checks.map((spec) => ({ spec, manifest }));
+    if (!(manifest.preset.kind === 'policy' && !manifest.claims.from_languages))
+        return manifest.checks.map((spec) => ({ spec, manifest }));
     const fresh = manifest.checks.filter((spec) => !seenRepoChecks.has(spec.name));
     for (const spec of fresh) seenRepoChecks.add(spec.name);
     return fresh.map((spec) => ({ spec, manifest }));
@@ -88,7 +85,7 @@ function manifestEntries(manifest: Manifest, seenRepoChecks: Set<string>): PlanE
 function entriesFor(session: Session, scope: ScopeSelection, seenRepoChecks: Set<string>): PlanEntry[] {
     const isRoot = scope.scope.path === '';
     const entries = scope.selected
-        .filter((manifest) => isRoot || !isRepositoryWide(manifest))
+        .filter((manifest) => isRoot || !(manifest.preset.kind === 'policy' && !manifest.claims.from_languages))
         .flatMap((manifest) => manifestEntries(manifest, seenRepoChecks));
     const own = isRoot ? session.policyFiles.policy.checks.map((entry) => ({ spec: fromRepoCheck(entry) })) : [];
     return [...entries, ...own];
@@ -163,7 +160,9 @@ function filesFor(
     const { spec, manifest } = entry;
     const scopePath = isWholeCheck ? '' : scope.scope.path;
     const triggerPaths = missingTriggers(context, spec, scopePath);
-    const isWhole = spec.runs !== 'per-file-list' || (manifest !== undefined && isRepositoryWide(manifest));
+    const isWhole =
+        spec.runs !== 'per-file-list' ||
+        (manifest !== undefined && manifest.preset.kind === 'policy' && !manifest.claims.from_languages);
     let files = triggerPaths.length === 0 ? claimedFor(context, entry, scopePath) : projectFiles(context, scopePath);
     if (!isWhole) files = files.filter((file) => isOutsideChildren(file, children));
     const selected = withoutExcluded(files, spec, scope);

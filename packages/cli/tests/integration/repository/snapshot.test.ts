@@ -121,3 +121,31 @@ test('Xcode source membership does not mix independent nested projects', async (
         );
     }
 });
+
+test('staged snapshots copy all workspace dependency trees before validating cross-tree links', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'package.json': '{"workspaces":["packages/*"]}',
+        'bun.lock': '{}',
+        'packages/one/package.json': '{"name":"one"}',
+        'packages/two/package.json': '{"name":"two"}',
+        'node_modules/root/value.js': 'export const value = 1;',
+        'packages/two/node_modules/owned/value.js': 'export const value = 2;',
+        '.gitignore': 'node_modules/\n',
+    });
+    symlinkSync('../packages/two/node_modules/owned', join(sandbox.path, 'node_modules/owned'));
+    git(sandbox.path, ['init']);
+    git(sandbox.path, ['add', '.']);
+    await withRevisionSnapshot(sandbox.path, { kind: 'index' }, async (snapshot) => {
+        expect(await Bun.file(join(snapshot, 'node_modules/owned/value.js')).text()).toContain('value = 2');
+        await Bun.write(join(snapshot, 'node_modules/owned/value.js'), 'snapshot change');
+    });
+    expect(await Bun.file(join(sandbox.path, 'packages/two/node_modules/owned/value.js')).text()).toContain(
+        'value = 2',
+    );
+    unlinkSync(join(sandbox.path, 'node_modules/owned'));
+    symlinkSync(sandbox.path, join(sandbox.path, 'node_modules/owned'));
+    await expect(withRevisionSnapshot(sandbox.path, { kind: 'index' }, async () => undefined)).rejects.toThrow(
+        'external link',
+    );
+});

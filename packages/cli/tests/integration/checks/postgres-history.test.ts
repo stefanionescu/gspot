@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 import { openSession } from '#cli/run/session.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';

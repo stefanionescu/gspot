@@ -2,12 +2,12 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { nearMatches } from '#cli/policy/near.ts';
-import type { Manifest } from '#types/manifest.ts';
+import type { Manifest } from '#cli/presets/types.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { detectPresets } from '#cli/presets/detect.ts';
-import type { ScopeEntry, TrackedFile } from '#types/repository.ts';
+import type { ScopeEntry, TrackedFile } from '#cli/repository/types.ts';
 import { requireChain, SelectionError, selectPresets } from '#cli/presets/select.ts';
-import type { InitContext, InitInputs, InitSelection, PresetReason } from '#types/lifecycle.ts';
+import type { InitContext, InitInputs, InitSelection, PresetReason } from '#cli/lifecycle/types.ts';
 
 const NO_PRESETS = 'none';
 
@@ -40,7 +40,7 @@ function isRootCandidate(context: InitContext, preset: string, hasScopes: boolea
     const manifest = context.manifests.get(preset);
     if (!manifest || without.has(preset)) return false;
     const { kind, proposed } = manifest.preset;
-    if (hasScopes && kind !== 'concern' && kind !== 'language') return false;
+    if (hasScopes && kind !== 'policy' && kind !== 'language') return false;
     return !proposed || context.options.yes;
 }
 
@@ -57,7 +57,7 @@ function rootSelection(context: InitContext, rootProposals: { preset: string }[]
 function isScopeCandidate(context: InitContext, preset: string, without: Set<string>): boolean {
     const manifest = context.manifests.get(preset);
     if (!manifest || without.has(preset)) return false;
-    return manifest.preset.kind !== 'concern' && (!manifest.preset.proposed || context.options.yes);
+    return manifest.preset.kind !== 'policy' && (!manifest.preset.proposed || context.options.yes);
 }
 
 function scopeSelection(

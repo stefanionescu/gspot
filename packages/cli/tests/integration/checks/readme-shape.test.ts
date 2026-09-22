@@ -1,9 +1,9 @@
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import type { MergedView } from '#types/config.ts';
-import type { CheckSpec } from '#types/manifest.ts';
-import type { Repository } from '#types/repository.ts';
-import type { EngineInput, Session } from '#types/run.ts';
+import type { MergedView } from '#cli/policy/types.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
+import type { Repository } from '#cli/repository/types.ts';
+import type { EngineInput, Session } from '#cli/run/types.ts';
 import { readmeShape } from '#cli/checks/docs/readme/shape.ts';
 import { docsHeadings } from '#cli/checks/docs/docs-headings.ts';
 

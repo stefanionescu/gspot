@@ -4,7 +4,7 @@ This document decides where checks run: git hooks, the CI job, and the tasks of 
 
 ## What runs when
 
-`gspot check` is the truth, and the hooks are the fast path (D-122).
+`gspot check` is the truth, and the hooks are the fast path.
 
 | When                         | What runs                                                                      |
 | ---------------------------- | ------------------------------------------------------------------------------ |
@@ -14,10 +14,10 @@ This document decides where checks run: git hooks, the CI job, and the tasks of 
 | `gspot check --stage manual` | the checks that build, test, or scan a whole project, or that need credentials |
 | CI                           | what the change touches, or everything with `[ci] run = "all"`                 |
 
-File-list checks narrow adoption noise, but affected whole-project checks report all findings (D-168). Existing errors can still block a change; gspot records no baseline (D-165). A
+File-list checks narrow adoption noise, but affected whole-project checks report all findings. Existing errors can still block a change; gspot records no baseline. A
 full run alone sees the world change, such as a new advisory, and `gspot doctor` prints the date
 of the last full run. `[hooks] push = "all"` is for a team that wants the full run on push
-(D-123).
+.
 
 ## Stages
 
@@ -32,7 +32,7 @@ Every check declares one stage.
 
 A release test measures the commit stage and fails a check over the ceiling that takes no file
 list. No hook has a time budget that skips checks, because a gate that skips by the clock gives
-two verdicts on two machines (D-102).
+two verdicts on two machines.
 
 A check requires nothing, or one of `build`, `docker`, `database`, and `network`. A requirement
 puts the check in `push` at least. A `docker` requirement with no daemon fails, with no silent
@@ -98,7 +98,7 @@ or bypass the local hook; CI still judges the submitted tree. No finding baselin
 
 ## Hooks
 
-gspot goes where the hook already points (D-114). `init` reads what each hook calls and proposes
+gspot goes where the hook already points. `init` reads what each hook calls and proposes
 the gspot line in a fixed order. The task the hook calls comes first, then the hook file, then
 hooks of its own where none exist.
 
@@ -112,19 +112,19 @@ hooks of its own where none exist.
 | `gspot`            | a dispatcher or new hook in the Git-resolved hooks directory, written by `gspot install` | no hook tool and no tracked hooks |
 | no table           | nothing                                                                                  | the person passes `--no-hooks`    |
 
-A repository with hooks keeps their behavior, arguments, input, and failure status (D-167). gspot
+A repository with hooks keeps their behavior, arguments, input, and failure status. gspot
 never sets `core.hooksPath`, because that setting turns every hook under `.git/hooks/` off: a
-hook one developer wrote for one clone, and the hooks git-lfs installs (D-167). Where such a
+hook one developer wrote for one clone, and the hooks git-lfs installs. Where such a
 local hook exists, `gspot install` installs the chain described below. Where a
 husky hook calls lint-staged, the gspot line goes into the hook, and the plan lists the
 lint-staged entries that run a tool gspot runs too. A
 folder named `hooks` is no sign of git hooks: gspot asks `git config core.hooksPath` first.
 
 A hook under `.git/hooks/` belongs to one clone. `gspot install` writes the gspot block of a clone, and
-the developer runs it explicitly after cloning (D-115), and `doctor` asks git whether the hooks run in this clone. It names one of three
+the developer runs it explicitly after cloning, and `doctor` asks git whether the hooks run in this clone. It names one of three
 states, and ends with the setup command where the hooks exist and do not run.
 
-The block gspot writes runs under the Bash 3.2 that macOS ships (D-85). In a new hook file it is
+The block gspot writes runs under the Bash 3.2 that macOS ships. In a new hook file it is
 the whole file:
 
 ```bash
@@ -158,7 +158,7 @@ hooks through the Bash that Git for Windows installs, and gspot marks them execu
 `git update-index --chmod=+x` for tracked hooks; clone-local hooks use filesystem executable permissions.
 
 One skip exists: `--skip` for one run, and it prints. No file and no environment variable turns
-a check off on one machine (D-173). A hook never runs `--fix`.
+a check off on one machine. A hook never runs `--fix`.
 
 ### Hook chaining
 
@@ -191,26 +191,26 @@ Every task calls gspot, and the order of checks lives in gspot.
 | `npm`, `pnpm`, `yarn`, `bun` | the `gspot` launcher in `devDependencies`, and the scripts below        |
 | no table                     | nothing                                                                 |
 
-Existing command names keep working (D-116). Where a `lint`, `format`, or `check` task exists,
+Existing command names keep working. Where a `lint`, `format`, or `check` task exists,
 the plan proposes a new body that calls gspot, and the developer accepts it. gspot writes a
 `gspot:check` and a `gspot:fix` task only where the name is free. `[runner] tasks` holds the
 names. Uninstall restores an old body only when its replacement is unchanged; otherwise it
 preserves the developer edit and reports the recovery copy. gspot never creates or edits a
 package lifecycle script, including `prepare`, and never injects a setup task.
 
-The mise file has one place in every repository (D-127). gspot changes an existing task in `mise.toml` only when that exact replacement was accepted in the init plan. `init`
+The mise file has one place in every repository. gspot changes an existing task in `mise.toml` only when that exact replacement was accepted in the init plan. `init`
 runs `mise trust` on its file before the install. The file pins gspot itself through the `github`
 backend of mise, which is what `mise exec` and the hook find. A pin the repository already holds
 for a tool is kept, and `doctor` reports a version below the floor of the preset.
 
 The npm lint tools are no part of the runner. They install under `.gspot/`, from
-`.gspot/package.json`, with the package manager the repository uses, under every runner (D-145).
-A repository with no JavaScript takes bun or npm, whichever the machine has (D-171).
+`.gspot/package.json`, with the package manager the repository uses, under every runner.
+A repository with no JavaScript takes bun or npm, whichever the machine has.
 
 ## CI
 
 `--ci` takes `github` or `gitlab`, and the default follows the repository: its CI files first,
-then the host of its remote (D-133). A repository whose CI already runs a lint job is told so
+then the host of its remote. A repository whose CI already runs a lint job is told so
 and gets no second job.
 
 For GitHub, gspot writes `.github/workflows/gspot.yml`. The emitter supplies real, verified
@@ -248,7 +248,7 @@ repository without code scanning.
 
 The findings print to the log, and the JSON report is written
 beside them. A macOS job appears only where a Swift scope exists. Actions are pinned by commit,
-and `config-files/actions-pins` asks GitHub that each pinned commit exists. Drift of generated
+and `configs/actions-pins` asks GitHub that each pinned commit exists. Drift of generated
 files is the check `integrity/generated-drift` inside `gspot check`, so the job runs no `apply`.
 
 For GitLab, gspot writes `.gitlab/ci/gspot.yml` with one job, and the plan shows the line that
@@ -288,7 +288,7 @@ terminal.
 ## The report
 
 Every run but the message run writes `.gspot/report.json`, and `gspot check --json` prints the
-same data (D-105). Its shape is part of `gspot.schema.json`. The report holds:
+same data. Its shape is part of `gspot.schema.json`. The report holds:
 
 - the version, the stage, the start time, and the duration;
 - each check with its status, file count, findings, and duration;
@@ -297,3 +297,281 @@ same data (D-105). Its shape is part of `gspot.schema.json`. The report holds:
 
 Paths in the report are relative to the repository. The CI job uploads a SARIF file with
 locations for the tools that give them.
+
+## Acceptance contracts
+
+These clauses specify required behavior. [Remaining work](22-remaining.md) owns status and evidence.
+
+### Acceptance K-56
+
+`init` reads what each hook calls, and proposes the gspot line in a fixed order
+. The task the hook calls comes first, then the hook file, then the hooks of gspot where
+none exist. gspot
+never sets `core.hooksPath`. `doctor` says when a clone runs no hooks, with
+the explicit command `gspot install`.
+
+`hook-calls.ts` parses a hook file for `mise run <task>`, `npm run <script>`,
+`npx lefthook`, and `husky`, and returns the target. `[hooks]` holds `tool` (`gspot`, `husky`,
+`lefthook`, or `existing`) and, for `existing`, `pre_commit` and `pre_push` with the file or task
+that carries the line. Supported tracked task insertion must be reachable and preserve control flow.
+
+Unsupported hook scripts stay intact with a setup error. Use the composition contract in [10-hooks-ci-runners.md](10-hooks-ci-runners.md), not textual append. Lines of the task that are no lint stay.
+
+`hooks.test.ts` plants a `.githooks/pre-commit` that runs `mise run lint`, and holds
+the gspot line in the task and an unchanged `core.hooksPath`.
+
+### Acceptance K-58
+
+Where such a name exists, the plan proposes a new body that calls gspot, and the
+developer accepts it. gspot writes a `gspot:*` task only where the name is free.
+
+`[runner] tasks` maps each gspot task to the name it lives under. `runner-tasks.ts`
+writes that map after saving the original body and installed-body hash in local recovery and ownership records. `uninstall` restores the original only if the task is still the installed value; later developer edits stay intact with recovery instructions. A fresh clone without the original backup cannot invent a previous body.
+
+A planted `mise.toml` with a `lint` task holds the new body after `init --yes`, and
+the old body after `uninstall`.
+
+### Acceptance K-59
+
+A table in a shared manifest is read, carried, and left in place. The plan
+lists each under the heading for what the developer removes by hand.
+
+A takeover row takes `table = "tool.ruff"` or `key = "eslintConfig"` with
+`shared = true`. `carryFrom` reads the table through the same reader as a file of that tool.
+
+A planted `pyproject.toml` with `[tool.ruff] ignore = ["E501"]` holds the carried
+ignore, the unchanged file, and the plan line.
+
+### Acceptance K-60
+
+A failing run from a hook ends with two lines: the command that reproduces it, and
+`git commit --no-verify` as the way past it.
+
+The hook sets `GSPOT_HOOK=<name>`, and the reporter adds the two lines when it is
+set.
+
+`hooks.test.ts` holds both lines in the output of a refused commit.
+
+### Acceptance K-292
+
+[10-hooks-ci-runners.md](10-hooks-ci-runners.md): supported composition actually runs both hooks and preserves failure semantics.
+
+Resolve the hook location through Git. Include worktrees and configured paths.
+Prefer native hook-manager composition. For unmanaged local hooks, preserve the executable in
+a collision-checked sibling and write a marked dispatcher. Run the original as a child, then
+gspot only on success.
+
+Forward arguments, working directory, environment, and exit status. Replay the same buffered
+stdin to each child. Record ownership and recovery before replacement. Reinstallation must
+not nest dispatchers. Restore only an unchanged owned dispatcher on uninstall.
+
+Assert observable execution of both hooks for originals ending in `exec` and `exit 0`; assert failure propagation for nonzero exits. Git LFS and gspot each receive the complete multi-ref stdin. Cover reinstall, custom hooks paths, linked worktrees, non-shell executables, collisions, and developer edits before uninstall.
+
+### Acceptance K-69
+
+A `[[check]]` is cached only when it names its inputs.
+
+`paths` says when the check runs. A new key `inputs` says what it reads, and the cache
+key holds the hashes of those files. A check with no `inputs` is never cached.
+
+A planted `[[check]]` that reads a file outside its `paths` fails, is fixed, and
+passes on the next run with the cache on.
+
+### Acceptance K-70
+
+The hook verifies the exact committed trees being pushed. HEAD and uncommitted work
+do not change the result. Whole-project findings follow the whole-project contract below.
+
+The dispatcher invokes internal `gspot check --push`, buffering all stdin ref rows.
+Each supplies local and remote object IDs. Compare the actual endpoints and check a temporary
+committed snapshot with matching config and dependency locks.
+
+Follow [10-hooks-ci-runners.md](10-hooks-ci-runners.md) for multiple refs, new refs, tags,
+force pushes, deletion-only pushes, missing objects, and a local ref other than HEAD.
+Never read working-tree bytes as proof of a pushed commit. Reuse installed dependencies only
+when their lock and manifest identity matches.
+
+`hooks.test.ts` pushes a clean commit with a broken uncommitted file beside it, and
+holds a passing push.
+
+### Acceptance K-293
+
+Changed paths select file-list tools and affected projects, never filter the findings of a whole-project tool. Existing project errors may block adoption; the plan must say so.
+
+Preserve deleted paths and both sides of renames for impact selection. Configuration, locks, and shared project references trigger dependent projects. Keep every whole-project finding, fileless finding, and failed tool status. Unknown impact selects the broader set.
+
+CI uses event-specific base and target objects, including merge queues and zero-base fallback, from [10-hooks-ci-runners.md](10-hooks-ci-runners.md). Managed tools use the package manager selected by the configuration contract and immutable locks.
+
+Changing an export in `a.ts` must fail on a new error in unchanged `b.ts`. Cover deleted exports, renames, config-only changes, dependency changes, fileless failures, missing tools, old project errors, and every CI event. A clean commit with broken uncommitted work passes when its committed snapshot is clean.
+
+### Acceptance K-295
+
+`--changed` takes an optional ref, written `--changed=<ref>`. `--since` is
+gone, with no alias.
+
+The parser reads the value only after an equals sign, so `gspot check --changed api`
+checks the folder `api`. With no value the ref is `@{upstream}`, then the default branch
+(K-272). The push hook uses internal `--push`; CI uses explicit event-specific base and target snapshots. Missing upstream and default refs give a setup error instead of an empty successful run.
+
+`check-command.test.ts` holds both forms, holds that `--changed api` reads `api` as a
+path, and holds that `--since` is an unknown option with exit 2.
+
+### Acceptance K-309
+
+Define the required checks and execution frequency before re-enabling CI.
+Keep fast local feedback, one owner for each repository CI check, and explicit full-platform
+and package acceptance checkpoints. Do not restore a full matrix on every intermediate commit.
+
+Inventory duplicate jobs, preserve unique manual and report checks, share reusable
+setup where it saves work, and cancel superseded runs in the same workflow/ref group. Choose
+path filtering and required-check behavior together so a skipped required check cannot leave
+an unexplained pending merge gate. Record cold and warm durations before claiming improvement.
+Do not suppress failures, replace platform acceptance with a Linux-only badge, or enable paid
+capacity. This work does not authorize running CI during the active bypass.
+
+Validate trigger and job selection locally for documentation-only and source changes,
+forks, main pushes, and concurrent revisions. After explicit re-enablement, verify the agreed
+schedule and exact-revision results. Keep that remote evidence deferred until then.
+
+### Acceptance K-271
+
+gspot works in any folder. Git adds the hooks, the changed-file runs, and the
+history scans. Without git, every check that needs no history runs over the files the walk
+finds.
+
+`--staged` and `--changed` exit 2 with one sentence: this folder is no git
+repository, so run `gspot check`. The secrets preset gains `secrets/gitleaks-files`, which runs
+`gitleaks dir`, with `needs_git = false`, and the two history checks take `needs_git = true`.
+`doctor` prints one line when a `.git` folder appeared after `init`, with the commands that add
+the hooks and the presets that need git. A Mercurial, Perforce, or jj folder without `.git` is
+this same mode, and the walk honors `.gitignore` and `.hgignore`.
+
+A planted folder with no `.git` and a planted secret holds the finding, and
+`gspot check --staged` there exits 2 with the sentence.
+
+### Acceptance K-272
+
+One stated behavior for each:
+
+| Case                            | Behavior                                                                                       |
+| ------------------------------- | ---------------------------------------------------------------------------------------------- |
+| no commit yet                   | `init` and `check` work; `--staged` compares with the empty tree                               |
+| no remote, or no upstream       | `--changed` uses a resolvable default branch, or exits 2 asking for an explicit ref            |
+| first push of a branch          | compare against fetched remote reachability; with no usable base, check the entire pushed tree |
+| a deleted branch                | the push hook passes and runs nothing                                                          |
+| a shallow clone                 | `--changed` says the history is cut, and names `git fetch --unshallow`                         |
+| submodules                      | not read; `init` and `doctor` say so once, with the path of each                               |
+| a linked worktree               | shares the hooks of its repository; `check` there says `Run: gspot install` once               |
+| `gspot.toml` below the git root | checks run from the config root; the hook at the git root changes folder first                 |
+
+`session.ts` holds two roots: the config root and the git root. Every path in the
+report is relative to the config root. The hook resolves the config's repository-relative location from Git at runtime, with quoted arguments, rather than embedding a machine-specific absolute path. A push snapshot resolves the same relative config location inside the snapshot. Ref selection and snapshot semantics are owned by [10-hooks-ci-runners.md](10-hooks-ci-runners.md).
+
+Eight planted cases in a new `tests/repositories/git-cases.test.ts`.
+
+### Acceptance K-273
+
+The managed `.gitattributes` block holds two lines: `.gspot/** linguist-generated`
+and `.gspot/** text eol=lf`.
+
+One more line in the block.
+
+The Windows job of CI clones a planted repository with `autocrlf` on, and holds a
+passing drift check.
+
+### Acceptance K-275
+
+`[hooks] tool` also takes `pre-commit` and `simple-git-hooks`, and `existing` reads a
+lint-staged call.
+
+For the pre-commit framework, gspot writes one `repo: local` hook into
+`.pre-commit-config.yaml`, as a managed block, with `entry: gspot check --staged` and
+`pass_filenames: false`. The takeover rows of the python manifest list the hooks of that file
+that gspot replaces, such as ruff and black, under removal by hand. For lint-staged, the plan
+proposes the gspot line in the husky hook, and lists the lint-staged entries that run a tool
+gspot now runs. For `simple-git-hooks`, the line goes into its key of `package.json` after a yes,
+as a task body does.
+
+Three planted cases in `hooks.test.ts`, each with a commit that runs gspot once.
+
+### Acceptance K-276
+
+A job that passes on a fork, on a private repository, and in a merge queue.
+
+`permissions` is `contents: read` for the workflow, and the upload step adds
+`security-events: write` in a job of its own. That job uses `always() && !cancelled()` in addition to an event guard, so failed checks do not suppress their own report upload. It runs only on a push to the repository itself, and `[ci] sarif = false` turns it off. `on` gains `merge_group`. `cancel-in-progress` is
+true for pull requests alone.
+
+One setup step, `gspot install`, follows a cache keyed on
+all actual managed lockfiles, tool pins, package-manager version, OS, and architecture. Select the base and target for each event, including `merge_group.base_sha` and `head_sha`; absent or zero bases require a full target-tree run. Upload stage-specific report artifacts after each check even on failure, including after the manual stage; never overwrite another stage's report.
+
+The workflow snapshot, `zizmor` over it, and the planted CI case.
+
+### Acceptance K-277
+
+A job that shows findings in a merge request.
+
+Every run but the message run writes three files under `.gspot/`: `report.json`,
+`report.sarif`, and `report.codequality.json` in the CodeClimate form. The job sets `GIT_DEPTH: 0` and runs `gspot install`. Its `rules` select merge request
+pipelines and the default branch, and it declares `.gspot/report.codequality.json` as the code quality artifact with `when: always`. Select the merge-request diff base or push-before SHA; missing or zero bases run the full target tree. The CI
+system is found by `.gitlab-ci.yml` or `.github/workflows/`, never by the host name.
+
+The snapshot of the file, and `glab ci lint` in the `manual` job.
+
+### Acceptance K-278
+
+gspot writes a file for GitHub and GitLab alone, and tells everybody else the three
+lines.
+
+With `--no-ci`, or where the CI files of another system are found, the plan ends with
+the lines to paste: install gspot at the pinned version, `gspot install`, and
+`gspot check`, with `.gspot/report.*` kept as artifacts. The guide shows them in the syntax of the four systems, and
+`docs/samples` parses each command.
+
+A planted `bitbucket-pipelines.yml` holds the three lines in the plan.
+
+### Acceptance K-37
+
+A hooks folder is `.githooks`, `.husky`, `.git-hooks`, or what `core.hooksPath`
+names.
+
+The name leaves the list. `existing-tooling.ts` reads `git config core.hooksPath`
+first, and that answer wins over any folder name.
+
+`takeover.test.ts` plants `hooks/use-thing.ts` and holds that the plan names no hooks.
+
+### Acceptance K-45
+
+A run of the `message` stage writes no report.
+
+`execute.ts` calls `writeReport` only for a stage other than `message`.
+
+`commits.test.ts` commits, then holds that the report still names the
+earlier run. A rejected message check preserves both report formats byte for byte.
+
+### Acceptance K-253
+
+The workflow follows the rule file, and the task names preserve the developer’s existing task definitions.
+
+`RUNNERS` holds `ubuntu-24.04`, `macos-15`, and `windows-2025`. The job gains
+`timeout-minutes: 20` and a `concurrency` group on the ref. The task is `check` where the name is
+free, and `gspot:check` where it is taken.
+
+The workflow snapshot (T-36), and `zizmor` over it in the planted repository.
+
+### Acceptance K-96
+
+`--ci` takes `github` or `gitlab`, and the default follows the repository. For
+GitLab gspot writes `.gitlab/ci/gspot.yml`, and the plan shows the one `include:` line for the
+developer to add. gspot never edits `.gitlab-ci.yml`. A repository whose CI already runs a lint
+job is told so and gets no second job.
+
+Detection reads a `.gitlab-ci.yml` file or a GitLab remote, then a `.github/` folder or
+a GitHub remote. The GitLab job runs `gspot install`, caches `.gspot/cache/`, and uploads a code quality report.
+GitLab reads the CodeClimate format there and not SARIF, so every run writes that third
+format beside the JSON and the SARIF file ([10-hooks-ci-runners.md](10-hooks-ci-runners.md), K-277).
+
+A planted install with `--ci gitlab`, whose file `glab ci lint` accepts in the
+`manual` job of CI.
+
+Staged snapshots copy every required dependency tree before validating links across them. Workspace links must resolve inside the complete snapshot. Fixer previews own their isolated copies separately from Git revision materialization. CI remains paused under the sole status record.

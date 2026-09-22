@@ -1,10 +1,10 @@
 // The install configuration: a minimum release age, and the security scanner where the package manager has one.
 import { join } from 'node:path';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import type { Reporter } from '#types/integrity.ts';
-import { LOCKFILES, SECONDS_PER_DAY } from '#config/integrity.ts';
+import type { Reporter } from '#cli/checks/types.ts';
+import { LOCKFILES, SECONDS_PER_DAY } from '#cli/checks/integrity-definitions.ts';
 
 const BUNFIG = 'bunfig.toml';
 const DEFAULT_AGE_DAYS = 7;

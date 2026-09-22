@@ -1,5 +1,5 @@
 // File stems and directory names as identifiers: the stem without its extension, every folder on the way, Next.js segments unwrapped.
-import type { Identifier } from '#types/naming.ts';
+import type { Identifier } from '#cli/naming/types.ts';
 
 const DECLARATION_SUFFIXES = ['.d.ts', '.d.mts', '.d.cts'];
 const MIGRATION_DIRECTORY = /^\d{14}_/u;
@@ -23,10 +23,6 @@ function unwrapped(segment: string): { name: string; category: string } {
     if (bracket === undefined) return { name: segment, category: 'directories' };
     const inner = segment.slice(bracket.open.length, segment.length - bracket.close.length);
     return { name: inner.replace(/^\.\.\./u, ''), category: bracket.category };
-}
-
-function segmentName(segment: string): { name: string; category: string } | undefined {
-    return segment.startsWith('.') || MIGRATION_DIRECTORY.test(segment) ? undefined : unwrapped(segment);
 }
 
 /**
@@ -59,7 +55,7 @@ export function fileIdentifier(path: string, language: string): Identifier {
 export function directoryIdentifiers(path: string, language: string): Identifier[] {
     const segments = path.split('/').slice(0, -1);
     return segments.flatMap((segment, index) => {
-        const named = segmentName(segment);
+        const named = segment.startsWith('.') || MIGRATION_DIRECTORY.test(segment) ? undefined : unwrapped(segment);
         if (named === undefined || named.name === '') return [];
         const directory = segments.slice(0, index + 1).join('/');
         return [

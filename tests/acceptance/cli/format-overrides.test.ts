@@ -3,7 +3,7 @@ import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import prettier from 'prettier';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 import { exportedProfile } from '#cli/profile/export.ts';
 import { run, toolsPath } from '#tests/harness/planted.ts';
 

@@ -1,7 +1,7 @@
 // Execa owns subprocess capture, deadlines, cancellation, and platform command shims.
 import { execa, execaSync, type Result } from 'execa';
 import { environmentVariables } from '#cli/platform/environment.ts';
-import type { AsyncSpawnOptions, SpawnResult, SpawnOptions, BinarySpawnResult } from '#types/platform.ts';
+import type { AsyncSpawnOptions, SpawnResult, SpawnOptions, BinarySpawnResult } from '#cli/platform/types.ts';
 
 const MISSING_CODE = 127;
 const FAILED_CODE = 1;

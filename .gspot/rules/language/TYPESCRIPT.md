@@ -102,21 +102,10 @@ index files only, as a recorded project choice.
 
 ## Type placement
 
-Every type alias, every `as const` object that replaces an enum, and every generic helper type
-lives under the `types/` directory (`types/` at the scope root, or the directory the project
-configures). Generated types and test-only types get their own subdirectories there and are not
-mixed with hand-written shared types.
-
-Rules:
-
-- No `interface`. Use `type` aliases for object shapes.
-- A file under `types/` holds only type declarations and type-only imports. It has no default
-  export and exports no function, class, or runtime value.
-- Source imports from `types/` are `import type`.
-- A component's props type, a function's options type, and a module's result type all live in
-  `types/`, named for the contract (`types/orders.ts` holds `SubmitOrderRequest`).
-- The exceptions are framework-generated `*.d.ts` files and a Zod schema module that exports
-  `z.infer` of its own schema, each recorded as an exception with a reason.
+Keep type aliases, interfaces, enum-replacement objects, and generic helper types beside their
+behavioral owner. Infer schema types from their authored schema. Use `import type` when an import
+has no runtime use. A shared contract belongs with its consumers, not in a mandatory top-level
+types directory. Do not split declarations into files merely to satisfy a placement convention.
 
 ## Values, literals, and coercion
 

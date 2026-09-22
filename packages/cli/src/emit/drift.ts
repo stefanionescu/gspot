@@ -5,12 +5,12 @@ import { readOwnership } from '#cli/lifecycle/ownership.ts';
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
 import { join } from 'node:path';
 import { createTwoFilesPatch } from 'diff';
-import type { Session } from '#types/run.ts';
-import type { Policy } from '#types/config.ts';
+import type { Session } from '#cli/run/types.ts';
+import type { Policy } from '#cli/policy/types.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { isMergeStubHeld } from '#cli/emit/stubs.ts';
 import { isLefthookHeld } from '#cli/emit/lefthook.ts';
-import type { DriftEntry, GeneratedProposal } from '#types/emit.ts';
+import type { DriftEntry, GeneratedProposal } from '#cli/emit/types.ts';
 import { hasPackageScripts, emitAll } from '#cli/emit/targets.ts';
 import { currentBlock, fileText } from '#cli/emit/managed-blocks.ts';
 
@@ -22,7 +22,7 @@ const NEVER_STRAY = new Set([
     '.gspot/report.sarif',
     '.gspot/report.codequality.json',
     '.gspot/ownership.json',
-    '.gspot/mutation.lock',
+    '.gspot/writer.lock',
 ]);
 const DIFF_CONTEXT = 2;
 

@@ -1,5 +1,5 @@
 import { installHooks } from '#cli/lifecycle/hooks.ts';
-import { UV_INSTALLER } from '#config/installers.ts';
+import { UV_INSTALLER } from '#cli/platform/installers-definitions.ts';
 import { InstallationError } from '#cli/lifecycle/install-error.ts';
 import semver from 'semver';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
@@ -9,7 +9,7 @@ import { installPackageProject } from '#cli/lifecycle/package-project.ts';
 import { runToolCommand } from '#cli/run/tool-runner.ts';
 import { packageEnvironment } from '#cli/platform/package-environment.ts';
 import { toolEnvironment } from '#cli/emit/tool-environment.ts';
-import type { Session } from '#types/run.ts';
+import type { Session } from '#cli/run/types.ts';
 
 async function runInstall(root: string, commands: string[][]): Promise<string> {
     const notes: string[] = [];

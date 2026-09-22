@@ -8,7 +8,7 @@ import { openSession } from '#cli/run/session.ts';
 import { denoLint } from '#cli/checks/supabase/deno.ts';
 import { functionFolders } from '#cli/checks/supabase/project.ts';
 import { projectValid, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
-import type { EngineInput, Session } from '#types/run.ts';
+import type { EngineInput, Session } from '#cli/run/types.ts';
 
 function input(session: Session, scope: string, name: string): EngineInput {
     const selected = session.scopes.find((entry) => entry.scope.path === scope)!;

@@ -1,10 +1,11 @@
+import { trivialFile } from '#cli/structure/statements.ts';
 // The Swift structure checks, each one analysis of the integrity engine.
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import type { SwiftReader } from '#types/swift.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { SwiftReader } from '#cli/structure/swift/types.ts';
 import { functionsOf, swiftSources } from '#cli/structure/swift/sources.ts';
 import { environmentReads, privateBeforePublic } from '#cli/structure/swift/order.ts';
-import { callThroughs, duplicateFunctions, trivialFunctions } from '#cli/structure/swift/bodies.ts';
+import { duplicateFunctions, trivialFunctions } from '#cli/structure/swift/bodies.ts';
 
 const DEFAULT_DUPLICATE_LINES = 4;
 
@@ -37,10 +38,22 @@ function analysis(read: SwiftReader): (input: EngineInput) => Promise<Finding[]>
 
 /** The analyses by the name a manifest gives them. */
 export const SWIFT_STRUCTURE: Record<string, (input: EngineInput) => Promise<Finding[]>> = {
-    'swift-call-through': analysis(({ functions }) => callThroughs(functions)),
-    'swift-trivial-function': analysis(({ sources, functions }, input) =>
-        trivialFunctions(sources, functions, names(input, 'structure.swift.trivial_allowed')),
-    ),
+    'swift-trivial-function': analysis(({ functions, sources }, input) => {
+        const threshold = input.view.limit('trivial_statements', 'swift') ?? 2;
+        return [
+            ...trivialFunctions(functions, threshold),
+            ...sources
+                .filter((source) => trivialFile(source.tree.rootNode, 'swift', threshold))
+                .map((source) => ({
+                    file: source.path,
+                    line:
+                        (source.tree.rootNode.namedChildren.find((node) => !node.type.includes('comment'))
+                            ?.startPosition.row ?? 0) + 1,
+                    rule: 'trivial-file',
+                    text: 'This file contains only imports, aliases, forwarding, or trivial functions. Move them to their owner.',
+                })),
+        ];
+    }),
     'swift-duplicate-functions': analysis(({ functions }, input) =>
         duplicateFunctions(functions, input.view.limit('duplicate_min_lines', 'swift') ?? DEFAULT_DUPLICATE_LINES),
     ),

@@ -33,7 +33,7 @@ unconditionally and the code files per preset.
 ## What belongs to one product
 
 The merge left the architecture of one team out of the shipped rule files on purpose. A rule
-file about one product belongs to that product, so gspot ships none (D-134, K-97). During the
+file about one product belongs to that product, so gspot ships none (K-97). During the
 migration of a reference repository, its material moves into that repository as rule files of
 its own. yap-swift-app takes the iOS architecture, the API architecture, and the Supabase
 deployment flow. yap-text-inference takes the Docker image stack and the inference vocabulary. A repository lists such files in its own agent file, outside the managed
@@ -55,11 +55,11 @@ content with no counterpart. The repair pass restored each into the file named.
 | Static site: boundaries, build, routes, HTML, CSS and content naming, tests, and test data naming | `repository/static-site/STATIC-SITE.md`, `language/naming/HTML.md`, `language/naming/CSS.md`, `general/code/TESTING.md` |
 | The iOS and API architecture, Supabase deployment, inference vocabulary                           | the repository each came from                                                                                           |
 
-Both guards are clean as of 2026-09-18. The completeness check counted 7,616 source statements: 6,443 matched exactly or as duplicates, 255 at the fuzzy ratio, 354 listed in `DROPPED.md`, and 564 with a recorded reason. The reasons include the 48 statements the prose pass split into shorter ones. None was unresolved, and the check and its records were retired once that state was reached (D-70).
+Both guards are clean as of 2026-09-18. The completeness check counted 7,616 source statements: 6,443 matched exactly or as duplicates, 255 at the fuzzy ratio, 354 listed in `DROPPED.md`, and 564 with a recorded reason. The reasons include the 48 statements the prose pass split into shorter ones. None was unresolved, and the check and its records were retired once that state was reached.
 
 Vale with the thirty `gspot` rules reports no findings over the 98 files. That pass changed 379 headings to sentence case, split 64 long list items and 28 long sentences and paragraphs, and stated 63 conditional modals as facts, with no rule dropped. Phase 6 owed code, not editing: the assembler and the corpus lint inside the binary, both under `packages/cli/src/rules/` now.
 
-The guard was mechanical: a completeness check normalized every statement (sentence or list item) in the four source corpora. Each had to appear in the merged corpus or a project template, or be listed in `rules/DROPPED.md` with a reason. The check ran in the gate of this repository until the state above was reached, then retired with its records (D-70).
+The guard was mechanical: a completeness check normalized every statement (sentence or list item) in the four source corpora. Each had to appear in the merged corpus or a project template, or be listed in `rules/DROPPED.md` with a reason. The check ran in the gate of this repository until the state above was reached, then retired with its records.
 
 ## Layer boundary
 
@@ -102,9 +102,9 @@ title: Python            # equals the H1
 
 ## Rules say nothing about tooling
 
-A rule file states the rule and nothing else. It names no check and no enforcement state (D-73).
+A rule file states the rule and nothing else. It names no check and no enforcement state.
 It does not name gspot, an engine of gspot, or a key of `gspot.toml`, and it does not say that
-anything is enforced (D-81). Where a rule needs the idea, it names the checks of the repository.
+anything is enforced. Where a rule needs the idea, it names the checks of the repository.
 
 A rule may name a tool as a standard, such as a script that passes ShellCheck, or as its subject,
 such as a suppression comment. A person who installs the rule files alone reads nothing about a
@@ -148,7 +148,7 @@ Run `gspot check --staged` before committing. Change policy with `gspot set` or
 <!-- <<< gspot managed <<< -->
 ```
 
-The closing paragraph depends on what is installed (D-81). With at least one check selected it
+The closing paragraph depends on what is installed. With at least one check selected it
 reads as above. With rule files alone (`presets = []`) it keeps only the sentence about
 subagents, and adds: "These files are installed copies. Change `[rules]` in `gspot.toml` and run
 `gspot apply`, and never edit files under the rules directory."
@@ -163,13 +163,13 @@ The block is a plain list: one line for each selected preset, with its rule file
 
 ## The rules lint
 
-The rules lint belongs to this repository, not to the commands of the binary (D-86). It runs as
+The rules lint belongs to this repository, not to the commands of the binary. It runs as
 the `[[check]]` entry `rules/lint` in the `gspot.toml` of this repository, at the commit stage,
 over `rules/**`. Its code sits in `packages/cli/src/rules/`. Prose is no part of it: `prose/vale`
 reads the rule files like every other text.
 
 - Front matter holds `preset` and `title`. The folder says the rest, so a `layer` key is refused.
-- Every rule file is listed by one manifest. A file no manifest lists fails the lint (D-154).
+- Every rule file is listed by one manifest. A file no manifest lists fails the lint.
 - No file links to another rule file, and no file exceeds 800 lines.
 - A list item is a whole sentence. An item that stops at a comma or at `and` fails.
 - A section that describes checks of the level `all` carries the mark `<!-- level: all -->`, and
@@ -184,7 +184,7 @@ reads the rule files like every other text.
 
 The four source rule corpora were checked against the merged corpus statement by statement while the merge ran. Every statement had to survive in `rules/`, in the templates, or in a list
 of dropped statements with a reason. The state recorded above is the final one, and the check
-retired with the source corpora (D-70).
+retired with the source corpora.
 
 ## What the corpus does not do
 
@@ -193,3 +193,106 @@ retired with the source corpora (D-70).
 - It does not enumerate directories. Layout belongs to the project layer.
 - It does not tell an agent to run commands the gate already runs. It says: run `gspot check
 --staged`.
+
+## Acceptance contracts
+
+These clauses specify required behavior. [Remaining work](22-remaining.md) owns status and evidence.
+
+### Acceptance K-230
+
+A section of a rule file carries the level of the checks it describes, and the
+assembler leaves out a section above the level of the repository.
+
+A heading line is followed by `<!-- level: all -->` where its rules are taste. The
+assembler drops such a section at `recommended`. The lint fails a section that names a rule name of
+the `all` level and carries no mark. `REACT.md` names the file after its component.
+
+A unit test assembles `TYPESCRIPT.md` at both levels and compares the headings.
+
+### Acceptance S-10
+
+The rules lint reads front matter, links, size, layer, and fences. Prose is one
+check, `prose/vale`, for every text of the repository.
+
+The `[[check]]` entry `rules/lint` of `gspot.toml` points at the new path and drops
+the words about prose from its summary.
+
+A rule file with a broken link fails `rules/lint`, and one with a long sentence fails
+`prose/vale` only.
+
+### Acceptance K-179
+
+Selected manifests own rule-file selection and conditional inclusion. Reject missing listed assets. Preserve SwiftUI/UIKit, Tailwind, Playwright, and Bun detection where selected. Rule guides follow selected levels and exclusions; rules-only installation must not claim that checks were installed.
+
+### Acceptance K-231
+
+A language, framework, library, or tool file says what holds for every project of
+that kind. A general file holds what holds for every repository.
+
+A passage about one product moves into the repository it came from, during its
+migration, as a rule file of that repository under `[rules] extra`. A habit of the owner moves
+into the profile of the owner. A sentence that is wrong for most projects, such as the Drizzle
+cutover rule, is deleted. The rules lint refuses the word `quality/` and the names of the
+reference repositories.
+
+`rules/lint` with the word list of K-38, which is built from the manifests.
+
+### Acceptance K-65
+
+The block is a plain list: one line for each selected preset, with the paths of its
+rule files, then the check command and how policy changes.
+
+A list item holds the preset title and its files as links. No padding.
+
+The snapshot of the block for the selection of the app holds under 3 KB.
+
+### Acceptance K-67
+
+The front matter of a rule file holds `preset` and `title`. The folder says the rest.
+
+`front-matter.ts` refuses the key. The managed block groups by the first folder.
+
+The rules lint fails a file with the key.
+
+### Acceptance K-279
+
+`[rules] agents` lists the agent files gspot writes into, detected from what exists.
+
+`AGENTS.md` is always written, because most agents read it. `CLAUDE.md`,
+`GEMINI.md`, and `.github/copilot-instructions.md` get a managed block where the file exists or
+the person names it. Cursor gets `.cursor/rules/gspot.mdc`, a file with the mark, where
+`.cursor/` exists. Every block holds the same list.
+
+A planted repository with `.cursor/` and `GEMINI.md` holds all three, and `uninstall`
+removes them.
+
+### Acceptance K-229
+
+Every list item of a rule file is a whole sentence.
+
+The items are written whole from the reference repositories, which are read and not
+changed. `lint.ts` reports a list item whose last line ends with a comma, with `and`, or with no full stop.
+
+A unit test of the lint with one cut item.
+
+### Acceptance K-241
+
+A rule file never asks for what a check of the same preset refuses.
+
+Each of the nine is settled on the side of the decision or the check, and the rule
+file changes. `explicit_acl` moves to the level `all` (row 11), and the rule file says so.
+
+`src/rules/lint.ts` reads every rule name a rule file names, and fails where the template
+of its preset turns that rule the other way.
+
+### Acceptance K-261
+
+An example marked good passes the linter of its preset.
+
+`examples.ts` takes each fenced block under a line that starts with `Good`, writes it
+to the cache, and runs the tool the manifest names for that language. The two zod rules move to
+the level `all`.
+
+`rules/lint` runs the examples at the push stage.
+
+Structural prose follows the executable-statement contract in [07-slop-drift.md](07-slop-drift.md). Do not encourage tiny wrappers, arbitrary declaration splitting, or padding to satisfy a threshold. Required API functions use narrow, reasoned suppressions.

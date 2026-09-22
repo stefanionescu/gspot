@@ -1,10 +1,10 @@
 import { compact } from '#cli/policy/normalize.ts';
 import { dirname, relative } from 'node:path';
-import type { Session } from '#types/run.ts';
-import type { FormatSettings, Policy } from '#types/config.ts';
-import type { EditorconfigOverride, ScopedFormat } from '#types/emit.ts';
+import type { Session } from '#cli/run/types.ts';
+import type { FormatSettings, Policy } from '#cli/policy/types.ts';
+import type { EditorconfigOverride, ScopedFormat } from '#cli/emit/types.ts';
 import { shippedFormat } from '#cli/presets/listing.ts';
-import { expandedPaths, isInScope, pathMatcher } from '#cli/presets/claims.ts';
+import { expandedPaths } from '#cli/presets/claims.ts';
 
 function formatEntries(policy: Policy): ScopedFormat[] {
     const tables = [
@@ -61,7 +61,21 @@ export function prettierConfig(
         if (scope !== '') excludeFiles.push(`!${fromConfig(literalGlob(scope))}/**`);
         return { files, excludeFiles, options: prettierOptions(format) };
     });
-    const extras = Object.fromEntries(Object.entries(extra ?? {}).filter(([key]) => key !== 'reason'));
+    const { overrides: nativeOverrides = [], reason: _reason, ...extras } = extra ?? {};
+    for (const entry of nativeOverrides as {
+        files: string | string[];
+        excludeFiles?: string | string[];
+        options: Record<string, unknown>;
+    }[]) {
+        const files = (typeof entry.files === 'string' ? [entry.files] : entry.files).map(fromConfig);
+        const excluded =
+            entry.excludeFiles === undefined
+                ? []
+                : typeof entry.excludeFiles === 'string'
+                  ? [entry.excludeFiles]
+                  : entry.excludeFiles;
+        overrides.push({ files, excludeFiles: excluded.map(fromConfig), options: entry.options });
+    }
     const format = { ...shippedFormat(), ...policy.format } as FormatSettings;
     return {
         ...prettierOptions(format),
@@ -72,26 +86,25 @@ export function prettierConfig(
     };
 }
 
-/** Resolve EditorConfig options for the current governed paths, including selectors its section syntax cannot express. */
+/** Emit representable EditorConfig selectors without expanding the current file inventory. */
 export function editorconfigOverrides(session: Session): EditorconfigOverride[] {
-    const entries = formatEntries(session.policyFiles.policy).map((entry) => ({
-        ...entry,
-        matches: pathMatcher(entry.paths),
-    }));
-    return session.repository.files.flatMap((file): EditorconfigOverride[] => {
-        if (file.nature !== 'source' || file.path.startsWith('.gspot/')) return [];
-        const format = Object.assign(
-            {},
-            ...entries
-                .filter((entry) => isInScope(file.path, entry.scope) && entry.matches(file.path))
-                .map((entry) => entry.format),
-        ) as Partial<FormatSettings>;
+    return formatEntries(session.policyFiles.policy).flatMap(({ scope, paths, format }) => {
         const options = editorconfigOptions(format);
         if (Object.keys(options).length === 0) return [];
-        if (/[\r\n]/u.test(file.path))
-            throw new Error(
-                `EditorConfig cannot represent a path containing a line break: ${JSON.stringify(file.path)}.`,
-            );
-        return [{ path: `/${literalGlob(file.path)}`, options }];
+        return expandedPaths(paths).map((pattern) => {
+            if (pattern.startsWith('!') || /[\r\n]|[!+?*@]\(/u.test(pattern))
+                throw new Error(
+                    `EditorConfig cannot represent selector ${JSON.stringify(pattern)}. Keep this override in tools.prettier.extra.overrides or a native EditorConfig section.`,
+                );
+            let path = pattern;
+            if (scope !== '' && !path.startsWith(`${scope}/`)) {
+                if (!path.startsWith('**/') || path.slice(3).includes('/'))
+                    throw new Error(
+                        `EditorConfig cannot intersect selector ${JSON.stringify(pattern)} with scope ${scope}. Use a root-relative selector within that scope.`,
+                    );
+                path = `${literalGlob(scope)}/${path}`;
+            }
+            return { path: `/${path}`, options };
+        });
     });
 }

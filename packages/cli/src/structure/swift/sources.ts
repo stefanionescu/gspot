@@ -2,9 +2,9 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 import { parserFor } from '#cli/naming/parsers.ts';
-import type { SwiftFunction, SwiftSource } from '#types/swift.ts';
+import type { SwiftFunction, SwiftSource } from '#cli/structure/swift/types.ts';
 
 const FILE_LOCAL = new Set(['private', 'fileprivate']);
 
@@ -13,7 +13,9 @@ function modifiersOf(node: Node): Node[] {
 }
 
 function bodyOf(node: Node): Node[] {
-    const statements = node.childForFieldName('body')?.namedChildren.find((child) => child.type === 'statements');
+    const statements = (node.childForFieldName('body') ?? node).namedChildren.find(
+        (child) => child.type === 'statements',
+    );
     return (statements?.namedChildren ?? []).filter((child) => !child.type.endsWith('comment'));
 }
 
@@ -59,21 +61,35 @@ export async function swiftSources(input: EngineInput): Promise<SwiftSource[]> {
  * @returns the functions
  */
 export function functionsOf(source: SwiftSource): SwiftFunction[] {
-    return source.tree.rootNode.descendantsOfType('function_declaration').flatMap((node) => {
-        const name = node.childForFieldName('name');
-        if (name?.type !== 'simple_identifier') return [];
-        const modifiers = modifiersOf(node);
-        const isBound = modifiers.some((modifier) => modifier.type === 'attribute' || modifier.text === 'override');
-        return [
-            {
-                path: source.path,
-                node,
-                name: name.text,
-                body: bodyOf(node),
-                parameters: parameterNames(node),
-                isFileLocal: FILE_LOCAL.has(visibilityOf(node)),
-                isBound,
-            },
-        ];
-    });
+    return source.tree.rootNode
+        .descendantsOfType([
+            'function_declaration',
+            'init_declaration',
+            'deinit_declaration',
+            'lambda_literal',
+            'computed_getter',
+            'computed_setter',
+            'computed_property',
+            'willset_clause',
+            'didset_clause',
+        ])
+        .flatMap((node) => {
+            if (node.type === 'computed_property' && !node.namedChildren.some((child) => child.type === 'statements'))
+                return [];
+            const name = node.childForFieldName('name');
+            if (node.type === 'function_declaration' && node.childForFieldName('body') === null) return [];
+            const modifiers = modifiersOf(node);
+            const isBound = modifiers.some((modifier) => modifier.type === 'attribute' || modifier.text === 'override');
+            return [
+                {
+                    path: source.path,
+                    node,
+                    name: name?.text ?? node.type,
+                    body: bodyOf(node),
+                    parameters: parameterNames(node),
+                    isFileLocal: FILE_LOCAL.has(visibilityOf(node)),
+                    isBound,
+                },
+            ];
+        });
 }

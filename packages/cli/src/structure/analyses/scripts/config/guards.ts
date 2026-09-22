@@ -1,12 +1,8 @@
 // Every configuration owner opens with one include guard that no other owner shares. Searched: shellcheck; no such rule.
-import type { Finding } from '#types/finding.ts';
-import { CONFIG_GUARD } from '#config/structure.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import { CONFIG_GUARD } from '#cli/structure/structure-definitions.ts';
 import { codeLines } from '#cli/structure/code-lines.ts';
-import type { Analysis, CodeLine, ScriptFile, StructureContext } from '#types/structure.ts';
-
-function guardName(first: CodeLine | undefined): string | undefined {
-    return first === undefined ? undefined : CONFIG_GUARD.exec(first.code)?.groups?.['name'];
-}
+import type { Analysis, CodeLine, ScriptFile, StructureContext } from '#cli/structure/types.ts';
 
 function markProblems(
     file: ScriptFile,
@@ -31,7 +27,7 @@ function markProblems(
 
 function guardFindings(file: ScriptFile, seen: Map<string, string>, context: StructureContext): Finding[] {
     const [first, second] = codeLines(file.lines).filter((line) => !line.code.startsWith('#!'));
-    const name = guardName(first);
+    const name = first === undefined ? undefined : CONFIG_GUARD.exec(first.code)?.groups?.['name'];
     if (first === undefined || name === undefined)
         return [
             context.report(

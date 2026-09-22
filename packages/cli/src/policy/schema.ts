@@ -32,10 +32,14 @@ const reasonedNumber = reasoned(z.number());
 
 const reasonedTextList = reasoned(textList);
 
-const limitTable = z.record(text, reasonedNumber);
+const limitTable = z
+    .object({ trivial_statements: reasoned(z.number().int().positive()).optional() })
+    .catchall(reasonedNumber);
 
 const limitValue = z.union([reasonedNumber, limitTable]);
-const limitsTable = z.record(text, limitValue);
+const limitsTable = z
+    .object({ trivial_statements: reasoned(z.number().int().positive()).optional() })
+    .catchall(limitValue);
 
 const namingCategoryShape = {
     max_chars: reasonedNumber.optional(),
@@ -94,19 +98,8 @@ const architectureSchema = z.strictObject({
 
 const reasonedPaths = z.strictObject({ paths: textListNonEmpty, reason: text.optional() });
 
-const callThrough = z.strictObject({ file: text, name: text, reason: text.optional() });
-
-const trivialExemption = z.strictObject({
-    language: text.optional(),
-    path: text,
-    names: textList,
-    reason: text.optional(),
-});
-
 const structureSchema = z.strictObject({
     reexports: z.enum(['none', 'index-only']).optional(),
-    call_through_allowed: z.array(callThrough).optional(),
-    trivial_allowed: z.array(trivialExemption).optional(),
     single_file_folder_allowed: z.array(reasonedPaths).optional(),
     prefix_collision_allowed: z.array(reasonedPaths).optional(),
     folder_name_allowed: z.array(reasonedPaths).optional(),
@@ -144,11 +137,32 @@ const enabledRule = z.union([enabledSeverity, z.tuple([enabledSeverity]).rest(z.
         `Use an enabled severity (error, warn, 2, or 1), optionally followed by rule options. To disable this rule, use gspot ignore <check> --rule ${String(issue.path?.at(-1) ?? '<rule>')}.`,
 });
 const eslintRules = z.record(text, enabledRule);
+const adoptedSeverity = z.union([enabledSeverity, z.literal('off'), z.literal(0)]);
+const adoptedRule = z.union([adoptedSeverity, z.tuple([adoptedSeverity]).rest(z.json())]);
 const eslintTable = toolTable.extend({
+    adopted: z
+        .array(
+            z.strictObject({
+                name: text.optional(),
+                files: z.array(z.union([text, textListNonEmpty])).optional(),
+                ignores: textList.optional(),
+                rules: z.record(text, adoptedRule).optional(),
+                plugins: z.record(text, z.strictObject({ module: text.min(1), export: text.min(1) })).optional(),
+                languageOptions: z.record(text, z.json()).optional(),
+                linterOptions: z.record(text, z.json()).optional(),
+                settings: z.record(text, z.json()).optional(),
+            }),
+        )
+        .optional(),
     rules: eslintRules.optional(),
     overrides: z.array(z.strictObject({ paths: textListNonEmpty, rules: eslintRules })).optional(),
 });
-const toolsSchema = z.object({ eslint: eslintTable.optional() }).catchall(toolTable);
+const toolsSchema = z
+    .object({
+        eslint: eslintTable.optional(),
+        prettier: toolTable.extend({ ignore_patterns: z.array(z.string()).optional() }).optional(),
+    })
+    .catchall(toolTable);
 
 const ignoreSchema = z.strictObject({
     check: text,

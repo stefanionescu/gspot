@@ -1,11 +1,16 @@
 // Every package.json: exact versions, one packageManager across the workspace, a private root, one kind of lockfile.
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import type { Reporter } from '#types/integrity.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { Reporter } from '#cli/checks/types.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import type { PackageManifest } from '#types/repository.ts';
+import type { PackageManifest } from '#cli/repository/types.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
-import { DEPENDENCY_TABLES, EXACT_VERSION, LOCKFILES, NON_REGISTRY_VERSION } from '#config/integrity.ts';
+import {
+    DEPENDENCY_TABLES,
+    EXACT_VERSION,
+    LOCKFILES,
+    NON_REGISTRY_VERSION,
+} from '#cli/checks/integrity-definitions.ts';
 
 const MANIFEST = 'package.json';
 

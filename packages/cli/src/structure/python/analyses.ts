@@ -1,7 +1,8 @@
-import type { EngineInput } from '#types/run.ts';
+import { trivialFile } from '#cli/structure/statements.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 // The Python structure checks, each one analysis of the integrity engine.
-import type { Finding } from '#types/finding.ts';
-import type { StructureReader } from '#types/pyproject.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { StructureReader } from '#cli/structure/python/types.ts';
 import { importCycles, singletons } from '#cli/structure/python/imports.ts';
 import { functionsOf, pythonModules } from '#cli/structure/python/modules.ts';
 
@@ -13,7 +14,6 @@ import {
     privatePrefixes,
 } from '#cli/structure/python/exports.ts';
 import {
-    callThroughs,
     longFunctions,
     longModules,
     placeholderDocstrings,
@@ -53,10 +53,22 @@ export const PYTHON_STRUCTURE: Record<string, (input: EngineInput) => Promise<Fi
     'python-function-length': analysis(({ modules, functions }, input) =>
         longFunctions(modules, functions, input.view.limit('function_lines', 'python') ?? DEFAULT_FUNCTION_LINES),
     ),
-    'python-trivial-function': analysis(({ modules, functions }, input) =>
-        trivialFunctions(modules, functions, names(input, 'structure.python.trivial_allowed')),
-    ),
-    'python-call-through': analysis(({ functions }) => callThroughs(functions)),
+    'python-trivial-function': analysis(({ functions, modules }, input) => {
+        const threshold = input.view.limit('trivial_statements', 'python') ?? 2;
+        return [
+            ...trivialFunctions(functions, threshold),
+            ...modules
+                .filter((source) => trivialFile(source.tree.rootNode, 'python', threshold))
+                .map((source) => ({
+                    file: source.path,
+                    line:
+                        (source.tree.rootNode.namedChildren.find((node) => !node.type.includes('comment'))
+                            ?.startPosition.row ?? 0) + 1,
+                    rule: 'trivial-file',
+                    text: 'This file contains only imports, aliases, forwarding, or trivial functions. Move them to their owner.',
+                })),
+        ];
+    }),
     'python-placeholder-docstring': analysis(({ functions }) => placeholderDocstrings(functions)),
     'python-private-prefix': analysis(({ modules }) => privatePrefixes(modules)),
     'python-private-before-public': analysis(({ modules }) => privateBeforePublic(modules)),

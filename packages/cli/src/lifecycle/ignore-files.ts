@@ -40,7 +40,9 @@ export function ignoreFileEntries(text: string, path: string): { paths: string[]
         if (line.startsWith(COMMENT)) {
             flush();
             reason = reasonFrom(path, line.slice(1).trim());
-        } else if (line !== '' && !line.startsWith('!')) current.push(globOf(folder, line));
+        } else if (line.startsWith('!'))
+            throw new Error(`${path}: ordered negation ${JSON.stringify(line)} requires explicit conversion.`);
+        else if (line !== '') current.push(globOf(folder, line));
     }
     flush();
     return entries;

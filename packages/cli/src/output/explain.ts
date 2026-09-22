@@ -1,16 +1,16 @@
 // Explain a check, tool rule, preset, setting, or file path.
-import type { Session } from '#types/run.ts';
+import type { Session } from '#cli/run/types.ts';
 import { explainPath } from '#cli/output/file.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Explanation } from '#types/output.ts';
+import type { Explanation } from '#cli/output/types.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import type { ResolvedSetting } from '#types/config.ts';
+import type { ResolvedSetting } from '#cli/policy/types.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import { allChecks, toRow } from '#cli/presets/listing.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
-import type { CheckSpec, ListingRow, SettingSpec } from '#types/manifest.ts';
+import type { CheckSpec, ListingRow, SettingSpec } from '#cli/presets/types.ts';
 
 const TOOL_TIMEOUT_MS = 10_000;
 const SWIFTLINT_LINES = 6;
@@ -51,10 +51,6 @@ const TOOL_RULE_SOURCES: Record<string, (rule: string, path: string) => string |
     },
 };
 
-function toolOf(check: CheckSpec): string {
-    return check.tool ?? check.command?.[0] ?? '~';
-}
-
 function isSelected(session: Session, presetName: string): boolean {
     return session.scopes.some((scope) => scope.selected.some((manifest) => manifest.preset.name === presetName));
 }
@@ -63,7 +59,7 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
     const found = allChecks().get(checkName);
     if (!found) return undefined;
     const { check, preset } = found;
-    const toolPrefix = `tools.${toolOf(check)}.`;
+    const toolPrefix = `tools.${check.tool ?? check.command?.[0] ?? '~'}.`;
     const settings = preset.settings
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
         .map((setting) => setting.name);
@@ -121,7 +117,9 @@ function toolSummary(session: Session | undefined, tool: string, rule: string): 
 function toolRuleExplanation(session: Session | undefined, tool: string, rule: string): Explanation | undefined {
     const check = allChecks()
         .values()
-        .find(({ check: spec }) => toolOf(spec) === tool || spec.name.endsWith(`/${tool}`))?.check;
+        .find(
+            ({ check: spec }) => (spec.tool ?? spec.command?.[0] ?? '~') === tool || spec.name.endsWith(`/${tool}`),
+        )?.check;
     if (!check) return undefined;
     const summary = toolSummary(session, tool, rule);
     const lines = [

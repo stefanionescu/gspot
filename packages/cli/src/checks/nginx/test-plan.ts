@@ -1,6 +1,6 @@
 // What nginx -t needs to accept a file outside its server: the certificate paths it opens and the upstream names it resolves.
 import { capturedLines } from '#cli/run/captured-lines.ts';
-import { NGINX_CERTIFICATE, NGINX_KEY, NGINX_UPSTREAM } from '#config/integrity.ts';
+import { NGINX_CERTIFICATE, NGINX_KEY, NGINX_UPSTREAM } from '#cli/checks/integrity-definitions.ts';
 
 const LOCAL_NAMES = new Set(['localhost', 'unix']);
 

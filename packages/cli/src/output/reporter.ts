@@ -1,9 +1,9 @@
 import { invokingHook } from '#cli/platform/environment.ts';
 // Check lines, findings, help lines, reproduce lines, the summary; columns from the longest id.
 import { paint } from '#cli/output/messages.ts';
-import type { RunReport } from '#types/report.ts';
-import type { CheckResult, Finding } from '#types/finding.ts';
-import type { Columns, Painter, ReportOptions } from '#types/output.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
+import type { CheckResult, Finding } from '#cli/output/finding.ts';
+import type { Columns, Painter, ReportOptions } from '#cli/output/types.ts';
 
 const MS_PER_SECOND = 1000;
 const SCOPE_WIDTH_MIN = 4;

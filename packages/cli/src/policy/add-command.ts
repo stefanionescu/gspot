@@ -6,12 +6,12 @@ import * as messages from '#cli/policy/messages.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
-import type { CommandResult } from '#types/run.ts';
-import type { TomlTable, Mutation } from '#types/config.ts';
+import type { CommandResult } from '#cli/run/types.ts';
+import type { TomlTable, Mutation } from '#cli/policy/types.ts';
 import { commitPolicy } from '#cli/policy/commit-policy.ts';
 import { installTools } from '#cli/lifecycle/install-tools.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
-import type { AddOptions, RemoveOptions } from '#types/commands.ts';
+import type { AddOptions, RemoveOptions } from '#cli/commands/types.ts';
 import { requireChain } from '#cli/presets/select.ts';
 
 function presetHolder(raw: TomlTable, scope: string | undefined): TomlTable {

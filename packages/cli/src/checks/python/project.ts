@@ -5,8 +5,8 @@ import { z } from 'zod';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { pathMatcher } from '#cli/presets/claims.ts';
 
@@ -23,17 +23,13 @@ function finding(input: EngineInput, at: { file: string; line: number }, rule: s
     return { check: input.spec.name, file: at.file, line: at.line, rule, message: text, fixable: false };
 }
 
-function scopePath(input: EngineInput, path: string): string {
-    return input.scope === '' ? path : `${input.scope}/${path}`;
-}
-
 /**
  * Runs the import contracts of the scope. A project with no [tool.importlinter] table has none to run.
  * @param input the engine input
  * @returns one finding for each broken contract
  */
 export async function importLinter(input: EngineInput): Promise<Finding[]> {
-    const manifest = join(input.root, scopePath(input, MANIFEST));
+    const manifest = join(input.root, input.scope === '' ? MANIFEST : `${input.scope}/${MANIFEST}`);
     if (!existsSync(manifest)) throw new SkippedCheckError('This scope has no pyproject.toml import contracts.');
     const project = importConfiguration.parse(parse(readFileSync(manifest, 'utf8')));
     if (project.tool?.importlinter === undefined)
@@ -47,7 +43,7 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
     });
     const said = [result.stderr, result.stdout].join('').trim().split('\n').at(-1) ?? '';
     if (result.code !== 0 && broken.length === 0) throw new Error(`The lint-imports command failed: ${said}`);
-    const at = { file: scopePath(input, MANIFEST), line: 1 };
+    const at = { file: input.scope === '' ? MANIFEST : `${input.scope}/${MANIFEST}`, line: 1 };
     return broken.map((name) =>
         finding(input, at, 'contract', `The import contract "${name}" is broken; lint-imports prints the chain.`),
     );

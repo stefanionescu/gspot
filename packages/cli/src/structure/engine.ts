@@ -1,13 +1,12 @@
-import type { Engine, EngineInput } from '#types/run.ts';
+import type { Engine, EngineInput } from '#cli/run/types.ts';
 // The structure engine: one analysis per check, chosen by `analysis =` in the manifest.
-import type { CheckSpec } from '#types/manifest.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
 import { countFindings } from '#cli/structure/counts.ts';
-import { DOCUMENT_EXTENSIONS } from '#config/structure.ts';
+import { DOCUMENT_EXTENSIONS } from '#cli/structure/structure-definitions.ts';
 import { scriptIndex } from '#cli/structure/cross-file-index.ts';
 import { docComment } from '#cli/structure/analyses/doc-comment.ts';
 import { fileLength } from '#cli/structure/analyses/file/length.ts';
-import type { Analysis, StructureContext } from '#types/structure.ts';
-import { callThrough } from '#cli/structure/analyses/call-through.ts';
+import type { Analysis, StructureContext } from '#cli/structure/types.ts';
 import { folderNames } from '#cli/structure/analyses/folder-names.ts';
 import { scriptEmbeds } from '#cli/structure/analyses/scripts/embeds.ts';
 import { scriptSafety } from '#cli/structure/analyses/scripts/safety.ts';
@@ -43,7 +42,6 @@ const ANALYSES: Record<string, Analysis> = {
     'private-prefix': privatePrefix,
     'private-before-public': privateBeforePublic,
     'trivial-function': trivialFunction,
-    'call-through': callThrough,
     'env-access-owner': envAccessOwner,
     'bash-interpreter': scriptInterpreter,
     'bash-script-policy': scriptPolicy,

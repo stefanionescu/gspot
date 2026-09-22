@@ -1,10 +1,9 @@
 // Imports grouped and sorted by statement shape and length: one-line imports first, multi-line second, each by length.
-import { createRule } from '#plugin/rule.ts';
-import { optionsSchema } from '#plugin/options.ts';
+import { createRule } from '#plugin/rules/definition.ts';
+import { optionsSchema } from '#plugin/rules/options.ts';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import type { ImportLayoutEntry } from '#plugin-types/plugin.ts';
+
 import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
-import type { ImportLayoutOptions } from '#plugin-types/options.ts';
 
 const BLANK = /^\s*$/u;
 const SPACES = /\s+/gu;
@@ -160,3 +159,16 @@ export const importLayout = createRule<ImportLayoutOptions, 'layout'>({
         };
     },
 });
+
+export type ImportLayoutEntry = {
+    node: TSESTree.Statement;
+    start: number;
+    end: number;
+    text: string;
+    sortText: string;
+    lineSpan: number;
+    multiLine: boolean;
+    index: number;
+};
+
+export type ImportLayoutOptions = [{ allowRequire?: boolean }];

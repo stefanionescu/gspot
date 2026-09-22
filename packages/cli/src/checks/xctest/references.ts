@@ -1,6 +1,6 @@
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 // Snapshot references: every folder of references belongs to a test file that exists.
-import type { Finding } from '#types/finding.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { xcodeFinding } from '#cli/checks/xcode/files.ts';
 
 const DEFAULT_FOLDERS = ['__Snapshots__'];

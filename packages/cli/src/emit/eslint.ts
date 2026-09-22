@@ -1,5 +1,5 @@
-import type { EslintRuleBlock } from '#types/emit.ts';
-import type { EslintSettings, Policy } from '#types/config.ts';
+import type { EslintRuleBlock } from '#cli/emit/types.ts';
+import type { EslintSettings, Policy } from '#cli/policy/types.ts';
 import { pathExpressions } from '#cli/presets/claims.ts';
 
 /** Emit base rules first, then ordered path overrides, with each declaration bounded by its owning scope. */

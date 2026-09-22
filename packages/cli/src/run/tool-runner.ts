@@ -1,75 +1,77 @@
-import type { MergedView } from '#types/config.ts';
+import type { MergedView } from '#cli/policy/types.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
 import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { executionFailure, checkedFindings, toolOutputDetail } from '#cli/run/broken-tool.ts';
-import type { SpawnResult, SpawnOptions } from '#types/platform.ts';
+import type { SpawnResult, SpawnOptions } from '#cli/platform/types.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
 import { ToolOutputError } from '#cli/run/parse-output.ts';
 import { probeTool, toolPin } from '#cli/platform/tool-probe.ts';
-import type { ToolPin, CheckSpec } from '#types/manifest.ts';
-import type { CheckResult, Finding } from '#types/finding.ts';
-import { substitute, perFileCommands, substituteValue } from '#cli/run/command-parts.ts';
-import type { EngineInput, ToolRunState, PreparedCommand, Substitutions, Session, PlannedCheck } from '#types/run.ts';
-
+import type { ToolPin, CheckSpec } from '#cli/presets/types.ts';
+import type { CheckResult, Finding } from '#cli/output/finding.ts';
+import type {
+    EngineInput,
+    ToolRunState,
+    PreparedCommand,
+    Substitutions,
+    Session,
+    PlannedCheck,
+} from '#cli/run/types.ts';
 const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
-
 const FILES_PLACEHOLDER = '{files}';
-
 const DEFAULT_TOOL_SECONDS = 600;
-
 const MILLISECONDS = 1000;
-
-// ESLint opens a crash with a greeting and its version, and the cause is the line after those.
-function isBanner(line: string): boolean {
-    return line.trim() === '' || line.startsWith('Oops!') || line.startsWith('ESLint: ');
-}
-
 function firstLine(result: SpawnResult, placeholder: string): string {
     const text = result.stderr.trim() === '' ? result.stdout.trim() : result.stderr.trim();
-    return text.split('\n').find((line) => !isBanner(line)) ?? placeholder;
+    return (
+        text
+            .split('\n')
+            .find((line) => !(line.trim() === '' || line.startsWith('Oops!') || line.startsWith('ESLint: '))) ??
+        placeholder
+    );
 }
-
-function missingNote(tool: ToolPin, probe: { found?: string; floor?: string; hint?: string }, state: string): string {
+function missingNote(
+    tool: ToolPin,
+    probe: {
+        found?: string;
+        floor?: string;
+        hint?: string;
+    },
+    state: string,
+): string {
     const hint = probe.hint ?? 'install it';
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
     return state === 'outdated'
         ? `${tool.name} ${probe.found ?? '?'} is below ${probe.floor ?? '?'}. Run: ${hint}`
         : `${tool.name}${version} is not installed. Run: ${hint}`;
 }
-
 function workingDirectory(session: Session, planned: PlannedCheck): string {
     const { spec, scope } = planned;
     const isInScope = spec.cwd === 'scope' || (spec.runs === 'per-scope' && spec.cwd !== 'root');
     return isInScope ? join(session.root, scope.scope.path) : session.root;
 }
-
 function relativizer(session: Session, planned: PlannedCheck, cwd: string): (path: string) => string {
     const scopePath = planned.scope.scope.path;
     if (scopePath === '' || cwd === session.root) return (path) => path;
     return (path) => path.slice(scopePath.length + 1);
 }
-
 function prefixScope(findings: Finding[], scopePath: string): void {
     for (const finding of findings)
         if (finding.file !== '' && !finding.file.startsWith(`${scopePath}/`))
             finding.file = `${scopePath}/${finding.file}`;
 }
-
 function countMatches(spec: CheckSpec, result: SpawnResult): number {
     if (spec.count_regex === undefined) return 0;
     const pattern = new RegExp(spec.count_regex, 'gu');
     return `${result.stdout}\n${result.stderr}`.matchAll(pattern).toArray().length;
 }
-
 function unexplainedFailure(spec: CheckSpec, tool: ToolPin, result: SpawnResult, file: string | undefined): Finding {
     const placeholder = `${tool.name} exited ${String(result.code)}`;
     const text = file === undefined ? toolOutputDetail(result, placeholder) : firstLine(result, placeholder);
     const { name, help } = spec;
     return { check: name, file: file?.replaceAll('\\', '/') ?? '', message: text, help, fixable: false };
 }
-
 function markFailure(
     spec: CheckSpec,
     tool: ToolPin,
@@ -85,11 +87,6 @@ function markFailure(
     state.isFailed = true;
     if (parsed.length === 0) state.findings.push(unexplainedFailure(spec, tool, result, undefined));
 }
-
-function isPerFile(spec: CheckSpec): boolean {
-    return spec.command?.includes('{file}') ?? false;
-}
-
 function collect(
     planned: PlannedCheck,
     command: string[],
@@ -100,13 +97,12 @@ function collect(
     const { spec, scope } = planned;
     const tool = planned.tool;
     if (tool === undefined) throw new Error('Cannot collect tool output without a selected tool.');
-    if (parsed.length === 0 && result.code !== 0 && isPerFile(spec))
+    if (parsed.length === 0 && result.code !== 0 && (spec.command?.includes('{file}') ?? false))
         parsed.push(unexplainedFailure(spec, tool, result, command.at(-1) ?? ''));
     if (scope.scope.path !== '' && state.cwd !== state.root) prefixScope(parsed, scope.scope.path);
     state.findings.push(...parsed);
     markFailure(spec, tool, result, parsed, state);
 }
-
 function batchedCommands(
     session: Session,
     planned: PlannedCheck,
@@ -126,7 +122,6 @@ function batchedCommands(
         return perFileCommands(argv, files);
     });
 }
-
 function finished(
     base: CheckResult,
     spec: CheckSpec,
@@ -142,7 +137,6 @@ function finished(
     const status = state.isFailed || findings.length > 0 ? 'fail' : 'ok';
     return { ...base, status, duration: performance.now() - started, findings, command: argv };
 }
-
 async function runCommands(
     session: Session,
     planned: PlannedCheck,
@@ -176,7 +170,6 @@ async function runCommands(
     }
     return finished(base, spec, state, argv, started);
 }
-
 /**
  * Prepares scoped commands with bounded file batches for checks and corrections.
  * @param session the session rooted at the working copy
@@ -215,7 +208,6 @@ export function prepareCommand(
     );
     return { root: session.root, cwd, argv: argv.filter((part) => typeof part === 'string'), commands, env };
 }
-
 /**
  * Runs one planned tool check: probes the tool, expands the command, spawns it once or per file, parses the output.
  * @param session the session
@@ -247,7 +239,6 @@ export async function runToolCheck(
     const prepared = prepareCommand(session, planned, command, probe.path);
     return runCommands(session, planned, tool, prepared, base);
 }
-
 /**
  * Runs a tool command with the shared output environment and configured deadline.
  * @param view the policy view whose limits apply
@@ -259,7 +250,9 @@ export async function runToolCheck(
 export async function runToolCommand(
     view: Pick<MergedView, 'limit'> | undefined,
     command: string[],
-    prepared: Pick<SpawnOptions, 'cwd' | 'env' | 'stdin'> & { captureFd3?: boolean },
+    prepared: Pick<SpawnOptions, 'cwd' | 'env' | 'stdin'> & {
+        captureFd3?: boolean;
+    },
     cancelSignal?: AbortSignal,
 ): Promise<SpawnResult> {
     if (cancelSignal?.aborted === true)
@@ -279,7 +272,6 @@ export async function runToolCommand(
         ...(cancelSignal === undefined ? {} : { cancelSignal }),
     });
 }
-
 /**
  * Run an adapter command through the shared execution boundaries.
  * @param input the check and its command session
@@ -307,12 +299,14 @@ export async function runCheckCommand(
     if (failure !== undefined) throw new Error(failure.note);
     return result;
 }
-
 function adapterTool(
     input: EngineInput,
     name: string,
     options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>>,
-): { path: string; env: Record<string, string> } {
+): {
+    path: string;
+    env: Record<string, string>;
+} {
     const tool = toolPin(input.session.manifests.values(), name);
     const env = { ...tool.env, ...input.spec.env, ...options.env };
     const probe = probeTool({ ...input.session, cwd: options.cwd }, { ...tool, env });
@@ -321,4 +315,130 @@ function adapterTool(
         throw new MissingToolError(missingNote(tool, probe, probe.state));
     }
     return { path: probe.path, env };
+}
+import { existsSync } from 'node:fs';
+import { toPlatform } from '#cli/platform/paths.ts';
+import type { ConfigurationTarget } from '#cli/presets/types.ts';
+import type { CommandPart } from '#cli/run/types.ts';
+import { configurationName, isWorkspace, targetInScope } from '#cli/run/scope-paths.ts';
+const CONFIG_PLACEHOLDER = /\{config:(?<name>[a-z0-9-]+)\}/gu;
+const STUB_PLACEHOLDER = /\{stub:(?<name>[^}]+)\}/gu;
+const WORKSPACE_PREFIX = '{workspace:';
+const SETTING_PLACEHOLDER = /\{setting:(?<name>[a-z\d_.-]+)\}/gu;
+const EXISTING_PLACEHOLDER = /^\{existing:(?<flag>[^:]+):(?<path>[^}]+)\}$/u;
+const EACH_PLACEHOLDER = /^\{each:(?<flag>[^:]+):(?<setting>[a-z0-9_.-]+)\}$/u;
+/**
+ * Expands an each part, or returns undefined when the part is something else.
+ * @param planned the check, whose scope holds the settings
+ * @param part one part of the manifest command
+ * @returns the arguments, empty when the list is empty
+ */
+function listArguments(planned: PlannedCheck, part: string): string[] | undefined {
+    const groups = EACH_PLACEHOLDER.exec(part)?.groups;
+    if (groups === undefined) return undefined;
+    const held = planned.scope.view.settings[groups['setting'] ?? ''] as string[] | string | undefined;
+    const items = typeof held === 'string' ? [held].filter((item) => item !== '') : (held ?? []);
+    return items.flatMap((item) => [groups['flag'] ?? '', toPlatform(item)]);
+}
+/**
+ * Replaces every setting placeholder in a command part with the value the policy holds.
+ * @param planned the check, whose scope holds the settings
+ * @param part one part of the manifest command
+ * @returns the part with the values in place; a setting with no value becomes an empty string
+ */
+function settingsFilled(planned: PlannedCheck, part: string): string {
+    return part.replaceAll(SETTING_PLACEHOLDER, (_match, name: string) => {
+        const found = planned.scope.view.settings[name];
+        return typeof found === 'string' || typeof found === 'number' || typeof found === 'boolean'
+            ? String(found)
+            : '';
+    });
+}
+/**
+ * Expands {existing:<flag>:<path>}: the flag and the absolute path when the file exists, and nothing when it does not.
+ * @param root the repository root
+ * @param part one part of the manifest command
+ * @returns the arguments, or undefined when the part is something else
+ */
+function existingFileArguments(root: string, part: string): string[] | undefined {
+    const groups = EXISTING_PLACEHOLDER.exec(part)?.groups;
+    if (groups === undefined) return undefined;
+    const path = join(root, groups['path'] ?? '');
+    return existsSync(path) ? [groups['flag'] ?? '', toPlatform(path)] : [];
+}
+function allConfigs(session: Session, planned: PlannedCheck): ConfigurationTarget[] {
+    const own = planned.manifest?.configs ?? [];
+    const every = session.manifests
+        .values()
+        .flatMap((manifest) => manifest.configs)
+        .toArray();
+    return [...own, ...every];
+}
+function configurationPath(session: Session, planned: PlannedCheck, name: string): string {
+    const target = allConfigs(session, planned).find(
+        (config) => !config.fragment && configurationName(config.target) === name,
+    );
+    if (!target) throw new Error(`Check ${planned.check} names {config:${name}} and no preset renders it.`);
+    return targetInScope(planned.scope.scope.path, target);
+}
+function stubPath(session: Session, planned: PlannedCheck, name: string, scope: string): string {
+    const target = allConfigs(session, planned).find((config) => config.stub?.path === name);
+    const path = target?.stub?.path ?? name;
+    return scope === '' ? path : `${scope}/${path}`;
+}
+function expandPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
+    const policyPart = listArguments(planned, part) ?? existingFileArguments(session.root, part);
+    return policyPart ?? plainPart(session, planned, part, sub);
+}
+function plainPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
+    if (part === '{files}') return sub.files;
+    if (part === '{file}') return [{ file: true }];
+    if (part.startsWith(WORKSPACE_PREFIX) && part.endsWith('}'))
+        return isWorkspace(session.root, sub.scope) ? [part.slice(WORKSPACE_PREFIX.length, -1), sub.scope] : [];
+    return [substituteValue(session, planned, part, sub)];
+}
+/**
+ * Expands a scalar command argument or environment value from the check scope.
+ * @param session the repository session
+ * @param planned the planned check
+ * @param part the value with placeholders
+ * @param sub the expansion values
+ * @returns the expanded value
+ */
+export function substituteValue(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): string {
+    return settingsFilled(planned, part)
+        .replaceAll(CONFIG_PLACEHOLDER, (_match, name: string) =>
+            toPlatform(join(session.root, configurationPath(session, planned, name))),
+        )
+        .replaceAll(STUB_PLACEHOLDER, (_match, name: string) => toPlatform(stubPath(session, planned, name, sub.scope)))
+        .replaceAll('{scope}', () => (sub.scope === '' ? '.' : sub.scope))
+        .replaceAll('{root}', () => sub.root)
+        .replaceAll('{indent}', () => String(sub.indent))
+        .replaceAll('{message_file}', () => sub.messageFile ?? '');
+}
+/**
+ * Expands policy and scope arguments while retaining individual file slots.
+ * @param session the repository session
+ * @param planned the planned check
+ * @param command the original command
+ * @param sub the expansion values
+ * @returns argument text and file markers
+ */
+export function substitute(
+    session: Session,
+    planned: PlannedCheck,
+    command: string[],
+    sub: Substitutions,
+): CommandPart[] {
+    return command.flatMap((part) => expandPart(session, planned, part, sub));
+}
+/**
+ * Replaces every file marker after variable-length arguments have expanded.
+ * @param parts the expanded command
+ * @param files the paths relative to the command directory
+ * @returns one command per file, or one command when no file marker exists
+ */
+export function perFileCommands(parts: CommandPart[], files: string[]): string[][] {
+    const inputs = parts.some((part) => typeof part !== 'string') ? files : [''];
+    return inputs.map((file) => parts.map((part) => (typeof part === 'string' ? part : file)));
 }

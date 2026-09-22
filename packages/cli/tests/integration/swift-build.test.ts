@@ -5,7 +5,7 @@ import { rejects } from 'node:assert/strict';
 import { createFileTree, testdir } from 'testdirs';
 import { expect, spyOn, test } from 'bun:test';
 import * as spawn from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 import { openSession } from '#cli/run/session.ts';
 import { swiftAnalyze, swiftBuild } from '#cli/checks/swift/build.ts';
 

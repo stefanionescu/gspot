@@ -1,4 +1,4 @@
-import { HOOK_FILES } from '#config/integrity.ts';
+import { HOOK_FILES } from '#cli/checks/integrity-definitions.ts';
 // The one place gspot reads the environment: every variable it honors has a function here.
 
 function isSet(name: string): boolean {

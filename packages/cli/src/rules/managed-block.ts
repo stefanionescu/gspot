@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 // The index block for the agent instruction files.
-import type { Session } from '#types/run.ts';
-import type { RuleFile } from '#types/rules.ts';
+import type { Session } from '#cli/run/types.ts';
+import type { RuleFile } from '#cli/rules/types.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
 
 const AREA_BY_LAYER: Record<string, string> = {

@@ -4,12 +4,12 @@ import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 // The questions init asks, each answered by a flag or the terminal, with the default read from the repository.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import type { Manifest } from '#types/manifest.ts';
-import type { FormatSettings, Policy } from '#types/config.ts';
+import type { Manifest } from '#cli/presets/types.ts';
+import type { FormatSettings, Policy } from '#cli/policy/types.ts';
 import { shippedFormat } from '#cli/presets/listing.ts';
-import type { ExistingTooling } from '#types/repository.ts';
+import type { ExistingTooling } from '#cli/repository/types.ts';
 import { askChoice, askMany, askConfirmation } from '#cli/output/prompts.ts';
-import type { CarriedFormatter, InitAnswers, InitOptions, InitSelection } from '#types/lifecycle.ts';
+import type { CarriedFormatter, InitAnswers, InitOptions, InitSelection } from '#cli/lifecycle/types.ts';
 
 const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
     { value: 'gspot', label: 'gspot installs hooks in the Git-resolved directory' },
@@ -49,10 +49,6 @@ function ciDefault(root: string, tooling: ExistingTooling): InitAnswers['ci'] {
     return /^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|[^@/]+@)gitlab\.com[:/]/u.test(remote) ? 'gitlab' : 'none';
 }
 
-function runnerDefault(tooling: ExistingTooling): InitAnswers['runner'] {
-    return tooling.runner === 'yarn' ? 'npm' : tooling.runner;
-}
-
 async function askHooks(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['hooks']> {
     if (options.hooks !== undefined) return options.hooks;
     return askChoice('Install git hooks?', '--hooks', HOOK_CHOICES, hooksDefault(tooling), options.yes);
@@ -71,7 +67,13 @@ async function askRuleFiles(options: InitOptions): Promise<boolean> {
 
 async function askRunner(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['runner']> {
     if (options.runner !== undefined) return options.runner;
-    return askChoice('Task runner?', '--runner', RUNNER_CHOICES, runnerDefault(tooling), options.yes);
+    return askChoice(
+        'Task runner?',
+        '--runner',
+        RUNNER_CHOICES,
+        tooling.runner === 'yarn' ? 'npm' : tooling.runner,
+        options.yes,
+    );
 }
 
 async function askFormat(

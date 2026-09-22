@@ -1,9 +1,9 @@
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 // An exported `new` instance outside a registry file.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { optionsSchema, stringList } from '#plugin/options.ts';
-import type { RegistryInstanceOnlyOptions } from '#plugin-types/options.ts';
+import { optionsSchema, stringList } from '#plugin/rules/options.ts';
+
 import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot } from '#plugin/files.ts';
 
 const WRAPPERS = new Set(['TSAsExpression', 'TSSatisfiesExpression', 'TSNonNullExpression', 'ChainExpression']);
@@ -47,3 +47,5 @@ export const registryInstanceOnly = createRule<RegistryInstanceOnlyOptions, 'reg
         };
     },
 });
+
+export type RegistryInstanceOnlyOptions = [{ registryFiles?: string[] }];

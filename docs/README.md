@@ -1,7 +1,7 @@
 # The gspot Manual
 
-The user manual for gspot, built with Astro Starlight. The reference pages are written by
-`reference-pages.ts` from the same data the binary carries; the guides are written by hand.
+The user manual for gspot uses Astro Starlight. The reference loader in
+`src/content/reference.ts` derives pages from the CLI and plugin definitions. The guides are authored Markdown.
 
 ## Setup
 
@@ -10,6 +10,8 @@ mise run repo:setup
 mise run docs:build
 ```
 
-From the repository root or `docs/`, `mise run docs:dev` generates the reference and serves the site locally. Builds generate
-reference pages from the CLI definitions; generated pages are not committed. The generator
-preserves authored files and refuses to overwrite an authored page at a generated path.
+From the repository root or `docs/`, `mise run docs:dev` serves the site locally.
+The reference loader preserves authored pages and rejects duplicate page identities.
+
+Build and deployment checks live in `scripts/`: `links.ts` validates the built pages, and
+`verify-release.ts` checks that a deployment matches its release.

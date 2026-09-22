@@ -1,9 +1,9 @@
 // The OpenAPI document of an express service: it lints, and it matches the code that writes it.
 import { join } from 'node:path';
 import { readFileSync, rmSync } from 'node:fs';
-import { scratchCopy } from '#cli/run/scratch-copy.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import { scratchCopy } from '#cli/run/fixers.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { run } from '#cli/platform/spawn.ts';
 import { locateTool } from '#cli/platform/tool-probe.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';

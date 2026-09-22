@@ -1,6 +1,6 @@
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import type { ToolPin } from '#types/manifest.ts';
+import type { ToolPin } from '#cli/presets/types.ts';
 import { openSession } from '#cli/run/session.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import { describe, expect, spyOn, test } from 'bun:test';

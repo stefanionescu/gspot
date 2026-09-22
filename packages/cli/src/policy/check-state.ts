@@ -1,6 +1,6 @@
-import type { Policy } from '#types/config.ts';
-import type { CheckSpec } from '#types/manifest.ts';
-import type { ScopeSelection } from '#types/run.ts';
+import type { Policy } from '#cli/policy/types.ts';
+import type { CheckSpec } from '#cli/presets/types.ts';
+import type { ScopeSelection } from '#cli/run/types.ts';
 
 /** Describe the persistent policy selection independently of files or tool availability. */
 export function checkState(policy: Policy, scope: ScopeSelection, spec: CheckSpec): string {
@@ -25,4 +25,3 @@ export function waitingSetting(scope: ScopeSelection, spec: CheckSpec): string |
         value === undefined || value === false || value === '' || (Array.isArray(value) && value.length === 0);
     return isEmpty ? setting : undefined;
 }
-

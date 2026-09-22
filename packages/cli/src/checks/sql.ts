@@ -1,8 +1,9 @@
+import { parsePlpgsql } from '#cli/readers/sql/parser.ts';
 // The checks every SQL file gets: it parses, it holds no block comment, and it stays under the line ceiling.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { positionAt, sqlFile } from '#cli/readers/sql/statements.ts';
 
 const POSTGRES_DIALECTS = new Set(['postgres', 'ansi']);
@@ -104,4 +105,104 @@ export function sqlFileLength(input: EngineInput): Promise<Finding[]> {
         ];
     });
     return Promise.resolve(findings);
+}
+
+function proceduralStatements(value: unknown): number {
+    if (value === null || typeof value !== 'object') return 0;
+    if (Array.isArray(value)) return value.reduce<number>((count, child) => count + proceduralStatements(child), 0);
+    let count = 0;
+    for (const [key, child] of Object.entries(value)) {
+        if (
+            key.startsWith('PLpgSQL_stmt_') &&
+            key !== 'PLpgSQL_stmt_block' &&
+            ((child as { lineno?: number }).lineno ?? 0) > 0
+        )
+            count += 1;
+        count += proceduralStatements(child);
+    }
+    return count;
+}
+
+function sqlStatements(value: unknown): number {
+    if (value === null || typeof value !== 'object') return 0;
+    if (Array.isArray(value)) return value.reduce<number>((count, child) => count + sqlStatements(child), 0);
+    let count = 0;
+    for (const [key, child] of Object.entries(value)) count += (key.endsWith('Stmt') ? 1 : 0) + sqlStatements(child);
+    return count;
+}
+
+/** Check implemented PostgreSQL functions and their declared input parameters. */
+export async function sqlFunctions(input: EngineInput): Promise<Finding[]> {
+    const findings: Finding[] = [];
+    const threshold = input.view.limit('trivial_statements', 'sql') ?? 2;
+    const maximum = input.view.limit('function_parameters', 'sql') ?? 7;
+    for (const source of sources(input)) {
+        const parsed = await sqlFile(source.text);
+        if (parsed.error !== undefined)
+            throw new Error(`Cannot analyze SQL functions in ${source.path}: ${parsed.error.text}`);
+        let trivial = 0;
+        for (const [index, statement] of parsed.statements.entries()) {
+            if (statement.kind !== 'CreateFunctionStmt') continue;
+            const parameters = (statement.fields['parameters'] ?? []) as { FunctionParameter: { mode: string } }[];
+            const count = parameters.filter(
+                ({ FunctionParameter: parameter }) => !['FUNC_PARAM_OUT', 'FUNC_PARAM_TABLE'].includes(parameter.mode),
+            ).length;
+            if (count > maximum)
+                findings.push({
+                    check: input.spec.name,
+                    file: source.path,
+                    ...positionAt(source.text, statement.start),
+                    rule: 'function-parameters',
+                    message: `${count} declared input parameters exceeds ${maximum}.`,
+                    fixable: false,
+                });
+            const options = (statement.fields['options'] ?? []) as {
+                DefElem: {
+                    defname: string;
+                    arg: { String?: { sval: string }; List?: { items: { String: { sval: string } }[] } };
+                };
+            }[];
+            const language = options.find(({ DefElem }) => DefElem.defname === 'language')?.DefElem.arg.String?.sval;
+            const body = options.find(({ DefElem }) => DefElem.defname === 'as')?.DefElem.arg.List?.items[0]?.String
+                .sval;
+            let statements: number;
+            if (language === 'plpgsql') {
+                const definition = source.text.slice(statement.start, parsed.statements[index + 1]?.start);
+                statements = proceduralStatements(await parsePlpgsql(definition));
+            } else if (language === 'sql') {
+                if (body !== undefined) {
+                    const parsedBody = await sqlFile(body);
+                    if (parsedBody.error !== undefined)
+                        throw new Error(`Cannot analyze SQL function body: ${parsedBody.error.text}`);
+                    statements = parsedBody.statements.reduce(
+                        (count, statement) => count + 1 + sqlStatements(statement.fields),
+                        0,
+                    );
+                } else {
+                    statements = sqlStatements(statement.fields['sql_body']);
+                }
+            } else continue;
+            if (statements <= threshold) {
+                trivial += 1;
+                findings.push({
+                    check: input.spec.name,
+                    file: source.path,
+                    ...positionAt(source.text, statement.start),
+                    rule: 'trivial-function',
+                    message: `This function has ${statements} executable statements, at most ${threshold}. Inline it or suppress its required API with a reason.`,
+                    fixable: false,
+                });
+            }
+        }
+        if (trivial > 0 && trivial === parsed.statements.length)
+            findings.push({
+                check: input.spec.name,
+                file: source.path,
+                line: 1,
+                rule: 'trivial-file',
+                message: 'This file contains only trivial functions. Move them to their owner.',
+                fixable: false,
+            });
+    }
+    return findings;
 }

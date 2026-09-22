@@ -1,10 +1,10 @@
 import { pathMatcher } from '#cli/presets/claims.ts';
 // The detection table: what the tree proposes at init and in doctor. Detection never selects.
 import * as linguistLanguages from 'linguist-languages';
-import { SHEBANG_INTERPRETERS } from '#config/patterns.ts';
+import { SHEBANG_INTERPRETERS } from '#cli/lifecycle/patterns-definitions.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
-import type { TreeFacts, ManifestFacts, TrackedFile } from '#types/repository.ts';
-import type { Manifest, LinguistEntry, Proposal, UnknownLanguage } from '#types/manifest.ts';
+import type { TreeFacts, ManifestFacts, TrackedFile } from '#cli/repository/types.ts';
+import type { Manifest, LinguistEntry, Proposal, UnknownLanguage } from '#cli/presets/types.ts';
 
 const SHEBANG_TAG = 'shebang:';
 const GLOB_CHARS = /[*?{]/u;

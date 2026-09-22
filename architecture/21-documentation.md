@@ -1,14 +1,13 @@
 # The README, the Manual, and the Site
 
-This document decides what a developer reads before and after they install gspot: the README of
-the repository, the manual under `docs/`, and the landing page at gspot.dev. It answers gap G-10
-of [18-gaps.md](18-gaps.md). The site source already exists in `docs/`; the changes below and production deployment remain planned.
+The existing Astro/Starlight project owns the landing page at gspot.dev, the manual, and shared
+plain text branding. The root and published package READMEs provide first-use routes. This contract
+preserves the full design brief below; [remaining work](22-remaining.md) alone records acceptance.
 
-Every command and output example must be verified against the documented release. The adoption
-case study comes from the redone install in yap-swift-app (D-121). The introductory examples
-come from small, public test data in `examples/`, so readers can reproduce them without access
-to that app. Content planning and theme work can precede the redo; publication of the case
-study and adoption claims cannot.
+Verify command and output examples against the documented release. Keep reproducible examples
+in their guides or demonstrations and exercise the same behavior through ordinary command tests.
+The adoption case study depends on the deferred Yap handoff; introductory examples must work
+without access to Yap. No separate documentation fixture system or root examples inventory is required.
 
 ## Contents
 
@@ -17,7 +16,7 @@ study and adoption claims cannot.
 - [The README](#the-readme)
 - [The manual](#the-manual)
 - [The site](#the-site)
-- [Visual identity and generated assets](#visual-identity-and-generated-assets)
+- [Demonstrations](#demonstrations)
 - [Implementation and acceptance](#implementation-and-acceptance)
 - [Before launch](#before-launch)
 - [Deployment and released documentation](#deployment-and-released-documentation)
@@ -25,43 +24,28 @@ study and adoption claims cannot.
 
 ## What exists today
 
-| Surface | State                                                                                                                                     |
-| ------- | ----------------------------------------------------------------------------------------------------------------------------------------- |
-| README  | A sentence, two requirements, two setup commands, and a list of command names; no demonstrated finding or recovery path                   |
-| Manual  | Starlight with its default theme, six authored guides, and generated reference; guide length and page count do not establish completeness |
-| Site    | The index page of the manual: three paragraphs and six links. No landing page, no demonstration, no design of its own                     |
-
-The reference generator has a real build-time role, but its output is not automatically correct.
-It omits parts of the command and settings contract and includes hard-coded prose. K-303 and
-K-304 in [25-simplification.md](fixes/25-simplification.md) define the correction.
+The project already has a custom Astro landing page, Starlight navigation and guides, shared
+light/dark tokens and a real finding/correction transcript. The implementation is
+visible in `docs/src/pages/index.astro`, `docs/src/styles/theme.css`, and `docs/astro.config.ts`.
+The content configuration currently uses Starlight's loader, and `docs/src/content/reference.ts`
+loads references into Astro content storage. The reference contract below governs
+that content loader. It does not require rebuilding the site shell.
 
 ## Reference projects and the quality gap
 
-The September 20, 2026 review used official site content and repository READMEs. Browser
-rendering was unavailable, so this is a content and presentation-pattern comparison, not a
-pixel-level audit or an accessibility certification of those sites. The design below is a
-gspot proposal, not a claim that those projects use these colors or dimensions.
-
-| Reference                                                 | Observed pattern                                                                                     | Adopt for gspot                                                                                             |
-| --------------------------------------------------------- | ---------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------- |
-| [Starship](https://starship.rs/)                          | A short purpose statement leads to getting started, compatibility, and concrete installation steps.  | Explain the product before its vocabulary; place supported platforms beside installation.                   |
-| [Charm](https://charm.land/)                              | Distinctive product names, playful descriptions, and terminal-oriented humor accompany real tools.   | Give the site personality without putting jokes in warnings or renaming commands.                           |
-| [Gum README](https://github.com/charmbracelet/gum#readme) | Demonstrations and usage examples make a terminal product tangible.                                  | Show a real finding and the action that resolves it, not only a command inventory.                          |
-| [Atuin](https://atuin.sh/)                                | Installation, compatibility, documentation, and product identity are visible entry points.           | Keep the next action obvious; use an original, small brand detail rather than borrowing its mascot.         |
-| [uv documentation](https://docs.astral.sh/uv/)            | First steps, task guides, concepts, integrations, and reference have separate navigation roles.      | Route new users and returning users differently; do not make either search an alphabetical reference first. |
-| [uv README](https://github.com/astral-sh/uv#readme)       | Installation and concrete workflows accompany the product summary and links to deeper documentation. | Make the repository page useful without requiring a visit to the website.                                   |
-
-The current surfaces are not at this level. They name capabilities but barely demonstrate the
-experience. The old plan improves coverage but does not define navigation, responsive behavior,
-readable typography, or release-bound examples. It also overstates safe adoption and requires
-statistics that are not yet useful evidence. Replace those gaps with the contracts below.
+Use the inspected [Nx content-loader pattern](15-prior-art.md#nx-and-turborepo) for reference
+mechanics. The visual brief remains gspot's own terminal field notebook design. Its reader
+patterns draw on Starship's clear first action, Charm and Gum's warm terminal demonstrations,
+Atuin's visible installation routes, and uv's separation of guides from reference. These are
+design influences, not copied artwork or claims of those sites' accessibility. Verify gspot's
+rendered experience against the acceptance criteria below.
 
 ## The README
 
 A reader needs purpose, release status, a visible result, and a next step in the opening screen.
 Use native GitHub Markdown, not a centered HTML marketing layout. Target 700 to 1,000 words,
 excluding output; this is an editorial budget, not a reason to omit safety information.
-Include a compact branded illustration using the same mascot and palette as the website.
+Use a plain lowercase `gspot` title. Do not add decorative illustrations or a separate logo system.
 Keep the title, purpose, and release status as selectable text outside the image. The art must
 not push the first useful example below a large decorative header.
 
@@ -108,7 +92,7 @@ one npm publishes.
 
 ## The manual
 
-The guides that exist stay and are rewritten with real output. The guides that are missing:
+The manual provides these tasks with real output:
 
 | Guide                     | The question it answers                                                         |
 | ------------------------- | ------------------------------------------------------------------------------- |
@@ -121,9 +105,8 @@ The guides that exist stay and are rewritten with real output. The guides that a
 | Uninstall                 | How to leave and get my old files back                                          |
 | Troubleshooting           | A missing tool, a slow check, a version pin that differs                        |
 
-Two guides are wrong today: the scopes guide shows config that gspot refuses, and the findings
-guide says every ignore prints on every run (K-202). Every sample of the manual is run through
-the program, so a guide cannot drift from the code again (S-11).
+Guide examples must match the production parser and the ordinary behavioral tests for the
+commands they describe. Do not require a universal parser for every prose code block.
 
 Each command gets a worked example on its reference page. `docs/readme-shape` requires the
 sections that the README template names, so the README cannot thin out again.
@@ -148,7 +131,7 @@ The sidebar groups are:
 These are navigation groups, not a requirement for another index page per group. Reuse the
 existing guide that owns a task; add only missing tasks. Add a short concepts section to the
 customization guide for preset, check, tool rule, finding, level, stage, scope, and profile.
-Use the vocabulary in [19-names.md](19-names.md) everywhere, including search labels and `help`.
+Use the [public vocabulary](README.md#glossary) everywhere, including search labels and `help`.
 
 A guide states starting conditions, commands, expected results, and recovery for consequential
 steps. Do not enforce a two-page limit or one command per step when that hides necessary
@@ -206,22 +189,18 @@ that passing the gate proves code has no defects.
 
 ### The theme
 
-Use a playful terminal field notebook: quiet reading surfaces, colorful sticker-like art,
-a curious mascot, precise type, and actual command output. This is an original direction
-informed by the references, not a copy of their assets.
-The website can be playful; operational help, safety warnings, and errors stay literal.
+Use quiet reading surfaces, precise type, and actual command output. The product name is plain
+text. Keep the landing page focused on setup, configuration, and findings.
 
 Proposed design tokens:
 
-| Token      | Dark      | Light     | Use                                      |
-| ---------- | --------- | --------- | ---------------------------------------- |
-| Canvas     | `#111410` | `#F7F8F2` | Page background                          |
-| Panel      | `#1B2018` | `#ECEFE4` | Terminal and configuration examples      |
-| Text       | `#EFF3E8` | `#182015` | Headings and prose                       |
-| Muted text | `#B5BEAA` | `#4D5945` | Captions and secondary labels            |
-| Accent     | `#B7F36B` | `#365D13` | Links, focus, and the brand dot          |
-| Lilac      | `#C4AEFF` | `#68459A` | Secondary illustration color, not status |
-| Peach      | `#FFB694` | `#984829` | Small illustration accents, not warnings |
+| Token      | Dark      | Light     | Use                                 |
+| ---------- | --------- | --------- | ----------------------------------- |
+| Canvas     | `#111410` | `#F7F8F2` | Page background                     |
+| Panel      | `#1B2018` | `#ECEFE4` | Terminal and configuration examples |
+| Text       | `#EFF3E8` | `#182015` | Headings and prose                  |
+| Muted text | `#B5BEAA` | `#4D5945` | Captions and secondary labels       |
+| Accent     | `#B7F36B` | `#365D13` | Links and focus                     |
 
 These are implementation inputs, not a completed contrast audit. Test actual foreground and
 background pairs, including syntax highlighting, selection, hover, and disabled states.
@@ -233,9 +212,8 @@ use the terminal's semantic colors plus visible words, not the brand accent as a
 - Use system sans-serif for prose at 17 to 18 pixels and approximately 1.6 line height. Use
   system monospace for the wordmark, short headings, commands, and small metadata. Keep prose
   near 65 characters per line.
-- Use a lowercase `gspot` wordmark and one solid accent dot. Build the production mark in
-  text or SVG. Generate the mascot illustrations through the workflow below, not the text,
-  terminal output, or functional controls. No separate icon library is required.
+- Use lowercase `gspot` text in headers and a plain letter favicon. No illustrated character,
+  generated artwork, concept board, or branding pipeline belongs in the project.
 - Limit the landing content to roughly 1,120 pixels. Use an 8-pixel spacing scale, thin panel
   borders, modest 8-pixel corners, and generous section spacing. Avoid nested card grids,
   huge empty heroes, glass effects, gradients, scanlines, and glowing body text.
@@ -245,8 +223,6 @@ use the terminal's semantic colors plus visible words, not the brand accent as a
 - Keep terminal prompts decorative and out of copied commands. Label commands and output
   separately. Use existing Starlight code controls where suitable. Copy feedback says
   "Copied" only after success; failure leaves selectable text and a manual-copy instruction.
-- Keep fun in the mascot, colorful illustrations, terminal framing, and optional footer detail.
-  Keep most of the page quiet so the artwork has room to stand out.
 - Do not invent shell
   commands as section labels, hide content behind a pretend prompt, add a boot sequence,
   require Nerd Fonts, or put jokes in failure messages. No tracking widget or chat popover.
@@ -257,111 +233,7 @@ use the terminal's semantic colors plus visible words, not the brand accent as a
   search, focus handling, and mobile controls. Do not rebuild the documentation shell just
   to make it look like the landing page.
 
-## Visual identity and generated assets
-
-This is a required design workstream, not permission to publish arbitrary generated artwork.
-The implementer drives exploration and selects a coherent direction against this brief. Show
-the resulting concept board and explain the choice; another brainstorming round is not a
-prerequisite unless the user requests a different direction. This architecture update does
-not generate assets or implement the website.
-
-### Character and tone
-
-The proposed mascot is Spot: a small, rounded lime creature with two dark eyes, tiny feet,
-and an oversized lilac magnifying lens. Spot notices details in code and helps the reader
-investigate. Use a curious, friendly expression, not a scolding inspector. A peach detail
-adds warmth. Keep a recognizable silhouette, flat rounded shapes, restrained texture, and
-consistent outlines. Avoid mixing pixel art, glossy 3D, and flat illustration in one family.
-
-The name can carry an understated wink. The visual identity is workplace-safe: no anatomy,
-sexual imagery, suggestive poses, or sexual jokes in onboarding. Use discovery and finding
-the right spot as the visual idea. Keep the official product spelling `gspot`; Spot is the
-character, not a new name for the CLI, a check, or a rule. Proposed playful caption:
-"A soft spot for readable code." It is optional brand copy, not a product guarantee.
-
-Learn from Charm and Gum by giving a technical product warmth and a recognizable character.
-Learn from Starship by keeping the purpose and next action clear. Do not copy their characters,
-logos, slogans, or distinctive compositions. No competitor assets enter production.
-
-### Image-generation workflow
-
-Use the available OpenAI image-generation tool and the imagegen skill for original raster
-concepts and mascot illustrations. The user requested `GPT Image 2.5`; that exact model is
-unverified in this environment and must not be represented as a confirmed dependency. At
-execution, report the tool name. Report its model when exposed. If that exact model is essential,
-verify access first and report a blocker rather than claiming another model is 2.5.
-
-Use the built-in tool by default. Do not create an API client, add an image-generation service
-to the product, or make site builds depend on generation. An explicitly selected API/CLI
-fallback requires its documented local credentials; never place keys in source or ask for
-them in chat. If the built-in tool is unavailable, report that before changing execution mode.
-
-Generate three concept candidates with the same palette and character brief. The compositions
-are Spot with a magnifying lens, Spot beside a small terminal-shaped notebook, and a compact
-sticker built around Spot and the accent dot. Explore composition and expression within one
-identity. No generated words, commands, or interface.
-
-Continue with the selection and production steps:
-
-1. Compare the candidates on originality, workplace suitability, small-size silhouette,
-   fit beside real terminal output, and readability on both backgrounds. Select one and
-   record why. Keep rejected concepts out of production and out of the normal site build.
-1. Generate a character reference sheet from the selected image, then use that image as an
-   explicit reference for each production illustration. Preserve proportions, face, outline,
-   palette, lens, and texture across variants. Inspect local inputs before editing them.
-1. Generate each asset separately, inspect it, and iterate with one targeted change at a
-   time. Request real transparency for cutouts and verify alpha; a painted checkerboard is
-   not transparency. Check edges on both page backgrounds and at actual display sizes.
-1. Compose exact words and the wordmark using native text or SVG after generation. Export
-   appropriately sized delivery files and keep selected source images, prompts, actual tool
-   metadata, and editing notes.
-
-Generation is not reliably bit-for-bit reproducible, so the selected source image matters as
-much as its prompt.
-
-Base prompt for concept exploration, adapted only for the candidate composition:
-
-```text
-Use case: stylized-concept
-Asset type: original mascot illustration for a developer CLI website and README
-Subject: Spot, a small rounded lime creature with two dark eyes, tiny feet,
-and an oversized lilac magnifying lens; curious, friendly, and helpful
-Style: flat sticker illustration, rounded silhouette, consistent dark outline,
-restrained print texture, readable at small sizes
-Palette: lime #B7F36B, lilac #C4AEFF, peach #FFB694, charcoal #111410
-Composition: isolated full character, generous clear space, no cropped limbs
-Background: genuinely transparent; clean edges for light and dark surfaces
-Avoid: text, letters, logos, fake terminal output, sexual imagery, suggestive
-poses, competitor mascots, watermarks, glossy 3D, complex scenery
-```
-
-### Asset set and placement
-
-The same selected character and palette serve all surfaces. Do not commission unrelated
-README art after the website design is complete.
-
-| Asset                     | Placement                                                     | Delivery contract                                                                                                            |
-| ------------------------- | ------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------- |
-| Primary Spot illustration | Landing hero beside, not behind, the copy and real transcript | Transparent master; responsive WebP/PNG exports; target at most 120 KB for the initially loaded size                         |
-| Compact Spot illustration | Root README opening and package branding where useful         | PNG with transparency; target at most 100 KB and 160 rendered pixels high; useful in GitHub light and dark themes            |
-| Investigating pose        | Website not-found page                                        | Small illustration with literal explanatory text and navigation outside it; no implication that a check failed               |
-| Social preview            | Website and repository sharing                                | 1,200 by 630 pixel composed PNG; same Spot, palette, wordmark, and short product description; text added deterministically   |
-| Wordmark and favicon      | Header, manual, browser tab                                   | Text/SVG wordmark and simplified dot mark; inspect favicon at 16 and 32 pixels rather than shrinking a detailed illustration |
-
-Keep final shared assets under `docs/public/brand/`, referenced by repository-relative links
-from the root README and served under `/brand/` on the site. The npm packaging step must
-include any required image or use a verified release-stable hosted URL; repository-relative
-links alone do not establish npm rendering. Keep chosen source art and a short asset record
-under `docs/design/`, outside published static output. Record prompt, reference image, actual
-tool/model when known, source, edits, dimensions, license or usage review, and consuming pages.
-Do not create a branding package, generic asset pipeline, or automatic regeneration in CI.
-
-On the landing page, use the primary illustration as a modest companion to the hero, not a
-full-screen poster. The manual shares colors and wordmark but keeps illustrations out of
-routine reference pages. The README uses the compact pose, not a screenshot of the website.
-Functional controls and error semantics remain consistent even when decorative art differs.
-
-### Demonstration contract
+## Demonstrations
 
 Capture the real CLI in a clean test repository at a documented revision with no personal paths or
 credentials. Show the actual check name and `help` text, not a shortened invented error.
@@ -369,26 +241,22 @@ If the sequence uses automatic fixing, show which command performs it and the re
 change; do not imply every finding is fixable. Preserve warning and failure information.
 Show a separate successful check after correction, not a green website label implying success.
 
-Keep the reproduction commands, test repository, output transcript, and CLI version with the existing
-documentation sample workflow. Use the same reviewed example on the README and site. Do not
+Keep the reproduction commands, test repository, output transcript, and CLI version with the guide or demonstration that owns the example. Use the same reviewed example on the README and site. Do not
 introduce a second reference generator or snapshot every volatile timing. Optional recordings
 load only on request; the initial page remains useful without them or JavaScript.
 
 ## Implementation and acceptance
 
 This work extends G-10, K-202, S-11, S-19, K-302, and K-304 rather than creating a parallel
-website backlog. Implement in this order:
+website backlog. Complete the remaining design and acceptance work in this order, retaining the existing implementation:
 
-1. Run the concept exploration and image-generation workflow above. Select Spot's visual
-   reference, produce the shared asset set, and review it across a landing composition,
-   README opening, and manual header before treating the identity as finished.
 1. Verify the public command and terminology contract, then correct the sample test data and
    reference generator. Record the release each example demonstrates. No design polish can
    make a nonexistent command acceptable documentation.
 1. Rewrite the root and published package READMEs using the brief above. Revise existing
    guides and add the missing tasks. Set explicit navigation in `docs/astro.config.ts`.
-1. Replace the current root manual index with one Astro landing page at `/`, using
-   `docs/src/pages/index.astro`; remove the conflicting root content route in the same change.
+1. Retain one Astro landing page at `/`, using `docs/src/pages/index.astro`, with no competing
+   root content route.
    Keep the existing guide and reference routes.
 1. Put shared design tokens in
    `docs/src/styles/theme.css`, registered with both the landing layout and Starlight.
@@ -397,22 +265,13 @@ website backlog. Implement in this order:
 1. Review the rendered README on GitHub, the actual npm README payload, and landing, guide,
    reference, search, and not-found pages in both themes. Check 360-, 768-, and 1,440-pixel
    viewports, keyboard-only use, reduced motion, and 200% zoom.
-1. Use a static wordmark and
-   title with the selected Spot art for a locally owned social preview image; add canonical
-   URLs and page descriptions.
+1. Use plain text titles, canonical URLs, and page descriptions for sharing metadata.
 1. Run scoped documentation checks and build in a disposable checkout. Then apply the
    deployment and release contract below. Keep runtime implementation and publishing separate
    from this architecture edit.
 
 Acceptance is task-based as well as mechanical:
 
-- The selected art family matches across website, README, manual branding, and social preview.
-  Review originality, workplace suitability, character consistency, transparency, small-size
-  legibility, and asset provenance.
-- Generated images contain no functional text or fabricated
-  product output. Give informative images useful alt text and decorative art empty alt text.
-  Explicit dimensions prevent layout shift; lazy-load below-fold art. The existing total
-  page-transfer budget still applies, including the hero illustration.
 - A new reader can identify what gspot does, whether their platform is supported, and whether
   a release is available without opening source code.
 - A reader follows the documented test repository from installation through one finding and a clean
@@ -438,7 +297,7 @@ Acceptance is task-based as well as mechanical:
 ## Before launch
 
 - A release of the binary and of the plugin exists ([11-toolchain.md](11-toolchain.md)).
-- The Adoption phase of [13-roadmap.md](13-roadmap.md) is done, and the app is redone.
+- The [candidate and deferred adoption gates](22-remaining.md#candidate-gate) are satisfied.
 - Every number and every recording on the page comes from a command kept in the repository.
 - The links validator of the manual passes over the landing page too.
 
@@ -448,13 +307,12 @@ Keep the landing page, Starlight manual, reference generator, and schema in this
 `docs/` project. They share CLI and preset definitions; a second repository requires a second
 version-coordination mechanism without providing a product benefit.
 
-The planned static host is GitHub Pages, with a separate `.github/workflows/site.yml`.
-This is a deployment decision to implement, not evidence that a hosting account or domain has
-already been configured.
+The GitHub Pages definition is `.github/workflows/site.yml`. Its presence does not establish
+that the protected environment, hosting account, domain, or live rollback has been verified.
 
 - Build from a published release tag. Use its pinned runtime and frozen repository lockfile.
   Run the existing docs build, including reference generation from that tag's CLI and presets,
-  and upload `docs/dist/`. Generated source changes stay in the disposable checkout.
+  and upload `docs/dist/`. Generated reference entries and staged schema copies stay in build output.
 - The build job has read-only repository access. A separate deployment job uses the protected
   `github-pages` environment and the Pages artifact. Only that job receives `pages: write`
   and `id-token: write`, following [GitHub's custom Pages workflow contract](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
@@ -482,19 +340,74 @@ No deployment or DNS change is part of this architecture-editing task.
 
 ## Reference generation
 
-Keep `docs/reference-pages.ts` as the single public-reference generator. Its filename is clear;
-renaming it does not remove work. Build and dev run it before Astro. Generated pages are ignored
-by Git, and the stale-copy check and its `--check` mode go (K-205). Unknown arguments fail before
-writing. The generator owns marked output only, never an arbitrary file under the reference
-folder, and a failed replacement cannot truncate a previous page (K-303).
+Render reference content from validated command, configuration, preset, and plugin definitions
+through Astro's content store. Keep authored guides in their own collection and generated
+entries under separate ownership. Use the existing Astro/Starlight project and content
+configuration, with route rendering that preserves all public reference URLs and anchors.
+Do not create another package or generic documentation framework.
 
-Commands come from the registered public command tree, including inherited options. Settings
-come from the validated configuration definitions. These include global settings and their scopes.
-Manifest settings cannot silently override another definition with the same name. Page tests
-compare that public contract, not only file counts or successful Markdown parsing (K-304).
+Commands come from the registered public Commander tree, including inherited global options,
+usage, choices, defaults, implicit help, and nested commands. Exclude hidden/internal commands.
+Settings cover the complete root, scope, integration, and preset configuration contracts.
+Matching shared settings list every owner; conflicting definitions fail the build. Include
+plugin rules, public options, and both exported levels without duplicating manually maintained
+lists. Generated pages show the release version and link to the owning source definition.
 
-Do not publish a copy of the architecture decision log as product reference. Remove its generated
-page, sidebar entry, and link-rewriting code. Keep one clearly labeled architecture link at the
-matching source revision. The decision log remains in this repository for contributors.
-Do not add `architecture/presets.ts`: the public reference owns implemented details, while
-architecture owns intended contracts and differences still to implement.
+Validate every definition and rendered identity before updating generated entries. Reject
+invalid schemas, duplicate routes or identities, conflicts with authored routes, and missing
+required content. A build must fail rather than publish an incomplete reference. Development
+reloads remove stale generated entries within their collection without touching authored guides.
+
+Verify content-store output against the validated definitions and existing public routes. Check
+inherited options, complete settings, plugin exports, duplicates, search, links, and source
+provenance. Reuse ordinary behavior tests for worked command examples. Do not parse every prose
+code block or maintain a separate fixture hierarchy as a condition of documentation correctness.
+
+One Astro reference loader owns rendering and source attribution. It writes content-store entries,
+not generated Markdown files. No file replacement, ownership markers, staging, or pruning remain.
+The Bash demonstration transcript lives beside its documentation component. Theme tokens,
+search, release-aligned deployment, and rollback remain part of the site contract.
+
+Architecture owns target contracts. Public reference describes released behavior and never
+copies an architecture decision log. Missing implementations stay visible in remaining work.
+
+## Acceptance contracts
+
+These clauses specify required behavior. [Remaining work](22-remaining.md) owns status and evidence.
+
+### Acceptance K-302
+
+Keep one site in docs and implement [21-documentation.md](21-documentation.md).
+Include version alignment and rollback.
+
+Build release-aligned references, provide unprivileged PR build artifacts, deploy through the protected Pages environment, and verify ownership, HTTPS, and domain cutover. External account and DNS changes require the owner's access.
+
+Clean frozen-lock build, internal links, accessible landing controls, no PR deploy permissions, released-version labels, provider URL, custom-domain HTTPS, and rollback to the preceding artifact.
+
+### Acceptance K-205
+
+Build references from validated definitions without tracked copies. The Astro content loader replaces intermediate generated source Markdown after route, content, and authored-guide preservation acceptance passes. Build from a clean frozen checkout; never restore a public architecture decision mirror.
+
+### Acceptance K-303
+
+Authored guides and generated reference entries have separate ownership. Preserve authored content and reject invalid definitions before publication. Replace the existing generated-Markdown writer and pruning machinery only after the content-loader contract in this document is verified.
+
+### Acceptance K-304
+
+Render complete public reference from validated command, configuration, preset, and plugin definitions through the Astro content store. Preserve routes and inherited command options. Include global and integration settings. Reject duplicate identities and conflicting setting definitions. Publish only release-matched behavior, with source links to definitions.
+
+### Acceptance S-4
+
+Check architecture links and anchors. Public guides and demonstrations use reproducible commands and complete configurations exercised by ordinary behavioral tests. Generated reference derives from validated definitions. Do not require a separate documentation fixture system, root examples inventory, or universal parser of prose code blocks.
+
+### Acceptance S-15
+
+Verify product promises with observable CLI and installed-package behavior. Describe unimplemented capabilities as target contracts in architecture and track their acceptance in remaining work. Do not infer completeness from a source-file or test-count inventory.
+
+### Acceptance G-10
+
+Preserve the README, guide navigation, landing page, plain text identity and visual acceptance in this owner. Demonstrations retain real reproduction inputs, output, version, and correction. Explain all five `explain` subjects and editor coexistence. Reuse ordinary command tests and inspect both themes, responsive layout, keyboard, screen-reader access, script-free content, and loading budgets. A successful build alone does not establish usability.
+
+### Acceptance S-19
+
+Provide guides for first use, an existing setup, customization, profiles, custom checks, and hooks and CI. Include prerequisites, expected results, and recovery. Keep reproducible examples in their guides or demonstrations and reuse the ordinary command tests.

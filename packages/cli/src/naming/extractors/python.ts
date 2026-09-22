@@ -1,6 +1,6 @@
 // Identifiers a Python file declares, by category, through tree-sitter. Dunder names belong to the language and are left out.
 import type { Node } from 'web-tree-sitter';
-import type { ExtractSink, Identifier } from '#types/naming.ts';
+import type { ExtractSink, Identifier } from '#cli/naming/types.ts';
 
 const PARAMETER_NODES = new Set(['identifier', 'typed_parameter', 'default_parameter', 'typed_default_parameter']);
 const SPLAT_NODES = new Set(['list_splat_pattern', 'dictionary_splat_pattern']);
@@ -60,13 +60,11 @@ function parameterName(parameter: Node): Node | null {
     return unwrapped(inner ?? parameter.namedChildren[0] ?? null);
 }
 
-function isParameter(node: Node): boolean {
-    return PARAMETER_NODES.has(node.type) || SPLAT_NODES.has(node.type);
-}
-
 function addParameters(sink: ExtractSink, definition: Node): void {
     const parameters = definition.childForFieldName('parameters')?.namedChildren ?? [];
-    const names = parameters.filter((parameter) => isParameter(parameter)).map((parameter) => parameterName(parameter));
+    const names = parameters
+        .filter((parameter) => PARAMETER_NODES.has(parameter.type) || SPLAT_NODES.has(parameter.type))
+        .map((parameter) => parameterName(parameter));
     for (const name of names)
         if (name?.type === 'identifier' && !IMPLICIT_PARAMETERS.has(name.text)) add(sink, name, 'parameters');
 }

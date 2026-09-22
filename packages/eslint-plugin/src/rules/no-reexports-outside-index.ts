@@ -1,4 +1,4 @@
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 // A re-export in a file that is not an index.
 import { isIndexFile, lintedFile } from '#plugin/files.ts';
 

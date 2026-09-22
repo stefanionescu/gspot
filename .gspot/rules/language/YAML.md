@@ -1,6 +1,6 @@
 ---
 layer: language
-preset: config-files
+preset: configs
 title: YAML
 ---
 

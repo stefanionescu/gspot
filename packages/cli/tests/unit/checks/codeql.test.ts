@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import type { SarifLog } from '#types/integrity.ts';
+import type { SarifLog } from '#cli/checks/types.ts';
 import { sarifFindings } from '#cli/checks/security/codeql.ts';
 
 const log: SarifLog = {

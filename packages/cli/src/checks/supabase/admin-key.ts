@@ -1,11 +1,11 @@
 // The key that bypasses row level security, named only where the policy allows it.
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';
-import { CODE_EXTENSIONS, ADMIN_KEY_NAMES } from '#config/supabase.ts';
+import { CODE_EXTENSIONS, ADMIN_KEY_NAMES } from '#cli/checks/supabase/supabase-definitions.ts';
 
 const DEFAULT_PATHS = [
     'supabase/functions/**',

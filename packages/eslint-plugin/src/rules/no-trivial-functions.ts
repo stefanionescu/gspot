@@ -1,80 +1,30 @@
-// A function with too few executable statements that only forwards its parameters to one call.
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
-import { AST_NODE_TYPES } from '@typescript-eslint/utils';
-import { optionsSchema, positiveInteger } from '#plugin/options.ts';
-import type { NoCallThroughFunction } from '#plugin-types/plugin.ts';
-import type { NoTrivialFunctionsOptions } from '#plugin-types/options.ts';
+import { optionsSchema, positiveInteger } from '#plugin/rules/options.ts';
 
-const DEFAULT_MAX = 2;
-const NAMED_PARENTS = new Set(['Property', 'MethodDefinition', 'PropertyDefinition']);
+const FUNCTIONS = new Set(['FunctionDeclaration', 'FunctionExpression', 'ArrowFunctionExpression']);
+const TYPE_ONLY = new Set(['TSInterfaceDeclaration', 'TSTypeAliasDeclaration', 'TSDeclareFunction']);
 
-function unwrap(node: TSESTree.Node | null | undefined): TSESTree.Node | null | undefined {
-    let current = node;
-    for (;;) {
-        if (current?.type === AST_NODE_TYPES.AwaitExpression) current = current.argument;
-        else if (current?.type === AST_NODE_TYPES.ChainExpression) current = current.expression;
-        else return current;
+/** Count executable statements without entering nested functions or type declarations. */
+export function statementCount(node: TSESTree.Node, visitorKeys: Readonly<Record<string, readonly string[]>>): number {
+    if (TYPE_ONLY.has(node.type) || ('declare' in node && node.declare === true)) return 0;
+    if (FUNCTIONS.has(node.type)) return node.type === 'FunctionDeclaration' ? 1 : 0;
+    const own =
+        (node.type.endsWith('Statement') && node.type !== 'BlockStatement' && node.type !== 'EmptyStatement') ||
+        node.type === 'VariableDeclaration' ||
+        node.type === 'TSEnumDeclaration' ||
+        node.type === 'ClassDeclaration'
+            ? 1
+            : 0;
+    let count = own;
+    for (const key of visitorKeys[node.type] ?? []) {
+        const child = (node as unknown as Record<string, unknown>)[key];
+        if (Array.isArray(child)) {
+            for (const item of child) if (item !== null) count += statementCount(item as TSESTree.Node, visitorKeys);
+        } else if (child !== null && typeof child === 'object')
+            count += statementCount(child as TSESTree.Node, visitorKeys);
     }
-}
-
-function parameterName(parameter: TSESTree.Parameter): string | undefined {
-    if (parameter.type === AST_NODE_TYPES.Identifier) return parameter.name;
-    if (parameter.type === AST_NODE_TYPES.RestElement && parameter.argument.type === AST_NODE_TYPES.Identifier)
-        return `...${parameter.argument.name}`;
-    return undefined;
-}
-
-function argumentName(argument: TSESTree.CallExpressionArgument): string | undefined {
-    if (argument.type === AST_NODE_TYPES.Identifier) return argument.name;
-    if (argument.type === AST_NODE_TYPES.SpreadElement && argument.argument.type === AST_NODE_TYPES.Identifier)
-        return `...${argument.argument.name}`;
-    return undefined;
-}
-
-function callOf(
-    expression: TSESTree.Node | null | undefined,
-): TSESTree.CallExpression | TSESTree.NewExpression | undefined {
-    const call = unwrap(expression);
-    if (call?.type !== AST_NODE_TYPES.CallExpression && call?.type !== AST_NODE_TYPES.NewExpression) return undefined;
-    return call.callee.type === AST_NODE_TYPES.Identifier ? call : undefined;
-}
-
-function isPassThrough(node: NoCallThroughFunction, expression: TSESTree.Node | null | undefined): boolean {
-    const call = callOf(expression);
-    if (!call) return false;
-    const parameters = node.params.map((parameter) => parameterName(parameter));
-    const argv = call.arguments.map((argument) => argumentName(argument));
-    if (parameters.includes(undefined) || argv.includes(undefined)) return false;
-    return parameters.length === argv.length && parameters.every((name, index) => name === argv[index]);
-}
-
-function bodyExpression(statement: TSESTree.Statement): TSESTree.Node | null | undefined {
-    if (statement.type === AST_NODE_TYPES.ExpressionStatement) return statement.expression;
-    return statement.type === AST_NODE_TYPES.ReturnStatement ? statement.argument : undefined;
-}
-
-function parentName(parent: TSESTree.Node | undefined): string | undefined {
-    if (parent?.type === AST_NODE_TYPES.VariableDeclarator && parent.id.type === AST_NODE_TYPES.Identifier)
-        return parent.id.name;
-    if (
-        parent !== undefined &&
-        NAMED_PARENTS.has(parent.type) &&
-        'key' in parent &&
-        parent.key.type === AST_NODE_TYPES.Identifier
-    )
-        return parent.key.name;
-    return undefined;
-}
-
-function nameOf(node: NoCallThroughFunction): string {
-    if ('id' in node && node.id?.type === AST_NODE_TYPES.Identifier) return node.id.name;
-    return parentName(node.parent) ?? '<anonymous>';
-}
-
-function calleeOf(expression: TSESTree.Node | null | undefined): string {
-    const call = callOf(expression);
-    return call?.callee.type === AST_NODE_TYPES.Identifier ? call.callee.name : 'the inner call';
+    return count;
 }
 
 export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial'>({
@@ -82,37 +32,31 @@ export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial
     meta: {
         type: 'problem',
         docs: {
-            summary: 'Finds a function whose body only forwards its parameters to one other call.',
-            why: 'The extra name adds a hop for the reader and nothing for the program.',
-            fix: 'Call the inner function directly and delete this one, or give it real work: validation, a decision, an error to handle.',
+            level: 'recommended',
+            summary: 'Finds every implemented function with at most the configured number of executable statements.',
+            why: 'An unnecessary function adds another name and another place to read.',
+            fix: 'Inline unnecessary functions. Required external APIs need a narrow suppression with a reason.',
         },
         schema: [optionsSchema({ maxStatements: positiveInteger })],
-        messages: { trivial: 'Inline {{name}}: its body only forwards its parameters to {{callee}}.' },
+        messages: {
+            trivial:
+                'This function has {{count}} executable statements, at most {{max}}. Inline it or explain its required API with a narrow suppression.',
+        },
     },
-    defaultOptions: [{ maxStatements: DEFAULT_MAX }],
+    defaultOptions: [{ maxStatements: 2 }],
     create(context, [options]) {
-        const max = options.maxStatements ?? DEFAULT_MAX;
-        const report = (node: NoCallThroughFunction, expression: TSESTree.Node | null | undefined): void => {
-            context.report({ node, messageId: 'trivial', data: { name: nameOf(node), callee: calleeOf(expression) } });
-        };
-        const checkBlock = (node: NoCallThroughFunction): void => {
-            if (node.body.type !== AST_NODE_TYPES.BlockStatement) return;
-            const statements = node.body.body.filter((statement) => statement.type !== AST_NODE_TYPES.EmptyStatement);
-            const [only] = statements;
-            if (only === undefined || statements.length !== 1 || statements.length > max) return;
-            const expression = bodyExpression(only);
-            if (isPassThrough(node, expression)) report(node, expression);
-        };
+        const max = options.maxStatements ?? 2;
         return {
-            FunctionDeclaration: checkBlock,
-            FunctionExpression: checkBlock,
-            ArrowFunctionExpression(node) {
-                if (node.body.type === AST_NODE_TYPES.BlockStatement) {
-                    checkBlock(node);
-                    return;
-                }
-                if (nameOf(node) !== '<anonymous>' && isPassThrough(node, node.body)) report(node, node.body);
+            ':matches(FunctionDeclaration, FunctionExpression, ArrowFunctionExpression)'(
+                node: TSESTree.FunctionDeclaration | TSESTree.FunctionExpression | TSESTree.ArrowFunctionExpression,
+            ) {
+                if (node.body === undefined) return;
+                const count =
+                    node.body.type === 'BlockStatement' ? statementCount(node.body, context.sourceCode.visitorKeys) : 1;
+                if (count <= max) context.report({ node, messageId: 'trivial', data: { count, max } });
             },
         };
     },
 });
+
+export type NoTrivialFunctionsOptions = [{ maxStatements?: number }];

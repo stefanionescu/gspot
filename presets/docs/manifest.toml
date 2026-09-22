@@ -1,0 +1,145 @@
+[preset]
+name = "docs"
+kind = "policy"
+title = "Docs"
+default = true
+description = "Documentation integrity: links and anchors, banned headings, stale paths, the README of every scope, and its shape."
+
+[claims]
+extensions = [".md", ".mdx"]
+filenames = ["CLAUDE.md", "AGENTS.md", "README.md"]
+
+[[tools]]
+name = "lychee"
+version = "0.24.2"
+mise = "lychee"
+brew = "lychee"
+cargo = "lychee"
+github = {name = "lycheeverse/lychee", version = "lychee-v0.24.2"}
+
+[[configs]]
+template = "lychee.toml.tmpl"
+target = ".gspot/lychee.toml"
+
+[[checks]]
+name = "docs/links"
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["lychee", "--config", "{config:lychee}", "--offline", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
+exclude_setting = "tools.lychee.exclude_paths"
+coverage = ["links"]
+output = {format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$"}
+summary = "Checks that every relative link names a tracked file and every anchor names a heading."
+why = "A dead link inside the repository is a promise the docs broke without anyone noticing."
+help = "Point the link at the file or heading that exists, or delete it."
+
+[[checks]]
+name = "docs/links-external"
+level = "recommended"
+stage = "manual"
+runs = "per-file-list"
+requires = "network"
+command = ["lychee", "--config", "{config:lychee}", "--include-fragments", "--format", "detailed", "--no-progress", "{files}"]
+exclude_setting = "tools.lychee.exclude_paths"
+coverage = ["links"]
+output = {format = "grouped", file_pattern = "^Errors in (?<file>.+)$", pattern = "^\\[(?<rule>[A-Z0-9]+)\\] (?<message>\\S+(?: \\(at (?<line>\\d+):(?<column>\\d+)\\))? \\| .*)$"}
+summary = "Checks every external link over the network."
+why = "An external link rots on its own schedule; this run says which ones did."
+help = "Update or remove the link, or exclude the URL pattern with a reason under tools.lychee.exclude."
+
+[[checks]]
+name = "integrity/docs-headings"
+level = "all"
+stage = "commit"
+engine = "integrity"
+analysis = "docs-headings"
+coverage = ["structure"]
+summary = "Finds a heading from the banned list, such as Table of contents, or Project structure."
+why = "An inventory heading promises a map that goes stale; the reader wanted an explanation."
+help = "Replace the section with prose that explains, or delete it."
+
+[[checks]]
+name = "integrity/stale-paths"
+level = "recommended"
+stage = "commit"
+engine = "integrity"
+analysis = "stale-paths"
+coverage = ["links"]
+summary = "Checks that every path a Markdown file names is tracked, and every mise run or bun run names a task that exists."
+why = "A path in the docs that nothing tracks sends the reader to a file that is gone."
+help = "Fix the path or the task name, or add the pattern with a reason under tools.docs.paths_allowed."
+
+[[checks]]
+name = "docs/readme-present"
+level = "all"
+stage = "commit"
+engine = "integrity"
+analysis = "readme-present"
+coverage = ["structure"]
+summary = "Checks that every scope has a README.md and the root has a LICENSE."
+why = "A scope with no README is a door with no sign."
+help = "Write the README; the docs rule files say what goes in it."
+
+[[checks]]
+name = "docs/readme-shape"
+level = "all"
+stage = "commit"
+engine = "integrity"
+analysis = "readme-shape"
+coverage = ["structure"]
+summary = "Checks the shape of every README: one H1, an opening paragraph, a Contents list when long, a section on getting started."
+why = "A README with the right shape answers what this is and how to start before the reader scrolls."
+help = "Add the missing piece; turn the check off with a reason under tools.docs.readme_shape when the shape does not fit."
+
+[[settings]]
+name = "tools.lychee.exclude_paths"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Files the link checks skip, each with a reason: the pages of a site whose links resolve only once it is built."
+
+[[settings]]
+name = "tools.docs.paths_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Path patterns the stale-paths check skips, each with a reason."
+
+[[settings]]
+name = "tools.docs.banned_headings"
+kind = "list"
+direction = "tightening"
+default = []
+summary = "Headings this repository bans beyond the shipped list."
+
+[[settings]]
+name = "tools.docs.require_license"
+kind = "boolean"
+direction = "neutral"
+default = true
+summary = "Whether the root must carry a LICENSE file."
+
+[[settings]]
+name = "tools.docs.readme_shape"
+kind = "boolean"
+direction = "loosening"
+default = true
+summary = "Whether the README shape check runs; false with a reason turns it off."
+
+[[settings]]
+name = "tools.docs.contents_threshold"
+kind = "number"
+direction = "ceiling"
+default = 6
+summary = "How many H2 headings a README may have before it needs a Contents list."
+
+[[settings]]
+name = "tools.lychee.exclude"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "URL patterns lychee skips, each with a reason."
+
+[rule_files]
+general = ["general/prose/DOCS.md", "general/prose/DOCS-FORMAT.md", "general/prose/DOCS-CONTENT.md", "general/prose/DOCS-MEDIA.md", "general/prose/DOCS-SURFACES.md", "general/prose/DOCS-REVIEW.md", "general/prose/WRITING.md", "general/code/COMMENTS.md"]

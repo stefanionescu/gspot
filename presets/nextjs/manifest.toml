@@ -1,0 +1,112 @@
+[preset]
+name = "nextjs"
+kind = "framework"
+title = "Next.js"
+requires = ["typescript", "react"]
+recommends = ["css", "configs", "i18n"]
+description = "A Next.js app: the framework and hooks rules of ESLint, and server code marked as server only. Route segments serve one thing, the configuration turns no build check off, and message files parse."
+
+[detect]
+dependencies = ["next"]
+
+[claims]
+paths = ["**/next.config.js", "**/next.config.mjs", "**/next.config.ts", "next.config.js", "next.config.mjs", "next.config.ts"]
+natures = ["source"]
+
+[[tools]]
+name = "next"
+provider = "host"
+
+[[tools]]
+name = "@next/eslint-plugin-next"
+kind = "library"
+version = "16.3.5"
+npm = "@next/eslint-plugin-next"
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/eslint.config.mjs"
+fragment = true
+
+[[checks]]
+name = "nextjs/typecheck"
+level = "recommended"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "next-types"
+takes_over = "typescript/tsc"
+coverage = ["types"]
+summary = "Has Next.js write its types, then type-checks the app with the strict compiler options."
+why = "A fresh clone holds no next-env.d.ts and no route types, so a plain tsc run fails on imports the framework resolves."
+help = "Read the first error tsc prints and fix that file; later errors are often the same mistake."
+
+[[checks]]
+name = "nextjs/build"
+level = "recommended"
+waits_for = "tools.next.build_in_gate"
+stage = "push"
+runs = "per-scope"
+engine = "integrity"
+analysis = "next-build"
+requires = "build"
+coverage = ["build"]
+summary = "Builds the app with next build, for a repository that set tools.next.build_in_gate."
+why = "Some mistakes show only at build time: a server import in a client file, or a page that cannot be prerendered."
+help = "Run next build and read the first error it prints."
+
+[[checks]]
+name = "integrity/route-segments"
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "next-route-segments"
+coverage = ["structure"]
+summary = "Checks that no route segment holds both a page and a route handler."
+why = "One address is served by one file, and the framework refuses the build when a segment holds two."
+help = "Move the route handler into a segment of its own, such as an api folder."
+
+[[checks]]
+name = "integrity/next-config"
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "next-config"
+coverage = ["security"]
+summary = "Checks that the framework configuration turns no build check off and puts no secret into the client environment."
+why = "A build that ignores lint and type errors ships them, and a key under env is readable by every visitor."
+help = "Remove the switch, and read the secret on the server."
+
+[[checks]]
+name = "integrity/dependency-alignment"
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "dependency-alignment"
+coverage = ["consistency"]
+summary = "Checks that packages that ship together sit on one version: the framework with its lint package, and react with react-dom."
+why = "A lint package a version behind flags what the framework allows and allows what it removed."
+help = "Move both packages to the same version."
+
+[[settings]]
+name = "tools.next.build_in_gate"
+kind = "boolean"
+direction = "tightening"
+default = false
+summary = "Whether the push stage builds the app with next build."
+
+[[settings]]
+name = "tools.next.build_flags"
+kind = "list"
+direction = "neutral"
+default = []
+summary = "The flags next build runs with, such as --webpack for an app that does not build with Turbopack."
+
+[rule_files]
+framework = ["framework/nextjs/NEXTJS.md"]
+
+[required_rules]
+tsx = ["@next/next/no-html-link-for-pages", "@next/next/no-async-client-component"]

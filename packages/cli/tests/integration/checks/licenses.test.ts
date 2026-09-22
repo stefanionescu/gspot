@@ -3,7 +3,7 @@ import { test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { licensesNpm } from '#cli/checks/licenses.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 
 async function input(root: string): Promise<EngineInput> {
     const session = await openSession(root);

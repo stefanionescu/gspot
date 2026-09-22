@@ -15,7 +15,7 @@ adds routing, server components, and caching on top of these.
   hooks, server modules, or the query layer, never in the render body.
 - One component per file, named for what it renders. The file is kebab-case and exports one
   PascalCase component.
-- Props are a `type` alias in `types/`; a component never takes an untyped object.
+- Props have a type beside their component; a component never takes an untyped object.
 - Compose downward: a component imports children and shared primitives, never its parent, its
   section, or its route.
 - Domain-neutral primitives (button, input, dialog, popover, tooltip) live in the shared UI owner

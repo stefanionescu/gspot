@@ -1,9 +1,9 @@
 // The string files and the asset folders of a project: every string has every locale, and every image set has an image that exists and that code names.
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import type { AssetContents, StringsFile } from '#types/apple.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { AssetContents, StringsFile } from '#cli/checks/xcode/types.ts';
 import { textOf, trackedEnding, xcodeFinding } from '#cli/checks/xcode/files.ts';
 
 const NOT_WORD = /[^A-Za-z\d]/u;

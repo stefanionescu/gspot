@@ -1,6 +1,6 @@
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 // The test checks that read one line at a time: a disabled test says why, no test sleeps, and no snapshot test records.
-import type { Finding } from '#types/finding.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { xcodeFinding } from '#cli/checks/xcode/files.ts';
 import { testFiles } from '#cli/checks/xctest/test-files.ts';

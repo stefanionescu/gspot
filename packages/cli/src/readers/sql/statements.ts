@@ -1,6 +1,6 @@
 // The statements of one SQL file, each with its kind, its fields and where it starts in the text.
 import { parseSql } from '#cli/readers/sql/parser.ts';
-import type { SqlFile, SqlNode, SqlStatement, SqlStatementView } from '#types/sql.ts';
+import type { SqlFile, SqlNode, SqlStatement, SqlStatementView } from '#cli/readers/sql/types.ts';
 
 function located(bytes: Buffer, statement: SqlStatement): SqlStatementView {
     const [kind = ''] = Object.keys(statement.stmt);

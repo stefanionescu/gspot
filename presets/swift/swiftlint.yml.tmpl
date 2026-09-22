@@ -1,0 +1,72 @@
+<% const OPT_IN = ["missing_docs", "explicit_init", "fatal_error_message", "first_where", "last_where", "empty_count", "empty_string", "contains_over_first_not_nil", "contains_over_filter_count", "contains_over_filter_is_empty", "contains_over_range_nil_comparison", "direct_return", "empty_collection_literal", "flatmap_over_map_reduce", "untyped_error_in_catch", "accessibility_label_for_image", "accessibility_trait_for_button", "private_swiftui_state", "prefer_self_in_static_references", "closure_body_length", "closure_spacing", "array_init", "sorted_first_last", "collection_alignment", "enum_case_associated_values_count", "switch_case_on_newline", "vertical_whitespace_between_cases", "multiline_arguments", "multiline_arguments_brackets", "multiline_function_chains", "multiline_literal_brackets", "multiline_parameters", "multiline_parameters_brackets", "number_separator", "vertical_parameter_alignment_on_call", "vertical_whitespace_closing_braces", "vertical_whitespace_opening_braces", "async_without_await", "convenience_type", "fallthrough", "force_unwrapping", "function_default_parameter_at_end", "implicitly_unwrapped_optional", "joined_default_parameter", "legacy_multiple", "legacy_random", "literal_expression_end_indentation", "lower_acl_than_parent", "operator_usage_whitespace", "overridden_super_call", "prefer_zero_over_explicit_init", "private_action", "private_outlet", "prohibited_super_call", "raw_value_for_camel_cased_codable_enum", "reduce_into", "redundant_nil_coalescing", "redundant_type_annotation", "static_operator", "toggle_bool", "trailing_closure", "unavailable_function", "unneeded_parentheses_in_closure_argument", "unowned_variable_capture", "yoda_condition", "balanced_xctest_lifecycle", "empty_xctest_method", "final_test_case", "test_case_accessibility", "xct_specific_matcher", "unhandled_throwing_task", "discarded_notification_center_observer", "identical_operands", "return_value_from_void_function", "weak_delegate", "superfluous_else", "pattern_matching_keywords", "optional_enum_case_matching", "shorthand_optional_binding", "self_binding", "prefer_key_path", "implicit_return", "redundant_self", "local_doc_comment", "period_spacing", "prefer_self_type_over_type_of_self", "unneeded_override", "no_magic_numbers", "type_contents_order", "file_types_order", "no_empty_block", "explicit_acl", "explicit_top_level_acl", "private_over_fileprivate", "file_name_no_space"]; const ANALYZER = ["capture_variable", "typesafe_array_init", "unused_import", "unused_declaration"]; -%>
+<% const at = (key, otherwise) => limit(key, 'swift') ?? limit(key) ?? otherwise; const pair = (count) => `    warning: ${count}\n    error: ${count}`; const off = rulesOff('swift/swiftlint'); const offSet = new Set(off); -%>
+line_length:
+<%~ pair(format.print_width) %>
+    ignores_comments: true
+    ignores_urls: true
+    ignores_interpolated_strings: true
+
+file_length:
+<%~ pair(at('file_lines', 300)) %>
+    ignore_comment_only_lines: true
+
+type_body_length:
+<%~ pair(settings['limits.swift.type_body_length'] ?? 300) %>
+
+function_parameter_count:
+<%~ pair(at('function_parameters', 7)) %>
+    ignores_default_parameters: false
+
+function_body_length:
+<%~ pair(at('function_lines', 60)) %>
+
+cyclomatic_complexity:
+<%~ pair(at('cyclomatic_complexity', 8)) %>
+    ignores_case_statements: true
+
+closure_body_length:
+<%~ pair(settings['limits.swift.closure_body_length'] ?? 60) %>
+
+nesting:
+    type_level:
+        warning: 1
+        error: 1
+    function_level:
+        warning: 2
+        error: 2
+
+missing_docs:
+    excludes_extensions: true
+    excludes_inherited_types: true
+    error: [open, public]
+
+unused_import:
+    always_keep_imports:
+<% for (const name of settings['tools.swiftlint.keep_imports'] ?? ['CoreGraphics']) { -%>
+        - <%= name %>
+<% } -%>
+
+disabled_rules:
+    - trailing_whitespace
+    - opening_brace
+    - statement_position
+    - todo
+    - identifier_name
+    - type_name
+    - discouraged_optional_collection
+    - discouraged_optional_boolean
+    - notification_center_detachment
+    - large_tuple
+<% for (const rule of off) { -%>
+    - <%= rule %>
+<% } -%>
+
+opt_in_rules:
+<% for (const rule of OPT_IN) { if (!offSet.has(rule)) { -%>
+    - <%= rule %>
+<% } } -%>
+
+analyzer_rules:
+<% for (const rule of ANALYZER) { if (!offSet.has(rule)) { -%>
+    - <%= rule %>
+<% } } -%>

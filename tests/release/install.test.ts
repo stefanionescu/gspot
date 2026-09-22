@@ -1,6 +1,6 @@
 // Installs built packages from an isolated registry and checks a fresh consumer.
 import { createRequire } from 'node:module';
-import { releaseTargets } from '../../packages/cli/config/targets.ts';
+import { releaseTargets } from '../../packages/cli/src/emit/targets-definitions.ts';
 import { join, dirname, delimiter, resolve, relative, isAbsolute } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { describe, expect, test } from 'bun:test';
@@ -658,7 +658,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                         'init',
                         '--yes',
                         '--presets',
-                        'config-files',
+                        'configs',
                         '--no-runner',
                         '--no-ci',
                         '--no-hooks',
@@ -678,7 +678,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                     'check',
                     'settings.toml',
                     '--only',
-                    'config-files/toml-format',
+                    'configs/toml-format',
                     '--no-cache',
                     '--json',
                 ];
@@ -688,7 +688,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                 expect(tomlReport.skips).toEqual([]);
                 expect(tomlReport.checks).toHaveLength(1);
                 expect(tomlReport.checks[0]).toMatchObject({
-                    check: 'config-files/toml-format',
+                    check: 'configs/toml-format',
                     status: 'fail',
                     files: 1,
                 });
@@ -701,7 +701,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                     })),
                 ).toEqual([
                     {
-                        check: 'config-files/toml-format',
+                        check: 'configs/toml-format',
                         file: 'settings.toml',
                         message: 'The file is not formatted with the configured TOML settings.',
                         fixable: true,
@@ -716,7 +716,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                 const formattedToml = await run(tomlFormat, wrapperOptions);
                 expect(formattedToml.code, formattedToml.stdout + formattedToml.stderr).toBe(0);
                 expect(reportSchema.parse(JSON.parse(formattedToml.stdout)).checks).toMatchObject([
-                    { check: 'config-files/toml-format', status: 'ok', files: 1, findings: [] },
+                    { check: 'configs/toml-format', status: 'ok', files: 1, findings: [] },
                 ]);
                 writeFileSync(join(wrapperConsumer, 'settings.toml'), 'a = [\n');
                 const tomlSyntax = [
@@ -724,7 +724,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                     'check',
                     'settings.toml',
                     '--only',
-                    'config-files/toml',
+                    'configs/toml',
                     '--no-cache',
                     '--json',
                 ];
@@ -733,7 +733,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                 const syntaxReport = reportSchema.parse(JSON.parse(invalidToml.stdout));
                 expect(syntaxReport.skips).toEqual([]);
                 expect(syntaxReport.checks).toHaveLength(1);
-                expect(syntaxReport.checks[0]).toMatchObject({ check: 'config-files/toml', status: 'fail', files: 1 });
+                expect(syntaxReport.checks[0]).toMatchObject({ check: 'configs/toml', status: 'fail', files: 1 });
                 expect(
                     syntaxReport.checks[0]!.findings.map(({ check, file, line, column, message, fixable }) => ({
                         check,
@@ -745,7 +745,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                     })),
                 ).toEqual([
                     {
-                        check: 'config-files/toml',
+                        check: 'configs/toml',
                         file: 'settings.toml',
                         line: 2,
                         column: 1,
@@ -757,7 +757,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                 const validToml = await run(tomlSyntax, wrapperOptions);
                 expect(validToml.code, validToml.stdout + validToml.stderr).toBe(0);
                 expect(reportSchema.parse(JSON.parse(validToml.stdout)).checks).toMatchObject([
-                    { check: 'config-files/toml', status: 'ok', files: 1, findings: [] },
+                    { check: 'configs/toml', status: 'ok', files: 1, findings: [] },
                 ]);
                 const whitespaceCommand = [
                     ...command,

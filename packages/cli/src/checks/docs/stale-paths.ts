@@ -2,13 +2,14 @@ import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 // Every path-shaped token in Markdown names a tracked file or folder, and every `mise run` or `bun run` names a task that exists.
+import { globbySync } from 'globby';
 import { visit } from 'unist-util-visit';
 import { parse as parseToml } from 'smol-toml';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import type { PathIndex, ProseLine } from '#types/integrity.ts';
+import type { PathIndex, ProseLine } from '#cli/checks/types.ts';
 
 import {
     FILE_EXTENSION,
@@ -17,7 +18,7 @@ import {
     PATH_TOKEN_SKIPS,
     RUN_TOKEN,
     TOKEN_SEPARATORS,
-} from '#config/docs.ts';
+} from '#cli/checks/docs/docs-definitions.ts';
 
 const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', MISE_CONFIG_PATH];
 const TRAILING_PUNCTUATION = '.,;:';
@@ -57,7 +58,12 @@ function packageScripts(root: string): string[] {
 }
 
 function tasksOf(root: string): Set<string> {
-    return new Set([...MISE_FILES.flatMap((file) => miseTasks(root, file)), ...packageScripts(root)]);
+    return new Set([
+        ...[...new Set([...MISE_FILES, ...globbySync('.mise/conf.d/*.toml', { cwd: root, dot: true })])].flatMap(
+            (file) => miseTasks(root, file),
+        ),
+        ...packageScripts(root),
+    ]);
 }
 
 function proseLines(text: string): ProseLine[] {
@@ -67,10 +73,6 @@ function proseLines(text: string): ProseLine[] {
         for (let line = node.position.start.line; line <= node.position.end.line; line += 1) ignored.add(line);
     });
     return text.split('\n').flatMap((line, index) => (ignored.has(index + 1) ? [] : [{ number: index + 1, line }]));
-}
-
-function normalized(token: string): string {
-    return token.replace(/^\.\//u, '').replace(/\/$/u, '');
 }
 
 function withoutTrailingPunctuation(token: string): string {
@@ -91,13 +93,13 @@ function pathTokens(line: string): string[] {
 
 // A token claims to be a path when it starts at a tracked top-level entry or ends in a file extension; `feat/order-export` is a branch, not a path.
 function isPathClaim(token: string, index: PathIndex): boolean {
-    const clean = normalized(token);
+    const clean = token.replace(/^\.\//u, '').replace(/\/$/u, '');
     const first = clean.split('/', 1)[0] ?? '';
     return index.known.has(first) || FILE_EXTENSION.test(clean);
 }
 
 function isMissing(token: string, index: PathIndex): boolean {
-    const clean = normalized(token);
+    const clean = token.replace(/^\.\//u, '').replace(/\/$/u, '');
     return isPathClaim(token, index) && !index.known.has(clean) && !index.isException(clean);
 }
 

@@ -1,6 +1,6 @@
 // The front matter of a rule file: layer, preset and title, and whether they agree with the path and the H1.
 import { RULE_LAYERS } from '#cli/rules/terms.ts';
-import type { RuleFinding, FrontMatter } from '#types/rules.ts';
+import type { RuleFinding, FrontMatter } from '#cli/rules/types.ts';
 
 // A preset id, or none; the manifest may arrive in a later phase.
 const PRESET_ID = /^(?:none|[a-z][a-z0-9-]*)$/u;

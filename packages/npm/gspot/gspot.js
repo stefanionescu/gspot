@@ -35,7 +35,9 @@ if (!binary || !existsSync(binary)) {
 }
 
 const child = spawn(binary, process.argv.slice(2), { stdio: 'inherit' });
+/** @type {NodeJS.Signals[]} */
 const signals = ['SIGINT', 'SIGTERM', 'SIGHUP'];
+/** @param {NodeJS.Signals} signal The process signal received by the launcher. */
 const forward = (signal) => child.kill(signal);
 for (const signal of signals) process.on(signal, forward);
 child.on('error', (error) => {

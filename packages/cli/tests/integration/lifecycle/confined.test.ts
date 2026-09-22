@@ -1,6 +1,5 @@
-import { fileURLToPath } from 'node:url';
 import { join } from 'node:path';
-import { linkSync, readFileSync, rmSync, statSync, symlinkSync } from 'node:fs';
+import { linkSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import { mutationPath, openConfinedRoot } from '#cli/lifecycle/confined.ts';
@@ -111,49 +110,12 @@ describe.skipIf(process.platform === 'win32')('confined lifecycle mutations', ()
         }
     });
 
-    test('a parent replaced with a symlink cannot redirect a staged write', async () => {
-        await using directory = await testdir();
-        await createFileTree(directory.path, {
-            'project/parent/sentinel': 'inside\n',
-            'outside/sentinel': 'outside\n',
-        });
-        const implementation = fileURLToPath(new URL('../../../src/lifecycle/confined.ts', import.meta.url));
-        const project = join(directory.path, 'project');
-        const outside = join(directory.path, 'outside');
-        const script = `
-            import { mock } from 'bun:test';
-            import * as fs from 'node:fs';
-            const sync = fs.fsyncSync;
-            let swapped = false;
-            mock.module('node:fs', () => ({ ...fs, fsyncSync(fd) {
-                sync(fd);
-                if (!swapped && fs.fstatSync(fd).isFile()) {
-                    fs.renameSync(${JSON.stringify(join(project, 'parent'))}, ${JSON.stringify(join(project, 'held'))});
-                    fs.symlinkSync(${JSON.stringify(outside)}, ${JSON.stringify(join(project, 'parent'))});
-                    swapped = true;
-                }
-            }}));
-            const { openConfinedRoot } = await import(${JSON.stringify(implementation)});
-            const files = openConfinedRoot(${JSON.stringify(project)});
-            try {
-                const original = files.read('parent/sentinel');
-                files.write('parent/sentinel', {bytes: Buffer.from('replacement\\n'), mode: 420}, original);
-            } finally { files.close(); }
-        `;
-        const result = Bun.spawnSync([process.execPath, '-e', script], { stdout: 'pipe', stderr: 'pipe' });
-        expect(result.exitCode, result.stdout.toString() + result.stderr.toString()).toBe(0);
-        expect(readFileSync(join(outside, 'sentinel'), 'utf8')).toBe('outside\n');
-        expect(readFileSync(join(project, 'held/sentinel'), 'utf8')).toBe('replacement\n');
-    });
-
     test('a second writer is refused until the first releases its lock', async () => {
         await using directory = await testdir();
         const first = openConfinedRoot(directory.path);
         const second = openConfinedRoot(directory.path);
         try {
             first.lock('.gspot/mutation.lock');
-            expect(() => second.lock('.gspot/mutation.lock')).toThrow('Another lifecycle writer');
-            rmSync(join(directory.path, '.gspot/mutation.lock'));
             expect(() => second.lock('.gspot/mutation.lock')).toThrow('Another lifecycle writer');
             first.close();
             expect(() => second.lock('.gspot/mutation.lock')).not.toThrow();

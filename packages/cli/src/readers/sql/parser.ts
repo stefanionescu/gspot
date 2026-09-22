@@ -1,8 +1,9 @@
+import { readFileSync } from 'node:fs';
 // The Postgres parser: libpg-query compiled to WASM, loaded from the bytes the binary embeds.
 
-import { grammarBytes } from '#cli/platform/assets.ts';
+import { grammarPath } from '#cli/platform/assets.ts';
 import createModule from 'libpg-query/wasm/libpg-query.js';
-import type { PgModule, SqlParse, SqlTree } from '#types/sql.ts';
+import type { PgModule, SqlParse, SqlTree } from '#cli/readers/sql/types.ts';
 
 const POINTER_BYTES = 4;
 const ERROR_POSITION_OFFSET = 16;
@@ -11,7 +12,7 @@ const state: { module: PgModule | undefined } = { module: undefined };
 async function pgModule(): Promise<PgModule> {
     if (state.module !== undefined) return state.module;
     const factory = createModule as (options: { wasmBinary: Uint8Array }) => Promise<PgModule>;
-    state.module = await factory({ wasmBinary: grammarBytes('libpg-query.wasm') });
+    state.module = await factory({ wasmBinary: readFileSync(grammarPath('libpg-query.wasm')) });
     return state.module;
 }
 
@@ -48,5 +49,21 @@ export async function parseSql(text: string): Promise<SqlParse> {
     } finally {
         module._free(query);
         module._wasm_free_parse_result(result);
+    }
+}
+
+/** Parse procedural bodies using the same embedded PostgreSQL parser as SQL statements. */
+export async function parsePlpgsql(text: string): Promise<unknown> {
+    const module = await pgModule();
+    const query = module._malloc(module.lengthBytesUTF8(text) + 1);
+    module.stringToUTF8(text, query, module.lengthBytesUTF8(text) + 1);
+    const result = module._wasm_parse_plpgsql(query);
+    try {
+        const value = module.UTF8ToString(result);
+        if (!value.startsWith('{')) throw new Error(value);
+        return JSON.parse(value) as unknown;
+    } finally {
+        module._free(query);
+        module._wasm_free_string(result);
     }
 }

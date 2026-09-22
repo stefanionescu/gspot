@@ -21,7 +21,12 @@ export function tester(root = '/repo'): RuleTester {
     return new RuleTester({
         languageOptions: {
             parser,
-            parserOptions: { ecmaVersion: 'latest', sourceType: 'module', ecmaFeatures: { jsx: true } },
+            parserOptions: {
+                tsconfigRootDir: root,
+                ecmaVersion: 'latest',
+                sourceType: 'module',
+                ecmaFeatures: { jsx: true },
+            },
         },
         settings: { gspot: { root } },
     });

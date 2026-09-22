@@ -1,17 +1,13 @@
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 // JSON, SARIF, and GitLab Code Quality reports.
 import { join } from 'node:path';
-import type { Finding } from '#types/finding.ts';
-import type { RunReport, PushReport } from '#types/report.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { RunReport, PushReport } from '#cli/output/report-types.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import { SarifBuilder, SarifResultBuilder, SarifRuleBuilder, SarifRunBuilder } from 'node-sarif-builder';
 
 const JSON_INDENT = 4;
-
-function ruleIdOf(finding: Finding): string {
-    return finding.rule === undefined ? finding.check : `${finding.check}:${finding.rule}`;
-}
 
 function locationOf(finding: Finding): { fileUri: string; startLine: number; startColumn: number } | undefined {
     if (finding.file === '') return undefined;
@@ -31,7 +27,7 @@ function codeQualityText(report: RunReport | PushReport): string {
         const path = finding.file.replaceAll('\\', '/').replace(/^\.\//u, '');
         if (path === '' || path.startsWith('/') || /^[a-zA-Z]:/u.test(path) || path.split('/').includes('..'))
             return [];
-        const check = ruleIdOf(finding);
+        const check = finding.rule === undefined ? finding.check : `${finding.check}:${finding.rule}`;
         const line = Math.max(1, finding.line ?? 1);
         const fingerprint = new Bun.CryptoHasher('sha256')
             .update(JSON.stringify([check, path, line, finding.column ?? 1, finding.message]))
@@ -108,7 +104,7 @@ function sarifRun(report: RunReport): SarifRunBuilder {
     const rules = new Set<string>();
     const findings = report.checks.flatMap((check) => check.findings);
     for (const finding of findings) {
-        const ruleId = ruleIdOf(finding);
+        const ruleId = finding.rule === undefined ? finding.check : `${finding.check}:${finding.rule}`;
         if (!rules.has(ruleId)) {
             rules.add(ruleId);
             run.addRule(

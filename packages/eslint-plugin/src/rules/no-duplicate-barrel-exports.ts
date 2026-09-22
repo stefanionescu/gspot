@@ -1,4 +1,4 @@
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 // A name exported twice from one index, including through two `export *`.
 import { dirname, join, resolve } from 'node:path';
 import type { TSESTree } from '@typescript-eslint/utils';
@@ -76,13 +76,9 @@ function starSource(rest: string): string | undefined {
     return end === -1 ? undefined : quoted.slice(1, end);
 }
 
-function exportStatements(content: string): string[] {
-    return content.split('export ').slice(1);
-}
-
 function namesInText(content: string): Set<string> {
     const names = new Set<string>();
-    for (const rest of exportStatements(content)) {
+    for (const rest of content.split('export ').slice(1)) {
         const declared = nameAfterKeyword(rest);
         if (declared !== undefined) names.add(declared);
         for (const name of namesInBraces(rest)) names.add(name);
@@ -95,7 +91,9 @@ function exportsOf(path: string, visited = new Set<string>()): Set<string> {
     visited.add(path);
     const content = readFileSync(path, 'utf8');
     const names = namesInText(content);
-    const sources = exportStatements(content)
+    const sources = content
+        .split('export ')
+        .slice(1)
         .map((rest) => starSource(rest))
         .filter((source) => source !== undefined);
     for (const source of sources) {

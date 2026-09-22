@@ -1,9 +1,9 @@
-import { releaseTargets } from '#config/targets.ts';
+import { releaseTargets } from '#cli/emit/targets-definitions.ts';
 import { stringify } from 'yaml';
 import { MISE_CONFIG_PATH, MISE_MIN_VERSION } from '#cli/emit/runner-tasks.ts';
 // GitHub workflows and GitLab includes share installation and exact-object selection.
 import { headerFor } from '#cli/emit/templates.ts';
-import type { GeneratedFile, WorkflowShape } from '#types/emit.ts';
+import type { GeneratedFile, WorkflowShape } from '#cli/emit/types.ts';
 
 const CHECKOUT = 'actions/checkout@34e114876b0b11c390a56381ad16ebd13914f8d5';
 const MISE = 'jdx/mise-action@5ac50f778e26fac95da98d50503682459e86d566';

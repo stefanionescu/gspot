@@ -1,5 +1,5 @@
 import { describe, expect, test } from 'bun:test';
-import type { Migration } from '#types/postgres.ts';
+import type { Migration } from '#cli/checks/postgres/types.ts';
 import { sqlFile } from '#cli/readers/sql/statements.ts';
 import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
 

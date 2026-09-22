@@ -2,8 +2,8 @@ import { writeFileSync } from 'node:fs';
 import { evaluateFormat, evaluateIgnoredPaths } from './format-evaluation.ts';
 import { evaluateEslint } from './eslint-evaluation.ts';
 import { configurationRequest } from './configuration-request.ts';
-import { formatResponse, ignoredPathsResponse } from './format-request.ts';
-import { eslintResponse } from './eslint-request.ts';
+import { formatResponse, ignoredPathsResponse } from './format-evaluation.ts';
+import { eslintResponse } from './eslint-evaluation.ts';
 
 try {
     const request = configurationRequest.parse(

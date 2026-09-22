@@ -2,7 +2,7 @@
 import type { Command } from 'commander';
 import { explain } from '#cli/output/explain.ts';
 import { openSession } from '#cli/run/session.ts';
-import type { CommandResult } from '#types/run.ts';
+import type { CommandResult } from '#cli/run/types.ts';
 import { directoryOf } from '#cli/commands/flags.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { hasPolicy } from '#cli/policy/read-policy.ts';

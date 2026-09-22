@@ -1,5 +1,5 @@
 // An exported declaration above a non-exported one: private first, public last.
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 
@@ -13,12 +13,8 @@ const DECLARATIONS = new Set([
     'TSModuleDeclaration',
 ]);
 
-function declarationOf(statement: TSESTree.Statement): TSESTree.Node | null {
-    return statement.type === AST_NODE_TYPES.ExportNamedDeclaration ? statement.declaration : statement;
-}
-
 function nameOf(statement: TSESTree.Statement): string {
-    const declaration = declarationOf(statement);
+    const declaration = statement.type === AST_NODE_TYPES.ExportNamedDeclaration ? statement.declaration : statement;
     if (!declaration) return 'this export';
     if ('id' in declaration && declaration.id?.type === AST_NODE_TYPES.Identifier) return declaration.id.name;
     const first = declaration.type === AST_NODE_TYPES.VariableDeclaration ? declaration.declarations[0] : undefined;

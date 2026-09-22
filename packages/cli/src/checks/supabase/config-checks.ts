@@ -1,9 +1,9 @@
 import { join, posix } from 'node:path';
-import type { EngineInput } from '#types/run.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 // The checks that read supabase/config.toml: it parses, its functions exist, its buckets have policies, and migrations are named as the CLI names them.
-import type { Finding } from '#types/finding.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
-import { MIGRATION_NAME, SUPABASE_CONFIG } from '#config/supabase.ts';
+import { MIGRATION_NAME, SUPABASE_CONFIG } from '#cli/checks/supabase/supabase-definitions.ts';
 import { functionFolders, readProject, supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 /**

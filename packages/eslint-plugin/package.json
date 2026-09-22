@@ -17,14 +17,12 @@
     },
     "imports": {
         "#plugin/*": "./src/*",
-        "#plugin-types/*": "./types/*",
         "#plugin-tests/*": "./tests/*",
         "#plugin-package": "./package.json"
     },
     "files": [
         "dist",
-        "README.md",
-        "LICENSE.md"
+        "README.md"
     ],
     "dependencies": {
         "@typescript-eslint/utils": "8.70.0",

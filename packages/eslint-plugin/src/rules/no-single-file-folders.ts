@@ -1,8 +1,7 @@
 // A leaf folder holding one code file.
 import { posix } from 'node:path';
-import { createRule } from '#plugin/rule.ts';
-import { optionsSchema, stringList } from '#plugin/options.ts';
-import type { SingleFileFoldersOptions } from '#plugin-types/options.ts';
+import { createRule } from '#plugin/rules/definition.ts';
+import { optionsSchema, stringList } from '#plugin/rules/options.ts';
 
 import {
     CODE_EXTENSIONS,
@@ -59,3 +58,5 @@ export const noSingleFileFolders = createRule<SingleFileFoldersOptions, 'lone'>(
         };
     },
 });
+
+export type SingleFileFoldersOptions = [{ extensions?: string[]; ignorePaths?: string[]; allow?: string[] }];

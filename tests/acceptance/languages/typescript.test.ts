@@ -4,7 +4,7 @@ import { join } from 'node:path';
 // The sandbox links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
 import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
-import type { RunReport } from '#types/report.ts';
+import type { RunReport } from '#cli/output/report-types.ts';
 import { describe, expect, test } from 'bun:test';
 import type { FindingCase } from '#tests/types/acceptance.ts';
 import { symlinkSync, writeFileSync, readdirSync, chmodSync, statSync } from 'node:fs';
@@ -177,7 +177,7 @@ const CASES: FindingCase[] = [
             'src/orders/forward.ts':
                 '// A second name for the receipt function.\nimport { receiptLine } from "./receipt.js";\nimport type { Total } from "#types/totals.js";\n\n/**\n * Formats a receipt.\n * @param total the total\n * @returns the receipt line\n */\nexport const forward = (total: Total): string => receiptLine(total);\n',
         },
-        expected: { file: 'src/orders/forward.ts', rule: 'gspot/no-call-through', line: 10, column: 24 },
+        expected: { file: 'src/orders/forward.ts', rule: 'gspot/no-trivial-functions', line: 10, column: 24 },
     },
     {
         check: 'javascript/knip',

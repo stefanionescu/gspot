@@ -1,5 +1,5 @@
 import { join, relative } from 'node:path';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { ESLint, loadESLint } from 'eslint';
 import { createFileTree, testdir } from 'testdirs';
@@ -66,10 +66,15 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
             '--no-rules',
             '--no-install',
         ]);
+        if (path !== 'eslint.config.mjs') {
+            expect(result.code, result.stdout + result.stderr).toBe(2);
+            expect(result.stdout).toContain('flat configuration');
+            expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
+            expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
+            return;
+        }
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(JSON.parse(result.stdout).plan.retained.some((entry: { path: string }) => entry.path === path)).toBe(
-            true,
-        );
+        expect(JSON.parse(result.stdout).plan.remove.some((entry: { path: string }) => entry.path === path)).toBe(true);
         const eslint = new ESLint({
             cwd: repository.path,
             overrideConfigFile: join(repository.path, '.gspot/eslint.config.mjs'),
@@ -91,12 +96,13 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
         const corrected = await eslint.lintFiles(FILES);
         expect(corrected.flatMap(({ messages }) => messages.filter(({ ruleId }) => ruleId === 'eqeqeq'))).toEqual([]);
         writeFileSync(join(repository.path, 'tests/future.js'), SOURCE);
-        const [future] = await new Constructor({ cwd: repository.path }).lintFiles(['tests/future.js']);
-        expect(future!.messages.map(({ ruleId, severity }) => ({ ruleId, severity }))).toEqual([
-            { ruleId: 'eqeqeq', severity: 2 },
-        ]);
-        expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
-        expect(statSync(join(repository.path, path)).mode & 0o777).toBe(0o640);
+        const [future] = await eslint.lintFiles(['tests/future.js']);
+        expect(
+            future!.messages
+                .filter(({ ruleId }) => ruleId === 'eqeqeq')
+                .map(({ ruleId, severity }) => ({ ruleId, severity })),
+        ).toEqual([{ ruleId: 'eqeqeq', severity: 2 }]);
+        expect(readFileSync(join(repository.path, path), 'utf8')).not.toBe(original);
         expect(existsSync(join(repository.path, '.gspot/report.json'))).toBe(false);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
@@ -123,8 +129,9 @@ test(
             '--no-rules',
             '--no-install',
         ]);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(JSON.parse(result.stdout).plan.retained[0].note).toContain('repository ESLint is not installed');
+        expect(result.code, result.stdout + result.stderr).toBe(2);
+        expect(JSON.parse(result.stdout).plan.unread[0].note).toContain("Cannot find package 'eslint'");
+        expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
         expect(readFileSync(join(repository.path, 'eslint.config.mjs'), 'utf8')).toBe(original);
         expect(readFileSync(join(repository.path, 'source.js'), 'utf8')).toBe(SOURCE);
     },
@@ -142,6 +149,7 @@ test(
             'eslint.config.mjs': 'export default [{ rules: { eqeqeq: "error" } }];\n',
             'source.js': SOURCE,
         });
+        symlinkSync(join(import.meta.dir, '../../../node_modules'), join(repository.path, 'node_modules'));
         const result = await run(repository.path, [
             'init',
             '--yes',
@@ -196,13 +204,13 @@ test(
         expect(accepted.code, accepted.stdout + accepted.stderr).toBe(0);
         expect(() => JSON.parse(accepted.stdout)).not.toThrow();
         expect(accepted.stdout).not.toContain('authored linter log');
-        expect(readFileSync(join(repository.path, 'eslint.config.mjs'), 'utf8')).toBe(corrected);
+        expect(readFileSync(join(repository.path, 'eslint.config.mjs'), 'utf8')).not.toBe(corrected);
     },
     PLANTED_TIMEOUT_MS,
 );
 
 test(
-    'ESLint processor behavior remains active and is identified as uncarried',
+    'unsupported ESLint processors refuse adoption and leave native behavior intact',
     async () => {
         await using repository = await testdir();
         const original =
@@ -221,10 +229,9 @@ test(
             '--no-rules',
             '--no-install',
         ]);
-        expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(JSON.parse(result.stdout).plan.retained[0].note).toContain(
-            'processor behavior remains in the original configuration; rules were not carried',
-        );
+        expect(result.code, result.stdout + result.stderr).toBe(2);
+        expect(JSON.parse(result.stdout).plan.unread[0].note).toContain('processor conversion is unsupported');
+        expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
         const eslint = new ESLint({ cwd: repository.path });
         const [defective] = await eslint.lintFiles(['source.js']);
         expect(defective!.messages.map(({ ruleId, line, column }) => ({ ruleId, line, column }))).toEqual([

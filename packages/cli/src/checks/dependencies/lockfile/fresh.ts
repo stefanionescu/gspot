@@ -1,9 +1,9 @@
 // Every lockfile matches its manifest: the package manager installs from it without wanting to change it.
 import { dirname, join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
-import { FROZEN_INSTALLS } from '#config/integrity.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import { FROZEN_INSTALLS } from '#cli/checks/integrity-definitions.ts';
 
 const INSTALL_TIMEOUT_MS = 300_000;
 const SHOWN_LINES = 3;

@@ -1,6 +1,6 @@
 // Whole-part matching of banned terms, reserved terms, external names and contract properties.
 import { splitParts } from '#cli/naming/split.ts';
-import type { EffectivePolicy, Identifier, Term } from '#types/naming.ts';
+import type { EffectivePolicy, Identifier, Term } from '#cli/naming/types.ts';
 
 const RESERVED_USES: Record<string, string[]> = {
     directory: ['directories', 'packages'],

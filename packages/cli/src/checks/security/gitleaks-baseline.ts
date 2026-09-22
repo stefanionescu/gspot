@@ -1,9 +1,9 @@
 // Every reviewed finding in the gitleaks baseline carries a reason and names a path that still exists.
 import { join } from 'node:path';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import type { BaselineReason, GitleaksFinding } from '#types/integrity.ts';
+import type { BaselineReason, GitleaksFinding } from '#cli/checks/types.ts';
 
 const BASELINE = '.gspot/gitleaks-baseline.json';
 

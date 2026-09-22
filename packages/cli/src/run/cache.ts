@@ -1,7 +1,7 @@
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
 import { join } from 'node:path';
-import type { CacheKeyInput } from '#types/run.ts';
-import type { CheckResult } from '#types/finding.ts';
+import type { CacheKeyInput } from '#cli/run/types.ts';
+import type { CheckResult } from '#cli/output/finding.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
 import { lstatSync, readFileSync } from 'node:fs';
@@ -12,10 +12,6 @@ const CACHE_FORMAT = 5;
 // Thirty days in milliseconds.
 const RETENTION_MS = 2_592_000_000;
 const CACHE_ENTRY = /^\.gspot\/cache\/[a-f0-9]{64}\.json$/u;
-
-function cacheDir(root: string): string {
-    return join(root, '.gspot', 'cache');
-}
 
 /**
  * The SHA-256 hex digest of a text.
@@ -52,7 +48,7 @@ export function fileHash(root: string, path: string): string {
  * @returns the result when the cache holds one
  */
 export function readCached(root: string, key: string): CheckResult | undefined {
-    const path = join(cacheDir(root), `${key}.json`);
+    const path = join(join(root, '.gspot', 'cache'), `${key}.json`);
     try {
         const relative = `.gspot/cache/${key}.json`;
         const recorded = readOwnership(root).files.find((entry) => entry.path === relative && entry.kind === 'runtime');
@@ -84,7 +80,7 @@ export function readCached(root: string, key: string): CheckResult | undefined {
  * @param result the result to record
  */
 export function writeCached(root: string, key: string, result: CheckResult): void {
-    const path = join(cacheDir(root), `${key}.json`);
+    const path = join(join(root, '.gspot', 'cache'), `${key}.json`);
     const status = result.status === 'cache' ? 'ok' : result.status;
     const text = JSON.stringify({ ...result, status });
     try {
@@ -120,6 +116,6 @@ export function pruneCache(root: string): void {
             owner.applyProposals(proposals);
         });
     } catch (error) {
-        reportStorageFailure(cacheDir(root), error);
+        reportStorageFailure(join(root, '.gspot', 'cache'), error);
     }
 }

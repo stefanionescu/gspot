@@ -28,10 +28,10 @@ Then teammates can run `gspot install` against the matching policy and locks.
 ## The CLI version differs from the pin
 
 Read `.gspot/version`. Use that exact CLI version, or intentionally upgrade with the target
-binary and `gspot upgrade`. Preview first:
+binary and `gspot apply`. Preview first:
 
 ```bash
-gspot upgrade --dry-run
+gspot apply --dry-run
 ```
 
 Upgrade migrates configuration before target validation, prepares generated output, and changes

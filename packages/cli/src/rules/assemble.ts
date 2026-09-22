@@ -1,8 +1,8 @@
 // Select the rule files for the selection and render them under [rules] directory, keeping the layer folders.
-import type { Session } from '#types/run.ts';
-import type { RuleFile } from '#types/rules.ts';
+import type { Session } from '#cli/run/types.ts';
+import type { RuleFile } from '#cli/rules/types.ts';
 import { nearMatches } from '#cli/policy/near.ts';
-import type { GeneratedFile } from '#types/emit.ts';
+import type { GeneratedFile } from '#cli/emit/types.ts';
 import { everyManifest } from '#cli/presets/select.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
 

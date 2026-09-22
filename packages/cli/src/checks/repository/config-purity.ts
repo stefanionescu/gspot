@@ -2,10 +2,10 @@
 import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import type { TrackedFile } from '#types/repository.ts';
+import type { TrackedFile } from '#cli/repository/types.ts';
 import { grammarFor, parserFor } from '#cli/naming/parsers.ts';
 
 import {
@@ -13,7 +13,7 @@ import {
     CONFIG_IMPORT_PREFIXES,
     CONFIG_LOGIC_NODES,
     CONFIG_STATEMENTS,
-} from '#config/integrity.ts';
+} from '#cli/checks/integrity-definitions.ts';
 
 const LANGUAGE_BY_EXTENSION: Record<string, string> = {
     '.ts': 'typescript',

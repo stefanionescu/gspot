@@ -1,10 +1,9 @@
 // A file comment placed after the import block.
-import { createRule } from '#plugin/rule.ts';
-import { optionsSchema } from '#plugin/options.ts';
+import { createRule } from '#plugin/rules/definition.ts';
+import { optionsSchema } from '#plugin/rules/options.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { isImportLike } from '#plugin/rules/import-layout.ts';
-import type { HeaderCommentsOptions } from '#plugin-types/options.ts';
 
 const DIRECTIVE_PREFIXES = [
     'eslint',
@@ -35,10 +34,6 @@ function isDirective(value: string): boolean {
 
 function isBlank(text: string): boolean {
     return BLANK.test(text);
-}
-
-function isInside(comment: TSESTree.Comment, node: TSESTree.Node): boolean {
-    return comment.range[0] >= node.range[0] && comment.range[1] <= node.range[1];
 }
 
 function isTrailing(text: string, comment: TSESTree.Comment, node: TSESTree.Node): boolean {
@@ -73,17 +68,6 @@ function isLeading(text: string, comment: TSESTree.Comment, node: TSESTree.Node,
     if (!isBlankLineAllowed && BLANK_LINE.test(between)) return false;
     const lineStart = text.lastIndexOf('\n', comment.range[0] - 1) + 1;
     return isBlank(text.slice(lineStart, comment.range[0]));
-}
-
-function isAttached(
-    text: string,
-    comment: TSESTree.Comment,
-    node: TSESTree.Node,
-    isBlankLineAllowed: boolean,
-): boolean {
-    return (
-        isInside(comment, node) || isTrailing(text, comment, node) || isLeading(text, comment, node, isBlankLineAllowed)
-    );
 }
 
 function firstOtherIndex(body: TSESTree.Statement[], firstImport: number, isRequireAllowed: boolean): number {
@@ -124,8 +108,20 @@ export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'he
                         isDirective(comment.value)
                     )
                         return false;
-                    if (run.some((statement) => isAttached(text, comment, statement, false))) return false;
-                    return !isAttached(text, comment, other, true);
+                    if (
+                        run.some(
+                            (statement) =>
+                                (comment.range[0] >= statement.range[0] && comment.range[1] <= statement.range[1]) ||
+                                isTrailing(text, comment, statement) ||
+                                isLeading(text, comment, statement, false),
+                        )
+                    )
+                        return false;
+                    return !(
+                        (comment.range[0] >= other.range[0] && comment.range[1] <= other.range[1]) ||
+                        isTrailing(text, comment, other) ||
+                        isLeading(text, comment, other, true)
+                    );
                 });
                 if (!violating) return;
                 context.report({
@@ -146,3 +142,5 @@ export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'he
         };
     },
 });
+
+export type HeaderCommentsOptions = [{ allowRequire?: boolean }];

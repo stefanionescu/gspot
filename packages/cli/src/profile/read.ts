@@ -2,7 +2,7 @@
 import { resolve } from 'node:path';
 import { textHash } from '#cli/run/cache.ts';
 import { parse as parseToml } from 'smol-toml';
-import type { Profile } from '#types/profile.ts';
+import type { Profile } from '#cli/profile/types.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import * as messages from '#cli/policy/messages.ts';

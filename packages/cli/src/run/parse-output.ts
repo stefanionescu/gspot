@@ -1,11 +1,11 @@
 import { z } from 'zod';
 import { parseJson } from '#cli/output/json.ts';
-import type { Finding } from '#types/finding.ts';
+import type { Finding } from '#cli/output/finding.ts';
 // Findings from a tool's output: one parser per output format a manifest can declare.
 import { toPosix } from '#cli/platform/paths.ts';
-import { UNPARSED_LIMIT } from '#config/markers.ts';
-import type { CheckSpec, OutputFormat } from '#types/manifest.ts';
-import type { EslintFile, EslintEntry, RegexParser } from '#types/run.ts';
+import { UNPARSED_LIMIT } from '#cli/emit/markers-definitions.ts';
+import type { CheckSpec, OutputFormat } from '#cli/presets/types.ts';
+import type { EslintFile, EslintEntry, RegexParser } from '#cli/run/types.ts';
 
 const DEFAULT_PATTERN = String.raw`^(?<file>[^:\s][^:]*):(?<line>\d+):(?:(?<column>\d+):)?\s*(?<message>.*)$`;
 const DEFAULT_FILE_PATTERN = String.raw`^(?<file>[^\s].*):$`;

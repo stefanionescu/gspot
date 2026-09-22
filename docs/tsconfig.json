@@ -4,21 +4,15 @@
         "jsx": "preserve",
         "module": "ESNext",
         "moduleResolution": "Bundler",
-        "types": ["astro/client", "bun"],
+        "types": ["bun"],
         "allowJs": true
     },
     "include": [
         ".astro/types.d.ts",
-        "../packages/cli/types/modules.d.ts",
+        "../packages/cli/src/platform/modules.d.ts",
         "src/**/*",
         "astro.config.ts",
-        "reference-pages.ts",
-        "configuration-reference.ts",
-        "plugin-reference.ts",
-        "types/**/*.ts",
-        "links.ts",
-        "source.ts",
-        "verify-release.ts"
+        "scripts/**/*.ts"
     ],
     "exclude": ["dist"]
 }

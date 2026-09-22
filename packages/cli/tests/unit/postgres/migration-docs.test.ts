@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'bun:test';
-import type { Migration } from '#types/postgres.ts';
-import { DOC_SEPARATOR } from '#config/postgres.ts';
+import type { Migration } from '#cli/checks/postgres/types.ts';
+import { DOC_SEPARATOR } from '#cli/checks/postgres/postgres-definitions.ts';
 import { sqlFile } from '#cli/readers/sql/statements.ts';
 import { docProblems } from '#cli/checks/postgres/migration-docs.ts';
 

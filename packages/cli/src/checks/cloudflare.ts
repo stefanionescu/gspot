@@ -3,10 +3,10 @@ import { join } from 'node:path';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { parse as parseToml } from 'smol-toml';
-import type { EngineInput } from '#types/run.ts';
-import type { Finding } from '#types/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
 import { readFileSync, rmSync } from 'node:fs';
-import { scratchCopy } from '#cli/run/scratch-copy.ts';
+import { scratchCopy } from '#cli/run/fixers.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
 const HEADER_LINE = /^[A-Za-z!][\w!#$%&'*+.^`|~-]*:\s*\S/u;

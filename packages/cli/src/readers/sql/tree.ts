@@ -1,5 +1,5 @@
 // Reading the parse tree: a list of nodes of one kind, and the text a field holds.
-import type { SqlNode } from '#types/sql.ts';
+import type { SqlNode } from '#cli/readers/sql/types.ts';
 
 /**
  * The nodes of one kind in a list field. Every item of a list is a table of one key, the node kind.

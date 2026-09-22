@@ -1,4 +1,4 @@
-import { createRule } from '#plugin/rule.ts';
+import { createRule } from '#plugin/rules/definition.ts';
 import type { TSESTree } from '@typescript-eslint/utils';
 // `export const A = B` where B is an identifier or a member expression.
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';

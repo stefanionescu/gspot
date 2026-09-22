@@ -1,14 +1,19 @@
 // Marker blocks in the agent instruction files, .gitignore, and lefthook.yml; text outside the markers is never read or moved.
 import { join } from 'node:path';
-import type { BlockStyle } from '#types/emit.ts';
+import type { BlockStyle } from '#cli/emit/types.ts';
 import { existsSync, readFileSync } from 'node:fs';
-import { HASH_BLOCK_END, HASH_BLOCK_START, MANAGED_BLOCK_END, MANAGED_BLOCK_START } from '#config/markers.ts';
+import {
+    HASH_BLOCK_END,
+    HASH_BLOCK_START,
+    MANAGED_BLOCK_END,
+    MANAGED_BLOCK_START,
+} from '#cli/emit/markers-definitions.ts';
 
 const GITIGNORE_LINES = [
     '.gspot/node_modules/',
     '.gspot/.venv/',
     '.gspot/ownership.json',
-    '.gspot/mutation.lock',
+    '.gspot/writer.lock',
     '.gspot/recovery/',
     '.gspot/cache/',
     '.gspot/report.json',
@@ -26,15 +31,12 @@ const GITIGNORE_LINES = [
     '.gspot/vale/styles/config/dictionaries/',
 ];
 
-function markers(style: BlockStyle): { start: string; end: string } {
-    return style === 'markdown'
-        ? { start: MANAGED_BLOCK_START, end: MANAGED_BLOCK_END }
-        : { start: HASH_BLOCK_START, end: HASH_BLOCK_END };
-}
-
 /** Locate one complete block, refusing ambiguous or malformed markers. */
 export function blockSpan(text: string, style: BlockStyle): { start: number; end: number } | undefined {
-    const markersForStyle = markers(style);
+    const markersForStyle =
+        style === 'markdown'
+            ? { start: MANAGED_BLOCK_START, end: MANAGED_BLOCK_END }
+            : { start: HASH_BLOCK_START, end: HASH_BLOCK_END };
     const start = text.indexOf(markersForStyle.start);
     const closing = text.indexOf(markersForStyle.end);
     if (start === -1 && closing === -1) return undefined;
@@ -54,7 +56,10 @@ export function blockSpan(text: string, style: BlockStyle): { start: number; end
 
 /** Replace a complete block or append it, preserving authored bytes around it. */
 export function applyBlock(existing: string, block: string, style: BlockStyle): string {
-    const { start, end } = markers(style);
+    const { start, end } =
+        style === 'markdown'
+            ? { start: MANAGED_BLOCK_START, end: MANAGED_BLOCK_END }
+            : { start: HASH_BLOCK_START, end: HASH_BLOCK_END };
     const gap = style === 'markdown' ? '\n\n' : '\n';
     const body = `${start}${gap}${block.trim()}${gap}${end}\n`;
     const span = blockSpan(existing, style);
@@ -69,7 +74,10 @@ export function applyBlock(existing: string, block: string, style: BlockStyle): 
  * @returns the block body, trimmed
  */
 export function currentBlock(text: string, style: BlockStyle): string | undefined {
-    const { start, end } = markers(style);
+    const { start, end } =
+        style === 'markdown'
+            ? { start: MANAGED_BLOCK_START, end: MANAGED_BLOCK_END }
+            : { start: HASH_BLOCK_START, end: HASH_BLOCK_END };
     const startIndex = text.indexOf(start);
     const endIndex = text.indexOf(end);
     if (startIndex === -1 || endIndex < startIndex) return undefined;

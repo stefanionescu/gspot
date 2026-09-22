@@ -1,12 +1,11 @@
 ---
 title: Install gspot
-description: Run the prerelease CLI from a contributor checkout.
+description: Install dependencies and run gspot from source.
 sidebar:
     order: 1
 ---
 
-gspot is prerelease. Public npm packages and release binaries are not available yet.
-Use Git and mise 2026.8.8 or later for contributor work:
+Use Git and mise 2026.8.8 or later to run gspot from a source checkout:
 
 ```bash
 git clone https://github.com/stefanionescu/gspot.git
@@ -15,16 +14,14 @@ mise run repo:setup
 bun packages/cli/src/main.ts --help
 ```
 
-Run the source entry point with Bun from the repository you want to check. Candidate package
-validation uses an isolated local registry. A cross-compiled binary does not establish that
-its target platform has passed acceptance.
+Run the source entry point with Bun from the repository you want to check.
 
 ## What the repository pins
 
 `gspot init` writes `.gspot/version` and, when mise runs the repository, a pin in
 `.mise/conf.d/gspot-tools.toml`. This integration requires mise 2026.8.8 or newer. Everyone on the repository runs that version; another version
 refuses `check` and says how to install the pinned one or move the pin with
-`gspot upgrade --to`.
+`gspot apply`. Preview generated changes with `gspot apply --dry-run`, apply them, then run `gspot install`.
 
 ## Native binaries and npm packages
 

@@ -1,7 +1,7 @@
 // Runs the compiled binary of this platform in a planted repository: the embedded presets, rules and grammars, not the source tree.
 
 import { createRequire } from 'node:module';
-import { releaseTargets } from '../../packages/cli/config/targets.ts';
+import { releaseTargets } from '../../packages/cli/src/emit/targets-definitions.ts';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 // Runs when GSPOT_RELEASE_TEST=1 (the release workflow sets it); it needs a built binary under dist/.

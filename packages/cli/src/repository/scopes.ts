@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import type { Package } from '@manypkg/tools';
 import { toPosix } from '#cli/platform/paths.ts';
-import { LINT_TOOL_PACKAGE_PREFIXES } from '#config/patterns.ts';
-import type { ManifestFacts, ScopeEntry } from '#types/repository.ts';
+import { LINT_TOOL_PACKAGE_PREFIXES } from '#cli/lifecycle/patterns-definitions.ts';
+import type { ManifestFacts, ScopeEntry } from '#cli/repository/types.ts';
 import { LernaTool, PnpmTool, RushTool, YarnTool } from '@manypkg/tools';
 
 function lastSegment(path: string): string {

@@ -1,10 +1,10 @@
 // The build of a Swift scope, the analyzer over its log, and Periphery over the project.
 import { join } from 'node:path';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { Finding } from '#types/finding.ts';
-import type { EngineInput, Session } from '#types/run.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput, Session } from '#cli/run/types.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import type { SwiftBuildPlan, SwiftBuildOutput } from '#types/swift.ts';
+import type { SwiftBuildPlan, SwiftBuildOutput } from '#cli/structure/swift/types.ts';
 import { existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
 
 const DIAGNOSTIC = /^(?<file>\/[^:]+):(?<line>\d+):(?<column>\d+): (?<level>error|warning): (?<text>.*)$/u;
@@ -13,13 +13,11 @@ const PRIVATE_PREFIX = /(?<before>^|[\s=])\/private\/(?<folder>tmp|var)\//gu;
 const RULE_SUFFIX = /^(?<text>.*\S)\s+\((?<rule>[a-z_]+)\)$/u;
 const builds = new WeakMap<Session, Map<string, Promise<SwiftBuildOutput>>>();
 
-// macOS reaches /tmp and /var through /private, and one tool names a file with the prefix while another leaves it out.
-function bare(path: string): string {
-    return path.replace(/^\/private\/(?=tmp\/|var\/)/u, '/');
-}
-
 function relative(root: string, file: string): string {
-    const [from, to] = [bare(root), bare(file)];
+    const [from, to] = [
+        root.replace(/^\/private\/(?=tmp\/|var\/)/u, '/'),
+        file.replace(/^\/private\/(?=tmp\/|var\/)/u, '/'),
+    ];
     return to.startsWith(`${from}/`) ? to.slice(from.length + 1) : file;
 }
 

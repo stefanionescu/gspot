@@ -8,13 +8,13 @@ const ROOT = fileURLToPath(new URL('../../../..', import.meta.url));
 const CHECKOUT = 'workspace % café';
 const SOURCES = [
     'packages/cli/package.json',
-    'packages/cli/config/grammars.ts',
+    'packages/cli/src/naming/grammars-definitions.ts',
     'packages/cli/src/platform/assets.ts',
     'packages/cli/src/platform/paths.ts',
 ];
 const PRESET = '[preset]\nname = "bash"\n';
 const PROBE = `import { readAsset, listAssets } from './packages/cli/src/platform/assets.ts';
-console.log(JSON.stringify({ text: readAsset('presets/language/bash/manifest.toml'), files: listAssets('presets') }));
+console.log(JSON.stringify({ text: readAsset('presets/bash/manifest.toml'), files: listAssets('presets') }));
 `;
 
 describe('development assets', () => {
@@ -25,7 +25,7 @@ describe('development assets', () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, {
             ...sources,
-            [`${CHECKOUT}/presets/language/bash/manifest.toml`]: PRESET,
+            [`${CHECKOUT}/presets/bash/manifest.toml`]: PRESET,
             [`${CHECKOUT}/probe.ts`]: PROBE,
         });
         const cwd = join(sandbox.path, CHECKOUT);
@@ -37,7 +37,7 @@ describe('development assets', () => {
         expect(result.exitCode, result.stderr.toString()).toBe(0);
         expect(JSON.parse(result.stdout.toString())).toEqual({
             text: PRESET,
-            files: ['presets/language/bash/manifest.toml'],
+            files: ['presets/bash/manifest.toml'],
         });
     });
 });

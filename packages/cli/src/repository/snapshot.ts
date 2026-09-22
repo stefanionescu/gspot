@@ -1,5 +1,5 @@
 import { cp, readdir, realpath } from 'node:fs/promises';
-import type { GitEntry, SnapshotSource } from '#types/repository.ts';
+import type { GitEntry, SnapshotSource } from '#cli/repository/types.ts';
 import { tmpdir } from 'node:os';
 import { basename, dirname, isAbsolute, join, relative, sep } from 'node:path';
 import { constants, existsSync, lstatSync, mkdtempSync, readFileSync, realpathSync, rmSync } from 'node:fs';
@@ -37,7 +37,15 @@ async function validateCopiedLinks(root: string, directory: string, cancelSignal
         const path = join(directory, entry.name);
         if (entry.isDirectory()) await validateCopiedLinks(root, path, cancelSignal);
         else if (entry.isSymbolicLink()) {
-            const target = relative(root, await realpath(path));
+            let resolved: string;
+            try {
+                resolved = await realpath(path);
+            } catch (error) {
+                throw new SelectionError([
+                    `Installed dependency link ${relative(root, path)} cannot be resolved: ${(error as Error).message}. Repair the dependency installation before checking this revision.`,
+                ]);
+            }
+            const target = relative(root, resolved);
             if (isAbsolute(target) || target === '..' || target.startsWith(`..${sep}`))
                 throw new SelectionError([
                     'Installed dependencies contain an external link. Prepare isolated dependencies for the selected revision.',
@@ -92,8 +100,9 @@ async function copyDependencies(
                 return true;
             },
         });
-        await validateCopiedLinks(snapshot, target, cancelSignal);
     }
+    for (const { folder, dependency } of directories)
+        await validateCopiedLinks(snapshot, join(snapshot, folder, dependency), cancelSignal);
 }
 
 async function materialize(

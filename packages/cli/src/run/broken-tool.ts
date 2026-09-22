@@ -1,24 +1,20 @@
 import { ToolOutputError, parseOutput } from '#cli/run/parse-output.ts';
-import type { PlannedCheck } from '#types/run.ts';
+import type { PlannedCheck } from '#cli/run/types.ts';
 // Telling a tool that found something from a tool that fell over: a crash must never pass for a finding.
 import { existsSync } from 'node:fs';
 import { isAbsolute, join } from 'node:path';
-import type { Finding } from '#types/finding.ts';
-import type { SpawnResult } from '#types/platform.ts';
-import type { CheckSpec, OutputFormat } from '#types/manifest.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { SpawnResult } from '#cli/platform/types.ts';
+import type { CheckSpec, OutputFormat } from '#cli/presets/types.ts';
 
 // These formats have no file in their findings by design, so a finding with no file says nothing about the tool.
 const FILELESS_FORMATS = new Set(['lines', 'none']);
-
-function hasFileField(output: OutputFormat): boolean {
-    return output.pattern?.includes('(?<file>') ?? output.fields?.file !== undefined;
-}
 
 // Whether the findings of this output name files of the repository: a link target, a coverage floor and a plain line do not.
 function isFileNamed(output: OutputFormat | undefined): boolean {
     if (output === undefined || output.format === 'eslint-json') return true;
     if (FILELESS_FORMATS.has(output.format) || (output.file_is ?? 'path') !== 'path') return false;
-    return hasFileField(output);
+    return output.pattern?.includes('(?<file>') ?? output.fields?.file !== undefined;
 }
 
 function isOnDisk(file: string, roots: string[]): boolean {
@@ -86,12 +82,6 @@ export function toolOutputDetail(result: SpawnResult, placeholder: string): stri
     return output.length === 0 ? placeholder : output.join('\n');
 }
 
-function matchesFailure(spec: CheckSpec, result: SpawnResult): boolean {
-    return (
-        spec.tool_errors !== undefined && new RegExp(spec.tool_errors, 'mu').test(`${result.stdout}\n${result.stderr}`)
-    );
-}
-
 /**
  * Parse findings while rejecting crashes and withholding secret-scanner diagnostics.
  * @param planned the selected check
@@ -101,7 +91,8 @@ function matchesFailure(spec: CheckSpec, result: SpawnResult): boolean {
  */
 export function checkedFindings(planned: PlannedCheck, result: SpawnResult, roots: [string, string]): Finding[] {
     const { spec } = planned;
-    const broken = matchesFailure(spec, result);
+    const broken =
+        spec.tool_errors !== undefined && new RegExp(spec.tool_errors, 'mu').test(`${result.stdout}\n${result.stderr}`);
     const parsed =
         spec.output?.format === 'trufflehog-json'
             ? redactedFindings(spec, result, roots[1], broken)

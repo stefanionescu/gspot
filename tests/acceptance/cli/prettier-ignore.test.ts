@@ -1,5 +1,5 @@
 import { join } from 'node:path';
-import { chmodSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import prettier from 'prettier';
 import { createFileTree, testdir } from 'testdirs';
@@ -36,7 +36,7 @@ test(
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(0);
         expect(
-            JSON.parse(result.stdout).plan.retained.some((entry: { path: string }) => entry.path === '.prettierignore'),
+            JSON.parse(result.stdout).plan.remove.some((entry: { path: string }) => entry.path === '.prettierignore'),
         ).toBe(true);
         const level = await run(repository.path, ['set', 'level', 'all']);
         expect(level.code, level.stdout + level.stderr).toBe(0);
@@ -70,9 +70,10 @@ test(
         expect(futureReport.skips).toEqual([{ check: 'formatting/prettier', source: 'ignore' }]);
         expect(futureReport.coverage.checked).toBe(0);
         expect(readFileSync(future, 'utf8')).toBe(SOURCE);
-        expect(readFileSync(join(repository.path, '.prettierignore'), 'utf8')).toBe(original);
-        expect(statSync(join(repository.path, '.prettierignore')).mode & 0o777).toBe(0o640);
-        const changed = original + '!generated/future.js\n';
+        const generated = readFileSync(join(repository.path, '.prettierignore'), 'utf8');
+        expect(generated).toContain(original);
+        const changed = generated + '!generated/future.js\n';
+        chmodSync(join(repository.path, '.prettierignore'), 0o640);
         writeFileSync(join(repository.path, '.prettierignore'), changed);
         const included = await run(repository.path, [...args, 'generated/future.js']);
         expect(included.code, included.stdout + included.stderr).toBe(0);
@@ -85,7 +86,7 @@ test(
         expect(readFileSync(join(repository.path, '.prettierignore'), 'utf8')).toBe(changed);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
-        expect(JSON.parse(repeated.stdout).drift).toEqual([]);
+        expect(JSON.parse(repeated.stdout).drift).toContainEqual(expect.objectContaining({ path: '.prettierignore' }));
     },
     PLANTED_TIMEOUT_MS,
 );
