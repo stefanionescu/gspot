@@ -6,6 +6,60 @@ import type { EditorconfigOverride, ScopedFormat } from '#cli/emit/types.ts';
 import { shippedFormat } from '#cli/presets/listing.ts';
 import { expandedPaths } from '#cli/presets/claims.ts';
 
+type NativeOverride<Options> = {
+    files: string | string[];
+    excludeFiles?: string | string[] | undefined;
+    options: Options;
+};
+
+/** Relocate native selectors while retaining Prettier's separate basename and relative-path matching. */
+export function relocatedOverrides<Options>(
+    entries: NativeOverride<Options>[],
+    base: string,
+    prefix: string,
+): NativeOverride<Options>[] {
+    const fromConfig = (pattern: string): string =>
+        [prefix, literalGlob(base), pattern].filter((part) => part !== '' && part !== '.').join('/');
+    return entries.flatMap((entry) => {
+        const files = typeof entry.files === 'string' ? [entry.files] : entry.files;
+        const excluded =
+            entry.excludeFiles === undefined
+                ? []
+                : typeof entry.excludeFiles === 'string'
+                  ? [entry.excludeFiles]
+                  : entry.excludeFiles;
+        return [false, true].flatMap((hasSlash) => {
+            const patterns = files.filter((pattern) => pattern.includes('/') === hasSlash);
+            if (patterns.length === 0) return [];
+            if (!hasSlash && base === '') return [{ files: patterns, excludeFiles: excluded, options: entry.options }];
+            if ([...patterns, ...excluded].some((pattern) => pattern.startsWith('!')))
+                throw new Error(
+                    'Prettier cannot relocate negated override selectors without changing their matching base. Keep the original configuration active.',
+                );
+            const exclusions = hasSlash
+                ? excluded.map(fromConfig)
+                : excluded.flatMap((pattern) => {
+                      const basename = pattern.replace(/^(?:\*\*\/)+/u, '');
+                      if (basename.includes('/')) {
+                          if (/[{}()]/u.test(basename))
+                              throw new Error(
+                                  'Prettier cannot relocate this basename exclusion without changing its meaning. Keep the original configuration active.',
+                              );
+                          return [];
+                      }
+                      return [fromConfig(`**/${basename}`)];
+                  });
+            return [
+                {
+                    files: patterns.map((pattern) => fromConfig(hasSlash ? pattern : `**/${pattern}`)),
+                    excludeFiles: exclusions,
+                    options: entry.options,
+                },
+            ];
+        });
+    });
+}
+
 function formatEntries(policy: Policy): ScopedFormat[] {
     const tables = [
         { scope: '', format: policy.format },
@@ -20,7 +74,7 @@ function formatEntries(policy: Policy): ScopedFormat[] {
     return [...base, ...overrides];
 }
 
-function prettierOptions(format: Partial<FormatSettings>): Record<string, unknown> {
+export function prettierOptions(format: Partial<FormatSettings>): Record<string, unknown> {
     return {
         ...(format.indent_width === undefined ? {} : { tabWidth: format.indent_width }),
         ...(format.indent_style === undefined ? {} : { useTabs: format.indent_style === 'tab' }),
@@ -32,7 +86,7 @@ function prettierOptions(format: Partial<FormatSettings>): Record<string, unknow
     };
 }
 
-function literalGlob(path: string): string {
+export function literalGlob(path: string): string {
     return path.replace(/[\\*?{}[\]()!+@,]/gu, '\\$&');
 }
 
@@ -62,25 +116,29 @@ export function prettierConfig(
         return { files, excludeFiles, options: prettierOptions(format) };
     });
     const { overrides: nativeOverrides = [], reason: _reason, ...extras } = extra ?? {};
-    for (const entry of nativeOverrides as {
-        files: string | string[];
-        excludeFiles?: string | string[];
-        options: Record<string, unknown>;
-    }[]) {
-        const files = (typeof entry.files === 'string' ? [entry.files] : entry.files).map(fromConfig);
+    for (const entry of relocatedOverrides(
+        nativeOverrides as {
+            files: string | string[];
+            excludeFiles?: string | string[];
+            options: Record<string, unknown>;
+        }[],
+        '',
+        prefix,
+    )) {
+        const files = typeof entry.files === 'string' ? [entry.files] : entry.files;
         const excluded =
             entry.excludeFiles === undefined
                 ? []
                 : typeof entry.excludeFiles === 'string'
                   ? [entry.excludeFiles]
                   : entry.excludeFiles;
-        overrides.push({ files, excludeFiles: excluded.map(fromConfig), options: entry.options });
+        overrides.push({ files, excludeFiles: excluded, options: entry.options });
     }
-    const format = { ...shippedFormat(), ...policy.format } as FormatSettings;
+    const nativeDefaults = policy.tools['prettier']?.['native_defaults'] === true;
+    const format = { ...(nativeDefaults ? {} : shippedFormat()), ...policy.format };
     return {
         ...prettierOptions(format),
-        arrowParens: 'always',
-        embeddedLanguageFormatting: 'off',
+        ...(nativeDefaults ? {} : { arrowParens: 'always', embeddedLanguageFormatting: 'off' }),
         ...extras,
         ...(overrides.length === 0 ? {} : { overrides }),
     };

@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { run, toolsPath } from '#tests/harness/planted.ts';
+import { run, toolsPath } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
 
 test('a path-specific Vale ignore retains findings elsewhere and reports its actual matches', async () => {

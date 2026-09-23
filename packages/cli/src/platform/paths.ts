@@ -1,5 +1,7 @@
 // Path handling: forward slashes in selectors, the platform form for tools.
-import { sep } from 'node:path';
+import { join, sep } from 'node:path';
+import { realpathSync } from 'node:fs';
+import { cacheHome } from '#cli/platform/environment.ts';
 
 const DECLARATION_EXTENSIONS = ['.d.ts', '.d.mts', '.d.cts'];
 
@@ -42,4 +44,10 @@ export function extensionOf(path: string): string {
     if (declaration !== undefined) return declaration;
     const index = base.lastIndexOf('.');
     return index <= 0 ? '' : base.slice(index).toLowerCase();
+}
+
+/** The private build cache for the canonical repository path. */
+export function buildFolder(root: string): string {
+    const identity = new Bun.CryptoHasher('sha256').update(realpathSync(root)).digest('hex');
+    return join(cacheHome(), 'gspot', identity);
 }

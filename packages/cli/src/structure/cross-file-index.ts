@@ -1,6 +1,5 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // The shell scripts of one scope, read once per run: functions, references and top-level assignments, and who owns each function.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { TrackedFile } from '#cli/repository/types.ts';
 import { TOP_LEVEL_ASSIGNMENT } from '#cli/structure/structure-definitions.ts';
@@ -38,7 +37,7 @@ function assignmentsOf(lines: string[], functions: ScriptFunction[]): Set<string
 }
 
 async function readScriptFile(root: string, file: TrackedFile): Promise<ScriptFile> {
-    const text = readFileSync(join(root, file.path), 'utf8');
+    const text = readSource(root, file.path).toString('utf8');
     const lines = text.split('\n');
     const functions = await scriptFunctions(text);
     return {
@@ -68,12 +67,12 @@ async function build(input: EngineInput, files: TrackedFile[]): Promise<ScriptIn
  * @returns the index
  */
 export function scriptIndex(input: EngineInput, files: TrackedFile[]): Promise<ScriptIndex> {
-    let perScope = cache.get(input.session);
+    let perScope = cache.get(input.runKey);
     if (perScope === undefined) {
         perScope = new Map();
-        cache.set(input.session, perScope);
+        cache.set(input.runKey, perScope);
     }
-    const key = `${input.scope}\n${files.map((file) => file.path).join('\n')}`;
+    const key = JSON.stringify([input.scope, files.map((file) => file.path)]);
     let index = perScope.get(key);
     if (index === undefined) {
         index = build(input, files);

@@ -3,7 +3,7 @@ import { stringify } from 'smol-toml';
 import { patch } from '@decimalturn/toml-patch';
 import { SCHEMA_LINE } from '#cli/emit/markers-definitions.ts';
 import { policySchema } from '#cli/policy/schema.ts';
-import type { CarriedLists } from '#cli/lifecycle/types.ts';
+import type { CarriedConfiguration } from '#cli/lifecycle/types.ts';
 import type { TomlTable, Proposal } from '#cli/policy/types.ts';
 
 const PREFACE = [
@@ -15,19 +15,9 @@ const PREFACE = [
     '',
 ].join('\n');
 
-const SHIPPED_LOCALE = 'en-us';
-
 function nonEmpty(table: Record<string, unknown[]>): TomlTable | undefined {
     const kept = Object.entries(table).filter(([, list]) => list.length > 0);
     return kept.length === 0 ? undefined : Object.fromEntries(kept);
-}
-
-// The locale is written only where it differs from the one the preset ships.
-function typosTable(carried: CarriedLists): TomlTable | undefined {
-    const lists = nonEmpty({ words: carried.typosWords, exclude: carried.typosExcludes });
-    const isOwn = carried.typosLocale !== undefined && carried.typosLocale !== SHIPPED_LOCALE;
-    if (!isOwn) return lists;
-    return { locale: carried.typosLocale, ...lists };
 }
 
 function xcodeTable(xcode: Proposal['xcode']): TomlTable | undefined {
@@ -35,23 +25,21 @@ function xcodeTable(xcode: Proposal['xcode']): TomlTable | undefined {
     return xcode.scheme === undefined ? { project: xcode.project } : { project: xcode.project, scheme: xcode.scheme };
 }
 
-function toolTables(carried: CarriedLists, commitScopes: string[] | undefined, xcode?: Proposal['xcode']): TomlTable {
-    const tables: Record<string, TomlTable | undefined> = {
-        typos: typosTable(carried),
-        prettier:
-            carried.formatter?.ignorePatterns === undefined
-                ? undefined
-                : { ignore_patterns: carried.formatter.ignorePatterns },
-        eslint: carried.eslintAdopted === undefined ? undefined : { adopted: carried.eslintAdopted },
-        gitleaks: nonEmpty({ allow: carried.gitleaksAllow }),
-        basedpyright: nonEmpty({ exclude: carried.pyrightExcludes }),
-        sqlfluff: nonEmpty({ exclude: carried.sqlfluffExcludes }),
-        semgrep: nonEmpty({ ignore: carried.semgrepIgnores }),
-        osv: nonEmpty({ ignore: carried.osvIgnores }),
-        licenses: nonEmpty({ allow: carried.licenseAllow, exceptions: carried.licenseExceptions }),
-        commitlint: nonEmpty({ scopes: commitScopes ?? [] }),
-        xcode: xcode?.scope === '' ? xcodeTable(xcode) : undefined,
-    };
+function toolTables(
+    carried: CarriedConfiguration,
+    commitScopes: string[] | undefined,
+    xcode?: Proposal['xcode'],
+): TomlTable {
+    const tables: Record<string, TomlTable | undefined> = Object.fromEntries(
+        [...carried.tools]
+            .filter(([, entry]) => Object.keys(entry.settings).length > 0)
+            .map(([tool, entry]) => [tool, entry.settings]),
+    );
+    if (carried.formatter?.ignorePatterns !== undefined)
+        tables['prettier'] = { ...tables['prettier'], ignore_patterns: carried.formatter.ignorePatterns };
+    const commits = nonEmpty({ scopes: commitScopes ?? [] });
+    if (commits !== undefined) tables['commitlint'] = { ...tables['commitlint'], ...commits };
+    if (xcode?.scope === '') tables['xcode'] = xcodeTable(xcode);
     return Object.fromEntries(Object.entries(tables).filter(([, table]) => table !== undefined));
 }
 
@@ -61,23 +49,41 @@ function headTables(proposal: Proposal): TomlTable {
         level: policySchema.shape.level.parse(undefined),
         presets: proposal.presets,
     };
-    if (proposal.scopes.length > 0)
-        document['scope'] = proposal.scopes.map((scope) => ({
-            path: scope.path,
-            presets: scope.presets,
-            ...(proposal.xcode?.scope === scope.path ? { tools: { xcode: xcodeTable(proposal.xcode) } } : {}),
+    const scopes = new Map<string, { path: string; presets: string[]; tools: TomlTable }>(
+        proposal.scopes.map((scope) => [
+            scope.path,
+            {
+                path: scope.path,
+                presets: scope.presets,
+                tools: proposal.xcode?.scope === scope.path ? { xcode: xcodeTable(proposal.xcode) } : {},
+            },
+        ]),
+    );
+    for (const [path, adopted] of proposal.carried.scopes) {
+        const scope = scopes.get(path) ?? { path, presets: [], tools: {} };
+        scope.presets = [...new Set([...scope.presets, ...adopted.presets])];
+        scope.tools = { ...scope.tools, ...adopted.tools };
+        scopes.set(path, scope);
+    }
+    if (scopes.size > 0)
+        document['scope'] = [...scopes.values()].map(({ tools, ...scope }) => ({
+            ...scope,
+            ...(Object.keys(tools).length === 0 ? {} : { tools }),
         }));
-    if (proposal.format !== undefined && Object.keys(proposal.format).length > 0) document['format'] = proposal.format;
+    if (proposal.formatter !== undefined && Object.keys(proposal.formatter.format).length > 0)
+        document['format'] = proposal.formatter.format;
     return document;
 }
 
-function ignoreTables(carried: CarriedLists): TomlTable[] {
-    return carried.ignores.map((entry) => ({
-        check: entry.check,
-        ...(entry.rule === undefined ? {} : { rule: entry.rule }),
-        ...(entry.paths === undefined ? {} : { paths: entry.paths }),
-        reason: entry.reason,
-    }));
+function ignoreTables(carried: CarriedConfiguration): TomlTable[] {
+    return [...carried.tools.values()]
+        .flatMap((tool) => tool.ignores)
+        .map((entry) => ({
+            check: entry.check,
+            ...(entry.rule === undefined ? {} : { rule: entry.rule }),
+            ...(entry.paths === undefined ? {} : { paths: entry.paths }),
+            reason: entry.reason,
+        }));
 }
 
 const PROFILE_HEAD = new Set(['version', 'profile', 'selection', 'presets']);
@@ -86,11 +92,18 @@ function asTable(value: unknown): TomlTable {
     return typeof value === 'object' && value !== null && !Array.isArray(value) ? (value as TomlTable) : {};
 }
 
-// A profile's tables are copied in; a table init also writes (tools, format) keeps both, the profile's keys first.
+// Repository settings override the same profile setting, without dropping other settings of that tool.
 function mergeProfile(document: TomlTable, tables: TomlTable | undefined): void {
     const entries = Object.entries(tables ?? {}).filter(([key]) => !PROFILE_HEAD.has(key));
     for (const [key, value] of entries) {
         const existing = document[key];
+        if (key === 'tools') {
+            const tools = { ...asTable(value) };
+            for (const [tool, settings] of Object.entries(asTable(existing)))
+                tools[tool] = { ...asTable(tools[tool]), ...asTable(settings) };
+            document[key] = tools;
+            continue;
+        }
         const isBothTables = Object.keys(asTable(existing)).length > 0 && Object.keys(asTable(value)).length > 0;
         document[key] = isBothTables ? { ...asTable(value), ...asTable(existing) } : value;
     }
@@ -117,11 +130,15 @@ function bodyText(document: TomlTable): string {
 export function proposeText(proposal: Proposal): string {
     const document = headTables(proposal);
     const tools = toolTables(proposal.carried, proposal.commitScopes, proposal.xcode);
-    if (proposal.prettierExtra !== undefined)
-        tools['prettier'] = { ...(tools['prettier'] as TomlTable), extra: proposal.prettierExtra };
+    if (proposal.formatter?.extra !== undefined)
+        tools['prettier'] = { ...(tools['prettier'] as TomlTable), extra: proposal.formatter?.extra };
+    if (proposal.formatter?.nativeDefaults === true)
+        tools['prettier'] = { ...(tools['prettier'] as TomlTable), native_defaults: true };
+    if (proposal.formatter?.editorconfig !== undefined)
+        tools['editorconfig'] = { adopted: proposal.formatter.editorconfig };
     if (Object.keys(tools).length > 0) document['tools'] = tools;
     mergeProfile(document, proposal.profileTables);
-    if (proposal.carried.ignores.length > 0)
+    if ([...proposal.carried.tools.values()].some((tool) => tool.ignores.length > 0))
         document['ignore'] = [
             ...((document['ignore'] as TomlTable[] | undefined) ?? []),
             ...ignoreTables(proposal.carried),
@@ -133,6 +150,14 @@ export function proposeText(proposal: Proposal): string {
     document['rules'] = { directory: '.gspot/rules', ...asTable(document['rules']), install: proposal.rules };
     document['coverage'] = { strict: false, ...asTable(document['coverage']) };
     if (proposal.runner === 'none') delete document['runner'];
-    else document['runner'] = { ...asTable(document['runner']), tool: proposal.runner };
+    else {
+        const runner = asTable(document['runner']);
+        const tasks = { ...proposal.runnerTasks, ...asTable(runner['tasks']) };
+        document['runner'] = {
+            ...runner,
+            tool: proposal.runner,
+            ...(Object.keys(tasks).length === 0 ? {} : { tasks }),
+        };
+    }
     return `${PREFACE}${bodyText(document)}`;
 }

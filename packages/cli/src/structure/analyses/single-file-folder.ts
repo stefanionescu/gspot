@@ -17,12 +17,12 @@ function isSkipped(directory: string, isAllowed: (path: string) => boolean): boo
  */
 export const singleFileFolder: Analysis = (context) => {
     const { input } = context;
-    const selection = input.session.scopes.find((entry) => entry.scope.path === input.scope);
-    const extensions = sourcePresets(selection?.selected ?? []).flatMap((manifest) => manifest.claims.extensions);
+    const selection = input.selection;
+    const extensions = sourcePresets(selection.selected).flatMap((manifest) => manifest.claims.extensions);
     const isAllowed = pathMatcher(
-        input.session.policyFiles.policy.structure.single_file_folder_allowed.flatMap((entry) => entry.paths),
+        input.policyFiles.policy.structure.single_file_folder_allowed.flatMap((entry) => entry.paths),
     );
-    const tree = directoryTree(input.session.repository.files);
+    const tree = directoryTree(input.files);
     const checked = new Set(context.files.map((file) => directoryOf(file.path)));
     const findings = [...checked].flatMap((directory) => {
         if (isSkipped(directory, isAllowed)) return [];
@@ -42,5 +42,5 @@ export const singleFileFolder: Analysis = (context) => {
             ),
         ];
     });
-    return Promise.resolve(findings);
+    return findings;
 };

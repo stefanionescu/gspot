@@ -9,13 +9,8 @@ import { duplicateFunctions, trivialFunctions } from '#cli/structure/swift/bodie
 
 const DEFAULT_DUPLICATE_LINES = 4;
 
-function names(input: EngineInput, key: string): Set<string> {
-    const entries = (input.view.settings[key] as { names?: string[] }[] | undefined) ?? [];
-    return new Set(entries.flatMap((entry) => entry.names ?? []));
-}
-
 function ownerPaths(input: EngineInput): string[] {
-    const env = input.session.policyFiles.policy.architecture.roles['env'];
+    const env = input.policyFiles.policy.architecture.roles['env'];
     if (env === undefined) return [];
     return Array.isArray(env) ? env : [env];
 }
@@ -23,16 +18,19 @@ function ownerPaths(input: EngineInput): string[] {
 function analysis(read: SwiftReader): (input: EngineInput) => Promise<Finding[]> {
     return async (input) => {
         const sources = await swiftSources(input);
-        const problems = read({ sources, functions: sources.flatMap((source) => functionsOf(source)) }, input);
-        for (const source of sources) source.tree.delete();
-        return problems.map((entry) => ({
-            check: input.spec.name,
-            file: entry.file,
-            line: entry.line,
-            rule: entry.rule,
-            message: entry.text,
-            fixable: false,
-        }));
+        try {
+            const problems = read({ sources, functions: sources.flatMap((source) => functionsOf(source)) }, input);
+            return problems.map((entry) => ({
+                check: input.spec.name,
+                file: entry.file,
+                line: entry.line,
+                rule: entry.rule,
+                message: entry.text,
+                fixable: false,
+            }));
+        } finally {
+            for (const source of sources) source.tree.delete();
+        }
     };
 }
 

@@ -9,8 +9,8 @@ import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync, renameSy
 import { run } from '#cli/platform/spawn.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
-import { publishTo, startRegistry } from '#tests/harness/registry/lifecycle.ts';
-import { environmentVariables, isReleaseTestWanted } from '#cli/platform/environment.ts';
+import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const requireCli = createRequire(join(root, 'packages/cli/package.json'));
@@ -36,7 +36,7 @@ environment['PATH'] = (environment['PATH'] ?? '')
     })
     .join(delimiter);
 
-describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
+describe('the installed consumer', () => {
     test(
         'installs matching packages, initializes, rejects a defect, and accepts its correction',
         async () => {
@@ -78,6 +78,12 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                 expect(dependency.code, dependency.stdout + dependency.stderr).toBe(0);
                 const published = publishTo(registry, version);
                 expect(published.code, published.stdout + published.stderr).toBe(0);
+                const toolNpmrc = join(registry.work, 'tools.npmrc');
+                writeFileSync(
+                    toolNpmrc,
+                    `@gspot:registry=${registry.url}\n${registry.url.replace('http:', '')}/:_authToken=fake\n`,
+                    { mode: 0o600 },
+                );
                 const consumer = join(registry.work, 'consumer');
                 mkdirSync(consumer);
                 writeFileSync(join(consumer, 'package.json'), '{"name":"consumer","private":true}\n');
@@ -173,7 +179,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                         expect(existsSync(join(cancellation, marker))).toBe(true);
                         toolPid = Number(readFileSync(join(cancellation, marker), 'utf8'));
                         child.kill(signal);
-                        expect(await child.exited, await errors).toBe(1);
+                        expect(await child.exited, await errors).toBe(2);
                         const canceled = reportSchema.parse(JSON.parse(await output));
                         expect(canceled.checks[0]?.status).toBe('error');
                         expect(canceled.checks[0]?.note).toContain('canceled');
@@ -194,42 +200,65 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                     }
                 }
                 const setupOptions = { ...options, env: { ...environment, NO_COLOR: '1', CI: '1' } };
-                const initialized = await run(
-                    [
-                        ...command,
-                        'init',
-                        '--json',
-                        '--yes',
-                        '--presets',
-                        'bash',
-                        'naming',
-                        'prose',
-                        'python',
-                        'swift',
-                        'formatting',
-                        '--no-runner',
-                        '--no-ci',
-                        '--no-hooks',
-                        '--no-install',
-                    ],
-                    setupOptions,
-                );
+                const parserRequire = createRequire(requireCli.resolve('editorconfig'));
+                const parserWasm = join(dirname(parserRequire.resolve('@one-ini/wasm')), 'one_ini_bg.wasm');
+                const retainedWasm = join(registry.work, 'checkout-parser.wasm');
+                renameSync(parserWasm, retainedWasm);
+                let initialized;
+                try {
+                    initialized = await run(
+                        [
+                            ...command,
+                            'init',
+                            '--json',
+                            '--yes',
+                            '--presets',
+                            'bash',
+                            'naming',
+                            'prose',
+                            'python',
+                            'swift',
+                            'formatting',
+                            '--no-runner',
+                            '--no-ci',
+                            '--no-hooks',
+                            '--no-install',
+                        ],
+                        setupOptions,
+                    );
+                } finally {
+                    renameSync(retainedWasm, parserWasm);
+                }
                 expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+                const installedTools = await run([...command, 'install', '--json'], {
+                    ...setupOptions,
+                    env: {
+                        ...setupOptions.env,
+                        NPM_CONFIG_USERCONFIG: toolNpmrc,
+                        BUN_INSTALL_CACHE_DIR: join(registry.work, 'tool-cache'),
+                    },
+                    timeoutMs: RELEASE_TIMEOUT_MS,
+                });
+                expect(installedTools.code, installedTools.stdout + installedTools.stderr).toBe(0);
                 expect(existsSync(join(consumer, 'gspot.toml'))).toBe(true);
-                expect(readFileSync(join(consumer, '.editorconfig'), 'utf8')).toBe(editorconfig);
-                expect(lstatSync(join(consumer, '.editorconfig')).mode & 0o777).toBe(0o640);
-                expect(readFileSync(join(consumer, 'prettier.config.mjs'), 'utf8')).toBe(formatter);
+                expect(existsSync(join(consumer, 'prettier.config.mjs'))).toBe(false);
                 expect(() => JSON.parse(initialized.stdout)).not.toThrow();
                 expect(initialized.stdout).not.toContain('formatter stdout');
                 const filepath = join(consumer, 'source.js');
                 const carried = await prettier.resolveConfig(filepath, {
                     config: join(consumer, '.gspot/prettier.json'),
-                    editorconfig: false,
+                    editorconfig: true,
                     useCache: false,
                 });
                 expect(await prettier.format(readFileSync(filepath, 'utf8'), { ...carried, filepath })).toBe(
                     'const greeting = "hello"\n',
                 );
+                const futureJson = await prettier.resolveConfig(join(consumer, 'nested/future.json'), {
+                    config: join(consumer, '.gspot/prettier.json'),
+                    editorconfig: true,
+                    useCache: false,
+                });
+                expect(futureJson?.tabWidth).toBe(4);
                 expect(existsSync(join(consumer, '.gspot', 'report.json'))).toBe(false);
                 const checked = await run(
                     [...command, 'check', '--only', 'bash/syntax', '--no-cache', '--json'],
@@ -569,7 +598,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                         CI: '1',
                         NO_COLOR: '1',
                         PATH: `${hostTools}${delimiter}${environment['PATH'] ?? ''}`,
-                        NPM_CONFIG_USERCONFIG: registry.npmrc,
+                        NPM_CONFIG_USERCONFIG: toolNpmrc,
                         HTTP_PROXY: undefined,
                         HTTPS_PROXY: undefined,
                         ALL_PROXY: undefined,
@@ -611,7 +640,7 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                 expect(previewInstall.code, previewInstall.stdout + previewInstall.stderr).toBe(0);
                 expect(JSON.parse(previewInstall.stdout).isDryRun).toBe(true);
                 const toolInstall = await run([...command, 'install', '--json'], toolOptions);
-                expect(toolInstall.code, toolInstall.stdout + toolInstall.stderr).toBe(1);
+                expect(toolInstall.code, toolInstall.stdout + toolInstall.stderr).toBe(2);
                 expect(JSON.parse(toolInstall.stdout).error).toContain('Install mise 2026.8.8 or newer');
                 expect(JSON.parse(toolInstall.stdout).error).toContain('installed locked npm tools');
                 expect(readFileSync(join(toolConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
@@ -808,6 +837,11 @@ describe.skipIf(!isReleaseTestWanted())('the installed consumer', () => {
                     { check: 'formatting/editorconfig-checker', status: 'ok', files: 1, findings: [] },
                 ]);
                 expect(readFileSync(join(wrapperConsumer, 'package.json'), 'utf8')).toBe(authoredPackage);
+                const removed = await run([...command, 'uninstall', '--yes'], options);
+                expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+                expect(readFileSync(join(consumer, '.editorconfig'), 'utf8')).toBe(editorconfig);
+                expect(lstatSync(join(consumer, '.editorconfig')).mode & 0o777).toBe(0o640);
+                expect(readFileSync(join(consumer, 'prettier.config.mjs'), 'utf8')).toBe(formatter);
             } finally {
                 await registry.stop();
             }

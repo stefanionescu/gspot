@@ -58,12 +58,25 @@ function startOf(node: TSESTree.Node): { offset: number; line: number } {
         : { offset: node.range[0], line: node.loc.start.line };
 }
 
-function isLeading(text: string, comment: TSESTree.Comment, node: TSESTree.Node, isBlankLineAllowed: boolean): boolean {
+function isLeading(
+    text: string,
+    comment: TSESTree.Comment,
+    node: TSESTree.Node,
+    isBlankLineAllowed: boolean,
+    comments: TSESTree.Comment[],
+): boolean {
     const start = startOf(node);
     if (comment.range[1] > start.offset) return false;
-    const between = text.slice(comment.range[1], start.offset);
+    let between = text.slice(comment.range[1], start.offset);
+    for (const directive of comments.toReversed()) {
+        if (directive.range[0] < comment.range[1] || directive.range[1] > start.offset || !isDirective(directive.value))
+            continue;
+        const from = directive.range[0] - comment.range[1];
+        const to = directive.range[1] - comment.range[1];
+        between = between.slice(0, from) + between.slice(to).replace(/^[\t ]*\r?\n/u, '');
+    }
     if (!isBlank(between)) return false;
-    const distance = start.line - comment.loc.end.line;
+    const distance = between.split('\n').length - 1;
     if (distance > (isBlankLineAllowed ? 2 : 1)) return false;
     if (!isBlankLineAllowed && BLANK_LINE.test(between)) return false;
     const lineStart = text.lastIndexOf('\n', comment.range[0] - 1) + 1;
@@ -81,6 +94,8 @@ export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'he
         type: 'layout',
         fixable: 'code',
         docs: {
+            example:
+                'A file header after an import and separated from the next declaration by two blank lines reports `headerFirst`. Move the header before the import. A comment attached to a declaration stays beside that declaration.',
             summary: 'Finds a file comment written after the import block instead of before it.',
             why: 'The first thing a reader sees should say what the file is; a header buried under imports is missed.',
             fix: 'Move the comment above the first import. gspot check --fix does it.',
@@ -92,6 +107,7 @@ export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'he
     create(context, [options]) {
         const source = context.sourceCode;
         const text = source.getText();
+        const comments = source.getAllComments();
         const isRequireAllowed = options.allowRequire === true;
         return {
             Program(node) {
@@ -101,7 +117,7 @@ export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'he
                 const other = node.body[firstOther];
                 if (first === undefined || other === undefined) return;
                 const run = node.body.slice(firstImport, firstOther);
-                const violating = source.getAllComments().find((comment) => {
+                const violating = comments.find((comment) => {
                     if (
                         comment.range[0] < first.range[0] ||
                         comment.range[1] > other.range[0] ||
@@ -113,14 +129,14 @@ export const headerCommentsBeforeImports = createRule<HeaderCommentsOptions, 'he
                             (statement) =>
                                 (comment.range[0] >= statement.range[0] && comment.range[1] <= statement.range[1]) ||
                                 isTrailing(text, comment, statement) ||
-                                isLeading(text, comment, statement, false),
+                                isLeading(text, comment, statement, false, comments),
                         )
                     )
                         return false;
                     return !(
                         (comment.range[0] >= other.range[0] && comment.range[1] <= other.range[1]) ||
                         isTrailing(text, comment, other) ||
-                        isLeading(text, comment, other, true)
+                        isLeading(text, comment, other, true, comments)
                     );
                 });
                 if (!violating) return;

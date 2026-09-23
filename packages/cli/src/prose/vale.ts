@@ -1,31 +1,45 @@
+import { readSource } from '#cli/repository/tracked.ts';
 import { tmpdir } from 'node:os';
-import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { createHash } from 'node:crypto';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { isValePackageFile } from '#cli/repository/natures.ts';
 import { run } from '#cli/platform/spawn.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { fileBatches } from '#cli/run/file-batches.ts';
+import { z } from 'zod';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { existsSync, readFileSync, mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
+import { mkdirSync, mkdtempSync, readdirSync, rmSync, writeFileSync } from 'node:fs';
 import type { GeneratedFile } from '#cli/emit/types.ts';
 import { routeGroups } from '#cli/prose/grammars.ts';
 // Vale, driven by gspot: the style files rendered from the limits, the packages synced at setup, every alert a finding.
 import type { SpawnResult } from '#cli/platform/types.ts';
-import { dirname, isAbsolute, join, relative } from 'node:path';
+import { basename, dirname, isAbsolute, join, relative } from 'node:path';
 import { locateTool } from '#cli/platform/tool-probe.ts';
-import { vocabularyFor } from '#cli/prose/vocabulary.ts';
 import type { MergedView, Policy } from '#cli/policy/types.ts';
 import type { ProseRoute, ValeAlert } from '#cli/prose/types.ts';
 import { listAssets, readAsset } from '#cli/platform/assets.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY, VALE_LINE, VALE_STDIN } from '#cli/prose/prose-definitions.ts';
+import { GSPOT_STYLE, LENGTH_RULES, STYLES_DIRECTORY, VALE_STDIN } from '#cli/prose/prose-definitions.ts';
 
-const STYLE_ASSETS = 'presets/prose/styles/gspot/';
+const STYLE_ASSETS = 'presets/policy/prose/styles/gspot/';
 
 const VALE_CONFIG = '.gspot/vale.ini';
 
 const MAX_LINE = /^max: \d+$/mu;
 const LONGER_THAN = /longer than \d+/u;
+const alertsSchema = z.record(
+    z.string().min(1),
+    z.array(
+        z.object({
+            Line: z.number().int().positive(),
+            Span: z.tuple([z.number().int().positive(), z.number().int().positive()]),
+            Check: z.string().min(1),
+            Message: z.string().min(1),
+        }),
+    ),
+);
 
 function renderedRule(stem: string, text: string, view: MergedView): string {
     const key = LENGTH_RULES[stem];
@@ -44,20 +58,29 @@ function assertValeRan(result: SpawnResult): void {
     throw new Error(`Vale did not run (exit ${String(result.code)}): ${reason.trim()}`);
 }
 
-async function alertsFor(root: string, binary: string, group: ProseRoute[]): Promise<ValeAlert[]> {
+async function alertsFor(input: EngineInput, group: ProseRoute[]): Promise<ValeAlert[]> {
     const [first] = group;
     if (first === undefined) return [];
-    const base = [binary, '--config', join(root, VALE_CONFIG), '--output', 'line', '--no-exit'];
+    const root = input.root;
+    const base = ['vale', '--config', join(root, VALE_CONFIG), '--output', 'JSON', '--no-exit'];
     if (first.mode === 'path') {
-        const result = await run([...base, ...group.map((route) => route.path)], { cwd: root });
-        assertValeRan(result);
-        return parseAlerts(result.stdout).map((alert) => ({
+        const alerts: ValeAlert[] = [];
+        for (const batch of fileBatches(
+            group.map((route) => route.path),
+            base,
+            process.platform,
+        )) {
+            const result = await runCheckCommand(input, [...base, ...batch], { cwd: root });
+            assertValeRan(result);
+            alerts.push(...parseAlerts(result.stdout));
+        }
+        return alerts.map((alert) => ({
             ...alert,
             file: toPosix(isAbsolute(alert.file) ? relative(root, alert.file) : alert.file),
         }));
     }
-    const text = readFileSync(join(root, first.path), 'utf8');
-    const result = await run([...base, `--ext=${first.extension}`], { cwd: root, stdin: text });
+    const text = readSource(root, first.path).toString('utf8');
+    const result = await runCheckCommand(input, [...base, `--ext=${first.extension}`], { cwd: root, stdin: text });
     assertValeRan(result);
     return parseAlerts(result.stdout).map((alert) => ({
         ...alert,
@@ -88,13 +111,14 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
             preset: 'prose',
         };
     });
-    const vocabulary = vocabularyFor(policy);
+    const shipped = readAsset('presets/policy/prose/vocabularies/gspot/accept.txt').trim().split(/\r?\n/u);
+    const vocabulary = [...new Set([...shipped, ...policy.prose.vocabulary])].toSorted((a, b) => a.localeCompare(b));
     const base = `${STYLES_DIRECTORY}/config/vocabularies/${GSPOT_STYLE}`;
     return [
         ...rules,
         {
             path: `${base}/accept.txt`,
-            content: `${vocabulary.accept.join('\n')}\n`,
+            content: `${vocabulary.join('\n')}\n`,
             readOnly: true,
             kind: 'config',
             preset: 'prose',
@@ -105,17 +129,56 @@ export function styleFiles(policy: Policy, view: MergedView): GeneratedFile[] {
 /**
  * True when every upstream package is present under the styles directory.
  * @param root the repository root
+ * @param requireOwnership require matching recorded package bytes and modes for setup
  * @returns whether vale sync has run
  */
-export function hasPackages(root: string): boolean {
-    const configured = /^Packages = (.*)$/mu.exec(readFileSync(join(root, VALE_CONFIG), 'utf8'))?.[1] ?? '';
-    const packages = configured
-        .split(',')
-        .map((name) => name.trim())
-        .filter((name) => name !== '');
-    // The Harper package reads the dictionaries vale sync puts beside the styles; without them Vale stops with E201.
-    const needed = [...packages, ...(packages.includes('Harper') ? [join('config', 'dictionaries')] : [])];
-    return needed.every((name) => existsSync(join(root, STYLES_DIRECTORY, name)));
+export function hasPackages(root: string, requireOwnership = false): boolean {
+    const files = openConfinedRoot(root);
+    try {
+        const source = files.read(VALE_CONFIG);
+        if (source === undefined) return false;
+        const configured = /^Packages = (.*)$/mu.exec(source.bytes.toString('utf8'))?.[1] ?? '';
+        const packages = configured
+            .split(',')
+            .map((name) => name.trim())
+            .filter((name) => name !== '')
+            .map((name) => basename(/^https?:\/\//u.test(name) ? new URL(name).pathname : name).replace(/\.zip$/u, ''));
+        // Harper requires the dictionaries installed beside its styles.
+        const needed = [...packages, ...(packages.includes('Harper') ? ['config/dictionaries'] : [])];
+        if (!needed.every((name) => files.stat(`${STYLES_DIRECTORY}/${name}`)?.isDirectory())) return false;
+        if (!requireOwnership || packages.length === 0) return true;
+        const selected = (path: string) =>
+            isValePackageFile(path) && needed.some((name) => path.startsWith(`${STYLES_DIRECTORY}/${name}/`));
+        const recorded = new Map(
+            readOwnership(root)
+                .files.filter((entry) => selected(entry.path))
+                .map((entry) => [entry.path, entry.installed]),
+        );
+        const installed: string[] = [];
+        const visit = (directory: string): void => {
+            for (const name of files.list(directory)) {
+                const path = `${directory}/${name}`;
+                if (files.stat(path)?.isDirectory()) visit(path);
+                else if (selected(path)) installed.push(path);
+            }
+        };
+        for (const name of needed) visit(`${STYLES_DIRECTORY}/${name}`);
+        return (
+            needed.every((name) => installed.some((path) => path.startsWith(`${STYLES_DIRECTORY}/${name}/`))) &&
+            [...new Set([...installed, ...recorded.keys()])].every((path) => {
+                const content = files.read(path);
+                const identity = recorded.get(path);
+                return (
+                    content !== undefined &&
+                    identity !== undefined &&
+                    content.mode === identity.mode &&
+                    createHash('sha256').update(content.bytes).digest('hex') === identity.hash
+                );
+            })
+        );
+    } finally {
+        files.close();
+    }
 }
 
 /**
@@ -145,6 +208,8 @@ export async function installPackages(root: string): Promise<string | undefined>
             if (result.code !== 0) return result.stderr.trim() || result.stdout.trim();
             const staged = openConfinedRoot(work);
             try {
+                if (staged.stat(STYLES_DIRECTORY)?.isDirectory() !== true)
+                    throw new Error('Vale did not produce a styles directory.');
                 const outputs = readdirSync(join(work, STYLES_DIRECTORY), { recursive: true, withFileTypes: true })
                     .filter((entry) => !entry.isDirectory())
                     .map((entry) => {
@@ -154,11 +219,21 @@ export async function installPackages(root: string): Promise<string | undefined>
                         return { path, content };
                     })
                     .filter((entry) => isValePackageFile(entry.path));
-                for (const output of outputs) owner.read(output.path);
-                for (const output of outputs) {
-                    const status = owner.replace(output.path, { bytes: output.content.bytes, mode: 0o444 }, 'config');
-                    if (status === 'preserved') return `preserved edited or unowned ${output.path}`;
-                }
+                const proposals = outputs.map((output) => {
+                    const current = owner.read(output.path);
+                    const mode = current?.bytes.equals(output.content.bytes) === true ? current.mode : 0o444;
+                    return owner.proposeReplacement(output.path, { bytes: output.content.bytes, mode }, 'config');
+                });
+                const retained = new Set(outputs.map((output) => output.path));
+                proposals.push(
+                    ...owner
+                        .installedPaths()
+                        .filter((path) => isValePackageFile(path) && !retained.has(path))
+                        .map((path) => owner.proposeRestoration(path)),
+                );
+                const conflict = proposals.find((proposal) => proposal.status === 'preserved');
+                if (conflict !== undefined) return `preserved edited or unowned ${conflict.path}`;
+                owner.applyProposals(proposals);
             } finally {
                 staged.close();
             }
@@ -170,24 +245,20 @@ export async function installPackages(root: string): Promise<string | undefined>
 }
 
 /**
- * Parses the Vale line output.
+ * Validates native Vale JSON before converting alerts to source locations.
  * @param stdout the output
  * @returns the alerts
  */
 export function parseAlerts(stdout: string): ValeAlert[] {
-    return stdout.split(/\r?\n/u).flatMap((line) => {
-        const groups = VALE_LINE.exec(line)?.groups;
-        if (groups === undefined) return [];
-        return [
-            {
-                file: toPosix(groups['file'] ?? ''),
-                line: Number(groups['line']),
-                column: Number(groups['column']),
-                check: groups['check'] ?? '',
-                message: groups['message'] ?? '',
-            },
-        ];
-    });
+    return Object.entries(alertsSchema.parse(JSON.parse(stdout))).flatMap(([file, alerts]) =>
+        alerts.map((alert) => ({
+            file: toPosix(file),
+            line: alert.Line,
+            column: alert.Span[0],
+            check: alert.Check,
+            message: alert.Message,
+        })),
+    );
 }
 
 /**
@@ -196,14 +267,12 @@ export function parseAlerts(stdout: string): ValeAlert[] {
  * @returns the findings
  */
 export async function valeFindings(input: EngineInput): Promise<Finding[]> {
-    const binary = locateTool(input.root, 'vale');
-    if (binary === undefined) throw new MissingToolError('Vale is not installed; run mise install.');
     if (!hasPackages(input.root))
         throw new Error('The Vale packages are not synced; run gspot apply with the network on.');
     const groups = routeGroups(input.files.filter((file) => file.nature === 'source'));
     const findings: Finding[] = [];
     for (const group of groups) {
-        const alerts = await alertsFor(input.root, binary, group);
+        const alerts = await alertsFor(input, group);
         findings.push(
             ...alerts.map((alert) => ({
                 check: input.spec.name,

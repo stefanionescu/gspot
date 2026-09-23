@@ -12,15 +12,14 @@ const KILOBYTE = 1024;
  * @param input the engine input
  * @returns the findings
  */
-export function largeFiles(input: EngineInput): Promise<Finding[]> {
+export function largeFiles(input: EngineInput): Finding[] {
     const limitKb = input.view.limit('file_size_kb') ?? FILE_SIZE_KB_DEFAULT;
-    const isDeclared = pathMatcher(input.session.policyFiles.policy.declarations.flatMap((entry) => entry.paths));
-    const findings = input.session.repository.files
+    const isDeclared = pathMatcher(input.policyFiles.policy.declarations.flatMap((entry) => entry.paths));
+    if (input.repositoryFiles === undefined) throw new Error('Large-file validation requires once-only execution.');
+    const findings = input.repositoryFiles
         .filter(
             (file) =>
-                file.size > limitKb * KILOBYTE &&
-                !isDeclared(file.path) &&
-                !isUnderLfs(input.session.repository.attributes, file.path),
+                file.size > limitKb * KILOBYTE && !isDeclared(file.path) && !isUnderLfs(input.attributes, file.path),
         )
         .map((file) => ({
             check: input.spec.name,
@@ -30,5 +29,5 @@ export function largeFiles(input: EngineInput): Promise<Finding[]> {
             message: `${String(Math.round(file.size / KILOBYTE))} KB is over the ${String(limitKb)} KB limit; move it to LFS or declare it with a reason.`,
             fixable: false,
         }));
-    return Promise.resolve(findings);
+    return findings;
 }

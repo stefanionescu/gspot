@@ -4,6 +4,3 @@ exact = true
 
 [install.security]
 scanner = "@socketsecurity/bun-security-scanner"
-
-[test]
-timeout = 60000

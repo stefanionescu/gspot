@@ -17,7 +17,6 @@
     },
     "imports": {
         "#plugin/*": "./src/*",
-        "#plugin-tests/*": "./tests/*",
         "#plugin-package": "./package.json"
     },
     "files": [
@@ -29,8 +28,6 @@
         "picomatch": "4.0.7"
     },
     "devDependencies": {
-        "@typescript-eslint/parser": "8.70.0",
-        "@typescript-eslint/rule-tester": "8.70.0",
         "eslint": "9.39.5",
         "typescript": "5.9.3",
         "@types/picomatch": "4.0.2"

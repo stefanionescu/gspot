@@ -43,13 +43,13 @@ export type StructureContext = {
 };
 
 /** One analysis: a function over the context that returns findings. */
-export type Analysis = (context: StructureContext, scripts: () => Promise<ScriptIndex>) => Promise<Finding[]>;
+export type Analysis = (
+    context: StructureContext,
+    scripts: () => Promise<ScriptIndex>,
+) => Finding[] | Promise<Finding[]>;
 
 /** How an analysis reports one problem in one file. */
 export type ScriptReport = (line: number, rule: string, message: string) => void;
-
-/** One ast-grep match. */
-export type AstGrepMatch = { file: string; ruleId: string; range: { start: { line: number }; end: { line: number } } };
 
 /** A line of a shell script with its comment stripped, keyed by its one-based number. */
 export type CodeLine = { number: number; code: string };

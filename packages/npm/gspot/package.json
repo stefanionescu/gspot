@@ -1,7 +1,7 @@
 {
     "name": "gspot",
     "version": "0.1.0",
-    "description": "CLI to lint and enforce rules for LLM generated code bases.",
+    "description": "CLI to lint and enforce rules for LLM generated codebases",
     "license": "Apache-2.0",
     "repository": "github:stefanionescu/gspot",
     "bin": {

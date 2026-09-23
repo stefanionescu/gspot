@@ -1,19 +1,39 @@
 // The whole validation a read performs: schema, structural rules, then the selection and the settings surface.
-import type { Policy } from '#cli/policy/types.ts';
+import type { PolicyFiles, PathSegment, PolicyProblem } from '#cli/policy/types.ts';
 import { selectForScope } from '#cli/presets/select.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { excludeProblems } from '#cli/rules/assemble.ts';
 import { exposedSettings } from '#cli/policy/settings.ts';
 import { validateAgainstSurface } from '#cli/policy/audit.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { sourceLocations, policyLocation } from '#cli/policy/source-locations.ts';
+import { nearMatches } from '#cli/policy/near.ts';
+import { unknownPreset } from '#cli/policy/messages.ts';
 
 /**
  * Every problem the selection and the surface find in a parsed policy. Throws PolicyError when there are any.
- * @param policy the parsed policy
+ * @param source the parsed policy and its authored text
  */
-export function assertPolicyComplete(policy: Policy): void {
+export function assertPolicyComplete(source: PolicyFiles): void {
+    const { policy } = source;
     const manifests = presetManifests();
-    const problems: string[] = [];
+    const declarations: { name: string; path: PathSegment[] }[] = [
+        ...policy.presets.map((name, index) => ({ name, path: ['presets', index] })),
+        ...policy.scopes.flatMap((scope, scopeIndex) =>
+            scope.presets.map((name, index) => ({ name, path: ['scope', scopeIndex, 'presets', index] })),
+        ),
+    ];
+    const unknown = declarations.filter(({ name }) => !manifests.has(name));
+    if (unknown.length > 0) {
+        const locations = sourceLocations(source.text);
+        throw new PolicyError(
+            unknown.map(
+                ({ name, path }) =>
+                    `${source.path}:${policyLocation(locations, path)}: ${unknownPreset(name, nearMatches(name, [...manifests.keys()]))}`,
+            ),
+        );
+    }
+    const problems: PolicyProblem[] = [];
     const rootSelected = selectForScope(policy, '', manifests);
     // A scope table is read against the settings of the presets that scope selects, the root presets included.
     const scopeSurfaces = new Map(
@@ -24,11 +44,26 @@ export function assertPolicyComplete(policy: Policy): void {
             (manifest) => manifest.checks.map((check) => check.name),
         ),
     );
-    for (const name of policy.extraChecks)
-        if (!selectedNames.has(name)) problems.push(`extra_checks names an unselected or unknown check: ${name}.`);
+    for (const [index, name] of policy.extraChecks.entries())
+        if (!selectedNames.has(name))
+            problems.push({
+                path: ['extra_checks', index],
+                message: `extra_checks names an unselected or unknown check: ${name}.`,
+            });
     problems.push(
-        ...excludeProblems(policy.rules.exclude),
+        ...policy.rules.exclude.flatMap((entry, index) =>
+            excludeProblems([entry]).map((message) => ({ path: ['rules', 'exclude', index], message })),
+        ),
         ...validateAgainstSurface(exposedSettings(rootSelected), policy, scopeSurfaces),
     );
-    if (problems.length > 0) throw new PolicyError([...new Set(problems)]);
+    if (problems.length > 0) {
+        const locations = sourceLocations(source.text);
+        throw new PolicyError([
+            ...new Set(
+                problems.map(
+                    (problem) => `${source.path}:${policyLocation(locations, problem.path)}: ${problem.message}`,
+                ),
+            ),
+        ]);
+    }
 }

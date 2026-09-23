@@ -15,6 +15,21 @@ import type {
 const TOOL_PREFIX = 'tools.';
 const RESERVED_SLOTS = new Set(['extra']);
 
+// A literal directory followed by /** covers that complete scope and each descendant.
+// Partial selectors and selectors with exclusions must remain per-file filters.
+function coversScope(paths: string[], scope: string): boolean {
+    if (scope === '' || paths.some((path) => path.startsWith('!'))) return false;
+    const segments = scope.split('/');
+    return segments.some((_, index) =>
+        paths.includes(
+            `${segments
+                .slice(0, index + 1)
+                .join('/')
+                .replaceAll(/[?*\[\]{}]/gu, '\\$&')}/**`,
+        ),
+    );
+}
+
 function groupedLimit(policy: Policy, scope: string, key: string, language: string): number | undefined {
     const grouped = policyTables(policy, scope)
         .toReversed()
@@ -104,7 +119,9 @@ export function mergeForScope(
         ignoresFor,
         rulesOff: (check) =>
             ignoresFor(check)
-                .filter((entry) => entry.paths === undefined || entry.paths.length === 0)
+                .filter(
+                    (entry) => entry.paths === undefined || entry.paths.length === 0 || coversScope(entry.paths, scope),
+                )
                 .map((entry) => entry.rule)
                 .filter((rule) => rule !== undefined),
         extra: (name) => extraOf(toolTables(policy, scope, name)),

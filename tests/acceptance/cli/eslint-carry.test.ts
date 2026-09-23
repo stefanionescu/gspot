@@ -1,9 +1,9 @@
 import { join, relative } from 'node:path';
-import { chmodSync, existsSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { ESLint, loadESLint } from 'eslint';
 import { createFileTree, testdir } from 'testdirs';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/harness/planted.ts';
+import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 
 const SOURCE = 'export const isEmpty = (value) => value == null;\n';
 const FILES = ['source.js', 'tests/[draft].js', 'tests/café note.js', 'server/source.js', 'components/source.js'];
@@ -66,15 +66,10 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
             '--no-rules',
             '--no-install',
         ]);
-        if (path !== 'eslint.config.mjs') {
-            expect(result.code, result.stdout + result.stderr).toBe(2);
-            expect(result.stdout).toContain('flat configuration');
-            expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
-            expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
-            return;
-        }
         expect(result.code, result.stdout + result.stderr).toBe(0);
-        expect(JSON.parse(result.stdout).plan.remove.some((entry: { path: string }) => entry.path === path)).toBe(true);
+        expect(JSON.parse(result.stdout).plan.remove.some((entry: { path: string }) => entry.path === path)).toBe(
+            path !== 'package.json',
+        );
         const eslint = new ESLint({
             cwd: repository.path,
             overrideConfigFile: join(repository.path, '.gspot/eslint.config.mjs'),
@@ -102,11 +97,17 @@ test.each(['eslint.config.mjs', '.eslintrc.json', 'package.json'])(
                 .filter(({ ruleId }) => ruleId === 'eqeqeq')
                 .map(({ ruleId, severity }) => ({ ruleId, severity })),
         ).toEqual([{ ruleId: 'eqeqeq', severity: 2 }]);
-        expect(readFileSync(join(repository.path, path), 'utf8')).not.toBe(original);
+        if (path === 'package.json') expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
+        else if (existsSync(join(repository.path, path)))
+            expect(readFileSync(join(repository.path, path), 'utf8')).not.toBe(original);
         expect(existsSync(join(repository.path, '.gspot/report.json'))).toBe(false);
         const repeated = await run(repository.path, ['apply', '--dry-run', '--json']);
         expect(repeated.code, repeated.stdout + repeated.stderr).toBe(0);
         expect(JSON.parse(repeated.stdout).drift).toEqual([]);
+        const removed = await run(repository.path, ['uninstall', '--yes']);
+        expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+        expect(readFileSync(join(repository.path, path), 'utf8')).toBe(original);
+        expect(statSync(join(repository.path, path)).mode & 0o777).toBe(0o640);
     },
     PLANTED_TIMEOUT_MS,
 );
@@ -230,7 +231,7 @@ test(
             '--no-install',
         ]);
         expect(result.code, result.stdout + result.stderr).toBe(2);
-        expect(JSON.parse(result.stdout).plan.unread[0].note).toContain('processor conversion is unsupported');
+        expect(JSON.parse(result.stdout).plan.unread[0].note).toContain('processor has no imported module owner');
         expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
         const eslint = new ESLint({ cwd: repository.path });
         const [defective] = await eslint.lintFiles(['source.js']);

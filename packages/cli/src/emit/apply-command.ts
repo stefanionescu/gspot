@@ -3,6 +3,7 @@ import { resolvePackageProject } from '#cli/lifecycle/package-project.ts';
 import { isValePackageFile } from '#cli/repository/natures.ts';
 // Write every generated file, block and merge; remove recorded strays. The apply command as a function.
 import { computeDrift } from '#cli/emit/drift.ts';
+import { eslintRuleDiff } from '#cli/emit/eslint-rule-diff.ts';
 import { parse as parseJsonc } from 'jsonc-parser';
 import { generatedSnapshot, readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import type { FileProposal, FileSnapshot, LifecycleOwner } from '#cli/lifecycle/types.ts';
@@ -28,17 +29,10 @@ function configurationProposals(owner: LifecycleOwner, generated: GeneratedPropo
             ),
         });
     }
-    for (const output of generated.packages) {
-        const fields = Object.entries(output.scripts).map(([name, value]) => ({ path: ['scripts', name], value }));
-        proposals.push({ package: true, proposal: owner.proposeConfiguration(output.path, 'json', fields, true) });
-    }
-    if (generated.lefthook !== undefined) {
-        const fields = Object.entries(generated.lefthook.block).flatMap(([hook, { commands }]) =>
-            Object.entries(commands).map(([name, value]) => ({ path: [hook, 'commands', name], value })),
-        );
+    for (const output of generated.configurations) {
         proposals.push({
-            package: false,
-            proposal: owner.proposeConfiguration(generated.lefthook.path, 'yaml', fields, true),
+            package: output.path === 'package.json',
+            proposal: owner.proposeConfiguration(output.path, output.format, output.changes, true),
         });
     }
     return proposals;
@@ -49,6 +43,13 @@ function driftText(drift: DriftEntry[]): string {
     const lines = [`${String(drift.length)} generated ${noun} drifted:`, ''];
     for (const entry of drift) {
         lines.push(`  ${entry.path}  ${entry.kind}`);
+        for (const rules of entry.rules ?? []) {
+            const at = rules.path === '' ? 'root' : rules.path;
+            if (rules.added.length > 0) lines.push(`    ${at}: added ${rules.added.join(', ')}`);
+            if (rules.removed.length > 0) lines.push(`    ${at}: removed ${rules.removed.join(', ')}`);
+            if (rules.changed.length > 0) lines.push(`    ${at}: changed ${rules.changed.join(', ')}`);
+        }
+        if (entry.ruleError !== undefined) lines.push(`    ${entry.ruleError}`);
         if (entry.diff !== undefined && entry.diff !== '')
             lines.push(
                 entry.diff
@@ -64,9 +65,10 @@ function driftText(drift: DriftEntry[]): string {
     return `${lines.join('\n')}\n`;
 }
 
-function previewApply(session: Session): CommandResult {
+async function previewApply(session: Session): Promise<CommandResult> {
     const proposal = emitAll(session);
     const drift = computeDrift(session, proposal);
+    await eslintRuleDiff(session, proposal, drift);
     const summary = drift.length === 0 ? 'every generated file matches its proposal\n' : driftText(drift);
     const text = summary + proposal.notes.map((note) => `note     ${note}\n`).join('');
     const pin = { from: pinnedVersion(session.root), to: GSPOT_VERSION };
@@ -81,7 +83,7 @@ async function installProsePackages(session: Session, report: ApplyReport): Prom
     const isProse = session.scopes.some((selection) =>
         selection.selected.some((manifest) => manifest.preset.name === 'prose'),
     );
-    if (!isProse || hasPackages(session.root)) return;
+    if (!isProse || hasPackages(session.root, true)) return;
     const problem = await installPackages(session.root);
     if (problem === undefined) report.notes.push('synced the Vale packages into .gspot/vale/styles');
     else report.notes.push(`the Vale packages are not synced (${problem}); run gspot apply with the network on`);
@@ -103,16 +105,21 @@ function reportText(report: ApplyReport): string {
 function recordPreserved(report: ApplyReport, proposals: FileProposal[]): void {
     const preserved = proposals.filter((proposal) => proposal.status === 'preserved');
     report.preserved.push(...preserved.map((proposal) => proposal.path));
-    report.notes.push(...preserved.map((proposal) => `preserved edited or unowned ${proposal.path}`));
+    for (const proposal of preserved) {
+        report.notes.push(`preserved edited or unowned ${proposal.path}`);
+        if (proposal.previous?.original !== undefined)
+            report.notes.push(`original for ${proposal.path} retained at ${proposal.previous.original.backup}`);
+    }
 }
 
 // Every proposal is prepared before the owner publishes the batch.
 function publishGenerated(
     owner: LifecycleOwner,
+    session: Session,
     rendered: GeneratedProposal,
     report: ApplyReport,
     takeover?: ReadonlyMap<string, FileSnapshot>,
-): string[] {
+): void {
     const configurations = configurationProposals(owner, rendered, takeover !== undefined);
     const replacements = rendered.files.map((file) => {
         const kind = file.kind === 'lock' || file.kind === 'hook' ? file.kind : 'config';
@@ -125,7 +132,10 @@ function publishGenerated(
         );
     });
     const blocks = rendered.blocks.map((block) => owner.proposeBlock(block.path, block.block, block.style));
-    const proposals = [...replacements, ...blocks, ...configurations.map(({ proposal }) => proposal)];
+    const generated = [...replacements, ...blocks, ...configurations.map(({ proposal }) => proposal)];
+    const expected = new Set(['gspot.toml', '.gspot/version', '.gitignore', ...generated.map(({ path }) => path)]);
+    const pruning = pruningProposals(owner, session, expected);
+    const proposals = [...generated, ...pruning];
     const conflicts = proposals.filter((proposal) => proposal.status === 'preserved').map((proposal) => proposal.path);
     if (takeover !== undefined && conflicts.length > 0)
         throw new Error(
@@ -143,20 +153,20 @@ function publishGenerated(
     for (const { proposal, package: isPackage } of configurations) {
         if (proposal.status === 'changed') (isPackage ? report.packages : report.written).push(proposal.path);
     }
-    return proposals.map((proposal) => proposal.path);
+    report.removed.push(...pruning.filter((proposal) => proposal.status !== 'preserved').map(({ path }) => path));
 }
 
 // Pruning restores only locally recorded outputs that no selected owner still needs.
-function pruneGenerated(owner: LifecycleOwner, session: Session, expected: Set<string>, report: ApplyReport): void {
+function pruningProposals(owner: LifecycleOwner, session: Session, expected: Set<string>): FileProposal[] {
     const usesProse = session.scopes.some((scope) =>
         scope.selected.some((manifest) => manifest.preset.name === 'prose'),
     );
     const retained = new Set(
         readOwnership(session.root)
-            .files.filter((entry) => entry.kind === 'hook' || entry.kind === 'runtime')
+            .files.filter((entry) => entry.kind === 'hook' || entry.kind === 'runtime' || entry.kind === 'export')
             .map((entry) => entry.path),
     );
-    const pruning = owner
+    return owner
         .installedPaths()
         .filter(
             (path) =>
@@ -169,10 +179,6 @@ function pruneGenerated(owner: LifecycleOwner, session: Session, expected: Set<s
                 ),
         )
         .map((path) => owner.proposeRestoration(path));
-    recordPreserved(report, pruning);
-    const accepted = pruning.filter((proposal) => proposal.status !== 'preserved');
-    owner.applyProposals(accepted);
-    report.removed.push(...accepted.map((proposal) => proposal.path));
 }
 
 /**
@@ -200,8 +206,7 @@ export async function applyAll(session: Session, takeover?: ReadonlyMap<string, 
         if (owner.read('gspot.toml')?.bytes.toString('utf8') !== session.policyFiles.text)
             throw new Error('The gspot.toml file changed during tool resolution. Retry the command.');
         report.notes.push(...rendered.notes);
-        const targets = publishGenerated(owner, rendered, report, takeover);
-        pruneGenerated(owner, session, new Set(['gspot.toml', '.gspot/version', '.gitignore', ...targets]), report);
+        publishGenerated(owner, session, rendered, report, takeover);
         await installProsePackages(session, report);
         const toolInputs = new Set(
             rendered.files
@@ -217,7 +222,7 @@ export async function applyAll(session: Session, takeover?: ReadonlyMap<string, 
             report.notes.push('Tool dependencies changed. Run: gspot install');
         if (report.preserved.length > 0)
             throw new Error(
-                `Apply preserved edited outputs: ${report.preserved.join(', ')}. Resolve them and retry; the version pin was not changed.`,
+                `Apply preserved edited outputs: ${report.preserved.join(', ')}. ${report.notes.join('. ')}. Resolve them and retry; the version pin was not changed.`,
             );
         writePin(session.root);
         return report;

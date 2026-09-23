@@ -32,6 +32,8 @@ export const noTrivialFunctions = createRule<NoTrivialFunctionsOptions, 'trivial
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'The function `function one() { return 1; }` reports `trivial` at the default limit of two statements. Replace its calls with the value `1` and delete the function. Required external signatures need a narrow suppression with a reason.',
             level: 'recommended',
             summary: 'Finds every implemented function with at most the configured number of executable statements.',
             why: 'An unnecessary function adds another name and another place to read.',

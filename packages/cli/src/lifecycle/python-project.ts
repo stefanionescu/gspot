@@ -1,4 +1,5 @@
 import { InstallationError } from '#cli/lifecycle/install-error.ts';
+import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import {
     mkdtempSync,
@@ -56,15 +57,14 @@ function matches(project: string, lock: string): boolean {
         const recorded = lockSchema.parse(parse(lock));
         const root = recorded.package.find((entry) => entry.name === manifest.name && entry.source.virtual === '.');
         if (root === undefined || recorded['requires-python'] !== manifest['requires-python']) return false;
-        const canonical = (value: string) => value.toLowerCase().replaceAll(/[._-]+/gu, '-');
         const expected = manifest.dependencies
             .map((value) => {
                 const [name, version] = value.split('==');
-                return `${canonical(name!)}==${version}`;
+                return `${normalizedPythonPackage(name!)}==${version}`;
             })
             .toSorted();
         const actual = (root.metadata?.['requires-dist'] ?? [])
-            .map((entry) => `${canonical(entry.name)}${entry.specifier}`)
+            .map((entry) => `${normalizedPythonPackage(entry.name)}${entry.specifier}`)
             .toSorted();
         return isDeepStrictEqual(actual, expected);
     } catch {
@@ -219,6 +219,7 @@ export async function installPythonProject(root: string, executable = 'uv'): Pro
         try {
             writeFileSync(join(work, 'pyproject.toml'), project.bytes);
             writeFileSync(join(work, 'uv.lock'), lock.bytes);
+            await uv(root, owner, work, ['venv', '--relocatable', '.venv'], executable);
             await uv(root, owner, work, ['sync', '--locked', '--no-install-project'], executable);
             if (
                 !readFileSync(join(work, 'pyproject.toml')).equals(project.bytes) ||
@@ -226,7 +227,7 @@ export async function installPythonProject(root: string, executable = 'uv'): Pro
             )
                 throw new Error(`uv changed locked inputs. ${SETUP}`);
             // uv links the host interpreter. Copy its executable so the published environment has no external link.
-            const interpreter = join(work, '.venv/bin/python');
+            const interpreter = join(work, '.venv', process.platform === 'win32' ? 'Scripts/python.exe' : 'bin/python');
             const source = realpathSync(interpreter);
             const mode = lstatSync(source).mode & 0o7777;
             if (lstatSync(interpreter).isSymbolicLink()) {

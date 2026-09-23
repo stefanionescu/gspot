@@ -113,14 +113,14 @@ Avoid repeated `cd` commands when one working-directory statement is clearer.
 Use uppercase angle-bracket placeholders:
 
 ```shell
-tool deploy --project <PROJECT_ID> --token <ACCESS_TOKEN>
+tool deploy --project <PROJECT_ID>
 ```
 
 Explain the values:
 
 ```text
-Replace `<PROJECT_ID>` with the project identifier and `<ACCESS_TOKEN>` with a
-token that has deployment access.
+Replace `<PROJECT_ID>` with the project identifier. Configure credentials through the
+tool's documented environment or credential-file mechanism before deployment.
 ```
 
 Do not mix placeholder styles such as `YOUR_PROJECT`, `{project}`, and

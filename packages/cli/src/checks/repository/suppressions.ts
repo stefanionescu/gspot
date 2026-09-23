@@ -1,15 +1,15 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // Validate suppression comments against the repository reason policy; reporting owns the census.
-import { join } from 'node:path';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
-import { readFileSync } from 'node:fs';
 import type { EngineInput, Session } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import type { TrackedFile } from '#cli/repository/types.ts';
 import { GSPOT_SUPPRESSION } from '#cli/suppressions/suppressions-definitions.ts';
 import { claimedByClaims } from '#cli/presets/claims.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
-import type { SuppressionComment } from '#cli/checks/types.ts';
 import { COMMENT_OPENERS, COMMENT_STYLE_BY_EXTENSION } from '#cli/emit/markers-definitions.ts';
+
+export type SuppressionComment = { file: string; line: number; form: string; reason?: string; forbidden: boolean };
 
 function styleOf(file: TrackedFile): string | undefined {
     const dot = file.path.lastIndexOf('.');
@@ -62,7 +62,8 @@ export function suppressionComments(session: Session, files: TrackedFile[]): Sup
             reason: new RegExp(definition.reason, 'u'),
             forbidden: definition.forbidden === true,
         }));
-        return readFileSync(join(session.root, file.path), 'utf8')
+        return readSource(session.root, file.path)
+            .toString('utf8')
             .split('\n')
             .flatMap((line, index) => {
                 const comment = commentOf(line, style);
@@ -86,11 +87,9 @@ export function suppressionComments(session: Session, files: TrackedFile[]): Sup
 }
 
 /** Report forbidden suppressions and missing or invalid required reasons. */
-export function suppressions(input: EngineInput): Promise<Finding[]> {
-    const files = input.session.repository.files.filter(
-        (file) => file.nature === 'source' && file.tags.includes('text'),
-    );
-    const findings = suppressionComments(input.session, files).flatMap((entry): Finding[] => {
+export function suppressions(input: EngineInput): Finding[] {
+    if (input.suppressions === undefined) throw new Error('Suppression validation requires once-only execution.');
+    const findings = input.suppressions.flatMap((entry): Finding[] => {
         const base = { check: input.spec.name, file: entry.file, line: entry.line, fixable: false };
         if (entry.forbidden)
             return [
@@ -100,7 +99,7 @@ export function suppressions(input: EngineInput): Promise<Finding[]> {
                     message: `${entry.form} suppression is not allowed; fix the finding or configure an explicit ignore.`,
                 },
             ];
-        if (!input.session.policyFiles.policy.requireReasons) return [];
+        if (!input.policyFiles.policy.requireReasons) return [];
         if (isReasonAccepted(entry.reason)) return [];
         return [
             {
@@ -110,5 +109,5 @@ export function suppressions(input: EngineInput): Promise<Finding[]> {
             },
         ];
     });
-    return Promise.resolve(findings);
+    return findings;
 }

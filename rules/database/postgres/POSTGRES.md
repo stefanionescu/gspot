@@ -6,6 +6,10 @@ title: Postgres
 
 # Postgres
 
+Supabase examples use its `anon`, `authenticated`, and `service_role` roles and
+`config.toml` API settings. In other Postgres deployments, use the roles and
+exposed schemas declared by that application.
+
 ## Migration naming
 
 Prefer the
@@ -39,7 +43,7 @@ Use object labels before important objects:
 -- Purpose: Represents a submitted order owned by an account.
 -- ============================================================================
 CREATE TABLE IF NOT EXISTS commerce.orders (
-    id UUID DEFAULT public.generate_uuid_v7() PRIMARY KEY
+    id UUID PRIMARY KEY
 );
 ```
 
@@ -62,13 +66,14 @@ Trigger creation must have a descriptive comment within five lines above the
 
 ## Tables and data modeling
 
-- Prefer UUIDv7 primary keys via `public.generate_uuid_v7()` for app-owned rows.
+- Prefer UUIDv7 primary keys when ordered identifiers fit the application. Use the
+  generator supported by the deployed Postgres version or the application's declared
+  generator. The table example requires callers to supply the identifier.
 - Add UUIDv7 check constraints for UUIDv7 columns.
 - Use `TIMESTAMPTZ` for timestamps.
 - Add `created_at` and `updated_at` when rows are mutable and audit columns are
   required.
-- Use `public.touch_updated_at()` triggers for mutable tables that carry
-  `updated_at`.
+- Update `updated_at` through the application's declared timestamp trigger or write owner.
 - Think through account deletion. Some tables intentionally avoid foreign keys to
   `auth.users` so historical data survives user deletion.
 - Use soft delete where the product relies on retained history.
@@ -158,16 +163,12 @@ migrations. Large or structured data migrations are generated from source data.
 
 Rules for generated data migrations:
 
-- The generator definition name must exactly match the emitted migration name.
-- `definition.purpose` must be specific and non-empty.
+- Keep each generator paired with its emitted migration and document the migration's purpose.
 - Local relative imports must stay inside the same generated migration owner.
 - Keep canonical source constants separate from SQL composition code.
 - Do not import data from another generated migration owner. Duplicate or promote shared
   constants only when there is a clear durable ownership reason.
-- Supported generated statement kinds are `note`, `insert`,
-  `insertSelectFromValues`, `update`, `updateFrom`, and `delete`.
-- `update`, `updateFrom`, and `delete` statements must include explicit `WHERE`
-  conditions.
+- Generated `UPDATE` and `DELETE` statements must include explicit `WHERE` conditions.
 - Regenerate emitted SQL after changing generated migration source.
 - Check generated SQL drift during review or verification.
 - After the generated SQL migration is immutable, do not edit the paired

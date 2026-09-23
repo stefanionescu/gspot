@@ -82,8 +82,8 @@ function orphanFindings(input: EngineInput, sets: string[]): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function stringFiles(input: EngineInput): Promise<Finding[]> {
-    return Promise.resolve(trackedEnding(input, ['.xcstrings']).flatMap((path) => stringFindings(input, path)));
+export function stringFiles(input: EngineInput): Finding[] {
+    return trackedEnding(input, ['.xcstrings']).flatMap((path) => stringFindings(input, path));
 }
 
 /**
@@ -91,10 +91,7 @@ export function stringFiles(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function assetFolders(input: EngineInput): Promise<Finding[]> {
+export function assetFolders(input: EngineInput): Finding[] {
     const contents = trackedEnding(input, ['Contents.json']).filter((path) => path.includes('.xcassets/'));
-    return Promise.resolve([
-        ...contents.flatMap((path) => imageFindings(input, path)),
-        ...orphanFindings(input, contents),
-    ]);
+    return [...contents.flatMap((path) => imageFindings(input, path)), ...orphanFindings(input, contents)];
 }

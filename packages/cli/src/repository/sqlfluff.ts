@@ -1,0 +1,72 @@
+function value(text: string): unknown {
+    if (/^[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:e[+-]?\d+)?$/iu.test(text)) return Number(text);
+    if (text.toLowerCase() === 'true') return true;
+    if (text.toLowerCase() === 'false') return false;
+    if (text.toLowerCase() === 'none') return null;
+    return text;
+}
+
+/** Read SQLFluff's case-sensitive INI sections without loading paths or templaters. */
+export function sqlfluffConfiguration(text: string): Map<string, Map<string, string>> {
+    const sections = new Map<string, Map<string, string>>();
+    let section: Map<string, string> | undefined;
+    let key: string | undefined;
+    let indentation = 0;
+    for (const [index, original] of text.split(/\r?\n/u).entries()) {
+        const line = original.trim();
+        if (line.startsWith('#') || line.startsWith(';')) continue;
+        if (line === '') {
+            if (section !== undefined && key !== undefined) section.set(key, `${section.get(key)}\n`);
+            continue;
+        }
+        const indent = original.length - original.trimStart().length;
+        if (section !== undefined && key !== undefined && indent > indentation) {
+            section.set(key, `${section.get(key)}\n${line}`);
+            continue;
+        }
+        indentation = indent;
+        const heading = /^\[([^\]]+)\]/u.exec(line)?.[1];
+        if (heading !== undefined) {
+            if (sections.has(heading)) throw new Error(`Duplicate SQLFluff section on line ${index + 1}.`);
+            section = new Map();
+            sections.set(heading, section);
+            key = undefined;
+            continue;
+        }
+        const separator = line.indexOf('=');
+        if (section === undefined || separator <= 0)
+            throw new Error(`Invalid SQLFluff configuration on line ${index + 1}.`);
+        key = line.slice(0, separator).trimEnd();
+        if (section.has(key)) throw new Error(`Duplicate SQLFluff option on line ${index + 1}.`);
+        section.set(key, line.slice(separator + 1).trimStart());
+    }
+    return sections;
+}
+
+/** Extract rule collections from the parsed SQLFluff configuration. */
+export function sqlfluffRules(text: string): Record<string, unknown> {
+    const sections = sqlfluffConfiguration(text);
+    const defaults = sections.get('DEFAULT') ?? new Map<string, string>();
+    const core = new Map([...defaults, ...(sections.get('sqlfluff') ?? [])]);
+    const options: Record<string, unknown> = Object.fromEntries([
+        ...[...(sections.get('sqlfluff:rules') ?? [])].map(([option, setting]) => [option, value(setting.trim())]),
+        ...[...sections]
+            .filter(([name]) => name.startsWith('sqlfluff:rules:'))
+            .map(([name, entries]) => [
+                name.slice('sqlfluff:rules:'.length),
+                Object.fromEntries(
+                    [...new Map([...defaults, ...entries])].map(([option, setting]) => [option, value(setting.trim())]),
+                ),
+            ]),
+    ]);
+    const lists = Object.fromEntries(
+        ['rules', 'exclude_rules'].map((name) => [
+            name,
+            (core.get(name) ?? '')
+                .split(',')
+                .map((entry) => entry.trim())
+                .filter(Boolean),
+        ]),
+    );
+    return { sqlfluff: lists, 'sqlfluff:rules': options };
+}

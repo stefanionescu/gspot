@@ -1,4 +1,4 @@
-import { join, posix } from 'node:path';
+import { posix } from 'node:path';
 import type { EngineInput } from '#cli/run/types.ts';
 // The checks that read supabase/config.toml: it parses, its functions exist, its buckets have policies, and migrations are named as the CLI names them.
 import type { Finding } from '#cli/output/finding.ts';
@@ -11,21 +11,19 @@ import { functionFolders, readProject, supabaseFinding } from '#cli/checks/supab
  * @param input the engine input
  * @returns the findings
  */
-export function projectValid(input: EngineInput): Promise<Finding[]> {
-    const config = readProject(join(input.root, input.scope));
+export function projectValid(input: EngineInput): Finding[] {
+    const config = readProject(input.scopeRoot);
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
-    if (config === undefined) return Promise.resolve([]);
-    if (typeof config === 'string') return Promise.resolve([supabaseFinding(input, at, 'parse', config)]);
+    if (config === undefined) return [];
+    if (typeof config === 'string') return [supabaseFinding(input, at, 'parse', config)];
     const folders = new Set(functionFolders(input).map((folder) => folder.slice(folder.lastIndexOf('/') + 1)));
     const missing = Object.keys(config.functions ?? {}).filter((name) => !folders.has(name));
-    return Promise.resolve(
-        missing.map((name) =>
-            supabaseFinding(
-                input,
-                at,
-                'function',
-                `[functions.${name}] configures a function that has no folder with an index file.`,
-            ),
+    return missing.map((name) =>
+        supabaseFinding(
+            input,
+            at,
+            'function',
+            `[functions.${name}] configures a function that has no folder with an index file.`,
         ),
     );
 }
@@ -36,7 +34,7 @@ export function projectValid(input: EngineInput): Promise<Finding[]> {
  * @returns the findings
  */
 export async function storagePolicies(input: EngineInput): Promise<Finding[]> {
-    const config = readProject(join(input.root, input.scope));
+    const config = readProject(input.scopeRoot);
     const at = { file: posix.join(input.scope, SUPABASE_CONFIG), line: 1 };
     if (config === undefined) return [];
     if (typeof config === 'string') throw new Error(`Cannot inspect storage policies: ${config}`);

@@ -65,36 +65,13 @@ Do not invent defensive logic for scenarios that are not part of the real contra
 - Trust internal invariants after they are established. If an invariant is unclear, trace the code and clarify the contract instead of adding speculative protection.
 - Do not pad the codebase with logic meant to protect against hypothetical future failures.
 
-## Managing sprawl
-
-Keep one clear implementation for each concept.
-
-- Do not create multiple functions, services, types, or wrappers that do nearly the same thing.
-- Do not wrap a helper with another helper unless the wrapper owns a real boundary, policy, or transformation.
-- Do not add an abstraction for one call site or one concept.
-- Before adding a new helper, find the owner of the behavior and put the logic
-  there.
-- When touching duplicated logic in the same area, collapse it into the owner
-  instead of adding another layer.
-
 ## Abstractions
 
-Abstractions are useful only when they remove real complexity. They are harmful
-when they hide ownership, combine unrelated behavior, or predict reuse before
-the code proves it.
-
-### Prefer duplication over the wrong abstraction
-
-- Duplication is cheaper than the wrong abstraction.
-- Prefer duplication until there are at least two real examples that prove the
-  same concept exists.
-- Do not build reusable code before the code is usable.
-- Do not preserve an abstraction because of sunk cost.
-
-### Do not abstract for one caller
-
-- Do not introduce an abstraction for one caller.
-- Do not introduce an abstraction for hypothetical future reuse.
+Keep one implementation for each concept in its existing owner. Extract shared behavior only
+when real callers prove the same contract and the extraction removes complexity. Do not add
+forwarding wrappers, one-caller helpers, or abstractions for hypothetical reuse. Prefer local
+duplication when callers have different responsibilities. Remove abstractions that no longer
+justify their cost.
 
 ### Watch for boxing
 

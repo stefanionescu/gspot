@@ -1,8 +1,8 @@
 import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { acceptanceRun } from '#tests/harness/worktree.ts';
-import { commitAll } from '#tests/harness/planted.ts';
+import { acceptanceRun } from '#tests/support/cli/worktree.ts';
+import { commitAll } from '#tests/support/cli/planted.ts';
 
 test('a detected reference project reports its syntax defect, accepts its correction, and preserves authored input', async () => {
     await using repository = await testdir();

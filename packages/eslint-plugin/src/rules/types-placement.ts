@@ -100,6 +100,8 @@ export const typesPlacement = createRule<TypesPlacementOptions, TypesPlacementMe
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'With `typesDirectory: "types"`, `type A = string;` in `src/a.ts` reports `aliasOutside`. Declare and export `A` in `types/a.ts`, then use `import type { A } from "../types/a";` where the runtime code needs it.',
             summary: 'Enforces an explicitly configured type-only directory.',
             why: 'A repository can explicitly designate a type-only public contract directory. Types otherwise live beside their behavioral owners.',
             fix: 'Move the type under the types directory and import it with import type. Exceptions go through gspot ignore with a reason.',

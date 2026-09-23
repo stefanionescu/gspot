@@ -2,8 +2,7 @@ import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import { readGitSetting } from '#cli/platform/spawn.ts';
 import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
 // The questions init asks, each answered by a flag or the terminal, with the default read from the repository.
-import { join } from 'node:path';
-import { existsSync } from 'node:fs';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import type { Manifest } from '#cli/presets/types.ts';
 import type { FormatSettings, Policy } from '#cli/policy/types.ts';
 import { shippedFormat } from '#cli/presets/listing.ts';
@@ -15,6 +14,8 @@ const HOOK_CHOICES: { value: InitAnswers['hooks']; label: string }[] = [
     { value: 'gspot', label: 'gspot installs hooks in the Git-resolved directory' },
     { value: 'lefthook', label: 'a block in lefthook.yml' },
     { value: 'husky', label: 'lines in .husky/' },
+    { value: 'pre-commit', label: 'a local hook in .pre-commit-config.yaml' },
+    { value: 'simple-git-hooks', label: 'commands in package.json simple-git-hooks' },
     { value: 'none', label: 'no hooks' },
 ];
 
@@ -29,20 +30,28 @@ const RUNNER_CHOICES: { value: InitAnswers['runner']; label: string }[] = [
     { value: 'bun', label: 'bun (package.json scripts)' },
     { value: 'npm', label: 'npm (package.json scripts)' },
     { value: 'pnpm', label: 'pnpm (package.json scripts)' },
+    { value: 'yarn', label: 'yarn (package.json scripts)' },
     { value: 'uv', label: 'uv (private Python environment)' },
     { value: 'none', label: 'none' },
 ];
 
 function hooksDefault(tooling: ExistingTooling): InitAnswers['hooks'] {
     if (tooling.hooks.some((hook) => hook.kind === 'husky')) return 'husky';
-    return tooling.hooks.some((hook) => hook.kind === 'lefthook') ? 'lefthook' : 'gspot';
+    if (tooling.hooks.some((hook) => hook.kind === 'lefthook')) return 'lefthook';
+    if (tooling.hooks.some((hook) => hook.kind === 'pre-commit')) return 'pre-commit';
+    return tooling.hooks.some((hook) => hook.kind === 'simple-git-hooks') ? 'simple-git-hooks' : 'gspot';
 }
 
 function ciDefault(root: string, tooling: ExistingTooling): InitAnswers['ci'] {
     if (tooling.ci.some((path) => path === '.gitlab-ci.yml')) return 'gitlab';
     if (tooling.ci.some((path) => path.startsWith('.github/workflows/'))) return 'github';
-    if (existsSync(join(root, '.gitlab-ci.yml'))) return 'gitlab';
-    if (existsSync(join(root, '.github/workflows'))) return 'github';
+    const files = openConfinedRoot(root);
+    try {
+        if (files.read('.gitlab-ci.yml') !== undefined) return 'gitlab';
+        if (files.stat('.github/workflows')?.isDirectory()) return 'github';
+    } finally {
+        files.close();
+    }
     if (tooling.ci.length > 0) return 'none';
     const remote = readGitSetting(root, 'remote.origin.url') ?? '';
     if (/^(?:https?:\/\/|ssh:\/\/(?:[^@/]+@)?|[^@/]+@)github\.com[:/]/u.test(remote)) return 'github';
@@ -67,13 +76,7 @@ async function askRuleFiles(options: InitOptions): Promise<boolean> {
 
 async function askRunner(options: InitOptions, tooling: ExistingTooling): Promise<InitAnswers['runner']> {
     if (options.runner !== undefined) return options.runner;
-    return askChoice(
-        'Task runner?',
-        '--runner',
-        RUNNER_CHOICES,
-        tooling.runner === 'yarn' ? 'npm' : tooling.runner,
-        options.yes,
-    );
+    return askChoice('Task runner?', '--runner', RUNNER_CHOICES, tooling.runner, options.yes);
 }
 
 async function askFormat(
@@ -127,7 +130,7 @@ export async function askPresets(
         })
         .toArray();
     const initial = [...selection.selectedIds];
-    const kept = await askMany('Which presets?', choices, initial, options.yes);
+    const kept = await askMany('Which presets?', '--presets <ids>', choices, initial, options.yes);
     const isUnchanged = kept.length === initial.length && kept.every((id) => selection.selectedIds.has(id));
     return isUnchanged ? undefined : kept;
 }
@@ -151,15 +154,20 @@ export async function askInitQuestions(
     const isRules = await askRuleFiles(options);
     const runner = await askRunner(options, tooling);
     const shipped = shippedFormat();
-    const differences = Object.fromEntries(
-        Object.entries(carriedFormat?.format ?? {}).filter(
-            ([key, value]) => value !== shipped[key as keyof FormatSettings],
-        ),
-    ) as Policy['format'];
+    const differences =
+        carriedFormat?.nativeDefaults === true
+            ? carriedFormat.format
+            : (Object.fromEntries(
+                  Object.entries(carriedFormat?.format ?? {}).filter(
+                      ([key, value]) => value !== shipped[key as keyof FormatSettings],
+                  ),
+              ) as Policy['format']);
     const differing =
-        Object.keys(differences).length === 0 && carriedFormat?.extra === undefined
+        Object.keys(differences).length === 0 &&
+        carriedFormat?.extra === undefined &&
+        carriedFormat?.nativeDefaults !== true
             ? undefined
-            : { format: differences, ...(carriedFormat?.extra === undefined ? {} : { extra: carriedFormat.extra }) };
+            : { ...carriedFormat, format: differences };
     const formatter = await askFormat(options, differing);
     return { hooks, ci, isRules, runner, ...(formatter ? { formatter } : {}) };
 }

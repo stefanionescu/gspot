@@ -4,13 +4,13 @@ import { createRequire } from 'node:module';
 import { releaseTargets } from '../../packages/cli/src/emit/targets-definitions.ts';
 import { join } from 'node:path';
 import { existsSync } from 'node:fs';
-// Runs when GSPOT_RELEASE_TEST=1 (the release workflow sets it); it needs a built binary under dist/.
+// The explicit release suite requires a built binary under dist/.
 import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { environmentVariables, isReleaseTestWanted } from '#cli/platform/environment.ts';
-import { commitAll, PLANTED_TIMEOUT_MS, script, toolsPath } from '#tests/harness/planted.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { commitAll, PLANTED_TIMEOUT_MS, script, toolsPath } from '#tests/support/cli/planted.ts';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const requireCli = createRequire(join(root, 'packages/cli/package.json'));
@@ -34,7 +34,7 @@ function binary(cwd: string, argv: string[]): { code: number; stdout: string } {
     return { code: result.exitCode, stdout: result.stdout.toString() };
 }
 
-describe.skipIf(!isReleaseTestWanted())('the compiled binary', () => {
+describe('the compiled binary', () => {
     test(
         'prints the package version, installs from its embedded assets and checks a planted script',
         async () => {

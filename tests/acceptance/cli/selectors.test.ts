@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { writeFileSync, readFileSync, unlinkSync, chmodSync, statSync, existsSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { git, run } from '#tests/harness/planted.ts';
+import { git, run } from '#tests/support/cli/planted.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
 

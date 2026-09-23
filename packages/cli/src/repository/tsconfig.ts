@@ -1,29 +1,42 @@
 import { z } from 'zod';
 import ts from 'typescript';
-import { dirname } from 'node:path';
+import { dirname, relative, sep } from 'node:path';
+import { openConfinedRoot, mutationPath } from '#cli/lifecycle/confined.ts';
 import { readFileSync } from 'node:fs';
 
 const configSchema = z.looseObject({ compilerOptions: z.record(z.string(), z.unknown()).optional() });
 const EMPTY_FILES = 18_002;
 const NO_INPUTS = 18_003;
 
-function configurationText(path: string): string | undefined {
+function configurationText(root: string, path: string): string | undefined {
+    const local = relative(root, path).split(sep).join('/');
+    const files = openConfinedRoot(root, 'native');
     try {
-        return readFileSync(path, 'utf8');
+        const segments = local.split('/');
+        const dependency = segments.indexOf('node_modules');
+        if (dependency >= 0 && segments[0] !== '.gspot') {
+            mutationPath(local);
+            if (dependency > 0) files.stat(segments.slice(0, dependency).join('/'));
+            return readFileSync(path, 'utf8');
+        }
+        return files.read(local)?.bytes.toString('utf8');
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
         throw error;
+    } finally {
+        files.close();
     }
 }
 
 /**
  * Resolves compiler options and inherited paths with the TypeScript compiler.
+ * @param root the repository boundary for authored configuration
  * @param path the absolute configuration path
  * @returns the parsed configuration, or undefined when the file is absent
  */
-export function getTsconfig(path: string): ts.ParsedCommandLine | undefined {
+export function getTsconfig(root: string, path: string): ts.ParsedCommandLine | undefined {
     try {
-        const text = configurationText(path);
+        const text = configurationText(root, path);
         if (text === undefined) return undefined;
         const source = ts.parseConfigFileTextToJson(path, text);
         if (source.error !== undefined)
@@ -31,7 +44,7 @@ export function getTsconfig(path: string): ts.ParsedCommandLine | undefined {
         const raw: unknown = source.config;
         const parsed = ts.parseJsonConfigFileContent(
             configSchema.parse(raw),
-            { ...ts.sys, readFile: configurationText },
+            { ...ts.sys, readFile: (file) => configurationText(root, file) },
             dirname(path),
             undefined,
             path,

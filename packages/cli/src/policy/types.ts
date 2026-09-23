@@ -1,6 +1,6 @@
 import type { z } from 'zod';
 // The shape of gspot.toml after load: every reasoned key is normalized to { value, reason }.
-import type { CarriedLists } from '#cli/lifecycle/types.ts';
+import type { CarriedFormatter, CarriedConfiguration } from '#cli/lifecycle/types.ts';
 import type { policySchema, scopeSchema } from '#cli/policy/schema.ts';
 import type { SettingSpec } from '#cli/presets/types.ts';
 
@@ -114,6 +114,9 @@ export type PolicyFiles = {
     text: string;
 };
 
+/** An authored policy value and the semantic problem it caused. */
+export type PolicyProblem = { path: PathSegment[]; message: string };
+
 export type TomlTable = Record<string, unknown>;
 
 export type Defined<T> = { [K in keyof T]: Exclude<T[K], undefined> };
@@ -135,13 +138,13 @@ export type Proposal = {
     profileTables?: TomlTable;
     presets: string[];
     scopes: { path: string; presets: string[] }[];
-    carried: CarriedLists;
+    carried: CarriedConfiguration;
     hooks: NonNullable<RawPolicy['hooks']>['tool'] | 'none';
     ci: NonNullable<RawPolicy['ci']>['provider'] | 'none';
     rules: boolean;
     runner: NonNullable<RawPolicy['runner']>['tool'] | 'none';
-    format?: Policy['format'];
-    prettierExtra?: TomlTable;
+    runnerTasks?: NonNullable<RawPolicy['runner']>['tasks'];
+    formatter?: CarriedFormatter;
     /** The Xcode project and scheme init found, for the tools.xcode table. */
     xcode?: { scope: string; project: string; scheme?: string };
     commitScopes?: string[];
@@ -159,7 +162,7 @@ export type ResolvedSetting = {
 export type ExposedSettings = {
     specs: Map<string, SettingSpec>;
     defaults: Map<string, { value: unknown; preset: string }>;
-    problems: string[];
+    problems: { key: string; message: string }[];
 };
 
 export type Mutation = (raw: TomlTable) => void;
@@ -192,6 +195,8 @@ export type PathSegment = string | number;
 /** gspot.toml as the schema accepts it, before normalization. */
 export type RawPolicy = z.infer<typeof policySchema>;
 
+export type EslintAdoption = NonNullable<NonNullable<NonNullable<RawPolicy['tools']>['eslint']>['adopted']>[number];
+
 /** One [[scope]] entry as written. */
 export type RawScope = z.infer<typeof scopeSchema>;
 
@@ -200,9 +205,6 @@ export type RawLimits = NonNullable<RawPolicy['limits']>;
 
 /** The [naming] table as written. */
 export type RawNaming = NonNullable<RawPolicy['naming']>;
-
-/** The configured task runner. */
-export type RunnerTool = NonNullable<Policy['runner']>['tool'];
 
 /** What resolving a value for one scope needs. */
 export type PolicyScopeLayer = { surface: ExposedSettings; policy: Policy; scope: string };
@@ -226,3 +228,7 @@ export type ToolTables = Record<string, { extra?: Record<string, unknown> & { re
 
 /** ESLint settings retain the validation shape of their policy owner. */
 export type EslintSettings = NonNullable<NonNullable<RawPolicy['tools']>['eslint']>;
+
+export type EslintRegistration = NonNullable<EslintAdoption['plugins']>[string];
+
+export type EditorconfigAdoption = NonNullable<NonNullable<NonNullable<RawPolicy['tools']>['editorconfig']>['adopted']>;

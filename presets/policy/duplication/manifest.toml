@@ -1,0 +1,70 @@
+[preset]
+name = "duplication"
+kind = "policy"
+title = "Duplication"
+proposed = true
+description = "Copy-paste detection across every language a selected preset claims, with a ceiling for the share of duplicated lines."
+
+[claims]
+from_languages = true
+
+[[tools]]
+name = "jscpd"
+version = "5.2.0"
+npm = "jscpd"
+mise = "npm:jscpd"
+
+[[tools.takeover]]
+file = ".jscpd.json"
+carries = "rules-table"
+
+[[configs]]
+template = "jscpd.json.tmpl"
+target = ".gspot/jscpd.json"
+header = false
+
+[[checks]]
+name = "duplication/jscpd"
+example = "Two selected files containing the same substantial code block can exceed the configured duplication threshold. Move the shared behavior into its actual owner and call it from both locations, then rerun."
+level = "all"
+stage = "push"
+runs = "per-scope"
+engine = "integrity"
+analysis = "copied-blocks"
+tool = "jscpd"
+coverage = ["duplication"]
+exclude_setting = "tools.jscpd.ignore"
+summary = "Finds blocks of code copied between files. While the duplicated share stays at or under the ceiling it passes, and over it every copy is a finding that names both places."
+why = "A copied block is fixed in one place and stays broken in the other."
+help = "Move the shared block into one function both callers use, or raise limits.duplication.threshold_percent with a reason."
+
+[[settings]]
+name = "limits.duplication.min_lines"
+kind = "number"
+direction = "ceiling"
+default = 8
+summary = "The fewest lines a copied block has before it counts."
+
+[[settings]]
+name = "limits.duplication.min_tokens"
+kind = "number"
+direction = "ceiling"
+default = 40
+summary = "The fewest tokens a copied block has before it counts."
+
+[[settings]]
+name = "limits.duplication.threshold_percent"
+kind = "number"
+direction = "ceiling"
+default = 4
+summary = "The largest share of duplicated lines the check accepts, as a number out of 100."
+
+[[settings]]
+name = "tools.jscpd.ignore"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Paths the duplication check skips, each with a reason."
+
+[rule_files]
+agent = ["general/agent/WORKING.md"]

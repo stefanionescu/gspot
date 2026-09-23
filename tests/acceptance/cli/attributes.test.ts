@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { readFileSync, rmSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { git, run } from '#tests/harness/planted.ts';
+import { git, run } from '#tests/support/cli/planted.ts';
 
 test('generated attributes preserve LF through autocrlf checkout and restore authored attributes', async () => {
     await using sandbox = await testdir();

@@ -1,0 +1,5 @@
+<% const through = String(settings['tools.squawk.frozen_through'] ?? 'none'); const frozen = through === 'none' ? [] : files('.sql').filter((path) => { const version = /^(\d+)/.exec(path.slice(path.lastIndexOf('/') + 1))?.[1]; return version !== undefined && (through === 'all' || version <= through); }); %><%~ toml({
+    assume_in_transaction: settings['tools.squawk.assume_in_transaction'],
+    excluded_rules: rulesOff('postgres/squawk'),
+    excluded_paths: frozen,
+}).trimEnd() %>

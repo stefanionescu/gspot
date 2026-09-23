@@ -1,6 +1,8 @@
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
 import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { hookLocation } from '#cli/lifecycle/hooks.ts';
 import { existsSync } from 'node:fs';
 // What changed in the repository after init: presets detected and not selected, configuration not owned, hooks or CI changed by hand, duplicate pins.
 import type { Session } from '#cli/run/types.ts';
@@ -75,6 +77,22 @@ function configurationNotOwned(session: Session, tooling: ExistingTooling, selec
         .map((config) => configurationRow(session, config, selected));
 }
 
+function unownedGeneratedFiles(session: Session): ChangeRow[] {
+    const recorded = new Set(readOwnership(session.root).files.map((entry) => entry.path));
+    if (session.repository.hasGit) {
+        const location = hookLocation(session.root);
+        for (const entry of readOwnership(location.root).files)
+            recorded.add(relative(session.root, join(location.root, entry.path)).replaceAll('\\', '/'));
+    }
+    return session.repository.files
+        .filter((file) => file.path.startsWith('.gspot/') && !recorded.has(file.path))
+        .map((file) => ({
+            path: file.path,
+            note: 'not recorded as owned; lifecycle commands preserve this file',
+            command: 'review the file before moving or adopting it',
+        }));
+}
+
 function hookRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
     const tool = session.policyFiles.policy.hooks?.tool;
     if (tool === undefined) return [];
@@ -105,12 +123,13 @@ function workflowRows(session: Session, tooling: ExistingTooling): ChangeRow[] {
 export function changeReport(session: Session): ChangeReport {
     const facts = readManifests(session.root, session.repository.files);
     const selected = new Set(everyManifest(session).map((manifest) => manifest.preset.name));
-    const tooling = existingTooling(session.root, session.repository.files, session.repository.scopes, facts);
+    const tooling = existingTooling(session.root, session.repository.files, facts);
     return {
         detectedNotSelected: detectedNotSelected(session, facts, selected),
         recommendedNotSelected: recommendedNotSelected(session, selected),
         configurationNotOwned: [
             ...configurationNotOwned(session, tooling, selected),
+            ...unownedGeneratedFiles(session),
             ...(existsSync(join(session.root, 'gspot.local.toml'))
                 ? [
                       {

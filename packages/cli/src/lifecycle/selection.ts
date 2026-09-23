@@ -1,6 +1,5 @@
 // What init selects: presets at the root and per scope from detection and flags, then the closure of requires.
-import { join } from 'node:path';
-import { existsSync } from 'node:fs';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import type { Manifest } from '#cli/presets/types.ts';
 import * as messages from '#cli/policy/messages.ts';
@@ -30,9 +29,17 @@ function initScopes(root: string, workspace: ScopeEntry[], scopeFlags: Map<strin
         { name: 'root', path: '', presets: [], source: 'root' },
         ...workspace.filter((scope) => scopeFlags.size === 0 || scopeFlags.has(scope.path)),
     ];
-    for (const path of scopeFlags.keys())
-        if (scopes.every((scope) => scope.path !== path) && existsSync(join(root, path)))
-            scopes.push({ name: path.split('/').pop() ?? path, path, presets: [], source: 'gspot.toml' });
+    const files = openConfinedRoot(root);
+    try {
+        for (const path of new Set([...scopes.map((scope) => scope.path), ...scopeFlags.keys()])) {
+            if (path === '') continue;
+            if (!files.stat(path)?.isDirectory()) throw new SelectionError([`Scope directory does not exist: ${path}`]);
+            if (scopes.every((scope) => scope.path !== path))
+                scopes.push({ name: path.split('/').pop() ?? path, path, presets: [], source: 'gspot.toml' });
+        }
+    } finally {
+        files.close();
+    }
     return scopes;
 }
 

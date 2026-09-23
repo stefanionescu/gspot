@@ -9,10 +9,6 @@ const GLOB_CHARS = /[*?{]/u;
 
 const matcherCache = new Map<string, (path: string) => boolean>();
 
-function isExtensionClaimed(claims: Claims, extension: string): boolean {
-    return claims.extensions.includes(extension);
-}
-
 function isFilenameClaimed(claims: Claims, base: string): boolean {
     if (claims.filenames.length === 0) return false;
     if (claims.filenames.some((name) => !GLOB_CHARS.test(name) && name === base)) return true;
@@ -30,8 +26,8 @@ export function pathMatcher(patterns: string[]): (path: string) => boolean {
     const cached = matcherCache.get(key);
     if (cached) return cached;
     const expressions = pathExpressions(patterns);
-    const includes = expressions.includes.map((source) => new RegExp(source));
-    const excludes = expressions.excludes.map((source) => new RegExp(source));
+    const includes = expressions.includes.map((source) => new RegExp(source, 's'));
+    const excludes = expressions.excludes.map((source) => new RegExp(source, 's'));
     const isMatch = (path: string): boolean =>
         includes.some((pattern) => pattern.test(path)) && !excludes.some((pattern) => pattern.test(path));
     matcherCache.set(key, isMatch);
@@ -68,7 +64,7 @@ export function isInScope(path: string, scope: string): boolean {
  * @returns whether the claims cover the file
  */
 export function isClaimed(claims: Claims, file: TrackedFile): boolean {
-    if (isExtensionClaimed(claims, extensionOf(file.path))) return true;
+    if (claims.extensions.includes(extensionOf(file.path))) return true;
     if (isFilenameClaimed(claims, baseName(file.path))) return true;
     if (claims.tags.some((tag) => file.tags.includes(tag))) return true;
     return claims.paths.length > 0 && pathMatcher(claims.paths)(file.path);
@@ -91,26 +87,11 @@ export function claimedByClaims(
     const candidates = files.filter((file) => isInScope(file.path, scope) && claims.natures.includes(file.nature));
     if (claims.from_languages) {
         const languages = sourcePresets(selected);
-        return candidates.filter((file) => languages.some((language) => isClaimed(language.claims, file)));
+        return candidates.filter(
+            (file) => isClaimed(claims, file) || languages.some((language) => isClaimed(language.claims, file)),
+        );
     }
     return candidates.filter((file) => isClaimed(claims, file));
-}
-
-/**
- * The files a preset claims in a scope. A repository preset with from_languages claims what the language and framework presets claim.
- * @param manifest the preset
- * @param selected the selected manifests
- * @param files the tracked files
- * @param scope the scope path
- * @returns the files claimed
- */
-export function claimedFiles(
-    manifest: Manifest,
-    selected: Manifest[],
-    files: TrackedFile[],
-    scope: string,
-): TrackedFile[] {
-    return claimedByClaims(manifest.claims, selected, files, scope);
 }
 
 /**
@@ -122,7 +103,8 @@ export function claimedFiles(
 export function claimants(file: TrackedFile, selected: Manifest[]): Manifest[] {
     const languages = sourcePresets(selected);
     return selected.filter((manifest) => {
-        if (manifest.claims.from_languages) return languages.some((language) => isClaimed(language.claims, file));
+        if (manifest.claims.from_languages)
+            return isClaimed(manifest.claims, file) || languages.some((language) => isClaimed(language.claims, file));
         return isClaimed(manifest.claims, file);
     });
 }

@@ -9,6 +9,8 @@ export const noHarnessBarrelImports = createRule<HarnessBarrelImportsOptions, 'b
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'With `barrels: ["@tests/harness"]`, importing `a` from `@tests/harness` inside `tests/harness/b.ts` reports `barrel`. Import it from its owner with `import { a } from "@tests/harness/a.js";`.',
             summary: 'Finds an import of the test-harness barrel from inside the harness code itself.',
             why: 'Support modules that import their own barrel create cycles and load every sandbox to use one.',
             fix: 'Import the specific harness module instead of the barrel.',

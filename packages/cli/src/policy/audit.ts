@@ -2,9 +2,10 @@
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { shippedPolicy } from '#cli/naming/policy.ts';
+import { quoteArgument } from '#cli/run/reproduce.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { WrittenValue, Policy, ExposedSettings } from '#cli/policy/types.ts';
-import { asRecord, policyValue, specFor, writtenKeys } from '#cli/policy/settings.ts';
+import type { WrittenValue, Policy, ExposedSettings, PolicyProblem, PathSegment } from '#cli/policy/types.ts';
+import { asRecord, policyTables, policyValue, specFor, writtenKeys } from '#cli/policy/settings.ts';
 
 const LIMITS_PREFIX = 'limits.';
 
@@ -42,11 +43,16 @@ function quotedTableProblem(key: string, item: unknown): string | undefined {
     return isQuoted ? messages.quotedTable(key, text) : undefined;
 }
 
-function listItemProblems(key: string, items: unknown, requireReasons: boolean): string[] {
+function listItemProblems(key: string, items: unknown, requireReasons: boolean): PolicyProblem[] {
     if (!Array.isArray(items)) return [];
-    return (items as unknown[])
-        .flatMap((item) => [requireReasons ? itemReasonProblem(key, item) : undefined, quotedTableProblem(key, item)])
-        .filter((problem) => problem !== undefined);
+    return (items as unknown[]).flatMap((item, index) => {
+        const reason = requireReasons ? itemReasonProblem(key, item) : undefined;
+        const quoted = quotedTableProblem(key, item);
+        return [
+            ...(reason === undefined ? [] : [{ path: [...key.split('.'), index, 'reason'], message: reason }]),
+            ...(quoted === undefined ? [] : [{ path: [...key.split('.'), index], message: quoted }]),
+        ];
+    });
 }
 
 function looseningProblem(
@@ -57,7 +63,7 @@ function looseningProblem(
 ): string | undefined {
     if (written.reason !== undefined) return messages.refusedReason(key, written.reason);
     const shown = shipped === undefined ? 'default' : `default ${JSON.stringify(shipped)}`;
-    const scopeFlag = scope === undefined ? '' : ` --scope ${scope}`;
+    const scopeFlag = scope === undefined ? '' : ` --scope ${quoteArgument(scope)}`;
     const value = JSON.stringify(written.value);
     return messages.loosenNeedsReason(key, value, shown, `gspot set ${key} ${value}${scopeFlag} --reason "..."`);
 }
@@ -68,18 +74,21 @@ function keyProblems(
     scope: string | undefined,
     key: string,
     requireReasons: boolean,
-): string[] {
+): PolicyProblem[] {
     const match = specFor(surface, key);
-    if (!match) return [unknownKeyProblem(surface, key)];
+    if (!match) return [{ path: key.split('.'), message: unknownKeyProblem(surface, key) }];
     const written = policyValue(table, key);
     if (!written) return [];
     if (match.spec.kind === 'list') {
         const problems = listItemProblems(key, written.value, requireReasons);
         if (requireReasons && match.spec.direction === 'loosening' && Array.isArray(written.value)) {
-            for (const item of written.value as unknown[]) {
+            for (const [index, item] of (written.value as unknown[]).entries()) {
                 const record = asRecord(item);
                 if (record !== undefined && record['reason'] === undefined)
-                    problems.push(messages.missingReason(key, `gspot set ${key} <entry> --reason "..."`));
+                    problems.push({
+                        path: [...key.split('.'), index],
+                        message: messages.missingReason(key, `gspot set ${key} <entry> --reason "..."`),
+                    });
             }
         }
         return problems;
@@ -88,17 +97,17 @@ function keyProblems(
     if (!requireReasons) return [];
     if (!isLoosening(match.spec, written.value, shipped) || isReasonAccepted(written.reason)) return [];
     const problem = looseningProblem(key, written, shipped, scope);
-    return problem === undefined ? [] : [problem];
+    return problem === undefined ? [] : [{ path: key.split('.'), message: problem }];
 }
 
-function extraProblems(surface: ExposedSettings, table: Partial<Policy>): string[] {
-    const problems: string[] = [];
+function extraProblems(surface: ExposedSettings, table: Partial<Policy>): PolicyProblem[] {
+    const problems: PolicyProblem[] = [];
     const tools = table.tools ?? {};
     for (const [tool, toolTable] of Object.entries(tools)) {
         const extra = toolTable.extra ?? {};
         for (const key of Object.keys(extra)) {
             if (key !== 'reason' && surface.specs.has(`tools.${tool}.${key}`))
-                problems.push(messages.extraCoversSlot(tool, key));
+                problems.push({ path: ['tools', tool, 'extra', key], message: messages.extraCoversSlot(tool, key) });
         }
     }
     return problems;
@@ -119,7 +128,7 @@ function tableProblems(
     table: Partial<Policy>,
     scope: string | undefined,
     requireReasons: boolean,
-): string[] {
+): PolicyProblem[] {
     const keys = writtenKeys(table).flatMap((key) => keyProblems(surface, table, scope, key, requireReasons));
     return [...keys, ...extraProblems(surface, table)];
 }
@@ -135,19 +144,43 @@ export function validateAgainstSurface(
     surface: ExposedSettings,
     policy: Policy,
     scopeSurfaces = new Map<string, ExposedSettings>(),
-): string[] {
-    const problems = [...surface.problems];
+): PolicyProblem[] {
+    const problems: PolicyProblem[] = [];
+    for (const { settings, scope, path } of [
+        { settings: surface, scope: undefined, path: ['presets'] },
+        ...policy.scopes.map((scope, index) => ({
+            settings: scopeSurfaces.get(scope.path) ?? surface,
+            scope: scope.path,
+            path: ['scope', index, 'presets'],
+        })),
+    ]) {
+        const layers = policyTables(policy, scope);
+        for (const { key, message } of settings.problems)
+            if (!layers.some(({ table }) => policyValue(table, key) !== undefined)) problems.push({ path, message });
+    }
     // A root table feeds every scope, so it may hold a setting that only a preset of some scope exposes.
     const everywhere = mergedSurface([surface, ...scopeSurfaces.values()]);
     const surfaceFor = (scope: string | undefined): ExposedSettings =>
         scope === undefined ? everywhere : (scopeSurfaces.get(scope) ?? surface);
-    const tables: { table: Partial<Policy>; scope?: string }[] = [
-        { table: policy },
-        ...Object.entries(policy.scopeTables).map(([scope, table]) => ({ table, scope })),
+    const tables: { table: Partial<Policy>; scope?: string; path: PathSegment[] }[] = [
+        { table: policy, path: [] },
+        ...policy.scopes.flatMap((scope, index) => {
+            const table = policy.scopeTables[scope.path];
+            return table === undefined ? [] : [{ table, scope: scope.path, path: ['scope', index] as PathSegment[] }];
+        }),
     ];
-    for (const { table, scope } of tables)
-        problems.push(...tableProblems(surfaceFor(scope), table, scope, policy.requireReasons));
-    for (const { group } of policy.naming.remove_groups)
-        if (shippedPolicy().groups[group]?.removable === false) problems.push(messages.groupNotRemovable(group));
+    for (const { table, scope, path } of tables)
+        problems.push(
+            ...tableProblems(surfaceFor(scope), table, scope, policy.requireReasons).map((problem) => ({
+                ...problem,
+                path: [...path, ...problem.path],
+            })),
+        );
+    for (const [index, { group }] of policy.naming.remove_groups.entries())
+        if (shippedPolicy().groups[group]?.removable === false)
+            problems.push({
+                path: ['naming', 'remove_groups', index, 'group'],
+                message: messages.groupNotRemovable(group),
+            });
     return problems;
 }

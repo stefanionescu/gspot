@@ -658,52 +658,28 @@ def test_parse_prompt_rejects_unexpected_entry() -> None:
 
 ## Review checklist
 
-Before you run the checks of the repository, read the change against these questions:
+Before running the requested checks, review the changed code:
 
-- Does the code follow local project rules over generic style preferences?
 - Are imports top-level, grouped, sorted, and free of cycles?
-- Is the module import-stable, with no import-time work?
-- Are public APIs typed and documented?
-- Do argument types accept the broadest useful protocol or abstract collection?
-- Do concrete implementations return concrete types?
-- Is `Any` avoided where `object`, a protocol, or a type variable expresses
-- Are names consistent with `NAMING.md`?
-- Are functions small, focused, and under the local length limit?
-- Are defaults immutable or initialized inside the function?
-- Are None checks explicit?
-- Are constructors free of external row, payload, SDK, or CLI object coupling?
-- Is subclassing used only for interfaces or true specialization, not code
-- Are exceptions specific, with narrow `try` blocks?
-- Are resources managed with `with` or documented ownership?
-- Are logging calls using literal pattern strings and argument parameters?
-- Is logging configured only at the application boundary?
-- Are error messages precise, actionable, and free of internal details?
-- Are environment variables read, parsed, and validated at a boundary instead
-- When changing deployment install commands, are pip requirements pinned,
-- Are comments present where behavior is non-obvious and absent where they only
-- Is `__all__` explicit and at the bottom when public exports exist?
-- Are package boundaries and import-linter contracts respected?
-- Is importable code under `src/` without `sys.path` mutation?
-- For FastAPI code, are path operations thin and grouped behind routers?
-- For FastAPI code, are parameter defaults, `Annotated` metadata, and
-- For FastAPI code, are route declarations ordered so fixed paths are not
-- For FastAPI code, are request and response schemas using Pydantic v2 APIs and
-- For FastAPI code, are `Field` constraints, schema metadata, and examples
-- For FastAPI code, do nested models use precise typed fields instead of
-- For FastAPI code, are special boundary types such as `UUID`, `datetime`,
-- For FastAPI code, are headers and cookies declared with `Header()` and
-- For FastAPI code, do response models filter private fields through dedicated
-- For FastAPI code, are success status codes declared on decorators, error
-- For FastAPI code, are custom exception handlers registered at the app boundary
-- For FastAPI code, are forms and files declared with `Form()`, `File()`, and
-- For FastAPI code, do file uploads use `UploadFile` unless the file is small
-- For FastAPI code, are replacement and partial-update routes using clear
-- For FastAPI code, are OpenAPI, Swagger UI, and ReDoc disabled by default and
-- For FastAPI code, is blocking I/O kept out of `async def` path operations?
-- For FastAPI code, are dependencies placed at the narrowest correct boundary:
-- For FastAPI code, are secrets externalized, credentials errors generic, and
-- For FastAPI code, are background tasks, middleware, and streaming endpoints
-- Did you avoid tests, linting, and formatting commands unless requested?
+- Is the module import-stable, with no external work at import time?
+- Are public APIs typed and documented, with accurate `__all__` exports?
+- Do input types accept the intended protocols and return types describe actual values?
+- Do precise types replace `Any` wherever the contract allows it?
+- Are names consistent with the naming rules?
+- Do functions have one responsibility and comply with configured size limits?
+- Are defaults immutable, with explicit handling of `None`?
+- Do constructors receive domain values instead of unrelated payload or CLI objects?
+- Does inheritance represent an interface or true specialization?
+- Are exceptions specific, `try` blocks narrow, and resource cleanup explicit?
+- Is logging configured at the application boundary and free of secrets?
+- Are environment values parsed and validated by their configuration owner?
+- Are deployment dependencies pinned and integrity-checked as required by Packaging?
+- Do comments explain non-obvious behavior without repeating the code?
+- Are package boundaries respected without `sys.path` mutation?
+
+For FastAPI applications, also review the FastAPI and Runtime guides. Check request and
+response schemas, authorization, blocking I/O, resource lifetimes, and actual HTTP outcomes.
+Report which requested checks ran and any verification that remains unavailable.
 
 ## Source decisions
 

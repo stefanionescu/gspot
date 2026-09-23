@@ -3,7 +3,7 @@ import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import prettier from 'prettier';
-import { run } from '#tests/harness/planted.ts';
+import { run } from '#tests/support/cli/planted.ts';
 
 const POLICY = 'version = 1\npresets = ["formatting"]\n[rules]\ninstall = false\n';
 const SOURCE = 'const greeting="hello";if(greeting){console.log(greeting);}';

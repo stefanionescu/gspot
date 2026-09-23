@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/harness/planted.ts';
+import { run } from '#tests/support/cli/planted.ts';
 
 const POLICY = `version = 1
 presets = ["formatting"]

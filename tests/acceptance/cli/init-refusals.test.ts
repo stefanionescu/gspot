@@ -4,14 +4,33 @@ import { hookBody } from '#cli/emit/hooks.ts';
 import { createFileTree, testdir } from 'testdirs';
 import { chmodSync, existsSync } from 'node:fs';
 import { describe, expect, test } from 'bun:test';
-import { treeContents } from '#tests/harness/contents.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
-import { commitAll, git, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, git, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/support/cli/planted.ts';
 
 const SYSTEM_BASH = '/bin/bash';
 const QUIET = ['--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
 describe('init refusals', () => {
+    test(
+        'a nonterminal preview names its accepted preset list and keeps JSON output parseable',
+        async () => {
+            await using sandbox = await testdir();
+            await createFileTree(sandbox.path, { 'scripts/a.sh': script });
+            commitAll(sandbox.path);
+            const flags = ['init', '--dry-run', '--no-hooks', '--format', 'shipped', ...QUIET];
+            const result = await run(sandbox.path, flags);
+            expect(result.code, result.stdout + result.stderr).toBe(0);
+            expect(result.stdout + result.stderr).toMatch(/Selected: [^\n]*bash[^\n]*Change with --presets <ids>\./u);
+            expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
+            const json = await run(sandbox.path, [...flags, '--json']);
+            expect(json.code, json.stdout + json.stderr).toBe(0);
+            expect(() => JSON.parse(json.stdout) as unknown).not.toThrow();
+            expect(json.stdout + json.stderr).not.toContain('Selected:');
+        },
+        PLANTED_TIMEOUT_MS,
+    );
+
     test(
         'a choice flag outside its list exits 2 and names the allowed values',
         async () => {
@@ -72,7 +91,7 @@ describe('init refusals', () => {
         PLANTED_TIMEOUT_MS,
     );
 
-    test.skipIf(!existsSync(SYSTEM_BASH))('every hook body runs under the system Bash', async () => {
+    test('every hook body runs under the system Bash', async () => {
         await using sandbox = await testdir();
         await createFileTree(sandbox.path, { 'README.md': '# Hook test\n' });
         commitAll(sandbox.path);
@@ -130,10 +149,11 @@ describe('init refusals', () => {
             commitAll(sandbox.path);
             const argv = ['init', '--yes', '--no-hooks', '--scope', 'tools=bash', 'jobs=bash', ...QUIET];
             const init = await run(sandbox.path, argv, { PATH: toolsPath(['shellcheck', 'shfmt', 'typos', 'ec']) });
-            expect(init.stderr).not.toContain('did not run');
+            expect(init.code, init.stdout + init.stderr).toBe(0);
             const policy = await Bun.file(join(sandbox.path, 'gspot.toml')).text();
-            expect(policy).toContain('path = "tools"');
-            expect(policy).toContain('path = "jobs"');
+            const parsed = parsePolicyText(policy, 'gspot.toml');
+            expect(parsed.scopes.find((scope) => scope.path === 'tools')?.presets).toContain('bash');
+            expect(parsed.scopes.find((scope) => scope.path === 'jobs')?.presets).toContain('bash');
         },
         PLANTED_TIMEOUT_MS,
     );

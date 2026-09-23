@@ -22,7 +22,6 @@
         "paths": {
             "#cli/*": ["./packages/cli/src/*"],
             "#plugin/*": ["./packages/eslint-plugin/src/*"],
-            "#plugin-tests/*": ["./packages/eslint-plugin/tests/*"],
             "#tests/*": ["./tests/*"]
         }
     },

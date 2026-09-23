@@ -1,15 +1,26 @@
+import { readPolicy } from '#cli/policy/read-policy.ts';
+import { reportSchema } from '#cli/run/report-schema.ts';
 import { fileURLToPath } from 'node:url';
-import { startRegistry } from '#tests/harness/registry/lifecycle.ts';
+import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 // Takeover at init: owned configuration files are replaced, their exception lists carried into gspot.toml with a reason, and the lint folder listed for deletion.
 import { join } from 'node:path';
 import prettier from 'prettier';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import { existsSync, readFileSync, symlinkSync } from 'node:fs';
+import { chmodSync, existsSync, readFileSync, statSync, symlinkSync } from 'node:fs';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { treeContents } from '#tests/harness/contents.ts';
-import { git, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
+import {
+    commitAll,
+    git,
+    installPrivateTools,
+    PLANTED_TIMEOUT_MS,
+    run,
+    script,
+    toolsPath,
+} from '#tests/support/cli/planted.ts';
 
 const INIT = [
     'init',
@@ -26,6 +37,181 @@ const INIT = [
 ];
 
 describe('takeover', () => {
+    test.each(['', 'guide[1]', 'native-defaults'])(
+        'Markdown adoption retains native defaults through checks, fixes, and uninstall (scope %s)',
+        async (scope) => {
+            await using sandbox = await testdir();
+            const prefix = scope === '' ? '' : `${scope}/`;
+            const configuration = `${prefix}.markdownlint.jsonc`;
+            const original =
+                scope === 'native-defaults'
+                    ? '{"MD009":true,"MD041":false}\n'
+                    : scope === ''
+                      ? '{"default":false,"MD033":true,"MD009":true}\n'
+                      : '{"extends":"./config/base.jsonc","MD033":true,"MD009":true}\n';
+            const inherited = '{"default":false,"MD033":false}\n';
+            const parent = `${prefix}config/base.jsonc`;
+            await createFileTree(sandbox.path, {
+                [configuration]: original,
+                [parent]: inherited,
+                [`${prefix}sample.md`]: 'A paragraph.   \n\n<span>Content</span>\n',
+            });
+            chmodSync(join(sandbox.path, configuration), 0o640);
+            chmodSync(join(sandbox.path, parent), 0o640);
+            commitAll(sandbox.path);
+            const initialized = await run(sandbox.path, [
+                'init',
+                '--yes',
+                '--presets',
+                'markdown',
+                '--without',
+                'docs',
+                'spelling',
+                '--no-runner',
+                '--no-hooks',
+                '--no-ci',
+                '--no-rules',
+                '--no-install',
+            ]);
+            expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+            expect(readFileSync(join(sandbox.path, parent), 'utf8')).toBe(inherited);
+            expect(statSync(join(sandbox.path, parent)).mode & 0o777).toBe(0o640);
+            const selected = await run(sandbox.path, ['set', 'level', 'all']);
+            expect(selected.code, selected.stdout + selected.stderr).toBe(0);
+            await installPrivateTools(sandbox.path);
+            const literalFiles = [
+                'sample.md',
+                '#notes.md',
+                '[notes].md',
+                '-notes.md',
+                ...(process.platform === 'win32' ? [] : ['name:5.md', 'line\nbreak.md']),
+            ];
+            await createFileTree(sandbox.path, {
+                [`${prefix}nested/.markdownlint.jsonc`]: '{"default":false,"MD033":false,"MD009":false}\n',
+                [`${prefix}nested/.markdownlint-cli2.mjs`]:
+                    'import { writeFileSync } from "node:fs"; writeFileSync("discovered.txt", "executed"); export default {};\n',
+                ...Object.fromEntries(
+                    literalFiles.map((name) => [
+                        `${prefix}nested/${name}`,
+                        'A paragraph.   \n\n<span>Content</span>\n',
+                    ]),
+                ),
+            });
+            const command = ['check', '--only', 'markdown/markdownlint', '--no-cache'];
+            const structured = await run(sandbox.path, [...command, '--json']);
+            expect(structured.code, structured.stdout + structured.stderr).toBe(1);
+            const findings = reportSchema
+                .parse(JSON.parse(structured.stdout))
+                .checks.flatMap((check) => check.findings);
+            for (const name of literalFiles) {
+                expect(findings).toContainEqual(
+                    expect.objectContaining({
+                        file: `${prefix}nested/${name}`,
+                        rule: 'MD033',
+                        line: 3,
+                        column: 1,
+                        fixable: false,
+                    }),
+                );
+                expect(findings).toContainEqual(
+                    expect.objectContaining({ file: `${prefix}nested/${name}`, rule: 'MD009', line: 1, fixable: true }),
+                );
+            }
+            const failed = await run(sandbox.path, [...command, '--fix']);
+            expect(failed.code, failed.stdout + failed.stderr).toBe(1);
+            expect(failed.stdout).toContain('MD033');
+            expect(failed.stdout).not.toContain('MD041');
+            expect(existsSync(join(sandbox.path, 'discovered.txt'))).toBe(false);
+            expect(readFileSync(join(sandbox.path, scope, 'sample.md'), 'utf8')).toBe(
+                'A paragraph.\n\n<span>Content</span>\n',
+            );
+            for (const name of literalFiles) {
+                if (!name.includes('\n')) expect(failed.stdout).toContain(`nested/${name}`);
+                expect(readFileSync(join(sandbox.path, scope, 'nested', name), 'utf8')).toBe(
+                    'A paragraph.\n\n<span>Content</span>\n',
+                );
+                await Bun.write(join(sandbox.path, scope, 'nested', name), 'A paragraph.\n\nContent\n');
+            }
+            await Bun.write(join(sandbox.path, scope, 'sample.md'), 'A paragraph.\n\nContent\n');
+            const corrected = await run(sandbox.path, command);
+            expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+            const native = Bun.spawnSync(
+                [join(sandbox.path, '.gspot/node_modules/.bin/markdownlint-cli2'), '--no-globs', 'sample.md'],
+                {
+                    cwd: join(sandbox.path, scope),
+                    stdout: 'pipe',
+                    stderr: 'pipe',
+                },
+            );
+            expect(native.exitCode, native.stderr.toString()).toBe(0);
+            commitAll(sandbox.path);
+            await Bun.write(join(sandbox.path, scope, 'nested/sample.md'), '<span>Staged content</span>\n');
+            expect(git(sandbox.path, ['add', '--', `${prefix}nested/sample.md`]).code).toBe(0);
+            await Bun.write(join(sandbox.path, scope, 'nested/sample.md'), 'Working content\n');
+            const staged = await run(sandbox.path, [...command, '--staged']);
+            expect(staged.code, staged.stdout + staged.stderr).toBe(1);
+            expect(staged.stdout).toContain('MD033');
+            expect(readFileSync(join(sandbox.path, scope, 'nested/sample.md'), 'utf8')).toBe('Working content\n');
+            expect(existsSync(join(sandbox.path, 'discovered.txt'))).toBe(false);
+            const removed = await run(sandbox.path, ['uninstall', '--yes']);
+            expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+            expect(readFileSync(join(sandbox.path, configuration), 'utf8')).toBe(original);
+            expect(statSync(join(sandbox.path, configuration)).mode & 0o777).toBe(0o640);
+            expect(readFileSync(join(sandbox.path, parent), 'utf8')).toBe(inherited);
+            expect(statSync(join(sandbox.path, parent)).mode & 0o777).toBe(0o640);
+        },
+        PLANTED_TIMEOUT_MS * 5,
+    );
+
+    test(
+        'EditorConfig adoption preserves native selectors and restores original bytes and mode',
+        async () => {
+            await using sandbox = await testdir();
+            const editorconfig =
+                '# Authored sections\nroot = true\n[*]\nindent_style = space\nindent_size = 2\n[*.json]\nindent_size = 4\n[deep/**]\nindent_style = tab\nindent_size = tab\ntab_width = 8\n';
+            const formatter = 'export default { semi: false, singleQuote: true };\n';
+            await createFileTree(sandbox.path, { '.editorconfig': editorconfig, 'prettier.config.mjs': formatter });
+            chmodSync(join(sandbox.path, '.editorconfig'), 0o640);
+            const sources = {
+                'future.js': 'function value(){return {first:"one",second:"two"}}',
+                'nested/future.json': '{"first":{"second":true}}',
+                'deep/future.js': 'function value(){return {first:"one",second:"two"}}',
+            };
+            const expected = new Map<string, string>();
+            for (const [path, source] of Object.entries(sources)) {
+                const filepath = join(sandbox.path, path);
+                const options = await prettier.resolveConfig(filepath, { editorconfig: true, useCache: false });
+                expected.set(path, await prettier.format(source, { ...options, filepath }));
+            }
+            const initialized = await run(sandbox.path, [
+                'init',
+                '--yes',
+                '--presets',
+                'formatting',
+                '--no-runner',
+                '--no-ci',
+                '--no-hooks',
+                '--no-rules',
+                '--no-install',
+            ]);
+            expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+            for (const [path, source] of Object.entries(sources)) {
+                const filepath = join(sandbox.path, path);
+                const options = await prettier.resolveConfig(filepath, {
+                    config: join(sandbox.path, '.gspot/prettier.json'),
+                    editorconfig: true,
+                    useCache: false,
+                });
+                expect(await prettier.format(source, { ...options, filepath }), path).toBe(expected.get(path)!);
+            }
+            const removed = await run(sandbox.path, ['uninstall', '--yes']);
+            expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+            expect(readFileSync(join(sandbox.path, '.editorconfig'), 'utf8')).toBe(editorconfig);
+            expect(statSync(join(sandbox.path, '.editorconfig')).mode & 0o777).toBe(0o640);
+            expect(readFileSync(join(sandbox.path, 'prettier.config.mjs'), 'utf8')).toBe(formatter);
+        },
+        PLANTED_TIMEOUT_MS,
+    );
     test.each(['', 'hooks', '.husky'])(
         'dry-run distinguishes source hooks from configured hooks at %s',
         async (hooksPath) => {
@@ -82,7 +268,7 @@ describe('takeover', () => {
             expect(result.stderr).toContain('changed after takeover was planned');
             expect(readFileSync(join(sandbox.path, '.prettierrc.json'), 'utf8')).toBe('{"semi":true}\n');
             expect(existsSync(join(sandbox.path, 'gspot.toml'))).toBe(false);
-            expect(existsSync(join(sandbox.path, '.gspot-version'))).toBe(false);
+            expect(existsSync(join(sandbox.path, '.gspot/version'))).toBe(false);
             expect(readFileSync(join(sandbox.path, 'source.js'), 'utf8')).toBe('const greeting = "hello";\n');
         },
         PLANTED_TIMEOUT_MS,
@@ -134,6 +320,10 @@ describe('takeover', () => {
         [
             '.prettierrc.yaml',
             'tabWidth: 8\nprintWidth: 90\ntrailingComma: none\nendOfLine: crlf\nsemi: false\nsingleQuote: false\nuseTabs: false\narrowParens: always\nembeddedLanguageFormatting: off\n',
+        ],
+        [
+            '.prettierrc.json5',
+            "{ // Authored JSON5\n tabWidth: 8, printWidth: 90, trailingComma: 'none', endOfLine: 'crlf', semi: false, singleQuote: false, useTabs: false, arrowParens: 'always', embeddedLanguageFormatting: 'off', }\n",
         ],
         [
             '.prettierrc.toml',
@@ -273,7 +463,9 @@ describe('takeover', () => {
                 expect(policy).toContain('SC2086');
                 expect(policy).toContain('carried from .shellcheckrc at init');
                 expect(policy).toContain('MD013');
-                expect(policy).not.toContain('MD033');
+                expect(policy).toContain('MD033 = true');
+                const markdown = parseJsonc(readFileSync(join(sandbox.path, '.gspot/markdownlint.jsonc'), 'utf8'));
+                expect(markdown).toMatchObject({ MD013: false, MD033: true });
                 for (const stub of ['typos.toml', '.shellcheckrc', '.markdownlint-cli2.jsonc'])
                     expect(readFileSync(join(sandbox.path, stub), 'utf8')).toContain('gspot');
                 const eslintStub = ['eslint.config.js', 'eslint.config.mjs'].find((name) =>
@@ -293,3 +485,48 @@ describe('takeover', () => {
         PLANTED_TIMEOUT_MS,
     );
 });
+
+test.each(['setup.cfg', 'tox.ini'])(
+    'init carries SQLFluff settings without retiring shared %s',
+    async (path) => {
+        await using sandbox = await testdir();
+        const original = '[flake8]\nignore = E501\n\n[sqlfluff]\nexclude_rules = LT01, RF01\n';
+        await createFileTree(sandbox.path, { [path]: original, 'query.sql': 'SELECT 1;\n' });
+        chmodSync(join(sandbox.path, path), 0o640);
+        const initialized = await run(sandbox.path, [
+            'init',
+            '--yes',
+            '--json',
+            '--presets',
+            'sql',
+            '--without',
+            'naming',
+            'spelling',
+            '--no-runner',
+            '--no-ci',
+            '--no-hooks',
+            '--no-rules',
+            '--no-install',
+        ]);
+        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+        const policy = readPolicy(sandbox.path).policy;
+        expect(policy.ignores.filter((entry) => entry.check === 'sql/sqlfluff').map((entry) => entry.rule)).toEqual([
+            'LT01',
+            'RF01',
+        ]);
+        expect(JSON.parse(initialized.stdout).plan.remove.some((entry: { path: string }) => entry.path === path)).toBe(
+            false,
+        );
+        expect(JSON.parse(initialized.stdout).plan.retained).toContainEqual({
+            path,
+            note: expect.stringContaining('remove that section manually'),
+        });
+        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
+        expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(0o640);
+        const removed = await run(sandbox.path, ['uninstall', '--yes']);
+        expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+        expect(readFileSync(join(sandbox.path, path), 'utf8')).toBe(original);
+        expect(statSync(join(sandbox.path, path)).mode & 0o777).toBe(0o640);
+    },
+    PLANTED_TIMEOUT_MS,
+);

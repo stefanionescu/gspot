@@ -264,20 +264,28 @@ names Homebrew only for a tool with no pin, and a `github` installer takes the t
 repository uses. The owner publishes a placeholder of `gspot` on npm before the release workflow
 first runs.
 
-`tests/release/publish.test.ts` removes one binary and holds a failed publish with
-nothing in the registry.
+Release acceptance removes one required binary, invokes the publication owner, and verifies
+failure before any registry publication. Keep that regression with the existing release
+argument and installed-consumer tests; no separate publish test file is required.
 
 ### Acceptance K-280
 
 Seven targets, and an install guide that says what each system shows.
 
-`targets.ts` gains `linux-x64-musl` and `linux-arm64-musl`, built with the musl
-targets of Bun. The launcher reads the libc of the machine before it picks a platform package.
+The shared target definition includes Linux x64 and arm64 musl builds using the corresponding
+Bun compile targets. The launcher reads the libc of the machine before it picks a platform package.
 The macOS binaries are signed ad hoc at build, and the guide names `xattr -d` for a browser
-download. mise and npm installs are not quarantined, and the guide recommends them first.
+download. Document quarantine behavior for the verified delivery route; do not promise a host security
+policy solely from the package manager name. Recommend only published, verified install routes.
 
 The release job runs `gspot --version` in an Alpine container for both musl targets.
 
 ### Acceptance K-281
 
 Apply the installed version without migrating policy. Dry-run is read-only. Preserve originals and recovery before publication, and update the pin last. Verify pin changes, edited outputs, lock failure, interruption, and safe retry.
+
+## Internal build arguments
+
+The CLI compiler always compiles an executable with syntax minification. Its internal interface
+accepts the entry, target, output path, and metadata path. It exposes no flags that suggest these
+fixed operations can be disabled. Cross-compilation does not establish native execution evidence.

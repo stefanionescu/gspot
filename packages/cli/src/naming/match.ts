@@ -44,7 +44,7 @@ export function compileTerms(terms: string[], source: string): Term[] {
  */
 export function bannedTerm(parts: string[], terms: Term[]): Term | undefined {
     return terms.find((term) =>
-        term.parts.length === 1 ? parts.includes(term.parts[0] ?? '') : isConsecutive(parts, term.parts),
+        term.parts.length === 1 ? parts.includes(term.parts[0]!) : isConsecutive(parts, term.parts),
     );
 }
 

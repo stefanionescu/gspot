@@ -26,26 +26,12 @@ Tests exist to catch bugs. A test that cannot fail when someone introduces a bug
 - Tests with no assertions or with assertions that verify nothing useful.
 - Snapshot tests that nobody reviews when they change.
 
-### Test behavior, not values
+### Assert contractual values
 
-Never write a test that asserts a parameter, config value, or return value equals a specific hardcoded literal. These tests break the moment the value changes and catch zero bugs. They test configuration, not whether the system works correctly.
-
-**What to test:**
-
-- **Constraints and invariants.** If a value must fall within a range, test the boundaries. If invalid input must be rejected, test the rejection.
-- **Access control.** Permissions, ownership rules, and role-specific behavior.
-- **Interactions.** Multi-entity workflows, admin actions, and cross-role behavior.
-- **Side effects.** Functions, triggers, scheduled work, computed values, and external boundary calls.
-- **Control and boundary behavior.** Contracts, error handling, caching, authentication flows, and edge cases.
-- **State transitions.** What happens when valid input is given, what happens when invalid input is given, what happens at the boundaries.
-
-**What not to test:**
-
-- That a specific parameter is set to a specific value (for example `expect(config.temperature).toBe(0.7)`).
-- That a function returns an exact hardcoded object when the object is just configuration.
-- That an artifact field has a specific default value by reading it back and comparing.
-
-**The distinction:** if the value can change freely without breaking anything, do not pin it in a test. If the value has constraints (must be between 0 and 2, must not be null, must be one of an enum set), test those constraints.
+Assert exact exit codes, diagnostic locations, preserved bytes, and documented defaults when
+those values define behavior. Do not pin incidental configuration or internal representation
+that can change without affecting the contract. Test rejection, state transitions, and side
+effects as well as successful results.
 
 ## Rules
 

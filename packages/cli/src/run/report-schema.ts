@@ -18,6 +18,10 @@ const checkResult = z.strictObject({
     scope: z.string(),
     status: z.enum(['ok', 'fail', 'cache', 'missing', 'skipped', 'error']),
     files: z.number().int(),
+    checkedFiles: z
+        .array(z.string())
+        .optional()
+        .describe('Repository-relative files whose analysis was confirmed by the engine.'),
     duration: z.number(),
     findings: z.array(finding),
     note: z.string().optional(),
@@ -47,7 +51,11 @@ export const reportSchema = z.strictObject({
     checks: z.array(checkResult),
     ignores: z.array(ignoreUse),
     skips: z.array(skip),
-    coverage: z.strictObject({ checked: z.number().int(), unchecked: z.number().int() }),
+    coverage: z.strictObject({
+        checked: z.number().int().describe('Source files analyzed by checks that ran.'),
+        unchecked: z.number().int().describe('Supported source files without an enabled configured check.'),
+        findings: z.array(finding).describe('Policy findings produced when strict source coverage is enabled.'),
+    }),
     suppressions: z.record(z.string(), z.number().int()),
     unstaged: z.number().int(),
     narrowed: z.boolean(),

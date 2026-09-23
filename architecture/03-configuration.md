@@ -602,8 +602,8 @@ One value, `format.indent_width`, for every tool that indents.
 
 The YAML block leaves the template.
 
-The snapshot of the formatting preset (T-36), and a unit test that reads the indent
-each generated file sets and holds them equal.
+Generate configuration at both levels and exercise indentation through each pinned formatter
+(T-36). Verify the configured value, the resulting bytes, and preservation of scoped overrides.
 
 ### Acceptance K-48
 
@@ -646,8 +646,8 @@ It leaves the shared-file list of
 K-36. The guide on editors names, for each tool with no pointer, the editor setting that reads
 `.gspot/`.
 
-The pointer snapshot of each preset (T-36). A planted case formats a file through the
-root pointer of Prettier and through `gspot check --fix`, and holds equal bytes.
+Verify emitted pointers through their native consumers (T-36). A planted case formats a file
+through the root pointer of Prettier and through `gspot check --fix`, and requires equal bytes.
 
 ### Acceptance K-274
 

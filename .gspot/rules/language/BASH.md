@@ -6,10 +6,10 @@ title: Bash
 
 # Bash
 
-The Bash rules span three files. This one covers scope, files, structure, options, output, comments,
+The Bash rules span four files. This one covers scope, files, structure, options, output, comments,
 and formatting. Language covers functions, variables, quoting, arrays, conditionals, arithmetic,
 loops, and paths. Safety covers commands, processes, network, secrets, temporary files, security,
-and portability.
+and portability. Operations covers ownership, deployment, publishing, and CI.
 
 ## Core Bash philosophy
 
@@ -658,38 +658,34 @@ Before you run the checks of the repository, read the change against these quest
 - Shell options are appropriate and not masking missing checks.
 - The script exits with a meaningful final status.
 - Every function has the required comment.
-- Deprecated syntax such as `$[ ... ]`, backticks, `let`, `typeset`, `function`,
 - Variables are quoted.
 - Argument lists use arrays.
 - User input and external data are validated before arithmetic or command use.
 - No `eval`, configured `bash -c`, parsed `ls`, or untrusted shell fragments exist.
-- `cd`, deployment, destructive, migration, upload, and sync commands are
+- Directory changes, deployment, destructive commands, migrations, uploads, and sync commands have explicit failure handling.
 - Pipelines behave correctly with or without `pipefail`.
 - Redirections are ordered correctly.
 - Temporary files are created with `mktemp` and cleaned up.
-- Downloads, generated files, and structured replacements validate temporary
 - Locks are acquired atomically, not with separate check-then-create steps.
-- Network, remote, mounted-filesystem, and readiness commands have bounded
 - Retries are limited to known retryable failures and have bounded attempts.
 - Background jobs are tracked by PID, waited on, and cleaned up on interruption.
 - Concurrent jobs keep output separated or use a tool that serializes output.
-- Checkpoint files cannot skip required work after inputs, targets, or runs
-- Long-running or multi-target scripts log stable status fields to STDERR
+- Checkpoint files cannot skip required work after inputs or targets change.
+- Long-running or multi-target scripts log stable status fields to STDERR.
 - Secrets are not printed, traced, or left in files/layers.
 - Filenames with spaces and leading dashes are safe.
-- Broken symlinks, home-relative paths, and no-match globs are handled
+- Broken symlinks, home-relative paths, and no-match globs have explicit handling.
 - `IFS`, `read`, and delimited-data handling do not drop meaningful data.
 - Privileged redirection and globbing happen at the intended privilege level.
 - Process control does not rely on `ps | grep`.
 - Files have UTF-8 without BOM and LF endings.
 - macOS/Linux portability is acceptable for the script's runtime.
 - The owning shell lint command passes or remaining findings are documented.
-- The file is exactly one invocation type: executable entrypoint or
+- The file is exactly one invocation type: executable entrypoint or sourced library.
 - Private functions precede public functions and are not called externally.
 - Public library functions and constants use their owner namespace.
 - Every repository function dependency is sourced directly.
 - No source-only barrel or one-function, one-caller pseudo-module remains.
-- `cd`, quantization, engine-build, runtime, publishing, upload, and
 - Deprecated syntax such as `$[ ... ]`, backticks, `let`, `typeset`, `function`, `&>`, `|&`, and the `[ ... -a ... ]` forms is absent.
 - Downloads, generated files, and structured replacements validate temporary data before replacing known-good files.
 - Network, remote, mounted-filesystem, and readiness commands have bounded timeouts where they can hang.

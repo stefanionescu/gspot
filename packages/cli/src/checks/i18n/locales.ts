@@ -1,10 +1,11 @@
+import { posix } from 'node:path';
+import { readSource } from '#cli/repository/tracked.ts';
 // Message files: every one parses as ICU MessageFormat, none is empty, and every locale holds every key of the base.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import type { Translations } from '#cli/checks/static-site/types.ts';
 import { parse } from '@formatjs/icu-messageformat-parser';
+
+type Translations = { directory?: string; base?: string };
 
 // Every message of a file by its dotted key: a nested table adds its key to the path of what it holds.
 function flat(value: unknown, prefix = ''): Map<string, string> {
@@ -42,15 +43,17 @@ function translations(input: EngineInput): Translations | undefined {
  * @param input the engine input
  * @returns the findings
  */
-export function localeFiles(input: EngineInput): Promise<Finding[]> {
+export function localeFiles(input: EngineInput): Finding[] {
     const named = translations(input);
-    if (named === undefined) return Promise.resolve([]);
+    if (named === undefined) return [];
     const base = named.base ?? 'en';
-    const files = input.session.repository.files
+    const files = input.files
         .map((file) => file.path)
-        .filter((path) => path.startsWith(`${named.directory ?? ''}/`) && path.endsWith('.json'));
+        .filter(
+            (path) => path.startsWith(`${posix.join(input.scope, named.directory ?? '')}/`) && path.endsWith('.json'),
+        );
     const raw = new Map(
-        files.map((path) => [path, JSON.parse(readFileSync(join(input.root, path), 'utf8')) as unknown]),
+        files.map((path) => [path, JSON.parse(readSource(input.root, path).toString('utf8')) as unknown]),
     );
     const held = new Map([...raw].map(([path, value]) => [path, flat(value)]));
     const basePath = files.find((path) => path.slice(path.lastIndexOf('/') + 1) === `${base}.json`);
@@ -82,5 +85,5 @@ export function localeFiles(input: EngineInput): Promise<Finding[]> {
             return [...broken, ...missing, ...dotted];
         })
         .toArray();
-    return Promise.resolve(found);
+    return found;
 }

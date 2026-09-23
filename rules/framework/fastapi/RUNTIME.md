@@ -379,7 +379,12 @@ async def get_current_user(
         headers={"WWW-Authenticate": "Bearer"},
     )
     try:
-        payload = jwt.decode(token, SECRET_KEY, algorithms=[ALGORITHM])
+        payload = jwt.decode(
+            token,
+            SECRET_KEY,
+            algorithms=[ALGORITHM],
+            options={"require": ["exp", "sub"]},
+        )
     except InvalidTokenError as error:
         raise credentials_error from error
 
@@ -391,6 +396,10 @@ async def get_current_user(
         raise credentials_error
     return user
 ```
+
+This PyJWT fragment requires the application-owned signing configuration and user lookup.
+Configure issuer and audience validation when those claims identify the accepted token source
+and recipient. See [PyJWT claim validation](https://pyjwt.readthedocs.io/en/latest/usage.html).
 
 Good token response:
 
@@ -522,7 +531,9 @@ Rules:
 - Middleware order matters. The last middleware added is the outermost.
 - On the request path, the outermost middleware runs first.
 - On the response path, the outermost middleware runs last.
-- Dependencies with `yield` run their exit code after middleware.
+- Request-scoped `yield` dependencies clean up after the response. Function-scoped
+  dependencies clean up before it is sent. Match middleware and streaming resource use to
+  the selected scope and installed FastAPI version.
 - Background tasks run after middleware.
 - Keep middleware small. Do not put business logic in middleware.
 - Do not use middleware when a router dependency or path operation dependency is

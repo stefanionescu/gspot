@@ -6,7 +6,7 @@ import { join, delimiter } from 'node:path';
 import { readFileSync, chmodSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import { git, gspot, toolsPath, PLANTED_TIMEOUT_MS, run, script } from '#tests/harness/planted.ts';
+import { installPrivateTools, git, gspot, toolsPath, PLANTED_TIMEOUT_MS, run, script } from '#tests/support/cli/planted.ts';
 
 const INIT = ['init', '--yes', '--presets', 'commits', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 
@@ -43,7 +43,7 @@ process.exit(child.exitCode);
             const bad = git(sandbox.path, ['commit', '-qm', 'Added notes.'], environment);
             expect(bad.code).not.toBe(0);
             expect(`${bad.stdout}${bad.stderr}`).toContain('type-empty');
-            expect(bad.stdout + bad.stderr).toContain('--message-file .git/COMMIT_EDITMSG');
+            expect(bad.stdout + bad.stderr).toContain(`--message-file ${join(sandbox.path, '.git/COMMIT_EDITMSG')}`);
             expect(bad.stdout + bad.stderr).toContain('Bypass this hook once: git commit --no-verify');
             const good = git(sandbox.path, ['commit', '-qm', 'docs: add the notes page'], environment);
             expect(good.code, good.stdout + good.stderr).toBe(0);
@@ -87,6 +87,7 @@ test(
         expect(git(sandbox.path, ['init', '-q']).code).toBe(0);
         const applied = await run(sandbox.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        await installPrivateTools(sandbox.path);
         expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
         expect(git(sandbox.path, ['commit', '-qm', 'chore: initialize']).code).toBe(0);
         const base = git(sandbox.path, ['rev-parse', 'HEAD']).stdout.trim();
@@ -139,6 +140,7 @@ test(
         const selected = git(source, ['rev-parse', 'HEAD']).stdout.trim();
         expect(git(sandbox.path, ['clone', '--depth=1', pathToFileURL(source).href, 'checkout']).code).toBe(0);
         const checkout = join(sandbox.path, 'checkout');
+        await installPrivateTools(checkout);
         const options = {
             cwd: checkout,
             env: { PATH: toolsPath(['commitlint']) },

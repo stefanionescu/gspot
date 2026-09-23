@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { expect, test } from 'bun:test';
 import { pathToFileURL } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/harness/planted.ts';
+import { run } from '#tests/support/cli/planted.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
 

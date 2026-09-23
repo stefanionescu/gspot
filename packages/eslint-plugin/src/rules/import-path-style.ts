@@ -18,6 +18,8 @@ export const importPathStyle = createRule<ImportPathStyleOptions, 'js' | 'ts' | 
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'With `style: "js"`, `import { a } from "./a";` reports a missing JavaScript suffix. Correct it to `import { a } from "./a.js";`. Package imports such as `import { a } from "package";` do not need a suffix.',
             summary:
                 'Checks that internal imports use the suffix the runtime resolves: .js for compiled ESM, .ts for Deno and Bun, none for bundled code.',
             why: 'The wrong suffix works in the editor and fails at run time, or the other way round.',

@@ -18,10 +18,15 @@ title: Tailwind CSS
   affect; no global variant classes on a wrapper.
 - Conditional classes go through the one class-merging helper the project adopts, never string
   concatenation with ternaries.
-- The content configuration lists every path that contains class names, including template and
-  content files, so purging never drops a used class.
+- Verify that source detection covers every template and content file containing class names.
+  Tailwind CSS 4 detects sources automatically; register excluded sources with `@source`.
+  Tailwind CSS 3 uses the `content` configuration. Keep complete class names in source so the
+  scanner can find them.
 - Custom utilities and plugins live in the configuration, named like the built-ins, and are
   documented where the theme is.
 - No hand-written CSS that duplicates a utility. Hand-written CSS is for what utilities cannot
   express, in a scoped stylesheet.
 - Dark mode uses one strategy (`class` or `media`) for the whole application.
+
+Use the [source detection documentation](https://tailwindcss.com/docs/detecting-classes-in-source-files)
+for the installed major version.

@@ -11,7 +11,7 @@ const LICENSE_NAMES = ['LICENSE', 'LICENSE.md', 'LICENSE.txt'];
  * @param input the engine input
  * @returns the findings
  */
-export function readmePresent(input: EngineInput): Promise<Finding[]> {
+export function readmePresent(input: EngineInput): Finding[] {
     const isLicenseRequired = input.view.tool('docs')['require_license'] !== false;
     const findings: Finding[] = [];
     const readme = input.scope === '' ? 'README.md' : `${input.scope}/README.md`;
@@ -29,5 +29,5 @@ export function readmePresent(input: EngineInput): Promise<Finding[]> {
             message: 'The root has no LICENSE file.',
             fixable: false,
         });
-    return Promise.resolve(findings);
+    return findings;
 }

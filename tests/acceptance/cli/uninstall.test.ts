@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { commitAll, PLANTED_TIMEOUT_MS, run, script } from '#tests/harness/planted.ts';
+import { commitAll, PLANTED_TIMEOUT_MS, run, script } from '#tests/support/cli/planted.ts';
 
 describe('uninstall', () => {
     test(
@@ -33,7 +33,7 @@ describe('uninstall', () => {
             const installed = JSON.parse(readFileSync(join(sandbox.path, 'package.json'), 'utf8')) as {
                 scripts: Record<string, string>;
             };
-            expect(installed.scripts['check']).toBe('gspot check');
+            expect(installed.scripts['gspot:check']).toBe('gspot check');
             expect(readFileSync(join(sandbox.path, 'lefthook.yml'), 'utf8')).toContain('gspot');
             const removed = await run(sandbox.path, ['uninstall', '--yes', '--json']);
             expect(removed.code).toBe(0);

@@ -6,14 +6,13 @@ import type { Profile } from '#cli/profile/types.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import * as messages from '#cli/policy/messages.ts';
-import { profileSchema } from '#cli/profile/schema.ts';
+import { profileSchema, isRepositoryPath } from '#cli/profile/schema.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
 
 const GITHUB_PREFIX = 'github:';
 const RAW_HOST = 'https://raw.githubusercontent.com';
 const PROFILE_FILE = 'gspot.profile.toml';
 const REQUEST_TIMEOUT_MS = 10_000;
-const PATH_KEYS = new Set(['paths', 'patterns', 'path', 'file']);
 
 function githubUrl(reference: string): string {
     const [location = '', ref = 'HEAD'] = reference.slice(GITHUB_PREFIX.length).split('@', 2);
@@ -42,7 +41,7 @@ function pathProblems(value: unknown, where: string): string[] {
     if (Array.isArray(value)) return value.flatMap((item, index) => pathProblems(item, `${where}[${String(index)}]`));
     if (typeof value !== 'object' || value === null) return [];
     return Object.entries(value).flatMap(([key, inner]) => {
-        if (PATH_KEYS.has(key))
+        if (isRepositoryPath(key, inner))
             return [`${where} holds \`${key}\`, which names a path of one repository; a profile carries no path.`];
         const below = where === '' ? key : `${where}.${key}`;
         return pathProblems(inner, below);

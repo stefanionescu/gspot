@@ -119,14 +119,11 @@ Good layout:
   pyproject.toml
   README.md
   src/
-    config/
+    training/
       __init__.py
-      runtime/
-        __init__.py
-        engine.py
-    runtime/
-      __init__.py
-      settings.py
+      config.py
+      dataset.py
+      model.py
 ```
 
 Bad layout:

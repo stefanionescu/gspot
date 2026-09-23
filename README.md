@@ -1,133 +1,85 @@
 # gspot
 
-gspot checks repository policy across code, configuration, documentation, and Git hooks.
-Presets select checks and pinned tools. `gspot.toml` owns the policy; `gspot apply` generates
-the files those tools read. Rule files give coding agents the selected repository instructions.
+CLI to lint and enforce rules for LLM generated codebases.
 
-A real finding from the [reproducible example](docs/src/content/docs/guides/quick-start.md):
+Choose presets for your tools, keep policy in `gspot.toml`, and generate their configuration
+with `gspot apply`. Coding agents receive the selected rule guides through `AGENTS.md`.
+
+[Get started](docs/src/content/docs/guides/install.md) ·
+[First check](docs/src/content/docs/guides/quick-start.md) ·
+[Existing repositories](docs/src/content/docs/guides/existing-repository.md) ·
+[Build and contribute](docs/src/content/docs/guides/build.md)
+
+## Run from source
+
+Complete the [source installation](docs/src/content/docs/guides/install.md), including Git,
+mise, and the pinned Bun and Node runtimes. The guide defines a `gspot` shell function for
+the checkout.
+
+Change to the repository you want to configure. Preview the proposal, then initialize and check:
+
+```shell
+gspot init --dry-run
+gspot init
+gspot check
+```
+
+Review the proposed files and integrations before accepting. Initialization installs selected
+tools unless you pass `--no-install`; lock resolution can still use the network. Initialization
+runs no checks. For a disposable example, follow [your first check](docs/src/content/docs/guides/quick-start.md).
+
+## Resolve a finding
+
+A Bash syntax failure looks like this:
 
 ```text
 greet.sh:1  bash/syntax  syntax error near unexpected token `then'
     help: Open the file at the line bash names and fix the quoting, bracket, or keyword it complains about.
 ```
 
-The example starts with `if then`, replaces it with a valid `printf` statement, and records the
-successful rerun. Its unchecked-files notice remains visible: passing one selected check does
-not mean every file was checked.
+Correct the named input and rerun the check. Use `gspot explain bash/syntax` for its purpose
+and correction advice. A failed check exits `1`; an execution or setup failure exits `2`.
+See [findings and reports](docs/src/content/docs/guides/you-got-a-finding.md) for automatic fixes,
+exceptions, and machine-readable output.
 
-## Install
+## Set repository policy
 
-Use Git and mise 2026.8.8 or later to run a contributor checkout. mise supplies the pinned Bun runtime. Installing dependencies downloads the
-packages recorded in the lockfile:
-
-```shell
-git clone https://github.com/stefanionescu/gspot.git
-cd gspot
-mise run repo:setup
-bun packages/cli/src/main.ts --help
-```
-
-For the commands below, define a shell function while still in the checkout:
-
-```shell
-GSPOT_SOURCE="$PWD/packages/cli/src/main.ts"
-gspot() { bun "$GSPOT_SOURCE" "$@"; }
-```
-
-This function runs the source CLI in your current shell. It does not install a global executable.
-Read the [installation guide](docs/src/content/docs/guides/install.md) for tool requirements and
-platform limits, or the [build guide](docs/src/content/docs/guides/build.md) for local binaries.
-Installing the CLI and configuring a repository are separate steps.
-
-## First run
-
-Change to the repository you want to configure. Preview its proposal first:
-
-```shell
-gspot init --dry-run
-```
-
-The proposal describes policy, generated tool configuration, locks, and selected integrations.
-Review existing configuration and hook handling before accepting. Initialization can install
-selected tools unless you pass `--no-install`; that option still allows lock resolution to use
-the network. Run initialization and checking separately:
-
-```shell
-gspot init
-gspot check
-```
-
-Init applies the accepted proposal once and runs no checks. For an existing setup, read the
-[adoption guide](docs/src/content/docs/guides/existing-repository.md). A teammate who clones a
-configured repository runs `gspot install`, which consumes its matching locks without resolving
-new tracked configuration. Setup does not inject a `prepare` lifecycle script.
-
-## Use it every day
-
-| Command                     | Purpose                                                                    |
-| --------------------------- | -------------------------------------------------------------------------- |
-| `gspot check`               | Run the selected checks.                                                   |
-| `gspot check --staged`      | Check staged content, preserving unstaged edits.                           |
-| `gspot check --changed`     | Select affected checks from working-tree changes.                          |
-| `gspot explain bash/syntax` | Explain a check and its correction.                                        |
-| `gspot apply`               | Regenerate configuration after a policy change and resolve matching locks. |
-| `gspot install`             | Install the tools already selected and locked by the repository.           |
-
-A finding names its check and location. Follow its `help:` text, correct the input, and rerun
-the check. Project-wide tools can report an existing defect in an unchanged file when a change
-selects that project. Read the [finding guide](docs/src/content/docs/guides/you-got-a-finding.md)
-for selection, persistent exceptions, and correction commands.
-
-## Choose your checks
-
-The default level is `recommended`. `all` adds naming, layout, ordering, and abstraction
-preferences. Select it explicitly with `gspot set level all`, then `gspot apply`.
-
-This complete Bash policy includes a narrow exception for a variable consumed by another script:
+A complete policy can select one language:
 
 ```toml
 version = 1
 presets = ["bash"]
-
-[[ignore]]
-check = "bash/shellcheck"
-rule = "SC2034"
-paths = ["<script-path>"]
-reason = "These variables are read by the script that sources this file."
+level = "recommended"
 ```
 
-Replace `<script-path>` with the repository-relative Bash file. The check name selects the integration; `SC2034` selects the tool diagnostic. Apply the policy
-after editing it. Prefer a specific path and reason to disabling an entire check. Read
-[customization](docs/src/content/docs/guides/customize.md),
-[scopes](docs/src/content/docs/guides/scopes.md), and
-[profiles](docs/src/content/docs/guides/profiles.md) for larger repositories and shared policy.
+`recommended` is the default. `all` adds further naming, ordering, and style checks. Mandatory
+trivial-file and trivial-function rules remain enabled at both levels. Change policy with
+`gspot set` or `gspot ignore`; those commands apply their changes. Run `gspot apply` after
+editing `gspot.toml` directly. Do not edit generated files under `.gspot/`.
 
-## Adopt and remove
+Use [scopes](docs/src/content/docs/guides/scopes.md) for nested projects and
+[profiles](docs/src/content/docs/guides/profiles.md) to share policy between repositories.
+The [customization guide](docs/src/content/docs/guides/customize.md) covers settings and narrow exceptions.
 
-Init carries supported settings through their owning tools and identifies unsupported behavior
-that stays in the original configuration. Before replacing an owned file, lifecycle operations
-record original bytes and permissions for recovery. Preserve local recovery data until you no
-longer need those originals. Change policy through `gspot.toml` or the writing commands; do not
-edit managed output under `.gspot/`.
+## Daily commands
 
-Preview removal with `gspot uninstall --dry-run`; follow the
-[recovery guide](docs/src/content/docs/guides/uninstall.md) for retained edits. Uninstall restores an original only when its
-destination is absent or unchanged since installation. It preserves later edits, unowned files,
-`gspot.toml`, and recovery data. A fresh clone without local ownership records does not authorize
-deletion merely because a file matches a generated template.
+| Command | Purpose |
+| --- | --- |
+| `gspot check` | Run selected checks. |
+| `gspot check --staged` | Check staged content while preserving unstaged edits. |
+| `gspot check --changed` | Select affected checks from working-tree changes. |
+| `gspot install` | Install the repository's locked tools and selected hooks after cloning. |
+| `gspot doctor` | Diagnose missing tools, configuration drift, and check coverage. |
 
-`git commit --no-verify` bypasses local commit hooks. `git push --no-verify` bypasses the local
-push hook. Neither changes independently configured CI or server policy.
+An affected project check can report defects in unchanged files. Local hooks can be bypassed;
+[CI checks](docs/src/content/docs/guides/hooks-and-ci.md) run independently.
+For removal, preview `gspot uninstall --dry-run` and follow
+[restoration and recovery](docs/src/content/docs/guides/uninstall.md).
+If setup or a check cannot run, use the
+[troubleshooting guide](docs/src/content/docs/guides/troubleshooting.md) to diagnose the failure.
 
-## Support and help
+## Contribute
 
-Use `gspot list presets` to inspect available integrations and `gspot doctor` to investigate
-coverage, missing tools, and configuration drift. The
-[troubleshooting guide](docs/src/content/docs/guides/troubleshooting.md) explains common failures.
-The [standalone ESLint plugin](packages/eslint-plugin/README.md) also works without the CLI.
-
-Repository CI remains paused behind `GSPOT_CI_ENABLED`. Its configured cadence is affected PR,
-merge-queue, and main checks, with full platform and manual acceptance at release checkpoints or
-explicit dispatch. No CI run is implied by a local test result. Contributor commands live in the
-[build guide](docs/src/content/docs/guides/build.md). [Architecture](architecture/README.md) contains
-contributor design contracts. The project uses [Apache-2.0](LICENSE.md).
+Read the [build and testing guide](docs/src/content/docs/guides/build.md) and the
+[documentation conventions](docs/README.md). The [standalone ESLint plugin](packages/eslint-plugin/README.md)
+can also run without the CLI. The project uses [Apache-2.0](LICENSE.md).

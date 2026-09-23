@@ -1,6 +1,5 @@
 // The [[ignore]] filter, the inline gspot-ignore syntax, and the suppression census input.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { readSource } from '#cli/repository/tracked.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import type { IgnoreEntry } from '#cli/policy/types.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
@@ -23,7 +22,7 @@ function isEntryMatch(entry: IgnoreEntry, finding: Finding): boolean {
 
 function existingText(root: string, path: string): string {
     try {
-        return readFileSync(join(root, path), 'utf8');
+        return readSource(root, path).toString('utf8');
     } catch (error) {
         if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return '';
         throw error;

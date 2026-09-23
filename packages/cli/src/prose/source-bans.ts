@@ -1,6 +1,5 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // What a source file may not say to Vale: an in-text directive in Markdown, a block comment in SQL.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { extensionOf } from '#cli/platform/paths.ts';
@@ -44,14 +43,14 @@ function lineFindings(input: EngineInput, path: string, lines: string[]): Findin
  * @param input the engine input
  * @returns the findings
  */
-export function sourceBans(input: EngineInput): Promise<Finding[]> {
+export function sourceBans(input: EngineInput): Finding[] {
     const findings = input.files
         .filter(
             (file) =>
                 file.nature === 'source' && (MARKDOWN.has(extensionOf(file.path)) || SQL.has(extensionOf(file.path))),
         )
         .flatMap((file) =>
-            lineFindings(input, file.path, readFileSync(join(input.root, file.path), 'utf8').split('\n')),
+            lineFindings(input, file.path, readSource(input.root, file.path).toString('utf8').split('\n')),
         );
-    return Promise.resolve(findings);
+    return findings;
 }

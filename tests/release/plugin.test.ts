@@ -5,8 +5,7 @@ import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
 import { lstatSync, mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs';
 import { test, expect, describe } from 'bun:test';
-import { isReleaseTestWanted } from '#cli/platform/environment.ts';
-import { startRegistry } from '#tests/harness/registry/lifecycle.ts';
+import { startRegistry } from '#tests/support/registry/lifecycle.ts';
 import pluginPackage from '../../packages/eslint-plugin/package.json' with { type: 'json' };
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -76,7 +75,7 @@ const rule: TSESLint.RuleModule<string, readonly unknown[]> | undefined = plugin
 console.log(configs, rule);
 `;
 
-describe.skipIf(!isReleaseTestWanted())('the installed ESLint plugin', () => {
+describe('the installed ESLint plugin', () => {
     test(
         'exposes usable modules and declarations and enforces both levels',
         async () => {

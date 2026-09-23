@@ -26,7 +26,7 @@ export const PATH_CHARS = /^[\w./-]+$/u;
 export const TOKEN_SEPARATORS = /[\s`'"()[\],;:!?<>|*]+/u;
 
 /** A `mise run`, `bun run` or `npm run` invocation and the task it names. */
-export const RUN_TOKEN = /\b(?<runner>mise|bun|npm|pnpm) run (?<task>[\w:.-]+)/gu;
+export const RUN_TOKEN = /\b(?<runner>mise|bun|npm|pnpm|yarn) run (?<task>[\w:.-]+)/gu;
 
 /** Fence languages whose content is prose or placeholders, not paths. */
 export const FREE_TEXT_FENCES = ['text', 'plaintext', 'console', 'diff'];

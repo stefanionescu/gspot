@@ -19,7 +19,7 @@ function isSetting(line: string): boolean {
  * @param input the engine input
  * @returns the findings
  */
-export function xcconfigLines(input: EngineInput): Promise<Finding[]> {
+export function xcconfigLines(input: EngineInput): Finding[] {
     const findings = trackedEnding(input, ['.xcconfig']).flatMap((path) =>
         textOf(input, path)
             .split('\n')
@@ -38,7 +38,7 @@ export function xcconfigLines(input: EngineInput): Promise<Finding[]> {
                       ];
             }),
     );
-    return Promise.resolve(findings);
+    return findings;
 }
 
 /**
@@ -46,7 +46,7 @@ export function xcconfigLines(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function entitlementsPolicy(input: EngineInput): Promise<Finding[]> {
+export function entitlementsPolicy(input: EngineInput): Finding[] {
     const allowed = new Set(input.view.tool('xcode')['allowed_entitlements'] as string[] | undefined);
     const findings = trackedEnding(input, ['.entitlements']).flatMap((path) => {
         const text = textOf(input, path);
@@ -64,7 +64,7 @@ export function entitlementsPolicy(input: EngineInput): Promise<Finding[]> {
             })
             .toArray();
     });
-    return Promise.resolve(findings);
+    return findings;
 }
 
 /**
@@ -72,7 +72,7 @@ export function entitlementsPolicy(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function transportSecurity(input: EngineInput): Promise<Finding[]> {
+export function transportSecurity(input: EngineInput): Finding[] {
     const findings = trackedEnding(input, ['.plist']).flatMap((path): Finding[] => {
         const text = textOf(input, path);
         const found = ARBITRARY_LOADS.exec(text);
@@ -87,5 +87,5 @@ export function transportSecurity(input: EngineInput): Promise<Finding[]> {
             ),
         ];
     });
-    return Promise.resolve(findings);
+    return findings;
 }

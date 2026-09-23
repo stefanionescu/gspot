@@ -1,0 +1,198 @@
+rules:
+  - id: ios-keychain-accessible-always
+    pattern-either:
+      - pattern: kSecAttrAccessibleAlways
+      - pattern: kSecAttrAccessibleAfterFirstUnlock
+    message: Keychain accessibility permits access while the device is locked. Use
+      kSecAttrAccessibleWhenUnlockedThisDeviceOnly for sensitive data.
+    languages:
+      - swift
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-922
+      category: security
+  - id: ios-no-secrets-in-userdefaults
+    patterns:
+      - pattern: 'UserDefaults.$INSTANCE.set($VALUE, forKey: $KEY)'
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: (?i).*(token|password|secret|credential|session).*
+    message: >
+      Sensitive data stored in UserDefaults (unencrypted plist). Use the
+      Keychain for tokens, passwords, and credentials.
+    languages:
+      - swift
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-312
+      category: security
+  - id: ios-no-secrets-in-plist
+    patterns:
+      - pattern-either:
+          - pattern: Bundle.main.infoDictionary?[$KEY]
+          - pattern: 'Bundle.main.object(forInfoDictionaryKey: $KEY)'
+      - metavariable-regex:
+          metavariable: $KEY
+          regex: .*(Secret|Password|PrivateKey).*
+    message: >
+      Reading secrets from Info.plist: plist values are not encrypted. Use the
+      Keychain or environment-injected configuration.
+    languages:
+      - swift
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-312
+      category: security
+  - id: ios-hardcoded-api-key
+    pattern-regex: (sk-[a-zA-Z0-9]{20,}|eyJhbGciOi[A-Za-z0-9+/=]{20,}|AKIA[0-9A-Z]{16}|ghp_[a-zA-Z0-9]{36})
+    message: |
+      Hardcoded secret detected. Move credentials to a secure store.
+    languages:
+      - swift
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-798
+      category: security
+  - id: ios-hardcoded-url-with-credentials
+    pattern-regex: https?://[a-zA-Z0-9._-]+:[^@]+@[a-zA-Z0-9._-]+
+    message: >
+      URL with embedded credentials. Use a credential store instead of embedding
+      user:pass in URLs.
+    languages:
+      - swift
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-798
+      category: security
+  - id: ios-insecure-http-url
+    pattern-regex: http://(?!(?:localhost|127\.0\.0\.1|0\.0\.0\.0|\[::1\])(?=[:/\"\s]|$))
+    message: |
+      Insecure HTTP URL detected. Use HTTPS for all network communication.
+    languages:
+      - swift
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-319
+      category: security
+  - id: ios-unsafe-pointer-cast
+    pattern-either:
+      - pattern: UnsafeRawPointer(...)
+      - pattern: UnsafeMutablePointer<$T>(...)
+      - pattern: $X.withUnsafeMutableBytes(...)
+    message: >
+      Unsafe pointer operations bypass Swift memory safety. Use safe
+      alternatives unless performance-critical and audited.
+    languages:
+      - swift
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-787
+      category: security
+  - id: ios-weak-hash-algorithm
+    pattern-either:
+      - pattern: Insecure.MD5
+      - pattern: Insecure.SHA1
+      - pattern: CC_MD5(...)
+      - pattern: CC_SHA1(...)
+    message: |
+      Weak hash algorithm (MD5/SHA1). Use SHA-256 or stronger from CryptoKit.
+    languages:
+      - swift
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-328
+      category: security
+  - id: ios-no-uiwebview
+    pattern: UIWebView(...)
+    message: |
+      UIWebView is deprecated and insecure. Use WKWebView instead.
+    languages:
+      - swift
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-919
+      category: security
+  - id: ios-wkwebview-javascript-enabled
+    pattern: |
+      $CONFIG.preferences.javaScriptEnabled = true
+    message: >
+      WKWebView with JavaScript enabled. Ensure content is trusted or implement
+      proper CSP and input validation.
+    languages:
+      - swift
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-79
+      category: security
+  - id: ios-log-sensitive-data
+    patterns:
+      - pattern-either:
+          - pattern: print($X)
+          - pattern: NSLog($X)
+          - pattern: os_log($X, ...)
+          - pattern: Logger.$METHOD($X)
+      - metavariable-regex:
+          metavariable: $X
+          regex: (?i).*(token|password|secret|credential).*
+    message: >
+      Potentially logging sensitive data. Redact tokens, passwords, and
+      credentials before logging.
+    languages:
+      - swift
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-532
+      category: security
+  - id: ios-no-ats-exception-in-plist
+    pattern-regex: (?s)<key>NSAppTransportSecurity</key>.*<key>(NSAllowsArbitraryLoads|NSAllowsArbitraryLoadsInWebContent|NSAllowsArbitraryLoadsForMedia|NSExceptionDomains)</key>
+    message: >
+      App Transport Security exception detected in plist configuration. Keep ATS
+      enabled and remove exception keys unless explicitly approved.
+    languages:
+      - generic
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-319
+      category: security
+    paths:
+      include:
+        - '**/*.plist'
+  - id: ios-scripts-no-eval
+    patterns:
+      - pattern-either:
+          - pattern: eval(...)
+          - pattern: new Function(...)
+    message: >
+      eval()/new Function() in CI scripts risks arbitrary code execution. Use
+      static code paths.
+    languages:
+      - javascript
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-94
+      category: security
+  - id: ios-scripts-no-unquoted-shell-var-in-exec
+    pattern: execSync(`...${$VAR}...`)
+    message: >
+      Template literal interpolation in execSync() is a command injection
+      vector. Use execFileSync() with an argument array instead.
+    languages:
+      - javascript
+    severity: ERROR
+    metadata:
+      cwe:
+        - CWE-78
+      category: security

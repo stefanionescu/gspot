@@ -1,9 +1,13 @@
 import { prettierConfig, editorconfigOverrides } from '#cli/emit/format.ts';
+import { markdownlintRules } from '#cli/emit/markdownlint.ts';
+import { scopeIgnorePatterns } from '#cli/emit/ignore-patterns.ts';
+import { pathExpressions } from '#cli/presets/claims.ts';
 import { eslintRuleBlocks } from '#cli/emit/eslint.ts';
 // Render a preset template with the merged settings; prepend the generated-file header.
 import { Eta } from 'eta';
 import { styleNames } from '#cli/prose/vale.ts';
-import { readFileSync } from 'node:fs';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { readPackageManifest } from '#cli/repository/manifests.ts';
 import { stringify as stringifyYaml } from 'yaml';
 import { jsonText } from '#cli/emit/json-format.ts';
 import { readAsset } from '#cli/platform/assets.ts';
@@ -16,11 +20,9 @@ import { extensionOf, toPosix } from '#cli/platform/paths.ts';
 import { BLOCK_IGNORES, TOKEN_IGNORES } from '#cli/prose/prose-definitions.ts';
 import { TomlDate, stringify as stringifyToml } from 'smol-toml';
 import { GENERATED_HEADER_LINES, GENERATED_JSON_KEY } from '#cli/emit/markers-definitions.ts';
-import type { JsonFormat, PackageImports, TemplateInputs } from '#cli/emit/types.ts';
+import type { JsonFormat, TemplateInputs, EslintRuleBlock } from '#cli/emit/types.ts';
 
 const JSON_INDENT = 4;
-
-const JSON_WIDTH = 120;
 
 const HEADER_LINES_CHECKED = 3;
 
@@ -36,19 +38,9 @@ const JSON_EXTENSIONS = new Set(['.json', '.webmanifest']);
 
 const HTML_EXTENSIONS = new Set(['.md', '.html']);
 
-const eta = new Eta({ autoEscape: false, autoTrim: false, useWith: true, rmWhitespace: false, varName: 'it' });
+export const eta = new Eta({ autoEscape: false, autoTrim: false, useWith: true, rmWhitespace: false, varName: 'it' });
 
 const SLASH_COMMENT_EXTENSIONS = new Set(['.js', '.mjs', '.cjs', '.ts', '.mts', '.cts', '.jsonc', '.json5']);
-
-function readJsonFile(path: string, parse: (text: string) => unknown): unknown {
-    try {
-        return parse(readFileSync(path, 'utf8'));
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
-        const detail = error instanceof Error ? error.message : String(error);
-        throw new Error(`Cannot read configuration ${path}: ${detail}`, { cause: error });
-    }
-}
 
 function importTarget(target: unknown): string | undefined {
     if (typeof target === 'string') return target;
@@ -58,10 +50,14 @@ function importTarget(target: unknown): string | undefined {
 
 function packageAliases(root: string, prefix: string): Record<string, string> {
     const aliases: Record<string, string> = {};
-    const manifest = readJsonFile(join(root, prefix, 'package.json'), (text) => JSON.parse(text)) as
-        | PackageImports
-        | undefined;
-    const imports = Object.entries(manifest?.imports ?? {});
+    const files = openConfinedRoot(root);
+    const path = `${prefix}package.json`;
+    let imports: [string, unknown][];
+    try {
+        imports = files.stat(path) === undefined ? [] : Object.entries(readPackageManifest(root, path).imports ?? {});
+    } finally {
+        files.close();
+    }
     for (const [pattern, target] of imports) {
         const found = importTarget(target);
         if (found === undefined) continue;
@@ -76,7 +72,7 @@ function tsconfigAliases(session: Session, prefix: string): Record<string, strin
     const { root } = session;
     const aliases: Record<string, string> = {};
     const path = join(root, prefix, 'tsconfig.json');
-    const options = getTsconfig(path)?.options;
+    const options = getTsconfig(root, path)?.options;
     if (options === undefined) return aliases;
     const paths = Object.entries(options.paths ?? {});
     const inheritedBase = options['pathsBasePath'];
@@ -137,8 +133,27 @@ function knipEntries(session: Session, scope: string): string[] {
     });
 }
 
-/** The layout of generated JSON when no policy says otherwise. */
-export const SHIPPED_JSON_FORMAT: JsonFormat = { width: JSON_WIDTH, indent: JSON_INDENT };
+function structuralRuleBlocks(session: Session): EslintRuleBlock[] {
+    const blocks: EslintRuleBlock[] = [];
+    for (const selection of session.scopes.toSorted((a, b) => a.scope.path.length - b.scope.path.length)) {
+        for (const [language, pattern] of [
+            ['javascript', '**/*.{js,mjs,cjs,jsx}'],
+            ['typescript', '**/*.{ts,tsx,mts,cts,vue,svelte}'],
+        ] as const) {
+            const maxStatements =
+                selection.view.limit('trivial_statements', language) ?? selection.view.limit('trivial_statements');
+            blocks.push({
+                scope: selection.scope.path,
+                ...pathExpressions([pattern]),
+                rules: {
+                    'gspot/no-trivial-files': ['error', { maxStatements }],
+                    'gspot/no-trivial-functions': ['error', { maxStatements }],
+                },
+            });
+        }
+    }
+    return blocks;
+}
 
 /**
  * The header lines for a version.
@@ -208,8 +223,10 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
             .map((file) => file.path);
     return {
         prettierConfig: (targetPath) => prettierConfig(session, targetPath, view.extra('prettier')),
+        markdownlintRules: markdownlintRules(view),
+        scopeIgnorePatterns,
         editorconfigOverrides: () => editorconfigOverrides(session),
-        eslintPolicy: eslintRuleBlocks(session.policyFiles.policy),
+        eslintPolicy: [...structuralRuleBlocks(session), ...eslintRuleBlocks(session.policyFiles.policy)],
         isAll: session.policyFiles.policy.level === 'all',
         typescriptOptions:
             session.policyFiles.policy.level === 'all' ? ALL_COMPILER_OPTIONS : RECOMMENDED_COMPILER_OPTIONS,
@@ -226,6 +243,15 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
                 path: entry.scope.path,
                 presets: entry.selected.map((manifest) => manifest.preset.name),
             })),
+        presetScopes: (preset) =>
+            session.scopes
+                .filter((entry) => entry.view.presets.includes(preset))
+                .toSorted(
+                    (left, right) =>
+                        left.scope.path.split('/').length - right.scope.path.split('/').length ||
+                        left.scope.path.localeCompare(right.scope.path),
+                )
+                .map((entry) => ({ path: entry.scope.path, settings: entry.view.settings })),
         presets: view.presets,
         policy: session.policyFiles.policy,
         view,
@@ -245,7 +271,7 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
         toml: stringifyToml,
         yaml: stringifyYaml,
         tomlDate: TomlDate,
-        // A target written once for the repository asks about every scope; a target written for one scope asks about that scope.
+        // Repository-wide output includes nested presets. The configuration owner narrows per-scope output.
         has: (preset) =>
             view.presets.includes(preset) ||
             (selection.scope.path === '' &&
@@ -257,16 +283,6 @@ export function templateInputs(session: Session, selection: ScopeSelection, frag
         header: headerFor('x.toml', session.version),
         headerLines: headerLines(session.version),
     };
-}
-
-/**
- * Renders template text with inputs.
- * @param template the template text
- * @param inputs the template inputs
- * @returns the rendered text
- */
-export function templateText(template: string, inputs: TemplateInputs): string {
-    return eta.renderString(template, inputs);
 }
 
 /**
@@ -283,7 +299,7 @@ export function emitTarget(
     inputs: TemplateInputs,
     isHeaderWanted = true,
 ): string {
-    const rendered = templateText(readAsset(templatePath), { ...inputs, targetPath });
+    const rendered = eta.renderString(readAsset(templatePath), { ...inputs, targetPath });
     if (JSON_EXTENSIONS.has(extensionOf(targetPath))) {
         const format = { width: inputs.format.print_width, indent: inputs.format.indent_width };
         if (!isHeaderWanted) return jsonText(JSON.parse(rendered), format);
@@ -291,6 +307,5 @@ export function emitTarget(
     }
     const body = rendered.replace(LEADING_NEWLINES, '').trimEnd() + '\n';
     if (!isHeaderWanted) return body;
-    const ended = body.endsWith('\n') ? body : `${body}\n`;
-    return `${headerFor(targetPath, inputs.version)}${ended}`;
+    return `${headerFor(targetPath, inputs.version)}${body}`;
 }

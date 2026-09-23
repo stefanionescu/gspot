@@ -542,7 +542,7 @@ A release note tells an affected reader what changed, what the effect is, and
 whether action is required.
 
 Release notes are not implementation summaries. See
-[Document releases and lifecycle changes](#release-note).
+[Document releases and lifecycle changes](DOCS-SURFACES.md#document-releases-and-lifecycle-changes).
 
 ### Combining topic types
 

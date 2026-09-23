@@ -1,6 +1,6 @@
 # Rules Corpus
 
-This document decides the agent rule files: their layers and how they are assembled into a repository. It also decides how the merged corpus is repaired before it ships and how each rule links to the check that enforces it.
+This document decides the agent rule files: their layers and how they are assembled into a repository. It defines relevant instructions, selection, and validation; remaining work owns repair status.
 
 ## What ships
 
@@ -24,11 +24,12 @@ arranged by layer:
 | templates  | `templates/docs/`         | document templates                                                                                                                                                                                                                                                                     | offered once at init, never upgraded   |
 | project    | the repository's own      | whatever the team writes                                                                                                                                                                                                                                                               | never written by gspot                 |
 
-Each preset manifest names its files under `[rule_files]`. A file belongs to exactly one preset.
+Each preset manifest names its files under `[rule_files]`. A source file has one owner; multiple presets can select shared guidance without copying it.
 
 The agent layer tells the agent how to work in a repository; the code and prose layers say
-what the code and text must look like. The split matters because the agent files are installed
-unconditionally and the code files per preset.
+what the code and text must look like. The general agent, code, and prose layers are installed when rules are enabled.
+Other layers follow preset selection; installation does not make every guide required reading
+for every task.
 
 ## What belongs to one product
 
@@ -42,25 +43,6 @@ block, and gspot lints them as it lints any Markdown.
 The retired project templates remain in Git at `b553f9d`, under `rules/templates/project/`.
 Use that revision as the source when carrying the relevant material into its owning repository.
 
-## What the merge dropped and the repair restored
-
-A heading comparison between the four source corpora and the merged corpus found general
-content with no counterpart. The repair pass restored each into the file named.
-
-| Restored                                                                                          | Into                                                                                                                    |
-| ------------------------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------- |
-| Docker: image stack ownership, build contexts, CUDA, models, Hugging Face downloads               | the rule files of yap-text-inference; layering and cache discipline was already in `tool/docker/DOCKER.md`              |
-| Swift: networking and API clients                                                                 | `language/SWIFT.md` (the neutral rules), and the rule files of yap-swift-app (the layered version)                      |
-| General: verification and tests policy, once                                                      | `general/agent/WORKING.md`                                                                                              |
-| Static site: boundaries, build, routes, HTML, CSS and content naming, tests, and test data naming | `repository/static-site/STATIC-SITE.md`, `language/naming/HTML.md`, `language/naming/CSS.md`, `general/code/TESTING.md` |
-| The iOS and API architecture, Supabase deployment, inference vocabulary                           | the repository each came from                                                                                           |
-
-Both guards are clean as of 2026-09-18. The completeness check counted 7,616 source statements: 6,443 matched exactly or as duplicates, 255 at the fuzzy ratio, 354 listed in `DROPPED.md`, and 564 with a recorded reason. The reasons include the 48 statements the prose pass split into shorter ones. None was unresolved, and the check and its records were retired once that state was reached.
-
-Vale with the thirty `gspot` rules reports no findings over the 98 files. That pass changed 379 headings to sentence case, split 64 long list items and 28 long sentences and paragraphs, and stated 63 conditional modals as facts, with no rule dropped. Phase 6 owed code, not editing: the assembler and the corpus lint inside the binary, both under `packages/cli/src/rules/` now.
-
-The guard was mechanical: a completeness check normalized every statement (sentence or list item) in the four source corpora. Each had to appear in the merged corpus or a project template, or be listed in `rules/DROPPED.md` with a reason. The check ran in the gate of this repository until the state above was reached, then retired with its records.
-
 ## Layer boundary
 
 The general and language layers carry no architecture. The framework, library, tool, platform
@@ -71,22 +53,22 @@ team writes and gspot never touches.
 
 The corpus lint enforces the boundary with a word list per layer. A general or language file that names a directory layout, a service tier or a deployment target fails the corpus lint in this repository.
 
-## Repair pass
+## Instruction relevance
 
-The first editorial pass is done. The corruption residue is gone, the twelve cross-file contradictions are resolved, and the "only when the user asks" statements are one sentence in `WORKING.md`. The Express API and next-intl content is re-homed, the SQL examples match the SQL casing rule, and the cross-language casing decisions are written in `general/code/NAMING.md`. The missing general, language, and tool files exist. Each remaining item is a check in the gate of this repository, so the corpus cannot regress.
+Agent entry files are task indexes, not complete policy manuals. Keep the initial instructions
+short: how to select relevant guides, how to change managed policy, and the required local gate.
+Use readable lists or compact tables with one guide per entry. Do not pad every source line to
+match a cell containing an entire layer's paths.
 
-| Defect                                                                                                                                                                                                                                          | Fix                                                                                                                                                                                                      | Guard                                                                                               |
-| ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------- |
-| Six global substitutions damaged the source forks: `control` became `command`, `object` became `item`, `dynamic` became `configured`, `custom` became `project`, `package manager` became `package coordinator`, `base64` became `encodedBytes` | Read every file for the phrases (`access command`, `command flow`, `inversion of command`, `z.item(`, `configured SQL`, `configured import`, `package coordinator`, `encodedBytes`) and restore the word | Vale `gspot.corruption` existence rule over the corpus with those phrases                           |
-| 154 uses of `should`, plus `may`, `might`, `could`, `would`                                                                                                                                                                                     | Rewrite as an imperative or a statement of fact                                                                                                                                                          | Vale `gspot.modals`                                                                                 |
-| Title Case in H2 and below                                                                                                                                                                                                                      | Sentence case                                                                                                                                                                                            | Vale `gspot.headings`                                                                               |
-| Cross-file pointers (`see NAMING.md`)                                                                                                                                                                                                           | Restate the one sentence the block needs                                                                                                                                                                 | corpus lint: no link to another rule file                                                           |
-| The same rule stated in two layers                                                                                                                                                                                                              | Keep the lower layer's copy                                                                                                                                                                              | corpus lint: duplicate statement detection on normalized sentences                                  |
-| `DOCS.md` at 2,990 lines restates formatter and markdownlint decisions                                                                                                                                                                          | Cut to what an agent needs before the linter runs; the tools own the rest                                                                                                                                | size ceiling per file, 800 lines, with `DOCS.md`, `PYTHON.md`, `BASH.md` and `FASTAPI.md` baselined |
-| Rules that name a reference repository's paths or products                                                                                                                                                                                      | Replace with the concept                                                                                                                                                                                 | Vale `gspot.file-paths`, `docs/stale-paths`                                                         |
+Keep general working and writing principles concise. Read detailed code, documentation, and
+language guidance when the task touches that area. Do not require every change to read the full
+general corpus. Remove repeated instructions, narrated history, tautological examples, and
+formatting directions already owned by tools. Keep rules that explain a real decision.
 
-The pass is editorial work and lands in its own commits, one file at a time, each with the
-Vale run clean for that file.
+Generate supported agent entry files from one selection. Preserve authored text outside managed
+blocks. Separate files for separate agent integrations are valid; independently maintained copies
+of their shared instructions are not. Update the generator and corpus, then use apply to refresh
+installed copies. Never hand-edit `.gspot/` or generated blocks as the cleanup mechanism.
 
 ## Front matter
 
@@ -100,7 +82,7 @@ title: Python            # equals the H1
 ---
 ```
 
-## Rules say nothing about tooling
+## Rules describe guidance independently of installation
 
 A rule file states the rule and nothing else. It names no check and no enforcement state.
 It does not name gspot, an engine of gspot, or a key of `gspot.toml`, and it does not say that
@@ -114,8 +96,8 @@ inline code. What the gate enforces is the ledger's business ([06-enforcement-le
 ## Size
 
 No file exceeds 800 lines. A file that grows past the ceiling is split into siblings under the
-same preset (`language/python/TYPING.md` beside `language/PYTHON.md`), each self-contained, each
-opening with one sentence that names its siblings by title. Templates are project files and are
+same preset (`language/python/TYPING.md` beside `language/PYTHON.md`) only when distinct reader
+tasks justify the split. Remove repetition before splitting. Each guide states its own scope. Templates are project files and are
 not measured.
 
 ## Assembly
@@ -125,23 +107,25 @@ not measured.
 1. Selects the files for the selected presets, root, and every scope.
 2. Writes them under `[rules] directory` (default `.gspot/rules/`), keeping the layer folders.
 3. Removes files under that directory that no selected preset installs.
-4. Writes one managed block into `CLAUDE.md` and `AGENTS.md`, creating the files when absent:
+4. Writes the shared managed block into `AGENTS.md`, supported detected agent files, and
+   additional files configured in `[rules] agents`:
 
 ```markdown
 <!-- >>> gspot managed >>> -->
 # Engineering guidelines
 
 Read `.gspot/rules/general/agent/WORKING.md` and `.gspot/rules/general/prose/WRITING.md` first. Then read
-the guides for the files you change. A more specific layer wins over a general one.
+only the guides relevant to the task and files you change. A more specific layer wins over a general one.
 
-| Area | Guide |
-| --- | --- |
-| Naming, files and directories | `.gspot/rules/general/code/NAMING.md` |
-| Comments and documentation | `.gspot/rules/general/code/COMMENTS.md`, `.gspot/rules/general/prose/DOCS.md` |
-| TypeScript | `.gspot/rules/language/TYPESCRIPT.md`, `.gspot/rules/language/naming/TYPESCRIPT.md` |
-| Bash, hooks and tasks | `.gspot/rules/language/BASH.md` |
-| Next.js | `.gspot/rules/framework/nextjs/NEXTJS.md`, `.gspot/rules/framework/react/REACT.md` |
-| Zod | `.gspot/rules/library/zod/ZOD.md` |
+- Naming: `.gspot/rules/general/code/NAMING.md`
+- Comments: `.gspot/rules/general/code/COMMENTS.md`
+- Documentation: `.gspot/rules/general/prose/DOCS.md`
+- TypeScript: `.gspot/rules/language/TYPESCRIPT.md`
+- TypeScript naming: `.gspot/rules/language/naming/TYPESCRIPT.md`
+- Bash: `.gspot/rules/language/BASH.md`
+- Next.js: `.gspot/rules/framework/nextjs/NEXTJS.md`
+- React: `.gspot/rules/framework/react/REACT.md`
+- Zod: `.gspot/rules/library/zod/ZOD.md`
 
 Run `gspot check --staged` before committing. Change policy with `gspot set` or
 `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`. Do not use subagents or parallel agents unless asked in the conversation.
@@ -159,7 +143,7 @@ file fails the load with the near matches. `general/agent/WORKING.md` and
 `general/prose/WRITING.md` cannot be excluded while the block tells the reader to open them first.
 
 The block is written again on every `apply`, and text outside the markers is never read or moved.
-The block is a plain list: one line for each selected preset, with its rule files as links.
+The block is a compact task index with one guide per entry, grouped where that helps selection.
 
 ## The rules lint
 
@@ -168,8 +152,10 @@ the `[[check]]` entry `rules/lint` in the `gspot.toml` of this repository, at th
 over `rules/**`. Its code sits in `packages/cli/src/rules/`. Prose is no part of it: `prose/vale`
 reads the rule files like every other text.
 
-- Front matter holds `preset` and `title`. The folder says the rest, so a `layer` key is refused.
-- Every rule file is listed by one manifest. A file no manifest lists fails the lint.
+- Front matter holds `layer`, `preset`, and `title`. The layer agrees with the path and the title
+  agrees with the H1; do not require a metadata migration merely to remove a validated field.
+- Preset-specific files have a manifest owner. General agent, code, and prose files belong to
+  the general corpus. Shared selection does not require duplicated source files.
 - No file links to another rule file, and no file exceeds 800 lines.
 - A list item is a whole sentence. An item that stops at a comma or at `and` fails.
 - A section that describes checks of the level `all` carries the mark `<!-- level: all -->`, and
@@ -178,18 +164,13 @@ reads the rule files like every other text.
   runs those examples at the push stage.
 - No file names a tool or a library of another preset. The word list is built from the
   manifests. The words `quality/` and the names of the reference repositories are refused.
-- A rule name that a file names is on in the template of its preset, or the file says it is off.
-
-## Completeness
-
-The four source rule corpora were checked against the merged corpus statement by statement while the merge ran. Every statement had to survive in `rules/`, in the templates, or in a list
-of dropped statements with a reason. The state recorded above is the final one, and the check
-retired with the source corpora.
+- Instruction policy agrees with the selected checks and levels. Check identifiers and
+  implementation status belong in references and remaining work, not installed rule prose.
 
 ## What the corpus does not do
 
 - It does not describe the linters' configuration. The tools own their options; the rule says
-  the intent and names the check.
+  the intent. Check identifiers belong in the generated reference.
 - It does not enumerate directories. Layout belongs to the project layer.
 - It does not tell an agent to run commands the gate already runs. It says: run `gspot check
 --staged`.
@@ -204,8 +185,8 @@ A section of a rule file carries the level of the checks it describes, and the
 assembler leaves out a section above the level of the repository.
 
 A heading line is followed by `<!-- level: all -->` where its rules are taste. The
-assembler drops such a section at `recommended`. The lint fails a section that names a rule name of
-the `all` level and carries no mark. `REACT.md` names the file after its component.
+assembler drops such a section at `recommended`. Keep mandatory trivial-function and trivial-file guidance at both levels. Validate level
+selection against the policy owner without requiring check identifiers in rule prose. `REACT.md` names the file after its component.
 
 A unit test assembles `TYPESCRIPT.md` at both levels and compares the headings.
 
@@ -239,20 +220,16 @@ reference repositories.
 
 ### Acceptance K-65
 
-The block is a plain list: one line for each selected preset, with the paths of its
-rule files, then the check command and how policy changes.
-
-A list item holds the preset title and its files as links. No padding.
-
-The snapshot of the block for the selection of the app holds under 3 KB.
+Generate a compact task index with one guide per entry and no width padding. Include the
+required check command and how policy changes. Keep general initial instructions short and
+select detailed guidance by task. Verify selected paths, preserved authored text, readable source,
+and idempotent regeneration. Do not assert a fixed guide inventory or snapshot byte quota.
 
 ### Acceptance K-67
 
-The front matter of a rule file holds `preset` and `title`. The folder says the rest.
-
-`front-matter.ts` refuses the key. The managed block groups by the first folder.
-
-The rules lint fails a file with the key.
+Rule front matter holds `layer`, `preset`, and `title`. Validate these against the actual owner,
+path, and heading. The managed block derives its labels from validated metadata. Verify incorrect
+metadata and corrected input; no field-removal migration or compatibility parser is required.
 
 ### Acceptance K-279
 

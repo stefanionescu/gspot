@@ -4,25 +4,96 @@
 
 Read `.gspot/rules/general/agent/WORKING.md` and `.gspot/rules/general/prose/WRITING.md` first. Then read the guides for the files you change. A more specific layer wins over a general one.
 
-| Area                      | Guide                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| ------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| How to work here          | `.gspot/rules/general/agent/GIT.md`, `.gspot/rules/general/agent/PLANNING.md`, `.gspot/rules/general/agent/SUPPRESSIONS.md`, `.gspot/rules/general/agent/TALKING.md`, `.gspot/rules/general/agent/WORKING.md`                                                                                                                                                                                                                                                                                                                                              |
-| Code, everywhere          | `.gspot/rules/general/code/ACCESSIBILITY.md`, `.gspot/rules/general/code/CLI.md`, `.gspot/rules/general/code/COMMENTS.md`, `.gspot/rules/general/code/CONFIGURATION.md`, `.gspot/rules/general/code/DEPENDENCIES.md`, `.gspot/rules/general/code/ERRORS.md`, `.gspot/rules/general/code/GENERATED.md`, `.gspot/rules/general/code/LOGGING.md`, `.gspot/rules/general/code/NAMING-FILES.md`, `.gspot/rules/general/code/NAMING.md`, `.gspot/rules/general/code/SECRETS.md`, `.gspot/rules/general/code/SECURITY.md`, `.gspot/rules/general/code/TESTING.md` |
-| Writing and documentation | `.gspot/rules/general/prose/DOCS-CONTENT.md`, `.gspot/rules/general/prose/DOCS-FORMAT.md`, `.gspot/rules/general/prose/DOCS-MEDIA.md`, `.gspot/rules/general/prose/DOCS-REVIEW.md`, `.gspot/rules/general/prose/DOCS-SURFACES.md`, `.gspot/rules/general/prose/DOCS.md`, `.gspot/rules/general/prose/WRITING.md`                                                                                                                                                                                                                                           |
-| Bash                      | `.gspot/rules/language/BASH.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Bash Language             | `.gspot/rules/language/bash/LANGUAGE.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                   |
-| Bash Safety               | `.gspot/rules/language/bash/SAFETY.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| Bash Operations           | `.gspot/rules/language/bash/OPERATIONS.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                 |
-| Bash Naming               | `.gspot/rules/language/naming/BASH.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                     |
-| JavaScript                | `.gspot/rules/language/JAVASCRIPT.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| JavaScript Naming         | `.gspot/rules/language/naming/JAVASCRIPT.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Node                      | `.gspot/rules/runtime/node/NODE.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                        |
-| TypeScript                | `.gspot/rules/language/TYPESCRIPT.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                      |
-| TypeScript Naming         | `.gspot/rules/language/naming/TYPESCRIPT.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| Commit Messages           | `.gspot/rules/tool/commitlint/COMMITLINT.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                               |
-| YAML                      | `.gspot/rules/language/YAML.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                            |
-| Task Runner               | `.gspot/rules/tool/tasks/TASKS.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                         |
-| GitHub Actions            | `.gspot/rules/tool/github-actions/GITHUB-ACTIONS.md`                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
+How to work here:
+
+- `.gspot/rules/general/agent/GIT.md`
+- `.gspot/rules/general/agent/PLANNING.md`
+- `.gspot/rules/general/agent/SUPPRESSIONS.md`
+- `.gspot/rules/general/agent/TALKING.md`
+- `.gspot/rules/general/agent/WORKING.md`
+
+Code, everywhere:
+
+- `.gspot/rules/general/code/ACCESSIBILITY.md`
+- `.gspot/rules/general/code/CLI.md`
+- `.gspot/rules/general/code/COMMENTS.md`
+- `.gspot/rules/general/code/CONFIGURATION.md`
+- `.gspot/rules/general/code/DEPENDENCIES.md`
+- `.gspot/rules/general/code/ERRORS.md`
+- `.gspot/rules/general/code/GENERATED.md`
+- `.gspot/rules/general/code/LOGGING.md`
+- `.gspot/rules/general/code/NAMING-FILES.md`
+- `.gspot/rules/general/code/NAMING.md`
+- `.gspot/rules/general/code/SECRETS.md`
+- `.gspot/rules/general/code/SECURITY.md`
+- `.gspot/rules/general/code/TESTING.md`
+
+Writing and documentation:
+
+- `.gspot/rules/general/prose/DOCS-CONTENT.md`
+- `.gspot/rules/general/prose/DOCS-FORMAT.md`
+- `.gspot/rules/general/prose/DOCS-MEDIA.md`
+- `.gspot/rules/general/prose/DOCS-REVIEW.md`
+- `.gspot/rules/general/prose/DOCS-SURFACES.md`
+- `.gspot/rules/general/prose/DOCS.md`
+- `.gspot/rules/general/prose/WRITING.md`
+
+JavaScript:
+
+- `.gspot/rules/language/JAVASCRIPT.md`
+
+JavaScript Naming:
+
+- `.gspot/rules/language/naming/JAVASCRIPT.md`
+
+Node:
+
+- `.gspot/rules/runtime/node/NODE.md`
+
+Bash:
+
+- `.gspot/rules/language/BASH.md`
+
+Bash Language:
+
+- `.gspot/rules/language/bash/LANGUAGE.md`
+
+Bash Safety:
+
+- `.gspot/rules/language/bash/SAFETY.md`
+
+Bash Operations:
+
+- `.gspot/rules/language/bash/OPERATIONS.md`
+
+Bash Naming:
+
+- `.gspot/rules/language/naming/BASH.md`
+
+TypeScript:
+
+- `.gspot/rules/language/TYPESCRIPT.md`
+
+TypeScript Naming:
+
+- `.gspot/rules/language/naming/TYPESCRIPT.md`
+
+Commit Messages:
+
+- `.gspot/rules/tool/commitlint/COMMITLINT.md`
+
+YAML:
+
+- `.gspot/rules/language/YAML.md`
+
+Task Runner:
+
+- `.gspot/rules/tool/tasks/TASKS.md`
+
+GitHub Actions:
+
+- `.gspot/rules/tool/github-actions/GITHUB-ACTIONS.md`
+
 
 Run `gspot check --staged` before committing. Change policy with `gspot set` or `gspot ignore` (or by editing `gspot.toml`), then `gspot apply`; never edit files under `.gspot/`.
 

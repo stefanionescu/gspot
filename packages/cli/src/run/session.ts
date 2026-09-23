@@ -18,7 +18,7 @@ import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
  * @returns the session
  */
 export async function openSession(root: string, policyFiles: PolicyFiles = readPolicy(root)): Promise<Session> {
-    assertPolicyComplete(policyFiles.policy);
+    assertPolicyComplete(policyFiles);
     const manifests = presetManifests();
     const repo = await readRepository(
         root,

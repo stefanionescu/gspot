@@ -96,10 +96,8 @@ function build(targets: string[], out: string): void {
         execaSync(
             'bun',
             [
-                'build',
-                '--compile',
+                join(here, 'compile.ts'),
                 `--target=${target}`,
-                '--minify-syntax',
                 entry,
                 '--outfile',
                 outfile,

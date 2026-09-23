@@ -1,6 +1,5 @@
 // Findings from a tool that prints JSON: the manifest names where the list is and which field holds what.
 import type { Finding } from '#cli/output/finding.ts';
-import { UNPARSED_LIMIT } from '#cli/emit/markers-definitions.ts';
 import type { OutputFormat } from '#cli/presets/types.ts';
 
 const JSON_INDENT = 2;
@@ -17,7 +16,8 @@ function at(value: unknown, path: string | undefined): unknown {
 
 function listAt(value: unknown, path: string | undefined): unknown[] {
     const found = at(value, path);
-    return Array.isArray(found) ? found : [];
+    if (!Array.isArray(found)) throw new Error(`Required JSON report array ${path ?? '<root>'} is missing or invalid.`);
+    return found;
 }
 
 // Every chain of nodes under one node, nearest first: each key of the path names a list one level further down.
@@ -39,6 +39,8 @@ function firstLinePosition(finding: Finding, base: number, line: string | undefi
 
 function jsonFinding(shape: { check: string; help: string; output: OutputFormat }, sources: unknown[]): Finding {
     const { check, help, output } = shape;
+    if (sources.some((source) => source === null || typeof source !== 'object' || Array.isArray(source)))
+        throw new Error('The JSON report contains an invalid finding object.');
     const fields: Record<string, string | undefined> = output.fields ?? {};
     const one = (path: string): string | undefined =>
         sources.map((source) => text(at(source, path))).find((found) => found !== undefined);
@@ -48,7 +50,9 @@ function jsonFinding(shape: { check: string; help: string; output: OutputFormat 
         const joined = found.filter((part) => part !== '').join(' ');
         return joined === '' ? undefined : joined;
     };
-    const finding: Finding = { check, file: read('file') ?? '', message: read('message') ?? '', help, fixable: false };
+    const message = read('message');
+    if (message === undefined) throw new Error('The JSON report contains a finding without its mapped message.');
+    const finding: Finding = { check, file: read('file') ?? '', message, help, fixable: false };
     firstLinePosition(finding, output.line_base ?? 1, read('line'), read('column'));
     const rule = read('rule');
     if (rule !== undefined) finding.rule = rule;
@@ -61,17 +65,12 @@ function jsonFinding(shape: { check: string; help: string; output: OutputFormat 
  * @param output the output table of the manifest
  * @param stdout what the tool printed
  * @param help the fix text of the check
- * @returns the findings, or one finding that holds the text when it is not JSON
+ * @returns the findings from a valid report
  */
 export function parseJson(check: string, output: OutputFormat, stdout: string, help: string): Finding[] {
     const start = stdout.search(/[[{]/u);
-    if (start === -1) return [];
-    let parsed: unknown;
-    try {
-        parsed = JSON.parse(stdout.slice(start));
-    } catch {
-        return [{ check, file: '', message: stdout.trim().slice(0, UNPARSED_LIMIT), help, fixable: false }];
-    }
+    if (start === -1) throw new Error('The tool returned no JSON report.');
+    const parsed: unknown = JSON.parse(stdout.slice(start));
     const shape = { check, help, output };
     const keys = output.children === undefined ? [] : output.children.split('.');
     return listAt(parsed, output.items).flatMap((item) =>

@@ -1,3 +1,5 @@
+import { homedir } from 'node:os';
+import { isAbsolute, join } from 'node:path';
 import { HOOK_FILES } from '#cli/checks/integrity-definitions.ts';
 // The one place gspot reads the environment: every variable it honors has a function here.
 
@@ -41,14 +43,6 @@ export function miseHome(): string | undefined {
 }
 
 /**
- * True when GSPOT_RELEASE_TEST asks for the release test, which needs a registry and a built binary.
- * @returns whether the release test runs
- */
-export function isReleaseTestWanted(): boolean {
-    return process.env['GSPOT_RELEASE_TEST'] === '1';
-}
-
-/**
  * The environment for spawning tools, with Windows names normalized to uppercase.
  * @returns the variables as strings
  */
@@ -64,4 +58,16 @@ export function environmentVariables(): Record<string, string> {
 /** The supported Git hook that invoked this process. */
 export function invokingHook(): (typeof HOOK_FILES)[number] | undefined {
     return HOOK_FILES.find((name) => name === process.env['GSPOT_HOOK']);
+}
+
+/** The platform cache directory; relative environment overrides are invalid. */
+export function cacheHome(): string {
+    if (process.platform === 'darwin') return join(homedir(), 'Library', 'Caches');
+    const name = process.platform === 'win32' ? 'LOCALAPPDATA' : 'XDG_CACHE_HOME';
+    const override = process.env[name];
+    if (override !== undefined && override !== '') {
+        if (!isAbsolute(override)) throw new Error(`${name} must name an absolute directory.`);
+        return override;
+    }
+    return process.platform === 'win32' ? join(homedir(), 'AppData', 'Local') : join(homedir(), '.cache');
 }

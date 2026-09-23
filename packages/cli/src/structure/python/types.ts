@@ -16,8 +16,6 @@ export type PythonFunction = {
     path: string;
     name: string;
     node: Node;
-    isDecorated: boolean;
-    isTopLevel: boolean;
     /** The statements of the body, the docstring left out. */
     body: Node[];
 };

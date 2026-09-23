@@ -11,7 +11,7 @@ import type { ScriptFunction } from '#cli/structure/types.ts';
 export async function scriptFunctions(text: string): Promise<ScriptFunction[]> {
     const parser = await parserFor('bash');
     const tree = parser.parse(text);
-    if (tree === null) return [];
+    if (tree === null) throw new Error('The source parser returned no tree.');
     const lines = text.split('\n');
     try {
         return tree.rootNode.descendantsOfType('function_definition').flatMap((node) => {

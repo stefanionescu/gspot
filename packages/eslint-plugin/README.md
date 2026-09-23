@@ -14,8 +14,9 @@ import gspot from '@gspot/eslint-plugin';
 export default [gspot.configs.recommended];
 ```
 
-Recommended checks private environment access in client modules and duplicate barrel exports.
-Use `gspot.configs.all` to opt into naming, layout, ordering, and forwarding-function preferences.
+Recommended includes private environment access, duplicate barrel exports, and structural rules
+for trivial files and functions. These structural rules apply at both levels.
+Use `gspot.configs.all` to add layout, ordering, and import rules.
 All includes the recommended rules. Configure your TypeScript parser separately when checking
 TypeScript files.
 
@@ -39,6 +40,6 @@ it globally.
 
 The [plugin reference](https://gspot.dev/reference/plugin/no-trivial-functions/) describes each rule
 and its options. Individual rules remain available through `gspot.rules`, including alternative
-re-export and trivial-function policies that the bundled configurations do not enable together.
+re-export policies that require explicit selection.
 
 Licensed under Apache-2.0.

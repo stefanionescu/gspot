@@ -46,7 +46,7 @@ CREATE TABLE public.order_items (
 );
 
 CREATE POLICY users_can_view_own_order_items ON public.order_items
-    FOR SELECT TO authenticated USING (true);
+    FOR SELECT TO authenticated USING (user_id = (SELECT auth.uid()));
 ```
 
 ## Migration filenames

@@ -1,14 +1,15 @@
+import { commandArguments } from '#cli/policy/settings.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 // The OpenAPI document of an express service: it lints, and it matches the code that writes it.
 import { join } from 'node:path';
-import { readFileSync, rmSync } from 'node:fs';
+import { rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import { run } from '#cli/platform/spawn.ts';
-import { locateTool } from '#cli/platform/tool-probe.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { toolOutputDetail } from '#cli/run/broken-tool.ts';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 
-const TOOL_TIMEOUT_MS = 300_000;
 const SPECTRAL_LINE = /^(?<file>.+):(?<line>\d+):\d+ (?:error|warning) (?<rule>\S+) "(?<text>.*)"/u;
 
 function setting(input: EngineInput, table: string, key: string): string {
@@ -28,27 +29,28 @@ function finding(input: EngineInput, at: { file: string; line: number }, rule: s
 export async function openapiLint(input: EngineInput): Promise<Finding[]> {
     const document = setting(input, 'openapi', 'document');
     if (document === '') return [];
-    const binary = locateTool(input.root, 'spectral');
-    if (binary === undefined) throw new MissingToolError('Spectral is not installed.');
+    const files = openConfinedRoot(input.root, 'native');
+    try {
+        files.source(document);
+        if (files.read('.gspot/spectral.yaml') === undefined)
+            throw new Error('The Spectral configuration is missing. Run: gspot apply');
+    } finally {
+        files.close();
+    }
     const ruleset = join(input.root, '.gspot/spectral.yaml');
-    const result = await run([binary, 'lint', '--ruleset', ruleset, '--format', 'text', document], {
-        cwd: input.root,
-        timeoutMs: TOOL_TIMEOUT_MS,
-    });
+    const result = await runCheckCommand(
+        input,
+        ['spectral', 'lint', '--ruleset', ruleset, '--format', 'text', document],
+        {
+            cwd: input.root,
+        },
+    );
     const found = result.stdout.split('\n').flatMap((line): Finding[] => {
         const groups = SPECTRAL_LINE.exec(line.trim())?.groups;
         if (groups === undefined) return [];
-        return [
-            finding(
-                input,
-                { file: document, line: Number(groups['line']) },
-                groups['rule'] ?? 'spectral',
-                groups['text'] ?? '',
-            ),
-        ];
+        return [finding(input, { file: document, line: Number(groups['line']) }, groups['rule']!, groups['text']!)];
     });
-    if (result.code !== 0 && found.length === 0)
-        throw new Error(`Spectral failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
+    if (result.code !== 0 && found.length === 0) throw new Error(toolOutputDetail(result, 'Spectral failed'));
     return found;
 }
 
@@ -61,15 +63,19 @@ export async function openapiFresh(input: EngineInput): Promise<Finding[]> {
     const document = setting(input, 'openapi', 'document');
     const command = setting(input, 'openapi', 'produced_by');
     if (document === '' || command === '') return [];
-    const before = readFileSync(join(input.root, document));
-    const scratch = scratchCopy(input.session, [...input.session.repository.files.map((file) => file.path), document]);
+    const before = readSource(input.root, document);
+    const scratch = scratchCopy(
+        input.root,
+        [...input.files.map((file) => file.path), document],
+        input.scopeEntries.map((scope) => scope.path),
+    );
     try {
-        const result = await run(command.split(' '), { cwd: scratch, timeoutMs: TOOL_TIMEOUT_MS });
+        const result = await runCheckCommand(input, commandArguments(command), { cwd: scratch });
         if (result.code !== 0)
             throw new Error(
                 `The command that writes the OpenAPI document failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,
             );
-        const after = readFileSync(join(scratch, document));
+        const after = readSource(scratch, document);
         if (before.equals(after)) return [];
         return [
             finding(

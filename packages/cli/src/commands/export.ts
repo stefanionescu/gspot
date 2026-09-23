@@ -12,6 +12,10 @@ export function registerExport(program: Command): void {
     program
         .command('export <file>')
         .description('Write a profile from the policy of this repository, without anything that names a path')
+        .addHelpText(
+            'after',
+            '\nEffects:\nWrites a reusable profile to the requested file from the current policy. Path-specific settings are omitted and reported. The repository policy remains unchanged.\n\nExit codes:\n0: the profile was written. 2: invalid input or inability to complete the request.\n\nExample:\ngspot export team.toml',
+        )
         .action(async (file: string, _flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             await printCommand(() => exportCommand(directoryOf(global), file), global);

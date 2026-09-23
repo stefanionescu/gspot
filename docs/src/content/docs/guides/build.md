@@ -6,10 +6,10 @@ sidebar:
 ---
 
 Run these commands from the repository root with Git and mise 2026.8.8 or later installed.
-The repository pins Bun and Node through mise.
+Complete the [source installation](/guides/install/) first. The repository pins Bun and Node
+through mise. Routine tasks do not install native check tools automatically.
 
 ```shell
-mise run repo:setup
 mise run build
 mise run build:plugin
 ```
@@ -22,27 +22,46 @@ The plugin build runs independently of the CLI build.
 
 ## Run tests
 
+Run the suites relevant to your change from the repository root:
+
 ```shell
+mise run check:types
 mise run test
-mise run test:integration
-mise run test:acceptance
-mise run test:coverage
+mise run docs:build
 ```
 
-`mise run test` runs CLI unit tests and plugin tests. Integration and acceptance tasks
-select their existing test directories. Shared timeouts and other Bun settings belong in
-`bunfig.toml`. Direct `bun test` uses broader discovery, including integration, acceptance,
-and release files. Coverage measurement helps identify missing behavioral tests; it has no
-fixed percentage gate.
+`test` runs the unit and integration suites using the development prerequisites and installed
+workspace dependencies. Use `test:unit` or `test:integration` to select one suite.
 
-`mise run test:release` enables the release opt-in for that task. Build the required artifacts
-before running it. A skipped release suite is
-not release acceptance. Candidate acceptance requires the unit, integration, acceptance,
-and explicitly enabled release suites, with platform gaps recorded.
+Native compatibility and source acceptance require their pinned external tools. Install those
+tools with `mise install`, then run the explicit suites. These suites can download dependencies:
 
-The docs build copies `gspot.schema.json` into its output for editor downloads. Regenerate
-and validate that root schema with `mise run generate:schema` and
-`mise run generate:schema -- --check`.
+```shell
+mise run test:native
+mise run test:acceptance
+```
+
+The acceptance runner builds the plugin and serves it from an isolated local registry; tool
+dependencies use the configured npm registry. Output streams while the suite runs.
+The runner removes its registry after failure, timeout, or interruption. Select acceptance cases through that runner:
+
+```shell
+mise run test:acceptance -- ./acceptance/presets/vite.test.ts
+```
+
+Use `mise run test:coverage` to run the unit and integration suites with coverage measurement.
+There is no fixed coverage-percentage gate. Jest supplies lint rules for `bun:test`; its native
+coverage command does not run Bun tests. Direct `bun test` discovers the broader test tree,
+including suites that require the acceptance runner or release opt-in.
+
+Run [installed-package verification](#validate-packages-locally) separately from source tests.
+The release fixture temporarily removes a shared parser asset to verify binary independence;
+overlapping it with source tests causes unrelated failures.
+
+Regenerate the editor schema with `mise run generate:schema`. Check freshness with
+`mise run generate:schema -- --check`. The docs build copies the schema into the site.
+See the [documentation conventions](https://github.com/stefanionescu/gspot/blob/main/docs/README.md)
+for example, reference, and link validation.
 
 ## Build every target
 
@@ -102,37 +121,19 @@ selected local registry during local validation.
 
 ## Repository acceptance
 
-Use mise 2026.8.8 or newer for the repository task definitions. The root declares this minimum
-because its generated tool pins live in a native mise fragment.
+Install locked check dependencies with `mise run repo:install-checks`. Use `mise run doctor`
+to diagnose the environment. Run repository checks with `mise run gspot:check`; append
+`-- --stage manual` to include manual-stage checks. These checks are separate from the tests.
 
-Run the suites relevant to a change:
+The authored CI workflow owns repository automation. This checkout omits `[ci]` from
+`gspot.toml`, so apply does not generate a second workflow. Repository CI is paused behind
+`GSPOT_CI_ENABLED`; local test results do not imply a CI run.
 
-```shell
-mise run check:types
-mise run test:coverage
-mise run test:integration
-mise run test:acceptance
-mise run docs:build
-```
-
-The `test:coverage` task includes coverage measurement. It has no blanket coverage threshold.
-`mise run gspot:check` checks the repository; append `-- --stage manual` for the manual checks.
-`mise run doctor` diagnoses the installed environment. Install matching locked tool
-dependencies with `mise run repo:install-checks` before these checks.
-
-The authored `ci.yml` owns repository checks. This checkout omits `[ci]` from `gspot.toml` so
-apply does not create a second workflow. Generated GitHub and GitLab workflows remain available
-to configured consumer repositories.
-
-CI remains paused unless the owner sets the repository variable `GSPOT_CI_ENABLED` to `true`.
-After re-enablement, ordinary pull requests, merge queues, and main pushes run affected checks.
+When enabled, affected checks run for pull requests, merge queues, and main pushes.
 A full dispatch or release checkpoint runs the Linux, macOS, and Windows acceptance matrix,
-manual checks, and the documentation build. The release workflow waits for acceptance before
-building distribution artifacts. Installed-package journeys use those artifacts before any
-publication. No path filter suppresses the affected-check job for documentation-only changes.
-
-Local execution on one operating system does not establish acceptance on the other platforms.
-Cold and warm CI timings require actual runs after the owner re-enables CI.
+manual checks, and documentation build. The release workflow validates installed packages
+before publication. Local execution and cross-compilation do not establish native acceptance
+on other platforms.
 
 ## Released documentation and rollback
 
@@ -151,8 +152,8 @@ ownership of `gspot.dev` before any DNS change. The build has read-only access; 
 protected deployment job receives Pages and identity-token write permissions. This follows
 [GitHub's custom Pages workflow contract](https://docs.github.com/en/pages/getting-started-with-github-pages/using-custom-workflows-with-github-pages).
 
-CI and Pages remain gated separately by `GSPOT_CI_ENABLED` and `GSPOT_PAGES_ENABLED`. The current
-work does not set either variable, configure the external environment, deploy, or change DNS.
+CI and Pages are gated separately by `GSPOT_CI_ENABLED` and `GSPOT_PAGES_ENABLED`. Enabling
+repository checks does not authorize a site deployment.
 
 For a content rollback after launch, identify the previous successful site run and retain its
 artifact and `source.json`. Select **Run workflow** on the site workflow with its recorded
@@ -162,4 +163,4 @@ pinned runtime and frozen lock, and requests protected-environment approval befo
 This exact-source route also works after artifact retention expires. Do not roll back DNS for
 an ordinary content defect. Verify the resulting page and recorded revision after deployment.
 
-A live deployment and rollback have not been exercised while CI and external actions are paused.
+Verify the deployed version and a rollback before treating the release procedure as operational.

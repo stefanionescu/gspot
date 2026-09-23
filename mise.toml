@@ -1,5 +1,13 @@
 min_version = "2026.8.8"
 
+[settings]
+# Repository tasks execute the CLI source before a release exists.
+disable_tools = ["github:stefanionescu/gspot"]
+
+# Tasks use installed tools; native provisioning is an explicit development step.
+[settings.task]
+run_auto_install = false
+
 [settings.npm]
 package_manager = "npm"
 

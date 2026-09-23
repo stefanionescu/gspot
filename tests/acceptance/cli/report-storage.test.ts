@@ -12,8 +12,39 @@ import {
     existsSync,
 } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/harness/planted.ts';
+import { run } from '#tests/support/cli/planted.ts';
 import type { RunReport } from '#cli/output/report-types.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+
+test.each([{ flags: ['--stage', 'message'] }, { flags: ['--dry-run'] }])(
+    'staged $flags preserves the previous reports',
+    async ({ flags }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, {
+            'gspot.toml': `version = 1\npresets = []\n[[check]]\nname = "project/commit"\npaths = ["source.txt"]\nstage = "commit"\ncommand = ${JSON.stringify([process.execPath, '-e', 'process.exitCode=0'])}\n`,
+            'source.txt': 'source',
+            '.gitignore': '.gspot/report.*\n.gspot/ownership.json\n.gspot/recovery/\n',
+        });
+        for (const args of [
+            ['init', '-q'],
+            ['add', '.'],
+        ])
+            expect(runBlocking(['git', ...args], { cwd: sandbox.path }).code).toBe(0);
+        const initial = await run(sandbox.path, ['check', '--stage', 'commit', '--no-cache']);
+        expect(initial.code, initial.stdout + initial.stderr).toBe(0);
+        const paths = ['report.json', 'report.sarif', 'report.codequality.json'].map((name) =>
+            join(sandbox.path, '.gspot', name),
+        );
+        const previous = paths.map((path) => readFileSync(path));
+        const checked = await run(sandbox.path, ['check', '--staged', '--no-cache', '--json', ...flags]);
+        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+        expect(checked.stderr).not.toContain('Could not write');
+        expect((JSON.parse(checked.stdout) as RunReport).checks[0]?.check).toBe(
+            flags.some((flag) => flag === 'message') ? undefined : 'project/commit',
+        );
+        expect(paths.map((path) => readFileSync(path))).toEqual(previous);
+    },
+);
 
 test.skipIf(process.platform === 'win32')(
     'a read-only report directory preserves CLI findings and verdict',
@@ -72,7 +103,7 @@ test.each(['directory', 'report', 'cache'])(
         const result = await run(sandbox.path, ['check', '--json', ...(target === 'cache' ? [] : ['--no-cache'])]);
         if (target === 'directory') {
             expect(result.code, result.stdout + result.stderr).toBe(2);
-            expect(result.stderr).toContain('Open parent directory');
+            expect(result.stderr).toContain('Unsafe lifecycle parent');
         } else {
             expect(result.code, result.stdout + result.stderr).toBe(1);
             expect((JSON.parse(result.stdout) as RunReport).checks[0]?.findings[0]?.message).toBe('Exact finding');
@@ -155,6 +186,10 @@ await import(${JSON.stringify(cli)});
     else expect((JSON.parse(published) as RunReport).exitCode).toBe(0);
     const pending = JSON.parse(readFileSync(join(sandbox.path, '.gspot/ownership.json'), 'utf8'));
     expect(pending.pending[0].path).toBe('.gspot/report.json');
+    expect(pending.pending.map((entry: { path: string }) => entry.path)).toEqual([
+        '.gspot/report.json',
+        '.gspot/report.sarif',
+    ]);
     const retry = await run(sandbox.path, ['check', '--json']);
     expect(retry.code, retry.stdout + retry.stderr).toBe(0);
     expect(JSON.parse(readFileSync(join(sandbox.path, '.gspot/report.json'), 'utf8'))).toEqual(
@@ -222,7 +257,7 @@ test('SARIF identifies missing execution separately from a completed scan with n
         'source.txt': 'input\n',
     });
     const checked = await run(sandbox.path, ['check', '--json', '--no-cache']);
-    expect(checked.code, checked.stdout + checked.stderr).toBe(1);
+    expect(checked.code, checked.stdout + checked.stderr).toBe(2);
     const report = JSON.parse(checked.stdout) as RunReport;
     expect(report.checks[0]?.status).toBe('missing');
     const sarif = JSON.parse(readFileSync(join(sandbox.path, '.gspot/report.sarif'), 'utf8'));

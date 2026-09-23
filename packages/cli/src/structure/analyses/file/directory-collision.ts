@@ -8,7 +8,7 @@ import { directoryOf, directoryTree, stemOf } from '#cli/structure/directories.t
  * @returns the findings
  */
 export const fileDirectoryCollision: Analysis = (context) => {
-    const tree = directoryTree(context.input.session.repository.files);
+    const tree = directoryTree(context.input.files);
     const findings = context.files.flatMap((file) => {
         const stem = stemOf(file.path);
         const siblings = tree.get(directoryOf(file.path)) ?? [];
@@ -22,5 +22,5 @@ export const fileDirectoryCollision: Analysis = (context) => {
             ),
         ];
     });
-    return Promise.resolve(findings);
+    return findings;
 };

@@ -4,7 +4,14 @@ import * as linguistLanguages from 'linguist-languages';
 import { SHEBANG_INTERPRETERS } from '#cli/lifecycle/patterns-definitions.ts';
 import { baseName, extensionOf } from '#cli/platform/paths.ts';
 import type { TreeFacts, ManifestFacts, TrackedFile } from '#cli/repository/types.ts';
-import type { Manifest, LinguistEntry, Proposal, UnknownLanguage } from '#cli/presets/types.ts';
+import type { Manifest, Proposal, UnknownLanguage } from '#cli/presets/types.ts';
+
+type LinguistEntry = {
+    extensions?: readonly string[];
+    type?: string;
+    filenames?: readonly string[];
+    aliases?: readonly string[];
+};
 
 const SHEBANG_TAG = 'shebang:';
 const GLOB_CHARS = /[*?{]/u;
@@ -40,7 +47,12 @@ function dependencyMap(facts: ManifestFacts[], scope: string): Map<string, strin
 }
 
 function treeFacts(files: TrackedFile[], facts: ManifestFacts[], scope: string): TreeFacts {
-    const candidates = files.filter((file) => scope === '' || file.path.startsWith(`${scope}/`));
+    const candidates = files.filter(
+        (file) =>
+            file.nature === 'source' &&
+            !file.path.split('/').some((part) => part.toLowerCase() === '.gspot') &&
+            (scope === '' || file.path.startsWith(`${scope}/`)),
+    );
     const extensionCounts = new Map<string, number>();
     const names = new Set<string>();
     const shebangs = new Set<string>();
@@ -100,7 +112,11 @@ function defaultEvidence(manifest: Manifest, tree: TreeFacts): string | undefine
     return manifest.preset.default && tree.scope === '' ? 'every repository' : undefined;
 }
 
-const EVIDENCE = [filenameEvidence, dependencyEvidence, shebangEvidence, pathEvidence, defaultEvidence];
+function tagEvidence(manifest: Manifest, tree: TreeFacts): string | undefined {
+    return tree.candidates.find((file) => manifest.detect.tags.some((tag) => file.tags.includes(tag)))?.path;
+}
+
+const EVIDENCE = [filenameEvidence, dependencyEvidence, shebangEvidence, tagEvidence, pathEvidence, defaultEvidence];
 
 function proposalFor(manifest: Manifest, tree: TreeFacts): Proposal | undefined {
     const { preset } = manifest;

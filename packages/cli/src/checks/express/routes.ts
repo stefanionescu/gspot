@@ -9,11 +9,11 @@ import { scopeImports } from '#cli/structure/imports.ts';
  * @param input the engine input
  * @returns the findings
  */
-export function routesTested(input: EngineInput): Promise<Finding[]> {
+export function routesTested(input: EngineInput): Finding[] {
     const tool = input.view.tool('express');
     const routes = tool['route_glob'] as string[];
     const tests = tool['test_glob'] as string[];
-    if (routes.length === 0 || tests.length === 0) return Promise.resolve([]);
+    if (routes.length === 0 || tests.length === 0) return [];
     const isRoute = pathMatcher(routes);
     const isTest = pathMatcher(tests);
     const index = scopeImports(input);
@@ -24,14 +24,12 @@ export function routesTested(input: EngineInput): Promise<Finding[]> {
             !isTest(local(path)) &&
             [...(index.importers.get(path) ?? [])].every((importer) => !isTest(local(importer))),
     );
-    return Promise.resolve(
-        untested.map((path) => ({
-            check: input.spec.name,
-            file: path,
-            line: 1,
-            rule: 'untested-route',
-            message: `No test in this scope imports ${local(path)}.`,
-            fixable: false,
-        })),
-    );
+    return untested.map((path) => ({
+        check: input.spec.name,
+        file: path,
+        line: 1,
+        rule: 'untested-route',
+        message: `No test in this scope imports ${local(path)}.`,
+        fixable: false,
+    }));
 }

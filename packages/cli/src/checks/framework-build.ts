@@ -9,8 +9,6 @@ import { scratchCopy } from '#cli/run/fixers.ts';
 
 const SHOWN_LINES = 3;
 const TSC_LINE = /^(?<file>[^(]+)\((?<line>\d+),(?<column>\d+)\): error (?<rule>TS\d+): (?<text>.*)$/u;
-// A Next.js before 15.5 has no typegen command and reads the word as a project folder.
-const NO_TYPEGEN = ['Invalid project directory', 'unknown command'];
 
 function inScope(input: EngineInput, path: string): string {
     return input.scope === '' ? path : `${input.scope}/${path}`;
@@ -35,8 +33,7 @@ async function writeFrameworkTypes(input: EngineInput): Promise<void> {
         env: { CI: '1' },
     });
     const said = `${result.stdout}${result.stderr}`;
-    const isAbsent = NO_TYPEGEN.some((phrase) => said.includes(phrase));
-    if (!isAbsent && result.code !== 0) throw new Error(`The next typegen command failed: ${lastLines(said)}`);
+    if (result.code !== 0) throw new Error(`The next typegen command failed: ${lastLines(said)}`);
 }
 
 function typeFinding(input: EngineInput, line: string): Finding[] {
@@ -45,11 +42,11 @@ function typeFinding(input: EngineInput, line: string): Finding[] {
     return [
         {
             check: input.spec.name,
-            file: inScope(input, groups['file'] ?? ''),
+            file: inScope(input, groups['file']!),
             line: Number(groups['line']),
             column: Number(groups['column']),
-            rule: groups['rule'] ?? 'types',
-            message: groups['text'] ?? '',
+            rule: groups['rule']!,
+            message: groups['text']!,
             fixable: false,
         },
     ];
@@ -62,10 +59,11 @@ function typeFinding(input: EngineInput, line: string): Finding[] {
  */
 export async function frameworkTypes(input: EngineInput): Promise<Finding[]> {
     const scratch = scratchCopy(
-        input.session,
-        input.session.repository.files.map((file) => file.path),
+        input.root,
+        input.files.map((file) => file.path),
+        input.scopeEntries.map((scope) => scope.path),
     );
-    const isolated = { ...input, root: scratch, session: { ...input.session, root: scratch } };
+    const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
     try {
         await writeFrameworkTypes(isolated);
         const cwd = join(scratch, input.scope);
@@ -87,10 +85,11 @@ export async function frameworkTypes(input: EngineInput): Promise<Finding[]> {
  */
 export async function frameworkBuild(input: EngineInput): Promise<Finding[]> {
     const scratch = scratchCopy(
-        input.session,
-        input.session.repository.files.map((file) => file.path),
+        input.root,
+        input.files.map((file) => file.path),
+        input.scopeEntries.map((scope) => scope.path),
     );
-    const isolated = { ...input, root: scratch, session: { ...input.session, root: scratch } };
+    const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
     try {
         const cwd = join(scratch, input.scope);
         const flags = (input.view.tool('next')['build_flags'] as string[] | undefined) ?? [];

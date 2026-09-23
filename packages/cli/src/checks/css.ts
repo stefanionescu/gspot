@@ -1,7 +1,6 @@
+import { readSource } from '#cli/repository/tracked.ts';
 import { parse } from 'postcss';
 // CSS modules against the code that imports them: every class defined is read, and every class read is defined.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { parse as parseScss } from 'postcss-scss';
@@ -86,16 +85,16 @@ export function readClasses(text: string, binding: string): string[] {
  * @param input the engine input
  * @returns the findings
  */
-export function cssModuleUsage(input: EngineInput): Promise<Finding[]> {
+export function cssModuleUsage(input: EngineInput): Finding[] {
     const paths = input.files.filter((file) => file.nature === 'source').map((file) => file.path);
     const code = paths
         .filter((path) => CODE_SUFFIX.test(path))
-        .map((path) => ({ path, text: readFileSync(join(input.root, path), 'utf8') }));
+        .map((path) => ({ path, text: readSource(input.root, path).toString('utf8') }));
     const findings: Finding[] = [];
     const sheets = paths.filter((path) => MODULE_SUFFIX.test(path));
     for (const sheet of sheets) {
-        const defined = definedClasses(readFileSync(join(input.root, sheet), 'utf8'), sheet);
+        const defined = definedClasses(readSource(input.root, sheet).toString('utf8'), sheet);
         findings.push(...sheetFindings(input, sheet, defined, code));
     }
-    return Promise.resolve(findings);
+    return findings;
 }

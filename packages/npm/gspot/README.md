@@ -1,10 +1,14 @@
 # gspot
 
+CLI to lint and enforce rules for LLM generated codebases.
+
 This package launches the gspot binary selected for your operating system, architecture, and
 Linux C library. It requires Node.js 18 or newer and Git on `PATH`.
 
 The executable arrives as an optional dependency. Keep optional dependencies enabled.
 Installation works with lifecycle scripts disabled.
+
+From the repository root, preview the proposed file and hook changes before accepting:
 
 ```shell
 gspot init

@@ -20,7 +20,9 @@ Rules that hold because the code runs on Node, whatever language it is written i
 
 - Use APIs the declared Node version supports. The version is a fact about the project, stated in
   one place, not repeated in prose.
-- `process`, `Buffer` and the Node built-ins are available. Browser globals are not.
+- `process`, `Buffer`, and Node built-ins are available. Node also provides version-specific
+  [web-compatible globals](https://nodejs.org/api/globals.html), including `fetch`.
+  DOM globals such as `window` and `document` require a browser environment.
 - Read configuration through one module that owns environment access. Do not read `process.env`
   from arbitrary files.
 

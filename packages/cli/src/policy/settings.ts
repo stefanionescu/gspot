@@ -1,4 +1,6 @@
+import { parseShell } from '@yarnpkg/parsers';
 import { scopeAncestors } from '#cli/repository/scopes.ts';
+import { COVERAGE_STRICT, TOOL_DEADLINE } from '#cli/run/execution-definitions.ts';
 // The settings surface: every key the selection exposes, its direction, default, and current value with its source.
 import * as messages from '#cli/policy/messages.ts';
 import { rootSettingSchemas, integrationSettingSchemas } from '#cli/policy/schema.ts';
@@ -21,7 +23,7 @@ const LANGUAGE_GROUP_TABLES = new Set(['limits', 'naming']);
 
 const NAMING_SCALARS = ['max_chars', 'max_words', 'case'] as const;
 
-const OVERRIDING_KINDS = new Set(['framework', 'platform', 'library']);
+const OVERRIDING_KINDS = new Set(['framework', 'platform', 'library', 'database']);
 
 function isReasoned(value: unknown): value is Reasoned<unknown> {
     return (
@@ -92,10 +94,16 @@ function addDefault(surface: ExposedSettings, manifest: Manifest, spec: SettingS
         JSON.stringify(previous.value) !== JSON.stringify(spec.default);
     const isList = surface.specs.get(spec.name)?.kind === 'list';
     if (!isList && isConflict && !OVERRIDING_KINDS.has(manifest.preset.kind)) {
-        surface.problems.push(messages.conflictingScalars(spec.name, previous.preset, manifest.preset.name));
+        surface.problems.push({
+            key: spec.name,
+            message: messages.conflictingScalars(spec.name, previous.preset, manifest.preset.name),
+        });
         return;
     }
-    surface.defaults.set(spec.name, { value: spec.default, preset: manifest.preset.name });
+    surface.defaults.set(spec.name, {
+        value: isList ? mergeValue(spec, previous?.value, spec.default) : spec.default,
+        preset: manifest.preset.name,
+    });
 }
 
 function languageSpec(
@@ -166,6 +174,7 @@ function namingValue(policy: Partial<Policy>, rest: string[]): WrittenValue | un
 function mergeValue(spec: SettingSpec, current: unknown, found: unknown): unknown {
     if (spec.kind === 'list' && Array.isArray(current) && Array.isArray(found))
         return [...new Set([...(current as unknown[]), ...(found as unknown[])])];
+    if (spec.kind === 'table' && spec.direction === 'per-rule') return { ...asRecord(current), ...asRecord(found) };
     return found;
 }
 
@@ -232,12 +241,16 @@ export function writtenKeys(policy: Partial<Policy>): string[] {
 }
 
 /**
- * Builds the surface from the selected manifests in selection order; later framework and platform presets override scalar defaults.
+ * Builds the surface in selection order; framework, platform, library, and database presets override scalar defaults.
  * @param selected the manifests of the selection, in order
  * @returns the specs, their defaults and the conflicts found on the way
  */
 export function exposedSettings(selected: Manifest[]): ExposedSettings {
     const surface: ExposedSettings = { specs: new Map(), defaults: new Map(), problems: [] };
+    for (const spec of [TOOL_DEADLINE, COVERAGE_STRICT]) {
+        surface.specs.set(spec.name, spec);
+        surface.defaults.set(spec.name, { value: spec.default, preset: 'gspot' });
+    }
     for (const [name, schema] of Object.entries({
         ...rootSettingSchemas,
         ...integrationSettingSchemas,
@@ -344,4 +357,24 @@ export function listSettings(surface: ExposedSettings, policy: Policy, scope?: s
         .toArray()
         .toSorted((a, b) => a.localeCompare(b));
     return keys.map((key) => settingValue(surface, policy, key, scope)).filter((row) => row !== undefined);
+}
+
+/** Read a configured executable and literal arguments, preserving shell quoting. */
+export function commandArguments(source: string): string[] {
+    const lines = parseShell(source, { isGlobPattern: () => false });
+    const line = lines[0];
+    if (lines.length !== 1 || line?.type !== ';' || line.command.then !== undefined)
+        throw new Error('Configure one executable with literal arguments.');
+    const command = line.command.chain;
+    if (command.type !== 'command' || command.then !== undefined || command.envs.length !== 0)
+        throw new Error('Configure one executable with literal arguments.');
+    return command.args.map((argument) => {
+        if (argument.type !== 'argument') throw new Error('Command redirection is not supported.');
+        return argument.segments
+            .map((segment) => {
+                if (segment.type !== 'text') throw new Error('Command arguments must be literal values.');
+                return segment.text;
+            })
+            .join('');
+    });
 }

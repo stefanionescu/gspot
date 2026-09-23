@@ -1,9 +1,9 @@
 // Does every generated file match its render? Runs apply --dry-run in memory.
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import { computeDrift } from '#cli/emit/drift.ts';
+import type { DriftEntry } from '#cli/emit/types.ts';
 
-const MESSAGES: Record<string, string> = {
+const MESSAGES: Record<DriftEntry['kind'], string> = {
     changed: 'This generated file differs from what gspot.toml renders.',
     missing: 'This generated file is missing.',
     stray: 'This file carries the gspot header but nothing in the selection renders it.',
@@ -17,14 +17,15 @@ const STRAY_HELP = 'Delete the file, or add the preset that renders it.';
  * @param input the engine input
  * @returns the findings
  */
-export function generatedDrift(input: EngineInput): Promise<Finding[]> {
-    const findings = computeDrift(input.session).map((entry) => ({
+export function generatedDrift(input: EngineInput): Finding[] {
+    if (input.generatedDrift === undefined) throw new Error('Generated drift requires once-only execution.');
+    const findings = input.generatedDrift().map((entry) => ({
         check: input.spec.name,
         file: entry.path,
         rule: entry.kind,
-        message: MESSAGES[entry.kind] ?? MESSAGES['changed'] ?? '',
+        message: MESSAGES[entry.kind],
         help: entry.kind === 'stray' ? STRAY_HELP : MOVE_HELP,
         fixable: true,
     }));
-    return Promise.resolve(findings);
+    return findings;
 }

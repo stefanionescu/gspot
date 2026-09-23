@@ -126,6 +126,8 @@ export const importLayout = createRule<ImportLayoutOptions, 'layout'>({
         type: 'layout',
         fixable: 'code',
         docs: {
+            example:
+                'The import block below reports `layout`:\n\n```ts\nimport { ccc } from "ccc";\nimport a from "a";\n```\n\nPut the shorter import first:\n\n```ts\nimport a from "a";\nimport { ccc } from "ccc";\n```',
             summary:
                 'Checks that imports are grouped one-line first, multi-line second, and sorted by length within each group.',
             why: 'One layout for imports means a diff shows the import that changed, not a reshuffle.',

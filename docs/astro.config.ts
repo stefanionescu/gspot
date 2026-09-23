@@ -1,4 +1,4 @@
-import { sourceRevision } from './src/content/reference';
+import { sourceRevision } from './src/content/revision';
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
 import starlightLlmsTxt from 'starlight-llms-txt';
@@ -6,11 +6,21 @@ import { copyFileSync, mkdirSync } from 'node:fs';
 
 export default defineConfig({
     site: 'https://gspot.dev',
+    // Lower resource-management syntax before Bun evaluates CLI-backed references through Vite.
+    vite: { oxc: { target: 'es2022' } },
     integrations: [
         {
             name: 'gspot-schema',
             hooks: {
                 'astro:build:done': ({ dir }) => {
+                    const licenses = new URL('licenses/', dir);
+                    mkdirSync(licenses, { recursive: true });
+                    for (const font of ['geist', 'geist-mono']) {
+                        copyFileSync(
+                            new URL(`./node_modules/@fontsource-variable/${font}/LICENSE`, import.meta.url),
+                            new URL(`${font}.txt`, licenses),
+                        );
+                    }
                     const directory = new URL('schema/', dir);
                     mkdirSync(directory, { recursive: true });
                     copyFileSync(
@@ -22,16 +32,19 @@ export default defineConfig({
         },
         starlight({
             title: 'gspot',
+            components: { SiteTitle: './src/components/SiteTitle.astro' },
+            expressiveCode: { defaultProps: { frame: 'code' } },
+            routeMiddleware: './src/route-metadata.ts',
             editLink: { baseUrl: `https://github.com/stefanionescu/gspot/edit/${sourceRevision}/docs/` },
-            description: 'Repository checks and coding-agent rules, configured together.',
+            description: 'CLI to lint and enforce rules for LLM generated codebases',
             customCss: ['./src/styles/theme.css'],
             social: [{ icon: 'github', label: 'GitHub', href: 'https://github.com/stefanionescu/gspot' }],
             plugins: [starlightLlmsTxt()],
-            disable404Route: true,
             sidebar: [
                 {
                     label: 'Start',
                     items: [
+                        { label: 'Overview', slug: 'guides/overview' },
                         { label: 'Install', slug: 'guides/install' },
                         { label: 'Run your first check', slug: 'guides/quick-start' },
                         { label: 'Adopt in an existing repository', slug: 'guides/existing-repository' },
@@ -42,6 +55,7 @@ export default defineConfig({
                     items: [
                         { label: 'Read and resolve findings', slug: 'guides/you-got-a-finding' },
                         { label: 'Choose checks and exceptions', slug: 'guides/customize' },
+                        { label: 'Preset catalog', slug: 'reference/presets/index' },
                         { label: 'Share profiles', slug: 'guides/profiles' },
                         { label: 'Work with agents', slug: 'guides/agents' },
                     ],
@@ -53,6 +67,9 @@ export default defineConfig({
                         { label: 'Scopes and monorepos', slug: 'guides/scopes' },
                         { label: 'Without mise', slug: 'guides/without-mise' },
                         { label: 'Add a custom check', slug: 'guides/custom-checks' },
+                        { label: 'Tests and coverage', slug: 'guides/testing' },
+                        { label: 'Dependency licenses', slug: 'guides/dependency-licenses' },
+                        { label: 'Security checks', slug: 'guides/security' },
                     ],
                 },
                 {

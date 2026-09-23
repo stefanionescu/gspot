@@ -19,6 +19,8 @@ export const noExportOnlyFiles = createRule<[], 'exportOnly'>({
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'A `src/b.ts` containing only `export * from "./a";` reports `exportOnly`. Update consumers to import from `a.ts`, then delete `b.ts`. Do not add unrelated code to keep the forwarding file.',
             summary: 'Finds a file that is not an index and only re-exports other modules.',
             why: 'A re-export file is a second path to the same code; readers and tools follow it for nothing.',
             fix: 'Import from the module that declares the value, and delete this file.',

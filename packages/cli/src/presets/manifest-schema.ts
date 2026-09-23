@@ -1,6 +1,6 @@
 // The zod schema of manifest.toml, and the refusals the loader applies.
 import { z } from 'zod';
-import { commandSchema } from '#cli/run/command-schema.ts';
+import { commandSchema, findingExitCodesSchema } from '#cli/run/command-schema.ts';
 import { outputSchema } from '#cli/presets/output-schema.ts';
 
 const stringList = z.array(z.string()).default([]);
@@ -64,19 +64,71 @@ const toolSchema = z.strictObject({
         })
         .optional(),
     env: z.record(z.string(), z.string()).optional(),
+    query_packs: z.record(z.string().regex(/^[a-z][a-z0-9-]*$/u), z.string().regex(/^\d+\.\d+\.\d+$/u)).optional(),
+    takeover: z
+        .array(
+            z
+                .strictObject({
+                    file: z.string().min(1),
+                    table: z.string().min(1).optional(),
+                    key: z.string().min(1).optional(),
+                    shared: z.boolean().default(false),
+                    check: z.string().min(1).optional(),
+                    carries: z.enum([
+                        'ignore-paths',
+                        'rules-table',
+                        'words',
+                        'advisories',
+                        'licenses',
+                        'eslint-config',
+                    ]),
+                })
+                .superRefine((row, context) => {
+                    if (row.key !== undefined && row.table !== undefined)
+                        context.addIssue({
+                            code: 'custom',
+                            message: 'A takeover row selects either a key or a table.',
+                        });
+                    if ((row.key !== undefined || row.table !== undefined) && !row.shared)
+                        context.addIssue({
+                            code: 'custom',
+                            message: 'A selected key or table must preserve its shared file.',
+                        });
+                }),
+        )
+        .optional(),
     ...installerFields,
 });
 
-const stubSchema = z.strictObject({
-    path: z.string(),
-    body: z.string().optional(),
-    merge: z.record(z.string(), z.unknown()).optional(),
-    copy: z.boolean().optional(),
-});
+const stubSchema = z
+    .strictObject({
+        path: z.string(),
+        directories: z.array(z.string().min(1)).min(1).optional(),
+        body: z.string().optional(),
+        merge: z.record(z.string(), z.unknown()).optional(),
+        copy: z.boolean().optional(),
+        template: z.string().optional(),
+    })
+    .refine(
+        (stub) =>
+            stub.template === undefined ||
+            (stub.body === undefined && stub.merge === undefined && stub.copy === undefined),
+        'A template stub cannot also specify body, merge, or copy.',
+    )
+    .refine(
+        (stub) =>
+            stub.directories === undefined ||
+            (stub.body !== undefined &&
+                stub.merge === undefined &&
+                stub.copy === undefined &&
+                stub.template === undefined),
+        'Directory stubs require a body without merge, copy, or template.',
+    );
 
 const configSchema = z.strictObject({
     template: z.string(),
     target: z.string(),
+    rules_path: z.array(z.string()).optional(),
     stub: stubSchema.optional(),
     fragment: z.boolean().default(false),
     per_scope: z.boolean().default(false),
@@ -95,9 +147,12 @@ const checkFields = z.strictObject({
     stage: z.enum(['commit', 'push', 'manual', 'message']),
     runs: z.enum(['per-file-list', 'per-scope', 'once']).default('per-file-list'),
     command: commandSchema.optional(),
+    isolated_files: z.boolean().optional(),
+    file_prefix: z.string().optional(),
     env: z.record(z.string(), z.string()).optional(),
     fix_command: commandSchema.optional(),
     fix_order: z.enum(['codemod', 'imports', 'manifest', 'format']).optional(),
+    fix_findings_exit_codes: findingExitCodesSchema.optional(),
     engine: z.enum(['integrity', 'naming', 'structure', 'prose']).optional(),
     analysis: z.string().optional(),
     reported_by: z.string().optional(),
@@ -112,9 +167,14 @@ const checkFields = z.strictObject({
     claims: claimsSchema.optional(),
     output: outputSchema.optional(),
     cwd: z.enum(['root', 'scope']).optional(),
+    nested_config: z
+        .string()
+        .regex(/^[A-Za-z0-9_.-]+$/u)
+        .optional(),
     exclude_setting: z.string().optional(),
     coverage: stringList,
     summary: sentence,
+    example: z.string().trim().min(1),
     why: sentence,
     help: sentence,
     searched: z.array(z.string()).optional(),
@@ -159,11 +219,23 @@ const settingSchema = z.strictObject({
 });
 
 export const manifestSchema = z.strictObject({
+    untracked: z
+        .array(
+            z
+                .string()
+                .regex(/^\.gspot\/(?:[A-Za-z0-9._-]+\/)*[A-Za-z0-9._-]+\/?$/u)
+                .refine(
+                    (path) => !path.split('/').some((part) => part === '.' || part === '..'),
+                    'Untracked paths must stay inside .gspot.',
+                ),
+        )
+        .default([]),
     preset: z.strictObject({
         name: z.string().regex(/^[a-z0-9-]+$/),
         kind: z.enum(['language', 'framework', 'platform', 'tool', 'library', 'database', 'policy']),
         title: z.string(),
         requires: stringList,
+        check_references: z.array(z.string().min(1)).default([]),
         recommends: stringList,
         default: z.boolean().default(false),
         proposed: z.boolean().default(false),

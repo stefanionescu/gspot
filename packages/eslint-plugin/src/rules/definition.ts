@@ -39,4 +39,5 @@ export type RuleDocs = {
     summary: string;
     why: string;
     fix: string;
+    example: string;
 };

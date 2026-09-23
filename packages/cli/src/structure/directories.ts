@@ -49,8 +49,8 @@ export function directoryTree(files: TrackedFile[]): Map<string, DirectoryEntry[
     for (const file of files) {
         const segments = file.path.split('/');
         for (let depth = 0; depth < segments.length - 1; depth += 1)
-            put(segments.slice(0, depth).join('/'), segments[depth] ?? '', 'dir');
-        put(directoryOf(file.path), segments.at(-1) ?? '', 'file');
+            put(segments.slice(0, depth).join('/'), segments[depth]!, 'dir');
+        put(directoryOf(file.path), segments.at(-1)!, 'file');
     }
     return new Map(
         [...tree].map(([directory, entries]) => [

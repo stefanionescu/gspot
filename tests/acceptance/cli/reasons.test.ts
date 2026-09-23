@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { readFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/harness/planted.ts';
+import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 
 test('ignore and loosened settings accept omitted reasons by default and enforce the repository preference', async () => {
     for (const required of [false, true]) {
@@ -33,40 +33,44 @@ test('ignore and loosened settings accept omitted reasons by default and enforce
     }
 });
 
-test('named allowances follow require_reasons and removal restores enforcement', async () => {
-    for (const required of [false, true]) {
-        await using directory = await testdir();
-        const policy = `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\npresets = ["bash", "naming"]\n[rules]\ninstall = false\n`;
-        await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'shell_command=example\n' });
-        const entry = '{"name":"shell_command"}';
-        const allowed = await run(directory.path, ['set', 'naming.allowed', entry]);
-        expect(allowed.code, allowed.stdout + allowed.stderr).toBe(required ? 2 : 0);
-        if (required) {
-            expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
-            const explained = await run(directory.path, [
-                'set',
-                'naming.allowed',
-                entry,
-                '--reason',
-                'External protocol fixes this name',
+test(
+    'named allowances follow require_reasons and removal restores enforcement',
+    async () => {
+        for (const required of [false, true]) {
+            await using directory = await testdir();
+            const policy = `version = 1\nlevel = "all"\nrequire_reasons = ${String(required)}\npresets = ["bash", "naming"]\n[rules]\ninstall = false\n`;
+            await createFileTree(directory.path, { 'gspot.toml': policy, 'entry.sh': 'shell_command=example\n' });
+            const entry = '{"name":"shell_command"}';
+            const allowed = await run(directory.path, ['set', 'naming.allowed', entry]);
+            expect(allowed.code, allowed.stdout + allowed.stderr).toBe(required ? 2 : 0);
+            if (required) {
+                expect(readFileSync(join(directory.path, 'gspot.toml'), 'utf8')).toBe(policy);
+                const explained = await run(directory.path, [
+                    'set',
+                    'naming.allowed',
+                    entry,
+                    '--reason',
+                    'External protocol fixes this name',
+                ]);
+                expect(explained.code, explained.stdout + explained.stderr).toBe(0);
+            }
+            const command = ['check', '--only', 'naming/identifiers', '--no-cache', '--json'];
+            const checked = await run(directory.path, command);
+            expect(checked.code, checked.stdout + checked.stderr).toBe(0);
+            const removed = await run(directory.path, ['set', 'naming.allowed', 'shell_command', '--remove']);
+            expect(removed.code, removed.stdout + removed.stderr).toBe(0);
+            const restored = await run(directory.path, command);
+            expect(restored.code, restored.stdout + restored.stderr).toBe(1);
+            const report = JSON.parse(restored.stdout) as {
+                checks: { findings: { file: string; line: number; rule: string }[] }[];
+            };
+            expect(report.checks[0]?.findings).toEqual([
+                expect.objectContaining({ file: 'entry.sh', line: 1, rule: 'banned-term' }),
             ]);
-            expect(explained.code, explained.stdout + explained.stderr).toBe(0);
         }
-        const command = ['check', '--only', 'naming/identifiers', '--no-cache', '--json'];
-        const checked = await run(directory.path, command);
-        expect(checked.code, checked.stdout + checked.stderr).toBe(0);
-        const removed = await run(directory.path, ['set', 'naming.allowed', 'shell_command', '--remove']);
-        expect(removed.code, removed.stdout + removed.stderr).toBe(0);
-        const restored = await run(directory.path, command);
-        expect(restored.code, restored.stdout + restored.stderr).toBe(1);
-        const report = JSON.parse(restored.stdout) as {
-            checks: { findings: { file: string; line: number; rule: string }[] }[];
-        };
-        expect(report.checks[0]?.findings).toEqual([
-            expect.objectContaining({ file: 'entry.sh', line: 1, rule: 'banned-term' }),
-        ]);
-    }
-});
+    },
+    PLANTED_TIMEOUT_MS,
+);
 
 test.each([false, true])(
     'inline suppression reasons follow require_reasons=%s without turning the census into failures',

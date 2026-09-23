@@ -15,7 +15,7 @@ function dependencyFolder(path: string): string | undefined {
  * @param input the engine input
  * @returns the findings
  */
-export function trackedDependencies(input: EngineInput): Promise<Finding[]> {
+export function trackedDependencies(input: EngineInput): Finding[] {
     const tracked = indexedPaths(input.root);
     const counts = new Map<string, number>();
     for (const path of tracked) {
@@ -30,5 +30,5 @@ export function trackedDependencies(input: EngineInput): Promise<Finding[]> {
         message: `git tracks ${String(count)} file(s) under ${folder}/; a package manager fills that folder.`,
         fixable: false,
     }));
-    return Promise.resolve(findings);
+    return findings;
 }

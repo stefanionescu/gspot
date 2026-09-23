@@ -8,7 +8,7 @@ import { assertPinMatches } from '#cli/run/version-pin.ts';
 import { installTools } from '#cli/lifecycle/install-tools.ts';
 import { packageInstallSteps } from '#cli/lifecycle/package-project.ts';
 import type { CommandResult } from '#cli/run/types.ts';
-import type { InstallOptions } from '#cli/commands/types.ts';
+type InstallOptions = { cwd: string; isDryRun: boolean };
 
 /** Preview or install this clone's locked tools without regenerating tracked configuration. */
 export async function installCommand(options: InstallOptions): Promise<CommandResult> {
@@ -35,7 +35,8 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
         const runner = session.policyFiles.policy.runner?.tool;
         if (runner === 'mise') steps.unshift(['mise', 'trust', MISE_CONFIG_PATH], ['mise', 'install']);
         const hooks =
-            session.repository.hasGit && session.policyFiles.policy.hooks?.tool === 'gspot'
+            session.repository.hasGit &&
+            ['gspot', 'simple-git-hooks', 'pre-commit'].includes(session.policyFiles.policy.hooks?.tool ?? '')
                 ? hookLocation(root).absolute
                 : undefined;
         if (options.isDryRun && failures.length > 0) throw new Error([...new Set(failures)].join('\n'));
@@ -62,6 +63,6 @@ export async function installCommand(options: InstallOptions): Promise<CommandRe
         };
     } catch (error) {
         const message = error instanceof Error ? error.message : 'Tool installation failed.';
-        return { text: `${message}\n`, json: { installed: false, error: message }, exitCode: 1 };
+        return { text: `${message}\n`, json: { installed: false, error: message }, exitCode: 2 };
     }
 }

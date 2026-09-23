@@ -1,6 +1,6 @@
 // The history of the migrations folder: versions that never repeat, new files that sort last, and old files that never change.
 import { committedEntries, gitBlobs } from '#cli/repository/snapshot.ts';
-import type { EngineInput, Session } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import type { Migration } from '#cli/checks/postgres/types.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
@@ -12,18 +12,18 @@ function report(input: EngineInput, migration: Migration, rule: string, text: st
     return { check: input.spec.name, file: migration.path, line: 1, rule, message: text, fixable: false };
 }
 
-const history = new WeakMap<Session, Promise<Map<string, string>>>();
+const history = new WeakMap<object, Promise<Map<string, string>>>();
 
 async function readCommittedText(input: EngineInput): Promise<Map<string, string>> {
-    if (!input.session.repository.hasGit) return new Map();
-    const committed = await committedEntries(input.root, input.session.cancelSignal);
+    if (!input.hasGit) return new Map();
+    const committed = await committedEntries(input.root, input.cancelSignal);
     const entries = committed.filter(
         (entry) => entry.path.endsWith('.sql') && (entry.mode === '100644' || entry.mode === '100755'),
     );
     const blobs = await gitBlobs(
         input.root,
         entries.map((entry) => entry.object),
-        input.session.cancelSignal,
+        input.cancelSignal,
     );
     return new Map(
         entries.map((entry) => {
@@ -35,10 +35,10 @@ async function readCommittedText(input: EngineInput): Promise<Map<string, string
 }
 
 function committedText(input: EngineInput): Promise<Map<string, string>> {
-    let observed = history.get(input.session);
+    let observed = history.get(input.runKey);
     if (observed === undefined) {
         observed = readCommittedText(input);
-        history.set(input.session, observed);
+        history.set(input.runKey, observed);
     }
     return observed;
 }

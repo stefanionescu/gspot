@@ -1,45 +1,56 @@
 // The ast-grep runner: a preset rule over files, its matches as JSON, counted per enclosing function.
-import { join } from 'node:path';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { isAbsolute, join, relative } from 'node:path';
+import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 import { readAsset } from '#cli/platform/assets.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
-import type { AstGrepMatch } from '#cli/structure/types.ts';
-import { locateTool } from '#cli/platform/tool-probe.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import { toPosix } from '#cli/platform/paths.ts';
+import { z } from 'zod';
 
-const RULE_CACHE = join('.gspot', 'cache', 'ast-grep');
+const RULE_CACHE = '.gspot/cache/ast-grep';
+const positionSchema = z.object({ line: z.number().int().nonnegative() });
+const matchSchema = z.object({
+    file: z.string().min(1),
+    ruleId: z.string().min(1),
+    range: z.object({ start: positionSchema, end: positionSchema }),
+});
 
 function ruleFile(root: string, asset: string): string {
-    const dir = join(root, RULE_CACHE);
-    mkdirSync(dir, { recursive: true });
-    const path = join(dir, asset.slice(asset.lastIndexOf('/') + 1));
-    writeFileSync(path, readAsset(asset));
-    return path;
+    const path = `${RULE_CACHE}/${asset.slice(asset.lastIndexOf('/') + 1)}`;
+    return withLifecycleOwner(root, (owner) => {
+        const result = owner.replace(path, { bytes: Buffer.from(readAsset(asset)), mode: 0o444 }, 'runtime');
+        if (result === 'preserved') throw new Error(`Retained edited or unowned structural rule: ${path}`);
+        return join(root, path);
+    });
 }
 
+/** A validated native structural match with zero-based line positions. */
+export type AstGrepMatch = z.infer<typeof matchSchema>;
+
 /**
- * Runs one rule asset over files. Returns undefined when ast-grep is not installed.
- * @param root the repository root
- * @param asset the rule's asset path, such as `presets/bash/rules/bash-branches.yml`
+ * Runs one rule asset over selected files through shared execution boundaries.
+ * @param input the engine input
+ * @param asset the rule's asset path, such as `presets/language/bash/rules/bash-branches.yml`
  * @param files the files, relative to the root
- * @returns the matches with zero-based lines, by file, or undefined
+ * @returns the matches with zero-based lines, by file
  */
-export function astGrepMatches(root: string, asset: string, files: string[]): AstGrepMatch[] | undefined {
+export async function astGrepMatches(input: EngineInput, asset: string, files: string[]): Promise<AstGrepMatch[]> {
     if (files.length === 0) return [];
-    const binary = locateTool(root, 'ast-grep');
-    if (binary === undefined) return undefined;
+    const root = input.root;
     const rule = ruleFile(root, asset);
-    const command = [binary, 'scan', '--json=compact', '-r', rule];
+    const command = ['ast-grep', 'scan', '--json=compact', '-r', rule];
     const parsed: AstGrepMatch[] = [];
     for (const batch of fileBatches(files, command, process.platform)) {
-        const result = runBlocking([...command, ...batch], { cwd: root });
-        if (result.missing) return undefined;
+        const result = await runCheckCommand(input, [...command, ...batch], { cwd: root });
         if (result.code !== 0 && result.code !== 1) throw new Error(`The ast-grep run failed: ${result.stderr.trim()}`);
-        const matches = JSON.parse(result.stdout) as AstGrepMatch[];
+        const matches = z.array(matchSchema).parse(JSON.parse(result.stdout));
         parsed.push(...matches);
     }
-    return parsed.map((match) => ({
-        ...match,
-        file: match.file.startsWith(root) ? match.file.slice(root.length + 1) : match.file,
-    }));
+    const selected = new Set(files);
+    return parsed.map((match) => {
+        const file = toPosix(isAbsolute(match.file) ? relative(root, match.file) : match.file);
+        if (!selected.has(file)) throw new Error(`The ast-grep report names an unselected file: ${file}`);
+        return { ...match, file };
+    });
 }

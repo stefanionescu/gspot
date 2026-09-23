@@ -1,8 +1,9 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // An ignore file beside every Dockerfile, with the entries that keep history, dependencies and secrets out of the build.
 import { join } from 'node:path';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { DOCKERIGNORE_ENTRIES } from '#cli/checks/integrity-definitions.ts';
 
 function isDockerfile(path: string): boolean {
@@ -26,19 +27,19 @@ function missingEntries(text: string): string[] {
  * @param input the engine input
  * @returns the findings
  */
-export function dockerignore(input: EngineInput): Promise<Finding[]> {
-    const dockerfiles = input.session.repository.files.filter((file) => isDockerfile(file.path));
+export function dockerignore(input: EngineInput): Finding[] {
+    const dockerfiles = input.files.filter((file) => isDockerfile(file.path));
     const folders = new Map(dockerfiles.map((file) => [folderOf(file.path), file.path]));
     const findings = folders.entries().flatMap(([folder, dockerfile]): Finding[] => {
         const path = folder === '' ? '.dockerignore' : `${folder}/.dockerignore`;
         const base = { check: input.spec.name, line: 1, fixable: false };
         if (!existsSync(join(input.root, path)))
             return [{ ...base, file: dockerfile, rule: 'missing', message: `No ${path} sits beside this Dockerfile.` }];
-        const missing = missingEntries(readFileSync(join(input.root, path), 'utf8'));
+        const missing = missingEntries(readSource(input.root, path).toString('utf8'));
         if (missing.length === 0) return [];
         return [
             { ...base, file: path, rule: 'entries', message: `The ignore file lets through: ${missing.join(', ')}.` },
         ];
     });
-    return Promise.resolve(findings.toArray());
+    return findings.toArray();
 }

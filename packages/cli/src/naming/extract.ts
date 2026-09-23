@@ -20,7 +20,7 @@ export async function identifiersOf(file: string, text: string, language: string
     if (grammar === undefined) return [];
     const parser = await parserFor(grammar);
     const tree = parser.parse(text);
-    if (tree === null) return [];
+    if (tree === null) throw new Error('The source parser returned no tree.');
     try {
         if (grammar === 'bash') return bashIdentifiers(tree.rootNode, file);
         if (grammar === 'swift') return swiftIdentifiers(tree.rootNode, file);

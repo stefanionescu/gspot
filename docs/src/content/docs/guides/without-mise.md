@@ -5,6 +5,8 @@ sidebar:
     order: 5
 ---
 
+Run commands from the configured repository root with the [CLI available](/guides/install/).
+
 gspot keeps npm lint dependencies in `.gspot/package.json` and Python lint dependencies in
 `.gspot/pyproject.toml`. These private projects exist under every runner, including when no
 runner is selected. `gspot apply` resolves their locks in isolation. `gspot install` installs
@@ -14,11 +16,20 @@ The npm project uses the package manager declared by the repository. Without a d
 manager, gspot selects Bun when available, or npm. Python tools use uv and install into
 `.gspot/.venv`.
 
-## With npm, Bun, or pnpm
+## With npm, Bun, pnpm, or Yarn
 
-Select the task integration with `gspot init --runner npm`, `--runner bun`, or `--runner pnpm`.
-The integration adds `check`, `check:fix`, and `apply` scripts to the repository package manifest.
-Authored lifecycle scripts remain intact.
+Select the task integration with `gspot init --runner npm`, `--runner bun`, `--runner pnpm`, or `--runner yarn`.
+The integration adds available `gspot:check`, `gspot:fix`, `gspot:apply`, and `gspot:doctor` scripts.
+Initialization proposes existing check and format task names in `[runner.tasks]`. Review the
+listed replacements before accepting the plan. Authored lifecycle scripts remain intact.
+
+To choose names explicitly, set the mapping and apply it:
+
+```bash
+gspot set runner.tasks '{"check":"lint","fix":"format"}'
+```
+
+Uninstall restores accepted task bodies when they remain unchanged and preserves later edits.
 
 ## With uv
 

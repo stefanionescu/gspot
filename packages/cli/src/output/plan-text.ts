@@ -1,5 +1,5 @@
 // The init, upgrade and --dry-run plans as text.
-import { paint } from '#cli/output/messages.ts';
+import { colors } from '#cli/output/messages.ts';
 import type { TakeoverPlan } from '#cli/lifecycle/types.ts';
 
 const COLUMN_GAP = 2;
@@ -46,7 +46,7 @@ function carriedSection(rows: TakeoverPlan['carried']): string[] {
  * @returns the text
  */
 export function initPlanText(plan: TakeoverPlan): string {
-    const { dim } = paint();
+    const { dim } = colors;
     const lines = [
         ...profileSection(plan.profile),
         ...presetSection(plan.presets),

@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync } from 'node:fs';
+import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import prettier from 'prettier';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/harness/planted.ts';
+import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 
 const SOURCE = 'const greeting="hello";if(greeting){console.log(greeting);}';
 const EDITORCONFIG =
@@ -18,12 +18,13 @@ const FILES = [
 ];
 
 test.each([false, true])(
-    'unsupported EditorConfig adoption leaves formatting and original bytes intact, with Prettier config=%s',
+    'nested EditorConfig adoption preserves formatting and restores original bytes, with Prettier config=%s',
     async (hasPrettier) => {
         await using repository = await testdir();
         const originals = {
             '.editorconfig': EDITORCONFIG,
             'src/.editorconfig': '[*.js]\nindent_size = 8\n',
+            'src/package.json': '{"private":true,"prettier":{"semi":false}}\n',
             ...(hasPrettier ? { '.prettierrc.yaml': 'semi: false\n' } : {}),
         };
         await createFileTree(repository.path, {
@@ -33,7 +34,7 @@ test.each([false, true])(
         for (const file of Object.keys(originals)) chmodSync(join(repository.path, file), 0o640);
         symlinkSync(join(import.meta.dir, '../../../node_modules'), join(repository.path, 'node_modules'));
         const expected = new Map<string, string>();
-        for (const file of FILES) {
+        for (const file of [...FILES, 'src/future.js']) {
             const filepath = join(repository.path, file);
             const options = await prettier.resolveConfig(filepath, { editorconfig: true, useCache: false });
             expected.set(file, await prettier.format(SOURCE, { ...options, filepath }));
@@ -52,9 +53,20 @@ test.each([false, true])(
             '--no-rules',
             '--no-install',
         ]);
-        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(2);
-        expect(initialized.stdout).toContain('Formatting conversion does not support .editorconfig');
-        expect(existsSync(join(repository.path, 'gspot.toml'))).toBe(false);
+        expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+        const applied = await run(repository.path, ['apply']);
+        expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+        for (const file of [...FILES, 'src/future.js']) {
+            const filepath = join(repository.path, file);
+            const options = await prettier.resolveConfig(filepath, {
+                config: join(repository.path, '.gspot/prettier.json'),
+                editorconfig: true,
+                useCache: false,
+            });
+            expect(await prettier.format(SOURCE, { ...options, filepath }), file).toBe(expected.get(file)!);
+        }
+        const restored = await run(repository.path, ['uninstall', '--yes']);
+        expect(restored.code, restored.stdout + restored.stderr).toBe(0);
         for (const [file, text] of Object.entries(originals)) {
             expect(readFileSync(join(repository.path, file), 'utf8')).toBe(text);
             expect(statSync(join(repository.path, file)).mode & 0o777).toBe(0o640);

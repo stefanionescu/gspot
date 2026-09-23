@@ -1,3 +1,4 @@
+import { privateToolInstallation } from '#cli/platform/tool-installation.ts';
 import { stringify } from 'smol-toml';
 import { collectPins } from '#cli/emit/runner-tasks.ts';
 import { everyManifest } from '#cli/presets/select.ts';
@@ -8,9 +9,8 @@ import type { GeneratedFile } from '#cli/emit/types.ts';
 /** Select exact Python tool requirements from their implementation owners. */
 export function pythonPins(manifests: Manifest[]): string[] {
     return collectPins(manifests).flatMap((tool) => {
-        if (tool.provider === 'host') return [];
-        const pin = tool.installers['pypi'];
-        return pin?.version === undefined ? [] : [`${pin.name}==${pin.version}`];
+        const installation = privateToolInstallation(tool);
+        return installation?.kind === 'python' ? [`${installation.name}==${installation.version}`] : [];
     });
 }
 

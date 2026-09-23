@@ -3,7 +3,7 @@ import { join } from 'node:path';
 import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/harness/planted.ts';
+import { run } from '#tests/support/cli/planted.ts';
 import { currentBlock } from '#cli/emit/managed-blocks.ts';
 
 test('agent instructions reach detected and configured consumers and uninstall restores authored content', async () => {
@@ -57,9 +57,9 @@ test('an authored Cursor rule is preserved and escaping agent destinations are r
         '.cursor/rules/gspot.mdc': original,
     });
     const applied = await run(sandbox.path, ['apply']);
-    expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    expect(applied.code, applied.stdout + applied.stderr).toBe(2);
     expect(readFileSync(join(sandbox.path, '.cursor/rules/gspot.mdc'), 'utf8')).toBe(original);
-    expect(applied.stdout).toContain('.cursor/rules/gspot.mdc');
+    expect(applied.stdout + applied.stderr).toContain('.cursor/rules/gspot.mdc');
     const before = readFileSync(join(sandbox.path, 'gspot.toml'), 'utf8');
     const refused = await run(sandbox.path, ['set', 'rules.agents', '../outside.md']);
     expect(refused.code).toBe(2);

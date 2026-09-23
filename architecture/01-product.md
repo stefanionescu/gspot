@@ -20,7 +20,8 @@ gspot is the shared house style for AI-written code, delivered as one binary:
   such as ESLint, Prettier, Ruff, SwiftLint, ShellCheck, and sqlfluff. It runs file-list tools over an
   explicit file list and whole-project tools over affected projects.
 - **Two levels.** At `recommended` a tool runs its recommended set and the rules that find a
-  defect. The level `all` adds the house style.
+  defect, plus mandatory trivial-function and trivial-file enforcement. The level `all` adds
+  the remaining house style.
 - **The missing rules.** gspot ships the structural, naming, prose, security, and drift checks
   the standard tools lack, as one engine per concern, versioned with the rest.
 - **Agent instructions.** gspot installs rule files that tell an agent how to write code in this
@@ -79,7 +80,8 @@ evidence appears below; [remaining work](22-remaining.md) owns current dispositi
 ## Principles
 
 - **Everything is an error.** No warning level. Two levels decide what runs: `recommended`
-  holds what finds a defect, and `all` adds the house style. An old repository adopts gspot by checking the
+  holds defect checks and mandatory trivial-function and trivial-file rules; `all` adds
+  the remaining house style. An old repository adopts gspot by checking the
   files a change touches, and gspot records no old findings.
 - **A maintained tool wins.** gspot writes original analysis only where no maintained tool
   expresses the rule, and the preset names the tools it searched.

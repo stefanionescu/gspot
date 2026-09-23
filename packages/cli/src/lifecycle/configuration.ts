@@ -1,3 +1,7 @@
+import { mkdtempSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
+import { tmpdir } from 'node:os';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import type { MergedView } from '#cli/policy/types.ts';
 import type { z } from 'zod';
 import { isEmbedded, readAsset } from '#cli/platform/assets.ts';
@@ -13,20 +17,28 @@ export async function evaluateConfiguration(
     const program = isEmbedded()
         ? readAsset('packages/cli/build/configuration-process.js')
         : `await import(${JSON.stringify(new URL('./configuration-process.ts', import.meta.url).href)});`;
-    const result = await runToolCommand(
-        view,
-        [process.execPath, '--no-install', 'run', '-'],
-        {
-            cwd: request.root,
-            env: { BUN_BE_BUN: '1' },
-            stdin: `globalThis.gspotConfigurationRequest = ${JSON.stringify(request)};\n${program}`,
-            captureFd3: true,
-        },
-        cancelSignal,
-    );
-    if (result.code !== 0 || result.isTimedOut === true || result.isCanceled === true)
-        throw new Error(
-            `Tool configuration evaluation failed: ${result.stderr.trim() || 'The configuration process did not complete.'}`,
+    const work = mkdtempSync(join(tmpdir(), 'gspot-configuration-'));
+    const files = openConfinedRoot(work);
+    try {
+        const result = await runToolCommand(
+            view,
+            [process.execPath, '--no-install', 'run', '-'],
+            {
+                cwd: request.root,
+                env: { BUN_BE_BUN: '1' },
+                stdin: `globalThis.gspotConfigurationRequest = ${JSON.stringify(request)};\nglobalThis.gspotConfigurationOutput = ${JSON.stringify(join(work, 'result.json'))};\n${program}`,
+            },
+            cancelSignal,
         );
-    return JSON.parse(result.fd3 ?? 'null') as unknown;
+        if (result.code !== 0 || result.isTimedOut === true || result.isCanceled === true)
+            throw new Error(
+                `Tool configuration evaluation failed: ${result.stderr.trim() || 'The configuration process did not complete.'}`,
+            );
+        const output = files.read('result.json');
+        if (output === undefined) throw new Error('Tool configuration evaluation did not produce a result.');
+        return JSON.parse(output.bytes.toString('utf8')) as unknown;
+    } finally {
+        files.close();
+        rmSync(work, { recursive: true, force: true });
+    }
 }

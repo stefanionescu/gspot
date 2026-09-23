@@ -15,7 +15,7 @@ install script runs, so `npx`, `--ignore-scripts`, proxies, and offline mirrors 
 
 gspot is unreleased and has no users. Change names and configuration directly. Do not maintain
 compatibility aliases, version migrations, Changesets, or release-PR promises. Presets live at
-`presets/<name>`; the data/configuration preset and its public check prefix are `configs`.
+`presets/<kind>/<name>`; the data/configuration preset and its public check prefix are `configs`.
 
 The CLI owns command behavior, planning, execution, and lifecycle operations. Commands translate
 arguments and present results; output renders the statuses and findings computed by the runner.
@@ -26,6 +26,11 @@ The independent ESLint plugin owns editor enforcement and its public exports. Th
 selects an installed platform artifact. Presets own shipped policy, pins, templates, styles, and
 vocabulary; rule guides own instructions for agents. Documentation renders released definitions
 and authored guides. Tests exercise these behaviors and installed consumer journeys.
+
+During cleanup, delete confirmed redundant implementation and its unused callers, imports,
+types, fixtures, and tests together. Do not relocate it, retain an alias, or wrap it with a new
+abstraction. Repairs belong directly in the surviving owner. Report what was actually removed
+and which behavior remains verified; architecture edits alone do not satisfy code cleanup.
 
 Group source by behavior and ownership. Extract a shared module only when it owns shared behavior
 or a shared contract. Keep local types, schemas, constants, and functions beside their consumers.
@@ -70,10 +75,16 @@ Repository choices remain in TOML. The generated root schema provides
 [Taplo editor assistance](https://taplo.tamasfe.dev/configuration/using-schemas.html).
 The website build copies that schema into output; a second tracked copy serves no purpose.
 
-Use [Bun's native test configuration](https://bun.sh/docs/test/configuration) in `bunfig.toml`.
-`mise run test` selects CLI unit and plugin tests. Explicit mise tasks select integration,
-acceptance, and release directories; direct `bun test` has broader discovery. Release opt-in
-and artifact prerequisites remain. Do not add Vitest, Jest, or a custom coordinator for this
+Use [Bun's native test configuration](https://bun.sh/docs/test/configuration) in `tests/bunfig.toml`.
+Run test tasks from `tests/` with `--timeout 60000`; per-case deadlines remain explicit.
+The test TypeScript configuration inherits the strict workspace settings.
+All tests belong under the root `tests/`: unit CLI and plugin suites, integration CLI, docs,
+and repository suites, native checks, source acceptance CLI and preset journeys, and release
+consumers. Support owns process, registry, and fixture lifetime; types stay with those owners.
+`mise run test` targets deterministic unit and integration execution using documented development
+prerequisites and installed workspace dependencies. Native tools, downloads, source acceptance,
+and installed release consumers require separate explicit tasks. The release task runs directly
+after its artifact prerequisites are built; no environment opt-in hides its tests. Do not add Vitest, Jest, or a custom coordinator for this
 repository. Framework presets can still use their own test tools.
 
 The root `LICENSE.md` is the authored project license. Builds copy it into distribution output,
@@ -115,7 +126,7 @@ questions when interactive input is available.
 | Read TOML                                             | smol-toml                                                              |                                                                                                                                                            |
 | Write `gspot.toml` keeping comments and order         | `@decimalturn/toml-patch`                                              | TOML 1.1; `patch()` and `TomlDocument`; a comment travels with the entry it belongs to when the entry moves or goes                                        |
 | Detect the package manager                            | `nypm`                                                                 | `detectPackageManager` reads repository metadata; installation remains owned by the runner.                                                                |
-| `.gitignore` semantics without git                    | `globby` with `gitignore: true`                                        | the walk `init` does when there is no repository                                                                                                           |
+| `.gitignore` semantics without Git                    | `ignore`, pinned in the CLI package                                   | Native directory traversal applies nested exclusions, negations, pruning, and symlink boundaries while preserving newline-containing paths.              |
 | Name a language gspot has no preset for               | `linguist-languages`                                                   | GitHub Linguist's extension data, offline                                                                                                                  |
 | SARIF for CI                                          | `node-sarif-builder`                                                   | the `.gspot/report.sarif` rendering                                                                                                                        |
 | Shell completions                                     | `@bomb.sh/tab` with its commander adapter                              | `gspot completion <shell>`; the same library Wrangler, Nuxt, Astro, and Vitest use                                                                         |
@@ -156,17 +167,17 @@ an entire gspot workflow before reusing the part it already solves.
 - The npm release publishes one platform package per target plus the launcher package, all at one version.
 - The launcher resolves the installed platform package by `process.platform` and `process.arch`, and fails with the install hint when none is present.
 - `@gspot/eslint-plugin` builds with `bun build` to ESM and CommonJS, versioned with the binary.
-- The plugin exports `configs.recommended` for standalone use. `configs.all` also rejects
-  forwarding functions. Each uses shipped options.
+- The plugin exports `configs.recommended` and `configs.all` for standalone use. Both enable
+  trivial-function and trivial-file rules by default, with the shipped options.
 - The plugin matches paths with `picomatch`, the matcher the binary uses, so one pattern in
   `gspot.toml` means one thing.
 
 ## Release
 
 The version has one source: `version` in `packages/cli/package.json`. The build passes it
-to the binary with `--define`, the plugin build writes it into `meta.version`, and `publish.ts`
+to the binary through the package manifest import, the plugin exposes it in `meta.version`, and `publish.ts`
 reads it for every npm manifest. The release workflow fails when the tag differs from it. The
-workflow sets `GSPOT_RELEASE_TEST=1` and runs `tests/release` against the binaries it built,
+workflow selects the explicit `test:release` task against the binaries it built,
 before it publishes. One more test starts the compiled binary of the runner's platform in a
 planted repository and runs `init --yes` and `check`.
 
@@ -177,7 +188,7 @@ Native tools own release operations. gspot retains artifact staging and bundled-
 | Package versions       | Edit package versions directly. Keep release packaging without release-PR machinery.                                                                     |
 | Build                  | a GitHub Actions matrix runs `bun build --compile` per target; the report of the build is the tool table of the release note                             |
 | Provenance             | `actions/attest` signs every binary and the npm packages carry `--provenance` from trusted publishing, so `doctor` and a person can verify what they run |
-| GitHub release         | `softprops/action-gh-release` uploads the binaries and checksums                                                                                         |
+| GitHub release         | `gh release create` uploads the binaries, checksums, license, and bundled notices                                                                        |
 | npm                    | the launcher and one platform package per target, published in one job at one version                                                                    |
 | Homebrew tap (post-v1) | a tap repository updated by `repository_dispatch` from the release workflow with `SierraSoftworks/actions-tap`                                           |
 | Docs                   | Astro Starlight; `starlight-llms-txt` writes `llms.txt`, `llms-full.txt` and `llms-small.txt` from the same pages                                        |
@@ -229,8 +240,23 @@ Local-registry installation tests run against the built artifacts and derive the
 External acquisition is explicit and separate from deterministic test execution. Required
 tool absence fails acceptance; unit tests need not download tools. Check coverage comes from
 executed behavior, not finding a check name in test source. Coverage reports complement this
-contract and cannot replace it. No arbitrary percentage floor applies. Conditional platform
-and release suites are valid; required candidate suites must be explicitly enabled and run. The actionable cleanup is in
+contract and cannot replace it. No arbitrary percentage floor applies.
+
+Delete redundant cases when they prove the same behavior
+through the same boundary. A case at another shipped surface, level, parser, platform, or recovery
+boundary can provide distinct evidence; do not delete it merely because its setup looks similar.
+
+Before removing a weak test that is the only coverage for a retained requirement, strengthen or
+replace that coverage at the owning behavior. Keep meaningful byte, permission, escaping,
+serialization, and restoration assertions. Remove source-token searches, fixed inventory totals,
+assertions of forwarding, duplicated snapshots, and configuration substring checks when executed
+behavior already covers their purpose. Do not invent a new test-audit registry or test-count target.
+Record a concise reason for deletions with the owning remaining-work group and run its affected
+suite. A reduced test count is neither a success criterion nor evidence of lost coverage by itself.
+
+Platform prerequisites remain explicit. Invoke every required candidate suite through its task;
+missing required tools fail instead of silently skipping tests. Source acceptance and installed
+release consumers run sequentially because they exercise shared build and parser assets. The actionable cleanup is in
 [22-remaining.md](22-remaining.md#grouped-dispositions).
 
 ## Self-lint
@@ -249,9 +275,13 @@ cannot follow fails the gate the same way a long function does.
 The existing Astro/Starlight site renders validated reference definitions through content
 loaders and keeps authored task guides separate. Preserve released URLs, complete public
 settings, inherited options, plugin exports, search, source links, and `llms.txt`.
-[Documentation](21-documentation.md) owns the replacement acceptance for the existing Markdown
-writer, the plain text site design, and release-aligned deployment and rollback. Guide length
+[Documentation](21-documentation.md) owns the content-loader contract, the plain text site
+design, and release-aligned deployment and rollback. Guide length
 follows the task; no page quota, separate fixture system, or universal prose parser is required.
+
+Documentation content loading belongs in `docs/src/content/reference.ts`. The executable checks
+for built links and release-aligned deployment belong in `docs/scripts/`. Plugin rule metadata
+and common option schemas belong in `packages/eslint-plugin/src/rules/` beside their consumers.
 
 ## Contribution rule
 
@@ -271,10 +301,6 @@ These clauses specify required behavior. [Remaining work](22-remaining.md) owns 
 ### Acceptance K-300
 
 Each contract has one architecture owner and each unfinished behavior has one status owner in remaining work. Keep help, schemas, references, and behavior consistent. Verify no-check initialization, read-only previews, immutable installation, reachable hook chains, application across changed version pins, and manual build/test stages.
-
-### Acceptance K-73
-
-The implementation prescription is retired. Preserve the behavioral contract of this owner; no cosmetic move, global synonym replacement, or file inventory is required.
 
 ### Acceptance K-55
 
@@ -302,26 +328,25 @@ Convert file URLs through the platform API, including encoded characters, spaces
 
 ### Acceptance T-27
 
-A harness that fails early, with a message about the machine or about `init`.
+Product journeys fail at the actual failed prerequisite, installation, or initialization step.
+Report the missing tool and installation action. A fixture transformation must fail if its
+expected input is absent; setup errors cannot become passing product evidence.
 
-`install` expects exit 0 when every tool of the install is on the `PATH` it was given.
-`toolsPath` throws and names the tool it cannot find and the command that installs it. `plant`
-fails when the pattern it replaces is absent. `engineInput(overrides)` builds a whole input from a
-planted folder, and the four tests use it.
-
-Product acceptance checks the actual init exit and resulting policy. Do not add
-a unit test of the harness or mock its assertions.
+Check the actual init exit and resulting policy. Keep setup and cleanup with the owning suite.
+Do not require named harness helpers, a case count, a harness-only test suite, or mocked product
+assertions.
 
 ### Acceptance T-24
 
-Each value of `--runner`, of the hooks choice, and of the CI choice is installed
-once. One install starts from a repository that has hooks and mise tasks. One default `init` runs
-in every test run.
+Exercise supported runner, hook, and CI integrations through representative installed journeys.
+Include default initialization, existing hooks and tasks, mise with GitHub CI, npm, pnpm, Bun,
+and no runner with GitLab CI. Cover other supported choices where they have distinct behavior.
+Verify emitted integration, a real staged check, and hook invocation in the owning cases.
 
-Exercise six installs in the owning suite: mise with GitHub CI, npm, pnpm,
-bun, no runner with GitLab CI, and the default with no flag. Each holds the files written, a
-passing `gspot check --staged`, and a commit through the hook. The release test installs
-`.gspot/package.json` of every npm preset with each package manager and runs one check there.
+Private tool installation uses each supported package manager and executes installed checks.
+Share a representative dependency installation where it proves the same boundary; do not repeat
+an expensive install for every preset solely to satisfy a matrix count. Native configuration
+behavior still needs defect and correction evidence at both levels.
 
 ### Acceptance T-3
 
@@ -363,7 +388,9 @@ that must pass. Group related cases by behavior; source filenames do not define 
 
 The shipped defaults are measured on ordinary code.
 
-For each generated project and representative established multi-package project, run `init --yes` and `check`. Review each recommended finding for a demonstrated defect and false positives before accepting any message or count snapshot (K-301). Include valid API wrappers, framework adapters, and identifiers containing `generate` or `service`. A count alone is not an acceptance criterion. The naming test runs the shipped policy over one short file for each
+For each generated project and representative established multi-package project, run `init --yes` and `check`. Review each recommended finding against its defect or mandatory structural contract before
+accepting message snapshots (K-301). Required API suppressions must be narrow and reasoned;
+ordinary callbacks and framework names are not automatic exemptions. Include valid API wrappers, framework adapters, and identifiers containing `generate` or `service`. A count alone is not an acceptance criterion. The naming test runs the shipped policy over one short file for each
 language and framework, and expects no finding.
 
 ### Acceptance K-28
@@ -391,10 +418,6 @@ The completion test walks the commander program, and looks for each command and 
 in the bash and the zsh script. The release tests read `version` of
 `packages/cli/package.json`.
 
-### Acceptance T-31
-
-The implementation prescription is retired. Preserve the behavioral contract of this owner; no cosmetic move, global synonym replacement, or file inventory is required.
-
 ### Acceptance T-20
 
 Keep surviving behavioral regressions with their implementation owner when internals change. Delete tests of removed implementation details; test filenames and commit narratives are not acceptance criteria.
@@ -420,30 +443,28 @@ Do not recreate a standalone registry-harness suite.
 One repository check writes every template of every preset into the cache, at both
 levels, and runs the parser and the formatter of each kind over the result.
 
-The script renders each preset with its planted policy, then runs `prettier --check`,
-`taplo check`, `yamllint`, and `eslint --no-config-lookup` over the files of its kind. It shares
-its renders with the snapshot test (T-36).
+Render each preset with its planted policy, then validate the output with its pinned consumer,
+including Prettier, Taplo, yamllint, and ESLint where applicable. Retain exact serialization
+assertions only for contractual bytes. T-36 requires generated behavior, not a snapshot inventory.
 
 A template with a broken TOML line fails the check.
 
 ### Acceptance S-3
 
-The unit and plugin tests run at the push stage. Coverage measures missing behavioral evidence without an arbitrary percentage quota. Conditional platform and release suites retain explicit prerequisites. The
+The deterministic unit, plugin, and integration tests run at the push stage. Coverage measures
+missing behavioral evidence without an arbitrary percentage quota. Native and release suites
+retain explicit prerequisites. The
 work of a change follows the [active CI bypass](22-remaining.md#active-ci-bypass).
 While it is active, local verification permits continued implementation without a GitHub run.
 
-The check runs `mise run test`. Use `mise run test:coverage` for measurement with shared settings in
-`bunfig.toml`. Candidate acceptance explicitly runs integration, acceptance, and opted-in release suites. The docs test fetches the Vale packages in its setup, or fails with the command
-that fetches them. The jest preset of [06-enforcement-ledger.md](06-enforcement-ledger.md) reads `bun:test`
-through `globalPackage`, and this repository selects it. This repository sets `level = "all"` and `[coverage] strict = true`.
+The check runs `mise run test`. Use `mise run test:coverage` for measurement. Both tasks run
+from `tests/`, load `tests/bunfig.toml`, and pass `--timeout 60000` to Bun. Focused tasks are
+`test:unit` and `test:integration`. Candidate acceptance also runs `test:native`,
+`test:acceptance`, and `test:release`; build release prerequisites first and run source acceptance
+before installed consumers. Native tools and downloads do not belong in routine documentation
+tests. The Jest preset configures ESLint for `bun:test` through `globalPackage`; the repository
+replaces native Jest coverage execution with its Bun tasks. Preserve `level = "all"` and
+`[coverage] strict = true`, which govern product checks rather than a test coverage percentage.
 
 `CONTRIBUTING.md` explains local verification and how to read CI results when CI is enabled.
 It must not require a GitHub run while the active bypass applies.
-
-### Acceptance K-61
-
-The implementation prescription is retired. Preserve the behavioral contract of this owner; no cosmetic move, global synonym replacement, or file inventory is required.
-
-Documentation content loading belongs in `docs/src/content/reference.ts`. The executable checks
-for built links and release-aligned deployment belong in `docs/scripts/`. Plugin rule metadata
-and common option schemas belong in `packages/eslint-plugin/src/rules/` beside their consumers.

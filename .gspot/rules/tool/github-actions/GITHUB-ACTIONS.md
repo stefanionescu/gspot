@@ -41,7 +41,8 @@ title: GitHub Actions
 
 - A `run:` block is short. Anything past a few lines is a script in the repository that follows
   the shell rules and passes ShellCheck.
-- `run:` uses `bash` with `set -euo pipefail` (the default `shell: bash` does this).
+- `run:` uses `shell: bash` and starts with `set -euo pipefail`. GitHub's explicit
+  Bash shell enables `-e` and `pipefail`, but does not enable `-u`.
 - Caches are keyed on the lockfile hash and the runtime version. Restore keys never match a
   different lockfile.
 
@@ -50,3 +51,6 @@ title: GitHub Actions
 - Artifacts and summaries name the job and the ref. Retention is set explicitly.
 - A workflow that deploys is the only workflow with deploy credentials and runs on a protected
   environment with a reviewer.
+
+See [GitHub's shell configuration](https://docs.github.com/en/actions/reference/workflows-and-actions/workflow-syntax#jobsjob_idstepsshell)
+for the command each runner uses.

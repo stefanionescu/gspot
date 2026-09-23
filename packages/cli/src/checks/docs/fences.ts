@@ -1,5 +1,4 @@
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { readSource } from '#cli/repository/tracked.ts';
 import { parseAllDocuments } from 'yaml';
 // Every fenced code block with a language tag parses in that language.
 import { visit } from 'unist-util-visit';
@@ -9,7 +8,6 @@ import type { Finding } from '#cli/output/finding.ts';
 import { parserFor } from '#cli/naming/parsers.ts';
 import type { GrammarName } from '#cli/naming/types.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
-import type { FencedBlock } from '#cli/checks/types.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import {
     ANGLE_PLACEHOLDER,
@@ -17,6 +15,8 @@ import {
     ELLIPSIS_LINE,
     FENCE_PARSERS,
 } from '#cli/checks/docs/docs-definitions.ts';
+
+type FencedBlock = { line: number; language: string; body: string };
 
 const STRUCTURED_PARSERS = new Set(['json', 'toml', 'yaml']);
 const TREE_PARSERS = new Set(['typescript', 'javascript', 'python']);
@@ -89,7 +89,7 @@ function problemFor(input: EngineInput, parser: string, body: string): Promise<s
 
 async function fileFindings(input: EngineInput, path: string): Promise<Finding[]> {
     const findings: Finding[] = [];
-    const blocks = fencesOf(readFileSync(join(input.root, path), 'utf8'));
+    const blocks = fencesOf(readSource(input.root, path).toString('utf8'));
     for (const fence of blocks) {
         const parser = FENCE_PARSERS[fence.language];
         if (parser === undefined || fence.body.trim() === '') continue;

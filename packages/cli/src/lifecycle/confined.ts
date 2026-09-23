@@ -1,6 +1,6 @@
 import { LIFECYCLE_PRIVATE_PATH } from '#cli/lifecycle/patterns-definitions.ts';
 import { randomUUID } from 'node:crypto';
-import { dirname, join, posix } from 'node:path';
+import { dirname, isAbsolute, join, posix, relative, sep } from 'node:path';
 import {
     chmodSync,
     closeSync,
@@ -9,8 +9,10 @@ import {
     lchmodSync,
     lstatSync,
     mkdirSync,
+    rmdirSync,
     openSync,
     readFileSync,
+    readdirSync,
     readlinkSync,
     realpathSync,
     renameSync,
@@ -22,6 +24,20 @@ import { isDeepStrictEqual } from 'node:util';
 import type { ConfinedRoot, FileSnapshot } from '#cli/lifecycle/types.ts';
 
 const DEVICE_NAME = /^(?:con|prn|aux|nul|com[1-9]|lpt[1-9])(?:\.|$)/iu;
+
+/** Compare only permissions represented by the host filesystem API. Windows exposes a read-only flag. */
+export function fileMode(file: Pick<FileSnapshot, 'mode' | 'isLink'>, platform = process.platform): number {
+    if (platform !== 'win32') return file.mode;
+    if (file.isLink || (file.mode & 0o200) !== 0) return 0o666;
+    return 0o444;
+}
+
+function sameSnapshot(actual: FileSnapshot | undefined, expected: FileSnapshot | undefined): boolean {
+    if (actual === undefined || expected === undefined) return actual === expected;
+    const observed = { ...actual, mode: fileMode(actual) };
+    const requested = { ...expected, mode: fileMode(expected) };
+    return isDeepStrictEqual(observed, requested);
+}
 
 /** Reject path spellings that have different meanings on supported operating systems. */
 export function mutationPath(path: string): string[] {
@@ -91,20 +107,28 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
             const target = parent(path);
             const stat = lstatSync(target);
             if (allowLink && stat.isSymbolicLink())
-                return { bytes: Buffer.from(readlinkSync(target)), mode: stat.mode & 0o7777, isLink: true };
+                return {
+                    bytes: Buffer.from(readlinkSync(target)),
+                    mode: fileMode({ mode: stat.mode & 0o7777, isLink: true }),
+                    isLink: true,
+                };
             if (!stat.isFile() || stat.nlink !== 1)
                 throw new Error(`Lifecycle destination is not a private regular file: ${path}`);
             const bytes = readFileSync(target);
             const after = lstatSync(target);
             if (stat.size !== bytes.length || stat.mtimeMs !== after.mtimeMs || stat.ctimeMs !== after.ctimeMs)
                 throw new Error(`Lifecycle destination changed while being read: ${path}`);
-            return { bytes, mode: stat.mode & 0o7777 };
+            return { bytes, mode: fileMode({ mode: stat.mode & 0o7777 }) };
         } catch (error) {
             if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
             throw error;
         }
     };
-    const validate = (path: string, value: FileSnapshot): string | undefined => {
+    const validate = (
+        path: string,
+        value: FileSnapshot,
+        proposed?: ReadonlyMap<string, FileSnapshot | undefined>,
+    ): string | undefined => {
         partsOf(path);
         if (!value.isLink) return undefined;
         const target = value.bytes.toString('utf8');
@@ -120,12 +144,94 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
         privateTarget(destination);
         if (posix.relative(posix.dirname(path), destination) !== target)
             throw new Error(`Lifecycle link target must use a normalized relative path: ${path}`);
-        if (readEntry(destination, false) === undefined) throw new Error(`Lifecycle link target is missing: ${path}`);
+        const targetFile = proposed?.has(destination) ? proposed.get(destination) : readEntry(destination, false);
+        if (targetFile === undefined) throw new Error(`Lifecycle link target is missing: ${path}`);
+        if (targetFile.isLink) throw new Error(`Lifecycle link target is not a regular file: ${path}`);
         return target;
     };
+    const write: ConfinedRoot['write'] = (path, value, expected) => {
+        const link = validate(path, value);
+        const target = parent(path, true);
+        const temporary = join(dirname(target), `.gspot-${randomUUID()}.tmp`);
+        let staged = false;
+        let removed = false;
+        try {
+            if (link !== undefined) {
+                symlinkSync(link, temporary);
+                staged = true;
+                if (process.platform === 'darwin') lchmodSync(temporary, value.mode);
+            } else {
+                const file = openSync(temporary, 'wx', 0o600);
+                staged = true;
+                try {
+                    writeFileSync(file, value.bytes);
+                    fchmodSync(file, value.mode);
+                    fsyncSync(file);
+                } finally {
+                    closeSync(file);
+                }
+            }
+            if (!sameSnapshot(readEntry(path, expected?.isLink === true), expected))
+                throw new Error(`Lifecycle destination changed during the operation: ${path}`);
+            // Windows cannot rename over a read-only file. The owner journals its saved bytes
+            // before this removal, so an interrupted replacement can restore the absent target.
+            if (
+                process.platform === 'win32' &&
+                expected !== undefined &&
+                !expected.isLink &&
+                (expected.mode & 0o200) === 0
+            ) {
+                unlinkSync(parent(path));
+                removed = true;
+            }
+            renameSync(temporary, parent(path));
+            staged = false;
+        } catch (error) {
+            if (removed && expected !== undefined) {
+                try {
+                    if (readEntry(path, false) === undefined) write(path, expected, undefined);
+                } catch (restorationError) {
+                    throw new AggregateError([error, restorationError], `Replacement and restoration failed: ${path}`);
+                }
+            }
+            throw error;
+        } finally {
+            if (staged) unlinkSync(temporary);
+        }
+    };
     return {
-        validate(path, value) {
-            validate(path, value);
+        rmdir(path) {
+            rmdirSync(parent(path));
+        },
+        source(path) {
+            const target = realpathSync(parent(path));
+            const local = relative(canonical, target);
+            if (isAbsolute(local) || local === '..' || local.startsWith(`..${sep}`))
+                throw new Error(`Source link leaves the repository: ${path}`);
+            return target;
+        },
+        list(path) {
+            try {
+                const target = path === undefined ? canonical : parent(path);
+                if (!lstatSync(target).isDirectory()) throw new Error(`Unsafe lifecycle directory: ${path ?? '.'}`);
+                return readdirSync(target).toSorted((left, right) => left.localeCompare(right));
+            } catch (error) {
+                if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
+                throw error;
+            }
+        },
+        stat(path) {
+            try {
+                const stat = lstatSync(parent(path));
+                if (stat.isSymbolicLink()) throw new Error(`Unsafe lifecycle destination: ${path}`);
+                return stat;
+            } catch (error) {
+                if ((error as NodeJS.ErrnoException).code === 'ENOENT') return undefined;
+                throw error;
+            }
+        },
+        validate(path, value, proposed) {
+            validate(path, value, proposed);
         },
         read(path) {
             return readEntry(path, false);
@@ -133,37 +239,9 @@ export function openConfinedRoot(root: string, pathFormat: 'portable' | 'native'
         readEntry(path) {
             return readEntry(path, true);
         },
-        write(path, value, expected) {
-            const link = validate(path, value);
-            const target = parent(path, true);
-            const temporary = join(dirname(target), `.gspot-${randomUUID()}.tmp`);
-            let staged = false;
-            try {
-                if (link !== undefined) {
-                    symlinkSync(link, temporary);
-                    staged = true;
-                    if (process.platform === 'darwin') lchmodSync(temporary, value.mode);
-                } else {
-                    const file = openSync(temporary, 'wx', 0o600);
-                    staged = true;
-                    try {
-                        writeFileSync(file, value.bytes);
-                        fchmodSync(file, value.mode);
-                        fsyncSync(file);
-                    } finally {
-                        closeSync(file);
-                    }
-                }
-                if (!isDeepStrictEqual(readEntry(path, expected?.isLink === true), expected))
-                    throw new Error(`Lifecycle destination changed during the operation: ${path}`);
-                renameSync(temporary, parent(path));
-                staged = false;
-            } finally {
-                if (staged) unlinkSync(temporary);
-            }
-        },
+        write,
         remove(path, expected) {
-            if (!isDeepStrictEqual(readEntry(path, expected.isLink === true), expected))
+            if (!sameSnapshot(readEntry(path, expected.isLink === true), expected))
                 throw new Error(`Lifecycle destination changed during removal: ${path}`);
             unlinkSync(parent(path));
         },

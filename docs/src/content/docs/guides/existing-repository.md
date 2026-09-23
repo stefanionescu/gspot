@@ -1,117 +1,168 @@
 ---
-title: Run it in a repository you already have
-description: What init deletes, carries and leaves alone when the repository already has linting.
+title: Adopt gspot in an existing repository
+description: Review configuration adoption, preserve unsupported settings, and run your first checks.
 sidebar:
     order: 2
 ---
 
-`gspot init` on a repository with linting in it replaces what it owns and lists what it can prove
-redundant. It prints its plan and waits for a yes.
+Use the [source installation guide](/guides/install/) to prepare the CLI. Run the commands below
+from the repository root unless a step names another directory.
 
-If the plan lists unread configuration, `init` exits with status 2 before
+Preview adoption from the repository root:
+
+```bash
+gspot init --dry-run
+```
+
+Review the proposed presets, configuration changes, and integrations. Run `gspot init` to
+accept the proposal. Keep unsupported configuration until you have converted its behavior.
+
+If the plan lists unread configuration, `gspot init` without `--dry-run` exits with status 2 before
 writing or installing anything. Fix the listed files and run `gspot init` again.
 Use `gspot init --dry-run` to inspect the proposal without changing files.
 Executable formatter and ESLint configurations are evaluated through the installed owning tool.
-The proposal identifies captured settings and retained behavior. Missing ESLint, processors,
-plugin behavior, and selectors that cannot be carried remain in the original configuration.
+The proposal identifies captured settings and retained behavior. Missing ESLint, unregistered
+executable behavior, and selectors that cannot be carried remain in the original configuration.
 A tool evaluation failure is unread configuration and refuses initialization.
 
-## What it deletes
+## Preserve originals
 
 Readable configurations of selected tools include `typos.toml`, `.shellcheckrc`,
 and `.markdownlint.jsonc`. Before replacing or removing a file, gspot saves its exact bytes
 and permissions in local recovery data under `.gspot/recovery/`. Keep that directory private
 and retain it until you no longer need the originals.
 
-## What it carries
+## Carry existing policy
 
-The exception lists, because they are facts about the repository and not policy:
+Supported exception lists become explicit repository policy:
 
 - typos words and excludes;
 - rules turned off in a linter configuration, as `[[ignore]]` entries;
 - gitleaks allowlists, osv ignored advisories and license exceptions, when those presets run.
 
-Every carried entry says `carried from <file> at init` as its reason. Rewrite or remove it when
-you have read it.
+Carried entries retain source comments where supported. Otherwise, their reason identifies
+the source as `carried from <file> at init`. Review these reasons after adoption.
 
-## What it lists and leaves alone
+### Dependency licenses
 
-- Local executable hooks: `gspot install` preserves each original as a `.gspot-original`
-  sibling and installs a dispatcher in the directory Git already uses. It preserves arguments,
-  input, and failure status without changing `core.hooksPath`. Tracked hooks remain intact and
-  require integration through their hook manager.
-- `gspot uninstall` restores an unchanged dispatcher and retains edits to its original hook.
-  An edited dispatcher stays in place for review.
-- A folder of lint scripts nothing in the gate calls, a manifest whose dependencies are all
-  tools gspot pins, a duplicate pin of a tool gspot pins.
-- A tool gspot has no preset for: add it as a `[[check]]` entry in `gspot.toml` when you want it
-  in the gate.
+License package exclusions are resolved through the project's installed
+`license-checker-rseidelsohn` scanner. Each exception records the installed package version
+and reported license. An unresolved package stops adoption. License allowances that cannot
+be represented as supported SPDX allowances remain in the original configuration for conversion.
 
-To allow caching for a repository check, declare `inputs` as root-relative file globs that
-cover every file its command reads, including ignored files. Leave `inputs` out when the
-command depends on external state that those files do not capture. Changes to input bytes
-or matching paths invalidate the cached result.
+### SQLFluff
 
-## Remove gspot configuration
+SQLFluff rule exclusions can be carried from `.sqlfluff`, or from the `[sqlfluff]` section
+of `setup.cfg` and `tox.ini`. Shared files retain their exact bytes and permissions, even when
+they contain only that section. The plan names the adopted section for manual removal.
+Exclusion lists can continue onto indented lines. Duplicate options and unsupported settings
+stop adoption before any original is replaced.
 
-Preview the recorded removals and restorations:
+### Markdown
 
-```sh
-gspot uninstall --dry-run
-```
+Markdown rule tables retain enabled rules, disabled rules, and options. Adoption preserves
+native defaults, including when the source omits `default`. An explicit native `default: false`
+keeps unspecified rules disabled. Directory-local configuration creates a policy scope with its own generated configuration
+and editor pointer. Descendant scopes inherit those rule choices. Static JSON and YAML parents
+use explicit `./` or `../` paths. Child values replace inherited values by rule name.
+Parent files remain intact and are checked for changes before publication. Overlapping
+configuration, package inheritance, and custom rules remain intact for explicit conversion.
+CLI checks and corrections use only selected files and generated configuration in a temporary
+directory. Other native configuration files do not override that policy or execute during a check.
 
-Run `gspot uninstall --yes` to apply them. Uninstall restores originals only when the
-destination is absent or still matches the installed value. Later edits, unowned files,
-`gspot.toml`, and local recovery data remain.
+### Stylelint
 
-A fresh clone has no local ownership record. Its files remain even when they match generated
-templates. If you run `gspot apply`, gspot preserves those existing bytes and permissions as
-originals for later restoration. Git tracking and generated markers do not authorize deletion.
+Root and directory-local Stylelint rule tables retain enabled options, numeric limits, and disabled rules.
+Adoption validates rule names and options with the installed Stylelint version pinned by the
+CSS preset. Install that version before adopting its configuration. Local JSON and YAML
+inheritance uses explicit `./` or `../` paths and preserves parent order and child overrides.
+Inherited files remain intact and are
+checked for changes before publication. Directory-local configuration creates a policy scope.
+Disabled rules keep that directory selector and apply to its generated editor configuration.
+Overlapping configurations, package-provided inheritance,
+executable configuration, and options that cannot be represented in TOML remain active for
+explicit conversion. Enabled settings are stored in `tools.stylelint.rules`.
+Disabled rules become `gspot ignore css/stylelint --rule` entries.
+Declared scopes can set their own `tools.stylelint.rules`. Each scope receives its own generated
+configuration and editor pointer, while the tools remain in the shared private installation.
+A scope inherits rules it does not override. An override replaces the entire option value for
+that rule, including any secondary options.
 
-## The first run
+### Ruff
 
-After accepting the proposal, `init` writes the configuration and installs the tools.
-Run `gspot check` when you are ready to see findings. Adding a preset or upgrading
-also leaves check execution to an explicit command.
+Ruff disabled rules and supported per-file exclusions can be carried from `ruff.toml`,
+`.ruff.toml`, or `[tool.ruff]` in `pyproject.toml`. The project manifest remains intact.
+Both `ignore` and `extend-ignore` carry. Rules under `per-file-ignores` and
+`extend-per-file-ignores` combine for each selector and retain their configuration directory.
+Local `extend` chains carry supported exclusions and retain inherited files. A child
+`per-file-ignores` table replaces the inherited table; additive exclusions accumulate.
+Inherited selectors keep their declaring directory. If a wildcard selector cannot be restricted
+to the child directory without changing its meaning, adoption retains the configuration for
+explicit conversion. Missing parents, cycles, and unsupported inherited settings also stop
+adoption before any rules are carried.
+Nested configurations retain their directory base. A nested negated selector requires
+explicit conversion because moving it could exempt files outside that directory.
+Overlapping Ruff configurations also require explicit conversion. Nonoverlapping nested spelling
+configurations carry their locale, allowed words, and exclusions into a scope table. Native editor
+configuration preserves directory selectors, basename patterns, and ordered negations.
+Overlapping spelling configurations require explicit conversion because native child settings
+replace parent settings while policy lists append. Nested secret allowlists, advisory exceptions,
+and license settings stop adoption when their scope cannot be preserved.
 
-## CI
+### ESLint
 
-Select a provider with `gspot init --ci github` or `gspot init --ci gitlab`. Existing CI files
-determine the default before the remote hostname. When initialization finds an authored lint
-job, the plan identifies it and proposes no duplicate job.
+ESLint adoption preserves ordered selectors, `basePath` directories, and processors. Named
+processors retain their plugin names. Imported plugin, parser, and processor objects retain
+module registrations, including nested exported members. Adoption recognizes static imports,
+literal `require` calls, and top-level literal dynamic imports assigned to configuration values.
+CommonJS registrations use default exports so generated configuration also runs under Node.
+A registration names its `module`,
+`export`, and optional `members` path. The export `"*"` refers to the module namespace. Selector bases remain relative to the
+repository and apply to future files. Keep local executable modules in the repository. Exported
+profiles omit entries that depend on repository paths or local executable modules.
 
-For GitLab, gspot writes `.gitlab/ci/gspot.yml`. Add its include to your existing pipeline:
+Legacy ESLint configurations can extend other configurations. Adoption resolves inherited
+rules, plugin environments, and extension processors through ESLint. Native override groups and
+ignore patterns are stored as `legacyCriteria` and `legacyIgnores` under `tools.eslint.adopted`.
+A root `.eslintignore` is captured and retired with the legacy configuration after conversion.
+Standalone ignore files, nested ignore files, and ignore files beside flat configuration require
+explicit conversion before adoption. Their selector bases remain relative to the repository.
+Nested configuration uses native file
+precedence and preserves `root: true` resets. Directory branches are stored as `legacyScope`.
+Package-embedded configuration is captured while the shared manifest remains intact.
 
-```yaml
-include:
-  - local: .gitlab/ci/gspot.yml
-```
+### Prettier and EditorConfig
 
-The generated job runs for merge requests and the default branch. It retains JSON, SARIF, and
-GitLab Code Quality reports after a failed check. See the GitLab documentation for
-[local includes](https://docs.gitlab.com/ci/yaml/#includelocal) and
-[Code Quality reports](https://docs.gitlab.com/ci/testing/code_quality/).
+Formatting adoption preserves JSON5 options, ordered Prettier overrides, and nested configuration
+precedence. Selectors continue to apply to files created after initialization. Directory branches
+exclude nested configurations, so a nested configuration resets unspecified parent options and
+parsers. EditorConfig remains the native source for options that Prettier does not override.
 
-For GitHub, the workflow checks pull requests, merge queues, and pushed commits. Manual checks
-run in separate jobs on default-branch pushes. Each stage and platform retains its own reports.
-A separate code-scanning job uploads available SARIF reports after repository pushes. Set
-`ci.sarif` to `false` when the repository does not use GitHub code scanning:
+EditorConfig sections are stored under `tools.editorconfig.adopted`. Its `directories` list stores
+nested documents with repository-relative `basePath` values. Generation restores each document
+at its native directory, preserving `root = true` and `unset` behavior.
+`tools.prettier.native_defaults` lets Prettier resolve unspecified options through EditorConfig
+and its native defaults. Profiles omit these repository-specific EditorConfig documents.
 
-```sh
-gspot set ci.sarif false
-gspot apply
-```
+### Ignore files
 
-CI checks changes relative to the event base. An absent base on a first push checks the full
-tree. An invalid or unavailable comparison object fails the job. To check the full tree on
-every CI run:
+SQLFluff and Semgrep ignore files retain their directory base, including nested files.
+Nested Prettier ignore files and selectors that cannot be relocated without changing their
+meaning stop adoption and leave the original configuration active.
 
-```sh
-gspot set ci.run all
-gspot apply
-```
+## Keep existing integrations
 
-CI installs tracked tool locks before checking. Generated shell steps require Bash.
-Generated jobs require the selected installer
-on the runner. The mise integration provisions its pinned tools; without mise, provision the
-package manager, uv when Python tools are selected, and required native tools on the runner.
+Local executable hooks remain in the chain. Installation preserves their arguments, input,
+and failure status without changing `core.hooksPath`. Tracked hooks require integration through
+their hook manager. Configure [hooks and CI](/guides/hooks-and-ci/) before replacing that setup.
+
+The proposal identifies potentially redundant lint scripts and tool dependencies for review.
+Add tools without a preset as [custom checks](/guides/custom-checks/).
+
+## Run the checks
+
+After accepting the proposal, initialization writes configuration and installs selected tools
+unless you pass `--no-install`. It runs no checks. Run `gspot check` to see findings.
+
+To reverse recorded changes, follow [uninstall and recovery](/guides/uninstall/).
+Keep local recovery data until restoration is complete.

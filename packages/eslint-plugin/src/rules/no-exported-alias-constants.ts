@@ -18,6 +18,8 @@ export const noExportedAliasConstants = createRule<[], 'alias'>({
     meta: {
         type: 'suggestion',
         docs: {
+            example:
+                'The declaration `export const a = b;` reports `alias`. Remove `a` and update its consumers to use `b` from its owner. A declaration that owns a value, such as `export const a = 1;`, does not report this finding.',
             summary: 'Finds an exported constant that only renames another value.',
             why: 'Two names for one value split every search and every reader in two.',
             fix: 'Export the source value under its own name, or import the source where the alias was used.',

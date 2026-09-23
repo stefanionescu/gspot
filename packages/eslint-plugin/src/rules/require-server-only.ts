@@ -7,9 +7,11 @@ export const requireServerOnly = createRule<[], 'missing'>({
     meta: {
         type: 'problem',
         docs: {
-            summary: 'Checks that a server module starts with import "server-only".',
-            why: 'Without that import, a client component can pull the module in and ship its secrets to the browser.',
-            fix: 'Add import "server-only" as the first line, or move the module out of the server file class.',
+            example:
+                'A selected server module containing `export const secret = 1;` reports `missing`. With the `server-only` package installed, add `import "server-only";` before that declaration.',
+            summary: 'Checks that a selected server module imports "server-only" or declares "use server".',
+            why: 'A server-only marker lets Next.js reject client imports of a module that uses private server capabilities.',
+            fix: 'Add import "server-only" to the imports. Use "use server" only for a module that follows the Server Actions contract. Remove an incorrect server file classification when appropriate.',
         },
         schema: [],
         messages: {

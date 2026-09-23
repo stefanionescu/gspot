@@ -1,14 +1,16 @@
 // Line coverage of the targets the policy names, from one xcodebuild test run.
 import { join } from 'node:path';
-import { mkdirSync, rmSync } from 'node:fs';
-import { run } from '#cli/platform/spawn.ts';
+import { openBuildCache, prepareBuildSources } from '#cli/platform/build-cache.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { z } from 'zod';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { swiftBuildPlan } from '#cli/checks/swift/plan.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import type { CoverageFloor, CoverageReport } from '#cli/checks/xcode/types.ts';
 
-const TEST_TIMEOUT_MS = 3_600_000;
+const coverageReportSchema = z.object({
+    targets: z.array(z.object({ name: z.string().min(1), lineCoverage: z.number().min(0).max(1) })),
+});
 const PERCENT = 100;
 
 /**
@@ -36,32 +38,64 @@ export function underFloor(report: CoverageReport, floors: CoverageFloor[]): str
  * @returns the findings
  */
 export async function testCoverage(input: EngineInput): Promise<Finding[]> {
+    if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
+    if (input.view.tool('xcode')['project'] === '')
+        throw new Error('Set tools.xcode.project and tools.xcode.scheme before measuring XCTest coverage.');
     const floors = input.view.tool('xctest')['coverage'] as CoverageFloor[];
-    const plan = swiftBuildPlan(input);
+    const plan = swiftBuildPlan(input, 'coverage');
     const bundle = join(plan.folder, 'coverage.xcresult');
-    mkdirSync(plan.folder, { recursive: true });
-    rmSync(bundle, { recursive: true, force: true });
-    const argv = plan.argv
-        .map((part) => (part === 'build-for-testing' ? 'test' : part))
-        .filter((part) => part !== 'clean');
-    const tested = await run([...argv, '-enableCodeCoverage', 'YES', '-resultBundlePath', bundle], {
-        cwd: plan.cwd,
-        timeoutMs: TEST_TIMEOUT_MS,
-    });
-    if (tested.missing) throw new MissingToolError('The xcodebuild command is not installed.');
-    const viewed = await run(['xcrun', 'xccov', 'view', '--report', '--json', bundle], {
-        cwd: plan.cwd,
-        timeoutMs: TEST_TIMEOUT_MS,
-    });
-    if (viewed.code !== 0)
-        throw new Error(`The test run wrote no coverage report: ${tested.stderr.trim().split('\n').at(-1) ?? ''}`);
-    const report = JSON.parse(viewed.stdout) as CoverageReport;
-    return underFloor(report, floors).map((text) => ({
-        check: input.spec.name,
-        file: '',
-        line: 1,
-        rule: 'coverage',
-        message: text,
-        fixable: false,
-    }));
+    const files = openBuildCache(plan.folder);
+    try {
+        const source = prepareBuildSources(
+            input.root,
+            input.files.map((file) => file.path),
+            plan.folder,
+            files,
+        );
+        const cwd = join(source, input.scope);
+        if (files.stat('coverage.xcresult') !== undefined) {
+            const directories = ['coverage.xcresult'];
+            for (const directory of directories) {
+                for (const name of files.list(directory)) {
+                    const path = `${directory}/${name}`;
+                    if (files.stat(path)?.isDirectory()) directories.push(path);
+                    else {
+                        const previous = files.read(path);
+                        if (previous !== undefined) files.remove(path, previous);
+                    }
+                }
+            }
+            for (const directory of directories.toReversed()) files.rmdir(directory);
+        }
+        const argv = plan.argv
+            .map((part) => (part === 'build-for-testing' ? 'test' : part))
+            .filter((part) => part !== 'clean');
+        const tested = await runCheckCommand(
+            input,
+            [...argv, '-enableCodeCoverage', 'YES', '-resultBundlePath', bundle],
+            {
+                cwd,
+            },
+        );
+        if (tested.code !== 0)
+            throw new Error(
+                `Cannot measure coverage because the test run exited ${String(tested.code)}: ${tested.stderr.trim()}`,
+            );
+        const viewed = await runCheckCommand(input, ['xcrun', 'xccov', 'view', '--report', '--json', bundle], {
+            cwd,
+        });
+        if (viewed.code !== 0)
+            throw new Error(`The test run wrote no coverage report: ${viewed.stderr.trim().split('\n').at(-1) ?? ''}`);
+        const report = coverageReportSchema.parse(JSON.parse(viewed.stdout));
+        return underFloor(report, floors).map((text) => ({
+            check: input.spec.name,
+            file: '',
+            line: 1,
+            rule: 'coverage',
+            message: text,
+            fixable: false,
+        }));
+    } finally {
+        files.close();
+    }
 }

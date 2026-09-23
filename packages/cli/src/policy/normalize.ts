@@ -209,7 +209,14 @@ export function normalize(raw: RawPolicy): Policy {
             ...(raw.ci === undefined ? {} : { ci: raw.ci }),
             rules: defaulted<Policy['rules']>(raw.rules, { install: true, directory: '.gspot/rules', exclude: [] }),
             coverage: defaulted<Policy['coverage']>(raw.coverage, { strict: false }),
-            ...(raw.runner === undefined ? {} : { runner: { tool: raw.runner.tool } }),
+            ...(raw.runner === undefined
+                ? {}
+                : {
+                      runner: {
+                          tool: raw.runner.tool,
+                          ...(raw.runner.tasks === undefined ? {} : { tasks: raw.runner.tasks }),
+                      },
+                  }),
         },
         scopeTables,
     };

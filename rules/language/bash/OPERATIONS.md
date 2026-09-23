@@ -123,7 +123,7 @@ Remote commands:
 
 - Prefer copying a reviewed script to the remote host and invoking it with arguments.
 - Avoid interpolating local variables into remote shell strings.
-- If `ssh host command args...` is used, pass fixed commands and quoted arguments.
+- SSH joins command arguments into a remote shell string. Local argument quoting alone does not preserve remote argument boundaries.
 - Treat remote command strings as a last resort. Quote or escape every argument deliberately for
   the shell that will parse it.
 - Do not build remote shell fragments from user input.
@@ -137,10 +137,12 @@ Bad:
 ssh "$host" "cd $dir && docker compose up -d $service"
 ```
 
-Better:
+The [SSH command contract](https://man.openbsd.org/ssh) joins arguments before remote execution.
+For a remote login shell that is Bash, escape each argument with Bash's `%q` format:
 
 ```bash
-ssh -- "${host}" bash -- "${remote_script}" "${dir}" "${service}"
+printf -v remote_command 'bash -- %q %q %q' "${remote_script}" "${dir}" "${service}"
+ssh -- "${host}" "${remote_command}"
 ```
 
 Checkpoint state:
@@ -163,7 +165,9 @@ Persisted runtime state:
   replace the previous state with an atomic `mv`.
 - Readers treat malformed, duplicate, or unknown state keys as errors.
 
-Retry pattern:
+Retry pattern: capture failure status in the `else` branch. An
+[`if` with no successful condition and no `else`](https://www.gnu.org/software/bash/manual/html_node/Conditional-Constructs.html)
+returns zero after `fi`.
 
 ```bash
 # retry_retryable - Runs a retryable command with bounded attempts.
@@ -192,9 +196,10 @@ retry_retryable() {
       printf 'step=%s attempt=%s/%s status=success\n' \
         "${step_name}" "${attempt}" "${attempts}" >&2
       return 0
+    else
+      status=$?
     fi
 
-    status=$?
     printf 'step=%s attempt=%s/%s status=failed exit=%s\n' \
       "${step_name}" "${attempt}" "${attempts}" "${status}" >&2
 

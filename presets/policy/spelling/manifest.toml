@@ -1,0 +1,76 @@
+[preset]
+name = "spelling"
+kind = "policy"
+title = "Spelling"
+default = true
+description = "typos over every text file, with the words this repository allows and the reason for each."
+
+[claims]
+paths = ["**"]
+natures = ["source"]
+
+[[tools]]
+name = "typos"
+version = "1.43.5"
+mise = "typos"
+brew = "typos-cli"
+cargo = "typos-cli"
+winget = "crate-ci.typos"
+scoop = "typos"
+github = {name = "crate-ci/typos", version = "v1.43.5"}
+
+[[tools.takeover]]
+file = "typos.toml"
+carries = "words"
+
+[[tools.takeover]]
+file = ".typos.toml"
+carries = "words"
+
+[[tools.takeover]]
+file = "_typos.toml"
+carries = "words"
+
+[[configs]]
+template = "typos.toml.tmpl"
+target = ".gspot/typos.toml"
+per_scope = true
+stub = {path = "typos.toml", template = "typos.toml.tmpl"}
+
+[[checks]]
+name = "spelling/typos"
+example = "The word `teh` in selected text reports a spelling finding. Correct it to `the` and rerun. Filename findings require a manual rename and reference updates."
+level = "recommended"
+stage = "commit"
+runs = "per-file-list"
+command = ["typos", "--isolated", "--config", "{config:typos}", "--force-exclude", "--format", "json", "--color", "never", "{files}"]
+fix_command = ["typos", "--isolated", "--config", "{config:typos}", "--force-exclude", "--no-check-filenames", "--write-changes", "--color", "never", "{files}"]
+fix_order = "codemod"
+fix_findings_exit_codes = [2]
+coverage = ["spelling"]
+exclude_setting = "tools.typos.exclude"
+output = {format = "typos-json"}
+summary = "Finds misspelled words in code, comments, and documentation."
+why = "A typo in an identifier spreads to every caller; in prose it costs the reader a second look."
+help = "Fix the spelling, or use gspot set tools.typos.words with a word entry when it is a real name."
+
+[[settings]]
+name = "tools.typos.words"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Words typos flags that this repository uses on purpose, each with a reason (the word itself counts)."
+
+[[settings]]
+name = "tools.typos.exclude"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Root-relative paths typos skips, each with a reason."
+
+[[settings]]
+name = "tools.typos.locale"
+kind = "string"
+direction = "neutral"
+default = "en-us"
+summary = "The English locale typos checks against: en, en-us, en-gb, en-ca, or en-au."

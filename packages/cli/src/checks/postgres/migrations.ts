@@ -1,13 +1,12 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // The migrations of a repository: where they live, their versions, and their parsed statements.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
-import type { EngineInput, Session } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 import type { Migration } from '#cli/checks/postgres/types.ts';
 import { scopeOf } from '#cli/repository/scopes.ts';
 import { sqlFile } from '#cli/readers/sql/statements.ts';
 import { MIGRATION_FOLDERS, MIGRATION_VERSION } from '#cli/checks/postgres/postgres-definitions.ts';
 
-const observations = new WeakMap<Session, Map<string, Promise<Migration[]>>>();
+const observations = new WeakMap<object, Map<string, Promise<Migration[]>>>();
 
 function folderOf(input: EngineInput, paths: string[]): string | undefined {
     const named = input.view.tool('postgres')['migrations_dir'];
@@ -21,9 +20,11 @@ function folderOf(input: EngineInput, paths: string[]): string | undefined {
 async function readMigrations(root: string, paths: string[]): Promise<Migration[]> {
     const migrations: Migration[] = [];
     for (const path of paths) {
-        const text = readFileSync(join(root, path), 'utf8');
+        const text = readSource(root, path).toString('utf8');
         const name = path.slice(path.lastIndexOf('/') + 1);
         const parsed = await sqlFile(text);
+        if (parsed.error !== undefined)
+            throw new Error(`SQL parse failed at ${parsed.error.line}:${parsed.error.column}: ${parsed.error.text}`);
         migrations.push({
             path,
             name,
@@ -41,17 +42,18 @@ async function readMigrations(root: string, paths: string[]): Promise<Migration[
  * @returns the migrations, empty when the repository has no migrations folder
  */
 export async function migrationsOf(input: EngineInput): Promise<Migration[]> {
-    const paths = input.session.repository.files
-        .filter((file) => scopeOf(file.path, input.session.repository.scopes).path === input.scope)
+    const paths = input.files
+        .filter((file) => scopeOf(file.path, input.scopeEntries).path === input.scope)
         .map((file) => file.path);
     const folder = folderOf(input, paths);
     if (folder === undefined) return [];
-    let folders = observations.get(input.session);
+    let folders = observations.get(input.runKey);
     if (folders === undefined) {
         folders = new Map();
-        observations.set(input.session, folders);
+        observations.set(input.runKey, folders);
     }
-    let migrations = folders.get(folder);
+    const key = JSON.stringify([folder, paths]);
+    let migrations = folders.get(key);
     if (migrations === undefined) {
         migrations = readMigrations(
             input.root,
@@ -59,7 +61,7 @@ export async function migrationsOf(input: EngineInput): Promise<Migration[]> {
                 .filter((path) => path.startsWith(`${folder}/`) && path.endsWith('.sql'))
                 .toSorted((left, right) => left.localeCompare(right)),
         );
-        folders.set(folder, migrations);
+        folders.set(key, migrations);
     }
     return migrations;
 }

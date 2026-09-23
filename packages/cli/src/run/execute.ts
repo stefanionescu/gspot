@@ -1,41 +1,60 @@
-import { globby } from 'globby';
+import type { IgnoreEntry } from '#cli/policy/types.ts';
+import { readFileSync, realpathSync, statSync } from 'node:fs';
 // The orchestrator: plan, run, filter through ignores, report, decide the exit code.
-import { isActive, planRun } from '#cli/run/plan.ts';
+import { claimedInputs, isActive, planRun } from '#cli/run/plan.ts';
+import { coverageReport } from '#cli/doctor/coverage.ts';
+import { readRepository } from '#cli/repository/tree.ts';
 import { applyFixers } from '#cli/run/fixers.ts';
 import type { RunReport } from '#cli/output/report-types.ts';
 import { writeReport } from '#cli/output/report.ts';
 import { reproduceLine } from '#cli/run/reproduce.ts';
 import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 import type { TrackedFile } from '#cli/repository/types.ts';
-import { stageLimiter } from '#cli/run/concurrency.ts';
+import pLimit from 'p-limit';
+import { cpus } from 'node:os';
+import { jobsWanted } from '#cli/platform/environment.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import type { CheckResult, Finding } from '#cli/output/finding.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
-import { prepareCommand } from '#cli/run/tool-runner.ts';
-import { textHash, cacheKey, fileHash, readCached, writeCached, pruneCache } from '#cli/run/cache.ts';
+import { commandConfigurations, prepareCommand } from '#cli/run/tool-runner.ts';
+import { textHash, cacheKey, fileHash, cacheInputs, readCached, writeCached, pruneCache } from '#cli/run/cache.ts';
 
-import type {
-    RunHashes,
-    FilterInputs,
-    FixReport,
-    IgnoreUse,
-    RunOptions,
-    RunOutcome,
-    Session,
-    PlannedCheck,
-    Sifted,
-} from '#cli/run/types.ts';
+import type { FixReport, IgnoreUse, RunOptions, RunOutcome, Session, PlannedCheck } from '#cli/run/types.ts';
+
+/** File observations shared by cached checks within one execution pass. */
+type RunHashes = {
+    policy: string;
+    files: Map<string, string>;
+    tools: Map<string, string>;
+};
+
+/** Policy entries that filter reported findings. */
+type FilterInputs = { ignores: IgnoreEntry[] };
+
+/** One result on its way through the filters: the check, its result, and the findings no ignore took. */
+type Sifted = { check: PlannedCheck; result: CheckResult; remaining: Finding[] };
 
 const NEVER_CACHED = new Set(['integrity/generated-drift', 'commits/commitlint', 'commits/range']);
 const RAN_STATUSES = new Set(['ok', 'cache', 'fail']);
 const FAILED_STATUSES = new Set(['fail', 'missing', 'error']);
 const DOCKER = { name: 'docker', provider: 'host' as const, windows: true, installers: {} };
 
-function toolVersionOf(session: Session, planned: PlannedCheck): string {
+function toolVersionOf(session: Session, planned: PlannedCheck, hashes: RunHashes): string {
     if (!planned.tool) return 'engine';
     const { env, cwd } = prepareCommand(session, planned, planned.spec.command ?? []);
     const probe = probeTool({ ...session, cwd }, { ...planned.tool, env });
-    return `${planned.tool.name}@${probe.found ?? probe.state}`;
+    if (probe.path === undefined) return JSON.stringify(probe);
+    const path = realpathSync(probe.path);
+    let identity = hashes.tools.get(path);
+    if (identity === undefined) {
+        identity = JSON.stringify({
+            path,
+            mode: statSync(path).mode,
+            hash: new Bun.CryptoHasher('sha256').update(readFileSync(path)).digest('hex'),
+        });
+        hashes.tools.set(path, identity);
+    }
+    return JSON.stringify([planned.tool.name, probe.state, probe.found, identity]);
 }
 
 function observedHash(session: Session, path: string, hashes: RunHashes): string {
@@ -46,17 +65,20 @@ function observedHash(session: Session, path: string, hashes: RunHashes): string
     return hash;
 }
 
-function generatedHash(session: Session, hashes: RunHashes): string {
-    if (hashes.generated !== undefined) return hashes.generated;
-    const files = session.repository.files
-        .filter((file) => file.path.startsWith('.gspot/'))
-        .filter((file) => !file.path.startsWith('.gspot/cache/') && !file.path.startsWith('.gspot/rules/'))
-        .map((file) => ({ path: file.path, hash: observedHash(session, file.path, hashes) }));
-    hashes.generated = JSON.stringify(files);
-    return hashes.generated;
+function configurationHashes(session: Session, planned: PlannedCheck, hashes: RunHashes): string {
+    return JSON.stringify(
+        commandConfigurations(session, planned).map((path) => {
+            try {
+                return { path, hash: observedHash(session, path, hashes) };
+            } catch (error) {
+                if ((error as NodeJS.ErrnoException).code !== 'ENOENT') throw error;
+                return { path, hash: 'missing' };
+            }
+        }),
+    );
 }
 
-async function keyFor(session: Session, planned: PlannedCheck, config: RunHashes): Promise<string | undefined> {
+function keyFor(session: Session, planned: PlannedCheck, config: RunHashes): string | undefined {
     const declared =
         planned.manifest === undefined
             ? session.policyFiles.policy.checks.find((entry) => entry.name === planned.check)?.inputs
@@ -67,16 +89,7 @@ async function keyFor(session: Session, planned: PlannedCheck, config: RunHashes
     if (planned.spec.engine !== undefined || planned.spec.analysis !== undefined) return undefined;
     if (NEVER_CACHED.has(planned.check) || planned.spec.requires !== undefined) return undefined;
     if (planned.spec.runs !== 'per-file-list' && planned.files.length === 0) return undefined;
-    const inputs =
-        declared === undefined
-            ? []
-            : await globby(declared, {
-                  cwd: session.root,
-                  dot: true,
-                  onlyFiles: true,
-                  followSymbolicLinks: true,
-                  gitignore: false,
-              });
+    const inputs = declared === undefined ? [] : cacheInputs(session.root, declared);
     const paths = [...new Set([...planned.files.map((file) => file.path), ...inputs])].toSorted((left, right) =>
         left.localeCompare(right),
     );
@@ -84,11 +97,10 @@ async function keyFor(session: Session, planned: PlannedCheck, config: RunHashes
     return cacheKey({
         check: planned.check,
         scope: planned.scope.scope.path,
-        toolVersion: toolVersionOf(session, planned),
+        toolVersion: toolVersionOf(session, planned, config),
         configurationHash: config.policy,
         files,
-        extra:
-            planned.manifest === undefined ? session.version : `${session.version}\n${generatedHash(session, config)}`,
+        extra: `${session.version}\n${configurationHashes(session, planned, config)}`,
     });
 }
 
@@ -124,7 +136,7 @@ async function runOne(
     };
     const early = unrunnable(session, planned, base);
     if (early) return early;
-    const key = options.noCache === true ? undefined : await keyFor(session, planned, config);
+    const key = options.noCache === true ? undefined : keyFor(session, planned, config);
     const cached = key === undefined ? undefined : cachedResult(session.root, key, planned);
     if (cached) return cached;
     const result = await planned.run(session, planned, staged);
@@ -190,9 +202,10 @@ function filterAll(
     });
     const ran = paired.filter((entry) => RAN_STATUSES.has(entry.result.status));
     for (const entry of ran) entry.remaining = withoutIgnored(root, entry, filtering, uses);
-    for (const { result, remaining } of ran) {
+    for (const { check, result, remaining } of ran) {
+        const countedFailure = check.spec.count_regex !== undefined && result.status === 'fail';
         result.findings = remaining;
-        if (result.findings.length > 0) result.status = 'fail';
+        if (countedFailure || result.findings.length > 0) result.status = 'fail';
         else if (result.status !== 'cache') result.status = 'ok';
     }
     for (const { check, result } of paired)
@@ -217,29 +230,69 @@ function failedChecks(results: CheckResult[], fixes: FixReport | undefined): str
  * @returns the report, the plan, and the fix report when --fix ran
  */
 export async function executeRun(opened: Session, options: RunOptions): Promise<RunOutcome> {
-    const session = options.cancelSignal === undefined ? opened : { ...opened, cancelSignal: options.cancelSignal };
+    using resources = new DisposableStack();
+    const session = {
+        ...opened,
+        resources,
+        ...(options.cancelSignal === undefined ? {} : { cancelSignal: options.cancelSignal }),
+    };
+    session.probes.clear();
     const started = new Date();
-    const planned = await planRun(session, options);
+    let planned = await planRun(session, options);
     const fixes = options.fix ? await applyFixers(session, planned, options.isDryRun) : undefined;
-    const config = { policy: textHash(session.policyFiles.text), files: new Map() };
+    if (fixes !== undefined && !options.isDryRun) {
+        const { declarations, scopes, exclude } = session.policyFiles.policy;
+        session.repository = await readRepository(session.root, declarations, scopes, exclude);
+        opened.repository = session.repository;
+        session.probes.clear();
+        planned = await planRun(session, options);
+    }
+    const config = { policy: textHash(session.policyFiles.text), files: new Map(), tools: new Map() };
     const staged = options.staged ? new Set(options.staged) : undefined;
-    const limiter = stageLimiter();
+    const limiter = pLimit(jobsWanted() ?? Math.max(1, cpus().length));
     const active = planned.filter((check) => isActive(check));
-    const results = await Promise.all(
-        active.map((check) => limiter(() => runOne(session, check, options, config, staged))),
-    );
     const { ignores } = session.policyFiles.policy;
     const filtering: FilterInputs = { ignores };
     const uses = new Map<string, IgnoreUse>(ignores.map((entry) => [JSON.stringify(entry), { entry, matched: 0 }]));
-    filterAll(session.root, active, results, filtering, uses, options);
-    const failed = failedChecks(results, fixes);
-    const claimed = new Set(
-        active.flatMap((check, index) =>
-            RAN_STATUSES.has(results[index]!.status) ? check.files.map((file) => file.path) : [],
+    const settled = await Promise.allSettled(
+        active.map((check) =>
+            limiter(async () => {
+                const result = await runOne(session, check, options, config, staged);
+                filterAll(session.root, [check], [result], filtering, uses, options);
+                options.onResult?.(result);
+                return result;
+            }),
         ),
+    );
+    const results = settled.map((result) => {
+        if (result.status === 'rejected') throw result.reason;
+        return result.value;
+    });
+    const failed = failedChecks(results, fixes);
+    const unable =
+        session.cancelSignal?.aborted === true ||
+        results.some((result) => result.status === 'missing' || result.status === 'error') ||
+        fixes?.results.some((result) => result.status === 'failed') === true;
+    const claimed = new Set(
+        active.flatMap((check, index) => {
+            if (!RAN_STATUSES.has(results[index]!.status)) return [];
+            if (results[index]!.checkedFiles !== undefined) return results[index]!.checkedFiles;
+            return claimedInputs(session, check).map((file) => file.path);
+        }),
     );
     const sources = session.repository.files.filter((file) => file.nature === 'source');
     const checkedSources = sources.filter((file) => claimed.has(file.path));
+    const configured = coverageReport(session);
+    const coverageFindings: Finding[] =
+        session.policyFiles.policy.coverage.strict && options.stage !== 'message'
+            ? configured.unchecked.map((entry) => ({
+                  check: 'coverage.strict',
+                  file: entry.path,
+                  message: 'No enabled check claims this supported source file.',
+                  help: 'Run gspot doctor to inspect coverage and enable a check for this file.',
+                  fixable: false,
+              }))
+            : [];
     const report: RunReport = {
         ...(options.comparison === undefined ? {} : { comparison: options.comparison }),
         version: session.version,
@@ -249,12 +302,16 @@ export async function executeRun(opened: Session, options: RunOptions): Promise<
         checks: results,
         ignores: ignoreRows(uses),
         skips: skipRows(planned),
-        coverage: { checked: checkedSources.length, unchecked: sources.length - checkedSources.length },
+        coverage: {
+            checked: checkedSources.length,
+            unchecked: configured.unchecked.length,
+            findings: coverageFindings,
+        },
         suppressions: census(session, checkedSources),
         unstaged: 0,
         narrowed: [options.staged, options.changed, options.paths].some((selection) => selection !== undefined),
         failed,
-        exitCode: failed.length > 0 ? 1 : 0,
+        exitCode: unable ? 2 : failed.length > 0 || coverageFindings.length > 0 ? 1 : 0,
     };
     if (!options.isDryRun && options.stage !== 'message') writeReport(session.root, report);
     if (!options.isDryRun && options.noCache !== true && options.stage === 'all' && !report.narrowed)

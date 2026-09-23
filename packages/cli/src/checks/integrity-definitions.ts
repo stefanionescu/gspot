@@ -74,6 +74,7 @@ export const FROZEN_INSTALLS: Record<string, string[]> = {
     'bun.lock': ['bun', 'install', '--frozen-lockfile', '--dry-run'],
     'package-lock.json': ['npm', 'ci', '--dry-run', '--ignore-scripts'],
     'pnpm-lock.yaml': ['pnpm', 'install', '--frozen-lockfile', '--lockfile-only'],
+    'yarn.lock': ['yarn', 'install', '--frozen-lockfile', '--ignore-scripts', '--non-interactive'],
     'uv.lock': ['uv', 'lock', '--check'],
 };
 
@@ -93,15 +94,3 @@ export const COMPOSE_FILES = [
     '**/compose*.yml',
     '**/compose*.yaml',
 ];
-
-/** The image of one Compose service; every pattern below reads a trimmed line with single spaces. */
-export const COMPOSE_IMAGE = /^image: ["']?(?<found>[^ "'#]+)/u;
-
-/** The certificate a server block opens. */
-export const NGINX_CERTIFICATE = /^ssl_(?:trusted_)?certificate (?<found>[^; ]+)/u;
-
-/** The key a server block opens. */
-export const NGINX_KEY = /^ssl_certificate_key (?<found>[^; ]+)/u;
-
-/** A host nginx resolves when it reads the file: a proxy target or an upstream server. */
-export const NGINX_UPSTREAM = /^(?:proxy_pass https?:\/\/|server )(?<found>[A-Za-z][\w.-]*)/u;

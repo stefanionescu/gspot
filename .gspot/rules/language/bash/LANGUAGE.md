@@ -186,7 +186,7 @@ Rules:
 - On Bash 3.2-compatible scripts, indexed arrays are allowed; associative arrays
   are not.
 
-Safe multi-line command output into an array on Bash 4+:
+For newline-delimited text that cannot contain embedded newlines, Bash 4+ supports:
 
 ```bash
 readarray -t files < <(find . -type f -name '*.sql' -print)
@@ -311,18 +311,16 @@ retry_count=$(( retry_count + 1 ))
 Validate external input:
 
 ```bash
-if [[ ! "${port}" =~ ^[0-9]+$ ]]; then
+if [[ ! "${port}" =~ ^[0-9]{1,5}$ ]]; then
   printf 'error: port must be numeric\n' >&2
   return 1
 fi
 
-if (( port < 1 || port > 65535 )); then
+if (( 10#${port} < 1 || 10#${port} > 65535 )); then
   printf 'error: port is out of range\n' >&2
   return 1
 fi
 ```
-
-That is a lexicographical comparison.
 
 Safer signed base-10 conversion:
 
@@ -371,8 +369,9 @@ while IFS= read -r line; do
 done < <(generate_lines)
 ```
 
-It collects all output first, strips trailing newlines, discards NUL bytes, and
-adds a final newline.
+Unlike process substitution, a here-string containing command substitution collects all output
+first, strips trailing newlines, discards NUL bytes, and adds a final newline. Neither form
+propagates the producer's failure to the loop; use a checked temporary file when that status matters.
 
 Good filename loop:
 
@@ -492,14 +491,6 @@ list_sql_files() {
 }
 ```
 
-Prefer the simpler local form:
-
-```bash
-shopt -s nullglob
-sql_files=( ./*.sql )
-shopt -u nullglob
-```
-
 If changing directories:
 
 ```bash
@@ -539,7 +530,7 @@ them with a sentinel.
 Sentinel pattern:
 
 ```bash
-content_with_sentinel="$(some_command; printf x)" || return 1
+content_with_sentinel="$(some_command || exit; printf x)" || return 1
 content="${content_with_sentinel%x}"
 ```
 

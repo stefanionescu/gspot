@@ -1,17 +1,17 @@
-import { openSession } from '#cli/run/session.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { uninstallHooks, hookLocation } from '#cli/lifecycle/hooks.ts';
+import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
+import { proposeHookRestorations, hookLocation } from '#cli/lifecycle/hooks.ts';
 import { askConfirmation } from '#cli/output/prompts.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { Session, CommandResult } from '#cli/run/types.ts';
+import { relative, resolve } from 'node:path';
+import type { CommandResult } from '#cli/run/types.ts';
 import type { UninstallOptions, UninstallPlan, OwnershipState } from '#cli/lifecycle/types.ts';
 
 function planText(plan: UninstallPlan): string {
     return [
         'restore originals or remove unchanged installed files',
         ...[...plan.remove, ...plan.blocks].map((path) => `  ${path}`),
-        ...(plan.hooks ? ['restore unchanged dispatchers in the Git-resolved hooks directory'] : []),
-        'kept: gspot.toml, recovery data, ignore entries, unowned files, and subsequent edits',
+        ...(plan.hooks ? ['restore or remove unchanged dispatchers in the Git-resolved hooks directory'] : []),
+        'kept: gspot.toml, exported profiles, recovery data, ignore entries, unowned files, and subsequent edits',
         '',
     ].join('\n');
 }
@@ -26,19 +26,19 @@ function restorationCandidates(state: OwnershipState) {
 
 /**
  * Preview only recorded ownership; matching templates do not authorize deletion.
- * @param session the repository being removed
+ * @param root the repository being removed
  * @returns the recorded restoration and removal candidates
  */
-export function planUninstall(session: Session): UninstallPlan {
-    const recorded = restorationCandidates(readOwnership(session.root));
+export function planUninstall(root: string): UninstallPlan {
+    const recorded = restorationCandidates(readOwnership(root));
     const blocks = recorded
         .filter((entry) => entry.kind === 'block' && entry.path !== '.gitignore')
         .map((entry) => entry.path);
     const blockSet = new Set(blocks);
     const remove = new Set(recorded.map((entry) => entry.path));
     for (const path of ['gspot.toml', '.gitignore', ...blocks]) remove.delete(path);
-    for (const entry of recorded) if (entry.kind === 'hook') remove.delete(entry.path);
-    const location = session.repository.hasGit ? hookLocation(session.root) : undefined;
+    for (const entry of recorded) if (entry.kind === 'hook' || entry.kind === 'export') remove.delete(entry.path);
+    const location = isGitRepository(root) ? hookLocation(root) : undefined;
     const hooks =
         location !== undefined &&
         restorationCandidates(readOwnership(location.root)).some(
@@ -53,20 +53,32 @@ export function planUninstall(session: Session): UninstallPlan {
 
 /**
  * Restore only unchanged or absent destinations, retaining recovery and subsequent edits.
- * @param session the repository being removed
+ * @param root the repository being removed
  * @param plan the reviewed restoration and removal candidates
  * @returns paths preserved because they were edited or unowned
  */
-export function applyUninstall(session: Session, plan: UninstallPlan): string[] {
-    return withLifecycleOwner(session.root, (owner) => {
+export function applyUninstall(root: string, plan: UninstallPlan): string[] {
+    return withLifecycleOwner(root, (owner) => {
         const proposed = new Set([...plan.remove, ...plan.blocks]);
         const proposals = [...proposed].map((path) => owner.proposeRestoration(path));
         const preserved = proposals
             .filter((proposal) => proposal.status === 'preserved')
             .map((proposal) => proposal.path);
-        owner.applyProposals(proposals.filter((proposal) => proposal.status !== 'preserved'));
-        if (plan.hooks) preserved.push(...uninstallHooks(session));
-        return preserved;
+        const restorations = proposals.filter((proposal) => proposal.status !== 'preserved');
+        if (!plan.hooks) {
+            owner.applyProposals(restorations);
+            return preserved;
+        }
+        const location = hookLocation(root);
+        return withLifecycleOwner(location.root, (hooks) => {
+            const planned = proposeHookRestorations(hooks, location);
+            if (hooks === owner) owner.applyProposals([...restorations, ...planned.proposals]);
+            else {
+                owner.applyProposals(restorations);
+                hooks.applyProposals(planned.proposals);
+            }
+            return [...preserved, ...planned.preserved.map((path) => relative(root, resolve(location.root, path)))];
+        });
     });
 }
 
@@ -76,9 +88,8 @@ export function applyUninstall(session: Session, plan: UninstallPlan): string[] 
  * @returns the proposed or completed removal report
  */
 export async function uninstallCommand(options: UninstallOptions): Promise<CommandResult> {
-    const root = findRoot(options.cwd);
-    const session = await openSession(root);
-    const plan = planUninstall(session);
+    const root = findRoot(options.cwd, ['gspot.toml', '.gspot/ownership.json']);
+    const plan = planUninstall(root);
     const text = planText(plan);
     if (options.isDryRun)
         return { text: `${text}--dry-run: nothing removed.\n`, json: { plan, isDryRun: true }, exitCode: 0 };
@@ -86,11 +97,22 @@ export async function uninstallCommand(options: UninstallOptions): Promise<Comma
     const isGo =
         options.yes || (await askConfirmation('Apply these removals and restorations?', '--yes', false, false));
     if (!isGo) return { text: 'Nothing removed.\n', json: { plan, applied: false }, exitCode: 0 };
-    const preserved = applyUninstall(session, plan);
+    const preserved = applyUninstall(root, plan);
     const retained = preserved.map((path) => `preserved edited or unowned ${path}\n`).join('');
+    const roots = new Set([root]);
+    if (plan.hooks) roots.add(hookLocation(root).root);
+    const destinations = new Set(preserved.map((path) => resolve(root, path)));
+    const originals = [...roots].flatMap((root) =>
+        readOwnership(root).files.flatMap((entry) =>
+            entry.original !== undefined && destinations.has(resolve(root, entry.path))
+                ? [{ path: resolve(root, entry.path), backup: resolve(root, entry.original.backup) }]
+                : [],
+        ),
+    );
+    const recovery = originals.map(({ path, backup }) => `original for ${path} retained at ${backup}\n`).join('');
     return {
-        text: `${retained}Uninstall complete. Recovery data and gspot.toml remain.\n`,
-        json: { plan, applied: true, preserved },
+        text: `${retained}${recovery}Uninstall complete. Recovery data and gspot.toml remain.\n`,
+        json: { plan, applied: true, preserved, originals },
         exitCode: 0,
     };
 }

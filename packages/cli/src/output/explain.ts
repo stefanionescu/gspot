@@ -3,14 +3,15 @@ import type { Session } from '#cli/run/types.ts';
 import { explainPath } from '#cli/output/file.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Explanation } from '#cli/output/types.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
+import { quoteArgument } from '#cli/run/reproduce.ts';
+import { repositoryCheckSpec } from '#cli/run/plan.ts';
 import type { ResolvedSetting } from '#cli/policy/types.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import { allChecks, toRow } from '#cli/presets/listing.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
-import type { CheckSpec, ListingRow, SettingSpec } from '#cli/presets/types.ts';
+import type { ListingRow, SettingSpec } from '#cli/presets/types.ts';
 
 const TOOL_TIMEOUT_MS = 10_000;
 const SWIFTLINT_LINES = 6;
@@ -56,16 +57,20 @@ function isSelected(session: Session, presetName: string): boolean {
 }
 
 function checkExplanation(session: Session | undefined, checkName: string): Explanation | undefined {
-    const found = allChecks().get(checkName);
+    const own = session?.policyFiles.policy.checks.find((entry) => entry.name === checkName);
+    const found =
+        allChecks().get(checkName) ??
+        (own === undefined ? undefined : { check: repositoryCheckSpec(own), preset: undefined });
     if (!found) return undefined;
     const { check, preset } = found;
     const toolPrefix = `tools.${check.tool ?? check.command?.[0] ?? '~'}.`;
-    const settings = preset.settings
+    const settings = (preset?.settings ?? [])
         .filter((setting) => setting.name === check.limit || setting.name.startsWith(toolPrefix))
         .map((setting) => setting.name);
-    const rules = Object.values(preset.rule_files).flat();
+    const rules = Object.values(preset?.rule_files ?? {}).flat();
+    const owner = preset === undefined ? 'repository command' : `${preset.preset.name} preset`;
     const lines = [
-        `${checkName}  (${preset.preset.name} preset, ${check.stage} stage, ${check.level} level)`,
+        `${checkName}  (${owner}, ${check.stage} stage, ${check.level} level)`,
         '',
         `What it looks for: ${check.summary}`,
         `Why it matters: ${check.why}`,
@@ -75,9 +80,16 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
         `Turn it off for some paths: gspot ignore ${checkName} --paths "<glob>" --reason "..."`,
     ];
     if (check.command) lines.push(`Turn one of its rules off: gspot ignore ${checkName} --rule <rule> --reason "..."`);
+    if (check.fix_findings_exit_codes !== undefined)
+        lines.push(`Correction exit codes that mean findings remain: ${check.fix_findings_exit_codes.join(', ')}`);
+    if (check.tool_errors !== undefined) lines.push(`Fatal tool diagnostic pattern: ${check.tool_errors}`);
+    if (check.isolated_files === true)
+        lines.push('Runs with selected files and declared configuration in an isolated directory.');
     if (settings.length > 0) lines.push(`Settings that change it: ${settings.join(', ')} (gspot set <key> <value>)`);
     if (rules.length > 0) lines.push(`Rule files that state it: ${rules.join(', ')}`);
-    if (session)
+    if (own !== undefined)
+        lines.push(`Command: ${own.command.map(quoteArgument).join(' ')}`, `Paths: ${own.paths.join(', ')}`);
+    if (session && preset !== undefined)
         lines.push(
             isSelected(session, preset.preset.name)
                 ? 'Selected in this repository: yes'
@@ -90,13 +102,19 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
         text: `${lines.join('\n')}\n`,
         data: {
             check: checkName,
-            preset: preset.preset.name,
+            ...(preset === undefined ? { command: own?.command, paths: own?.paths } : { preset: preset.preset.name }),
             stage,
             level: check.level,
             summary,
             why,
             help,
             waits_for: waitsFor,
+            ...(check.fix_findings_exit_codes === undefined
+                ? {}
+                : { fix_findings_exit_codes: check.fix_findings_exit_codes }),
+            ...(check.tool_errors === undefined ? {} : { tool_errors: check.tool_errors }),
+            ...(check.isolated_files === undefined ? {} : { isolated_files: check.isolated_files }),
+            ...(check.file_prefix === undefined ? {} : { file_prefix: check.file_prefix }),
             settings,
             rules,
         },
@@ -181,16 +199,15 @@ function presetExplanation(presetName: string): Explanation | { error: string } 
     return { kind: 'preset', subject: presetName, text: `${lines.join('\n')}\n`, data: row };
 }
 
-function changeLine(spec: SettingSpec, key: string): string {
-    const isReasoned = spec.direction === 'ceiling' || spec.direction === 'loosening';
-    return `Change it: gspot set ${key} <value>${isReasoned ? ' --reason "..."' : ''}`;
+function changeLine(spec: SettingSpec, key: string, scope: string): string {
+    const isReasoned = spec.direction === 'ceiling' || spec.direction === 'floor' || spec.direction === 'loosening';
+    return `Change it: gspot set ${key} <value>${scope}${isReasoned ? ' --reason "..."' : ''}`;
 }
 
 function settingLines(
     key: string,
     spec: SettingSpec,
-    shipped: unknown,
-    current: ResolvedSetting | undefined,
+    scopes: { scope: string; shipped: unknown; current: ResolvedSetting | undefined }[],
 ): string[] {
     return [
         key,
@@ -198,28 +215,53 @@ function settingLines(
         spec.summary,
         '',
         `Direction: ${DIRECTIONS[spec.direction] ?? spec.direction}`,
-        `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
-        `Current value: ${JSON.stringify(current?.value)} (from ${current?.source ?? 'unset'})`,
-        ...(current?.reason === undefined ? [] : [`Reason on record: ${current.reason}`]),
-        '',
-        changeLine(spec, key),
-        `Back to the default: gspot set ${key} --default`,
+        ...scopes.flatMap(({ scope, shipped, current }) => {
+            const target = scope === '' ? '' : ` --scope ${quoteArgument(scope)}`;
+            return [
+                '',
+                `Scope: ${scope === '' ? 'root' : scope}`,
+                `Shipped default: ${shipped === undefined ? 'none' : JSON.stringify(shipped)}`,
+                `Current value: ${JSON.stringify(current?.value)} (from ${current?.source ?? 'unset'})`,
+                ...(current?.reason === undefined ? [] : [`Reason on record: ${current.reason}`]),
+                changeLine(spec, key, target),
+                `Back to the default: gspot set ${key} --default${target}`,
+            ];
+        }),
     ];
 }
 
 function settingExplanation(session: Session | undefined, key: string): Explanation | undefined {
-    const root = session?.scopes[0];
-    if (session === undefined || root === undefined) return undefined;
-    const match = specFor(root.surface, key);
-    if (match === undefined) return undefined;
-    const current = settingValue(root.surface, session.policyFiles.policy, key);
-    const shipped = root.surface.defaults.get(match.spec.name)?.value;
-    const lines = settingLines(key, match.spec, shipped, current);
+    if (session === undefined) return undefined;
+    const scopes = session.scopes.flatMap((selection) => {
+        const match = specFor(selection.surface, key);
+        if (match === undefined) return [];
+        return [
+            {
+                scope: selection.scope.path,
+                spec: match.spec,
+                current: settingValue(selection.surface, session.policyFiles.policy, key, selection.scope.path),
+                shipped: selection.surface.defaults.get(match.spec.name)?.value,
+            },
+        ];
+    });
+    const first = scopes[0];
+    if (first === undefined) return undefined;
+    const lines = settingLines(key, first.spec, scopes);
     return {
         kind: 'setting',
         subject: key,
         text: `${lines.join('\n')}\n`,
-        data: { key, ...match.spec, current: current?.value, source: current?.source },
+        data: {
+            key,
+            ...first.spec,
+            scopes: scopes.map(({ scope, shipped, current }) => ({
+                scope,
+                default: shipped,
+                current: current?.value,
+                source: current?.source,
+                reason: current?.reason,
+            })),
+        },
     };
 }
 
@@ -229,13 +271,14 @@ function explainSlashed(session: Session | undefined, subject: string): Explanat
     const slash = subject.indexOf('/');
     const toolRule = toolRuleExplanation(session, subject.slice(0, slash), subject.slice(slash + 1));
     if (toolRule) return toolRule;
-    return { error: messages.unknownCheck(subject, nearMatches(subject, allChecks().keys().toArray())) };
+    const known = [...allChecks().keys(), ...(session?.policyFiles.policy.checks.map((check) => check.name) ?? [])];
+    return { error: messages.unknownCheck(subject, nearMatches(subject, known)) };
 }
 
 function explainDotted(session: Session | undefined, subject: string): Explanation | { error: string } {
     const setting = settingExplanation(session, subject);
     if (setting) return setting;
-    const known = session?.scopes[0]?.surface.specs.keys().toArray() ?? [];
+    const known = [...new Set(session?.scopes.flatMap((scope) => [...scope.surface.specs.keys()]) ?? [])];
     return { error: messages.settingNotExposed(subject, nearMatches(subject, known)) };
 }
 
@@ -255,3 +298,10 @@ export function explain(session: Session | undefined, subject: string): Explanat
     if (!('error' in named)) return named;
     return file ?? named;
 }
+
+export type Explanation = {
+    kind: 'check' | 'tool-rule' | 'preset' | 'setting' | 'path';
+    subject: string;
+    text: string;
+    data: Record<string, unknown>;
+};

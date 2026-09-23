@@ -3,7 +3,7 @@ import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { ESLint } from 'eslint';
 import { createFileTree, testdir } from 'testdirs';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/harness/planted.ts';
+import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 
 const POLICY = 'version = 1\npresets = ["javascript"]\n[rules]\ninstall = false\n';
 const SOURCE = 'alert(left == right);\n';

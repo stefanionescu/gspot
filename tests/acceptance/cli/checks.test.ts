@@ -1,10 +1,10 @@
 // Planted repository: a [[check]] entry of the repository itself, with an output format that gives file and line.
 import { join } from 'node:path';
-import { unlinkSync, renameSync, symlinkSync } from 'node:fs';
+import { unlinkSync, renameSync, symlinkSync, writeFileSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#cli/output/report-types.ts';
 import { describe, expect, test } from 'bun:test';
-import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/support/cli/planted.ts';
 
 const ENTRY = String.raw`
 [[check]]
@@ -19,6 +19,72 @@ summary = "Finds FIXME notes left in the notes folder."
 format = "regex"
 pattern = "^(?<file>[^:]+):(?<line>\\d+):(?<message>.*)$"
 `;
+
+test.each([
+    { scope: 'root', policy: 'version = 1\npresets = ["bas"]\n', line: 2 },
+    { scope: 'nested', policy: 'version = 1\npresets = []\n[[scope]]\npath = "api"\npresets = ["bas"]\n', line: 5 },
+])(
+    'unknown presets in the $scope scope identify their declaration and accept the suggested preset',
+    async ({ policy, line }) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/example.toml': 'value = 1\n' });
+        const invalid = await run(sandbox.path, ['list', '--json']);
+        expect(invalid.code).toBe(2);
+        const diagnostic = JSON.parse(invalid.stdout);
+        expect(diagnostic.message).toContain(`gspot.toml:${String(line)}:`);
+        expect(diagnostic.message).toContain('bash');
+        writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('"bas"', '"bash"'));
+        const corrected = await run(sandbox.path, ['list', '--json']);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    },
+);
+
+test.each([
+    {
+        name: 'a root loosening',
+        policy: 'version = 1\npresets = ["bash"]\nrequire_reasons = true\n[limits]\nfile_lines = 1000\n',
+        line: 5,
+        before: '1000',
+        after: '200',
+    },
+    {
+        name: 'a nested unknown setting',
+        policy: 'version = 1\npresets = ["bash"]\n[[scope]]\npath = "api"\n[scope.limits]\nfile_linse = 200\n',
+        line: 6,
+        before: 'file_linse',
+        after: 'file_lines',
+    },
+])('effective-setting errors locate $name and accept a correction', async ({ policy, line, before, after }) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'gspot.toml': policy, 'api/source.sh': 'echo example\n' });
+    const invalid = await run(sandbox.path, ['list', '--json']);
+    expect(invalid.code).toBe(2);
+    expect(JSON.parse(invalid.stdout).message).toContain(`gspot.toml:${String(line)}:`);
+    writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace(before, after));
+    const corrected = await run(sandbox.path, ['list', '--json']);
+    expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+});
+
+test.each(['\n', '\r\n'])(
+    'configuration errors retain source locations in text and JSON with %j lines',
+    async (newline) => {
+        await using sandbox = await testdir();
+        const policy = ['version = 1', 'presets = []', 'require_reasons = "wrong"', ''].join(newline);
+        await createFileTree(sandbox.path, { 'gspot.toml': policy });
+        const text = await run(sandbox.path, ['check']);
+        expect(text.code).toBe(2);
+        expect(text.stdout + text.stderr).toContain('gspot.toml:3:19: require_reasons:');
+        const json = await run(sandbox.path, ['check', '--json']);
+        expect(json.code).toBe(2);
+        expect(JSON.parse(json.stdout)).toMatchObject({
+            error: 'PolicyError',
+            message: expect.stringContaining('gspot.toml:3:19:'),
+        });
+        writeFileSync(join(sandbox.path, 'gspot.toml'), policy.replace('"wrong"', 'true'));
+        const corrected = await run(sandbox.path, ['check', '--json']);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    },
+);
 
 describe('a [[check]] entry', () => {
     test('reruns a repository check when an input outside its selected paths changes', async () => {
@@ -49,7 +115,7 @@ stage = "commit"
         await Bun.write(join(sandbox.path, 'state.txt'), 'valid');
         const passed = await run(sandbox.path, ['check', '--only', 'notes/state']);
         expect(passed.code).toBe(0);
-        expect(passed.stdout).toContain('notes/state');
+        expect(passed.stdout).toContain('1 check passed, 0 checks failed');
 
         await Bun.write(join(sandbox.path, 'state.txt'), 'invalid');
         const failedAgain = await run(sandbox.path, ['check', '--only', 'notes/state']);

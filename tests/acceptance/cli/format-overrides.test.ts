@@ -1,11 +1,11 @@
 import { join } from 'node:path';
-import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { readFileSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
 import prettier from 'prettier';
 import type { RunReport } from '#cli/output/report-types.ts';
 import { exportedProfile } from '#cli/profile/export.ts';
-import { run, toolsPath } from '#tests/harness/planted.ts';
+import { installPrivateTools, run, toolsPath } from '#tests/support/cli/planted.ts';
 
 const POLICY = `version = 1
 level = "all"
@@ -48,7 +48,6 @@ const CASES = [
 
 test('formatter overrides agree between direct tool configuration, editor discovery, and gspot correction', async () => {
     await using directory = await testdir();
-    const modules = join(import.meta.dir, '../../../node_modules');
     await createFileTree(directory.path, {
         'gspot.toml': POLICY,
         'package.json': '{"private":true}\n',
@@ -56,9 +55,9 @@ test('formatter overrides agree between direct tool configuration, editor discov
             CASES.map(({ file }) => [file, 'const greeting="hello";if(greeting){console.log(greeting);}']),
         ),
     });
-    symlinkSync(modules, join(directory.path, 'node_modules'));
     const applied = await run(directory.path, ['apply']);
     expect(applied.code, applied.stdout + applied.stderr).toBe(0);
+    await installPrivateTools(directory.path);
     for (const { file, ...expected } of CASES) {
         for (const config of ['.gspot/prettier.json', '.prettierrc.json']) {
             const resolved = await prettier.resolveConfig(join(directory.path, file), {

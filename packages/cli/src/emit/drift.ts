@@ -1,18 +1,17 @@
 import { pythonLockDrift } from '#cli/lifecycle/python-project.ts';
 import { packageLockDrift } from '#cli/lifecycle/package-project.ts';
 import { isValePackageFile } from '#cli/repository/natures.ts';
-import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { hasConfiguration, readOwnership } from '#cli/lifecycle/ownership.ts';
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
-import { join } from 'node:path';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { createTwoFilesPatch } from 'diff';
 import type { Session } from '#cli/run/types.ts';
 import type { Policy } from '#cli/policy/types.ts';
-import { existsSync, readFileSync } from 'node:fs';
 import { isMergeStubHeld } from '#cli/emit/stubs.ts';
-import { isLefthookHeld } from '#cli/emit/lefthook.ts';
 import type { DriftEntry, GeneratedProposal } from '#cli/emit/types.ts';
-import { hasPackageScripts, emitAll } from '#cli/emit/targets.ts';
-import { currentBlock, fileText } from '#cli/emit/managed-blocks.ts';
+import { emitAll } from '#cli/emit/targets.ts';
+import { currentBlock } from '#cli/emit/managed-blocks.ts';
+import { ruleDiff } from '#cli/emit/rule-diff.ts';
 
 const NEVER_STRAY = new Set([
     'gspot.toml',
@@ -41,23 +40,31 @@ function patch(path: string, before: string, after: string, beforeName: string):
 
 function fileDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     const entries: DriftEntry[] = [];
+    const confined = openConfinedRoot(root);
     for (const file of rendered.files) {
-        const full = join(root, file.path);
-        if (!existsSync(full)) {
-            entries.push({ path: file.path, kind: 'missing' });
+        const current = confined.read(file.path);
+        if (current === undefined) {
+            entries.push({ path: file.path, kind: 'missing', ...ruleDiff(file, undefined) });
             continue;
         }
-        const disk = readFileSync(full, 'utf8');
+        const disk = current.bytes.toString('utf8');
         if (disk !== file.content)
-            entries.push({ path: file.path, kind: 'changed', diff: patch(file.path, disk, file.content, 'on disk') });
+            entries.push({
+                path: file.path,
+                kind: 'changed',
+                diff: patch(file.path, disk, file.content, 'on disk'),
+                ...ruleDiff(file, disk),
+            });
     }
     return entries;
 }
 
 function blockDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     const entries: DriftEntry[] = [];
+    const confined = openConfinedRoot(root);
     for (const block of rendered.blocks) {
-        const current = currentBlock(fileText(root, block.path), block.style);
+        const text = confined.read(block.path)?.bytes.toString('utf8') ?? '';
+        const current = currentBlock(text, block.style);
         const wanted = block.block.trim();
         if (current === undefined) entries.push({ path: block.path, kind: 'missing' });
         else if (current !== wanted)
@@ -71,18 +78,15 @@ function blockDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
 }
 
 function presenceDrift(root: string, path: string): DriftEntry {
-    return { path, kind: existsSync(join(root, path)) ? 'changed' : 'missing' };
+    return { path, kind: openConfinedRoot(root).read(path) === undefined ? 'missing' : 'changed' };
 }
 
 function otherDrift(root: string, rendered: GeneratedProposal): DriftEntry[] {
     const entries: DriftEntry[] = [];
     for (const merge of rendered.merges)
         if (!isMergeStubHeld(root, merge.stub, merge.path, merge.target)) entries.push(presenceDrift(root, merge.path));
-    for (const output of rendered.packages)
-        if (!hasPackageScripts(root, output)) entries.push({ path: output.path, kind: 'changed' });
-    const { lefthook } = rendered;
-    if (lefthook && !isLefthookHeld(root, lefthook.path, lefthook.block))
-        entries.push(presenceDrift(root, lefthook.path));
+    for (const output of rendered.configurations)
+        if (!hasConfiguration(root, output)) entries.push(presenceDrift(root, output.path));
     return entries;
 }
 
@@ -91,8 +95,7 @@ function knownPaths(rendered: GeneratedProposal): Set<string> {
         ...rendered.files.map((file) => file.path),
         ...rendered.blocks.map((block) => block.path),
         ...rendered.merges.map((merge) => merge.path),
-        ...rendered.packages.map((output) => output.path),
-        ...(rendered.lefthook ? [rendered.lefthook.path] : []),
+        ...rendered.configurations.map((output) => output.path),
     ]);
 }
 
@@ -111,6 +114,7 @@ export function computeDrift(session: Session, rendered: GeneratedProposal = emi
         .files.filter(
             (entry) =>
                 entry.kind !== 'runtime' &&
+                entry.kind !== 'export' &&
                 !isValePackageFile(entry.path) &&
                 (entry.kind !== 'dependency' ||
                     (entry.path.startsWith('.gspot/.venv/')

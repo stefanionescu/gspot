@@ -56,11 +56,7 @@ export function privateBeforePublic(modules: PythonModule[]): StructureProblem[]
     return modules.flatMap((module) => {
         const names = module.statements.flatMap((statement) => {
             const name =
-                statement.type === 'function_definition'
-                    ? DEFINITIONS.has(statement.type)
-                        ? statement.childForFieldName('name')?.text
-                        : undefined
-                    : undefined;
+                statement.type === 'function_definition' ? statement.childForFieldName('name')?.text : undefined;
             return name === undefined ? [] : [{ name, statement }];
         });
         const firstPublic = names.findIndex((entry) => !entry.name.startsWith('_'));

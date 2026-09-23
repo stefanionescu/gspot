@@ -1,19 +1,12 @@
 #!/usr/bin/env bash
-#
 # Written by gspot. Run `gspot uninstall` to remove.
-# Runtime: Bash 3.2+, macOS and Linux.
+# Runtime: Bash 3.2+, macOS, Linux, and Git for Windows.
 set -euo pipefail
-
-main() {
-    local -a gspot_command
-    read -ra gspot_command <<<"${GSPOT_BIN-}"
-    if [[ ${#gspot_command[@]} -eq 0 ]]; then
-        gspot_command=('mise' 'exec' '--' 'gspot')
-    fi
-    if command -v git-lfs >/dev/null 2>&1; then
-        git lfs pre-push "$@"
-    fi
-    exec "${gspot_command[@]}" check
-}
-
-main "$@"
+status=0
+(export GSPOT_HOOK=pre-push; { gspot_executable=$(command -v 'mise') && [ -x "$gspot_executable" ] || { printf "%s\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2; exit 2; }; mise exec -- gspot check --push -- "$@"; }) || status=$?
+if [[ ${status} -eq 126 || ${status} -eq 127 ]]; then
+    printf "%s\n" "The pinned gspot executable is unavailable. Install gspot, then run: gspot install" >&2
+    status=2
+fi
+if [[ ${status} -ne 0 ]]; then exit "${status}"; fi
+exit 0

@@ -1,3 +1,5 @@
+import { everyManifest } from '#cli/presets/select.ts';
+import { installHookManager } from '#cli/lifecycle/hook-managers.ts';
 import { installHooks } from '#cli/lifecycle/hooks.ts';
 import { UV_INSTALLER } from '#cli/platform/installers-definitions.ts';
 import { InstallationError } from '#cli/lifecycle/install-error.ts';
@@ -38,9 +40,18 @@ export async function installTools(session: Session, isInstalling: boolean): Pro
     if (!isInstalling) {
         return 'install skipped; run: gspot install';
     }
-    const hookNote = installHooks(session);
-    const notes: string[] = hookNote === '' ? [] : [hookNote];
+    const notes: string[] = [];
     const failures: Error[] = [];
+    try {
+        const hookNote = ['simple-git-hooks', 'pre-commit', 'lefthook', 'husky'].includes(
+            session.policyFiles.policy.hooks?.tool ?? '',
+        )
+            ? await installHookManager(session)
+            : installHooks(session);
+        if (hookNote !== '') notes.push(hookNote);
+    } catch (error) {
+        failures.push(error instanceof Error ? error : new Error('Hook installation failed.'));
+    }
     try {
         if (runner === 'mise') {
             const observed = await runToolCommand(undefined, ['mise', '--version'], { cwd: root });
@@ -60,7 +71,13 @@ export async function installTools(session: Session, isInstalling: boolean): Pro
         failures.push(error instanceof Error ? error : new Error('Native tool installation failed.'));
     }
     try {
-        const installed = session.packageManager === undefined ? '' : await installPackageProject(root);
+        const installed =
+            session.packageManager === undefined
+                ? ''
+                : await installPackageProject(
+                      root,
+                      everyManifest(session).flatMap((manifest) => manifest.tools),
+                  );
         if (installed !== '') notes.push(installed);
     } catch (error) {
         failures.push(error instanceof Error ? error : new Error('Package installation failed.'));

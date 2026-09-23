@@ -2,8 +2,8 @@
 import type { Finding } from '#cli/output/finding.ts';
 import { functionAt } from '#cli/structure/parser.ts';
 import { astGrepMatches } from '#cli/structure/ast-grep.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import type { AstGrepMatch, ScriptIndex, StructureContext } from '#cli/structure/types.ts';
+import type { AstGrepMatch } from '#cli/structure/ast-grep.ts';
+import type { ScriptIndex, StructureContext } from '#cli/structure/types.ts';
 
 const RULES: Record<string, { limit: string; noun: string; isDepth: boolean }> = {
     'bash-branches': { limit: 'function_branches', noun: 'branches', isDepth: false },
@@ -34,17 +34,19 @@ function scoreFor(matches: AstGrepMatch[], isDepth: boolean): number {
  * @param index the shell index
  * @returns the findings; a missing ast-grep raises MissingToolError
  */
-export function countFindings(analysis: string, context: StructureContext, index: ScriptIndex): Finding[] {
+export async function countFindings(
+    analysis: string,
+    context: StructureContext,
+    index: ScriptIndex,
+): Promise<Finding[]> {
     const rule = RULES[analysis];
     const ceiling = rule === undefined ? undefined : context.limit(rule.limit, 'bash');
     if (rule === undefined || ceiling === undefined) return [];
-    const matches = astGrepMatches(
-        context.input.root,
-        `presets/bash/rules/${analysis}.yml`,
+    const matches = await astGrepMatches(
+        context.input,
+        `presets/language/bash/rules/${analysis}.yml`,
         index.files.map((file) => file.path),
     );
-    if (matches === undefined)
-        throw new MissingToolError('The ast-grep tool is not installed. Run: mise install ast-grep');
     return index.files.flatMap((file) => {
         const inFile = matches.filter((match) => match.file === file.path);
         return file.functions.flatMap((entry) => {

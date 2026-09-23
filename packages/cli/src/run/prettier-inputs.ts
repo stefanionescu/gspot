@@ -1,5 +1,5 @@
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { isDeepStrictEqual } from 'node:util';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { evaluateConfiguration } from '#cli/lifecycle/configuration.ts';
 import { ignoredPathsResponse } from '#cli/lifecycle/format-evaluation.ts';
 import type { PlannedCheck, Session } from '#cli/run/types.ts';
@@ -14,33 +14,32 @@ export async function prettierInputs(session: Session, check: PlannedCheck): Pro
     )
         return check;
     const ignorePath = '.prettierignore';
-    const fullPath = join(session.root, ignorePath);
-    let observed: Buffer;
+    const confined = openConfinedRoot(session.root);
     try {
-        observed = readFileSync(fullPath);
-    } catch (error) {
-        if ((error as NodeJS.ErrnoException).code === 'ENOENT') return check;
-        throw error;
-    }
-    const ignored = new Set(
-        ignoredPathsResponse.parse(
-            await evaluateConfiguration(
-                {
-                    tool: 'prettier',
-                    operation: 'ignore',
-                    root: session.root,
-                    paths: check.files.map((file) => file.path),
-                    ignorePath,
-                },
-                check.scope.view,
-                session.cancelSignal,
+        const observed = confined.read(ignorePath);
+        if (observed === undefined) return check;
+        const ignored = new Set(
+            ignoredPathsResponse.parse(
+                await evaluateConfiguration(
+                    {
+                        tool: 'prettier',
+                        operation: 'ignore',
+                        root: session.root,
+                        paths: check.files.map((file) => file.path),
+                        ignorePath,
+                    },
+                    check.scope.view,
+                    session.cancelSignal,
+                ),
             ),
-        ),
-    );
-    if (!readFileSync(fullPath).equals(observed))
-        throw new Error('.prettierignore changed while check inputs were resolved. Run gspot check again.');
-    const files = check.files.filter((file) => !ignored.has(file.path));
-    return files.length === 0
-        ? { ...check, skip: { source: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
-        : { ...check, files };
+        );
+        if (!isDeepStrictEqual(confined.read(ignorePath), observed))
+            throw new Error('.prettierignore changed while check inputs were resolved. Run gspot check again.');
+        const files = check.files.filter((file) => !ignored.has(file.path));
+        return files.length === 0
+            ? { ...check, skip: { source: 'ignore', note: 'all selected paths are ignored by .prettierignore' } }
+            : { ...check, files };
+    } finally {
+        confined.close();
+    }
 }

@@ -25,6 +25,8 @@ export const noSingleFileFolders = createRule<SingleFileFoldersOptions, 'lone'>(
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'A folder `lone/` containing only `only.ts` reports `lone`. Move `only.ts` beside related files in the parent folder, remove the empty folder, and update imports.',
             summary: 'Finds a folder that holds one code file and nothing else.',
             why: 'A folder of one file adds a level to every path and promises siblings that never arrive.',
             fix: 'Move the file up beside its neighbors, or allow the folder with a reason under structure.single_file_folder_allowed.',

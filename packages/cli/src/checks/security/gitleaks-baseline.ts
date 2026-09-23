@@ -1,9 +1,13 @@
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 // Every reviewed finding in the gitleaks baseline carries a reason and names a path that still exists.
 import { join } from 'node:path';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import { existsSync, readFileSync } from 'node:fs';
-import type { BaselineReason, GitleaksFinding } from '#cli/checks/types.ts';
+import { existsSync } from 'node:fs';
+
+type BaselineReason = { fingerprint: string; reason: string };
+
+type GitleaksFinding = { Fingerprint: string; File: string; RuleID: string; Commit?: string };
 
 const BASELINE = '.gspot/gitleaks-baseline.json';
 
@@ -16,10 +20,16 @@ function finding(input: EngineInput, rule: string, text: string): Finding {
  * @param input the engine input
  * @returns the findings
  */
-export function gitleaksBaseline(input: EngineInput): Promise<Finding[]> {
-    const path = join(input.root, BASELINE);
-    if (!existsSync(path)) return Promise.resolve([]);
-    const entries = JSON.parse(readFileSync(path, 'utf8')) as GitleaksFinding[];
+export function gitleaksBaseline(input: EngineInput): Finding[] {
+    const files = openConfinedRoot(input.root);
+    let bytes: Buffer | undefined;
+    try {
+        bytes = files.read(BASELINE)?.bytes;
+    } finally {
+        files.close();
+    }
+    if (bytes === undefined) return [];
+    const entries = JSON.parse(bytes.toString('utf8')) as GitleaksFinding[];
     const reasons = (input.view.tool('gitleaks')['baseline_reasons'] as BaselineReason[] | undefined) ?? [];
     const explained = new Set(reasons.map((entry) => entry.fingerprint));
     const findings = entries.flatMap((entry) => [
@@ -37,5 +47,5 @@ export function gitleaksBaseline(input: EngineInput): Promise<Finding[]> {
                   ),
               ]),
     ]);
-    return Promise.resolve(findings);
+    return findings;
 }

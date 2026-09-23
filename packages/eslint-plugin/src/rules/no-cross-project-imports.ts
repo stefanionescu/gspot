@@ -11,6 +11,8 @@ export const noCrossProjectImports = createRule<CrossProjectImportsOptions, 'esc
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'With scopes `api` and `supabase`, an import of `../../supabase/src/a.js` from `api/src/b.ts` reports `escape`. Move shared behavior into a declared package dependency and import its package name. Relative imports within `api`, such as `../types/a.js`, remain in that scope.',
             summary: 'Finds a relative import that reaches out of its scope into another one.',
             why: 'Scopes are separate projects; a path between them couples two builds that were meant to stay apart.',
             fix: 'Move the shared code into a package both scopes depend on, or allow the escape with a reason.',

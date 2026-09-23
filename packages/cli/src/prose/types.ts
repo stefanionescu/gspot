@@ -5,6 +5,3 @@ export type ProseRoute = { path: string; mode: 'path' | 'stdin'; extension: stri
 
 /** One Vale alert, parsed. */
 export type ValeAlert = { file: string; line: number; column: number; check: string; message: string };
-
-/** The vocabulary files Vale reads. */
-export type Vocabulary = { accept: string[] };

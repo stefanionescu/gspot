@@ -1,5 +1,5 @@
 import type { StructureProblem } from '#cli/structure/python/types.ts';
-import type { SwiftFunction, SwiftSource } from '#cli/structure/swift/types.ts';
+import type { SwiftFunction } from '#cli/structure/swift/types.ts';
 
 import { executableStatements } from '#cli/structure/statements.ts';
 function problem(fn: SwiftFunction, rule: string, text: string): StructureProblem {

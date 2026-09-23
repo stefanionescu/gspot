@@ -1,7 +1,6 @@
 // Every package.json: exact versions, one packageManager across the workspace, a private root, one kind of lockfile.
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import type { Reporter } from '#cli/checks/types.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import type { PackageManifest } from '#cli/repository/types.ts';
 import { readPackageManifest } from '#cli/repository/manifests.ts';
@@ -11,6 +10,8 @@ import {
     LOCKFILES,
     NON_REGISTRY_VERSION,
 } from '#cli/checks/integrity-definitions.ts';
+
+type Reporter = (file: string, rule: string, text: string) => Finding;
 
 const MANIFEST = 'package.json';
 
@@ -74,7 +75,7 @@ function installerFindings(input: EngineInput, manifests: Map<string, PackageMan
 
 function lockfileFindings(input: EngineInput): Finding[] {
     const kinds = new Map<string, string>();
-    for (const file of input.session.repository.files) {
+    for (const file of input.files) {
         const kind = LOCKFILES[file.path.slice(file.path.lastIndexOf('/') + 1)];
         if (kind !== undefined && !kinds.has(kind)) kinds.set(kind, file.path);
     }
@@ -99,16 +100,16 @@ function lockfileFindings(input: EngineInput): Finding[] {
  * @param input the engine input
  * @returns the findings
  */
-export function manifestPolicy(input: EngineInput): Promise<Finding[]> {
+export function manifestPolicy(input: EngineInput): Finding[] {
     const allowed = (input.view.tool('dependencies')['ranges_allowed'] as { paths: string[] }[] | undefined) ?? [];
     const isRangeAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
     const manifests = new Map<string, PackageManifest>();
-    for (const file of input.session.repository.files) {
+    for (const file of input.files) {
         if (file.nature !== 'source' || !isManifest(file.path)) continue;
         manifests.set(file.path, readPackageManifest(input.root, file.path));
     }
     const ranges = [...manifests].flatMap(([path, manifest]) =>
         isRangeAllowed(path) ? [] : rangeFindings(input, path, manifest),
     );
-    return Promise.resolve([...ranges, ...installerFindings(input, manifests), ...lockfileFindings(input)]);
+    return [...ranges, ...installerFindings(input, manifests), ...lockfileFindings(input)];
 }

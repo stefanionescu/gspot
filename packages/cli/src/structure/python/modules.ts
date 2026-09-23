@@ -1,6 +1,5 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // The parsed Python modules of one run, and the functions they define.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { Node } from 'web-tree-sitter';
 import type { EngineInput } from '#cli/run/types.ts';
 import { parserFor } from '#cli/naming/parsers.ts';
@@ -25,20 +24,25 @@ function exportList(statement: Node): Node | undefined {
 export async function pythonModules(input: EngineInput): Promise<PythonModule[]> {
     const parser = await parserFor('python');
     const modules: PythonModule[] = [];
-    for (const file of input.files) {
-        if (file.nature !== 'source' || !file.path.endsWith('.py')) continue;
-        const text = readFileSync(join(input.root, file.path), 'utf8');
-        const tree = parser.parse(text);
-        if (tree === null) continue;
-        const statements = tree.rootNode.namedChildren.filter((child) => child.type !== 'comment');
-        modules.push({
-            path: file.path,
-            lines: text.split('\n'),
-            tree,
-            statements: statements.map((node) =>
-                node.type === 'decorated_definition' ? (node.childForFieldName('definition') ?? node) : node,
-            ),
-        });
+    try {
+        for (const file of input.files) {
+            if (file.nature !== 'source' || !file.path.endsWith('.py')) continue;
+            const text = readSource(input.root, file.path).toString('utf8');
+            const tree = parser.parse(text);
+            if (tree === null) throw new Error('The Python parser returned no tree.');
+            const statements = tree.rootNode.namedChildren.filter((child) => child.type !== 'comment');
+            modules.push({
+                path: file.path,
+                lines: text.split('\n'),
+                tree,
+                statements: statements.map((node) =>
+                    node.type === 'decorated_definition' ? (node.childForFieldName('definition') ?? node) : node,
+                ),
+            });
+        }
+    } catch (error) {
+        for (const source of modules) source.tree.delete();
+        throw error;
     }
     return modules;
 }
@@ -80,9 +84,6 @@ export function functionsOf(module: PythonModule): PythonFunction[] {
             path: module.path,
             name: node.childForFieldName('name')?.text ?? '<anonymous>',
             node,
-            isDecorated: node.parent?.type === 'decorated_definition',
-            isTopLevel:
-                (node.parent?.type === 'decorated_definition' ? node.parent.parent : node.parent)?.type === 'module',
             body: bodyOf(node),
         }));
 }

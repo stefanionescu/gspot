@@ -36,6 +36,8 @@ export const noCrossFolderImports = createRule<CrossFolderImportsOptions, 'cross
         type: 'problem',
         fixable: 'code',
         docs: {
+            example:
+                'With `@/` mapped to `src/`, `import { a } from "../turn/a.js";` in `src/other/b.ts` reports `cross`. Correct the import to `import { a } from "@/turn/a.js";`.',
             summary: 'Finds relative imports that leave their top-level folder under a source root.',
             why: 'A path of ../../ ties the importer to the tree shape; the alias names the folder and survives a move.',
             fix: 'Keep relative imports within a top-level folder. gspot check --fix uses a configured alias when one exists.',

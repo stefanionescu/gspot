@@ -3,8 +3,10 @@
 The [active CI bypass](22-remaining.md#active-ci-bypass) governs all implementation work.
 Skip CI on every commit and push until the user explicitly re-enables it.
 
-This folder is the specification for gspot. Implementation follows it. When code and this folder
-disagree, fix one of them in the same change.
+This folder specifies the product contract. It does not certify the current implementation.
+The immediate priority is the [cleanup phase](22-remaining.md#cleanup-before-feature-work).
+Repair existing behavior and remove unnecessary work before resuming feature expansion.
+Repository lint cleanup is a later phase; keep its findings visible.
 
 ## What gspot is
 
@@ -94,6 +96,15 @@ recovery are defined in [03-configuration.md](03-configuration.md), not inferred
 - A number that summarizes a list lives beside the list, or not at all.
 - No document links to a file that does not exist. A link check runs over this folder in the gate of this repository.
 - Reference source paths belong in the ledger or the inspected prior-art rationale.
+- Delete obsolete prescriptions and empty retired acceptance sections. Retain their disposition
+  once in remaining work and update incoming links.
+- State each rule in its owning section and link to it elsewhere. Do not copy a policy paragraph
+  into every language or framework contract.
+- Keep implementation tasks behavioral. Do not require a helper, module, registry, test file,
+  or abstraction merely because a previous plan named it.
+- Keep one current disposition per behavior. Retain unique unresolved failures and the evidence
+  needed to assess them; remove superseded successful-run narratives after reconciliation.
+  Test totals, elapsed effort, and generated page counts do not establish product quality.
 
 ## Contract owners
 
@@ -113,6 +124,6 @@ Acceptance clauses describe the target; only remaining work records completion e
 
 The [grouped dispositions](22-remaining.md#grouped-dispositions) own all status. The ledger
 preserves agreed preset capabilities, including those without a manifest. Directory inventories,
-cosmetic rename campaigns, and fixed rule totals do not establish completion. This consolidation
-changes architecture only; code, generated artifacts, artwork, and external repositories remain
-outside the batch.
+cosmetic rename campaigns, and fixed rule totals do not establish completion. Updating this
+folder does not authorize implementation changes, publication, deployment, or changes to
+external repositories.

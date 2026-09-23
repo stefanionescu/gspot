@@ -1,9 +1,9 @@
 import { join } from 'node:path';
-import { chmodSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import prettier from 'prettier';
 import { createFileTree, testdir } from 'testdirs';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/harness/planted.ts';
+import { installPrivateTools, run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
 
 const SOURCE = 'export const greeting="hello";\n';
@@ -21,7 +21,6 @@ test(
             ...Object.fromEntries(FILES.map((file) => [file, SOURCE])),
         });
         chmodSync(join(repository.path, '.prettierignore'), 0o640);
-        symlinkSync(join(import.meta.dir, '../../../node_modules'), join(repository.path, 'node_modules'));
         const result = await run(repository.path, [
             'init',
             '--yes',
@@ -38,6 +37,7 @@ test(
         expect(
             JSON.parse(result.stdout).plan.remove.some((entry: { path: string }) => entry.path === '.prettierignore'),
         ).toBe(true);
+        await installPrivateTools(repository.path);
         const level = await run(repository.path, ['set', 'level', 'all']);
         expect(level.code, level.stdout + level.stderr).toBe(0);
         const args = ['check', '--only', 'formatting/prettier', '--fix', '--no-cache', '--json', '--'];

@@ -234,11 +234,13 @@ Rules:
 Good:
 
 ```python
+from html import escape
+
 message = f"name: {name}; score: {score}"
 
 rows = ["<table>"]
 for last_name, first_name in employees:
-    rows.append("<tr><td>%s, %s</td></tr>" % (last_name, first_name))
+    rows.append("<tr><td>%s, %s</td></tr>" % (escape(last_name), escape(first_name)))
 rows.append("</table>")
 employee_table = "".join(rows)
 ```

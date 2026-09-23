@@ -16,30 +16,44 @@ description = "Build the standalone ESLint plugin and stage its license."
 run = "bun packages/eslint-plugin/build.ts"
 
 [tasks.test]
-description = "Run CLI unit tests and standalone plugin tests."
-run = "bun test ./packages/cli/tests/unit ./packages/eslint-plugin/tests"
+description = "Run deterministic unit and integration tests."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./unit ./integration"
+
+[tasks."test:unit"]
+description = "Run CLI unit and standalone plugin tests."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./unit"
 
 [tasks."test:coverage"]
-description = "Run CLI unit and plugin tests with coverage."
-run = "bun test --coverage ./packages/cli/tests/unit ./packages/eslint-plugin/tests"
+description = "Run unit and integration tests with coverage."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 --coverage ./unit ./integration"
 
 [tasks."test:integration"]
 description = "Run integration tests."
-run = "bun test ./packages/cli/tests/integration ./tests/integration"
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./integration"
+
+[tasks."test:native"]
+description = "Run native compatibility tests with the selected tools installed."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./native"
 
 [tasks."test:acceptance"]
-description = "Run behavioral acceptance tests."
-run = "bun test ./tests/acceptance"
+description = "Run behavioral acceptance tests with the local plugin in an isolated registry."
+dir = "{{config_root}}/tests"
+run = "bun support/acceptance/run.ts"
 
 [tasks."test:release"]
 description = "Exercise built release artifacts and installed consumers through an isolated registry."
-env = {GSPOT_RELEASE_TEST = "1"}
-run = "bun test ./tests/release"
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./release"
 
 [tasks."check:types"]
 description = "Check workspace and documentation TypeScript types."
 depends = ["docs:sync"]
-run = ["bunx tsc --noEmit -p tsconfig.json", "bunx tsc --noEmit -p docs/tsconfig.json"]
+run = ["bunx tsc --noEmit -p tsconfig.json", "bunx tsc --noEmit -p docs/tsconfig.json", "bunx tsc --noEmit -p tests/tsconfig.json"]
 
 [tasks."docs:sync"]
 description = "Generate Astro content and TypeScript metadata."
@@ -57,13 +71,9 @@ description = "Generate references and serve the documentation locally."
 dir = "{{config_root}}/docs"
 run = "bun --bun astro dev"
 
-[tasks."ci:affected"]
-description = "Check the exact revision against the CI base."
-run = "bun tests/ci-affected.ts"
-
 [tasks."ci:swiftformat"]
 description = "Prepare and exercise SwiftFormat on Windows."
-run = "bun tests/harness/swiftformat.ts"
+run = "bun tests/support/cli/swiftformat.ts"
 
 [tasks."site:verify-release"]
 description = "Verify that documentation describes a published stable release."

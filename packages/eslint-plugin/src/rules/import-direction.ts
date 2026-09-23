@@ -10,7 +10,7 @@ import { lintedFile, lintedRoot, isAnyGlobMatch, relativeToRoot, importFile, sta
 const DEFAULT_ROLES: Required<ImportDirectionRoles> = {
     types: ['**/types/**'],
     tests: ['tests/**', '**/*.test.*', '**/*.spec.*', '**/__tests__/**'],
-    harness: ['tests/harness/**'],
+    harness: ['tests/support/**'],
     config: ['config/**'],
     env: ['src/env/**'],
     runtime: ['src/**'],
@@ -63,6 +63,8 @@ export const importDirection = createRule<ImportDirectionOptions, ImportDirectio
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'With `@/` mapped to `src/`, a value import from `@/turn/build` inside `types/b.ts` reports `typesOnlyTypes`. For a type dependency, use `import type { A } from "@/turn/build";`. Keep runtime dependencies outside the type-only directory.',
             summary:
                 'Checks the four import directions: types import only types, runtime never imports tests, tests reach runtime only through contracts, and config never imports runtime.',
             why: 'An import against the direction makes a test part of the product, or a type file part of the runtime, and the build carries it.',

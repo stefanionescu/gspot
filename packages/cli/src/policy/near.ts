@@ -10,14 +10,14 @@ function distance(a: string, b: string): number {
         const current = [row];
         for (let column = 1; column <= b.length; column += 1) {
             const cost = a[row - 1] === b[column - 1] ? 0 : 1;
-            const above = previous[column] ?? 0;
-            const left = current[column - 1] ?? 0;
-            const diagonal = previous[column - 1] ?? 0;
+            const above = previous[column]!;
+            const left = current[column - 1]!;
+            const diagonal = previous[column - 1]!;
             current.push(Math.min(above + 1, left + 1, diagonal + cost));
         }
         previous = current;
     }
-    return previous[b.length] ?? 0;
+    return previous[b.length]!;
 }
 
 /**

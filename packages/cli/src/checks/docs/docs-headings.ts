@@ -1,5 +1,4 @@
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { readSource } from '#cli/repository/tracked.ts';
 // A Markdown heading from the banned list: an inventory where an explanation belongs.
 import { visit } from 'unist-util-visit';
 import { toString } from 'mdast-util-to-string';
@@ -13,13 +12,13 @@ import { fromMarkdown } from 'mdast-util-from-markdown';
  * @param input the engine input
  * @returns the findings
  */
-export function docsHeadings(input: EngineInput): Promise<Finding[]> {
+export function docsHeadings(input: EngineInput): Finding[] {
     const extra = (input.view.tool('docs')['banned_headings'] as string[] | undefined) ?? [];
     const banned = new Set([...BANNED_HEADINGS, ...extra.map((heading) => heading.toLowerCase())]);
     const findings: Finding[] = [];
     for (const file of input.files) {
         if (file.nature !== 'source' || !file.path.endsWith('.md')) continue;
-        const tree = fromMarkdown(readFileSync(join(input.root, file.path), 'utf8'));
+        const tree = fromMarkdown(readSource(input.root, file.path).toString('utf8'));
         visit(tree, 'heading', (heading) => {
             const text = toString(heading).trim().toLowerCase();
             if (banned.has(text))
@@ -33,5 +32,5 @@ export function docsHeadings(input: EngineInput): Promise<Finding[]> {
                 });
         });
     }
-    return Promise.resolve(findings);
+    return findings;
 }

@@ -7,12 +7,12 @@ import type { PgModule, SqlParse, SqlTree } from '#cli/readers/sql/types.ts';
 
 const POINTER_BYTES = 4;
 const ERROR_POSITION_OFFSET = 16;
-const state: { module: PgModule | undefined } = { module: undefined };
+const state: { module: Promise<PgModule> | undefined } = { module: undefined };
 
 async function pgModule(): Promise<PgModule> {
     if (state.module !== undefined) return state.module;
     const factory = createModule as (options: { wasmBinary: Uint8Array }) => Promise<PgModule>;
-    state.module = await factory({ wasmBinary: readFileSync(grammarPath('libpg-query.wasm')) });
+    state.module = factory({ wasmBinary: readFileSync(grammarPath('libpg-query.wasm')) });
     return state.module;
 }
 

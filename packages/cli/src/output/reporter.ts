@@ -1,9 +1,10 @@
+import { stripVTControlCharacters } from 'node:util';
+import type { Colors } from 'picocolors/types';
 import { invokingHook } from '#cli/platform/environment.ts';
 // Check lines, findings, help lines, reproduce lines, the summary; columns from the longest id.
-import { paint } from '#cli/output/messages.ts';
+import { colors } from '#cli/output/messages.ts';
 import type { RunReport } from '#cli/output/report-types.ts';
 import type { CheckResult, Finding } from '#cli/output/finding.ts';
-import type { Columns, Painter, ReportOptions } from '#cli/output/types.ts';
 
 const MS_PER_SECOND = 1000;
 const SCOPE_WIDTH_MIN = 4;
@@ -26,14 +27,14 @@ function scopeName(scope: string): string {
     return scope === '' ? 'root' : scope;
 }
 
-function statusWord(result: CheckResult, colors: Painter): string {
+function statusWord(result: CheckResult, colors: Colors): string {
     const { red, green, yellow, dim } = colors;
     switch (result.status) {
         case 'ok': {
             return green('ok');
         }
         case 'cache': {
-            return dim('cache');
+            return dim('unchanged');
         }
         case 'fail': {
             return red('fail');
@@ -57,7 +58,7 @@ function location(finding: Finding): string {
     return `${finding.file}${line}${column}  `;
 }
 
-function findingLines(finding: Finding, colors: Painter): string[] {
+function findingLines(finding: Finding, colors: Colors): string[] {
     const { dim, cyan } = colors;
     const rule = cyan(finding.rule ?? finding.check);
     const lines = [`  ${location(finding)}${rule}  ${finding.message}`];
@@ -71,7 +72,7 @@ function checkTail(check: CheckResult): string {
     return `${fileCount(check.files).padEnd(FILES_WIDTH)} ${time}`;
 }
 
-function failureLines(check: CheckResult, options: ReportOptions, colors: Painter): string[] {
+function failureLines(check: CheckResult, options: ReportOptions, colors: Colors): string[] {
     const shown = options.verbose ? check.findings : check.findings.slice(0, FINDINGS_SHOWN);
     const lines = shown.flatMap((finding) => findingLines(finding, colors));
     const hidden = check.findings.length - shown.length;
@@ -82,9 +83,10 @@ function failureLines(check: CheckResult, options: ReportOptions, colors: Painte
     return lines;
 }
 
-function checkLines(check: CheckResult, columns: Columns, options: ReportOptions, colors: Painter): string[] {
+function checkLines(check: CheckResult, columns: Columns, options: ReportOptions, colors: Colors): string[] {
     const scope = scopeName(check.scope).padEnd(columns.scope);
-    const status = statusWord(check, colors).padEnd(STATUS_WIDTH);
+    const word = statusWord(check, colors);
+    const status = word.padEnd(STATUS_WIDTH + word.length - stripVTControlCharacters(word).length);
     const lines = [`${scope}  ${check.check.padEnd(columns.check)}  ${status}  ${checkTail(check)}`.trimEnd()];
     if (options.verbose && check.command) {
         const command = `$ ${check.command.join(' ')}`;
@@ -95,7 +97,7 @@ function checkLines(check: CheckResult, columns: Columns, options: ReportOptions
     return lines;
 }
 
-function ignoreLines(report: RunReport, options: ReportOptions, colors: Painter): string[] {
+function ignoreLines(report: RunReport, options: ReportOptions, colors: Colors): string[] {
     if (report.ignores.length === 0) return [];
     if (!options.verbose) return [`ignores    ${String(report.ignores.length)} (printed with --verbose)`];
     return report.ignores.map((ignore) => {
@@ -106,17 +108,18 @@ function ignoreLines(report: RunReport, options: ReportOptions, colors: Painter)
     });
 }
 
-function skipLine(check: string, source: string, colors: Painter): string {
+function skipLine(check: string, source: string, colors: Colors): string {
     const shown = `(${source})`;
     return `skipped    ${check}  ${colors.dim(shown)}`;
 }
 
-function tailLines(report: RunReport, options: ReportOptions, colors: Painter): string[] {
+function tailLines(report: RunReport, options: ReportOptions, colors: Colors): string[] {
     const lines = [
         ...ignoreLines(report, options, colors),
         ...report.skips.map((skip) => skipLine(skip.check, skip.source, colors)),
     ];
     if (report.coverage.unchecked > 0) lines.push(`unchecked  ${fileCount(report.coverage.unchecked)} (gspot doctor)`);
+    for (const finding of report.coverage.findings) lines.push(...findingLines(finding, colors));
     if (report.unstaged > 0) {
         const verb = report.unstaged === 1 ? ' has' : 's have';
         lines.push(
@@ -126,11 +129,18 @@ function tailLines(report: RunReport, options: ReportOptions, colors: Painter): 
     return lines;
 }
 
-function summaryLine(report: RunReport, options: ReportOptions, shownCount: number, colors: Painter): string {
-    if (report.failed.length > 0) return colors.red(`failed: ${report.failed.join(', ')}`);
-    if (shownCount === 0 && options.quiet) return 'passed';
-    const count = report.checks.length;
-    return `passed: ${String(count)} check${count === 1 ? '' : 's'}`;
+function summaryLine(report: RunReport, colors: Colors): string {
+    const passed = report.checks.filter((check) => check.status === 'ok' || check.status === 'cache').length;
+    const failed = report.checks.filter((check) => ['fail', 'missing', 'error'].includes(check.status)).length;
+    const skipped = report.checks.filter((check) => check.status === 'skipped').length;
+    const findings = report.checks.reduce(
+        (count, check) => count + check.findings.length,
+        report.coverage.findings.length,
+    );
+    const count = (value: number, noun: string): string => `${String(value)} ${noun}${value === 1 ? '' : 's'}`;
+    const summary = `${count(passed, 'check')} passed, ${count(failed, 'check')} failed, ${count(skipped, 'check')} skipped, ${count(findings, 'finding')}, ${seconds(report.duration)}`;
+    if (report.exitCode === 2) return colors.red(`${summary} (incomplete)`);
+    return report.exitCode === 0 ? summary : colors.red(`${summary} (failed)`);
 }
 
 /**
@@ -140,8 +150,7 @@ function summaryLine(report: RunReport, options: ReportOptions, shownCount: numb
  * @returns the text for stdout
  */
 export function runText(report: RunReport, options: ReportOptions): string {
-    const colors = paint();
-    const isHidden = (check: CheckResult): boolean => options.quiet && QUIET_HIDES.has(check.status);
+    const isHidden = (check: CheckResult): boolean => QUIET_HIDES.has(check.status);
     const shown = report.checks.filter((check) => !isHidden(check));
     const columns: Columns = {
         scope: Math.max(SCOPE_WIDTH_MIN, ...report.checks.map((check) => scopeName(check.scope).length)),
@@ -152,7 +161,7 @@ export function runText(report: RunReport, options: ReportOptions): string {
     const isSeparated = tail.length > 0 && body.length > 0;
     const lines = [...body, ...(isSeparated ? [''] : []), ...tail];
     if (lines.length > 0) lines.push('');
-    lines.push(summaryLine(report, options, shown.length, colors));
+    lines.push(summaryLine(report, colors));
     const hook = invokingHook();
     if (hook !== undefined && report.exitCode !== 0) {
         const reproduce = report.checks.find((check) => check.reproduce !== undefined)?.reproduce;
@@ -167,3 +176,7 @@ export function runText(report: RunReport, options: ReportOptions): string {
               : `${report.comparison.content === 'index' ? 'Staged index' : 'Committed tree'} ${report.comparison.reference}.\n`;
     return `${comparison}${lines.join('\n')}\n`;
 }
+
+type Columns = { scope: number; check: number };
+
+type ReportOptions = { quiet: boolean; verbose: boolean };

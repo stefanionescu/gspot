@@ -1,14 +1,23 @@
 import { parse as parseToml } from 'smol-toml';
 import { openSession } from '#cli/run/session.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { SetOptions } from '#cli/commands/types.ts';
+type SetOptions = {
+    cwd: string;
+    key: string;
+    items: string[];
+    reason?: string;
+    scope?: string;
+    replace: boolean;
+    remove: boolean;
+    toDefault: boolean;
+};
 import type { SettingSpec } from '#cli/presets/types.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
 import { isLoosening } from '#cli/policy/loosening.ts';
 // gspot set: one setting at a time, checked against the surface, with a reason when the change loosens.
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
-import type { TomlTable, Mutation } from '#cli/policy/types.ts';
+import type { Mutation } from '#cli/policy/types.ts';
 import { specFor, settingValue } from '#cli/policy/settings.ts';
 import type { CommandResult, ScopeSelection, Session } from '#cli/run/types.ts';
 import { commitPolicy, refuseBadReason, requireReason } from '#cli/policy/commit-policy.ts';
@@ -55,12 +64,6 @@ function unknownSetting(session: Session, selection: ScopeSelection, key: string
     return new PolicyError([messages.settingNotExposed(key, known.length > 0 ? known : all.slice(0, NEAR_LIMIT))]);
 }
 
-function holderFor(raw: TomlTable, scope: string | undefined): TomlTable {
-    const holder = scopeHolder(raw, scope);
-    if (!holder) throw new PolicyError([messages.scopeMissing(scope ?? '')]);
-    return holder;
-}
-
 function shaped(parsed: unknown[], isList: boolean): unknown {
     if (parsed.length !== 1) return parsed;
     const [only] = parsed;
@@ -93,7 +96,7 @@ function isReasonOwed(spec: SettingSpec, o: SetOptions, value: unknown, shipped:
 function setMutation(o: SetOptions, isList: boolean, value: unknown): Mutation {
     const written = !isList && o.reason !== undefined ? { value, reason: o.reason } : value;
     return (raw) => {
-        const holder = holderFor(raw, o.scope);
+        const holder = scopeHolder(raw, o.scope);
         if (
             (o.key === 'generated' || o.key === 'vendored') &&
             o.remove &&
@@ -178,7 +181,7 @@ export async function setCommand(o: SetOptions): Promise<CommandResult> {
     if (!o.toDefault) return writeValue(root, session, selection, o, match.spec);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
     const mutation: Mutation = (raw) => {
-        deleteKey(o.key)(holderFor(raw, o.scope));
+        deleteKey(o.key)(scopeHolder(raw, o.scope));
     };
     return commitPolicy(root, mutation, false, `${shown} back to the shipped default`);
 }

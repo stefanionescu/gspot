@@ -56,8 +56,9 @@ title: Security
 
 - No secret in source, configuration files, examples, tests, logs, error messages, URLs, build
   arguments, image layers, or commit history.
-- Error responses and logs carry no stack trace, file path, schema name, internal ID, or raw
-  upstream error.
+- Public service errors carry no stack trace, private path, schema name, internal ID, or raw
+  upstream error. Local developer diagnostics can identify the affected source and configuration.
+  Restricted logs retain only the safe context required by the logging policy.
 - No default credentials, sample admin users, debug endpoints, or auth bypasses in any build.
 
 ## Supply chain

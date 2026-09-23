@@ -8,6 +8,8 @@ export const noReexports = createRule<NoReexportsOptions, 'from' | 'star' | 'loc
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'The following declaration reports `local`:\n\n```ts\nconst a = 1;\nexport { a };\n```\n\nExport at the declaration:\n\n```ts\nexport const a = 1;\n```',
             summary: 'Finds a re-export: export from, export star, or an export list of local names.',
             why: 'A re-export exists to shorten an import path; it hides the owner and lets the same value arrive by two routes.',
             fix: 'Export values where they are declared and import them from there. Set structure.reexports to index-only if the repository is a library with barrels.',

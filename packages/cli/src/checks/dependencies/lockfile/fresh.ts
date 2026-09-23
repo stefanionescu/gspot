@@ -1,12 +1,20 @@
 // Every lockfile matches its manifest: the package manager installs from it without wanting to change it.
 import { dirname, join } from 'node:path';
-import { run } from '#cli/platform/spawn.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { createFileWorkspace } from '#cli/run/file-workspace.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { FROZEN_INSTALLS } from '#cli/checks/integrity-definitions.ts';
 
-const INSTALL_TIMEOUT_MS = 300_000;
 const SHOWN_LINES = 3;
+const STALE_LOCK_DIAGNOSTICS: Record<string, RegExp> = {
+    bun: /lockfile had changes, but lockfile is frozen/u,
+    npm: /can only install packages when your package\.json and package-lock\.json or npm-shrinkwrap\.json are in sync/u,
+    pnpm: /ERR_PNPM_(?:OUTDATED_LOCKFILE|FROZEN_LOCKFILE_WITH_OUTDATED_LOCKFILE)/u,
+    uv: /lockfile[\s\S]*needs to be updated/u,
+    yarn: /Your lockfile needs to be updated|YN0028|lockfile would have been modified/u,
+};
 
 /**
  * One finding for each lockfile its package manager refuses to install from unchanged.
@@ -15,12 +23,28 @@ const SHOWN_LINES = 3;
  */
 export async function lockfileFresh(input: EngineInput): Promise<Finding[]> {
     const findings: Finding[] = [];
-    for (const file of input.session.repository.files) {
-        const command = FROZEN_INSTALLS[file.path.slice(file.path.lastIndexOf('/') + 1)];
+    // Package managers can write installation metadata even when they refuse a frozen lock.
+    using workspace = createFileWorkspace(
+        input.root,
+        input.files.map((file) => file.path),
+    );
+    for (const file of input.files) {
+        const filename = file.path.slice(file.path.lastIndexOf('/') + 1);
+        const command =
+            filename === 'yarn.lock' && /^__metadata:/mu.test(readSource(input.root, file.path).toString('utf8'))
+                ? ['yarn', 'install', '--immutable']
+                : FROZEN_INSTALLS[filename];
         if (command === undefined) continue;
-        const result = await run(command, { cwd: join(input.root, dirname(file.path)), timeoutMs: INSTALL_TIMEOUT_MS });
-        if (result.missing || result.code === 0) continue;
+        const result = await runCheckCommand(input, command, {
+            cwd: join(workspace.root, dirname(file.path)),
+            ...(filename === 'yarn.lock' ? { env: { YARN_ENABLE_SCRIPTS: 'false' } } : {}),
+        });
+        if (result.code === 0) continue;
         const said = `${result.stderr}\n${result.stdout}`.split('\n').filter((line) => line.trim() !== '');
+        if (!STALE_LOCK_DIAGNOSTICS[command[0]!]!.test(said.join('\n')))
+            throw new Error(
+                `${command.join(' ')} could not validate the lockfile: ${said.slice(0, SHOWN_LINES).join(' ')}`,
+            );
         findings.push({
             check: input.spec.name,
             file: file.path,

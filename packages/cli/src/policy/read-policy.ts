@@ -1,13 +1,14 @@
 // Read, parse and validate gspot.toml; normalize into the Policy shape.
 import type { z } from 'zod';
 import { join } from 'node:path';
-import { parse as parseToml } from 'smol-toml';
-import { existsSync, readFileSync } from 'node:fs';
+import { parse as parseToml, TomlError } from 'smol-toml';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { normalize } from '#cli/policy/normalize.ts';
 import { policySchema } from '#cli/policy/schema.ts';
 import { knownKeysAt } from '#cli/policy/json-schema.ts';
-import { reasonProblems, scopeProblems } from '#cli/policy/problems.ts';
+import { reasonProblems, pathProblems } from '#cli/policy/problems.ts';
+import { policyLocation, sourceLocations } from '#cli/policy/source-locations.ts';
 import type { PolicyFiles, PathSegment, Policy } from '#cli/policy/types.ts';
 
 function issueText(issue: z.core.$ZodIssue): string {
@@ -18,8 +19,6 @@ function issueText(issue: z.core.$ZodIssue): string {
         return issue.keys.map((key) => messages.unknownKey(where, key, known)).join('\n');
     }
     const shown = where === '' ? 'gspot.toml' : where;
-    if (issue.code === 'invalid_type')
-        return messages.invalidValue(shown, `expected ${issue.expected}, got ${typeof issue.input}`);
     return messages.invalidValue(shown, issue.message);
 }
 
@@ -27,7 +26,9 @@ export function parseTomlText(text: string, path: string): Record<string, unknow
     try {
         return parseToml(text);
     } catch (error) {
-        throw new PolicyError([messages.tomlSyntax(path, (error as Error).message)]);
+        if (!(error instanceof TomlError)) throw error;
+        const detail = error.message.split('\n', 1).join('').replace('Invalid TOML document: ', '');
+        throw new PolicyError([messages.tomlSyntax(`${path}:${String(error.line)}:${String(error.column)}`, detail)]);
     }
 }
 
@@ -55,21 +56,32 @@ export class PolicyError extends Error {
  */
 export function parsePolicyText(text: string, path: string, root?: string): Policy {
     const result = policySchema.safeParse(parseTomlText(text, path));
-    if (!result.success) throw new PolicyError(result.error.issues.map((issue) => issueText(issue)));
-    if (result.data.version !== 1) throw new PolicyError([messages.versionUnsupported(result.data.version)]);
+    if (!result.success) {
+        const locations = sourceLocations(text);
+        const problems = result.error.issues.flatMap((issue) => {
+            const segments = issue.path.filter((part): part is PathSegment => typeof part !== 'symbol');
+            return issue.code === 'unrecognized_keys'
+                ? issue.keys.map(
+                      (key) =>
+                          `${path}:${policyLocation(locations, [...segments, key])}: ${issueText({ ...issue, keys: [key] })}`,
+                  )
+                : [`${path}:${policyLocation(locations, segments)}: ${issueText(issue)}`];
+        });
+        throw new PolicyError(problems);
+    }
+    if (result.data.version !== 1)
+        throw new PolicyError([
+            `${path}:${policyLocation(sourceLocations(text), ['version'])}: ${messages.versionUnsupported(result.data.version)}`,
+        ]);
     const policy = normalize(result.data);
-    const problems = [...reasonProblems(policy), ...(root === undefined ? [] : scopeProblems(root, policy))];
-    if (problems.length > 0) throw new PolicyError(problems);
+    const problems = [...reasonProblems(policy), ...(root === undefined ? [] : pathProblems(root, policy))];
+    if (problems.length > 0) {
+        const locations = sourceLocations(text);
+        throw new PolicyError(
+            problems.map((problem) => `${path}:${policyLocation(locations, problem.path)}: ${problem.message}`),
+        );
+    }
     return policy;
-}
-
-/**
- * The path of gspot.toml under a root.
- * @param root the repository root
- * @returns the absolute path
- */
-export function policyPath(root: string): string {
-    return join(root, 'gspot.toml');
 }
 
 /**
@@ -78,7 +90,7 @@ export function policyPath(root: string): string {
  * @returns whether the file is there
  */
 export function hasPolicy(root: string): boolean {
-    return existsSync(policyPath(root));
+    return openConfinedRoot(root).read('gspot.toml') !== undefined;
 }
 
 /**
@@ -87,9 +99,10 @@ export function hasPolicy(root: string): boolean {
  * @returns the policy and the file's path and text
  */
 export function readPolicy(root: string): PolicyFiles {
-    const path = policyPath(root);
-    if (!existsSync(path)) throw new PolicyError([messages.fileMissing('gspot.toml')]);
-    const text = readFileSync(path, 'utf8');
+    const path = join(root, 'gspot.toml');
+    const current = openConfinedRoot(root).read('gspot.toml');
+    if (current === undefined) throw new PolicyError([messages.fileMissing('gspot.toml')]);
+    const text = current.bytes.toString('utf8');
     const policy = parsePolicyText(text, 'gspot.toml', root);
     return { policy, path, text };
 }

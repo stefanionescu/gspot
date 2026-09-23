@@ -3,8 +3,8 @@ import { join } from 'node:path';
 import { existsSync } from 'node:fs';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import { treeContents } from '#tests/harness/contents.ts';
-import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/harness/planted.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
+import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/support/cli/planted.ts';
 
 const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };
 

@@ -1,6 +1,5 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // A configuration module holds literals: no function, no control flow, no call, no value import from outside the config roots.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { Node } from 'web-tree-sitter';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
@@ -26,7 +25,7 @@ const LANGUAGE_BY_EXTENSION: Record<string, string> = {
 };
 
 function configurationRolePaths(input: EngineInput): string[] {
-    const role = input.session.policyFiles.policy.architecture.roles['config'];
+    const role = input.policyFiles.policy.architecture.roles['config'];
     if (role === undefined) return [];
     const listed = Array.isArray(role) ? role : [role];
     return listed.map((path) => (path.includes('*') ? path : `${path.replace(/\/$/u, '')}/**`));
@@ -87,8 +86,8 @@ async function fileFindings(input: EngineInput, file: TrackedFile, language: str
     const grammar = grammarFor(file.path, language);
     if (grammar === undefined) return [];
     const parser = await parserFor(grammar);
-    const tree = parser.parse(readFileSync(join(input.root, file.path), 'utf8'));
-    if (tree === null) return [];
+    const tree = parser.parse(readSource(input.root, file.path).toString('utf8'));
+    if (tree === null) throw new Error('The source parser returned no tree.');
     try {
         return problemsOf(tree.rootNode).map((problem) => ({
             check: input.spec.name,
@@ -111,7 +110,7 @@ async function fileFindings(input: EngineInput, file: TrackedFile, language: str
 export async function configurationPurity(input: EngineInput): Promise<Finding[]> {
     const isConfig = pathMatcher(configurationRolePaths(input));
     const findings: Finding[] = [];
-    for (const file of input.session.repository.files) {
+    for (const file of input.files) {
         const language = languageOf(file);
         if (language === undefined || file.nature !== 'source' || !isConfig(file.path)) continue;
         findings.push(...(await fileFindings(input, file, language)));

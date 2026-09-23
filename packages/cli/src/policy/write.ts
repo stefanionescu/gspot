@@ -1,10 +1,13 @@
+import * as messages from '#cli/policy/messages.ts';
 // The one writer the six commands share: patch gspot.toml keeping comments and order, validate as load does, write.
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { isDeepStrictEqual } from 'node:util';
 import { patch } from '@decimalturn/toml-patch';
-import { readFileSync } from 'node:fs';
 import { assertPolicyComplete } from '#cli/policy/validate-policy.ts';
 import type { TomlTable, Mutation, WriteResult } from '#cli/policy/types.ts';
-import { parsePolicyText, policyPath, parseTomlText } from '#cli/policy/read-policy.ts';
+import { parsePolicyText, PolicyError, parseTomlText } from '#cli/policy/read-policy.ts';
+import { fileMissing } from '#cli/policy/messages.ts';
 import { stringify as stringifyToml } from 'smol-toml';
 
 function isTable(value: unknown): value is TomlTable {
@@ -13,33 +16,13 @@ function isTable(value: unknown): value is TomlTable {
 
 function splitKey(key: string): { path: string[]; name: string } {
     const path = key.split('.');
-    const name = path.pop() ?? key;
+    const name = path.pop()!;
     return { path, name };
 }
 
 function listItemKey(item: unknown): string {
     const isNamed = typeof item === 'object' && item !== null && 'name' in item;
     return JSON.stringify(isNamed ? (item as TomlTable)['name'] : item);
-}
-
-function tablesAlong(raw: TomlTable, path: string[]): TomlTable[] | undefined {
-    const tables: TomlTable[] = [raw];
-    for (const part of path) {
-        const next = tables.at(-1)?.[part];
-        if (!isTable(next)) return undefined;
-        tables.push(next);
-    }
-    return tables;
-}
-
-function pruneEmpty(tables: TomlTable[], path: string[]): void {
-    for (let index = tables.length - 1; index > 0; index -= 1) {
-        const table = tables[index];
-        const parent = tables[index - 1];
-        const part = path[index - 1];
-        if (table && parent && part !== undefined && Object.keys(table).length === 0)
-            Reflect.deleteProperty(parent, part);
-    }
 }
 
 /**
@@ -83,22 +66,25 @@ export function proposePolicy(root: string, text: string, mutate: Mutation): Wri
     // No padding inside array brackets: the style taplo formats to, so a hand edit and a written entry agree.
     const next = patch(seed, raw, { inlineTableStart: 2, bracketSpacing: false });
     const policy = parsePolicyText(next, 'gspot.toml', root);
-    assertPolicyComplete(policy);
+    assertPolicyComplete({ policy, text: next, path: 'gspot.toml' });
     return { text: next, policy, changed: next !== text };
 }
 
 /** Apply a validated policy proposal through lifecycle ownership. */
 export function writePolicy(root: string, mutate: Mutation, isDryRun = false): WriteResult {
-    const text = readFileSync(policyPath(root), 'utf8');
+    const original = openConfinedRoot(root).read('gspot.toml');
+    if (original === undefined) throw new PolicyError([fileMissing('gspot.toml')]);
+    const text = original.bytes.toString('utf8');
+    if (!Buffer.from(text).equals(original.bytes)) throw new Error('gspot.toml must contain valid UTF-8 text.');
     const proposal = proposePolicy(root, text, mutate);
     if (proposal.changed && !isDryRun)
         withLifecycleOwner(root, (owner) => {
             const previous = owner.read('gspot.toml');
-            if (previous?.bytes.toString('utf8') !== text)
+            if (!isDeepStrictEqual(previous, original))
                 throw new Error('gspot.toml changed while the edit was prepared. Retry the command.');
             const status = owner.replace(
                 'gspot.toml',
-                { bytes: Buffer.from(proposal.text), mode: previous.mode },
+                { bytes: Buffer.from(proposal.text), mode: original.mode },
                 'policy',
                 true,
             );
@@ -166,10 +152,16 @@ export function setKey(key: string, value: unknown): Mutation {
 export function deleteKey(key: string): Mutation {
     return (raw) => {
         const { path, name } = splitKey(key);
-        const tables = tablesAlong(raw, path);
-        if (!tables) return;
-        Reflect.deleteProperty(tables.at(-1) ?? raw, name);
-        pruneEmpty(tables, path);
+        const tables = [raw];
+        for (const part of path) {
+            const next = tables.at(-1)![part];
+            if (!isTable(next)) return;
+            tables.push(next);
+        }
+        Reflect.deleteProperty(tables.at(-1)!, name);
+        for (let index = tables.length - 1; index > 0; index -= 1)
+            if (Object.keys(tables[index]!).length === 0)
+                Reflect.deleteProperty(tables[index - 1]!, path[index - 1]!);
     };
 }
 
@@ -215,10 +207,12 @@ export function removeFromList(key: string, entries: unknown[]): Mutation {
  * The table a command writes into: the document itself, or the [[scope]] entry with that path.
  * @param raw the parsed document
  * @param scope the scope path, if any
- * @returns the table, or undefined when no scope has that path
+ * @returns the required table
  */
-export function scopeHolder(raw: TomlTable, scope: string | undefined): TomlTable | undefined {
+export function scopeHolder(raw: TomlTable, scope: string | undefined): TomlTable {
     if (scope === undefined) return raw;
     const scopes = (raw['scope'] as TomlTable[] | undefined) ?? [];
-    return scopes.find((entry) => entry['path'] === scope);
+    const holder = scopes.find((entry) => entry['path'] === scope);
+    if (holder === undefined) throw new PolicyError([messages.scopeMissing(scope)]);
+    return holder;
 }

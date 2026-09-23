@@ -117,9 +117,8 @@ rows that are easier to maintain as source data.
 ## Edge function imports
 
 - Internal Edge Function imports must include `.ts`.
-- TypeScript code outside Edge Functions uses extensionless imports
-  because it runs through Bun/tsx tooling.
-- The Deno configs under function folders map `@/` to the Supabase project root.
+- TypeScript code outside Edge Functions follows its runtime and TypeScript configuration.
+- Declare any import aliases in the owning Deno configuration before using them.
 - Supabase examples often use `functions/_shared`; the required shared-code
   directory is `functions/shared/`.
 
@@ -224,7 +223,7 @@ Good:
 ```text
 functions/submit-order/
 functions/refresh-provider-token/
-functions/shared-code/
+functions/shared/
 functions/provider-config/
 functions/generated-types/
 ```
@@ -238,7 +237,7 @@ Before you run the checks of the repository, read the change against these quest
 - Generated data migrations were rendered and checked.
 - RLS is enabled on every new exposed table.
 - Grants are explicit and least-privilege.
-- Security-definer functions have `SET search_path = ''`, fully qualified
+- Security-definer functions have `SET search_path = ''` and fully qualified object names.
 - Storage bucket settings are in both migrations and `config.toml` when relevant.
 - Edge Function `verify_jwt` settings match the real caller auth pattern.
 - Secrets are read from env or Vault, never checked in.

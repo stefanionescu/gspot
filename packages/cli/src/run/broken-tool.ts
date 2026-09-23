@@ -12,7 +12,7 @@ const FILELESS_FORMATS = new Set(['lines', 'none']);
 
 // Whether the findings of this output name files of the repository: a link target, a coverage floor and a plain line do not.
 function isFileNamed(output: OutputFormat | undefined): boolean {
-    if (output === undefined || output.format === 'eslint-json') return true;
+    if (output === undefined || ['eslint-json', 'typos-json', 'markdownlint-json'].includes(output.format)) return true;
     if (FILELESS_FORMATS.has(output.format) || (output.file_is ?? 'path') !== 'path') return false;
     return output.pattern?.includes('(?<file>') ?? output.fields?.file !== undefined;
 }
@@ -63,11 +63,21 @@ export function executionFailure(
     if (result.isTimedOut === true)
         return { status: 'error', note: `${name} ran past ${String(seconds)} seconds and was stopped.` };
     if (result.missing) return { status: 'missing', note: `${name} could not be started: ${result.stderr.trim()}` };
+    if (result.isErrored === true)
+        return { status: 'error', note: `${name} failed during process launch, capture, or termination.` };
     return undefined;
 }
 
 const TAIL_LINES = 20;
 const TRUFFLEHOG_FINDINGS = 183;
+const TYPOS_FINDINGS = 2;
+
+/** Match a tool's declared fatal diagnostics for checks and corrections. */
+export function hasToolError(spec: CheckSpec, result: SpawnResult): boolean {
+    return (
+        spec.tool_errors !== undefined && new RegExp(spec.tool_errors, 'mu').test(`${result.stdout}\n${result.stderr}`)
+    );
+}
 
 /**
  * Bound diagnostics from tools that do not require secret redaction.
@@ -91,13 +101,22 @@ export function toolOutputDetail(result: SpawnResult, placeholder: string): stri
  */
 export function checkedFindings(planned: PlannedCheck, result: SpawnResult, roots: [string, string]): Finding[] {
     const { spec } = planned;
+    const isTypos = spec.output?.format === 'typos-json';
+    const isMarkdownlint = spec.output?.format === 'markdownlint-json';
     const broken =
-        spec.tool_errors !== undefined && new RegExp(spec.tool_errors, 'mu').test(`${result.stdout}\n${result.stderr}`);
+        (isTypos && result.code !== 0 && result.code !== TYPOS_FINDINGS) ||
+        (isMarkdownlint && result.code !== 0 && result.code !== 1) ||
+        hasToolError(spec, result);
     const parsed =
         spec.output?.format === 'trufflehog-json'
             ? redactedFindings(spec, result, roots[1], broken)
-            : parseOutput(spec, result.stdout, result.stderr, roots[1]);
-    if (broken || (planned.manifest !== undefined && isCrash(spec, result, parsed, roots))) {
+            : broken
+              ? []
+              : parseOutput(spec, result.stdout, result.stderr, roots[1], roots[0]);
+    if (
+        broken ||
+        ((planned.manifest !== undefined || isTypos || isMarkdownlint) && isCrash(spec, result, parsed, roots))
+    ) {
         const name = planned.tool?.name ?? spec.name;
         const detail = toolOutputDetail(result, `${name} exited ${String(result.code)}`);
         throw new ToolOutputError(`${name} broke: exit ${String(result.code)}\n${detail}`);

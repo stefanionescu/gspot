@@ -1,0 +1,6 @@
+export default {
+    config: JSON.parse(<%= json(JSON.stringify(markdownlintRules)) %>),
+    noBanner: true,
+    noProgress: true,
+    outputFormatters: [[({ results, logMessage }) => logMessage(JSON.stringify(results))]],
+};

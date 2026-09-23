@@ -1,27 +1,50 @@
 import { ciLintJobs } from '#cli/repository/existing-tooling.ts';
+import { submodulePaths } from '#cli/repository/tracked.ts';
 // The proposal init writes and the plan it prints: what is written, removed, carried, changed, and stops running.
 import { pythonPins } from '#cli/emit/tool-environment.ts';
-import { join } from 'node:path';
-import { existsSync } from 'node:fs';
+import type { RunnerTaskNames } from '#cli/emit/runner-definitions.ts';
 import type { Proposal } from '#cli/policy/types.ts';
 import type { Manifest } from '#cli/presets/types.ts';
 import type { ScopeEntry } from '#cli/repository/types.ts';
 import { noLongerRuns } from '#cli/lifecycle/takeover.ts';
 import { xcodeProposal } from '#cli/lifecycle/xcode-proposal.ts';
-import { pinnedTwice, misePins, npmPins, MISE_CONFIG_PATH, MISE_TASKS } from '#cli/emit/runner-tasks.ts';
-import type { CarriedLists, InitAnswers, InitPlanInputs, InitSelection, TakeoverPlan } from '#cli/lifecycle/types.ts';
+import { pinnedTwice, misePins, npmPins, MISE_CONFIG_PATH, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
+import type {
+    CarriedConfiguration,
+    InitAnswers,
+    InitPlanInputs,
+    InitSelection,
+    TakeoverPlan,
+} from '#cli/lifecycle/types.ts';
 
-const PACKAGE_RUNNERS = new Set(['bun', 'npm', 'pnpm']);
-
-function carriedRows(carried: CarriedLists): TakeoverPlan['carried'] {
-    const rows: { from: string; count: number; into: string }[] = [
-        { from: 'typos words', count: carried.typosWords.length, into: 'words' },
-        { from: 'gitleaks allowlist', count: carried.gitleaksAllow.length, into: 'entries' },
-        { from: 'osv ignores', count: carried.osvIgnores.length, into: 'advisories' },
-        { from: 'license exceptions', count: carried.licenseExceptions.length, into: 'exceptions' },
-        { from: 'rules turned off', count: carried.ignores.length, into: '[[ignore]] entries' },
-    ];
-    return rows.filter((row) => row.count > 0);
+function carriedRows(carried: CarriedConfiguration): TakeoverPlan['carried'] {
+    const rows = [...carried.tools].flatMap(([tool, entries]) => {
+        const settings = Object.entries(entries.settings).map(([key, value]) => ({
+            from: `${tool} ${key}`,
+            count: Array.isArray(value)
+                ? value.length
+                : typeof value === 'object' && value !== null
+                  ? Object.keys(value).length
+                  : 1,
+            into: `tools.${tool}.${key}`,
+        }));
+        if (entries.ignores.length > 0)
+            settings.push({
+                from: `${tool} rules turned off`,
+                count: entries.ignores.length,
+                into: '[[ignore]] entries',
+            });
+        return settings.filter((row) => row.count > 0);
+    });
+    for (const [scope, entry] of carried.scopes)
+        for (const [tool, settings] of Object.entries(entry.tools))
+            for (const [key, value] of Object.entries(settings))
+                rows.push({
+                    from: `${scope}: ${tool} ${key}`,
+                    count: Array.isArray(value) ? value.length : 1,
+                    into: `[[scope]] ${scope}: tools.${tool}.${key}`,
+                });
+    return rows;
 }
 
 function stubRows(everySelected: Manifest[]): TakeoverPlan['write'] {
@@ -32,7 +55,12 @@ function stubRows(everySelected: Manifest[]): TakeoverPlan['write'] {
         .map((path) => ({ path, note: 'stub' }));
 }
 
-function runnerRows(root: string, answers: InitAnswers, everySelected: Manifest[]): TakeoverPlan['change'] {
+function runnerRows(
+    root: string,
+    answers: InitAnswers,
+    everySelected: Manifest[],
+    names?: RunnerTaskNames,
+): TakeoverPlan['change'] {
     const count = Object.keys(npmPins(everySelected, answers.runner)).length;
     const rows: TakeoverPlan['change'] =
         count === 0
@@ -44,13 +72,21 @@ function runnerRows(root: string, answers: InitAnswers, everySelected: Manifest[
             path: '.gspot/pyproject.toml',
             note: `${String(python)} pinned Python tools; matching uv.lock and private environment`,
         });
+    const tasks = runnerTaskPlan(root, answers.runner, names);
     if (answers.runner === 'mise')
         rows.unshift({
             path: MISE_CONFIG_PATH,
-            note: `${String(misePins(everySelected, count > 0).length)} tool pins, ${String(MISE_TASKS.length)} tasks`,
+            note: `${String(misePins(everySelected, count > 0).length)} tool pins, ${String(tasks.tasks.length)} tasks`,
         });
-    if (PACKAGE_RUNNERS.has(answers.runner) && existsSync(join(root, 'package.json')))
-        rows.push({ path: 'package.json', note: 'scripts check, check:fix, apply' });
+    const configuration = tasks.configuration;
+    if (configuration !== undefined)
+        rows.push(
+            ...configuration.changes.map((field) => ({
+                path: configuration.path,
+                note: `task ${String(field.path[1])}: ${String(field.value)}`,
+            })),
+        );
+    rows.push(...tasks.notes.map((note) => ({ path: 'runner', note })));
     return rows;
 }
 
@@ -74,7 +110,7 @@ export function buildProposal(
     root: string,
     selection: InitSelection,
     answers: InitAnswers,
-    carried: CarriedLists,
+    carried: CarriedConfiguration,
 ): Proposal {
     const scopes: ScopeEntry[] = selection.scopes.filter((scope) => scope.path !== '');
     const hasCommitScopes = scopes.length > 0 && selection.selectedIds.has('commits');
@@ -88,8 +124,7 @@ export function buildProposal(
         ci: answers.ci,
         rules: answers.isRules,
         runner: answers.runner,
-        ...(answers.formatter === undefined ? {} : { format: answers.formatter.format }),
-        ...(answers.formatter?.extra === undefined ? {} : { prettierExtra: answers.formatter.extra }),
+        ...(answers.formatter === undefined ? {} : { formatter: answers.formatter }),
         ...(commitScopes ? { commitScopes } : {}),
         ...(xcode ? { xcode } : {}),
     };
@@ -143,6 +178,7 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
         unread: carried.unread,
         retained: [
             ...carried.retained,
+            ...submodulePaths(root).map((path) => ({ path, note: 'submodule; contents are not read' })),
             ...(answers.ci === 'none' && tooling.ci.length > 0 && ciLintJobs(root, tooling.ci).length === 0
                 ? tooling.ci.map((path) => ({
                       path,
@@ -158,7 +194,7 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
         change: [
             { path: '.gitignore', note: 'one managed block' },
             { path: '.gitattributes', note: 'managed generated-file classification and LF line endings' },
-            ...runnerRows(root, answers, everySelected),
+            ...runnerRows(root, answers, everySelected, inputs.runnerTasks),
             ...(answers.hooks === 'gspot'
                 ? [
                       {
@@ -169,6 +205,6 @@ export function buildInitPlan(inputs: InitPlanInputs): TakeoverPlan {
                 : []),
         ],
         noLongerRuns: noLongerRuns(tooling, pinnedTwice(root, everySelected)),
-        ignores: carried.ignores,
+        ignores: [...carried.tools.values()].flatMap((tool) => tool.ignores),
     };
 }

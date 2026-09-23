@@ -510,49 +510,35 @@ These clauses specify required behavior. [Remaining work](22-remaining.md) owns 
 
 ### Acceptance D-129
 
-The fifteen commands of [02-cli.md](02-cli.md). This step deletes `why`,
-`declare`, and `profile check`. Later steps remove `allow`, rename `profile save` to `export`,
-and add `install` and `list`.
+The [command surface](#commands) owns supported commands and flags. Keep one implementation
+per command, with no removed-name aliases or compatibility forwarding. Explain supports paths,
+checks, presets, rules, and settings. Set writes supported generated and vendored declarations.
+Doctor performs local diagnosis without network access. Apply previews through `--dry-run`.
 
-`explain` takes a path and prints what `why` printed. `gspot set generated <glob>` and
-`gspot set vendored <glob>` append the entries `declare` wrote. `policy/allow-command.ts` keeps the list `typos`
-and loses the other six. `doctor` calls no network, so `--offline` has no meaning.
-
-`apply` loses `--check` and `--lower-baselines`. `ignore` and `set`
-lose `--dry-run`, `add` and `remove` keep it, and apply previews generated changes.
-`uninstall` loses `--keep-hooks`. `check --at` becomes `check --stage`, and `--keep-format` and
-`--shipped-format` become `--format keep` and `--format shipped`.
-
-Exercise completion for supported commands, values, and paths (T-22).
-Verify the replacement `explain` and `set` behavior. Do not add command-count or
-removed-command assertions.
+Exercise completion for supported commands, values, and paths (T-22). Verify observable explain,
+set, and preview behavior. Do not assert a fixed command count or test removed commands solely
+to preserve refactoring history.
 
 ### Acceptance D-100
 
-The root holds no lint file. Each check passes `--config` with the path under
-`.gspot/`. A root file exists only as a pointer, for a tool that has an include form.
+Managed tool configuration lives under `.gspot/`. Native editors can require a root pointer
+or an explicitly owned root configuration, such as `.editorconfig`. Those files must follow
+the owning tool's loading contract and lifecycle preservation rules.
 
-The manifest key `copy` leaves `presets/manifest-schema.ts`, and `emit/targets.ts`
-loses the branch that writes a copy. `.editorconfig` stays at the root, because the formatting
-preset writes the file itself there, with its mark, and editors read no other place.
-
-A planted install holds that the root gains no file but `gspot.toml`, the mise file,
-`.editorconfig`, and the managed blocks.
+Verify that the pinned consumer loads the generated configuration, that required native root
+integration works, and that unrelated files remain unchanged. Do not require a fixed root-file
+inventory or forbid the root integrations the adoption contract explicitly supports.
 
 ### Acceptance K-111
 
 A finding is silenced by `[[ignore]]` with `check`, `rule`, `paths`, and `reason`, or
 by one `gspot-ignore` comment with a reason. Nothing else.
 
-`ignores.ts` loses the two lines that read `entry.finding`. The shell analyses read
-`gspot-ignore` through the one reader every engine uses.
+Shell analyses interpret `gspot-ignore` through the shared suppression owner. Removed
+exception fields have no compatibility path.
 
 Run the four affected Bash analyses over real functions. A reasoned
 `gspot-ignore` suppresses its target while another finding remains visible.
-
-### Acceptance K-146
-
-The implementation prescription is retired. Preserve the behavioral contract of this owner; no cosmetic move, global synonym replacement, or file inventory is required.
 
 ### Acceptance K-259
 
@@ -563,10 +549,6 @@ The harness runs a tool with the planted folder as its working directory, never 
 root of gspot.
 
 After the full suite, `git status --ignored` names no `.pytest_cache` at the root.
-
-### Acceptance K-282
-
-The implementation prescription is retired. Preserve the behavioral contract of this owner; no cosmetic move, global synonym replacement, or file inventory is required.
 
 ### Acceptance K-290
 
@@ -590,11 +572,10 @@ not selected, and the rest. Under each installed preset it prints its checks wit
 on, off by level, off by an ignore, or waiting for a setting. `gspot list settings` prints every
 setting with its value and where the value comes from.
 
-`listing.ts` already builds what `explain <preset>` prints. `list` adds the state from
-`presets/levels.ts`, `run/ignores.ts`, and the `waits_for` key. Each preset of the second group
-ends with its `gspot add` line. `--json` prints the same data.
+List and explain use the same effective check selection and setting prerequisites. Each preset
+found but not selected ends with its `gspot add` line. `--json` prints the same data.
 
-A unit test of `output/list.ts` for each of the four states, and the JSON shape test.
+Exercise each effective state through list and explain, including their structured output.
 
 ### Acceptance K-64
 
@@ -603,11 +584,8 @@ the checks that fit any repository, each with its proposed set already marked.
 
 A manifest `kind` decides the group. A group with nothing found is not asked.
 
-A unit test with a fake prompt holds three calls and their options.
-
-### Acceptance K-54
-
-The implementation prescription is retired. Preserve the behavioral contract of this owner; no cosmetic move, global synonym replacement, or file inventory is required.
+Verify the proposed selections and accepted result, including empty groups and noninteractive
+initialization. Do not assert a fixed prompt-call count.
 
 ### Acceptance K-66
 
@@ -634,7 +612,8 @@ result on a terminal, and one line for each failed result elsewhere. A cached pa
 seconds. The workflow runs plain `gspot check`, so the findings are in the log, and it keeps
 `.gspot/report.*` as artifacts. No flag is needed, because every run writes those files.
 
-A unit test of `progress.ts` with a fake stream. The workflow snapshot.
+Exercise progress output through its output owner and verify live findings and report artifacts
+through the workflow behavior. Preserve terminal and nonterminal output contracts.
 
 ### Acceptance K-82
 
@@ -683,15 +662,15 @@ The table of [02-cli.md](02-cli.md): `--dry-run` on `init`, `apply`,
 The global flags `--json`, `--quiet`, `--verbose`, and `--no-color` are read once in `program.ts`
 (K-98).
 
-A unit test walks the program and fails a flag name outside the table.
+Verify supported flags through parsing and observable behavior, and confirm generated help and
+completion derive from the same command definitions.
 
 ### Acceptance K-284
 
-Fifteen commands, and four of them write the config:
-`ignore`, `set`, `add`, and `remove`.
+`ignore`, `set`, `add`, and `remove` mutate config and apply the resulting policy.
 
-`isPlanned` in `levels.ts` plans a check whose level is within the level of the
-repository, or whose name is in `extra_checks`. `emit/tool-packages.ts` and `tool-environment.ts` leave out a tool
+Planning selects a check whose level is within the level of the repository, or whose name
+is in `extra_checks`. `emit/tool-packages.ts` and `tool-environment.ts` leave out a tool
 whose every check has an `[[ignore]]` with no rule and no paths.
 
 The `help:` line of a spelling finding prints `gspot set tools.typos.words <word>`. The profile

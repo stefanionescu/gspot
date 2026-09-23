@@ -1,0 +1,82 @@
+[preset]
+name = "cloudflare"
+kind = "platform"
+title = "Cloudflare"
+requires = ["javascript"]
+recommends = ["security", "configs"]
+description = "Cloudflare Pages and Workers: a wrangler configuration that parses and pins its date, headers and redirects files Cloudflare can read, fresh binding types, and the Semgrep rules for workers."
+
+[detect]
+paths = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "**/wrangler.toml", "**/wrangler.jsonc", "functions/_middleware.js", "functions/_worker.js"]
+dependencies = ["wrangler", "@opennextjs/cloudflare"]
+
+[claims]
+filenames = ["wrangler.toml", "wrangler.json", "wrangler.jsonc", "_headers", "_redirects"]
+natures = ["source"]
+
+[[tools]]
+name = "wrangler"
+floor = "3.0.0"
+npm = "wrangler"
+
+[[configs]]
+template = "semgrep-workers.yml.tmpl"
+target = ".gspot/semgrep/workers.yml"
+rules_path = ["rules"]
+needs = "security"
+
+[[checks]]
+name = "cloudflare/wrangler-config"
+example = "A Wrangler configuration without `compatibility_date` reports the missing date. Add a reviewed date in `YYYY-MM-DD` form, such as `2025-01-31`, and test the Worker against that runtime behavior."
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "cloudflare-wrangler"
+coverage = ["schema"]
+summary = "Checks that every wrangler configuration parses, names the worker, and pins a compatibility date."
+why = "Without a pinned date the runtime changes behavior under a deployed worker."
+help = "Add the name and a compatibility_date in the form 2025-01-31."
+
+[[checks]]
+name = "cloudflare/headers-syntax"
+example = "An indented `X-Frame-Options: DENY` line before any path in `_headers` reports that the header sits under no path. Put the intended path, such as `/*`, on the preceding unindented line."
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "cloudflare-headers"
+coverage = ["syntax"]
+summary = "Checks that the headers file is blocks of a path line and indented header lines."
+why = "Cloudflare skips a line it cannot read, so a typo silently drops a security header."
+help = "Write each block as a path, then indented lines of a name, a colon, and a value."
+
+[[checks]]
+name = "cloudflare/redirects-syntax"
+example = "The `_redirects` line `/old /new 999` reports an unsupported redirect status. For an intended permanent redirect, change it to `/old /new 301`."
+level = "recommended"
+stage = "commit"
+runs = "once"
+engine = "integrity"
+analysis = "cloudflare-redirects"
+coverage = ["syntax"]
+summary = "Checks that every redirect is a source, a destination, and an optional status Cloudflare knows."
+why = "A redirect Cloudflare cannot read is dropped, and the old address starts to answer 404."
+help = "Write the rule as source, destination, status."
+
+[[checks]]
+name = "cloudflare/env-types-fresh"
+example = "A generated Worker environment type file that differs from `wrangler types` output reports drift. Regenerate it using the configured Wrangler project, inspect the changes, and rerun."
+level = "recommended"
+stage = "push"
+runs = "once"
+engine = "integrity"
+analysis = "cloudflare-env-types"
+tool = "wrangler"
+coverage = ["consistency"]
+summary = "Checks that a tracked environment types file matches what wrangler writes."
+why = "Stale binding types let code compile against a binding the configuration dropped."
+help = "Run wrangler types and commit the file."
+
+[rule_files]
+runtime = ["runtime/workers/WORKERS.md"]

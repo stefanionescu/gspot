@@ -7,7 +7,7 @@ import { join } from 'node:path';
 import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { commitAll, run } from '#tests/harness/planted.ts';
+import { commitAll, run } from '#tests/support/cli/planted.ts';
 
 const INIT = [
     'init',
@@ -26,6 +26,7 @@ test('apply and uninstall preserve later edits and unowned content while restori
     const original = 'disable=SC2086\n';
     await createFileTree(directory.path, { '.shellcheckrc': original, 'entry.sh': 'echo example\n' });
     chmodSync(join(directory.path, '.shellcheckrc'), 0o640);
+    commitAll(directory.path);
     const initialized = await run(directory.path, INIT);
     expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
     const generated = join(directory.path, '.gspot/shellcheckrc');
@@ -92,7 +93,7 @@ test('apply previews missing outputs without writing and rejects obsolete mutati
     expect(preview.code, preview.stdout + preview.stderr).toBe(0);
     const result = JSON.parse(preview.stdout) as { isDryRun: boolean; drift: { path: string; kind: string }[] };
     expect(result.isDryRun).toBe(true);
-    expect(result.drift).toContainEqual({ path: '.gspot/shellcheckrc', kind: 'missing' });
+    expect(result.drift).toContainEqual(expect.objectContaining({ path: '.gspot/shellcheckrc', kind: 'missing' }));
     for (const flags of [['--check'], ['--lower-baselines'], ['--baseline', 'bash/syntax']]) {
         const rejected = await run(directory.path, ['apply', ...flags]);
         expect(rejected.code, rejected.stdout + rejected.stderr).toBe(2);

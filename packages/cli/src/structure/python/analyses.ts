@@ -32,16 +32,19 @@ function names(input: EngineInput, key: string): Set<string> {
 function analysis(read: StructureReader): (input: EngineInput) => Promise<Finding[]> {
     return async (input) => {
         const modules = await pythonModules(input);
-        const problems = read({ modules, functions: modules.flatMap((module) => functionsOf(module)) }, input);
-        for (const module of modules) module.tree.delete();
-        return problems.map((entry) => ({
-            check: input.spec.name,
-            file: entry.file,
-            line: entry.line,
-            rule: entry.rule,
-            message: entry.text,
-            fixable: false,
-        }));
+        try {
+            const problems = read({ modules, functions: modules.flatMap((module) => functionsOf(module)) }, input);
+            return problems.map((entry) => ({
+                check: input.spec.name,
+                file: entry.file,
+                line: entry.line,
+                rule: entry.rule,
+                message: entry.text,
+                fixable: false,
+            }));
+        } finally {
+            for (const module of modules) module.tree.delete();
+        }
     };
 }
 

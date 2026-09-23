@@ -1,7 +1,6 @@
+import { readSource } from '#cli/repository/tracked.ts';
 import { parsePlpgsql } from '#cli/readers/sql/parser.ts';
 // The checks every SQL file gets: it parses, it holds no block comment, and it stays under the line ceiling.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { positionAt, sqlFile } from '#cli/readers/sql/statements.ts';
@@ -18,7 +17,7 @@ const SQL_TOKENS = /'[^']*'|"[^"]*"|--[^\n]*|\/\*/gu;
 function sources(input: EngineInput): { path: string; text: string }[] {
     return input.files
         .filter((file) => file.nature === 'source')
-        .map((file) => ({ path: file.path, text: readFileSync(join(input.root, file.path), 'utf8') }));
+        .map((file) => ({ path: file.path, text: readSource(input.root, file.path).toString('utf8') }));
 }
 
 // A script for psql holds meta-commands and variables the server never sees. A meta-command line becomes blank and a
@@ -69,7 +68,7 @@ export async function sqlSyntax(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function sqlBlockComments(input: EngineInput): Promise<Finding[]> {
+export function sqlBlockComments(input: EngineInput): Finding[] {
     const findings = sources(input).flatMap((source): Finding[] => {
         const found = blockCommentAt(source.text);
         if (found === -1) return [];
@@ -84,7 +83,7 @@ export function sqlBlockComments(input: EngineInput): Promise<Finding[]> {
             },
         ];
     });
-    return Promise.resolve(findings);
+    return findings;
 }
 
 /**
@@ -92,9 +91,9 @@ export function sqlBlockComments(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function sqlFileLength(input: EngineInput): Promise<Finding[]> {
+export function sqlFileLength(input: EngineInput): Finding[] {
     const ceiling = input.view.limit('file_lines', 'sql');
-    if (ceiling === undefined) return Promise.resolve([]);
+    if (ceiling === undefined) return [];
     const findings = sources(input).flatMap((source): Finding[] => {
         const lines = source.text.split('\n').map((line) => line.trim());
         const count = lines.filter((line) => line !== '' && !line.startsWith(LINE_COMMENT)).length;
@@ -104,7 +103,7 @@ export function sqlFileLength(input: EngineInput): Promise<Finding[]> {
             { check: input.spec.name, file: source.path, line: 1, rule: 'file-lines', message: said, fixable: false },
         ];
     });
-    return Promise.resolve(findings);
+    return findings;
 }
 
 function proceduralStatements(value: unknown): number {

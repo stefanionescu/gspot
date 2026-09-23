@@ -115,6 +115,15 @@ export function trivialFile(root: Node, language: 'python' | 'swift' | 'bash', t
         }
         return true;
     };
-    const statements = root.namedChildren.filter((node) => !node.type.includes('comment'));
+    const statements = root.namedChildren.filter(
+        (node, index) =>
+            !node.type.includes('comment') &&
+            !(
+                language === 'python' &&
+                root.namedChildren.slice(0, index).every((previous) => previous.type.includes('comment')) &&
+                node.type === 'expression_statement' &&
+                node.namedChildren[0]?.type === 'string'
+            ),
+    );
     return statements.length > 0 && !statements.some(substantial);
 }

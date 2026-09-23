@@ -1,16 +1,14 @@
 // Type aliases of the platform modules.
 
-export type EmbeddedIndex = Record<string, string>;
-
 export type SpawnResult = {
     code: number;
     stdout: string;
     stderr: string;
     missing: boolean;
     duration: number;
-    fd3?: string;
     isTimedOut?: boolean;
     isCanceled?: boolean;
+    isErrored?: boolean;
 };
 
 export type SpawnOptions = {
@@ -20,6 +18,10 @@ export type SpawnOptions = {
     timeoutMs?: number;
 };
 
-export type AsyncSpawnOptions = SpawnOptions & { cancelSignal?: AbortSignal; captureFd3?: boolean };
+export type AsyncSpawnOptions = SpawnOptions & {
+    cancelSignal?: AbortSignal;
+    onStdout?: (chunk: string) => void;
+    onStderr?: (chunk: string) => void;
+};
 
 export type BinarySpawnResult = Omit<SpawnResult, 'stdout'> & { stdout: Uint8Array };

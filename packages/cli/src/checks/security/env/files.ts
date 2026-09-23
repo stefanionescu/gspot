@@ -10,7 +10,7 @@ import { ENV_FILE_PATTERNS, ENV_TEMPLATE_NAMES } from '#cli/repository/env-files
  * @param input the engine input
  * @returns the findings
  */
-export function envFiles(input: EngineInput): Promise<Finding[]> {
+export function envFiles(input: EngineInput): Finding[] {
     const isEnvironmentFile = pathMatcher(ENV_FILE_PATTERNS.map((pattern) => `**/${pattern}`));
     const tracked = indexedPaths(input.root);
     const findings = tracked
@@ -25,5 +25,5 @@ export function envFiles(input: EngineInput): Promise<Finding[]> {
             message: `${path} is tracked; an environment file holds the values of one machine.`,
             fixable: false,
         }));
-    return Promise.resolve(findings);
+    return findings;
 }

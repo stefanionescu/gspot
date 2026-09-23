@@ -1,8 +1,10 @@
 import type { Profile } from '#cli/profile/types.ts';
 // init and uninstall: their options, the selection, the questions, the takeover plan and the carried lists.
-import type { TomlTable, Policy, EslintSettings } from '#cli/policy/types.ts';
+import type { TomlTable, Policy, RawPolicy } from '#cli/policy/types.ts';
 import type { Manifest, Proposal, UnknownLanguage } from '#cli/presets/types.ts';
 import type { ExistingTooling, ManifestFacts, Repository, ScopeEntry, TrackedFile } from '#cli/repository/types.ts';
+
+export type PreparedHook = { generated: string; installed: string };
 
 export type TakeoverPlan = {
     profile?: { name: string; digest: string; selection: string; detected: string[] };
@@ -41,32 +43,21 @@ export type InitResult = { text: string; json: Record<string, unknown>; exitCode
 
 export type CarriedIgnore = { check: string; rule?: string; reason: string; paths?: string[] };
 
-export type CarriedFormatter = { format: Policy['format']; extra?: TomlTable; ignorePatterns?: string[] };
+export type CarriedFormatter = {
+    format: Policy['format'];
+    extra?: TomlTable;
+    ignorePatterns?: string[];
+    nativeDefaults?: boolean;
+    editorconfig?: NonNullable<NonNullable<RawPolicy['tools']>['editorconfig']>['adopted'];
+};
 
-export type CarriedLists = {
+export type CarriedLists = Map<string, { settings: TomlTable; ignores: CarriedIgnore[] }>;
+
+export type CarriedConfiguration = {
+    tools: CarriedLists;
+    scopes: Map<string, { presets: string[]; tools: Record<string, TomlTable> }>;
     formatter?: CarriedFormatter;
-    eslintAdopted?: EslintSettings['adopted'];
     observed: Map<string, FileSnapshot>;
-    typosWords: { word: string; reason: string }[];
-    typosExcludes: { paths: string[]; reason: string }[];
-    /** The paths an old pyrightconfig.json at the root left out of the type check. */
-    pyrightExcludes: { paths: string[]; reason: string }[];
-    /** The locale the old typos file checked against; a file that names none accepts every English dialect. */
-    typosLocale?: string;
-    sqlfluffExcludes: { paths: string[]; reason: string }[];
-    semgrepIgnores: { paths: string[]; reason: string }[];
-    gitleaksAllow: {
-        description: string;
-        paths: string[];
-        regexes: string[];
-        regex_target?: string;
-        condition?: string;
-        reason: string;
-    }[];
-    osvIgnores: { id: string; reason: string; review_by?: string }[];
-    licenseExceptions: { package: string; license: string; reason: string }[];
-    licenseAllow: string[];
-    ignores: CarriedIgnore[];
     removed: { path: string; note: string }[];
     unread: { path: string; note: string }[];
     retained: { path: string; note: string }[];
@@ -134,7 +125,8 @@ export type InitPlanInputs = {
     everySelected: Manifest[];
     how: Map<string, PresetReason>;
     answers: InitAnswers;
-    carried: CarriedLists;
+    runnerTasks?: import('#cli/emit/runner-definitions.ts').RunnerTaskNames;
+    carried: CarriedConfiguration;
     policyLines: number;
     /** Instruction destinations resolved from the final proposed policy. */
     agents: string[];
@@ -161,12 +153,16 @@ export type InitInputs = {
 export type FileSnapshot = { bytes: Buffer; mode: number; isLink?: true };
 
 export type ConfinedRoot = {
-    validate(path: string, value: FileSnapshot): void;
+    source(path: string): string;
+    list(path?: string): string[];
+    stat(path: string): import('node:fs').Stats | undefined;
+    validate(path: string, value: FileSnapshot, proposed?: ReadonlyMap<string, FileSnapshot | undefined>): void;
     readEntry(path: string): FileSnapshot | undefined;
     read(path: string): FileSnapshot | undefined;
     write(path: string, value: FileSnapshot, expected: FileSnapshot | undefined): void;
     remove(path: string, expected: FileSnapshot): void;
     mkdir(path: string, mode: number): void;
+    rmdir(path: string): void;
     lock(path: string): void;
     close(): void;
 };
@@ -188,8 +184,8 @@ export type LifecycleOwner = {
     finishInstallation(kind: 'npm' | 'python'): void;
     proposeConfiguration(
         path: string,
-        format: 'json' | 'yaml',
-        changes: { path: string[]; value: unknown }[],
+        format: 'json' | 'yaml' | 'toml',
+        changes: { path: (string | number)[]; value: unknown }[],
         takeover?: boolean,
     ): FileProposal;
     proposeReplacement(
@@ -198,6 +194,7 @@ export type LifecycleOwner = {
         kind: OwnershipEntry['kind'],
         takeover?: boolean,
         expected?: FileSnapshot,
+        proposed?: ReadonlyMap<string, FileSnapshot | undefined>,
     ): FileProposal;
     proposeBlock(path: string, body: string, style: import('#cli/emit/types.ts').BlockStyle): FileProposal;
     applyProposal(proposal: FileProposal): 'changed' | 'unchanged' | 'preserved';
@@ -225,4 +222,44 @@ export type LifecycleOwner = {
 
 export type TakeoverRemovalResult = { removed: string[]; preserved: string[] };
 
-export type HookLocation = { root: string; directory: string; absolute: string };
+export type HookLocation = { root: string; directory: string; absolute: string; gitRoot: string };
+
+export type LegacyEslintMatcher = {
+    pattern: string;
+    negate: boolean;
+    options: { matchBase?: boolean };
+};
+export type LegacyEslintCriteria = {
+    basePath: string;
+    patterns: { includes: LegacyEslintMatcher[] | null; excludes: LegacyEslintMatcher[] | null }[];
+};
+export type LegacyEslintDependency = {
+    id: string;
+    filePath: string;
+    definition: unknown;
+    original?: unknown;
+    error?: Error | null;
+};
+export type LegacyEslintEntry = {
+    type: string;
+    name: string;
+    criteria: LegacyEslintCriteria | null;
+    ignorePattern?: { basePath: string; patterns: string[]; loose: boolean };
+    parser?: LegacyEslintDependency;
+    plugins?: Record<string, LegacyEslintDependency>;
+    [key: string]: unknown;
+};
+export type LegacyEslintApi = {
+    Legacy: {
+        ConfigArrayFactory: new (options: Record<string, unknown>) => {
+            loadFile(path: string): LegacyEslintEntry[];
+            loadInDirectory(path: string): LegacyEslintEntry[];
+            loadDefaultESLintIgnore(): LegacyEslintEntry[];
+        };
+        IgnorePattern: { DefaultPatterns: string[] };
+        naming: { normalizePackageName(name: string, prefix: string): string };
+    };
+    FlatCompat: new (options: Record<string, unknown>) => {
+        config(configuration: Record<string, unknown>): Record<string, unknown>[];
+    };
+};

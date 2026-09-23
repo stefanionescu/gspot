@@ -31,4 +31,21 @@ capitalisation = "capitalisation"
 speling = "speling"
 
 [files]
-extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/cache/", ".gspot/vale/", ".gspot/report.json", ".gspot/report.sarif", ".gspot/baselines/", "presets/prose/styles/gspot/us-english.yml", "gspot.schema.json", "packages/cli/grammars/swift.wasm", "packages/cli/grammars/swift.LICENSE", "packages/cli/notices.json" ]
+extend-exclude = [ "*.lock", "bun.lockb", "package-lock.json", "pnpm-lock.yaml", "yarn.lock", "Package.resolved", "*.pbxproj", "*.xcstrings", "*.svg", "*.min.js", "*.min.css", ".gspot/cache/", ".gspot/vale/", ".gspot/report.json", ".gspot/report.sarif", ".gspot/baselines/", "presets/policy/prose/styles/gspot/us-english.yml", "gspot.schema.json", "packages/cli/grammars/swift.wasm", "packages/cli/grammars/swift.LICENSE", "packages/cli/notices.json" ]
+
+[type.gspot-policy]
+extend-glob = [ "gspot.toml" ]
+
+[type.gspot-policy.extend-words]
+udid = "udid"
+certifi = "certifi"
+axe = "axe"
+Virtua = "Virtua"
+virtua = "virtua"
+synchronise = "synchronise"
+synchronised = "synchronised"
+materialise = "materialise"
+IFEs = "IFEs"
+IIF = "IIF"
+capitalisation = "capitalisation"
+speling = "speling"

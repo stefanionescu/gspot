@@ -44,7 +44,7 @@ function textTags(tags: Set<string>, firstLine: string): Tagged {
 }
 
 /**
- * Tags for one entry. Binary files get `binary` and nothing else.
+ * Tags for one entry. Binary files retain path tags and do not receive content tags.
  * @param entry the tracked entry
  * @param prefix the captured first bytes
  * @returns the tags, whether the file is binary, and the shebang interpreter when there is one

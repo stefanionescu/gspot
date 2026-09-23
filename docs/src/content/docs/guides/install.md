@@ -10,13 +10,23 @@ Use Git and mise 2026.8.8 or later to run gspot from a source checkout:
 ```bash
 git clone https://github.com/stefanionescu/gspot.git
 cd gspot
+mise install bun node
 mise run repo:setup
 bun packages/cli/src/main.ts --help
 ```
 
-Run the source entry point with Bun from the repository you want to check.
+While still in the checkout, define a command for your current shell:
 
-## What the repository pins
+```bash
+gspot_source="$PWD/packages/cli/src/main.ts"
+gspot() { bun "$gspot_source" "$@"; }
+```
+
+Change to the repository you want to check. The function keeps using the source entry point.
+For a new setup, follow [your first check](/guides/quick-start/) or
+[adopt an existing repository](/guides/existing-repository/).
+
+## Match the repository version
 
 `gspot init` writes `.gspot/version` and, when mise runs the repository, a pin in
 `.mise/conf.d/gspot-tools.toml`. This integration requires mise 2026.8.8 or newer. Everyone on the repository runs that version; another version
@@ -47,7 +57,18 @@ xattr -d com.apple.quarantine ./gspot-darwin-arm64
 ```
 
 Use the filename for your architecture. Windows builds are not Authenticode signed; Windows
-can display an unknown-publisher warning. Native execution is required to validate each target;
-cross-compilation alone does not establish platform support. Windows lifecycle mutations
-currently refuse because their secure filesystem boundary is not implemented. Local development
-evidence is from macOS arm64; the final native platform acceptance remains open.
+can display an unknown-publisher warning. Windows installation and hook behavior have not been verified natively.
+
+## Join a configured repository
+
+Prepare the CLI version recorded in `.gspot/version`, then run from the configured repository:
+
+```bash
+gspot install
+gspot check
+```
+
+Install consumes matching tool locks and sets up selected hooks. If policy and locks disagree,
+the policy owner must run `gspot apply` and share the resulting changes. Installation does not
+regenerate policy or add a `prepare` lifecycle script. Working-tree and staged checks warn when
+hooks are missing or edited; that warning does not change the check result.

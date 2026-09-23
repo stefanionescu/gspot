@@ -99,7 +99,7 @@ export function presetNotListed(name: string, scope: string | undefined): string
  * @returns the message
  */
 export function dirtyTree(count: number): string {
-    return `The working tree has ${String(count)} uncommitted change(s). gspot init replaces configuration files, and git is the only way back, so commit or stash first. Pass --allow-dirty to run anyway.`;
+    return `The working tree has ${String(count)} uncommitted change(s). Commit or stash them before gspot init so you can review its configuration changes separately. Pass --allow-dirty to continue with these changes present.`;
 }
 
 /**
@@ -159,9 +159,6 @@ export function extraNeedsReason(tool: string): string {
     return `[tools.${tool}.extra] needs a \`reason\` saying which option has no slot yet. It prints on every run.`;
 }
 
-/**\` so it is clear that everything under it is meant.`;
-}
-
 /**
  * Two presets shipping different defaults for one scalar.
  * @param key the setting key
@@ -191,7 +188,7 @@ export function loosenNeedsReason(key: string, value: string, shipped: string, c
  * @returns the message
  */
 export function groupNotRemovable(group: string): string {
-    return `The \`${group}\` term group cannot be removed. Allow one name at a time with \`gspot set naming.allowed {"name":"<name>"} --reason "..."\`.`;
+    return `The \`${group}\` term group cannot be removed. Allow one name at a time with \`gspot set naming.allowed '{"name":"<name>"}' --reason "..."\`.`;
 }
 
 /**
@@ -235,7 +232,7 @@ export function invalidValue(where: string, detail: string): string {
  * @returns the message
  */
 export function versionUnsupported(version: number): string {
-    return `gspot.toml says \`version = ${String(version)}\`, and this gspot reads version 1. Run \`gspot apply --dry-run\` to see the way forward.`;
+    return `gspot.toml says \`version = ${String(version)}\`, and this gspot reads version 1. Use a gspot version that supports this policy, or restore a version 1 policy from version control.`;
 }
 
 /**

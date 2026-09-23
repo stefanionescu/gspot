@@ -49,15 +49,6 @@ export function codeLines(lines: string[]): CodeLine[] {
 }
 
 /**
- * How many code lines a range of lines holds.
- * @param lines the lines
- * @returns the count
- */
-export function codeLineCount(lines: string[]): number {
-    return codeLines(lines).length;
-}
-
-/**
  * The code line without a leading declaration word and its flags: `readonly -a NAME=1` gives `NAME=1`.
  * @param code a code line
  * @returns the assignment or command that follows the declaration word

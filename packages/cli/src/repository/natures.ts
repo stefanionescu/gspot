@@ -1,6 +1,5 @@
 // Every tracked path has one nature: source, generated, vendored, binary.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import type { FileDeclaration } from '#cli/policy/types.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import type { Attribute, NatureVerdict } from '#cli/repository/types.ts';
@@ -130,15 +129,13 @@ export function natureOf(
  * @returns the parsed rules, or none when the optional file is absent
  */
 export function readAttributes(root: string): Attribute[] {
-    let text: string;
+    const files = openConfinedRoot(root);
     try {
-        text = readFileSync(join(root, '.gitattributes'), 'utf8');
-    } catch (error) {
-        if (error instanceof Error && 'code' in error && error.code === 'ENOENT') return [];
-        throw error;
+        return (files.read('.gitattributes')?.bytes.toString('utf8') ?? '')
+            .split('\n')
+            .map((line) => attributeRule(line))
+            .filter((rule) => rule !== undefined);
+    } finally {
+        files.close();
     }
-    return text
-        .split('\n')
-        .map((line) => attributeRule(line))
-        .filter((rule) => rule !== undefined);
 }

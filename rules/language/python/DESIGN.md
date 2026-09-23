@@ -33,13 +33,15 @@ Rules:
 - Do not split a function into meaningless helpers only to satisfy the count.
 - Extract helpers when the extracted operation has a clear name and contract.
 
-Good extraction:
+Good extraction for a nonnegative message limit:
 
 ```python
 def _trim_history_messages(
     messages: Sequence[HistoryMessage],
     max_messages: int,
 ) -> list[HistoryMessage]:
+    if max_messages == 0:
+        return []
     if len(messages) <= max_messages:
         return list(messages)
     return list(messages[-max_messages:])

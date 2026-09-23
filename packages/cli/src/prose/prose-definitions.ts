@@ -41,9 +41,6 @@ export const TOKEN_IGNORES = [
 /** Front matter is not prose. */
 export const BLOCK_IGNORES = [String.raw`(?s)^---\n.*?\n---\n`];
 
-/** One Vale alert on the line output: file, line, column, check, message. */
-export const VALE_LINE = /^(?<file>.+?):(?<line>\d+):(?<column>\d+):(?<check>[^:]+):(?<message>.*)$/u;
-
 /** The name Vale gives stdin, followed by the grammar extension. */
 export const VALE_STDIN = 'stdin';
 

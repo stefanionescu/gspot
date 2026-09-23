@@ -4,9 +4,10 @@
 min_version = "2026.8.8"
 
 [tools]
+"github:stefanionescu/gspot" = "0.1.0"
 actionlint = "1.7.12"
 ast-grep = "0.45.3"
-"github:github/codeql-cli-binaries" = "v2.23.1"
+"github:github/codeql-cli-binaries" = "v2.24.3"
 "npm:@commitlint/cli" = "21.2.2"
 dotenv-linter = "4.0.0"
 "aqua:editorconfig-checker/editorconfig-checker" = "3.4.0"
@@ -26,19 +27,3 @@ typos = "1.43.5"
 "npm:v8r" = "6.1.0"
 vale = "3.21.0"
 uv = "0.12.13"
-
-[tasks."gspot:check"]
-description = "Run selected checks"
-run = "gspot check"
-
-[tasks."gspot:fix"]
-description = "Apply corrections and check again"
-run = "gspot check --fix"
-
-[tasks."gspot:apply"]
-description = "Generate configuration from gspot.toml"
-run = "gspot apply"
-
-[tasks."gspot:doctor"]
-description = "Report tools, coverage, and configuration changes"
-run = "gspot doctor"

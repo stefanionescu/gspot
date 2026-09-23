@@ -1,12 +1,9 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // The parsed Swift files of one run, and the functions they declare.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { Node } from 'web-tree-sitter';
 import type { EngineInput } from '#cli/run/types.ts';
 import { parserFor } from '#cli/naming/parsers.ts';
 import type { SwiftFunction, SwiftSource } from '#cli/structure/swift/types.ts';
-
-const FILE_LOCAL = new Set(['private', 'fileprivate']);
 
 function modifiersOf(node: Node): Node[] {
     return node.namedChildren.filter((child) => child.type === 'modifiers').flatMap((child) => child.namedChildren);
@@ -17,15 +14,6 @@ function bodyOf(node: Node): Node[] {
         (child) => child.type === 'statements',
     );
     return (statements?.namedChildren ?? []).filter((child) => !child.type.endsWith('comment'));
-}
-
-function parameterNames(node: Node): string[] {
-    return node.namedChildren
-        .filter((child) => child.type === 'parameter')
-        .flatMap((parameter) => {
-            const local = parameter.childrenForFieldName('name').find((child) => child.type === 'simple_identifier');
-            return local === undefined ? [] : [local.text];
-        });
 }
 
 /**
@@ -46,11 +34,17 @@ export function visibilityOf(node: Node): string {
 export async function swiftSources(input: EngineInput): Promise<SwiftSource[]> {
     const parser = await parserFor('swift');
     const sources: SwiftSource[] = [];
-    for (const file of input.files) {
-        if (file.nature !== 'source' || !file.path.endsWith('.swift')) continue;
-        const text = readFileSync(join(input.root, file.path), 'utf8');
-        const tree = parser.parse(text);
-        if (tree !== null) sources.push({ path: file.path, text, lines: text.split('\n'), tree });
+    try {
+        for (const file of input.files) {
+            if (file.nature !== 'source' || !file.path.endsWith('.swift')) continue;
+            const text = readSource(input.root, file.path).toString('utf8');
+            const tree = parser.parse(text);
+            if (tree === null) throw new Error('The Swift parser returned no tree.');
+            sources.push({ path: file.path, text, lines: text.split('\n'), tree });
+        }
+    } catch (error) {
+        for (const source of sources) source.tree.delete();
+        throw error;
     }
     return sources;
 }
@@ -78,17 +72,12 @@ export function functionsOf(source: SwiftSource): SwiftFunction[] {
                 return [];
             const name = node.childForFieldName('name');
             if (node.type === 'function_declaration' && node.childForFieldName('body') === null) return [];
-            const modifiers = modifiersOf(node);
-            const isBound = modifiers.some((modifier) => modifier.type === 'attribute' || modifier.text === 'override');
             return [
                 {
                     path: source.path,
                     node,
                     name: name?.text ?? node.type,
                     body: bodyOf(node),
-                    parameters: parameterNames(node),
-                    isFileLocal: FILE_LOCAL.has(visibilityOf(node)),
-                    isBound,
                 },
             ];
         });

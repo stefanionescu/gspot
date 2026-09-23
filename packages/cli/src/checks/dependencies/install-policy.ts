@@ -1,10 +1,12 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // The install configuration: a minimum release age, and the security scanner where the package manager has one.
 import { join } from 'node:path';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import { existsSync, readFileSync } from 'node:fs';
-import type { Reporter } from '#cli/checks/types.ts';
+import { existsSync } from 'node:fs';
 import { LOCKFILES, SECONDS_PER_DAY } from '#cli/checks/integrity-definitions.ts';
+
+type Reporter = (file: string, rule: string, text: string) => Finding;
 
 const BUNFIG = 'bunfig.toml';
 const DEFAULT_AGE_DAYS = 7;
@@ -12,7 +14,7 @@ const DEFAULT_AGE_DAYS = 7;
 function installTable(root: string): Record<string, unknown> | undefined {
     const path = join(root, BUNFIG);
     if (!existsSync(path)) return undefined;
-    const parsed = Bun.TOML.parse(readFileSync(path, 'utf8')) as { install?: Record<string, unknown> };
+    const parsed = Bun.TOML.parse(readSource(root, BUNFIG).toString('utf8')) as { install?: Record<string, unknown> };
     return parsed.install ?? {};
 }
 
@@ -42,11 +44,9 @@ function scannerFindings(report: Reporter, install: Record<string, unknown>, sca
  * @param input the engine input
  * @returns the findings
  */
-export function installPolicy(input: EngineInput): Promise<Finding[]> {
-    const isBun = input.session.repository.files.some(
-        (file) => LOCKFILES[file.path.slice(file.path.lastIndexOf('/') + 1)] === 'bun',
-    );
-    if (!isBun) return Promise.resolve([]);
+export function installPolicy(input: EngineInput): Finding[] {
+    const isBun = input.files.some((file) => LOCKFILES[file.path.slice(file.path.lastIndexOf('/') + 1)] === 'bun');
+    if (!isBun) return [];
     const tool = input.view.tool('install');
     const days = (tool['min_release_age_days'] as number | undefined) ?? DEFAULT_AGE_DAYS;
     const scanner = (tool['security_scanner'] as string | undefined) ?? '';
@@ -60,6 +60,6 @@ export function installPolicy(input: EngineInput): Promise<Finding[]> {
     });
     const install = installTable(input.root);
     if (install === undefined)
-        return Promise.resolve([report('bun.lock', 'release-age', `No ${BUNFIG} sets [install] minimumReleaseAge.`)]);
-    return Promise.resolve([...ageFindings(report, install, days), ...scannerFindings(report, install, scanner)]);
+        return [report('bun.lock', 'release-age', `No ${BUNFIG} sets [install] minimumReleaseAge.`)];
+    return [...ageFindings(report, install, days), ...scannerFindings(report, install, scanner)];
 }

@@ -1,6 +1,6 @@
 // Type aliases of the naming engine.
 
-/** The shipped policy file, presets/naming/policy.json. */
+/** The shipped policy file, presets/policy/naming/policy.json. */
 export type ShippedPolicy = {
     version: number;
     matching: { wholeParts: boolean; caseInsensitive: boolean };

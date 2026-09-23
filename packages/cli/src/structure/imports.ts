@@ -1,13 +1,13 @@
-import { readFileSync } from 'node:fs';
+import { readSource } from '#cli/repository/tracked.ts';
 import { toPosix } from '#cli/platform/paths.ts';
 import { isInScope } from '#cli/presets/claims.ts';
 import { dirname, join, relative } from 'node:path';
 import type { ImportIndex } from '#cli/structure/types.ts';
-import type { EngineInput, Session } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 
 const SOURCE = /\.[cm]?[jt]sx?$/u;
 const IMPORT_KINDS = new Set(['import-statement', 'require-call', 'dynamic-import']);
-const cache = new WeakMap<Session, Map<string, ImportIndex>>();
+const cache = new WeakMap<object, Map<string, ImportIndex>>();
 
 function modulePath(path: string, directory: string): string | undefined {
     try {
@@ -31,7 +31,7 @@ function importedPaths(root: string, path: string, owned: Set<string>): string[]
     const full = join(root, path);
     const parser = new Bun.Transpiler({ loader: path.endsWith('x') ? 'tsx' : 'ts' });
     return parser
-        .scanImports(readFileSync(full))
+        .scanImports(readSource(root, path))
         .filter((entry) => IMPORT_KINDS.has(entry.kind))
         .map((entry) => modulePath(entry.path, dirname(full)))
         .filter((resolved) => resolved !== undefined)
@@ -59,21 +59,22 @@ function readImports(input: EngineInput, paths: string[]): ImportIndex {
  * @returns source paths and the files importing each path
  */
 export function scopeImports(input: EngineInput): ImportIndex {
-    let scopes = cache.get(input.session);
+    let scopes = cache.get(input.runKey);
     if (scopes === undefined) {
         scopes = new Map();
-        cache.set(input.session, scopes);
+        cache.set(input.runKey, scopes);
     }
-    const held = scopes.get(input.scope);
-    if (held !== undefined) return held;
-    const children = input.session.scopes
-        .map((entry) => entry.scope.path)
+    const children = input.scopeEntries
+        .map((entry) => entry.path)
         .filter((path) => path !== input.scope && isInScope(path, input.scope));
-    const paths = input.session.repository.files
+    const paths = input.files
         .filter((file) => file.nature === 'source' && SOURCE.test(file.path))
         .map((file) => file.path)
         .filter((path) => isInScope(path, input.scope) && children.every((child) => !isInScope(path, child)));
+    const key = JSON.stringify([input.scope, paths]);
+    const held = scopes.get(key);
+    if (held !== undefined) return held;
     const index = readImports(input, paths);
-    scopes.set(input.scope, index);
+    scopes.set(key, index);
     return index;
 }

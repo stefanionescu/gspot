@@ -4,5 +4,5 @@
         "paths": {},
         "types": ["bun"]
     },
-    "include": ["src/**/*.ts", "tests/**/*.ts", "build.ts"]
+    "include": ["src/**/*.ts", "build.ts"]
 }

@@ -4,13 +4,13 @@ import type { outputSchema } from '#cli/presets/output-schema.ts';
 import type { manifestSchema } from '#cli/presets/manifest-schema.ts';
 // The shape of a preset manifest.toml after validation.
 
+type ExecutionFields<Check> = Check extends unknown ? Omit<Check, 'example'> : never;
+
 type NpmInstallerDefinition = Exclude<NonNullable<RawTool['npm']>, string>;
 
 export type PresetKind = 'language' | 'framework' | 'platform' | 'tool' | 'library' | 'database' | 'policy';
 
 export type Stage = 'commit' | 'push' | 'manual' | 'message';
-
-export type Requirement = 'build' | 'docker' | 'network';
 
 export type FixOrder = 'codemod' | 'imports' | 'manifest' | 'format';
 
@@ -19,6 +19,7 @@ export type PresetHeader = {
     kind: PresetKind;
     title: string;
     requires: string[];
+    check_references?: string[];
     recommends: string[];
     default: boolean;
     proposed: boolean;
@@ -52,6 +53,8 @@ export type ToolPin = {
     version_exit_code?: number;
     version_regex?: string;
     suppression?: NonNullable<RawTool['suppression']>;
+    takeover?: NonNullable<RawTool['takeover']>;
+    query_packs?: NonNullable<RawTool['query_packs']>;
     env?: Record<string, string>;
     installers: Record<string, InstallerPin>;
 };
@@ -60,8 +63,8 @@ export type ConfigurationTarget = RawManifest['configs'][number];
 
 export type StubSpec = NonNullable<ConfigurationTarget['stub']>;
 
-/** Validated execution variants, with absent optional values removed by normalization. */
-export type CheckSpec = Defined<RawCheck>;
+/** Validated execution variants. Repository-defined commands do not require reference examples. */
+export type CheckSpec = ExecutionFields<Defined<RawCheck>> & { example?: string };
 
 export type SettingKind = 'number' | 'string' | 'boolean' | 'list' | 'table';
 
@@ -78,6 +81,7 @@ export type SettingSpec = {
 };
 
 export type Manifest = {
+    untracked: RawManifest['untracked'];
     preset: PresetHeader;
     detect: Detect;
     claims: Claims;
@@ -109,13 +113,6 @@ export type Proposal = { preset: string; evidence: string; kind: string; count?:
 
 export type UnknownLanguage = { language: string; extensions: string[]; count: number };
 
-export type LinguistEntry = {
-    extensions?: readonly string[];
-    type?: string;
-    filenames?: readonly string[];
-    aliases?: readonly string[];
-};
-
 /** manifest.toml as the schema accepts it. */
 export type RawManifest = z.infer<typeof manifestSchema>;
 
@@ -124,12 +121,3 @@ export type RawTool = RawManifest['tools'][number];
 
 /** One [[checks]] entry as written. */
 export type RawCheck = RawManifest['checks'][number];
-
-/** The state of one selection walk over the requires graph. */
-export type SelectionWalk = {
-    manifests: Map<string, Manifest>;
-    problems: string[];
-    order: Manifest[];
-    seen: Set<string>;
-    visiting: string[];
-};

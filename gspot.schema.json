@@ -743,6 +743,181 @@
                                                 "name": {
                                                     "type": "string"
                                                 },
+                                                "basePath": {
+                                                    "type": "string",
+                                                    "minLength": 1,
+                                                    "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                                },
+                                                "legacyCriteria": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "basePath": {
+                                                            "type": "string",
+                                                            "minLength": 1,
+                                                            "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                                        },
+                                                        "patterns": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "includes": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "excludes": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "additionalProperties": false
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "basePath",
+                                                        "patterns"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                "legacyScope": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "basePath": {
+                                                            "type": "string",
+                                                            "minLength": 1,
+                                                            "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                                        },
+                                                        "patterns": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "includes": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "excludes": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "additionalProperties": false
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "basePath",
+                                                        "patterns"
+                                                    ],
+                                                    "additionalProperties": false
+                                                },
+                                                "legacyIgnores": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "object",
+                                                        "properties": {
+                                                            "basePath": {
+                                                                "type": "string",
+                                                                "minLength": 1,
+                                                                "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                                            },
+                                                            "patterns": {
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string"
+                                                                }
+                                                            },
+                                                            "loose": {
+                                                                "type": "boolean"
+                                                            },
+                                                            "criteria": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "basePath": {
+                                                                        "type": "string",
+                                                                        "minLength": 1,
+                                                                        "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                                                    },
+                                                                    "patterns": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "object",
+                                                                            "properties": {
+                                                                                "includes": {
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                },
+                                                                                "excludes": {
+                                                                                    "type": "array",
+                                                                                    "items": {
+                                                                                        "type": "string"
+                                                                                    }
+                                                                                }
+                                                                            },
+                                                                            "additionalProperties": false
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "basePath",
+                                                                    "patterns"
+                                                                ],
+                                                                "additionalProperties": false
+                                                            }
+                                                        },
+                                                        "required": [
+                                                            "basePath",
+                                                            "patterns",
+                                                            "loose"
+                                                        ],
+                                                        "additionalProperties": false
+                                                    }
+                                                },
+                                                "processor": {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "string",
+                                                            "minLength": 1
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "module": {
+                                                                    "type": "string",
+                                                                    "minLength": 1
+                                                                },
+                                                                "export": {
+                                                                    "type": "string",
+                                                                    "minLength": 1
+                                                                },
+                                                                "members": {
+                                                                    "minItems": 1,
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string",
+                                                                        "minLength": 1
+                                                                    }
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "module",
+                                                                "export"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        }
+                                                    ]
+                                                },
                                                 "files": {
                                                     "type": "array",
                                                     "items": {
@@ -865,6 +1040,14 @@
                                                             "export": {
                                                                 "type": "string",
                                                                 "minLength": 1
+                                                            },
+                                                            "members": {
+                                                                "minItems": 1,
+                                                                "type": "array",
+                                                                "items": {
+                                                                    "type": "string",
+                                                                    "minLength": 1
+                                                                }
                                                             }
                                                         },
                                                         "required": [
@@ -876,8 +1059,33 @@
                                                 },
                                                 "languageOptions": {
                                                     "type": "object",
-                                                    "propertyNames": {
-                                                        "type": "string"
+                                                    "properties": {
+                                                        "parser": {
+                                                            "type": "object",
+                                                            "properties": {
+                                                                "module": {
+                                                                    "type": "string",
+                                                                    "minLength": 1
+                                                                },
+                                                                "export": {
+                                                                    "type": "string",
+                                                                    "minLength": 1
+                                                                },
+                                                                "members": {
+                                                                    "minItems": 1,
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "type": "string",
+                                                                        "minLength": 1
+                                                                    }
+                                                                }
+                                                            },
+                                                            "required": [
+                                                                "module",
+                                                                "export"
+                                                            ],
+                                                            "additionalProperties": false
+                                                        }
                                                     },
                                                     "additionalProperties": {
                                                         "$ref": "#/$defs/__schema1"
@@ -1043,6 +1251,428 @@
                                 },
                                 "additionalProperties": {}
                             },
+                            "stylelint": {
+                                "type": "object",
+                                "properties": {
+                                    "extra": {
+                                        "type": "object",
+                                        "properties": {
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": {}
+                                    },
+                                    "rules": {
+                                        "type": "object",
+                                        "propertyNames": {
+                                            "type": "string",
+                                            "minLength": 1
+                                        },
+                                        "additionalProperties": {
+                                            "anyOf": [
+                                                {
+                                                    "anyOf": [
+                                                        {
+                                                            "type": "boolean",
+                                                            "const": true
+                                                        },
+                                                        {
+                                                            "type": "string",
+                                                            "minLength": 1
+                                                        },
+                                                        {
+                                                            "type": "number"
+                                                        },
+                                                        {
+                                                            "type": "object",
+                                                            "propertyNames": {
+                                                                "type": "string"
+                                                            },
+                                                            "additionalProperties": {
+                                                                "$ref": "#/$defs/__schema4"
+                                                            }
+                                                        }
+                                                    ]
+                                                },
+                                                {
+                                                    "type": "array",
+                                                    "prefixItems": [
+                                                        {
+                                                            "anyOf": [
+                                                                {
+                                                                    "anyOf": [
+                                                                        {
+                                                                            "type": "boolean",
+                                                                            "const": true
+                                                                        },
+                                                                        {
+                                                                            "type": "string",
+                                                                            "minLength": 1
+                                                                        },
+                                                                        {
+                                                                            "type": "number"
+                                                                        },
+                                                                        {
+                                                                            "type": "object",
+                                                                            "propertyNames": {
+                                                                                "type": "string"
+                                                                            },
+                                                                            "additionalProperties": {
+                                                                                "$ref": "#/$defs/__schema4"
+                                                                            }
+                                                                        }
+                                                                    ]
+                                                                },
+                                                                {
+                                                                    "type": "array",
+                                                                    "items": {
+                                                                        "$ref": "#/$defs/__schema5"
+                                                                    }
+                                                                }
+                                                            ]
+                                                        }
+                                                    ],
+                                                    "items": {
+                                                        "$ref": "#/$defs/__schema6"
+                                                    },
+                                                    "minItems": 1
+                                                }
+                                            ]
+                                        }
+                                    }
+                                },
+                                "additionalProperties": {}
+                            },
+                            "squawk": {
+                                "type": "object",
+                                "properties": {
+                                    "extra": {
+                                        "type": "object",
+                                        "properties": {
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": {}
+                                    },
+                                    "assume_in_transaction": {
+                                        "anyOf": [
+                                            {
+                                                "type": "boolean"
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "boolean"
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "reason"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    }
+                                },
+                                "additionalProperties": {}
+                            },
+                            "licenses": {
+                                "type": "object",
+                                "properties": {
+                                    "extra": {
+                                        "type": "object",
+                                        "properties": {
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": {}
+                                    },
+                                    "licenses_allowed": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "string",
+                                            "minLength": 1
+                                        }
+                                    },
+                                    "packages_allowed": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "package": {
+                                                    "type": "string",
+                                                    "pattern": "^(?:@[^/@\\s]+\\/)?[^/@\\s]+@[0-9][^\\s@<>=~^*|,]*$"
+                                                },
+                                                "license": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                },
+                                                "reason": {
+                                                    "type": "string",
+                                                    "minLength": 1
+                                                }
+                                            },
+                                            "required": [
+                                                "package",
+                                                "license",
+                                                "reason"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    }
+                                },
+                                "additionalProperties": {}
+                            },
+                            "typos": {
+                                "type": "object",
+                                "properties": {
+                                    "extra": {
+                                        "type": "object",
+                                        "properties": {
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": {}
+                                    },
+                                    "locale": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string",
+                                                "enum": [
+                                                    "en",
+                                                    "en-us",
+                                                    "en-gb",
+                                                    "en-ca",
+                                                    "en-au"
+                                                ]
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "string",
+                                                        "enum": [
+                                                            "en",
+                                                            "en-us",
+                                                            "en-gb",
+                                                            "en-ca",
+                                                            "en-au"
+                                                        ]
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "reason"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    }
+                                },
+                                "additionalProperties": {}
+                            },
+                            "sqlfluff": {
+                                "type": "object",
+                                "properties": {
+                                    "extra": {
+                                        "type": "object",
+                                        "properties": {
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": {}
+                                    },
+                                    "dialect": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string",
+                                                "pattern": "^[a-z][a-z0-9_]*(?![\\s\\S])"
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "string",
+                                                        "pattern": "^[a-z][a-z0-9_]*(?![\\s\\S])"
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "reason"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    }
+                                },
+                                "additionalProperties": {}
+                            },
+                            "xctest": {
+                                "type": "object",
+                                "properties": {
+                                    "extra": {
+                                        "type": "object",
+                                        "properties": {
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": {}
+                                    },
+                                    "reference_layout": {
+                                        "type": "string",
+                                        "pattern": "^(?=[^\\r\\n]*\\{file\\})(?=[^\\r\\n]*\\{test\\})(?!.*\\{file\\}.*\\{file\\})(?!.*\\{test\\}.*\\{test\\})(?!\\/)(?!.*(?:^|\\/)\\.\\.?(?:\\/|$))(?:(?:[^{}\\\\\\r\\n]|\\{file\\}|\\{test\\}))+(?![\\s\\S])"
+                                    }
+                                },
+                                "additionalProperties": {}
+                            },
+                            "jest": {
+                                "type": "object",
+                                "properties": {
+                                    "extra": {
+                                        "type": "object",
+                                        "properties": {
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": {}
+                                    },
+                                    "coverage_lines": {
+                                        "anyOf": [
+                                            {
+                                                "type": "number",
+                                                "minimum": 0,
+                                                "maximum": 100
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "number",
+                                                        "minimum": 0,
+                                                        "maximum": 100
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "reason"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    },
+                                    "coverage_branches": {
+                                        "anyOf": [
+                                            {
+                                                "type": "number",
+                                                "minimum": 0,
+                                                "maximum": 100
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "number",
+                                                        "minimum": 0,
+                                                        "maximum": 100
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "reason"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    },
+                                    "coverage_functions": {
+                                        "anyOf": [
+                                            {
+                                                "type": "number",
+                                                "minimum": 0,
+                                                "maximum": 100
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "number",
+                                                        "minimum": 0,
+                                                        "maximum": 100
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "reason"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    },
+                                    "coverage_statements": {
+                                        "anyOf": [
+                                            {
+                                                "type": "number",
+                                                "minimum": 0,
+                                                "maximum": 100
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "value": {
+                                                        "type": "number",
+                                                        "minimum": 0,
+                                                        "maximum": 100
+                                                    },
+                                                    "reason": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "required": [
+                                                    "value",
+                                                    "reason"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    },
+                                    "global_package": {
+                                        "type": "string",
+                                        "minLength": 1
+                                    },
+                                    "harness_directory": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                    }
+                                },
+                                "additionalProperties": {}
+                            },
                             "prettier": {
                                 "type": "object",
                                 "properties": {
@@ -1060,6 +1690,133 @@
                                         "items": {
                                             "type": "string"
                                         }
+                                    },
+                                    "native_defaults": {
+                                        "type": "boolean"
+                                    }
+                                },
+                                "additionalProperties": {}
+                            },
+                            "editorconfig": {
+                                "type": "object",
+                                "properties": {
+                                    "extra": {
+                                        "type": "object",
+                                        "properties": {
+                                            "reason": {
+                                                "type": "string"
+                                            }
+                                        },
+                                        "additionalProperties": {}
+                                    },
+                                    "adopted": {
+                                        "type": "object",
+                                        "properties": {
+                                            "preamble": {
+                                                "type": "object",
+                                                "propertyNames": {
+                                                    "type": "string",
+                                                    "pattern": "^[\\w.-]+$"
+                                                },
+                                                "additionalProperties": {
+                                                    "type": "string",
+                                                    "pattern": "^[^\\r\\n]*$"
+                                                }
+                                            },
+                                            "sections": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "glob": {
+                                                            "type": "string",
+                                                            "minLength": 1,
+                                                            "pattern": "^[^\\r\\n]+$"
+                                                        },
+                                                        "properties": {
+                                                            "type": "object",
+                                                            "propertyNames": {
+                                                                "type": "string",
+                                                                "pattern": "^[\\w.-]+$"
+                                                            },
+                                                            "additionalProperties": {
+                                                                "type": "string",
+                                                                "pattern": "^[^\\r\\n]*$"
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "glob",
+                                                        "properties"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            },
+                                            "directories": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "preamble": {
+                                                            "type": "object",
+                                                            "propertyNames": {
+                                                                "type": "string",
+                                                                "pattern": "^[\\w.-]+$"
+                                                            },
+                                                            "additionalProperties": {
+                                                                "type": "string",
+                                                                "pattern": "^[^\\r\\n]*$"
+                                                            }
+                                                        },
+                                                        "sections": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "glob": {
+                                                                        "type": "string",
+                                                                        "minLength": 1,
+                                                                        "pattern": "^[^\\r\\n]+$"
+                                                                    },
+                                                                    "properties": {
+                                                                        "type": "object",
+                                                                        "propertyNames": {
+                                                                            "type": "string",
+                                                                            "pattern": "^[\\w.-]+$"
+                                                                        },
+                                                                        "additionalProperties": {
+                                                                            "type": "string",
+                                                                            "pattern": "^[^\\r\\n]*$"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "required": [
+                                                                    "glob",
+                                                                    "properties"
+                                                                ],
+                                                                "additionalProperties": false
+                                                            }
+                                                        },
+                                                        "basePath": {
+                                                            "type": "string",
+                                                            "minLength": 1,
+                                                            "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "preamble",
+                                                        "sections",
+                                                        "basePath"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            }
+                                        },
+                                        "required": [
+                                            "preamble",
+                                            "sections"
+                                        ],
+                                        "additionalProperties": false
                                     }
                                 },
                                 "additionalProperties": {}
@@ -1833,6 +2590,181 @@
                                     "name": {
                                         "type": "string"
                                     },
+                                    "basePath": {
+                                        "type": "string",
+                                        "minLength": 1,
+                                        "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                    },
+                                    "legacyCriteria": {
+                                        "type": "object",
+                                        "properties": {
+                                            "basePath": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                            },
+                                            "patterns": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "includes": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "excludes": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    },
+                                                    "additionalProperties": false
+                                                }
+                                            }
+                                        },
+                                        "required": [
+                                            "basePath",
+                                            "patterns"
+                                        ],
+                                        "additionalProperties": false
+                                    },
+                                    "legacyScope": {
+                                        "type": "object",
+                                        "properties": {
+                                            "basePath": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                            },
+                                            "patterns": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "includes": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        },
+                                                        "excludes": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "string"
+                                                            }
+                                                        }
+                                                    },
+                                                    "additionalProperties": false
+                                                }
+                                            }
+                                        },
+                                        "required": [
+                                            "basePath",
+                                            "patterns"
+                                        ],
+                                        "additionalProperties": false
+                                    },
+                                    "legacyIgnores": {
+                                        "type": "array",
+                                        "items": {
+                                            "type": "object",
+                                            "properties": {
+                                                "basePath": {
+                                                    "type": "string",
+                                                    "minLength": 1,
+                                                    "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                                },
+                                                "patterns": {
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string"
+                                                    }
+                                                },
+                                                "loose": {
+                                                    "type": "boolean"
+                                                },
+                                                "criteria": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "basePath": {
+                                                            "type": "string",
+                                                            "minLength": 1,
+                                                            "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                                        },
+                                                        "patterns": {
+                                                            "type": "array",
+                                                            "items": {
+                                                                "type": "object",
+                                                                "properties": {
+                                                                    "includes": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    },
+                                                                    "excludes": {
+                                                                        "type": "array",
+                                                                        "items": {
+                                                                            "type": "string"
+                                                                        }
+                                                                    }
+                                                                },
+                                                                "additionalProperties": false
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "basePath",
+                                                        "patterns"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            },
+                                            "required": [
+                                                "basePath",
+                                                "patterns",
+                                                "loose"
+                                            ],
+                                            "additionalProperties": false
+                                        }
+                                    },
+                                    "processor": {
+                                        "anyOf": [
+                                            {
+                                                "type": "string",
+                                                "minLength": 1
+                                            },
+                                            {
+                                                "type": "object",
+                                                "properties": {
+                                                    "module": {
+                                                        "type": "string",
+                                                        "minLength": 1
+                                                    },
+                                                    "export": {
+                                                        "type": "string",
+                                                        "minLength": 1
+                                                    },
+                                                    "members": {
+                                                        "minItems": 1,
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "minLength": 1
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "module",
+                                                    "export"
+                                                ],
+                                                "additionalProperties": false
+                                            }
+                                        ]
+                                    },
                                     "files": {
                                         "type": "array",
                                         "items": {
@@ -1955,6 +2887,14 @@
                                                 "export": {
                                                     "type": "string",
                                                     "minLength": 1
+                                                },
+                                                "members": {
+                                                    "minItems": 1,
+                                                    "type": "array",
+                                                    "items": {
+                                                        "type": "string",
+                                                        "minLength": 1
+                                                    }
                                                 }
                                             },
                                             "required": [
@@ -1966,8 +2906,33 @@
                                     },
                                     "languageOptions": {
                                         "type": "object",
-                                        "propertyNames": {
-                                            "type": "string"
+                                        "properties": {
+                                            "parser": {
+                                                "type": "object",
+                                                "properties": {
+                                                    "module": {
+                                                        "type": "string",
+                                                        "minLength": 1
+                                                    },
+                                                    "export": {
+                                                        "type": "string",
+                                                        "minLength": 1
+                                                    },
+                                                    "members": {
+                                                        "minItems": 1,
+                                                        "type": "array",
+                                                        "items": {
+                                                            "type": "string",
+                                                            "minLength": 1
+                                                        }
+                                                    }
+                                                },
+                                                "required": [
+                                                    "module",
+                                                    "export"
+                                                ],
+                                                "additionalProperties": false
+                                            }
                                         },
                                         "additionalProperties": {
                                             "$ref": "#/$defs/__schema1"
@@ -2133,6 +3098,428 @@
                     },
                     "additionalProperties": {}
                 },
+                "stylelint": {
+                    "type": "object",
+                    "properties": {
+                        "extra": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": {}
+                        },
+                        "rules": {
+                            "type": "object",
+                            "propertyNames": {
+                                "type": "string",
+                                "minLength": 1
+                            },
+                            "additionalProperties": {
+                                "anyOf": [
+                                    {
+                                        "anyOf": [
+                                            {
+                                                "type": "boolean",
+                                                "const": true
+                                            },
+                                            {
+                                                "type": "string",
+                                                "minLength": 1
+                                            },
+                                            {
+                                                "type": "number"
+                                            },
+                                            {
+                                                "type": "object",
+                                                "propertyNames": {
+                                                    "type": "string"
+                                                },
+                                                "additionalProperties": {
+                                                    "$ref": "#/$defs/__schema4"
+                                                }
+                                            }
+                                        ]
+                                    },
+                                    {
+                                        "type": "array",
+                                        "prefixItems": [
+                                            {
+                                                "anyOf": [
+                                                    {
+                                                        "anyOf": [
+                                                            {
+                                                                "type": "boolean",
+                                                                "const": true
+                                                            },
+                                                            {
+                                                                "type": "string",
+                                                                "minLength": 1
+                                                            },
+                                                            {
+                                                                "type": "number"
+                                                            },
+                                                            {
+                                                                "type": "object",
+                                                                "propertyNames": {
+                                                                    "type": "string"
+                                                                },
+                                                                "additionalProperties": {
+                                                                    "$ref": "#/$defs/__schema4"
+                                                                }
+                                                            }
+                                                        ]
+                                                    },
+                                                    {
+                                                        "type": "array",
+                                                        "items": {
+                                                            "$ref": "#/$defs/__schema5"
+                                                        }
+                                                    }
+                                                ]
+                                            }
+                                        ],
+                                        "items": {
+                                            "$ref": "#/$defs/__schema6"
+                                        },
+                                        "minItems": 1
+                                    }
+                                ]
+                            }
+                        }
+                    },
+                    "additionalProperties": {}
+                },
+                "squawk": {
+                    "type": "object",
+                    "properties": {
+                        "extra": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": {}
+                        },
+                        "assume_in_transaction": {
+                            "anyOf": [
+                                {
+                                    "type": "boolean"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "type": "boolean"
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        }
+                    },
+                    "additionalProperties": {}
+                },
+                "licenses": {
+                    "type": "object",
+                    "properties": {
+                        "extra": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": {}
+                        },
+                        "licenses_allowed": {
+                            "type": "array",
+                            "items": {
+                                "type": "string",
+                                "minLength": 1
+                            }
+                        },
+                        "packages_allowed": {
+                            "type": "array",
+                            "items": {
+                                "type": "object",
+                                "properties": {
+                                    "package": {
+                                        "type": "string",
+                                        "pattern": "^(?:@[^/@\\s]+\\/)?[^/@\\s]+@[0-9][^\\s@<>=~^*|,]*$"
+                                    },
+                                    "license": {
+                                        "type": "string",
+                                        "minLength": 1
+                                    },
+                                    "reason": {
+                                        "type": "string",
+                                        "minLength": 1
+                                    }
+                                },
+                                "required": [
+                                    "package",
+                                    "license",
+                                    "reason"
+                                ],
+                                "additionalProperties": false
+                            }
+                        }
+                    },
+                    "additionalProperties": {}
+                },
+                "typos": {
+                    "type": "object",
+                    "properties": {
+                        "extra": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": {}
+                        },
+                        "locale": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "enum": [
+                                        "en",
+                                        "en-us",
+                                        "en-gb",
+                                        "en-ca",
+                                        "en-au"
+                                    ]
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "type": "string",
+                                            "enum": [
+                                                "en",
+                                                "en-us",
+                                                "en-gb",
+                                                "en-ca",
+                                                "en-au"
+                                            ]
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        }
+                    },
+                    "additionalProperties": {}
+                },
+                "sqlfluff": {
+                    "type": "object",
+                    "properties": {
+                        "extra": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": {}
+                        },
+                        "dialect": {
+                            "anyOf": [
+                                {
+                                    "type": "string",
+                                    "pattern": "^[a-z][a-z0-9_]*(?![\\s\\S])"
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "type": "string",
+                                            "pattern": "^[a-z][a-z0-9_]*(?![\\s\\S])"
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        }
+                    },
+                    "additionalProperties": {}
+                },
+                "xctest": {
+                    "type": "object",
+                    "properties": {
+                        "extra": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": {}
+                        },
+                        "reference_layout": {
+                            "type": "string",
+                            "pattern": "^(?=[^\\r\\n]*\\{file\\})(?=[^\\r\\n]*\\{test\\})(?!.*\\{file\\}.*\\{file\\})(?!.*\\{test\\}.*\\{test\\})(?!\\/)(?!.*(?:^|\\/)\\.\\.?(?:\\/|$))(?:(?:[^{}\\\\\\r\\n]|\\{file\\}|\\{test\\}))+(?![\\s\\S])"
+                        }
+                    },
+                    "additionalProperties": {}
+                },
+                "jest": {
+                    "type": "object",
+                    "properties": {
+                        "extra": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": {}
+                        },
+                        "coverage_lines": {
+                            "anyOf": [
+                                {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        },
+                        "coverage_branches": {
+                            "anyOf": [
+                                {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        },
+                        "coverage_functions": {
+                            "anyOf": [
+                                {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        },
+                        "coverage_statements": {
+                            "anyOf": [
+                                {
+                                    "type": "number",
+                                    "minimum": 0,
+                                    "maximum": 100
+                                },
+                                {
+                                    "type": "object",
+                                    "properties": {
+                                        "value": {
+                                            "type": "number",
+                                            "minimum": 0,
+                                            "maximum": 100
+                                        },
+                                        "reason": {
+                                            "type": "string"
+                                        }
+                                    },
+                                    "required": [
+                                        "value",
+                                        "reason"
+                                    ],
+                                    "additionalProperties": false
+                                }
+                            ]
+                        },
+                        "global_package": {
+                            "type": "string",
+                            "minLength": 1
+                        },
+                        "harness_directory": {
+                            "type": "string",
+                            "minLength": 1,
+                            "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                        }
+                    },
+                    "additionalProperties": {}
+                },
                 "prettier": {
                     "type": "object",
                     "properties": {
@@ -2150,6 +3537,133 @@
                             "items": {
                                 "type": "string"
                             }
+                        },
+                        "native_defaults": {
+                            "type": "boolean"
+                        }
+                    },
+                    "additionalProperties": {}
+                },
+                "editorconfig": {
+                    "type": "object",
+                    "properties": {
+                        "extra": {
+                            "type": "object",
+                            "properties": {
+                                "reason": {
+                                    "type": "string"
+                                }
+                            },
+                            "additionalProperties": {}
+                        },
+                        "adopted": {
+                            "type": "object",
+                            "properties": {
+                                "preamble": {
+                                    "type": "object",
+                                    "propertyNames": {
+                                        "type": "string",
+                                        "pattern": "^[\\w.-]+$"
+                                    },
+                                    "additionalProperties": {
+                                        "type": "string",
+                                        "pattern": "^[^\\r\\n]*$"
+                                    }
+                                },
+                                "sections": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "glob": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "pattern": "^[^\\r\\n]+$"
+                                            },
+                                            "properties": {
+                                                "type": "object",
+                                                "propertyNames": {
+                                                    "type": "string",
+                                                    "pattern": "^[\\w.-]+$"
+                                                },
+                                                "additionalProperties": {
+                                                    "type": "string",
+                                                    "pattern": "^[^\\r\\n]*$"
+                                                }
+                                            }
+                                        },
+                                        "required": [
+                                            "glob",
+                                            "properties"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                },
+                                "directories": {
+                                    "type": "array",
+                                    "items": {
+                                        "type": "object",
+                                        "properties": {
+                                            "preamble": {
+                                                "type": "object",
+                                                "propertyNames": {
+                                                    "type": "string",
+                                                    "pattern": "^[\\w.-]+$"
+                                                },
+                                                "additionalProperties": {
+                                                    "type": "string",
+                                                    "pattern": "^[^\\r\\n]*$"
+                                                }
+                                            },
+                                            "sections": {
+                                                "type": "array",
+                                                "items": {
+                                                    "type": "object",
+                                                    "properties": {
+                                                        "glob": {
+                                                            "type": "string",
+                                                            "minLength": 1,
+                                                            "pattern": "^[^\\r\\n]+$"
+                                                        },
+                                                        "properties": {
+                                                            "type": "object",
+                                                            "propertyNames": {
+                                                                "type": "string",
+                                                                "pattern": "^[\\w.-]+$"
+                                                            },
+                                                            "additionalProperties": {
+                                                                "type": "string",
+                                                                "pattern": "^[^\\r\\n]*$"
+                                                            }
+                                                        }
+                                                    },
+                                                    "required": [
+                                                        "glob",
+                                                        "properties"
+                                                    ],
+                                                    "additionalProperties": false
+                                                }
+                                            },
+                                            "basePath": {
+                                                "type": "string",
+                                                "minLength": 1,
+                                                "pattern": "^(?!\\/)(?![\\s\\S]*(?:^|\\/)\\.\\.(?:\\/|$))[^\\\\:\\p{Cc}]+$"
+                                            }
+                                        },
+                                        "required": [
+                                            "preamble",
+                                            "sections",
+                                            "basePath"
+                                        ],
+                                        "additionalProperties": false
+                                    }
+                                }
+                            },
+                            "required": [
+                                "preamble",
+                                "sections"
+                            ],
+                            "additionalProperties": false
                         }
                     },
                     "additionalProperties": {}
@@ -2399,7 +3913,20 @@
                             "format"
                         ]
                     },
+                    "fix_findings_exit_codes": {
+                        "description": "Native nonzero correction exit codes that mean findings remain. Other nonzero codes are execution errors.",
+                        "type": "array",
+                        "items": {
+                            "type": "integer",
+                            "minimum": 1,
+                            "maximum": 255
+                        }
+                    },
                     "count_regex": {
+                        "type": "string"
+                    },
+                    "tool_errors": {
+                        "description": "A multiline Unicode regular expression matching fatal tool diagnostics in stdout or stderr, for both checks and corrections.",
                         "type": "string"
                     },
                     "requires": {
@@ -2434,6 +3961,8 @@
                                     "grouped",
                                     "eslint-json",
                                     "trufflehog-json",
+                                    "typos-json",
+                                    "markdownlint-json",
                                     "json",
                                     "lines",
                                     "none"
@@ -2515,6 +4044,9 @@
                 "dependentRequired": {
                     "fix_command": [
                         "fix_order"
+                    ],
+                    "fix_findings_exit_codes": [
+                        "fix_command"
                     ]
                 }
             }
@@ -2527,7 +4059,9 @@
                     "enum": [
                         "gspot",
                         "lefthook",
-                        "husky"
+                        "husky",
+                        "simple-git-hooks",
+                        "pre-commit"
                     ],
                     "description": "The tool that owns repository hooks."
                 },
@@ -2652,9 +4186,37 @@
                         "npm",
                         "bun",
                         "pnpm",
+                        "yarn",
                         "uv"
                     ],
                     "description": "The runner that receives generated tasks."
+                },
+                "tasks": {
+                    "description": "Accepted names for generated check, fix, apply, and doctor tasks.",
+                    "type": "object",
+                    "properties": {
+                        "check": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]*$",
+                            "description": "The accepted runner task name."
+                        },
+                        "fix": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]*$",
+                            "description": "The accepted runner task name."
+                        },
+                        "apply": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]*$",
+                            "description": "The accepted runner task name."
+                        },
+                        "doctor": {
+                            "type": "string",
+                            "pattern": "^[a-zA-Z0-9][a-zA-Z0-9:._-]*$",
+                            "description": "The accepted runner task name."
+                        }
+                    },
+                    "additionalProperties": false
                 }
             },
             "required": [
@@ -2788,6 +4350,99 @@
                     },
                     "additionalProperties": {
                         "$ref": "#/$defs/__schema3"
+                    }
+                }
+            ]
+        },
+        "__schema4": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/__schema4"
+                    }
+                },
+                {
+                    "type": "object",
+                    "propertyNames": {
+                        "type": "string"
+                    },
+                    "additionalProperties": {
+                        "$ref": "#/$defs/__schema4"
+                    }
+                }
+            ]
+        },
+        "__schema5": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/__schema5"
+                    }
+                },
+                {
+                    "type": "object",
+                    "propertyNames": {
+                        "type": "string"
+                    },
+                    "additionalProperties": {
+                        "$ref": "#/$defs/__schema5"
+                    }
+                }
+            ]
+        },
+        "__schema6": {
+            "anyOf": [
+                {
+                    "type": "string"
+                },
+                {
+                    "type": "number"
+                },
+                {
+                    "type": "boolean"
+                },
+                {
+                    "type": "null"
+                },
+                {
+                    "type": "array",
+                    "items": {
+                        "$ref": "#/$defs/__schema6"
+                    }
+                },
+                {
+                    "type": "object",
+                    "propertyNames": {
+                        "type": "string"
+                    },
+                    "additionalProperties": {
+                        "$ref": "#/$defs/__schema6"
                     }
                 }
             ]

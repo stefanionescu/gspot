@@ -1,3 +1,4 @@
+import type { ToolPin } from '#cli/presets/types.ts';
 import type { Policy } from '#cli/policy/types.ts';
 import type { z } from 'zod';
 import type { packageManifestSchema } from '#cli/repository/manifests.ts';
@@ -51,11 +52,20 @@ export type ManifestFacts = {
 export type ExistingTool = {
     tool: string;
     path: string;
+    shared?: boolean;
+    table?: string;
+    key?: string;
+    carries: NonNullable<ToolPin['takeover']>[number]['carries'];
+    check?: string;
 };
 
 export type ExistingTooling = {
     configs: ExistingTool[];
-    hooks: { kind: 'githooks' | 'husky' | 'lefthook' | 'hooksPath'; path: string; files: string[] }[];
+    hooks: {
+        kind: 'githooks' | 'husky' | 'lefthook' | 'simple-git-hooks' | 'pre-commit' | 'hooksPath';
+        path: string;
+        files: string[];
+    }[];
     ci: string[];
     agentFiles: string[];
     rulesDirectories: string[];

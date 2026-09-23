@@ -1,5 +1,6 @@
 import type { Stage } from '#cli/presets/types.ts';
 import { printCommand } from '#cli/commands/print-result.ts';
+import { progress } from '#cli/output/progress.ts';
 import type { StageFilter, CheckOptions } from '#cli/run/types.ts';
 // gspot check
 import { Command, Option, InvalidArgumentError } from 'commander';
@@ -53,6 +54,10 @@ export function registerCheck(program: Command): void {
     command
         .argument('[paths...]')
         .description('Run checks over the selected files and folders and print findings')
+        .addHelpText(
+            'after',
+            '\nEffects:\nRuns the selected checks and writes managed reports and cache observations. --fix runs configured corrections and can change selected source files. --fix --dry-run previews corrections in a disposable copy. --staged checks index content; --changed checks working-tree content for paths changed from the comparison reference. A plain check uses the working tree.\n\nExit codes:\n0: executed checks passed; review skipped checks separately. 1: findings or failed corrections remain. 2: the run could not complete, including missing tools, invalid reports, or invalid input.\n\nExample:\ngspot check --staged',
+        )
         .option('--only <checks...>', 'Run the named checks')
         .addOption(new Option('--push', 'Read Git pre-push object updates from stdin').hideHelp())
         .option('--staged', 'The commit stage over staged files, as the pre-commit hook runs it')
@@ -69,6 +74,7 @@ export function registerCheck(program: Command): void {
         .action(async (paths: string[], flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();
             const options = optionsFrom(paths, flags, global);
+            if (global['json'] !== true) options.onResult = progress(process.stdout, options.quiet);
             const controller = new AbortController();
             const cancel = (): void => controller.abort();
             process.on('SIGINT', cancel);
@@ -109,8 +115,8 @@ export function registerCheck(program: Command): void {
                         if (!controller.signal.aborted) throw error;
                         return {
                             text: 'Check canceled before all selected content was checked.\n',
-                            json: { error: 'canceled', exitCode: 1 },
-                            exitCode: 1,
+                            json: { error: 'canceled', exitCode: 2 },
+                            exitCode: 2,
                         };
                     }
                 }, global);
@@ -128,6 +134,7 @@ import { readFileSync } from 'node:fs';
 import { executeRun } from '#cli/run/execute.ts';
 import { openSession } from '#cli/run/session.ts';
 import { runText } from '#cli/output/reporter.ts';
+import { hookStatus } from '#cli/lifecycle/hooks.ts';
 import { note, warn } from '#cli/output/messages.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { findRoot, isGitRepository } from '#cli/repository/tracked.ts';
@@ -166,6 +173,7 @@ function runOptions(
         fix: options.fix,
         isDryRun: options.isDryRun,
         noCache: options.noCache,
+        ...(options.onResult === undefined ? {} : { onResult: options.onResult }),
         ...(staged === undefined ? {} : { staged }),
         ...(changed === undefined
             ? {}
@@ -264,7 +272,8 @@ function resultFor(
     reportRoot?: string,
 ): CheckCommandResult {
     outcome.report.unstaged = unstaged;
-    if (reportRoot !== undefined) writeReport(reportRoot, outcome.report);
+    if (reportRoot !== undefined && !options.isDryRun && options.stage !== 'message')
+        writeReport(reportRoot, outcome.report);
     const rendered = runText(outcome.report, { quiet: options.quiet, verbose: options.verbose });
     const text = outcome.fixes ? fixSummary(outcome.fixes, options.isDryRun, rendered) : rendered;
     return { text, json: outcome.report, report: outcome.report, exitCode: outcome.report.exitCode };
@@ -292,6 +301,14 @@ async function checkContent(
     const session = await openSession(root);
     const unknown = unknownSelection(session, options.only);
     if (unknown !== undefined) return unknown;
+    if (revision?.content !== 'commit') {
+        const hooks = hookStatus({
+            root: revision?.reportRoot ?? root,
+            policyFiles: session.policyFiles,
+            repository: { hasGit: revision?.reportRoot !== undefined || session.repository.hasGit },
+        });
+        if (!hooks.ready) warn(`Configured hooks are not ready in this clone. ${hooks.text}`);
+    }
     let changed =
         revision?.changed === undefined
             ? await revisionSelection(session, options, signal)
@@ -370,7 +387,7 @@ export async function checkCommand(options: CheckOptions, signal: AbortSignal): 
             rendered.push(`${revision.refs.join(', ')} at ${revision.object}\n${result.text}`);
         }
         const pendingRefs = selected.revisions.slice(revisions.length).flatMap((revision) => revision.refs);
-        const exitCode = Math.max(signal.aborted ? 1 : 0, ...revisions.map((revision) => revision.report.exitCode));
+        const exitCode = Math.max(signal.aborted ? 2 : 0, ...revisions.map((revision) => revision.report.exitCode));
         const report: PushReport = {
             revisions,
             notApplicable: selected.notApplicable,
@@ -381,7 +398,7 @@ export async function checkCommand(options: CheckOptions, signal: AbortSignal): 
             rendered.push(
                 `Push checks canceled. References not checked: ${pendingRefs.join(', ') || 'none; see canceled checks above'}.\n`,
             );
-        writeReport(root, report);
+        if (!options.isDryRun) writeReport(root, report);
         return {
             text: [
                 ...rendered,

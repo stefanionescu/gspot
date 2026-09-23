@@ -39,6 +39,8 @@ function toTool(raw: RawTool): ToolPin {
     if (raw.version_regex !== undefined) tool.version_regex = raw.version_regex;
     if (raw.suppression !== undefined) tool.suppression = raw.suppression;
     if (raw.env !== undefined) tool.env = raw.env;
+    if (raw.takeover !== undefined) tool.takeover = raw.takeover;
+    if (raw.query_packs !== undefined) tool.query_packs = raw.query_packs;
     return tool;
 }
 
@@ -54,11 +56,21 @@ function toCheck(raw: RawCheck): CheckSpec {
 
 function checkProblems(check: RawCheck): string[] {
     const problems: (string | undefined)[] = [
+        check.nested_config !== undefined && check.cwd !== 'scope'
+            ? `check ${check.name} discovers nested configuration and requires cwd = scope.`
+            : undefined,
+        (check.isolated_files === true || check.file_prefix !== undefined) &&
+        (check.runs !== 'per-file-list' || !check.command?.includes('{files}'))
+            ? `check ${check.name} isolates files or prefixes file arguments and requires a per-file-list command with {files}.`
+            : undefined,
         check.reported_by !== undefined && (check.fix_command !== undefined || check.fix_order !== undefined)
             ? `check ${check.name} is reported by another check and cannot declare a fixer.`
             : undefined,
         check.fix_command !== undefined && check.fix_order === undefined
             ? `check ${check.name} has a fix_command and no fix_order.`
+            : undefined,
+        check.fix_findings_exit_codes !== undefined && check.fix_command === undefined
+            ? `check ${check.name} has fix_findings_exit_codes and no fix_command.`
             : undefined,
         check.requires !== undefined && check.stage === 'commit'
             ? `check ${check.name} requires ${check.requires} and cannot run at the commit stage.`
@@ -132,9 +144,12 @@ export function parseManifest(text: string, dir: string): Manifest {
     if (!result.success) throw new ManifestError(presetName, [...new Set(result.error.issues.flatMap(issueLines))]);
     const raw = result.data;
     const problems = refusals(raw);
+    if (raw.checks.some((check) => raw.preset.check_references?.includes(check.name)))
+        problems.push('A preset cannot both declare and reference the same check.');
     if (problems.length > 0) throw new ManifestError(raw.preset.name, problems);
     return {
         preset: raw.preset,
+        untracked: raw.untracked,
         detect: raw.detect,
         claims: raw.claims,
         tools: raw.tools.map((tool) => toTool(tool)),
@@ -156,6 +171,7 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
             if (!manifests.has(required))
                 throw new ManifestError(manifest.preset.name, [`it requires \`${required}\`, which does not exist.`]);
         for (const check of manifest.checks) {
+            if (manifest.preset.check_references?.includes(check.name)) continue;
             const previous = owners.get(check.name);
             if (previous !== undefined)
                 throw new ManifestError(manifest.preset.name, [`check ${check.name} is already owned by ${previous}.`]);
@@ -166,6 +182,36 @@ export function validateManifests(manifests: Map<string, Manifest>): void {
         [...manifests.values()].flatMap((manifest) => manifest.checks.map((check) => [check.name, check] as const)),
     );
     for (const manifest of manifests.values()) {
+        for (const reference of manifest.preset.check_references ?? []) {
+            const target = checks.get(reference);
+            if (
+                target === undefined ||
+                !owners.has(reference) ||
+                owners.get(reference) === manifest.preset.name ||
+                target.engine === undefined ||
+                target.runs !== 'once' ||
+                target.command !== undefined ||
+                target.tool !== undefined ||
+                target.reported_by !== undefined
+            )
+                throw new ManifestError(manifest.preset.name, [
+                    `Referenced check ${reference} must name another preset's standalone built-in check that runs once.`,
+                ]);
+        }
+        for (const tool of manifest.tools) {
+            for (const takeover of tool.takeover ?? []) {
+                if (takeover.check === undefined) continue;
+                const target = checks.get(takeover.check);
+                if (
+                    target === undefined ||
+                    target.reported_by !== undefined ||
+                    (target.tool ?? target.command?.[0]) !== tool.name
+                )
+                    throw new ManifestError(manifest.preset.name, [
+                        `takeover check ${takeover.check} must execute ${tool.name}.`,
+                    ]);
+            }
+        }
         for (const check of manifest.checks) {
             for (const field of ['reported_by', 'takes_over'] as const) {
                 const target = check[field];
@@ -211,6 +257,14 @@ export function presetManifests(): Map<string, Manifest> {
         manifests.set(manifest.preset.name, manifest);
     }
     validateManifests(manifests);
+    const declaredChecks = new Map(
+        [...manifests.values()].flatMap((manifest) => manifest.checks.map((check) => [check.name, check] as const)),
+    );
+    for (const manifest of manifests.values())
+        for (const reference of new Set(manifest.preset.check_references ?? [])) {
+            const check = declaredChecks.get(reference);
+            if (check !== undefined) manifest.checks.push(check);
+        }
     state.cache = new Map([...manifests].toSorted(([first], [second]) => first.localeCompare(second)));
     return state.cache;
 }

@@ -4,7 +4,7 @@ import { join } from 'node:path';
 import { existsSync, readFileSync, unlinkSync, symlinkSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/harness/planted.ts';
+import { run } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
 
 test('a global ignore stops a repository check and its correction command until removed', async () => {

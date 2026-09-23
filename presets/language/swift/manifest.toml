@@ -1,0 +1,279 @@
+[preset]
+name = "swift"
+kind = "language"
+title = "Swift"
+requires = ["formatting", "structure"]
+recommends = ["naming", "spelling"]
+description = "Swift sources: SwiftLint with the opt-in and analyzer rules, SwiftFormat, a build, and Periphery for dead code."
+
+[detect]
+extensions = [".swift"]
+filenames = ["Package.swift"]
+
+[claims]
+extensions = [".swift"]
+filenames = ["Package.swift", "Package.resolved"]
+natures = ["source"]
+
+[[tools]]
+name = "swiftlint"
+suppression = {marker = "\\bswiftlint:disable\\b", reason = " - (?<reason>\\S.*)"}
+windows = false
+version = "0.63.2"
+floor = "0.57.0"
+mise = "swiftlint"
+brew = "swiftlint"
+github = {name = "realm/SwiftLint", version = "0.63.2"}
+version_command = ["version"]
+
+[[tools.takeover]]
+file = ".swiftlint.yml"
+carries = "rules-table"
+check = "swift/swiftlint"
+
+[[tools.takeover]]
+file = ".swiftlint.yaml"
+carries = "rules-table"
+check = "swift/swiftlint"
+
+[[tools]]
+name = "swiftformat"
+version = "0.61.1"
+floor = "0.54.0"
+mise = "swiftformat"
+brew = "swiftformat"
+github = {name = "nicklockwood/SwiftFormat", version = "0.61.1"}
+
+[[tools.takeover]]
+file = ".swiftformat"
+carries = "rules-table"
+
+[[tools]]
+name = "periphery"
+version = "3.6.0"
+floor = "3.0.0"
+mise = "periphery"
+brew = "periphery"
+github = {name = "peripheryapp/periphery", version = "3.6.0"}
+version_command = ["version"]
+
+[[tools.takeover]]
+file = ".periphery.yml"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = ".periphery.yaml"
+carries = "rules-table"
+
+[[tools]]
+name = "xcodebuild"
+provider = "host"
+
+[[configs]]
+template = "semgrep/ios.yml"
+target = ".gspot/semgrep/ios.yml"
+rules_path = ["rules"]
+
+[[configs]]
+template = "swiftlint.yml.tmpl"
+target = ".gspot/swiftlint.yml"
+rules_path = ["opt_in_rules", "analyzer_rules", "disabled_rules", "custom_rules"]
+per_scope = true
+stub = {path = ".swiftlint.yml", body = "parent_config: {target_json}\n"}
+
+[[configs]]
+template = "swiftformat.tmpl"
+target = ".gspot/swiftformat"
+rules_path = ["enable", "disable", "rules", "lint-only"]
+per_scope = true
+stub = {path = ".swiftformat", copy = true}
+
+[[configs]]
+template = "periphery.yml.tmpl"
+target = ".gspot/periphery.yml"
+per_scope = true
+
+[[checks]]
+name = "swift/swiftlint"
+example = "The forced cast `value as! NSString` reports `force_cast`. Use a conditional cast and handle the failed conversion, or change the input contract so no cast is required."
+level = "all"
+stage = "commit"
+command = ["swiftlint", "lint", "--strict", "--quiet", "--no-cache", "--reporter", "json", "{files}"]
+fix_command = ["swiftlint", "lint", "--fix", "--quiet", "--no-cache", "{files}"]
+cwd = "scope"
+nested_config = ".swiftlint.yml"
+fix_order = "codemod"
+claims = {extensions = [".swift"]}
+coverage = ["style", "structure"]
+output = {format = "json", fields = {file = "file", line = "line", column = "character", rule = "rule_id", message = "reason"}}
+summary = "Lints Swift files with the scoped and nested SwiftLint configurations, treating warnings as errors."
+why = "A force unwrap, a retain cycle through a delegate, or a function nobody can hold in their head is cheapest to stop at the commit."
+help = "Run gspot check --fix for the rules that fix themselves. Turn one rule off with gspot ignore swift/swiftlint --rule <id> --reason."
+
+[[checks]]
+name = "swift/swiftformat"
+example = "A declaration beginning `func   greeting` reports `consecutiveSpaces`. Run the configured formatter to obtain `func greeting`, inspect the diff, and rerun."
+level = "all"
+stage = "commit"
+command = ["swiftformat", "--lint", "--config", "{config:swiftformat}", "{files}"]
+fix_command = ["swiftformat", "--quiet", "--config", "{config:swiftformat}", "{files}"]
+fix_order = "format"
+claims = {extensions = [".swift"]}
+coverage = ["format"]
+output = {format = "regex", pattern = "^(?<file>.+?):(?<line>\\d+):(?<column>\\d+): (?:error|warning): \\((?<rule>\\w+)\\) (?<message>.*)$"}
+summary = "Checks the layout of every Swift file against the shipped SwiftFormat rules."
+why = "One layout everywhere keeps a diff about the change and not about where a brace went."
+help = "Run gspot check --fix."
+
+[[checks]]
+name = "swift/build"
+example = "A Swift assignment of a string to an `Int` variable fails compilation. Correct the value or declared type and rerun with the required compiler and project settings available."
+level = "recommended"
+stage = "push"
+runs = "per-scope"
+requires = "build"
+platform = ["macos"]
+engine = "integrity"
+analysis = "swift-build"
+coverage = ["build"]
+summary = "Builds the package or Xcode scheme incrementally to report compiler errors."
+why = "Swift has no type check without a build, so the build is the type check."
+help = "Fix the first compiler error; later ones are often the same mistake."
+
+[[checks]]
+name = "swift/swiftlint-analyze"
+example = "An import unused by the compiled Swift sources reports an analyzer finding. Remove the import and rerun the build-backed analysis. A missing build log does not establish a clean result."
+level = "recommended"
+stage = "manual"
+runs = "per-scope"
+requires = "build"
+platform = ["macos"]
+engine = "integrity"
+analysis = "swift-analyze"
+tool = "swiftlint"
+coverage = ["structure"]
+summary = "Runs the SwiftLint analyzer rules over the compiler log of the build: unused imports, unused declarations, captured variables."
+why = "These rules need the compiler's view of the code, which a file-by-file lint does not have."
+help = "Remove what the rule names. Keep an import the analyzer misjudges under tools.swiftlint.keep_imports."
+
+[[checks]]
+name = "swift/periphery"
+example = "A declaration with no references in the selected compiled project reports unused code. Delete the unused declaration and rebuild before rerunning. Runtime-only references require a specific documented exception."
+level = "recommended"
+stage = "push"
+runs = "per-scope"
+requires = "build"
+platform = ["macos"]
+engine = "integrity"
+analysis = "swift-periphery"
+tool = "periphery"
+coverage = ["structure"]
+summary = "Scans the built project for declarations nothing uses."
+why = "Dead code is read, maintained, and migrated by people who cannot tell it is dead."
+help = "Delete the declaration, or mark it with a periphery:ignore comment that says who uses it."
+
+
+[[checks]]
+name = "swift/trivial-function"
+example = "A Swift function containing only `return 1` reports a trivial-function finding at the default statement limit. Inline the value at unnecessary call sites and remove the function."
+level = "recommended"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "swift-trivial-function"
+claims = {extensions = [".swift"]}
+coverage = ["structure"]
+summary = "Reports functions at or below limits.trivial_statements and files containing only trivial declarations."
+why = "Unnecessary functions add names and indirection without substantial behavior."
+help = "Inline unnecessary functions. Required external APIs need a narrow suppression with a reason."
+
+[[checks]]
+name = "swift/duplicate-functions"
+example = "Two Swift functions with the same executable body report duplication. Keep the implementation that owns the behavior, replace calls to the duplicate, and remove it."
+level = "all"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "swift-duplicate-functions"
+claims = {extensions = [".swift"]}
+coverage = ["structure"]
+summary = "Finds functions whose bodies match line for line."
+why = "Two copies of one body drift apart, and a fix made in one never reaches the other."
+help = "Keep one of the functions and call it from both places."
+
+[[checks]]
+name = "swift/private-before-public"
+example = "A file-local private declaration below a public declaration reports an ordering finding. Move the private declaration above the first internal or public declaration without changing its behavior."
+level = "all"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "swift-private-before-public"
+claims = {extensions = [".swift"]}
+coverage = ["structure"]
+summary = "Checks that private and fileprivate top-level declarations sit above the ones other files see."
+why = "A file that opens with its own pieces and ends with what it offers reads in one direction."
+help = "Move the file-local declarations above the first internal, public, or open one."
+
+[[checks]]
+name = "swift/env-access-owner"
+example = "A read of `ProcessInfo.processInfo.environment` outside the configured environment owner reports a finding. Move that read to the path named by `architecture.roles.env` and pass the required values to callers."
+level = "all"
+stage = "commit"
+runs = "per-scope"
+engine = "integrity"
+analysis = "swift-env-access-owner"
+claims = {extensions = [".swift"]}
+coverage = ["structure"]
+summary = "Checks that the process environment is read in one place."
+why = "A variable read in many files has many defaults and many spellings, and nobody can list what the app needs."
+help = "Read the environment in the file that architecture.roles.env names, and pass the values in."
+
+
+[[settings]]
+name = "limits.swift.duplicate_min_lines"
+kind = "number"
+direction = "ceiling"
+default = 4
+summary = "The fewest lines two Swift functions must share before they count as duplicates."
+
+[[settings]]
+name = "tools.swiftlint.keep_imports"
+kind = "list"
+direction = "neutral"
+default = ["CoreGraphics"]
+summary = "Imports the analyzer keeps although it sees no use of them."
+
+[[settings]]
+name = "tools.swiftformat.swift_version"
+kind = "string"
+direction = "neutral"
+default = "5.9"
+summary = "The Swift version SwiftFormat formats for."
+
+[[settings]]
+name = "tools.xcode.project"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The Xcode project or workspace, relative to the scope; empty builds the Swift package."
+
+[[settings]]
+name = "tools.xcode.scheme"
+kind = "string"
+direction = "neutral"
+default = ""
+summary = "The shared scheme the build, the analyzer, and Periphery use."
+
+[[settings]]
+name = "tools.xcode.destination"
+kind = "string"
+direction = "neutral"
+default = "generic/platform=iOS Simulator"
+summary = "The xcodebuild destination."
+
+[coverage]
+".swift" = ["format", "syntax", "style", "types", "structure", "naming", "prose", "spelling"]
+
+[rule_files]
+language = ["language/SWIFT.md", "language/naming/SWIFT.md"]

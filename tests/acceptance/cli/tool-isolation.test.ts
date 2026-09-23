@@ -1,8 +1,8 @@
 import { join } from 'node:path';
-import { chmodSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { chmodSync, cpSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/harness/planted.ts';
+import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
@@ -24,7 +24,11 @@ test(
         mkdirSync(join(repository.path, 'node_modules/.bin'));
         symlinkSync('../prettier/cli', join(repository.path, 'node_modules/.bin/prettier'));
         mkdirSync(join(repository.path, '.gspot/node_modules/.bin'), { recursive: true });
-        symlinkSync(join(MODULES, '.bin/prettier'), join(repository.path, '.gspot/node_modules/.bin/prettier'));
+        cpSync(join(MODULES, 'prettier'), join(repository.path, '.gspot/node_modules/prettier'), {
+            recursive: true,
+            dereference: true,
+        });
+        symlinkSync('../prettier/bin/prettier.cjs', join(repository.path, '.gspot/node_modules/.bin/prettier'));
         const applied = await run(repository.path, ['apply']);
         expect(applied.code, applied.stdout + applied.stderr).toBe(0);
         const args = ['check', '--only', 'formatting/prettier', '--no-cache', '--json'];

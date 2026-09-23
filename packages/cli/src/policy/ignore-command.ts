@@ -5,7 +5,14 @@ import type { CommandResult } from '#cli/run/types.ts';
 import * as messages from '#cli/policy/messages.ts';
 import { allChecks } from '#cli/presets/listing.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
-import type { IgnoreOptions } from '#cli/commands/types.ts';
+type IgnoreOptions = {
+    cwd: string;
+    check: string;
+    paths?: string[];
+    rule?: string;
+    reason?: string;
+    remove: boolean;
+};
 import { readPolicy, PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import { appendEntry, removeEntries } from '#cli/policy/write.ts';

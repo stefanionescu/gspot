@@ -1,0 +1,14 @@
+---
+import SiteTitle from '@astrojs/starlight/components/SiteTitle.astro';
+---
+<div class="brand-navigation">
+    <SiteTitle />
+    <a href="/guides/overview/" aria-current={Astro.url.pathname.startsWith('/guides/') ? 'location' : undefined}>Docs</a>
+</div>
+<style>
+    .brand-navigation { display: flex; align-items: center; gap: 24px; }
+    a { color: var(--sl-color-gray-2); text-decoration: none; font-size: 0.875rem; min-height: 44px; display: inline-flex; align-items: center; }
+    a:hover, a[aria-current] { color: var(--sl-color-white); }
+    .brand-navigation :global(.site-title) { color: var(--sl-color-white); }
+    @media (max-width: 25rem) { .brand-navigation { gap: 12px; } }
+</style>

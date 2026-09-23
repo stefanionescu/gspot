@@ -1,14 +1,12 @@
+import { readSource } from '#cli/repository/tracked.ts';
 import type { CheckSpec } from '#cli/presets/types.ts';
 // The naming engine: identifiers, paths and the policy schema, as one function per analysis.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { Engine, EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { isKnownCase } from '#cli/naming/cases.ts';
 import { identifiersOf } from '#cli/naming/extract.ts';
 import type { TrackedFile } from '#cli/repository/types.ts';
 import { languagePresets } from '#cli/presets/select.ts';
-import { nameFinding } from '#cli/naming/name-finding.ts';
 import { nameProblems } from '#cli/naming/validate-name.ts';
 import { isClaimed, pathMatcher } from '#cli/presets/claims.ts';
 import { effectivePolicy, shippedPolicy } from '#cli/naming/policy.ts';
@@ -18,37 +16,33 @@ import type { EffectivePolicy, Identifier, NamingContext } from '#cli/naming/typ
 const REACT_FILE = /\.[jt]sx$/u;
 const TEST_FILE = /(?:(?:^|\/)(?:tests?|__tests__)\/)|(?:\.(?:test|spec)\.[^./]+$)/u;
 
-function languageOf(input: EngineInput, file: TrackedFile): string | undefined {
-    const selection = input.session.scopes.find((entry) => entry.scope.path === input.scope);
-    const languages = selection === undefined ? [] : languagePresets(selection.selected);
-    return languages.find((manifest) => isClaimed(manifest.claims, file))?.preset.name;
-}
-
-function policyFor(input: EngineInput): EffectivePolicy | undefined {
-    const selection = input.session.scopes.find((entry) => entry.scope.path === input.scope);
-    return selection === undefined
-        ? undefined
-        : effectivePolicy(selection.surface, input.session.policyFiles.policy, input.scope);
-}
-
 function sourceFiles(input: EngineInput): { file: TrackedFile; language: string }[] {
+    const languages = languagePresets(input.selection.selected);
     return input.files
         .filter((file) => file.nature === 'source')
-        .map((file) => ({ file, language: languageOf(input, file) }))
+        .map((file) => ({ file, language: languages.find((manifest) => isClaimed(manifest.claims, file))?.preset.name }))
         .filter((entry): entry is { file: TrackedFile; language: string } => entry.language !== undefined);
 }
 
 function findingsFor(input: EngineInput, policy: EffectivePolicy, identifiers: Identifier[], path: string): Finding[] {
     const context: NamingContext = { policy, isReactFile: REACT_FILE.test(path), isTestFile: TEST_FILE.test(path) };
     return identifiers.flatMap((identifier) =>
-        nameProblems(identifier, context).map((problem) => nameFinding(input.spec.name, identifier, problem)),
+        nameProblems(identifier, context).map((problem) => ({
+            check: input.spec.name,
+            file: identifier.file,
+            line: identifier.line,
+            column: identifier.column,
+            rule: problem.rule,
+            message: `${identifier.kind} "${identifier.name}": ${problem.message}${problem.source === undefined ? '' : ` (${problem.source})`}.`,
+            fixable: false,
+        })),
     );
 }
 
 async function identifierFindings(input: EngineInput, policy: EffectivePolicy): Promise<Finding[]> {
     const findings: Finding[] = [];
     for (const { file, language } of sourceFiles(input)) {
-        const text = readFileSync(join(input.root, file.path), 'utf8');
+        const text = readSource(input.root, file.path).toString('utf8');
         const identifiers = await identifiersOf(file.path, text, language);
         findings.push(...findingsFor(input, policy, identifiers, file.path));
     }
@@ -60,7 +54,7 @@ function pathIdentifiers(input: EngineInput): Identifier[] {
     return sourceFiles(input).flatMap(({ file, language }) => {
         const all = [fileIdentifier(file.path, language), ...directoryIdentifiers(file.path, language)];
         return all.filter((identifier) => {
-            const key = `${identifier.directory ?? identifier.file}\n${identifier.language}\n${identifier.name}`;
+            const key = JSON.stringify([identifier.directory ?? identifier.file, identifier.language, identifier.name]);
             if (seen.has(key)) return false;
             seen.add(key);
             return true;
@@ -68,14 +62,18 @@ function pathIdentifiers(input: EngineInput): Identifier[] {
     });
 }
 
-async function schemaFindings(input: EngineInput, policy: EffectivePolicy): Promise<Finding[]> {
+async function schemaFindings(input: EngineInput): Promise<Finding[]> {
     const names = new Set(pathIdentifiers(input).map((identifier) => identifier.name));
     for (const { file, language } of sourceFiles(input)) {
-        const identifiers = await identifiersOf(file.path, readFileSync(join(input.root, file.path), 'utf8'), language);
+        const identifiers = await identifiersOf(
+            file.path,
+            readSource(input.root, file.path).toString('utf8'),
+            language,
+        );
         for (const identifier of identifiers) names.add(identifier.name);
     }
-    const naming = input.session.policyFiles.policy.naming;
-    const paths = input.session.repository.files.map((file) => file.path);
+    const naming = input.policyFiles.policy.naming;
+    const paths = input.files.map((file) => file.path);
     const unused = naming.allowed
         .filter((entry) => !names.has(entry.name))
         .map((entry) => `naming.allowed names "${entry.name}", which no identifier in this scope carries.`);
@@ -105,9 +103,9 @@ async function schemaFindings(input: EngineInput, policy: EffectivePolicy): Prom
     }));
 }
 
-const ANALYSES: Record<string, (input: EngineInput, policy: EffectivePolicy) => Promise<Finding[]>> = {
+const ANALYSES: Record<string, (input: EngineInput, policy: EffectivePolicy) => Finding[] | Promise<Finding[]>> = {
     identifiers: identifierFindings,
-    paths: async (input, policy) =>
+    paths: (input, policy) =>
         pathIdentifiers(input).flatMap((identifier) => findingsFor(input, policy, [identifier], identifier.file)),
     'policy-schema': schemaFindings,
 };
@@ -116,8 +114,8 @@ const ANALYSES: Record<string, (input: EngineInput, policy: EffectivePolicy) => 
 export function resolveNaming(spec: CheckSpec): Engine {
     const analysis = ANALYSES[spec.analysis ?? ''];
     if (analysis === undefined) throw new Error(`No naming analysis is called ${spec.analysis ?? ''}.`);
-    return async (input) => {
-        const policy = policyFor(input);
-        return policy === undefined ? [] : analysis(input, policy);
+    return (input) => {
+        const policy = effectivePolicy(input.selection.surface, input.policyFiles.policy, input.scope);
+        return analysis(input, policy);
     };
 }

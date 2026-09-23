@@ -3,6 +3,9 @@ title: Remove gspot and recover original files
 description: Preview removal, preserve later edits, and restore recorded originals.
 ---
 
+Use the [source installation guide](/guides/install/) to prepare the CLI. Run the commands below
+from the repository root unless a step names another directory.
+
 Run removal from the configured repository root. Inspect the plan before applying it:
 
 ```bash
@@ -18,11 +21,12 @@ gspot uninstall --yes
 
 Uninstall uses the local ownership record. It restores an original when the destination is
 absent or still matches the installed bytes and permissions. Later edits and unowned files
-remain. It also keeps `gspot.toml`, the project rule layer, and local recovery material.
+remain. It also keeps `gspot.toml`, exported profiles, the project rule layer, and local recovery material.
 
 ## Resolve a retained edit
 
-Read the reported destination and compare it with the original saved under `.gspot/recovery/`.
+Uninstall reports the retained destination and its original recovery path when a backup exists.
+Compare those files before resolving the conflict. JSON output lists these pairs under `originals`.
 Choose which authored changes to retain before replacing anything. A modified hook dispatcher
 also needs review; uninstall does not assume that the current hook belongs entirely to gspot.
 Do not remove recovery material while a restoration conflict remains.

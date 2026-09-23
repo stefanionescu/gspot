@@ -1,9 +1,9 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // The Supabase project: its config file, its function folders and its finding shape.
 import { join, posix } from 'node:path';
-import { scopeOf } from '#cli/repository/scopes.ts';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { SUPABASE_CONFIG } from '#cli/checks/supabase/supabase-definitions.ts';
 import { parse } from 'smol-toml';
 import { z } from 'zod';
@@ -24,7 +24,7 @@ const SHARED_PREFIX = '_';
 export function readProject(root: string): z.infer<typeof projectSchema> | string | undefined {
     const path = join(root, SUPABASE_CONFIG);
     if (!existsSync(path)) return undefined;
-    const text = readFileSync(path, 'utf8');
+    const text = readSource(root, SUPABASE_CONFIG).toString('utf8');
     try {
         return projectSchema.parse(parse(text));
     } catch (error) {
@@ -40,14 +40,9 @@ export function readProject(root: string): z.infer<typeof projectSchema> | strin
 export function functionFolders(input: EngineInput): string[] {
     const named = input.view.tool('supabase')['functions_dir'];
     const base = posix.join(input.scope, typeof named === 'string' && named !== '' ? named : DEFAULT_FUNCTIONS);
-    const folders = input.session.repository.files
+    const folders = input.files
         .map((file) => file.path)
-        .filter(
-            (path) =>
-                scopeOf(path, input.session.repository.scopes).path === input.scope &&
-                path.startsWith(`${base}/`) &&
-                /\/index\.tsx?$/u.test(path),
-        )
+        .filter((path) => path.startsWith(`${base}/`) && /\/index\.tsx?$/u.test(path))
         .map((path) => path.slice(0, path.lastIndexOf('/')))
         .filter((folder) => folder.split('/').length === base.split('/').length + 1)
         .filter((folder) => !folder.slice(folder.lastIndexOf('/') + 1).startsWith(SHARED_PREFIX));

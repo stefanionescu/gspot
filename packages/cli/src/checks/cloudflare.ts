@@ -1,3 +1,4 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // The files Cloudflare reads by name: the headers file, the redirects file, the wrangler configuration, and the generated environment types.
 import { join } from 'node:path';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
@@ -5,7 +6,7 @@ import { scopeOf } from '#cli/repository/scopes.ts';
 import { parse as parseToml } from 'smol-toml';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import { readFileSync, rmSync } from 'node:fs';
+import { rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
 import { parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
@@ -20,17 +21,17 @@ function finding(input: EngineInput, file: string, line: number, rule: string, t
 }
 
 function named(input: EngineInput, name: string): string[] {
-    return input.session.repository.files
+    return input.files
         .map((file) => file.path)
         .filter(
             (path) =>
-                scopeOf(path, input.session.repository.scopes).path === input.scope &&
-                (path === name || path.endsWith(`/${name}`)),
+                scopeOf(path, input.scopeEntries).path === input.scope && (path === name || path.endsWith(`/${name}`)),
         );
 }
 
 function lines(input: EngineInput, path: string): { text: string; number: number }[] {
-    return readFileSync(join(input.root, path), 'utf8')
+    return readSource(input.root, path)
+        .toString('utf8')
         .split('\n')
         .map((text, index) => ({ text, number: index + 1 }))
         .filter((line) => line.text.trim() !== '' && !line.text.trimStart().startsWith('#'));
@@ -55,7 +56,7 @@ function wranglerTable(
     input: EngineInput,
     path: string,
 ): { table: Record<string, unknown>; problem: string | undefined } {
-    const text = readFileSync(join(input.root, path), 'utf8');
+    const text = readSource(input.root, path).toString('utf8');
     try {
         if (path.endsWith('.toml')) return { table: parseToml(text), problem: undefined };
         const errors: ParseError[] = [];
@@ -73,14 +74,13 @@ function wranglerTable(
 // Compares a copied types file with the output of wrangler in the same isolated directory.
 async function isTypesFileStale(input: EngineInput, path: string): Promise<boolean> {
     const folder = path.includes('/') ? path.slice(0, path.lastIndexOf('/')) : '';
-    const full = join(input.root, path);
-    const before = readFileSync(full);
+    const before = readSource(input.root, path);
     const result = await runCheckCommand(input, ['wrangler', 'types', TYPES_FILE], {
         cwd: join(input.root, folder),
     });
     if (result.code !== 0)
         throw new Error(`The wrangler types command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-    return !before.equals(readFileSync(full));
+    return !before.equals(readSource(input.root, path));
 }
 
 /**
@@ -121,13 +121,13 @@ export function redirectProblems(entries: { text: string; number: number }[]): {
  * @param input the engine input
  * @returns the findings
  */
-export function headersSyntax(input: EngineInput): Promise<Finding[]> {
+export function headersSyntax(input: EngineInput): Finding[] {
     const found = named(input, '_headers').flatMap((path) =>
         headerProblems(lines(input, path)).map((entry) =>
             finding(input, path, entry.number, 'headers-syntax', entry.text),
         ),
     );
-    return Promise.resolve(found);
+    return found;
 }
 
 /**
@@ -135,13 +135,13 @@ export function headersSyntax(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function redirectsSyntax(input: EngineInput): Promise<Finding[]> {
+export function redirectsSyntax(input: EngineInput): Finding[] {
     const found = named(input, '_redirects').flatMap((path) =>
         redirectProblems(lines(input, path)).map((entry) =>
             finding(input, path, entry.number, 'redirects-syntax', entry.text),
         ),
     );
-    return Promise.resolve(found);
+    return found;
 }
 
 /**
@@ -149,7 +149,7 @@ export function redirectsSyntax(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function wranglerFile(input: EngineInput): Promise<Finding[]> {
+export function wranglerFile(input: EngineInput): Finding[] {
     const paths = ['wrangler.toml', 'wrangler.json', 'wrangler.jsonc'].flatMap((name) => named(input, name));
     const found = paths.flatMap((path): Finding[] => {
         const { table, problem } = wranglerTable(input, path);
@@ -173,7 +173,7 @@ export function wranglerFile(input: EngineInput): Promise<Finding[]> {
                   ];
         return [...unnamed, ...undated];
     });
-    return Promise.resolve(found);
+    return found;
 }
 
 /**
@@ -185,10 +185,11 @@ export async function envTypesFresh(input: EngineInput): Promise<Finding[]> {
     const paths = named(input, TYPES_FILE);
     if (paths.length === 0) return [];
     const scratch = scratchCopy(
-        input.session,
-        input.session.repository.files.map((file) => file.path),
+        input.root,
+        input.files.map((file) => file.path),
+        input.scopeEntries.map((scope) => scope.path),
     );
-    const isolated = { ...input, root: scratch, session: { ...input.session, root: scratch } };
+    const isolated = { ...input, root: scratch, scopeRoot: join(scratch, input.scope) };
     try {
         const findings: Finding[] = [];
         for (const path of paths)

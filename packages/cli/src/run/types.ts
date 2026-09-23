@@ -3,15 +3,8 @@ import type { ToolContext } from '#cli/doctor/types.ts';
 import type { CheckResult, Finding } from '#cli/output/finding.ts';
 import type { TrackedFile, Repository, ScopeEntry } from '#cli/repository/types.ts';
 // Type aliases of the run modules.
-import type { CheckSpec, Manifest, OutputFormat, ToolPin } from '#cli/presets/types.ts';
+import type { CheckSpec, Manifest, ToolPin } from '#cli/presets/types.ts';
 import type { IgnoreEntry, PolicyFiles, MergedView, ExposedSettings } from '#cli/policy/types.ts';
-
-/** File observations shared by cached checks within one execution pass. */
-export type RunHashes = {
-    policy: string;
-    files: Map<string, string>;
-    generated?: string;
-};
 
 export type CacheKeyInput = {
     check: string;
@@ -23,6 +16,7 @@ export type CacheKeyInput = {
 };
 
 export type CheckOptions = {
+    onResult?: (result: CheckResult) => void;
     cwd: string;
     only?: string[];
     paths: string[];
@@ -44,7 +38,20 @@ export type CommandResult = { text: string; json: unknown; exitCode: number };
 export type CheckCommandResult = CommandResult & { report?: RunReport };
 
 export type EngineInput = {
-    session: Session;
+    policyFiles: PolicyFiles;
+    selection: ScopeSelection;
+    manifests: Map<string, Manifest>;
+    probes: ToolContext['probes'];
+    scopeEntries: ScopeEntry[];
+    attributes: Repository['attributes'];
+    hasGit: boolean;
+    runKey: object;
+    resources?: DisposableStack;
+    cancelSignal?: AbortSignal;
+    scopeRoot: string;
+    repositoryFiles?: TrackedFile[];
+    generatedDrift?: () => import('#cli/emit/types.ts').DriftEntry[];
+    suppressions?: import('#cli/checks/repository/suppressions.ts').SuppressionComment[];
     root: string;
     scope: string;
     view: MergedView;
@@ -53,11 +60,14 @@ export type EngineInput = {
     staged?: Set<string>;
 };
 
-export type Engine = (input: EngineInput) => Promise<Finding[]>;
+export type EngineOutcome = { findings: Finding[]; checkedFiles: string[] };
+
+export type Engine = (input: EngineInput) => Finding[] | EngineOutcome | Promise<Finding[] | EngineOutcome>;
 
 export type CheckRunner = (session: Session, planned: PlannedCheck, staged?: Set<string>) => Promise<CheckResult>;
 
 export type RunOptions = PlanOptions & {
+    onResult?: (result: CheckResult) => void;
     fix: boolean;
     isDryRun: boolean;
     noCache?: boolean;
@@ -117,6 +127,7 @@ export type ScopeSelection = {
 };
 
 export type Session = ToolContext & {
+    resources?: DisposableStack;
     packageManager?: import('zod').infer<typeof import('#cli/emit/tool-packages.ts').packageManagerSchema>;
     cancelSignal?: AbortSignal;
     version: string;
@@ -124,15 +135,6 @@ export type Session = ToolContext & {
     manifests: Map<string, Manifest>;
     repository: Repository;
     scopes: ScopeSelection[];
-};
-
-export type EslintEntry = {
-    ruleId: string | null;
-    line?: number;
-    column?: number;
-    message: string;
-    fix?: unknown;
-    severity: number;
 };
 
 export type CommandPart = string | { file: true };
@@ -145,30 +147,16 @@ export type Substitutions = {
     indent: number;
 };
 
-/** What one tool run accumulates across its spawns. */
-export type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
-
-/** One file entry from the ESLint JSON formatter. */
-export type EslintFile = { filePath: string; messages: EslintEntry[] };
-
 /** A tool command expanded and ready to spawn: once, or once per file. */
+export type ToolInvocation = { argv: string[]; file?: string };
+
 export type PreparedCommand = {
     root: string;
     cwd: string;
     argv: string[];
-    commands: string[][];
+    commands: ToolInvocation[];
     env: Record<string, string>;
 };
-
-/** What the regex output parser needs per line: the format, the compiled fixable pattern and the help text. */
-export type RegexParser = { output: OutputFormat; fixable: RegExp | undefined; help: string };
-
-/** Policy entries that filter reported findings. */
-export type FilterInputs = { ignores: IgnoreEntry[] };
-
-/** What filtering one check's findings produced. */
-/** One result on its way through the filters: the check, its result, and the findings no ignore took. */
-export type Sifted = { check: PlannedCheck; result: CheckResult; remaining: Finding[] };
 
 /** One check to plan: its spec and the manifest it came from, none for a [[check]] entry. */
 export type PlanEntry = { spec: CheckSpec; manifest?: Manifest };

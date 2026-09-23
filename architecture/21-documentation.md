@@ -6,8 +6,8 @@ preserves the full design brief below; [remaining work](22-remaining.md) alone r
 
 Verify command and output examples against the documented release. Keep reproducible examples
 in their guides or demonstrations and exercise the same behavior through ordinary command tests.
-The adoption case study depends on the deferred Yap handoff; introductory examples must work
-without access to Yap. No separate documentation fixture system or root examples inventory is required.
+Introductory examples must work without access to Yap or another reference repository. No
+separate documentation fixture system or root examples inventory is required.
 
 ## Contents
 
@@ -34,26 +34,22 @@ that content loader. It does not require rebuilding the site shell.
 ## Reference projects and the quality gap
 
 Use the inspected [Nx content-loader pattern](15-prior-art.md#nx-and-turborepo) for reference
-mechanics. The visual brief remains gspot's own terminal field notebook design. Its reader
-patterns draw on Starship's clear first action, Charm and Gum's warm terminal demonstrations,
-Atuin's visible installation routes, and uv's separation of guides from reference. These are
-design influences, not copied artwork or claims of those sites' accessibility. Verify gspot's
+mechanics. Use the selected Turborepo visual direction: neutral surfaces, restrained typography, and
+understated blue links. Use Nx's task-focused documentation structure. These are design
+influences, not copied artwork or claims of those sites' accessibility. Verify gspot's
 rendered experience against the acceptance criteria below.
 
 ## The README
 
 A reader needs purpose, release status, a visible result, and a next step in the opening screen.
-Use native GitHub Markdown, not a centered HTML marketing layout. Target 700 to 1,000 words,
-excluding output; this is an editorial budget, not a reason to omit safety information.
+Use native GitHub Markdown, not a centered HTML marketing layout. Include the information needed for setup and routine use without a word-count target.
 Use a plain lowercase `gspot` title. Do not add decorative illustrations or a separate logo system.
-Keep the title, purpose, and release status as selectable text outside the image. The art must
-not push the first useful example below a large decorative header.
+Keep the title, purpose, and release status as selectable text. The first useful example
+follows the introduction without a decorative image header.
 
 Use this ordered content brief when rewriting the root README:
 
-1. Title `gspot`. Proposed opening copy: "gspot runs your repository checks and gives coding
-   agents the rules to follow." Follow with one sentence about generated configuration for
-   existing tools. Publish this wording only once both behaviors are verified for the release.
+1. Title `gspot`. Use the product description "CLI to lint and enforce rules for LLM generated codebases".
 1. State prerelease status and material platform limits before setup. Do not claim gspot
    detects whether a human or an agent wrote code.
 1. A compact, selectable example of one finding: path, check name, explanation, and `help:`.
@@ -72,7 +68,8 @@ Use this ordered content brief when rewriting the root README:
    inject a `prepare` script. Link the full command reference instead of listing every command.
 1. `## Choose your checks`: one runnable configuration example, one scoped exception with a
    reason, and links to presets and profiles. Explain `recommended` versus `all`: banned names
-   and house-style checks belong to `all`. Do not confuse a check name with a tool rule name.
+   and optional house-style checks belong to `all`. Trivial-function and trivial-file checks
+   remain enabled by default at both levels. Do not confuse a check name with a tool rule name.
 1. `## Adopt and remove`: summarize carryover, retained unsupported configuration, recovery
    copies, and uninstall conflicts. Link the complete recovery procedure. Explain that affected
    project-wide tools can report errors in unchanged files. Describe `git commit --no-verify`
@@ -121,12 +118,13 @@ manual under `/docs/` just to make room for a landing page.
 
 The sidebar groups are:
 
-- Start: install, quick start, existing repository, joining a configured repository.
-- Daily work: findings, customization, presets and profiles, editors, working with agents.
-- Integrate: hooks and CI, other CI systems, scopes and monorepos, below the Git root,
-  coexistence with existing lint, folders without Git, custom checks.
-- Maintain: upgrades, recovery and uninstall, troubleshooting.
-- Reference: commands, presets, checks, settings, engines. Keep long lists collapsed.
+- Start: overview at `/guides/overview/`, install, quick start, and existing repository.
+- Daily work: findings, customization, the preset catalog grouped by kind, profiles, and agents.
+- Integrate: hooks and CI, scopes and monorepos, use without mise, custom checks, tests and
+  coverage, dependency licenses, and security checks.
+- Maintain: troubleshooting, recovery and uninstall, and building and contributing.
+- Reference: commands, presets, checks, standalone plugin, settings, configuration fields,
+  and engines. Keep long lists collapsed.
 
 These are navigation groups, not a requirement for another index page per group. Reuse the
 existing guide that owns a task; add only missing tasks. Add a short concepts section to the
@@ -135,8 +133,10 @@ Use the [public vocabulary](README.md#glossary) everywhere, including search lab
 
 A guide states starting conditions, commands, expected results, and recovery for consequential
 steps. Do not enforce a two-page limit or one command per step when that hides necessary
-context. The joining guide must include CLI prerequisites, `gspot install`, and a check before
-the first commit. It must not imply that cloning installs the CLI.
+context. The installation guide owns joining a configured repository: CLI prerequisites,
+`gspot install`, and a check before the first commit. It must not imply that cloning installs
+the CLI. Keep editor setup, other CI providers, below-Git-root behavior, and no-Git variants
+with the relevant owning guide rather than requiring a separate page for each variant.
 
 Command reference includes inherited options, working directory, input, output, exit status,
 side effects, noninteractive behavior, and an example. Check reference includes its name,
@@ -144,6 +144,17 @@ purpose, level, stage, scope, a triggering example, a corrected example, and the
 exception procedure. Settings reference includes type, default, scope, precedence, and a
 complete configuration fragment. Link tool rules to their upstream reference. Keep these
 facts with the generator's source definitions, not a second hand-written table.
+
+A description, usage string, option list, or JSON Schema dump alone is not a complete reference.
+Provide the behavioral explanations and examples above through the existing content loader and
+its owning definitions. Validate missing required content before replacing a generated entry.
+A successful build or large page count does not establish reader completeness. Keep authored
+recovery guides separate from reference facts; remove duplicated procedures and stale claims.
+Do not add a second documentation generator or a universal example-execution framework.
+Each shipped check and plugin rule owns one required, nonempty Markdown `example` field.
+Render that field through the existing reference loader. Exercise its defect and correction
+in the ordinary behavioral tests for the owning check or rule, rejecting empty diagnostic
+expectations before writing a planted case.
 
 Keep Starlight search, mobile navigation, heading links, and keyboard access. Validate search
 with literal check names, setting names, and common symptoms such as "missing tool." Offer
@@ -153,74 +164,53 @@ Retain `llms.txt` from the same release content without creating a second agent-
 
 ## The site
 
-The manual stays Starlight. The landing page is one Astro page in the same project, so one build
-serves both, and gspot.dev opens on the landing page.
+Render the landing page through `StarlightPage` in the existing Astro project. Starlight owns
+navigation, search, theme persistence, code controls, and the 404 route. Remove the separate
+site layout and duplicate scripts.
 
-The header contains the wordmark, Get started, Reference, GitHub, and a theme control. The
-landing page answers evaluation questions; it does not repeat every guide. Its sections are:
+Put "CLI to lint and enforce rules for LLM generated codebases" first. Follow it with
+**Get started** and **Command reference**, linking to the existing installation and check
+reference routes. Identify source-checkout setup explicitly. Do not present `--help` as an
+installation command.
 
-1. Hero: proposed headline "One place for your repository checks." Use the README purpose
-   sentence underneath. Primary action: Get started. Secondary action: See a finding, an
-   anchor within the landing page. Show a verified install command, its platform label, and Copy.
-1. See a finding: a real terminal transcript with one actionable failure, its explanation,
-   and the successful rerun after correction. Show `init` and `check` as separate actions.
-   The default is static HTML text. Optional playback is user-started and has pause/replay.
-1. Review what changes: a short excerpt of the actual initialization plan. Explain acceptance,
-   retained files, generated files, and recovery. Link the existing-repository guide. Do not
-   promise that all configurations translate or that uninstall always restores edited files.
-1. Choose what runs: a small `gspot.toml` example beside its observed effect. Explain
-   `recommended` and optional `all`; link customization. On phones, put configuration before
-   output. This is a static example, not a browser-based config editor.
-1. Work with your tools: a compact selection of verified presets, links to the full catalog,
-   and separate routes for local hooks, CI, and coding-agent rule files. Explain that agent
-   instructions guide behavior while checks enforce the subset they can measure.
-1. Footer: Get started, Reference, GitHub, releases, contribution, and license. A small
-   decorative `:wq` sign-off supplies personality; it is not a navigation control or command
-   instruction. Keep functional labels literal.
+Use one shared header with documentation navigation, search, GitHub, and theme controls.
+Use neutral navigation selections and fine section dividers.
 
-Put release status beside the hero install command. If no release is installable, say so and
-link contributor setup instead of displaying an install command that cannot work.
+Below the introduction, show the Bash defect and manual correction side by side on wide
+screens and stacked on phones. Keep the captured
+transcript in a native disclosure, with prerequisites, commands, output, and manual edits
+clearly distinguished. Link to the owning guide for the complete procedure. Remove slogans,
+repeated explanations, decorative sign-offs, and oversized terminal framing.
 
-Do not require three statistics cards. Add an adoption case study only when it answers a real
-question and links reproducible evidence. Record the test repository or public revision, CLI version, command,
-platform, tool availability, and cold or warm caches for timing. A check count is neither
-coverage nor correctness. No copied competitor benchmarks, invented endorsements, or claims
-that passing the gate proves code has no defects.
+Exclude testimonials, usage-statistics cards, competitor graphics, and unsupported product
+claims. Demonstrations record the test repository or revision, CLI version, command, platform,
+and tool availability; timing also names cold or warm caches. A check count is neither coverage
+nor correctness. Passing the gate does not prove that code has no defects.
 
 ### The theme
 
 Use quiet reading surfaces, precise type, and actual command output. The product name is plain
 text. Keep the landing page focused on setup, configuration, and findings.
 
-Proposed design tokens:
-
-| Token      | Dark      | Light     | Use                                 |
-| ---------- | --------- | --------- | ----------------------------------- |
-| Canvas     | `#111410` | `#F7F8F2` | Page background                     |
-| Panel      | `#1B2018` | `#ECEFE4` | Terminal and configuration examples |
-| Text       | `#EFF3E8` | `#182015` | Headings and prose                  |
-| Muted text | `#B5BEAA` | `#4D5945` | Captions and secondary labels       |
-| Accent     | `#B7F36B` | `#365D13` | Links and focus                     |
-
-These are implementation inputs, not a completed contrast audit. Test actual foreground and
-background pairs, including syntax highlighting, selection, hover, and disabled states.
-Use dark text on a bright filled button rather than white text on lime. Errors and warnings
-use the terminal's semantic colors plus visible words, not the brand accent as a success signal.
+Use neutral light and dark surfaces, readable gray text, and understated blue links. Verify
+actual contrast for prose, syntax highlighting, selection, hover, and focus states.
 
 - Follow system light/dark preference on first visit. An explicit saved choice wins. Apply
   the same choice on landing and manual pages, with no light flash before dark rendering.
-- Use system sans-serif for prose at 17 to 18 pixels and approximately 1.6 line height. Use
-  system monospace for the wordmark, short headings, commands, and small metadata. Keep prose
-  near 65 characters per line.
+- Self-host Geist Sans and Geist Mono through exactly pinned Fontsource packages and retain
+  their licenses. Set prose to 16 pixels with 28-pixel line height and a width near 68 characters.
+  Homepage headings use 56 pixels on desktop and 36 pixels on phones. Documentation titles
+  use 40 and 32 pixels respectively; section headings use 24 pixels with 32-pixel line height.
+  Use Geist's variable weight 450 for headings.
 - Use lowercase `gspot` text in headers and a plain letter favicon. No illustrated character,
   generated artwork, concept board, or branding pipeline belongs in the project.
 - Limit the landing content to roughly 1,120 pixels. Use an 8-pixel spacing scale, thin panel
   borders, modest 8-pixel corners, and generous section spacing. Avoid nested card grids,
-  huge empty heroes, glass effects, gradients, scanlines, and glowing body text.
-- At desktop widths, pair hero copy with the transcript. Below about 800 pixels, stack them
-  in reading order. Use 20-pixel side padding on phones. Code can scroll within its panel;
+  huge empty heroes, glass effects, scanlines, and glowing body text. A restrained static blue
+  glow can surround the defect-and-correction demonstration.
+- Keep the introduction before the defect, correction, and optional transcript at every width. Use 20-pixel side padding on phones. Code can scroll within its panel;
   the page itself must not overflow horizontally. Do not shrink text to fit output.
-- Keep terminal prompts decorative and out of copied commands. Label commands and output
+- Omit decorative terminal controls and shell prompts from copyable commands. Label commands and output
   separately. Use existing Starlight code controls where suitable. Copy feedback says
   "Copied" only after success; failure leaves selectable text and a manual-copy instruction.
 - Do not invent shell
@@ -259,9 +249,9 @@ website backlog. Complete the remaining design and acceptance work in this order
    root content route.
    Keep the existing guide and reference routes.
 1. Put shared design tokens in
-   `docs/src/styles/theme.css`, registered with both the landing layout and Starlight.
-   Extract components only for shared behavior such as the reviewed transcript or install
-   control; do not introduce a theme package or general-purpose component framework.
+   `docs/src/styles/theme.css`, registered with Starlight for both landing and documentation
+   pages. Extract components only for shared behavior such as the reviewed transcript;
+   do not introduce a theme package or general-purpose component framework.
 1. Review the rendered README on GitHub, the actual npm README payload, and landing, guide,
    reference, search, and not-found pages in both themes. Check 360-, 768-, and 1,440-pixel
    viewports, keyboard-only use, reduced motion, and 200% zoom.
@@ -348,6 +338,8 @@ Do not create another package or generic documentation framework.
 
 Commands come from the registered public Commander tree, including inherited global options,
 usage, choices, defaults, implicit help, and nested commands. Exclude hidden/internal commands.
+Command definitions own effects, exits, and examples in their behavioral help. The CLI and
+reference loader consume that same text. Missing behavioral help fails reference generation.
 Settings cover the complete root, scope, integration, and preset configuration contracts.
 Matching shared settings list every owner; conflicting definitions fail the build. Include
 plugin rules, public options, and both exported levels without duplicating manually maintained
@@ -386,11 +378,11 @@ Clean frozen-lock build, internal links, accessible landing controls, no PR depl
 
 ### Acceptance K-205
 
-Build references from validated definitions without tracked copies. The Astro content loader replaces intermediate generated source Markdown after route, content, and authored-guide preservation acceptance passes. Build from a clean frozen checkout; never restore a public architecture decision mirror.
+Build references from validated definitions without tracked copies. Use the Astro content loader and verify routes, content, and authored-guide preservation. Build from a clean frozen checkout; never restore a public architecture decision mirror.
 
 ### Acceptance K-303
 
-Authored guides and generated reference entries have separate ownership. Preserve authored content and reject invalid definitions before publication. Replace the existing generated-Markdown writer and pruning machinery only after the content-loader contract in this document is verified.
+Authored guides and generated reference entries have separate ownership. Preserve authored content and reject invalid definitions before publication. Keep reference generation in the existing content loader; do not restore a generated-Markdown writer or filesystem pruning machinery.
 
 ### Acceptance K-304
 

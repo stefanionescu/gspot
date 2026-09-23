@@ -29,14 +29,14 @@ function missingOptions(input: EngineInput, path: string, options: CompilerOptio
  * @param input the engine input for the scope
  * @returns the findings
  */
-export function tsconfigOptions(input: EngineInput): Promise<Finding[]> {
+export function tsconfigOptions(input: EngineInput): Finding[] {
     const scopeTsconfig = input.scope === '' ? 'tsconfig.json' : `${input.scope}/tsconfig.json`;
     const candidates = new Set([
         scopeTsconfig,
         ...input.files.map((file) => file.path).filter((path) => isTsconfigName(path)),
     ]);
     const findings = [...candidates].flatMap((path) => {
-        const parsed = getTsconfig(join(input.root, path));
+        const parsed = getTsconfig(input.root, join(input.root, path));
         if (parsed !== undefined) return missingOptions(input, path, parsed.options);
         if (path !== scopeTsconfig) return [];
         return [
@@ -49,5 +49,5 @@ export function tsconfigOptions(input: EngineInput): Promise<Finding[]> {
             },
         ];
     });
-    return Promise.resolve(findings);
+    return findings;
 }

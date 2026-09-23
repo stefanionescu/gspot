@@ -6,6 +6,7 @@ import type { ScopeSelection, Session } from '#cli/run/types.ts';
 import type { ConfigurationTarget, Manifest } from '#cli/presets/types.ts';
 
 export type GeneratedFile = {
+    rulesPath?: string[];
     path: string;
     content: string;
     readOnly: boolean;
@@ -19,6 +20,8 @@ export type DriftEntry = {
     path: string;
     kind: 'changed' | 'missing' | 'stray';
     diff?: string;
+    rules?: { path: string; added: string[]; removed: string[]; changed: string[] }[];
+    ruleError?: string;
 };
 
 export type HookName = 'pre-commit' | 'pre-push' | 'commit-msg';
@@ -50,17 +53,18 @@ export type MergeOutput = {
     stub: ConfigurationTarget['stub'] & object;
 };
 
-export type PackageOutput = { path: string; scripts: Record<string, string> };
-
-export type LefthookOutput = { path: string; block: LefthookBlock };
+export type ConfigurationOutput = {
+    path: string;
+    format: 'json' | 'yaml' | 'toml';
+    changes: { path: (string | number)[]; value: unknown }[];
+};
 
 export type GeneratedProposal = {
     notes: string[];
     files: GeneratedFile[];
     blocks: BlockOutput[];
     merges: MergeOutput[];
-    packages: PackageOutput[];
-    lefthook?: LefthookOutput;
+    configurations: ConfigurationOutput[];
 };
 
 export type EslintRuleBlock = PathExpressions & { scope: string; rules: Record<string, unknown> };
@@ -69,7 +73,9 @@ export type ScopedFormat = { scope: string; paths: string[]; format: Partial<For
 export type EditorconfigOverride = { path: string; options: Record<string, string | number | boolean> };
 
 export type TemplateInputs = {
+    markdownlintRules: Record<string, unknown>;
     targetPath?: string;
+    scopeIgnorePatterns: (patterns: string[], scope: string) => string[];
     prettierConfig: (targetPath: string) => Record<string, unknown>;
     editorconfigOverrides: () => EditorconfigOverride[];
     eslintPolicy: EslintRuleBlock[];
@@ -79,6 +85,7 @@ export type TemplateInputs = {
     version: string;
     scope: string;
     scopes: { path: string; presets: string[] }[];
+    presetScopes: (preset: string) => { path: string; settings: Record<string, unknown> }[];
     presets: string[];
     policy: Policy;
     view: MergedView;
@@ -104,12 +111,6 @@ export type TemplateInputs = {
     header: string;
     headerLines: string[];
 };
-
-/** The part of package.json the alias reader looks at. */
-export type PackageImports = { imports?: Record<string, unknown> };
-
-/** The part of package.json apply reads and writes. */
-export type PackageContent = { scripts?: Record<string, string> };
 
 /** What rendering one manifest's files in one scope needs. */
 export type EmitContext = { session: Session; selection: ScopeSelection; manifest: Manifest };

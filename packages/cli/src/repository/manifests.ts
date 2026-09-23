@@ -1,12 +1,24 @@
 import { z } from 'zod';
 // Readers for the manifests detection and takeover need: package.json, pyproject.toml, Package.swift and the rest.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { parse as parseToml } from 'smol-toml';
 import type { DependencyMap, ManifestFacts, TrackedFile, PackageManifest } from '#cli/repository/types.ts';
 
 const REQUIREMENT_NAME_END = /[\s<>=!~;[]/u;
 const SWIFT_PACKAGE_URL = /url:\s*"([^"]+)"/gu;
+
+function manifestText(root: string, path: string): string {
+    const files = openConfinedRoot(root, 'native');
+    try {
+        const content = files.read(path);
+        if (content === undefined) throw new Error(`Manifest is missing: ${path}`);
+        const text = content.bytes.toString('utf8');
+        if (!Buffer.from(text).equals(content.bytes)) throw new Error(`Manifest is not UTF-8 text: ${path}`);
+        return text;
+    } finally {
+        files.close();
+    }
+}
 
 function packageJsonFacts(root: string, path: string): ManifestFacts {
     const parsed = readPackageManifest(root, path);
@@ -17,15 +29,8 @@ function packageJsonFacts(root: string, path: string): ManifestFacts {
         ...parsed.optionalDependencies,
     };
     const facts: ManifestFacts = {
-        ...{
-            path: path,
-            kind: 'package.json',
-            dependencies: {},
-            installed: {},
-            scripts: {},
-            workspaces: [],
-            engines: {},
-        },
+        path,
+        kind: 'package.json',
         dependencies,
         installed,
         scripts: parsed.scripts ?? {},
@@ -58,22 +63,15 @@ function pythonDependencies(parsed: ReturnType<typeof pythonManifestSchema.parse
 }
 
 function pyprojectFacts(root: string, path: string): ManifestFacts {
-    const text = readFileSync(join(root, path), 'utf8');
+    const text = manifestText(root, path);
     const parsed = pythonManifestSchema.parse(parseToml(text));
     const project = parsed.project ?? {};
     const dependencies = pythonDependencies(parsed);
     const requiresPython = project['requires-python'];
     const engines: Record<string, string> = typeof requiresPython === 'string' ? { python: requiresPython } : {};
     return {
-        ...{
-            path: path,
-            kind: 'pyproject.toml',
-            dependencies: {},
-            installed: {},
-            scripts: {},
-            workspaces: [],
-            engines: {},
-        },
+        path,
+        kind: 'pyproject.toml',
         dependencies,
         installed: dependencies,
         scripts: project.scripts ?? {},
@@ -83,7 +81,7 @@ function pyprojectFacts(root: string, path: string): ManifestFacts {
 }
 
 function swiftFacts(root: string, path: string): ManifestFacts {
-    const text = readFileSync(join(root, path), 'utf8');
+    const text = manifestText(root, path);
     const dependencies: DependencyMap = {};
     for (const match of text.matchAll(SWIFT_PACKAGE_URL)) {
         const url = match[1] ?? '';
@@ -91,15 +89,11 @@ function swiftFacts(root: string, path: string): ManifestFacts {
         dependencies[last.endsWith('.git') ? last.slice(0, -'.git'.length) : last] = url;
     }
     return {
-        ...{
-            path: path,
-            kind: 'Package.swift',
-            dependencies: {},
-            installed: {},
-            scripts: {},
-            workspaces: [],
-            engines: {},
-        },
+        path,
+        kind: 'Package.swift',
+        scripts: {},
+        workspaces: [],
+        engines: {},
         dependencies,
         installed: dependencies,
     };
@@ -133,6 +127,7 @@ const pythonManifestSchema = z.object({
 const workspacePackages = z.object({ packages: stringList });
 
 export const packageManifestSchema = z.object({
+    imports: z.record(z.string(), z.unknown()).optional(),
     private: z.boolean().optional(),
     packageManager: z.string().optional(),
     type: z.string().optional(),
@@ -153,7 +148,7 @@ export const packageManifestSchema = z.object({
  */
 export function readPackageManifest(root: string, path: string): PackageManifest {
     try {
-        const content: unknown = JSON.parse(readFileSync(join(root, path), 'utf8'));
+        const content: unknown = JSON.parse(manifestText(root, path));
         return packageManifestSchema.parse(content);
     } catch (error) {
         const detail = error instanceof Error ? error.message : String(error);
@@ -169,7 +164,11 @@ export function readPackageManifest(root: string, path: string): PackageManifest
  */
 export function readManifests(root: string, files: TrackedFile[]): ManifestFacts[] {
     return files
-        .filter((file) => !file.path.includes('node_modules/'))
+        .filter(
+            (file) =>
+                file.nature === 'source' &&
+                !file.path.split('/').some((part) => part.toLowerCase() === '.gspot' || part === 'node_modules'),
+        )
         .flatMap((file) => {
             const base = file.path.slice(file.path.lastIndexOf('/') + 1);
             const reader = READERS[base];

@@ -16,6 +16,8 @@ export const noIndexImports = createRule<NoIndexImportsOptions, 'index'>({
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'The import `import { a } from "./index.js";` reports `index`. If `a.js` declares the value, use `import { a } from "./a.js";`.',
             summary: 'Finds an import that names an index file instead of the module that declares the value.',
             why: 'An index import pulls in everything behind the barrel and hides which module the value comes from.',
             fix: 'Import from the leaf module directly.',

@@ -1,6 +1,5 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // The Next.js checks that read files: route segments, the framework configuration, and versions that move together.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 
@@ -19,7 +18,7 @@ function finding(input: EngineInput, file: string, line: number, rule: string, t
 }
 
 function paths(input: EngineInput): string[] {
-    return input.session.repository.files.filter((file) => file.nature === 'source').map((file) => file.path);
+    return input.files.filter((file) => file.nature === 'source').map((file) => file.path);
 }
 
 function lineOf(text: string, offset: number): number {
@@ -31,7 +30,7 @@ function lineOf(text: string, offset: number): number {
  * @param input the engine input
  * @returns the findings
  */
-export function routeSegments(input: EngineInput): Promise<Finding[]> {
+export function routeSegments(input: EngineInput): Finding[] {
     const kinds = new Map<string, Map<string, string>>();
     for (const path of paths(input)) {
         const groups = SEGMENT_NAME.exec(path.slice(path.lastIndexOf('/') + 1))?.groups;
@@ -54,7 +53,7 @@ export function routeSegments(input: EngineInput): Promise<Finding[]> {
             ),
         )
         .toArray();
-    return Promise.resolve(found);
+    return found;
 }
 
 /**
@@ -62,11 +61,11 @@ export function routeSegments(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function frameworkFile(input: EngineInput): Promise<Finding[]> {
+export function frameworkFile(input: EngineInput): Finding[] {
     const found = paths(input)
         .filter((path) => CONFIG_FILE.test(path))
         .flatMap((path) => {
-            const text = readFileSync(join(input.root, path), 'utf8');
+            const text = readSource(input.root, path).toString('utf8');
             const off = text
                 .matchAll(SWITCHED_OFF)
                 .map((match) =>
@@ -93,7 +92,7 @@ export function frameworkFile(input: EngineInput): Promise<Finding[]> {
                 );
             return [...off, ...secrets];
         });
-    return Promise.resolve(found);
+    return found;
 }
 
 /**
@@ -101,10 +100,10 @@ export function frameworkFile(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function dependencyAlignment(input: EngineInput): Promise<Finding[]> {
+export function dependencyAlignment(input: EngineInput): Finding[] {
     const manifests = paths(input).filter((path) => path === 'package.json' || path.endsWith('/package.json'));
     const found = manifests.flatMap((path) => {
-        const parsed = JSON.parse(readFileSync(join(input.root, path), 'utf8')) as {
+        const parsed = JSON.parse(readSource(input.root, path).toString('utf8')) as {
             dependencies?: Record<string, string>;
             devDependencies?: Record<string, string>;
         };
@@ -122,5 +121,5 @@ export function dependencyAlignment(input: EngineInput): Promise<Finding[]> {
             ),
         );
     });
-    return Promise.resolve(found);
+    return found;
 }

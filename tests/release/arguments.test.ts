@@ -2,7 +2,7 @@ import { fileURLToPath } from 'node:url';
 import { delimiter, join } from 'node:path';
 import { describe, expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { treeContents } from '#tests/harness/contents.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
 import { chmodSync, existsSync, readFileSync, symlinkSync } from 'node:fs';
 
@@ -91,6 +91,8 @@ describe('build script arguments', () => {
                     'packages/cli/notices.json',
                     'packages/cli/src/platform/assets.ts',
                     'packages/cli/src/platform/paths.ts',
+                    'packages/cli/src/platform/environment.ts',
+                    'packages/cli/src/checks/integrity-definitions.ts',
                     'packages/cli/grammars/swift.json',
                     'packages/cli/grammars/swift.LICENSE',
                 ].map((path) => [path, readFileSync(join(ROOT, path), 'utf8')]),
@@ -161,7 +163,7 @@ const argv = process.argv.slice(2);
             .map((line) => JSON.parse(line) as string[]);
         expect(
             commands
-                .filter((command) => command.includes('--compile'))
+                .filter((command) => command.some((argument) => argument.endsWith('/compile.ts')))
                 .map((command) => command.find((argument) => argument.startsWith('--target='))),
         ).toEqual(['--target=bun-linux-arm64', '--target=bun-linux-x64-baseline']);
     });

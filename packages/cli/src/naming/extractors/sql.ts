@@ -67,12 +67,14 @@ function identifiers(file: string, source: string, statement: SqlStatementView):
 }
 
 /**
- * The identifiers a SQL file declares. A file that does not parse declares none; the syntax check reports it.
+ * The identifiers a valid SQL file declares. Parse failures stop the analysis.
  * @param file the file path
  * @param source the file text
  * @returns the identifiers
  */
 export async function sqlIdentifiers(file: string, source: string): Promise<Identifier[]> {
     const parsed = await sqlFile(source);
+    if (parsed.error !== undefined)
+        throw new Error(`SQL parse failed at ${parsed.error.line}:${parsed.error.column}: ${parsed.error.text}`);
     return parsed.statements.flatMap((statement) => identifiers(file, source, statement));
 }

@@ -1,38 +1,53 @@
+// Snapshot references belong to a semantic Swift test file beside their configured layout.
 import type { EngineInput } from '#cli/run/types.ts';
-// Snapshot references: every folder of references belongs to a test file that exists.
 import type { Finding } from '#cli/output/finding.ts';
 import { xcodeFinding } from '#cli/checks/xcode/files.ts';
 
-const DEFAULT_FOLDERS = ['__Snapshots__'];
-// A reference sits at least this many parts below the snapshot folder: the folder, the test name and the file.
-const REFERENCE_DEPTH = 3;
+function escapePattern(text: string): string {
+    return text.replace(/[.*+?^${}()|[\]\\]/gu, '\\$&');
+}
 
 /**
- * One finding for each reference whose folder names no Swift test file beside the snapshot folder.
- * @param input the engine input
- * @returns the findings
+ * Report references whose layout names no Swift test file in the same directory.
+ * @param input the scoped files and snapshot layout
+ * @returns the orphan reference findings
  */
-export function referenceOwners(input: EngineInput): Promise<Finding[]> {
-    const folders = (input.view.tool('xctest')['reference_directories'] as string[] | undefined) ?? DEFAULT_FOLDERS;
-    const paths = input.session.repository.files.map((file) => file.path);
-    const tests = new Set(
-        paths.filter((path) => path.endsWith('.swift')).map((path) => path.slice(0, -'.swift'.length)),
-    );
-    const findings = paths.flatMap((path): Finding[] => {
-        const parts = path.split('/');
-        const at = parts.findIndex((part) => folders.includes(part));
-        const owner = parts[at + 1];
-        if (at === -1 || owner === undefined || parts.length < at + REFERENCE_DEPTH) return [];
-        const beside = [...parts.slice(0, at), owner].join('/');
-        if (tests.has(beside)) return [];
+export function referenceOwners(input: EngineInput): Finding[] {
+    const layout = input.view.tool('xctest')['reference_layout'] as string;
+    const pattern = layout
+        .split(/(\{file\}|\{test\}|\*|\?)/u)
+        .map((part) => {
+            if (part === '{file}') return '(?<file>[^/]+)';
+            if (part === '{test}') return '[^/]+';
+            if (part === '*') return '[^/]*';
+            if (part === '?') return '[^/]';
+            return escapePattern(part);
+        })
+        .join('');
+    const reference = new RegExp(`^(?<base>(?:[^/]+/)*)${pattern}$`, 'u');
+    const owners = new Map<string, RegExp[]>();
+    for (const file of input.files.filter((file) => file.tags.includes('swift-test'))) {
+        const at = file.path.lastIndexOf('/') + 1;
+        const base = file.path.slice(0, at);
+        const name = file.path.slice(at, -'.swift'.length);
+        const patterns = owners.get(base) ?? [];
+        patterns.push(new RegExp(`^${pattern.replace('(?<file>[^/]+)', () => escapePattern(name))}$`, 'u'));
+        owners.set(base, patterns);
+    }
+    const findings = input.files.flatMap(({ path }): Finding[] => {
+        const match = reference.exec(path);
+        if (!match?.groups) return [];
+        const base = match.groups['base'] ?? '';
+        if (owners.get(base)?.some((owner) => owner.test(path.slice(base.length)))) return [];
+        const owner = `${base}${match.groups['file']}.swift`;
         return [
             xcodeFinding(
                 input,
                 { file: path, line: 1 },
                 'orphan-reference',
-                `No test file ${beside}.swift exists for this reference.`,
+                `No test file ${owner} exists for this reference.`,
             ),
         ];
     });
-    return Promise.resolve(findings);
+    return findings;
 }

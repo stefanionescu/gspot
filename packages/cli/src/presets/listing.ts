@@ -33,6 +33,7 @@ export function allChecks(): Map<string, { check: CheckSpec; preset: Manifest }>
     const checks = new Map<string, { check: CheckSpec; preset: Manifest }>();
     for (const manifest of presetManifests().values())
         for (const check of manifest.checks) {
+            if (manifest.preset.check_references?.includes(check.name)) continue;
             if (checks.has(check.name)) throw new Error(`Duplicate check identity: ${check.name}`);
             checks.set(check.name, { check, preset: manifest });
         }

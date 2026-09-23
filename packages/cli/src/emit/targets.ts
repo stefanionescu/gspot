@@ -1,12 +1,13 @@
+import { preCommitConfiguration } from '#cli/emit/pre-commit.ts';
+import { posix } from 'node:path';
+import { simpleGitHookOutputs } from '#cli/emit/simple-git-hooks.ts';
 import { toolEnvironment } from '#cli/emit/tool-environment.ts';
 import { toolPackages } from '#cli/emit/tool-packages.ts';
 import { retainedConfigurationPaths } from '#cli/emit/retained-config.ts';
 import type { FileSnapshot } from '#cli/lifecycle/types.ts';
 import { mutationTarget } from '#cli/lifecycle/confined.ts';
-import { join } from 'node:path';
 import { styleFiles } from '#cli/prose/vale.ts';
-import type { MergedView } from '#cli/policy/types.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import type { MergedView, EditorconfigAdoption } from '#cli/policy/types.ts';
 // Every generated file for the selection: path, template, stub; the managed blocks and the merge stubs beside them.
 import { workflowFile, gitlabFile } from '#cli/emit/workflow.ts';
 import { assembleRules } from '#cli/rules/assemble.ts';
@@ -14,18 +15,18 @@ import { everyManifest } from '#cli/presets/select.ts';
 import { GENERATED_JSON_KEY } from '#cli/emit/markers-definitions.ts';
 import { targetInScope } from '#cli/run/scope-paths.ts';
 import { bodyStub, mergeStub } from '#cli/emit/stubs.ts';
+import { claimedByClaims, pathMatcher } from '#cli/presets/claims.ts';
 import { agentFiles, managedBlock } from '#cli/rules/managed-block.ts';
 import type { ScopeSelection, Session } from '#cli/run/types.ts';
 import { applyBlock, gitignoreBlock } from '#cli/emit/managed-blocks.ts';
 import { binaryPath, readAsset } from '#cli/platform/assets.ts';
 import type { ConfigurationTarget, Manifest } from '#cli/presets/types.ts';
-import { huskyLines, lefthookBlock } from '#cli/emit/hooks.ts';
-import { miseTasks, npmScripts } from '#cli/emit/runner-tasks.ts';
-import { emitTarget, templateText, templateInputs } from '#cli/emit/templates.ts';
-import type { EmitContext, GeneratedFile, PackageContent, PackageOutput, GeneratedProposal } from '#cli/emit/types.ts';
+import { huskyLines, lefthookConfiguration } from '#cli/emit/hooks.ts';
+import { miseTasks, runnerTaskPlan } from '#cli/emit/runner-tasks.ts';
+import { emitTarget, eta, templateInputs } from '#cli/emit/templates.ts';
+import type { EmitContext, GeneratedFile, GeneratedProposal, TemplateInputs } from '#cli/emit/types.ts';
 
 const JSON_INDENT = 4;
-const NPM_RUNNERS = new Set(['bun', 'npm', 'pnpm']);
 
 function copyStubContent(content: string, stubPath: string): string {
     if (!stubPath.endsWith('.json')) return content;
@@ -36,6 +37,33 @@ function copyStubContent(content: string, stubPath: string): string {
 
 function pathInScope(scope: string, path: string): string {
     return scope === '' ? path : `${scope}/${path}`;
+}
+
+function directoryStubs(context: EmitContext, config: ConfigurationTarget, target: string): GeneratedFile[] {
+    const { session, selection, manifest } = context;
+    const stub = config.stub;
+    if (stub?.directories === undefined) return [];
+    const scope = selection.scope.path;
+    const children = session.scopes.map((entry) => entry.scope.path).filter((path) => path !== '' && path !== scope);
+    const matches = pathMatcher(stub.directories);
+    const directories = new Set<string>();
+    for (const file of claimedByClaims(manifest.claims, selection.selected, session.repository.files, scope)) {
+        if (
+            children.some(
+                (child) => file.path.startsWith(`${child}/`) && (scope === '' || child.startsWith(`${scope}/`)),
+            )
+        )
+            continue;
+        for (let directory = posix.dirname(file.path); directory !== '.'; directory = posix.dirname(directory)) {
+            if (matches(directory))
+                directories.add(
+                    scope !== '' && directory !== scope && !directory.startsWith(`${scope}/`) ? scope : directory,
+                );
+        }
+    }
+    return [...directories].map((directory) =>
+        bodyStub(stub, `${directory}/${stub.path}`, target, session.version, manifest.preset.name),
+    );
 }
 
 // The presets whose fragments a target takes: a target written for one scope asks that scope, and a target written once asks every scope.
@@ -51,18 +79,50 @@ function fragmentsFor(session: Session, selection: ScopeSelection, owner: Config
             manifest.configs
                 .filter((fragment) => fragment.fragment && fragment.target === owner.target)
                 .map((fragment) =>
-                    templateText(readAsset(`${manifest.dir}/${fragment.template}`), templateInputs(session, selection)),
+                    eta.renderString(
+                        readAsset(`${manifest.dir}/${fragment.template}`),
+                        templateInputs(session, selection),
+                    ),
                 ),
         )
         .join('\n');
 }
 
-function stubFor(context: EmitContext, config: ConfigurationTarget, file: GeneratedFile, out: GeneratedProposal): void {
+function stubFor(
+    context: EmitContext,
+    config: ConfigurationTarget,
+    file: GeneratedFile,
+    out: GeneratedProposal,
+    inputs: TemplateInputs,
+): void {
     const { session, selection, manifest } = context;
     const { stub } = config;
     if (!stub) return;
+    if (stub.directories !== undefined) {
+        out.files.push(...directoryStubs(context, config, file.path));
+        return;
+    }
     const stubPath = pathInScope(config.per_scope ? selection.scope.path : '', stub.path);
+    const replaced = selection.selected.some((owner) =>
+        owner.configs.some(
+            (fragment) =>
+                fragment.fragment &&
+                fragment.target === config.target &&
+                directoryStubs({ session, selection, manifest: owner }, fragment, file.path).some(
+                    (nested) => nested.path === stubPath,
+                ),
+        ),
+    );
+    if (replaced) return;
     if (stub.merge) out.merges.push({ ...mergeStub(session.root, stub, stubPath, file.path), target: file.path, stub });
+    else if (stub.template !== undefined)
+        out.files.push({
+            path: stubPath,
+            content: emitTarget(`${manifest.dir}/${stub.template}`, stubPath, inputs, config.header),
+            readOnly: true,
+            kind: 'stub',
+            preset: manifest.preset.name,
+        });
     else if (stub.copy === true)
         out.files.push({
             path: stubPath,
@@ -89,20 +149,41 @@ function configurationFiles(
     seen: Set<string>,
 ): void {
     for (const config of manifest.configs) {
-        if (!!config.fragment || !isWanted(config, session)) continue;
+        if (!isWanted(config, session)) continue;
         const target = targetInScope(selection.scope.path, config);
+        if (config.fragment) {
+            out.files.push(...directoryStubs({ session, selection, manifest }, config, target));
+            continue;
+        }
         if (seen.has(target)) continue;
         seen.add(target);
         const inputs = templateInputs(session, selection, fragmentsFor(session, selection, config));
+        if (config.per_scope) inputs.has = (preset) => selection.view.presets.includes(preset);
         const file: GeneratedFile = {
             path: target,
             content: emitTarget(`${manifest.dir}/${config.template}`, target, inputs, config.header),
             readOnly: true,
             kind: 'config',
             preset: manifest.preset.name,
+            ...(config.rules_path === undefined ? {} : { rulesPath: config.rules_path }),
         };
         out.files.push(file);
-        stubFor({ session, selection, manifest }, config, file, out);
+        if (manifest.preset.name === 'formatting' && config.target === '.editorconfig') {
+            const adopted = selection.view.tool('editorconfig')['adopted'] as EditorconfigAdoption | undefined;
+            for (const directory of adopted?.directories ?? []) {
+                const path = `${directory.basePath}/.editorconfig`;
+                const nestedInputs = {
+                    ...inputs,
+                    tool: (name: string) => (name === 'editorconfig' ? { adopted: directory } : inputs.tool(name)),
+                };
+                out.files.push({
+                    ...file,
+                    path,
+                    content: emitTarget(`${manifest.dir}/${config.template}`, path, nestedInputs, config.header),
+                });
+            }
+        }
+        stubFor({ session, selection, manifest }, config, file, out, inputs);
     }
 }
 
@@ -113,20 +194,21 @@ function hookOutputs(session: Session, out: GeneratedProposal, binary: string | 
         case 'gspot': {
             break;
         }
+        case 'pre-commit': {
+            out.configurations.push(preCommitConfiguration(session.root, runner, binary));
+            break;
+        }
+        case 'simple-git-hooks': {
+            simpleGitHookOutputs(session, out, binary);
+            break;
+        }
         case 'husky': {
-            for (const line of huskyLines(runner, binary))
+            for (const line of huskyLines(session.root, runner, binary))
                 out.blocks.push({ path: line.path, block: line.line, style: 'hash' });
             break;
         }
         case 'lefthook': {
-            const path =
-                ['lefthook.yml', '.lefthook.yml'].find((name) => existsSync(join(session.root, name))) ??
-                'lefthook.yml';
-            out.lefthook = {
-                path,
-                block: lefthookBlock(runner, binary),
-            };
-
+            out.configurations.push(lefthookConfiguration(session.root, runner, binary));
             break;
         }
         // No default
@@ -136,15 +218,13 @@ function hookOutputs(session: Session, out: GeneratedProposal, binary: string | 
 function runnerOutputs(session: Session, out: GeneratedProposal): void {
     const runner = session.policyFiles.policy.runner?.tool;
     if (runner === undefined) return;
-    const isRootPackage = hasRootPackage(session.root);
+    const plan = runnerTaskPlan(session.root, runner, session.policyFiles.policy.runner?.tasks);
+    out.notes.push(...plan.notes);
     if (runner === 'mise')
-        out.files.push(miseTasks(everyManifest(session), session.version, session.packageManager !== undefined));
-    const isNpmRunner = NPM_RUNNERS.has(runner);
-    if (isRootPackage && isNpmRunner)
-        out.packages.push({
-            path: 'package.json',
-            scripts: isNpmRunner ? npmScripts() : {},
-        });
+        out.files.push(
+            miseTasks(everyManifest(session), session.version, session.packageManager !== undefined, plan.tasks),
+        );
+    if (plan.configuration !== undefined) out.configurations.push(plan.configuration);
 }
 
 function workflowOutput(session: Session, out: GeneratedProposal): void {
@@ -172,7 +252,7 @@ function rootView(session: Session): MergedView {
 }
 
 function blockOutputs(session: Session, out: GeneratedProposal): void {
-    out.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
+    if (session.repository.hasGit) out.blocks.push({ path: '.gitignore', block: gitignoreBlock(), style: 'hash' });
     out.blocks.push({
         path: '.gitattributes',
         block: '.gspot/** linguist-generated\n.gspot/** text eol=lf',
@@ -192,42 +272,23 @@ function blockOutputs(session: Session, out: GeneratedProposal): void {
     }
 }
 
-/**
- * True when the root holds a package.json, where task scripts can be integrated.
- * @param root the repository root
- * @returns whether the file is there
- */
-export function hasRootPackage(root: string): boolean {
-    return existsSync(join(root, 'package.json'));
-}
-
-/**
- * True when package.json already carries every requested task script.
- * @param root the repository root
- * @param output the scripts wanted
- * @returns whether nothing needs writing
- */
-export function hasPackageScripts(root: string, output: PackageOutput): boolean {
-    const full = join(root, output.path);
-    if (!existsSync(full)) return false;
-    let manifestContent: PackageContent;
-    try {
-        manifestContent = JSON.parse(readFileSync(full, 'utf8')) as PackageContent;
-    } catch {
-        return false;
+function combineConfigurations(proposal: GeneratedProposal): void {
+    const combined = new Map<string, GeneratedProposal['configurations'][number]>();
+    for (const output of proposal.configurations) {
+        const previous = combined.get(output.path);
+        if (previous === undefined) combined.set(output.path, { ...output, changes: [...output.changes] });
+        else {
+            if (previous.format !== output.format)
+                throw new Error(`Generated configuration formats conflict: ${output.path}`);
+            previous.changes.push(...output.changes);
+        }
     }
-    return Object.entries(output.scripts).every(([name, command]) => manifestContent.scripts?.[name] === command);
+    proposal.configurations = [...combined.values()];
 }
 
 function validateProposal(proposal: GeneratedProposal): void {
     const paths = new Map<string, string>();
-    const outputs = [
-        ...proposal.files,
-        ...proposal.blocks,
-        ...proposal.merges,
-        ...proposal.packages,
-        ...(proposal.lefthook === undefined ? [] : [proposal.lefthook]),
-    ];
+    const outputs = [...proposal.files, ...proposal.blocks, ...proposal.merges, ...proposal.configurations];
     for (const output of outputs) {
         mutationTarget(output.path);
         const key = output.path.normalize('NFC').toLowerCase();
@@ -245,14 +306,31 @@ function validateProposal(proposal: GeneratedProposal): void {
  */
 export function emitAll(session: Session, takeover?: ReadonlyMap<string, FileSnapshot>): GeneratedProposal {
     const binary = binaryPath();
-    const out: GeneratedProposal = { notes: [], files: [], blocks: [], merges: [], packages: [] };
+    const out: GeneratedProposal = { notes: [], files: [], blocks: [], merges: [], configurations: [] };
     const seen = new Set<string>();
     for (const selection of session.scopes)
         for (const manifest of selection.selected) configurationFiles(session, selection, manifest, out, seen);
     if (out.files.some((file) => file.preset === 'formatting')) {
-        const retained = retainedConfigurationPaths(session, ['prettier', 'prettierignore', 'editorconfig'], takeover);
+        const retained = retainedConfigurationPaths(session, ['prettier', 'ec'], takeover);
         if (retained.length > 0) {
-            out.files = out.files.filter((file) => file.preset !== 'formatting' || file.path.startsWith('.gspot/'));
+            const adopted = session.policyFiles.policy.tools['editorconfig']?.['adopted'] as
+                | EditorconfigAdoption
+                | undefined;
+            const editorconfigs = new Set(
+                adopted === undefined
+                    ? []
+                    : [
+                          '.editorconfig',
+                          ...(adopted.directories ?? []).map((directory) => `${directory.basePath}/.editorconfig`),
+                      ],
+            );
+            out.files = out.files.filter(
+                (file) =>
+                    file.preset !== 'formatting' ||
+                    file.path.startsWith('.gspot/') ||
+                    editorconfigs.has(file.path) ||
+                    retained.every((path) => posix.dirname(path) !== posix.dirname(file.path)),
+            );
             out.notes.push(
                 ...retained.map(
                     (path) =>
@@ -282,6 +360,7 @@ export function emitAll(session: Session, takeover?: ReadonlyMap<string, FileSna
         out.files.push(...styleFiles(session.policyFiles.policy, rootView(session)));
     blockOutputs(session, out);
     out.files.sort((a, b) => a.path.localeCompare(b.path));
+    combineConfigurations(out);
     validateProposal(out);
     return out;
 }

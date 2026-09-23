@@ -1,17 +1,18 @@
+import { z } from 'zod';
 // The checks that read the built output of a static site.
-import { join } from 'node:path';
+import { isAbsolute, join, relative as relativePath } from 'node:path';
+import { mutationPath } from '#cli/lifecycle/confined.ts';
 import { gzipSync } from 'node:zlib';
-import { readFileSync } from 'node:fs';
-import { run } from '#cli/platform/spawn.ts';
-import type { SizeLimit } from '#cli/checks/static-site/types.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import type { SiteBuild } from '#cli/checks/static-site/build.ts';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import { locateTool } from '#cli/platform/tool-probe.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { filesUnder, requireSiteBuild } from '#cli/checks/static-site/build.ts';
 
-const TOOL_TIMEOUT_MS = 900_000;
+type SizeLimit = { paths: string[]; kb: number; reason?: string };
+
 const BYTES_PER_KB = 1024;
 const SITEMAP_LOCATION = /<loc>\s*(?<url>[^<\s]+)\s*<\/loc>/gu;
 
@@ -19,14 +20,10 @@ function finding(input: EngineInput, file: string, rule: string, text: string, l
     return { check: input.spec.name, file, line, rule, message: text, fixable: false };
 }
 
-function tool(input: EngineInput, name: string): string {
-    const found = locateTool(input.root, name);
-    if (found === undefined) throw new MissingToolError(`The ${name} command is not installed.`);
-    return found;
-}
-
-function relative(input: EngineInput, absolute: string): string {
-    return absolute.startsWith(`${input.root}/`) ? absolute.slice(input.root.length + 1) : absolute;
+function relative(input: EngineInput, build: SiteBuild, absolute: string): string {
+    const path = relativePath(build.cwd, absolute).replaceAll('\\', '/');
+    mutationPath(path);
+    return input.scope === '' ? path : `${input.scope}/${path}`;
 }
 
 async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Finding[]> {
@@ -41,15 +38,29 @@ async function brokenLinks(input: EngineInput, isExternal: boolean): Promise<Fin
         '^sms:',
         ...skipped,
     ].flatMap((pattern) => ['--skip', pattern]);
-    const result = await run(
-        [tool(input, 'linkinator'), '.', '--recurse', '--server-root', '.', '--format', 'json', ...skips],
-        { cwd: build.output, timeoutMs: TOOL_TIMEOUT_MS },
+    const result = await runCheckCommand(
+        input,
+        ['linkinator', '.', '--recurse', '--server-root', '.', '--format', 'json', ...skips],
+        { cwd: build.output },
     );
+    if (result.code !== 0 && result.code !== 1) throw new Error(`Linkinator failed: ${result.stderr}`);
     const start = result.stdout.indexOf('{');
-    const report = JSON.parse(start === -1 ? '{}' : result.stdout.slice(start)) as {
-        links?: { url: string; state: string; status?: number; parent?: string }[];
-    };
-    return (report.links ?? [])
+    if (start === -1) throw new Error('Linkinator returned no JSON report.');
+    const report = z
+        .object({
+            links: z.array(
+                z.object({
+                    url: z.string(),
+                    state: z.enum(['OK', 'BROKEN', 'SKIPPED']),
+                    status: z.number().optional(),
+                    parent: z.string().optional(),
+                }),
+            ),
+        })
+        .parse(JSON.parse(result.stdout.slice(start)));
+    if (result.code === 1 && !report.links.some((link) => link.state === 'BROKEN'))
+        throw new Error(`Linkinator failed without reporting broken links: ${result.stderr}`);
+    return report.links
         .filter((link) => link.state === 'BROKEN')
         .map((link) =>
             finding(input, link.parent ?? '', 'broken-link', `${link.url} answers ${String(link.status ?? 0)}.`),
@@ -74,17 +85,27 @@ export async function builtMarkup(input: EngineInput): Promise<Finding[]> {
         .map((path) => join(build.output, path));
     if (pages.length === 0) return [];
     const config = join(input.root, '.gspot/html-validate-built.json');
-    const result = await run([tool(input, 'html-validate'), '--config', config, '--formatter', 'json', ...pages], {
-        cwd: build.cwd,
-        timeoutMs: TOOL_TIMEOUT_MS,
-    });
-    const files = JSON.parse(result.stdout === '' ? '[]' : result.stdout) as {
-        filePath: string;
-        messages: { ruleId: string; line: number; message: string }[];
-    }[];
+    const result = await runCheckCommand(
+        input,
+        ['html-validate', '--config', config, '--formatter', 'json', ...pages],
+        {
+            cwd: build.cwd,
+        },
+    );
+    if (result.code !== 0 && result.code !== 1) throw new Error(`HTML validation failed: ${result.stderr}`);
+    const files = z
+        .array(
+            z.object({
+                filePath: z.string(),
+                messages: z.array(z.object({ ruleId: z.string(), line: z.number(), message: z.string() })),
+            }),
+        )
+        .parse(JSON.parse(result.stdout));
+    if (result.code === 1 && files.every((file) => file.messages.length === 0))
+        throw new Error(`HTML validation failed without diagnostics: ${result.stderr}`);
     return files.flatMap((file) =>
         file.messages.map((entry) =>
-            finding(input, relative(input, file.filePath), entry.ruleId, entry.message, entry.line),
+            finding(input, relative(input, build, file.filePath), entry.ruleId, entry.message, entry.line),
         ),
     );
 }
@@ -102,7 +123,7 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
         (entry) => entry.names ?? [],
     );
     const argv = [
-        tool(input, 'purgecss'),
+        'purgecss',
         '--css',
         ...sheets,
         '--content',
@@ -111,13 +132,17 @@ export async function deadSelectors(input: EngineInput): Promise<Finding[]> {
         '--rejected',
         ...(safelist.length === 0 ? [] : ['--safelist', ...safelist]),
     ];
-    const result = await run(argv, { cwd: build.output, timeoutMs: TOOL_TIMEOUT_MS });
-    const report = JSON.parse(result.stdout === '' ? '[]' : result.stdout) as { file?: string; rejected?: string[] }[];
+    const result = await runCheckCommand(input, argv, { cwd: build.output });
+    if (result.code !== 0) throw new Error(`Unused CSS analysis failed: ${result.stderr}`);
+    const report = z
+        .array(z.object({ file: z.string().min(1), rejected: z.array(z.string()) }))
+        .parse(JSON.parse(result.stdout));
+    if (report.length !== sheets.length) throw new Error('Unused CSS analysis returned an incomplete report.');
     return report.flatMap((sheet) =>
-        (sheet.rejected ?? []).map((selector) =>
+        sheet.rejected.map((selector) =>
             finding(
                 input,
-                relative(input, join(build.output, sheet.file ?? '')),
+                relative(input, build, isAbsolute(sheet.file) ? sheet.file : join(build.output, sheet.file)),
                 'dead-selector',
                 `No built page uses the selector ${selector.trim()}.`,
             ),
@@ -156,7 +181,7 @@ export async function sizeLimits(input: EngineInput): Promise<Finding[]> {
         const isCounted = pathMatcher(limit.paths);
         const bytes = files
             .filter((path) => isCounted(path))
-            .reduce((sum, path) => sum + gzipSync(readFileSync(join(build.output, path))).length, 0);
+            .reduce((sum, path) => sum + gzipSync(readSource(build.output, path)).length, 0);
         const weight = Math.ceil(bytes / BYTES_PER_KB);
         return weight <= limit.kb
             ? []
@@ -180,9 +205,10 @@ export async function sitemapMatches(input: EngineInput): Promise<Finding[]> {
     const build = await requireSiteBuild(input);
     const files = new Set(filesUnder(build.output));
     if (!files.has('sitemap.xml')) return [];
-    const urls = readFileSync(join(build.output, 'sitemap.xml'), 'utf8')
+    const urls = readSource(build.output, 'sitemap.xml')
+        .toString('utf8')
         .matchAll(SITEMAP_LOCATION)
-        .map((match) => match.groups?.['url'] ?? '')
+        .map((match) => match.groups!['url']!)
         .toArray();
     const listed = new Set(urls.flatMap((url) => pageOf(url)));
     const isLeftOut = pathMatcher(

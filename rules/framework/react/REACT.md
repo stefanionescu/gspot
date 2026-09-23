@@ -40,10 +40,7 @@ adds routing, server components, and caching on top of these.
 - Keep renders pure. Effects synchronize external systems; handlers own user-triggered work. Derive
   ordinary values during render rather than synchronizing duplicate state with effects. Clean up
   timers, observers, subscriptions, animation frames, and requests.
-- Include every required hook dependency. Fix callbacks that retain outdated values in the component
-  or hook that creates them.
-- Memoize when measurements show expensive work or a consumer needs a stable reference. Use refs for
-  mutable controller values and state for values displayed in the UI.
+- Use refs for mutable controller values and state for values displayed in the UI.
 
 - Give each state value one owner: URL state for navigation, query cache for server snapshots, form/local
   state for editing, and client store for truly shared client state.

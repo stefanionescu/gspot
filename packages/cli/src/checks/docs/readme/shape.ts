@@ -1,13 +1,15 @@
+import { readSource } from '#cli/repository/tracked.ts';
 import { join } from 'node:path';
 // The shape of a README: one H1, an opening paragraph, a Contents list when it is long, a section on getting started, no banned heading.
 import type { RootContent } from 'mdast';
 import { toString } from 'mdast-util-to-string';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import { existsSync, readFileSync } from 'node:fs';
-import type { ShapeProblem } from '#cli/checks/types.ts';
+import { existsSync } from 'node:fs';
 import { fromMarkdown } from 'mdast-util-from-markdown';
 import { CONTENTS_HEADING, CONTENTS_THRESHOLD, START_SECTION_WORDS } from '#cli/checks/docs/docs-definitions.ts';
+
+type ShapeProblem = [number, string, string];
 
 function titleProblem(nodes: RootContent[]): ShapeProblem[] {
     const titles = nodes.filter((node) => node.type === 'heading' && node.depth === 1);
@@ -59,7 +61,7 @@ function shapeProblems(text: string, threshold: number, isScopeRoot: boolean): S
 
 // The root README and every scope's README tell the reader how to start; a folder README only explains its folder.
 function scopeRoots(input: EngineInput): Set<string> {
-    return new Set(['README.md', ...input.session.repository.scopes.map((scope) => `${scope.path}/README.md`)]);
+    return new Set(['README.md', ...input.scopeEntries.map((scope) => `${scope.path}/README.md`)]);
 }
 
 /**
@@ -67,9 +69,9 @@ function scopeRoots(input: EngineInput): Set<string> {
  * @param input the engine input
  * @returns the findings
  */
-export function readmeShape(input: EngineInput): Promise<Finding[]> {
+export function readmeShape(input: EngineInput): Finding[] {
     const docs = input.view.tool('docs');
-    if (docs['readme_shape'] === false) return Promise.resolve([]);
+    if (docs['readme_shape'] === false) return [];
     const threshold = typeof docs['contents_threshold'] === 'number' ? docs['contents_threshold'] : CONTENTS_THRESHOLD;
     const roots = scopeRoots(input);
     const findings = input.files
@@ -79,7 +81,7 @@ export function readmeShape(input: EngineInput): Promise<Finding[]> {
                 existsSync(join(input.root, file.path)),
         )
         .flatMap((file) =>
-            shapeProblems(readFileSync(join(input.root, file.path), 'utf8'), threshold, roots.has(file.path)).map(
+            shapeProblems(readSource(input.root, file.path).toString('utf8'), threshold, roots.has(file.path)).map(
                 ([line, rule, text]) => ({
                     check: input.spec.name,
                     file: file.path,
@@ -90,5 +92,5 @@ export function readmeShape(input: EngineInput): Promise<Finding[]> {
                 }),
             ),
         );
-    return Promise.resolve(findings);
+    return findings;
 }

@@ -2,7 +2,13 @@
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import type { PathPattern } from '#cli/checks/types.ts';
+import { lockedPackages } from '#cli/repository/locked-packages.ts';
+import { readSource } from '#cli/repository/tracked.ts';
+import { basename, dirname } from 'node:path';
+import type { LicenseException } from '#cli/checks/licenses.ts';
+import { normalizedPythonPackage } from '#cli/repository/python-package.ts';
+
+type PathPattern = { pattern: string; where: string };
 
 const POLICY_FILE = 'gspot.toml';
 
@@ -26,7 +32,7 @@ function toolPatterns(tools: Record<string, Record<string, unknown>>): PathPatte
 }
 
 function policyPatterns(input: EngineInput): PathPattern[] {
-    const { policy } = input.session.policyFiles;
+    const { policy } = input.policyFiles;
     const { structure, naming } = policy;
     const named = (value: unknown, where: string): PathPattern[] =>
         listed(value, 'paths').map((pattern) => ({ pattern, where }));
@@ -58,8 +64,8 @@ function matchCandidates(paths: string[]): string[] {
  * @param input the engine input
  * @returns the findings
  */
-export function allowlistsMatch(input: EngineInput): Promise<Finding[]> {
-    const candidates = matchCandidates(input.session.repository.files.map((file) => file.path));
+export function allowlistsMatch(input: EngineInput): Finding[] {
+    const candidates = matchCandidates(input.files.map((file) => file.path));
     const findings = policyPatterns(input)
         .filter((entry) => !candidates.some(pathMatcher([entry.pattern])))
         .map((entry) => ({
@@ -70,5 +76,56 @@ export function allowlistsMatch(input: EngineInput): Promise<Finding[]> {
             message: `${entry.pattern} under ${entry.where} matches no tracked file or folder.`,
             fixable: false,
         }));
-    return Promise.resolve(findings);
+    const policy = input.policyFiles.policy;
+    const locks = new Map<string, Set<string>>();
+    for (const [scope, table] of [['', policy], ...Object.entries(policy.scopeTables)] as const) {
+        const exceptions = (table.tools?.['licenses']?.['packages_allowed'] ?? []) as LicenseException[];
+        if (exceptions.length === 0) continue;
+        const paths = input.files.filter(({ path }) => {
+            if (path.split('/').includes('.gspot')) return false;
+            if (
+                ![
+                    'package-lock.json',
+                    'bun.lock',
+                    'pnpm-lock.yaml',
+                    'yarn.lock',
+                    'uv.lock',
+                    'poetry.lock',
+                    'pdm.lock',
+                ].includes(basename(path))
+            )
+                return false;
+            const folder = dirname(path) === '.' ? '' : dirname(path);
+            return scope === '' || path.startsWith(`${scope}/`) || folder === '' || scope.startsWith(`${folder}/`);
+        });
+        if (paths.length === 0)
+            throw new Error('License exceptions require a dependency lockfile in their project or workspace.');
+        for (const { path } of paths)
+            if (!locks.has(path))
+                locks.set(path, lockedPackages(basename(path), readSource(input.root, path).toString('utf8')));
+        for (const exception of exceptions) {
+            const pythonIdentity = exception.package.replace(/^[^@]+(?=@)/u, normalizedPythonPackage);
+            if (
+                paths.some(({ path }) =>
+                    locks
+                        .get(path)
+                        ?.has(
+                            ['uv.lock', 'poetry.lock', 'pdm.lock'].includes(basename(path))
+                                ? pythonIdentity
+                                : exception.package,
+                        ),
+                )
+            )
+                continue;
+            findings.push({
+                check: input.spec.name,
+                file: POLICY_FILE,
+                line: 1,
+                rule: 'unlocked-package',
+                message: `${exception.package} under ${scope === '' ? 'tools.licenses.packages_allowed' : `scope ${scope}`} is absent from its dependency lockfiles. Remove the exception or correct its exact version.`,
+                fixable: false,
+            });
+        }
+    }
+    return findings;
 }

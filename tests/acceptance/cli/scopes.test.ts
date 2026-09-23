@@ -3,9 +3,9 @@ import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { symlinkSync, writeFileSync } from 'node:fs';
-import { treeContents } from '#tests/harness/contents.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/support/cli/planted.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const SOURCE =
@@ -81,7 +81,6 @@ describe('typescript in a scope', () => {
                 'spelling',
                 'markdown',
                 'docs',
-                'structure',
                 '--no-runner',
                 '--no-ci',
                 '--no-hooks',

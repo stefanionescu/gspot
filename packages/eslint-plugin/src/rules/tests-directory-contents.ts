@@ -13,9 +13,11 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'When `tests/unit/` contains `a.test.ts`, a neighboring non-test file `builders.ts` reports `misplaced`. Move `builders.ts` into `tests/support/` and update its imports. Declaration files such as `b.d.ts` can remain beside tests.',
             summary: 'Finds a file that is not a test sitting in a folder of test files.',
             why: 'Harness code beside tests gets imported through relative paths and drifts away from the declared harness directory.',
-            fix: 'Move the file into the harness directory the repository declares (tools.vitest.harness_dir).',
+            fix: 'Move the file into the configured test support directory.',
         },
         schema: [
             optionsSchema({
@@ -31,8 +33,8 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
         {
             testPattern: DEFAULT_TEST,
             testDirectories: ['**/tests/**', '**/__tests__/**', '**/test/**'],
-            harnessDirectory: 'tests/harness',
-            excluded: ['**/tests/harness/**', '**/tests/mocks/**', '**/tests/vitest/**', '**/tests/lifecycle/**'],
+            harnessDirectory: 'tests/support',
+            excluded: [],
         },
     ],
     create(context, [options]) {
@@ -41,7 +43,9 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
         const relative = relativeToRoot(lintedRoot(context), file);
         const test = new RegExp(options.testPattern ?? DEFAULT_TEST, 'u');
         const name = posix.basename(relative);
+        const harness = options.harnessDirectory ?? 'tests/support';
         if (
+            relative.startsWith(`${harness}/`) ||
             !(!test.test(name) && !name.endsWith('.d.ts') && CODE_FILE.test(name)) ||
             !(
                 isAnyGlobMatch(relative, options.testDirectories ?? []) &&
@@ -56,7 +60,7 @@ export const testsDirectoryContents = createRule<TestsDirectoryContentsOptions, 
                 context.report({
                     node,
                     messageId: 'misplaced',
-                    data: { name, harness: options.harnessDirectory ?? 'tests/harness' },
+                    data: { name, harness },
                 });
             },
         };

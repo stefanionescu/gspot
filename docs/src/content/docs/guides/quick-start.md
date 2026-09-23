@@ -3,17 +3,15 @@ title: Run your first check
 description: Reproduce a Bash syntax finding in a disposable folder, correct it, and run the check again.
 ---
 
-Start from a [source checkout with dependencies installed](/guides/install/). Public packages
-are not available yet. This example uses Bun 1.3.11 and Bash on `PATH`; it was captured with
+Start from a [source checkout with dependencies installed](/guides/install/). This example
+uses Bun 1.3.11 and Bash on `PATH`; it was captured with
 gspot 0.1.0 on macOS arm64. It selects only Bash syntax, so no broad tool installation is needed.
 
 ## Prepare a disposable folder
 
-From the gspot source checkout, define a shell function that keeps pointing to the source CLI:
+Use the `gspot` shell function from the installation procedure. In that shell, create the example:
 
 ```bash
-gspot_source="$PWD/packages/cli/src/main.ts"
-gspot() { bun "$gspot_source" "$@"; }
 example_directory="$(mktemp -d)"
 cd "$example_directory"
 printf 'if then\n' > greet.sh
@@ -48,8 +46,8 @@ greet.sh:1  bash/syntax  syntax error near unexpected token `then'
 ```
 
 Bash also echoes the invalid statement in a second diagnostic. Its wording can vary with the
-Bash version. The [landing page](/#finding) shows the complete captured output, including the
-notice that other files were not checked. A selected check passing does not imply every check passed.
+Bash version. The [landing page](/#finding) shows the complete captured output.
+Only Bash syntax was checked.
 
 ## Correct and rerun
 
@@ -60,23 +58,10 @@ printf 'printf "%%s\\n" "Hello"\n' > greet.sh
 gspot check --only bash/syntax --no-cache
 ```
 
-The command exits 0 and reports `passed: 1 check`. This is a manual correction. The example
-does not claim the syntax error has an automatic fixer.
+The command exits 0 and reports `1 check passed, 0 checks failed`. The edit fixes the syntax
+error manually; `bash/syntax` has no automatic fixer.
 
 The inputs and captured output live in
 [docs/src/components/bash-syntax.json](https://github.com/stefanionescu/gspot/blob/main/docs/src/components/bash-syntax.json).
 To reproduce in your own project, keep the project files and run `gspot init` without the
 example-specific exclusions. Run `gspot install` before checks that need the locked tools.
-
-## Join a configured repository
-
-Cloning does not install the CLI. Prepare the matching CLI version first, then run:
-
-```bash
-gspot install
-gspot check
-```
-
-Install consumes matching tool locks. If policy and locks disagree, ask the policy owner to
-run `gspot apply` and share the resulting changes. Do not regenerate policy as an installation
-step. Read [troubleshooting](/guides/troubleshooting/) if tools or version pins disagree.

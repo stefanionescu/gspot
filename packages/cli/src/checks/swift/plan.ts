@@ -1,7 +1,19 @@
+import { mutationTarget } from '#cli/lifecycle/confined.ts';
 // What a Swift scope builds: an Xcode scheme when the policy names a project, or the Swift package.
 import { join } from 'node:path';
+import { buildFolder } from '#cli/platform/paths.ts';
 import type { EngineInput } from '#cli/run/types.ts';
-import type { SwiftBuildPlan } from '#cli/structure/swift/types.ts';
+
+/** The build of one Swift scope. */
+export type SwiftBuildPlan = {
+    /** The cache folder of this scope. */
+    folder: string;
+    /** Where the compiler log is written. */
+    log: string;
+    argv: string[];
+    /** The analyzer clears this folder so its log includes every compiler call. */
+    scratch?: string;
+};
 
 const DEFAULT_DESTINATION = 'generic/platform=iOS Simulator';
 const WORKSPACE_SUFFIX = '.xcworkspace';
@@ -14,15 +26,15 @@ function text(input: EngineInput, key: string): string {
 /**
  * The build of one scope: the command, the folder it runs in, and where its log goes.
  * @param input the engine input
- * @param purpose whether the compiler must emit a complete analyzer log
+ * @param purpose the build consumer, whose command owns a separate cache
  * @returns the plan
  */
-export function swiftBuildPlan(input: EngineInput, purpose: 'compile' | 'analyze' = 'compile'): SwiftBuildPlan {
-    const cwd = join(input.root, input.scope);
+export function swiftBuildPlan(
+    input: EngineInput,
+    purpose: 'compile' | 'analyze' | 'coverage' | 'periphery' = 'compile',
+): SwiftBuildPlan {
     const folder = join(
-        input.root,
-        '.gspot',
-        'cache',
+        buildFolder(input.root),
         'swift',
         input.scope === '' ? 'root' : `scope-${Buffer.from(input.scope).toString('hex')}`,
         purpose,
@@ -32,13 +44,13 @@ export function swiftBuildPlan(input: EngineInput, purpose: 'compile' | 'analyze
     if (project === '') {
         const scratch = join(folder, 'package');
         return {
-            cwd,
             folder,
             log,
             ...(purpose === 'analyze' ? { scratch } : {}),
             argv: ['swift', 'build', '-v', '--scratch-path', scratch],
         };
     }
+    mutationTarget(project);
     const container = project.endsWith(WORKSPACE_SUFFIX) ? '-workspace' : '-project';
     const argv = [
         'xcodebuild',
@@ -54,5 +66,5 @@ export function swiftBuildPlan(input: EngineInput, purpose: 'compile' | 'analyze
         join(folder, 'derived'),
         'CODE_SIGNING_ALLOWED=NO',
     ];
-    return { cwd, folder, log, argv };
+    return { folder, log, argv };
 }

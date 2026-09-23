@@ -3,7 +3,7 @@ import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
 import { symlinkSync, readdirSync } from 'node:fs';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/support/cli/planted.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const INIT = [
@@ -22,7 +22,7 @@ const INIT = [
 ];
 const PACKAGE = '{\n    "name": "planted",\n    "version": "1.0.0",\n    "private": true,\n    "type": "module"\n}\n';
 const LOOSE =
-    "// A planted file.\n\nimport { z } from 'zod';\n\n/** Accepts anything. */\nexport const loose = z.any();\n";
+    "// A planted file.\n\nimport { z } from 'zod';\n\n/** Accepts anything. */\nexport const loose = z.object({ value: z.any() });\n";
 
 describe('gspot add', () => {
     test(

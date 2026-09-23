@@ -467,7 +467,9 @@ One stated behavior for each:
 `session.ts` holds two roots: the config root and the git root. Every path in the
 report is relative to the config root. The hook resolves the config's repository-relative location from Git at runtime, with quoted arguments, rather than embedding a machine-specific absolute path. A push snapshot resolves the same relative config location inside the snapshot. Ref selection and snapshot semantics are owned by [10-hooks-ci-runners.md](10-hooks-ci-runners.md).
 
-Eight planted cases in a new `tests/repositories/git-cases.test.ts`.
+Exercise each distinct case in the central CLI integration and source acceptance suites.
+Retain exact selected revisions, exits, findings, and preserved working-tree bytes; no dedicated
+filename or fixed case count is required.
 
 ### Acceptance K-273
 

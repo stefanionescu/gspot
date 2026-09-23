@@ -1,6 +1,7 @@
 import type { CheckOptions } from '#cli/run/types.ts';
 
-function quoted(value: string): string {
+/** Quote one argument for a POSIX shell command shown to the reader. */
+export function quoteArgument(value: string): string {
     if (/^[a-zA-Z0-9_./-]+$/u.test(value)) return value;
     return `'${value.replaceAll("'", "'\"'\"'")}'`;
 }
@@ -21,13 +22,13 @@ export function reproduceLine(
 ): string {
     const { stage, push, messageFile } = options;
     if (push !== undefined) {
-        const remote = push.remote === undefined ? '' : ` -- ${quoted(push.remote)} ''`;
-        return `printf '%s' ${quoted(push.input)} | gspot check --push --only ${quoted(checkName)}${remote}`;
+        const remote = push.remote === undefined ? '' : ` -- ${quoteArgument(push.remote)} ''`;
+        return `printf '%s' ${quoteArgument(push.input)} | gspot check --push --only ${quoteArgument(checkName)}${remote}`;
     }
     const parts = ['gspot check'];
-    if (scope !== '') parts.push(quoted(scope));
-    parts.push('--only', quoted(checkName));
+    if (scope !== '') parts.push(quoteArgument(scope));
+    parts.push('--only', quoteArgument(checkName));
     if (stage !== undefined && stage !== 'commit' && stage !== 'push') parts.push('--stage', stage);
-    if (messageFile !== undefined) parts.push('--message-file', quoted(messageFile));
+    if (messageFile !== undefined) parts.push('--message-file', quoteArgument(messageFile));
     return parts.join(' ');
 }

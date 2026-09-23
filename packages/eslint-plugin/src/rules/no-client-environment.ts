@@ -2,23 +2,9 @@ import { createRule } from '#plugin/rules/definition.ts';
 // `process.env` in a client module beyond NEXT_PUBLIC_* and NODE_ENV (Next.js).
 import { AST_NODE_TYPES } from '@typescript-eslint/utils';
 import { optionsSchema, stringList } from '#plugin/rules/options.ts';
-import type { TSESLint, TSESTree } from '@typescript-eslint/utils';
+import type { TSESTree } from '@typescript-eslint/utils';
 
-function memberName(node: TSESTree.MemberExpression): string | undefined {
-    if (node.computed) return node.property.type === AST_NODE_TYPES.Literal ? String(node.property.value) : undefined;
-    return node.property.type === AST_NODE_TYPES.Identifier ? node.property.name : undefined;
-}
-
-function isGlobalProcess(context: Readonly<TSESLint.RuleContext<string, unknown[]>>, node: TSESTree.Node): boolean {
-    if (node.type !== AST_NODE_TYPES.Identifier || node.name !== 'process') return false;
-    let scope: TSESLint.Scope.Scope | null = context.sourceCode.getScope(node);
-    while (scope) {
-        const variable = scope.set.get('process');
-        if (variable) return variable.defs.length === 0;
-        scope = scope.upper;
-    }
-    return true;
-}
+import { memberName, isGlobalEnvironmentHost } from '#plugin/rules/env-access-owner.ts';
 
 function readName(node: TSESTree.MemberExpression): string | undefined {
     const { parent } = node;
@@ -30,10 +16,12 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'In a module beginning with `"use client"`, `const key = process.env.SECRET;` reports `private`. Move the secret read and the work that needs it to a server module. A genuinely public URL can use `process.env.NEXT_PUBLIC_URL` in the client. Never rename a secret to make it public. See [Next.js environment variables](https://nextjs.org/docs/app/guides/environment-variables).',
             level: 'recommended',
             summary: 'Finds a client module reading environment variables other than the public ones.',
-            why: 'A client bundle ships to the browser; a private variable read there is a secret leaked.',
-            fix: 'Read private configuration in a server-only module and pass values down, or use a NEXT_PUBLIC_ variable for values meant for the browser.',
+            why: 'Client code needs public configuration. Private environment values are unavailable in the browser by default, and exposing a secret to satisfy the read is unsafe.',
+            fix: 'Keep private configuration and the work that needs it in a server-only module. Pass only public results to client code, or use NEXT_PUBLIC_ variables for values intended for the browser.',
         },
         schema: [optionsSchema({ clientModule: { type: 'boolean' }, publicPrefixes: stringList, allowed: stringList })],
         messages: {
@@ -60,7 +48,9 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
                 if (
                     !isClient ||
                     !node.init ||
-                    !isGlobalProcess(context, node.init) ||
+                    node.init.type !== AST_NODE_TYPES.Identifier ||
+                    node.init.name !== 'process' ||
+                    !isGlobalEnvironmentHost(context, node.init) ||
                     node.id.type !== AST_NODE_TYPES.ObjectPattern
                 )
                     return;
@@ -76,7 +66,14 @@ export const noClientEnvironment = createRule<NoClientEnvironmentOptions, 'priva
                     context.report({ node, messageId: 'private', data: { public: publicText } });
             },
             MemberExpression(node) {
-                if (!isClient || !isGlobalProcess(context, node.object) || memberName(node) !== 'env') return;
+                if (
+                    !isClient ||
+                    node.object.type !== AST_NODE_TYPES.Identifier ||
+                    node.object.name !== 'process' ||
+                    !isGlobalEnvironmentHost(context, node.object) ||
+                    memberName(node) !== 'env'
+                )
+                    return;
                 const name = readName(node);
                 if (name !== undefined && isPublic(name)) return;
                 context.report({ node, messageId: 'private', data: { public: publicText } });

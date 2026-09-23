@@ -1,7 +1,7 @@
 // Marker blocks in the agent instruction files, .gitignore, and lefthook.yml; text outside the markers is never read or moved.
-import { join } from 'node:path';
 import type { BlockStyle } from '#cli/emit/types.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import { presetManifests } from '#cli/presets/read-manifests.ts';
+import type { Manifest } from '#cli/presets/types.ts';
 import {
     HASH_BLOCK_END,
     HASH_BLOCK_START,
@@ -19,16 +19,6 @@ const GITIGNORE_LINES = [
     '.gspot/report.json',
     '.gspot/report.sarif',
     '.gspot/report.codequality.json',
-    '.gspot/vale/styles/Google/',
-    '.gspot/vale/styles/Microsoft/',
-    '.gspot/vale/styles/write-good/',
-    '.gspot/vale/styles/proselint/',
-    '.gspot/vale/styles/alex/',
-    '.gspot/vale/styles/RedHat/',
-    '.gspot/vale/styles/Readability/',
-    '.gspot/vale/styles/Harper/',
-    '.gspot/vale/styles/.vale-config/',
-    '.gspot/vale/styles/config/dictionaries/',
 ];
 
 /** Locate one complete block, refusing ambiguous or malformed markers. */
@@ -85,20 +75,9 @@ export function currentBlock(text: string, style: BlockStyle): string | undefine
 }
 
 /**
- * The text of a file, or '' when absent.
- * @param root the repository root
- * @param path the file, relative to the root
- * @returns the text
- */
-export function fileText(root: string, path: string): string {
-    const full = join(root, path);
-    return existsSync(full) ? readFileSync(full, 'utf8') : '';
-}
-
-/**
  * The .gitignore block: the paths gspot writes that git never tracks.
  * @returns the block body
  */
-export function gitignoreBlock(): string {
-    return GITIGNORE_LINES.join('\n');
+export function gitignoreBlock(manifests: Iterable<Pick<Manifest, 'untracked'>> = presetManifests().values()): string {
+    return [...new Set([...GITIGNORE_LINES, ...[...manifests].flatMap((manifest) => manifest.untracked)])].join('\n');
 }

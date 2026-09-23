@@ -6,7 +6,7 @@ import { registerSet } from '#cli/commands/set.ts';
 import { Command, CommanderError } from 'commander';
 import { PromptError } from '#cli/output/prompts.ts';
 import { registerInit } from '#cli/commands/init.ts';
-import type { OutputOptions } from '#cli/output/types.ts';
+import type { OutputOptions } from '#cli/output/messages.ts';
 import { registerApply } from '#cli/commands/apply.ts';
 import { registerCheck } from '#cli/commands/check.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
@@ -40,7 +40,7 @@ function exitCodeFor(error: unknown): number {
 export function buildProgram(): Command {
     const program = new Command('gspot');
     program
-        .description('CLI to lint and enforce rules for LLM generated code bases')
+        .description('CLI to lint and enforce rules for LLM generated codebases')
         .version(GSPOT_VERSION, '--version', 'Print the version and nothing else')
         .option('--json', 'Print the documented JSON object instead of text')
         .option('--quiet', 'Print failures only')

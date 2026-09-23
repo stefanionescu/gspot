@@ -8,6 +8,8 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'A file containing only `export { value } from "./owner";` reports `trivial`. Change consumers to import directly from `owner`, then delete the forwarding file. Entry filenames do not exempt forwarding code.',
             level: 'recommended',
             summary: 'Finds files containing only forwarding, aliases, re-exports, or trivial functions.',
             why: 'A file needs substantial behavior or a meaningful owned schema.',
@@ -63,6 +65,9 @@ export const noTrivialFiles = createRule<[{ maxStatements?: number }], 'trivial'
                 case 'CallExpression':
                 case 'NewExpression':
                     return (
+                        node.typeArguments?.params.some(
+                            (parameter) => parameter.type === 'TSTypeLiteral' && parameter.members.length > 0,
+                        ) === true ||
                         node.arguments.some(
                             (argument) =>
                                 argument.type !== 'Identifier' &&

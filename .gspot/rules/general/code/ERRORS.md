@@ -26,9 +26,11 @@ title: Errors
 
 ## Error messages
 
-Error messages visible to users, command-line callers, generated artifacts, or logs must not leak internal system details.
+Public error responses must not disclose private implementation details. A local development
+tool can name the caller's file, line, check, or configuration key when that information is
+needed to correct a finding. Keep credentials and unrelated private data out of every output.
 
-**Never include in error messages:**
+**Keep out of public service responses:**
 
 - Schema names, table names, column names, or function names
 - Internal identifiers (row IDs, user IDs, session tokens)
@@ -39,10 +41,13 @@ Error messages visible to users, command-line callers, generated artifacts, or l
 
 - Start error messages with an uppercase letter (sentence case)
 - Make messages actionable: tell the user what went wrong, not how the system works
-- Use generic messages for configuration and infrastructure failures
+- Give safe, actionable context for configuration and infrastructure failures
 - Name the value that failed in `name=value` form when it helps debugging and is safe to show
 - Keep messages consistent in tone and casing across the repository
 - Keep messages easy to grep: stable text, values as arguments
+
+Restricted diagnostic logs can retain stack traces and causes under the logging policy.
+Do not expose those logs as public error responses.
 
 ## At boundaries
 

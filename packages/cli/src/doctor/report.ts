@@ -1,13 +1,14 @@
+import type { Colors } from 'picocolors/types';
 import { hookStatus } from '#cli/lifecycle/hooks.ts';
+import { submodulePaths } from '#cli/repository/tracked.ts';
 // What doctor prints, as data and as text.
 import type { Session } from '#cli/run/types.ts';
-import type { Painter } from '#cli/output/types.ts';
-import { paint } from '#cli/output/messages.ts';
+import { colors } from '#cli/output/messages.ts';
 import { changeReport } from '#cli/doctor/changes.ts';
 import { everyManifest } from '#cli/presets/select.ts';
 import { collectPins } from '#cli/emit/runner-tasks.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
-import { coverageReport } from '#cli/doctor/coverage.ts';
+import { coverageLines, coverageReport } from '#cli/doctor/coverage.ts';
 import { selectRuleFiles } from '#cli/rules/assemble.ts';
 import type { ChangeKey, ChangeReport, DoctorReport, ToolProbe } from '#cli/doctor/types.ts';
 
@@ -26,7 +27,7 @@ const CHANGE_SECTIONS: { key: ChangeKey; title: string }[] = [
     { key: 'changedOutsideGspot', title: 'changed outside gspot' },
 ];
 
-function stateLabel(tool: ToolProbe, colors: Painter): string {
+function stateLabel(tool: ToolProbe, colors: Colors): string {
     const { red, green, dim } = colors;
     switch (tool.state) {
         case 'ok': {
@@ -58,7 +59,7 @@ function versionText(tool: ToolProbe): string {
     return `${tool.name} ${want === '' ? found : want}`.trim();
 }
 
-function toolLines(tools: ToolProbe[], colors: Painter): string[] {
+function toolLines(tools: ToolProbe[], colors: Colors): string[] {
     const width = Math.max(...tools.map((tool) => `${tool.name} ${tool.want ?? ''}`.length)) + VERSION_GAP;
     return tools.map((tool) => {
         const isBroken = tool.state !== 'ok' && tool.state !== 'host';
@@ -134,18 +135,19 @@ function versionLine(report: DoctorReport): string {
  * Builds the report: tool probes, coverage, changes after the install, hooks, CI, rules and versions.
  * @param session the session
  * @param pinned the version `.gspot/version` pins, if any
- * @returns the report, with exit code 1 when a tool is missing or outdated
+ * @returns the report, with exit code 1 when tools or hook integration need correction
  */
 export function doctorReport(session: Session, pinned: string | undefined): DoctorReport {
-    const scopePaths = session.scopes.map((entry) => entry.scope.path).filter((path) => path !== '');
-    const tools = collectPins(everyManifest(session)).map((tool) => probeTool(session, tool, scopePaths));
+    const tools = collectPins(everyManifest(session)).map((tool) => probeTool(session, tool));
     const { policy } = session.policyFiles;
-    const isBroken = tools.some((tool) => tool.state !== 'ok' && tool.state !== 'host');
+    const hooks = hookStatus(session);
+    const isBroken = !hooks.ready || tools.some((tool) => tool.state !== 'ok' && tool.state !== 'host');
     return {
+        submodules: submodulePaths(session.root),
         tools,
         coverage: coverageReport(session),
         changes: changeReport(session),
-        hooks: hookStatus(session),
+        hooks: hooks.text,
         ci:
             policy.ci === undefined
                 ? 'none'
@@ -167,15 +169,16 @@ export function doctorReport(session: Session, pinned: string | undefined): Doct
  * @returns the text for stdout
  */
 export function doctorText(report: DoctorReport): string {
-    const colors = paint();
     const lines = [
         'tools',
         ...toolLines(report.tools, colors),
         '',
         ...uncheckedLines(report),
         ...partialLines(report),
+        ...coverageLines(report.coverage),
         ...changeLines(report.changes),
         `hooks      ${report.hooks}`,
+        ...report.submodules.map((path) => `submodule  ${path} (contents are not read)`),
         `ci         ${report.ci}`,
         `rules      ${String(report.rules.files)} files`,
         versionLine(report),

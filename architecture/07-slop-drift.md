@@ -34,8 +34,10 @@ constructors, accessors, nested functions, anonymous functions, callbacks, and c
 nested executable statements; exclude comments, blank lines, type-only declarations, and nested
 function bodies. Inspect nested functions independently. Expression bodies count as one statement.
 No caller-count, physical-line, forwarding, visibility, decorator, framework, or entrypoint exemption
-applies. Both recommended and all enable the rule. Required external APIs use narrow, reasoned
-suppressions. Findings never delete code or justify filler statements.
+applies. Both recommended and all enable trivial-function and trivial-file enforcement by default.
+These rules are mandatory default policy, not opt-in abstraction preferences. Keep them at the
+root and in every inherited scope, generated tool configuration, and standalone plugin level.
+Required external APIs use narrow, reasoned suppressions. Findings never delete code or justify filler statements.
 
 Use the existing ESLint, Tree-sitter, and PostgreSQL parsers for JavaScript/TypeScript, Python,
 Swift, Bash, and SQL/PL/pgSQL. Files containing only forwarding, aliases, re-exports, or trivial
@@ -161,3 +163,11 @@ A pattern joins this document when a reviewer finds an instance in a real reposi
 existing check caught. The entry names the instance class, the mechanism, and the preset. If a
 maintained tool ships the rule, the mechanism is configuration. If not, the preset manifest
 records the tools searched before original code was written.
+
+## Behavioral test assertions
+
+Exact exit codes, diagnostic locations, preserved bytes, and contractual defaults are valid
+assertions. Do not retain tests that require silent parse failure, missing-report success, or
+mandatory-rule exemptions. Example verification must fail when no selected example or expected
+diagnostic remains. Distinct native, installed, recovery, cancellation, and platform tests retain
+their separate contracts even when setup resembles another suite.

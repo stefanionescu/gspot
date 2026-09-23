@@ -21,7 +21,10 @@ function locationOf(finding: Finding): { fileUri: string; startLine: number; sta
 /** Render located findings using GitLab's Code Quality format. */
 function codeQualityText(report: RunReport | PushReport): string {
     const reports = 'revisions' in report ? report.revisions.map((revision) => revision.report) : [report];
-    const findings = reports.flatMap((entry) => entry.checks.flatMap((check) => check.findings));
+    const findings = reports.flatMap((entry) => [
+        ...entry.checks.flatMap((check) => check.findings),
+        ...entry.coverage.findings,
+    ]);
     const seen = new Set<string>();
     const entries = findings.flatMap((finding) => {
         const path = finding.file.replaceAll('\\', '/').replace(/^\.\//u, '');
@@ -55,7 +58,7 @@ function codeQualityText(report: RunReport | PushReport): string {
 export function writeReport(root: string, report: RunReport | PushReport): void {
     const json = `${JSON.stringify(report, null, JSON_INDENT)}\n`;
     const sarif = sarifText(report);
-    let path = join(root, '.gspot', 'report.json');
+    const path = join(root, '.gspot', 'report.json');
     try {
         withLifecycleOwner(root, (owner) => {
             const proposals = (
@@ -72,10 +75,7 @@ export function writeReport(root: string, report: RunReport | PushReport): void 
                 throw new Error(
                     `Preserved edited or unowned report ${conflict.path}. Move it aside to save a new report.`,
                 );
-            for (const proposal of proposals) {
-                path = join(root, proposal.path);
-                owner.applyProposal(proposal);
-            }
+            owner.applyProposals(proposals);
         });
     } catch (error) {
         reportStorageFailure(path, error);
@@ -102,7 +102,7 @@ function sarifRun(report: RunReport): SarifRunBuilder {
         },
     ];
     const rules = new Set<string>();
-    const findings = report.checks.flatMap((check) => check.findings);
+    const findings = [...report.checks.flatMap((check) => check.findings), ...report.coverage.findings];
     for (const finding of findings) {
         const ruleId = finding.rule === undefined ? finding.check : `${finding.check}:${finding.rule}`;
         if (!rules.has(ruleId)) {

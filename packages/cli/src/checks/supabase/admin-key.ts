@@ -1,6 +1,5 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // The key that bypasses row level security, named only where the policy allows it.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
@@ -21,17 +20,18 @@ const DEFAULT_PATHS = [
  * @param input the engine input
  * @returns the findings
  */
-export function adminKey(input: EngineInput): Promise<Finding[]> {
+export function adminKey(input: EngineInput): Finding[] {
     const named = input.view.tool('supabase')['admin_key_paths'] as string[] | undefined;
     const isAllowed = pathMatcher(named ?? DEFAULT_PATHS);
-    const files = input.session.repository.files.filter(
+    const files = input.files.filter(
         (file) =>
             file.nature === 'source' &&
-            !isAllowed(file.path) &&
+            !isAllowed(input.scope === '' ? file.path : file.path.slice(input.scope.length + 1)) &&
             CODE_EXTENSIONS.some((extension) => file.path.endsWith(extension)),
     );
     const findings = files.flatMap((file) =>
-        readFileSync(join(input.root, file.path), 'utf8')
+        readSource(input.root, file.path)
+            .toString('utf8')
             .split('\n')
             .flatMap((text, index): Finding[] => {
                 if (ADMIN_KEY_NAMES.every((name) => !text.includes(name))) return [];
@@ -40,5 +40,5 @@ export function adminKey(input: EngineInput): Promise<Finding[]> {
                 return [supabaseFinding(input, { file: file.path, line: index + 1 }, 'admin-key', said)];
             }),
     );
-    return Promise.resolve(findings);
+    return findings;
 }

@@ -1,0 +1,50 @@
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
+import { expect, test } from 'bun:test';
+import { install, installPrivateTools, run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
+
+test(
+    'Swift security initializes with the candidate plugin and retains immutable tool locks',
+    async () => {
+        await using sandbox = await testdir();
+        const root = sandbox.path;
+        await createFileTree(root, {
+            'Value.swift': 'import CryptoKit\nlet digest = Insecure.MD5.hash(data: data)\n',
+            'scripts/build.js': 'export const buildName = "fixture";\n',
+            'Info.plist': '<plist><dict><key>CFBundleName</key><string>Fixture</string></dict></plist>\n',
+        });
+        await install(root, [
+            'init',
+            '--yes',
+            '--presets',
+            'swift',
+            'javascript',
+            'security',
+            '--without',
+            'spelling',
+            'naming',
+            '--no-runner',
+            '--no-ci',
+            '--no-hooks',
+            '--no-rules',
+            '--no-install',
+        ]);
+        const files = ['.gspot/package.json', '.gspot/bun.lock', '.gspot/pyproject.toml', '.gspot/uv.lock'];
+        const before = await Promise.all(files.map(async (path) => await Bun.file(join(root, path)).text()));
+        await installPrivateTools(root);
+        expect(await Promise.all(files.map(async (path) => await Bun.file(join(root, path)).text()))).toEqual(before);
+        expect(
+            await Bun.file(join(root, '.gspot/node_modules/@gspot/eslint-plugin/package.json')).json(),
+        ).toMatchObject({ name: '@gspot/eslint-plugin' });
+        const command = ['check', '--only', 'security/semgrep', '--no-cache', '--json'];
+        const broken = await run(root, command);
+        expect(broken.code, broken.stdout + broken.stderr).toBe(1);
+        expect(JSON.parse(broken.stdout).checks[0].findings).toEqual([
+            expect.objectContaining({ rule: 'ios-weak-hash-algorithm', file: 'Value.swift', line: 2 }),
+        ]);
+        await Bun.write(join(root, 'Value.swift'), 'import CryptoKit\nlet digest = SHA256.hash(data: data)\n');
+        const corrected = await run(root, command);
+        expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
+    },
+    PLANTED_TIMEOUT_MS * 3,
+);

@@ -56,13 +56,30 @@ Do not add a forwarding layer in its place.
 
 A command session owns repository observations and justified caches. Share files, scopes,
 metadata, and Git state within that session; the next command observes changed inputs.
-Required unreadable or malformed input is an error, not an empty collection. Cache keys must
-include the actual source, policy, tool, and scope inputs they depend on.
+Required unreadable or malformed input is an error, not an empty collection.
+For structured tool reports, missing output, invalid shape, and a fatal exit must not become
+`{}`, `[]`, zero counts, or an empty success. Each adapter checks the documented success and
+findings exits and validates the required report fields. The process runner cannot decide
+whether an ordinary nonzero exit means findings or a tool failure without that tool contract.
+Cache keys must include the actual source, policy, tool, and scope inputs they depend on.
 
 Distinguish applicability from execution. Report explicit skips, unavailable platforms, missing
 prerequisites, missing tools, and delegated coverage accurately. Validate `reported_by` and
 `takes_over` ownership so descriptive coverage never impersonates an executed check.
 Infrastructure stays independent of domain check catalogs.
+
+Command arguments must retain boundaries, including spaces, quotes, and empty arguments.
+Do not interpret configured build or generator commands with `split(' ')`. Resolve their syntax
+in the configuration owner and pass an argument vector to the runner. Retain the public setting
+shape unless its owning contract is deliberately changed; add no alternate compatibility field.
+
+Delete forwarding helpers that add no policy, transformation, lifecycle, or external boundary.
+Remove internal fallback values for states already excluded by validation or loop invariants.
+Keep optional values that are part of the actual contract and guards at input, process, network,
+and persistence boundaries. Do not replace a removed wrapper with a generic dispatcher or new
+registry. The mandatory trivial-function and trivial-file rules still apply at every level. Required
+external callback contracts use narrow, reasoned suppressions; implementation cleanup must not
+disable those rules, introduce blanket exemptions, or pad bodies to cross their thresholds.
 
 [implementation ownership](12-repository-layout.md#ownership) assigns implementation ownership. Structure, naming, and
 prose each own their analysis; domain checks own project and artifact checks. The runner
@@ -86,9 +103,11 @@ Runs external tools. Owns nothing about what they find.
   editors; the runner never relies on it.
 - **Concurrency.** Checks within a stage run in parallel up to the CPU count. Checks that share a
   fixer order run in that order under `--fix`.
-- **Exit codes.** A non-zero exit is findings unless the check declares `count_regex`, in which
-  case the count comes from the output. Output that matches a preset's `tool_errors` pattern is
-  reported as "the tool broke" with the remediation text, never as a code finding.
+- **Exit codes.** Native adapters recognize their tool's documented success and findings exits.
+  Unexpected exits, fatal diagnostics, and invalid required reports are inability, even when no
+  finding was parsed. A count expression cannot hide a failed execution. Repository custom
+  commands follow their declared output contract; a failed command cannot pass because output
+  is empty. Preserve aggregate exits: success `0`, findings `1`, inability `2`.
 - **Result cache.** Each check's verdict is stored under `.gspot/cache/` keyed on the tool
   version, the generated configuration hash and the content hash of every file it read.
   Unchanged inputs skip the run and print `unchanged`.
@@ -318,8 +337,8 @@ finding.
 Preserve `no-trivial-functions`, `no-single-file-folders`,
 `no-prefix-collisions`, `no-duplicate-barrel-exports`, `no-reexports-outside-index`, and interface
 enforcement in `types-placement`, with their public options. Retain the improved
-`no-trivial-functions` handling of every implemented function, nested statements, and expression bodies
-arguments. Default configs select one forwarding check; alternate exports remain usable.
+`no-trivial-functions` handling of every implemented function, nested statements, and expression bodies.
+Both levels enable trivial-function and trivial-file enforcement. Select one diagnostic owner for each equivalent rule; alternate exports remain usable.
 
 Generated CLI configuration can use `import-x/export`, TypeScript's interface rule,
 `no-reexports` with `allowIndex`, and structure-engine folder checks without double reporting.
@@ -357,18 +376,14 @@ Definitions use `name`; references retain `check`, `preset`, or `rule`. Keep ext
 
 ### Acceptance K-43
 
-A cache key holds the hashes of the config files its check names, computed once for
-a run. The verdict cache drops entries older than 30 days. A build folder of a tool sits in the
-cache folder of the platform.
+Cache keys cover the actual configuration inputs of the selected check as well as source,
+tool, policy, and scope inputs. Share observation hashes within a run and refresh them after
+edits. Full-run pruning removes owned verdict entries older than 30 days. Tool build state uses
+the platform cache location.
 
-`Session` gains `configHashes`, a map filled on first use. `cacheKey` takes the
-`{config:<name>}` parts of the check command, and for an engine check the config names of its
-manifest. `fileHash` hashes the bytes through `Bun.hash`. `pruneCache` runs at the end of a full
-run and removes entries whose file time is over 30 days. `platform/paths.ts` gains
-`buildFolder(root)`: `~/Library/Caches/gspot/<hash of root>` on macOS, and `$XDG_CACHE_HOME/gspot` on Linux.
-
-A unit test edits `.gspot/ruff.toml` and holds that the cached verdict of
-`bash/shellcheck` still stands. A second one ages an entry and holds that it is gone.
+Verify that changing a relevant configuration invalidates the result, changing an unrelated
+configuration does not, and stale owned entries are pruned without deleting unrelated files.
+The contract does not require a particular session field, hash helper, or module name.
 
 ### Acceptance K-53
 
@@ -433,13 +448,13 @@ exists after `gspot check --stage push`. The same for an edited, uncommitted `op
 
 ### Acceptance K-140
 
-A check whose tool is absent reports `missing`, as every tool check does.
+A check whose tool is absent reports `missing` and contributes inability exit `2`. Required
+AST search tools follow the shared resolver and process contract. File arguments use shared
+bounded batching. An absent tool cannot become an empty match list or clean result.
 
-`astGrepMatches` returns `undefined` for an absent tool, and `counts.ts` turns that
-into the `missing` status through `platform/missing-tool.ts`. The file list goes through
-`fileBatches`, the batching every tool run uses.
-
-A unit test runs the three checks with an empty `PATH` and holds `missing`.
+Verify missing-tool behavior and a corrected run with the required tool available through the
+owning checks. Keep diagnostic and file-selection assertions; do not test a removed sentinel
+return or prescribe an intermediate helper.
 
 ### Acceptance K-157
 
@@ -519,3 +534,15 @@ A naming policy is the specific naming-rule data, not another name for the compl
 A manifest's `[coverage]` table declares required check kinds by extension, and a check's
 `coverage` list names the kinds it supplies. Local code calls that list `coverageKinds`.
 These replace manifest `[inspections]` and check `inspection` without changing their meaning.
+
+## Required analysis results
+
+An engine can return a direct result or a promise. Execution awaits either form. A selected
+analysis must report inability when its parser cannot produce the required tree or statements.
+Release trees already created before a later source fails. Share parser initialization promises
+across concurrent calls. Serialize observation keys structurally so valid filenames cannot collide.
+
+Required structured reports must contain their declared arrays. Missing or malformed output and
+fatal adapter exits are inability, never fabricated findings or empty success. Counted custom-check
+failures remain failures after location filtering. Required framework generation cannot suppress
+failure based on diagnostic wording. Configured commands preserve quoted and empty arguments.

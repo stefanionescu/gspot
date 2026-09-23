@@ -7,18 +7,13 @@ import { findRoot } from '#cli/repository/tracked.ts';
 import { PolicyError } from '#cli/policy/read-policy.ts';
 import { assertPinMatches } from '#cli/run/version-pin.ts';
 import type { CommandResult } from '#cli/run/types.ts';
-import type { TomlTable, Mutation } from '#cli/policy/types.ts';
+import type { Mutation } from '#cli/policy/types.ts';
 import { commitPolicy } from '#cli/policy/commit-policy.ts';
 import { installTools } from '#cli/lifecycle/install-tools.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
-import type { AddOptions, RemoveOptions } from '#cli/commands/types.ts';
+type AddOptions = { cwd: string; isDryRun: boolean; presets: string[]; scope?: string };
+type RemoveOptions = { cwd: string; isDryRun: boolean; preset: string; scope?: string };
 import { requireChain } from '#cli/presets/select.ts';
-
-function presetHolder(raw: TomlTable, scope: string | undefined): TomlTable {
-    const holder = scopeHolder(raw, scope);
-    if (!holder) throw new PolicyError([messages.scopeMissing(scope ?? '')]);
-    return holder;
-}
 
 async function installChangedSelection(
     root: string,
@@ -47,7 +42,7 @@ export async function addCommand(o: AddOptions): Promise<CommandResult> {
             throw new PolicyError([messages.unknownPreset(id, nearMatches(id, known))]);
         }
     const mutation: Mutation = (raw) => {
-        const holder = presetHolder(raw, o.scope);
+        const holder = scopeHolder(raw, o.scope);
         const list = (holder['presets'] as string[] | undefined) ?? [];
         for (const id of o.presets) if (!list.includes(id)) list.push(id);
         holder['presets'] = list;
@@ -67,7 +62,7 @@ export async function removeCommand(o: RemoveOptions): Promise<CommandResult> {
     assertPinMatches(root);
     const manifests = presetManifests();
     const mutation: Mutation = (raw) => {
-        const holder = presetHolder(raw, o.scope);
+        const holder = scopeHolder(raw, o.scope);
         const list = (holder['presets'] as string[] | undefined) ?? [];
         const rootList = (raw['presets'] as string[] | undefined) ?? [];
         const kept = [...new Set([...rootList, ...list])].filter((id) => id !== o.preset);

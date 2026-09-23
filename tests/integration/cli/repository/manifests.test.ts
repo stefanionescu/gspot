@@ -1,0 +1,65 @@
+import { join } from 'node:path';
+import { expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
+import { readRepository } from '#cli/repository/tree.ts';
+import { mkdirSync, rmSync, writeFileSync, symlinkSync, readFileSync } from 'node:fs';
+import { workspaceScopes } from '#cli/repository/scopes.ts';
+import { readManifests } from '#cli/repository/manifests.ts';
+
+test('Python workspace detection uses captured manifest facts', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'pyproject.toml': '[project]\ndependencies = ["fastapi>=1"]\n[tool.uv.workspace]\nmembers = ["api"]\n',
+        'api/main.py': 'print("ready")\n',
+    });
+    const repository = await readRepository(sandbox.path, [], [], []);
+    const facts = readManifests(sandbox.path, repository.files);
+    expect(facts[0]!.dependencies).toEqual({ fastapi: 'fastapi>=1' });
+    writeFileSync(join(sandbox.path, 'pyproject.toml'), '[invalid');
+    expect(workspaceScopes(sandbox.path, facts).scopes.map((scope) => scope.path)).toEqual(['api']);
+    expect(() => readManifests(sandbox.path, repository.files)).toThrow('pyproject.toml');
+});
+
+test.each(['package.json', 'pyproject.toml', 'Package.swift'])(
+    'a failed read of a discovered %s remains an error',
+    async (path) => {
+        await using sandbox = await testdir();
+        await createFileTree(sandbox.path, { [path]: path.endsWith('.json') ? '{}' : '' });
+        const repository = await readRepository(sandbox.path, [], [], []);
+        rmSync(join(sandbox.path, path));
+        expect(() => readManifests(sandbox.path, repository.files)).toThrow(path);
+        mkdirSync(join(sandbox.path, path));
+        expect(() => readManifests(sandbox.path, repository.files)).toThrow(path);
+    },
+);
+
+test('Python group includes coexist with dependency detection', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'pyproject.toml': '[dependency-groups]\ntest = ["pytest>=8"]\ndev = [{include-group = "test"}, "ruff>=1"]\n',
+    });
+    const repository = await readRepository(sandbox.path, [], [], []);
+    const facts = readManifests(sandbox.path, repository.files);
+    expect(facts[0]!.dependencies).toEqual({ pytest: 'pytest>=8', ruff: 'ruff>=1' });
+});
+
+test.each(['package.json', 'pyproject.toml', 'Package.swift'])(
+    'manifest inspection refuses an external link replacing %s and accepts restored bytes',
+    async (path) => {
+        await using directory = await testdir();
+        const content = path === 'package.json' ? '{}' : '';
+        await createFileTree(directory.path, {
+            [`project/${path}`]: content,
+            [`outside/${path}`]: content,
+        });
+        const root = join(directory.path, 'project');
+        const repository = await readRepository(root, [], [], []);
+        rmSync(join(root, path));
+        symlinkSync(`../outside/${path}`, join(root, path));
+        expect(() => readManifests(root, repository.files)).toThrow('private regular file');
+        expect(readFileSync(join(directory.path, 'outside', path), 'utf8')).toBe(content);
+        rmSync(join(root, path));
+        writeFileSync(join(root, path), content);
+        expect(readManifests(root, repository.files)).toHaveLength(1);
+    },
+);

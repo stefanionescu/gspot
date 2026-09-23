@@ -48,8 +48,7 @@ Every TypeScript file is one of three classes, and the generated lint configurat
 differently:
 
 - Application and service source: the strictest rule set, `no-console`, the boundaries matrix,
-  the runtime's import style (`.js` suffix under NodeNext, extensionless under Bun or tsx, `.ts`
-  under Deno).
+  the import style supported by the declared runtime and compiler configuration.
 - Scripts and generators: `n/no-process-exit` off, JSDoc off, the same import style as their
   runtime.
 - Shared tooling: follows the JavaScript ESLint configuration and the tooling file class.
@@ -266,7 +265,7 @@ Use tests to verify behavior, not implementation detail.
 
 Rules:
 
-- Keep shared test types under the required test type roots.
+- Keep shared test types beside the support module or behavior that owns their contract.
 - Use the test runner's typed mock helpers rather than casting a mock to `any`.
 - Mock external boundaries, not internal implementation details.
 - Avoid `any` in tests. Use `unknown`, typed test data, or narrow mock helpers.

@@ -18,9 +18,15 @@ export type ToolProbe = {
     floor?: string;
 };
 
-export type ToolContext = { root: string; cwd?: string; probes: Map<string, ToolProbe> };
+export type ToolContext = {
+    root: string;
+    cwd?: string;
+    probes: Map<string, ToolProbe>;
+    policyFiles?: import('#cli/policy/types.ts').PolicyFiles;
+};
 
 export type CoverageReport = {
+    endings: { ending: string; scope: string; files: number; kinds: string[] }[];
     unchecked: { path: string; reason: string; remedy?: string }[];
     partial: { path: string; missing: string[] }[];
     checked: number;
@@ -35,6 +41,7 @@ export type ChangeReport = {
 };
 
 export type DoctorReport = {
+    submodules: string[];
     tools: ToolProbe[];
     coverage: CoverageReport;
     changes: ChangeReport;

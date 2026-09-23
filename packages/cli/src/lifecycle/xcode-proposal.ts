@@ -1,6 +1,7 @@
 // What init proposes for an Xcode project: the project of the scope, and a shared scheme.
-import { join } from 'node:path';
-import { existsSync, readdirSync, readFileSync } from 'node:fs';
+import { posix } from 'node:path';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import type { ConfinedRoot } from '#cli/lifecycle/types.ts';
 
 const PROJECT_SUFFIX = '.xcodeproj';
 const SCHEME_SUFFIX = '.xcscheme';
@@ -17,18 +18,14 @@ function listedScheme(text: string): string | undefined {
         .replaceAll(/^["']|["']$/gu, '');
 }
 
-function entries(folder: string): string[] {
-    return existsSync(folder) ? readdirSync(folder).toSorted((a, b) => a.localeCompare(b)) : [];
-}
-
 // The scheme a Periphery file already names wins: somebody chose it. Otherwise the first shared scheme by name.
-function schemeOf(folder: string, project: string): string | undefined {
-    const periphery = join(folder, PERIPHERY_FILE);
-    const named = existsSync(periphery) ? listedScheme(readFileSync(periphery, 'utf8')) : undefined;
+function schemeOf(files: ConfinedRoot, scope: string, project: string): string | undefined {
+    const periphery = files.read(posix.join(scope, PERIPHERY_FILE));
+    const named = periphery === undefined ? undefined : listedScheme(periphery.bytes.toString('utf8'));
     if (named !== undefined) return named;
-    const shared = entries(join(folder, project, 'xcshareddata', 'xcschemes')).find((name) =>
-        name.endsWith(SCHEME_SUFFIX),
-    );
+    const shared = files
+        .list(posix.join(scope, project, 'xcshareddata', 'xcschemes'))
+        .find((name) => name.endsWith(SCHEME_SUFFIX));
     return shared?.slice(0, -SCHEME_SUFFIX.length);
 }
 
@@ -42,12 +39,18 @@ export function xcodeProposal(
     root: string,
     scopePaths: string[],
 ): { scope: string; project: string; scheme?: string } | undefined {
-    for (const scope of scopePaths) {
-        const folder = join(root, scope);
-        const project = entries(folder).find((name) => name.endsWith(PROJECT_SUFFIX));
-        if (project === undefined) continue;
-        const scheme = schemeOf(folder, project);
-        return scheme === undefined ? { scope, project } : { scope, project, scheme };
+    const files = openConfinedRoot(root);
+    try {
+        for (const scope of scopePaths) {
+            const project = files.list(scope === '' ? undefined : scope).find((name) => name.endsWith(PROJECT_SUFFIX));
+            if (project === undefined) continue;
+            if (files.stat(posix.join(scope, project))?.isDirectory() !== true)
+                throw new Error(`Xcode project is not a directory: ${posix.join(scope, project)}`);
+            const scheme = schemeOf(files, scope, project);
+            return scheme === undefined ? { scope, project } : { scope, project, scheme };
+        }
+        return undefined;
+    } finally {
+        files.close();
     }
-    return undefined;
 }

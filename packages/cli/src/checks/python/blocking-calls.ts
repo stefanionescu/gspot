@@ -1,6 +1,5 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // Blocking calls inside an async function: they stop the event loop for every other task.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { Node } from 'web-tree-sitter';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
@@ -59,8 +58,8 @@ export async function pythonBlockingCalls(input: EngineInput): Promise<Finding[]
     const findings: Finding[] = [];
     for (const file of input.files) {
         if (file.nature !== 'source' || !file.path.endsWith('.py')) continue;
-        const tree = parser.parse(readFileSync(join(input.root, file.path), 'utf8'));
-        if (tree === null) continue;
+        const tree = parser.parse(readSource(input.root, file.path).toString('utf8'));
+        if (tree === null) throw new Error('The source parser returned no tree.');
         for (const call of blockingCalls(tree.rootNode))
             findings.push({
                 check: input.spec.name,

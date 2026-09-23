@@ -1,0 +1,251 @@
+import * as toolRunner from '#cli/run/tool-runner.ts';
+import { internalLinks, builtMarkup, deadSelectors } from '#cli/checks/static-site/output-checks.ts';
+import { engineInput } from '#cli/run/engines.ts';
+import { openSession } from '#cli/run/session.ts';
+import { executeRun } from '#cli/run/execute.ts';
+import * as processes from '#cli/platform/spawn.ts';
+import { join } from 'node:path';
+import {
+    readFileSync,
+    existsSync,
+    writeFileSync,
+    chmodSync,
+    statSync,
+    mkdirSync,
+    symlinkSync,
+    unlinkSync,
+} from 'node:fs';
+import { createFileTree, testdir } from 'testdirs';
+import { describe, expect, spyOn, test } from 'bun:test';
+import type { EngineInput } from '#cli/run/types.ts';
+import { buildReproducible, siteBuild, filesUnder } from '#cli/checks/static-site/build.ts';
+
+async function input(root: string, paths: string[], resources: DisposableStack): Promise<EngineInput> {
+    await createFileTree(root, {
+        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
+    });
+    const session = await openSession(root);
+    session.resources = resources;
+    session.repository.files = session.repository.files.filter((file) => paths.includes(file.path));
+    const selection = session.scopes[0]!;
+    const spec = selection.selected
+        .flatMap((manifest) => manifest.checks)
+        .find((check) => check.name === 'static-site/build-reproducible')!;
+    return engineInput(session, {
+        scope: session.scopes.find((entry) => entry.scope.path === '')!,
+        spec: spec,
+        files: session.repository.files,
+    });
+}
+
+const BUILD = `import { existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
+const hadOutput = existsSync('dist/index.html');
+rmSync('dist', { recursive: true, force: true });
+mkdirSync('dist');
+writeFileSync('dist/index.html', hadOutput ? 'second' : 'first');
+`;
+
+describe('site build reproducibility', () => {
+    test('the second build preserves the output shared with other checks', async () => {
+        await using sandbox = await testdir();
+        using resources = new DisposableStack();
+        await createFileTree(sandbox.path, { 'build.js': BUILD, 'dist/index.html': 'edited output' });
+        chmodSync(join(sandbox.path, 'dist/index.html'), 0o640);
+        const request = await input(sandbox.path, ['build.js'], resources);
+        const first = await siteBuild(request);
+        const before = readFileSync(join(first.output, 'index.html'), 'utf8');
+        expect(first.isBuilt).toBe(true);
+        expect(await buildReproducible(request)).toEqual([]);
+        expect(readFileSync(join(first.output, 'index.html'), 'utf8')).toBe(before);
+        expect(readFileSync(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('edited output');
+        expect(statSync(join(sandbox.path, 'dist/index.html')).mode & 0o777).toBe(0o640);
+        resources.dispose();
+        expect(existsSync(first.cwd)).toBe(false);
+    });
+
+    test('the first build does not import an unrelated working-tree input', async () => {
+        await using sandbox = await testdir();
+        using resources = new DisposableStack();
+        await createFileTree(sandbox.path, {
+            'local-input.txt': 'Only available in the working tree.',
+            'build.js': `import { readFileSync, existsSync, writeFileSync, chmodSync, statSync, mkdirSync, symlinkSync, unlinkSync } from 'node:fs';
+readFileSync('local-input.txt');
+${BUILD}`,
+        });
+        const request = await input(sandbox.path, ['build.js'], resources);
+        const first = await siteBuild(request);
+        expect(first.isBuilt).toBe(false);
+        expect(existsSync(join(sandbox.path, 'dist'))).toBe(false);
+        expect(readFileSync(join(sandbox.path, 'local-input.txt'), 'utf8')).toBe('Only available in the working tree.');
+    });
+});
+
+test('a failed reproducibility build retains the first isolated output', async () => {
+    await using sandbox = await testdir();
+    using resources = new DisposableStack();
+    await createFileTree(sandbox.path, { 'build.js': BUILD });
+    const request = await input(sandbox.path, ['build.js'], resources);
+    const first = await siteBuild(request);
+    expect(first.isBuilt).toBe(true);
+    writeFileSync(join(sandbox.path, 'build.js'), 'throw new Error("Planted build failure");');
+    await expect(buildReproducible(request)).rejects.toThrow('The second site build failed');
+    expect(readFileSync(join(first.output, 'index.html'), 'utf8')).toBe('first');
+    expect(existsSync(join(sandbox.path, 'dist'))).toBe(false);
+});
+
+test.each([0, 7])('a run cleans isolated site output after build exit %i', async (code) => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, {
+        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["static-site"]\n[tools.site]\nbuild = "bun build.js"\n',
+        'build.js': BUILD,
+        'dist/index.html': 'authored output',
+    });
+    const session = await openSession(sandbox.path);
+    let cwd = '';
+    const run = spyOn(processes, 'run').mockImplementation(async (_argv, options) => {
+        cwd = options.cwd!;
+        mkdirSync(join(cwd, 'dist'), { recursive: true });
+        writeFileSync(join(cwd, 'dist/index.html'), 'isolated output');
+        return { code, stdout: '', stderr: code === 0 ? '' : 'Planted build failure', missing: false, duration: 1 };
+    });
+    try {
+        const outcome = await executeRun(session, {
+            stage: 'all',
+            skips: [],
+            only: ['static-site/build'],
+            fix: false,
+            isDryRun: false,
+            noCache: true,
+        });
+        expect(outcome.report.exitCode).toBe(code === 0 ? 0 : 1);
+        expect(cwd).not.toBe(sandbox.path);
+        expect(cwd).not.toBe('');
+        expect(existsSync(cwd)).toBe(false);
+        expect(readFileSync(join(sandbox.path, 'dist/index.html'), 'utf8')).toBe('authored output');
+    } finally {
+        run.mockRestore();
+    }
+});
+
+test('site output inventory refuses external links and accepts corrected assets', async () => {
+    await using sandbox = await testdir();
+    await createFileTree(sandbox.path, { 'dist/local.txt': 'local', 'external.txt': 'external' });
+    const link = join(sandbox.path, 'dist/linked.txt');
+    symlinkSync('../external.txt', link);
+    expect(() => filesUnder(join(sandbox.path, 'dist'))).toThrow('Source link leaves the repository');
+    unlinkSync(link);
+    symlinkSync('local.txt', link);
+    expect(filesUnder(join(sandbox.path, 'dist'))).toEqual(['linked.txt', 'local.txt']);
+});
+
+test.each([
+    ['links', internalLinks],
+    ['markup', builtMarkup],
+    ['selectors', deadSelectors],
+] as const)(
+    '%s rejects fatal, absent, and malformed reports and accepts defects and corrections',
+    async (name, analyze) => {
+        await using sandbox = await testdir();
+        using resources = new DisposableStack();
+        await createFileTree(sandbox.path, { 'build.js': BUILD });
+        const request = await input(sandbox.path, ['build.js'], resources);
+        const build = await siteBuild(request);
+        writeFileSync(join(build.output, 'style.css'), 'body { color: red; }');
+        let code = 2;
+        let stdout = '';
+        const command = spyOn(toolRunner, 'runCheckCommand').mockImplementation(async () => ({
+            code,
+            stdout,
+            stderr: 'Planted tool diagnostic',
+            missing: false,
+            duration: 1,
+        }));
+        try {
+            await expect(analyze(request)).rejects.toThrow();
+            code = 0;
+            for (const invalid of ['', '{ broken', '{}']) {
+                stdout = invalid;
+                await expect(analyze(request)).rejects.toThrow();
+            }
+            stdout = JSON.stringify(
+                name === 'links'
+                    ? { links: [{ url: 'https://example.com/missing', state: 'BROKEN', status: 404 }] }
+                    : name === 'markup'
+                      ? [
+                            {
+                                filePath: join(build.output, 'index.html'),
+                                messages: [{ ruleId: 'doctype', line: 1, message: 'Missing doctype.' }],
+                            },
+                        ]
+                      : [{ file: 'style.css', rejected: ['.unused'] }],
+            );
+            code = name === 'selectors' ? 0 : 1;
+            expect(await analyze(request)).toHaveLength(1);
+            code = 0;
+            stdout = JSON.stringify(
+                name === 'links' ? { links: [] } : name === 'markup' ? [] : [{ file: 'style.css', rejected: [] }],
+            );
+            expect(await analyze(request)).toEqual([]);
+        } finally {
+            command.mockRestore();
+        }
+    },
+);
+
+test('site builds receive quoted script names and empty arguments', async () => {
+    await using sandbox = await testdir();
+    using resources = new DisposableStack();
+    await createFileTree(sandbox.path, {
+        'build site.js': `if (process.argv[2] !== '' || process.argv[3] !== 'two words') throw new Error('Lost arguments');\n${BUILD}`,
+    });
+    const request = await input(sandbox.path, ['build site.js'], resources);
+    const view = request.view;
+    request.view = {
+        ...view,
+        tool: (name) =>
+            name === 'site' ? { ...view.tool(name), build: `bun "build site.js" "" "two words"` } : view.tool(name),
+    };
+    expect((await siteBuild(request)).isBuilt).toBe(true);
+});
+
+test.each([
+    ['links', internalLinks],
+    ['markup', builtMarkup],
+    ['selectors', deadSelectors],
+] as const)('native %s output reports a defect and accepts its correction', async (name, analyze) => {
+    await using sandbox = await testdir();
+    using resources = new DisposableStack();
+    await createFileTree(sandbox.path, { 'build.js': BUILD });
+    const request = await input(sandbox.path, ['build.js'], resources);
+    const build = await siteBuild(request);
+    const page = (body: string) =>
+        `<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><title>Example</title></head><body>${body}</body></html>`;
+    await createFileTree(sandbox.path, {
+        '.gspot/html-validate-built.json': '{"extends":["html-validate:recommended"]}',
+    });
+    writeFileSync(
+        join(build.output, 'index.html'),
+        page(
+            name === 'links'
+                ? '<a href="/missing.html">Missing</a>'
+                : name === 'markup'
+                  ? '<img src="image.png">'
+                  : '<p>Example</p>',
+        ),
+    );
+    writeFileSync(join(build.output, 'style.css'), '.unused { color: red; }');
+    const command = spyOn(toolRunner, 'runCheckCommand').mockImplementation(async (_input, argv, options) =>
+        processes.run([join(import.meta.dir, '../../../node_modules/.bin', argv[0]!), ...argv.slice(1)], {
+            ...options,
+            timeoutMs: 10000,
+        }),
+    );
+    try {
+        const findings = await analyze(request);
+        expect(findings.length).toBeGreaterThan(0);
+        writeFileSync(join(build.output, 'index.html'), page('<p class="unused">Example</p>'));
+        expect(await analyze(request)).toEqual([]);
+    } finally {
+        command.mockRestore();
+    }
+});

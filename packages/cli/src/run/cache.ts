@@ -1,10 +1,12 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // .gspot/cache/: a recorded verdict keyed on the tool version, the configuration hash and the content hash of every file read.
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
+import { globbySync } from 'globby';
 import type { CacheKeyInput } from '#cli/run/types.ts';
 import type { CheckResult } from '#cli/output/finding.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
 import { reportStorageFailure } from '#cli/output/messages.ts';
-import { lstatSync, readFileSync } from 'node:fs';
+import { readdirSync, statSync, type Dirent } from 'node:fs';
 import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
 
@@ -38,7 +40,37 @@ export function cacheKey(input: CacheKeyInput): string {
  * @returns the digest
  */
 export function fileHash(root: string, path: string): string {
-    return new Bun.CryptoHasher('sha256').update(readFileSync(join(root, path))).digest('hex');
+    return new Bun.CryptoHasher('sha256').update(readSource(root, path)).digest('hex');
+}
+
+/** Expand declared cache inputs without traversing directories outside the repository. */
+export function cacheInputs(root: string, patterns: string[]): string[] {
+    const files = openConfinedRoot(root, 'native');
+    const localPath = (path: string): string => relative(root, path).replaceAll('\\', '/');
+    function readDirectory(path: string): string[];
+    function readDirectory(path: string, options: { withFileTypes: true }): Dirent[];
+    function readDirectory(path: string, options?: { withFileTypes: true }): string[] | Dirent[] {
+        const local = localPath(path);
+        if (local !== '') files.stat(local);
+        return options === undefined ? readdirSync(path) : readdirSync(path, options);
+    }
+    try {
+        return globbySync(patterns, {
+            cwd: root,
+            dot: true,
+            onlyFiles: true,
+            followSymbolicLinks: true,
+            throwErrorOnBrokenSymbolicLink: true,
+            gitignore: false,
+            expandDirectories: false,
+            fs: {
+                readdirSync: readDirectory,
+                statSync: (path) => statSync(localPath(path) === '' ? root : files.source(localPath(path))),
+            },
+        });
+    } finally {
+        files.close();
+    }
 }
 
 /**
@@ -105,10 +137,11 @@ export function pruneCache(root: string): void {
     const cutoff = Date.now() - RETENTION_MS;
     try {
         withLifecycleOwner(root, (owner) => {
+            const files = openConfinedRoot(root);
             const proposals = readOwnership(root)
                 .files.filter((entry) => entry.kind === 'runtime' && CACHE_ENTRY.test(entry.path))
                 .filter((entry) => {
-                    const status = lstatSync(join(root, entry.path), { throwIfNoEntry: false });
+                    const status = files.stat(entry.path);
                     return status !== undefined && status.isFile() && status.mtimeMs < cutoff;
                 })
                 .map((entry) => owner.proposeRestoration(entry.path))

@@ -3,9 +3,8 @@ import { basename } from 'node:path';
 import type { TomlTable } from '#cli/policy/types.ts';
 import type { ExportedProfile } from '#cli/profile/types.ts';
 import { stringify, parse as parseToml } from 'smol-toml';
-import { REPOSITORY_TABLES } from '#cli/profile/schema.ts';
+import { REPOSITORY_TABLES, isRepositoryPath } from '#cli/profile/schema.ts';
 
-const PATH_KEYS = new Set(['paths', 'patterns', 'path', 'file']);
 const PROFILE_EXTENSION = /\.profile\.toml$|\.toml$/u;
 
 function isTable(value: unknown): value is TomlTable {
@@ -13,7 +12,9 @@ function isTable(value: unknown): value is TomlTable {
 }
 
 function hasPath(value: unknown): boolean {
-    return isTable(value) && Object.keys(value).some((key) => PATH_KEYS.has(key));
+    if (!isTable(value)) return false;
+    if (Object.entries(value).some(([key, entry]) => isRepositoryPath(key, entry))) return true;
+    return Object.values(value).some((entry) => isTable(entry) && hasPath(entry));
 }
 
 // Returns the value without the list entries that name a path, and records where each one was.
@@ -30,6 +31,11 @@ function withoutPaths(value: unknown, where: string, leftOut: string[]): unknown
     }
     if (!isTable(value)) return value;
     const entries = Object.entries(value)
+        .filter(([key, inner]) => {
+            if (!isRepositoryPath(key, inner)) return true;
+            leftOut.push(`${where === '' ? key : `${where}.${key}`}: names a repository path`);
+            return false;
+        })
         .map(([key, inner]): [string, unknown] => [
             key,
             withoutPaths(inner, where === '' ? key : `${where}.${key}`, leftOut),

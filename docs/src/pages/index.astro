@@ -1,114 +1,48 @@
 ---
-import Site from '../layouts/Site.astro';
+import StarlightPage from '@astrojs/starlight/components/StarlightPage.astro';
 import Finding from '../components/Finding.astro';
 ---
-<Site title="gspot · One place for your repository checks" description="Run repository checks, configure your tools, and give coding agents the rules to follow. Read a real finding and run your first check.">
-    <section class="split hero" aria-labelledby="hero-title">
-        <div>
-            <p class="eyebrow">Repository checks</p>
-            <h1 id="hero-title">One place for your repository checks.</h1>
-            <p>gspot runs your checks and gives coding agents the rules to follow.
-                Presets generate configuration for existing tools. <code>gspot.toml</code> keeps the policy in your repository.</p>
-            <div class="actions"><a class="button primary" href="/guides/install/">Get started</a><a class="button" href="#finding">See a finding</a></div>
-            <p class="muted">Start from a source checkout with Bun 1.3.11.</p>
-            <div class="panel install">
-                <pre id="install-command" tabindex="0" aria-label="Contributor checkout command"><code>bun packages/cli/src/main.ts --help</code></pre>
-                <button type="button" id="copy-install" hidden>Copy</button>
-            </div>
-            <p id="copy-status" class="muted" aria-live="polite"></p>
-            <p class="muted">Run from the checkout after <code>bun install --frozen-lockfile</code>.
-                <a href="/guides/install/">Read the complete setup.</a></p>
-        </div>
-        <div id="finding"><Finding /></div>
-    </section>
-    <section aria-labelledby="finding-title" class="section-line">
-        <div>
-            <p class="eyebrow">Read. Correct. Run again.</p>
-            <h2 id="finding-title">A finding you can act on.</h2>
-            <p>This small Bash example has a broken <code>if</code> statement. The check names the file,
-                reports the parser error, and gives a correction path.</p>
-            <p>Replace the broken statement with the shown <code>printf</code> command, then run the same check again.
-                No automatic fix is implied.</p>
-            <p><code>init</code> and <code>check</code> are separate steps. Setup proposes and applies configuration;
-                it does not run checks.</p>
-            <a href="/guides/you-got-a-finding/">Understand findings and exceptions →</a>
-        </div>
-    </section>
-    <section class="split section-line" aria-labelledby="review-title">
-        <div>
-            <p class="eyebrow">Your repository stays yours</p>
-            <h2 id="review-title">Review what changes.</h2>
-            <p>Run <code>gspot init</code> from your repository root. Read the proposed presets, generated files,
-                and integrations before accepting.</p>
-            <p>Supported settings can carry over. Unsupported configuration stays visible in the plan.
-                Local recovery copies preserve recorded originals. Edited generated files require a decision
-                before restoration.</p>
-            <a href="/guides/existing-repository/">Adopt gspot in an existing repository →</a>
-        </div>
-        <div class="terminal">
-            <p class="terminal-label">Actual setup-plan excerpt · syntax example, integrations disabled</p>
-            <pre tabindex="0" aria-label="Initialization plan excerpt"><code>write
-  gspot.toml     your policy, 16 lines
-  .gspot/        generated configuration and version pin
-  .shellcheckrc  stub
-  typos.toml     stub
-
-change
-  .gitignore           one managed block
-  .gspot/package.json  3 pinned npm tools; matching lockfile</code></pre>
-            <p class="plan-note muted">This excerpt comes from the reproducible example. Your plan depends on the selected presets and existing files.</p>
-        </div>
-    </section>
-    <section class="split section-line" aria-labelledby="choose-title">
-        <div>
-            <p class="eyebrow">Policy you can read</p>
-            <h2 id="choose-title">Choose what runs.</h2>
-            <p>Start with selected presets at <code>recommended</code>. The optional <code>all</code> level adds
-                stricter style and structure preferences. Inspect each check in the generated reference.</p>
-            <div class="terminal"><p class="terminal-label">gspot.toml · selected presets</p><pre tabindex="0" aria-label="Preset configuration"><code>version = 1
-presets = ["bash"]
-level = "recommended"</code></pre></div>
-        </div>
-        <div class="choices">
-            <h3>One policy, several workflows.</h3>
-            <p>Run selected checks while editing. Check staged content before committing. Teammates clone the repository
-                and run <code>gspot install</code> to consume matching locks.</p>
-            <p><a href="/guides/scopes/">Give nested projects their own scopes.</a> Explain an exception with
-                <code>gspot ignore</code>; use <code>gspot apply</code> after changing policy.</p>
-            <a href="/reference/commands/check/">Explore the command reference →</a>
-        </div>
-    </section>
-    <section class="section-line" aria-labelledby="tools-title">
-        <p class="eyebrow">Use the tools that know your code</p>
-        <h2 id="tools-title">A shared policy around specialist checks.</h2>
-        <div class="tool-links"><a href="/reference/presets/bash/">Bash</a><a href="/reference/presets/typescript/">TypeScript</a><a href="/reference/presets/python/">Python</a><a href="/reference/presets/swift/">Swift</a><a href="/reference/presets/postgres/">Postgres</a></div>
-        <p>Presets declare tools and checks. Their references show the level, stage, and purpose of each check;
-            open a check reference for its configuration and supported platforms.</p>
-        <p>Use <a href="/guides/hooks-and-ci/">hooks and CI</a> for automated checks, and
-            <a href="/guides/agents/">agent rule files</a> for coding guidance. Instructions guide behavior.
-            Checks enforce the parts that tools can measure.</p>
-    </section>
-</Site>
-<script>
-    const button = document.querySelector<HTMLButtonElement>('#copy-install');
-    const code = document.querySelector('#install-command code');
-    const status = document.querySelector('#copy-status');
-    if (button && code && status) {
-        button.hidden = false;
-        button.addEventListener('click', async () => {
-            try {
-                await navigator.clipboard.writeText(code.textContent ?? '');
-                status.textContent = 'Copied.';
-            } catch { status.textContent = 'Copy was unavailable. Select the command and copy it manually.'; }
-        });
-    }
-</script>
+<StarlightPage frontmatter={{
+    title: 'CLI to lint and enforce rules for LLM generated codebases',
+    description: 'CLI to lint and enforce rules for LLM generated codebases',
+    template: 'splash',
+    editUrl: false,
+    lastUpdated: false,
+}}>
+    <div class="landing">
+        <nav class="actions" aria-label="Start using gspot">
+            <a href="/guides/install/">Get started</a>
+            <a href="/reference/commands/check/">Command reference</a>
+        </nav>
+        <p>Setup currently requires a source checkout and Bun 1.3.11.
+            The installation guide covers prerequisites and the commands to run from that checkout.</p>
+        <p>Choose presets in <code>gspot.toml</code> to configure tools and checks.
+            Generated rule guides give coding agents instructions for your repository.</p>
+        <section aria-labelledby="finding">
+            <h2 id="finding">Find and correct a Bash syntax error</h2>
+            <Finding />
+        </section>
+        <section aria-labelledby="setup">
+            <h2 id="setup">Configure your repository</h2>
+            <p>Run <code>gspot init</code> from your repository root. Review the proposed presets,
+                file changes, and integrations before accepting. Run <code>gspot check</code> separately.</p>
+            <p>For existing configuration and recovery options, follow the{' '}<a href="/guides/existing-repository/">existing repository guide</a>.</p>
+            <ul>
+                <li><a href="/guides/customize/">Choose checks and exceptions</a></li>
+                <li><a href="/guides/hooks-and-ci/">Run checks in hooks and CI</a></li>
+                <li><a href="/guides/agents/">Configure coding-agent instructions</a></li>
+            </ul>
+        </section>
+    </div>
+</StarlightPage>
 <style>
-    .section-line { border-top: 1px solid var(--site-border); }
-    .install { display: flex; align-items: center; padding-right: 12px; }
-    .install pre { flex: 1; }
-    .plan-note { padding: 0 20px 12px; }
-    .choices { padding-top: 24px; }
-    .tool-links { display: flex; gap: 16px 32px; flex-wrap: wrap; }
-    .tool-links a { min-height: 44px; display: inline-flex; align-items: center; font-family: ui-monospace, monospace; }
+    .landing { max-width: 1120px; }
+    .landing > p, section > p { max-width: 68ch; }
+    .actions { display: flex; flex-wrap: wrap; gap: 16px 32px; margin-block: 0 24px; }
+    .actions a { display: inline-flex; align-items: center; min-height: 44px; font-weight: 600; }
+    .actions a { border: 1px solid var(--sl-color-gray-5); border-radius: 8px; padding: 8px 20px; text-decoration: none; }
+    .actions a:first-child { background: var(--sl-color-white); color: var(--sl-color-black); }
+    .actions a:hover { border-color: var(--sl-color-gray-3); }
+    section { margin-top: 64px; padding-top: 32px; border-top: 1px solid var(--sl-color-gray-5); }
+    .landing > section > h2 { margin: 0 0 24px; padding: 0; border: 0; }
 </style>

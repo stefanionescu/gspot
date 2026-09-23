@@ -1,6 +1,5 @@
+import { readSource } from '#cli/repository/tracked.ts';
 import { MISE_CONFIG_PATH } from '#cli/emit/runner-tasks.ts';
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 // Every path-shaped token in Markdown names a tracked file or folder, and every `mise run` or `bun run` names a task that exists.
 import { globbySync } from 'globby';
 import { visit } from 'unist-util-visit';
@@ -9,7 +8,6 @@ import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
 import { fromMarkdown } from 'mdast-util-from-markdown';
-import type { PathIndex, ProseLine } from '#cli/checks/types.ts';
 
 import {
     FILE_EXTENSION,
@@ -20,24 +18,30 @@ import {
     TOKEN_SEPARATORS,
 } from '#cli/checks/docs/docs-definitions.ts';
 
+type PathIndex = { known: Set<string>; tasks: Set<string>; isException: (path: string) => boolean };
+
+type ProseLine = { number: number; line: string };
+
 const MISE_FILES = ['mise.toml', '.mise.toml', '.config/mise/config.toml', MISE_CONFIG_PATH];
 const TRAILING_PUNCTUATION = '.,;:';
 
 function knownPaths(input: EngineInput): Set<string> {
     const known = new Set<string>();
-    for (const file of input.session.repository.files) {
+    if (input.repositoryFiles === undefined)
+        throw new Error('The stale-paths check requires a once-only repository inventory.');
+    for (const file of input.repositoryFiles) {
         known.add(file.path);
         const segments = file.path.split('/');
         for (let depth = 1; depth < segments.length; depth += 1) known.add(segments.slice(0, depth).join('/'));
     }
     // A check id is written like a path, and a document that names supabase/config means the check, not a file.
-    for (const manifest of input.session.manifests.values()) for (const check of manifest.checks) known.add(check.name);
+    for (const manifest of input.manifests.values()) for (const check of manifest.checks) known.add(check.name);
     return known;
 }
 
 function miseTasks(root: string, file: string): string[] {
     try {
-        const parsed = parseToml(readFileSync(join(root, file), 'utf8')) as { tasks?: Record<string, unknown> };
+        const parsed = parseToml(readSource(root, file).toString('utf8')) as { tasks?: Record<string, unknown> };
         return Object.keys(parsed.tasks ?? {});
     } catch (error) {
         if ((error as NodeJS.ErrnoException).code === 'ENOENT') return [];
@@ -47,7 +51,7 @@ function miseTasks(root: string, file: string): string[] {
 
 function packageScripts(root: string): string[] {
     try {
-        const manifest = JSON.parse(readFileSync(join(root, 'package.json'), 'utf8')) as {
+        const manifest = JSON.parse(readSource(root, 'package.json').toString('utf8')) as {
             scripts?: Record<string, unknown>;
         };
         return Object.keys(manifest.scripts ?? {});
@@ -135,16 +139,16 @@ function lineFindings(input: EngineInput, file: string, prose: ProseLine, index:
  * @param input the engine input
  * @returns the findings
  */
-export function stalePaths(input: EngineInput): Promise<Finding[]> {
+export function stalePaths(input: EngineInput): Finding[] {
     const exceptions = (input.view.tool('docs')['paths_allowed'] as { patterns: string[] }[] | undefined) ?? [];
     const isException = pathMatcher(exceptions.flatMap((entry) => entry.patterns));
     const index: PathIndex = { known: knownPaths(input), tasks: tasksOf(input.root), isException };
     const findings = input.files
         .filter((file) => file.nature === 'source' && file.path.endsWith('.md') && !isException(file.path))
         .flatMap((file) =>
-            proseLines(readFileSync(join(input.root, file.path), 'utf8')).flatMap((prose) =>
+            proseLines(readSource(input.root, file.path).toString('utf8')).flatMap((prose) =>
                 lineFindings(input, file.path, prose, index),
             ),
         );
-    return Promise.resolve(findings);
+    return findings;
 }

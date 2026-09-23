@@ -1,3 +1,4 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // The project checks of a Python scope: import contracts, who owns the dependencies, and which files the type check leaves out.
 import { join } from 'node:path';
 import { parse } from 'smol-toml';
@@ -7,7 +8,7 @@ import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { pathMatcher } from '#cli/presets/claims.ts';
 
 const MANIFEST = 'pyproject.toml';
@@ -29,9 +30,10 @@ function finding(input: EngineInput, at: { file: string; line: number }, rule: s
  * @returns one finding for each broken contract
  */
 export async function importLinter(input: EngineInput): Promise<Finding[]> {
-    const manifest = join(input.root, input.scope === '' ? MANIFEST : `${input.scope}/${MANIFEST}`);
-    if (!existsSync(manifest)) throw new SkippedCheckError('This scope has no pyproject.toml import contracts.');
-    const project = importConfiguration.parse(parse(readFileSync(manifest, 'utf8')));
+    const manifest = input.scope === '' ? MANIFEST : `${input.scope}/${MANIFEST}`;
+    if (!existsSync(join(input.root, manifest)))
+        throw new SkippedCheckError('This scope has no pyproject.toml import contracts.');
+    const project = importConfiguration.parse(parse(readSource(input.root, manifest).toString('utf8')));
     if (project.tool?.importlinter === undefined)
         throw new SkippedCheckError('This scope has no tool.importlinter configuration.');
     const result = await runCheckCommand(input, ['lint-imports', '--no-cache'], {
@@ -54,13 +56,13 @@ export async function importLinter(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function dependencyOwnership(input: EngineInput): Promise<Finding[]> {
+export function dependencyOwnership(input: EngineInput): Finding[] {
     if (!['uv.lock', 'poetry.lock', 'pdm.lock'].some((name) => existsSync(join(input.root, input.scope, name))))
         throw new SkippedCheckError('Dependency ownership requires uv.lock, poetry.lock, or pdm.lock in this scope.');
     const allowed = (input.view.tool('dependencies')['pip_install_allowed'] as { paths: string[] }[] | undefined) ?? [];
     const isAllowed = pathMatcher(allowed.flatMap((entry) => entry.paths));
-    const files = input.session.repository.files.filter(
-        (file) => file.nature === 'source' && scopeOf(file.path, input.session.repository.scopes).path === input.scope,
+    const files = input.files.filter(
+        (file) => file.nature === 'source' && scopeOf(file.path, input.scopeEntries).path === input.scope,
     );
     const requirements = files
         .filter((file) => REQUIREMENTS_FILE.test(file.path))
@@ -75,7 +77,8 @@ export function dependencyOwnership(input: EngineInput): Promise<Finding[]> {
     const installs = files
         .filter((file) => !isAllowed(file.path) && INSTALL_HOLDERS.some((ending) => file.path.endsWith(ending)))
         .flatMap((file) =>
-            readFileSync(join(input.root, file.path), 'utf8')
+            readSource(input.root, file.path)
+                .toString('utf8')
                 .split('\n')
                 .flatMap((text, index): Finding[] =>
                     PIP_INSTALL.test(text) && !text.trimStart().startsWith('#')
@@ -90,7 +93,7 @@ export function dependencyOwnership(input: EngineInput): Promise<Finding[]> {
                         : [],
                 ),
         );
-    return Promise.resolve([...requirements, ...installs]);
+    return [...requirements, ...installs];
 }
 
 /**
@@ -98,23 +101,21 @@ export function dependencyOwnership(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns one finding for each exclusion that matches no tracked file
  */
-export function typecheckMembership(input: EngineInput): Promise<Finding[]> {
+export function typecheckMembership(input: EngineInput): Finding[] {
     const excluded = (input.view.tool('basedpyright')['exclude'] as { paths: string[] }[] | undefined) ?? [];
-    const paths = input.session.repository.files.map((file) => file.path);
+    const paths = input.files.map((file) => file.path);
     const stale = excluded
         .flatMap((entry) => entry.paths)
         .filter((pattern) => {
             const isMatch = pathMatcher([pattern, `${pattern}/**`]);
             return paths.every((path) => !isMatch(path));
         });
-    return Promise.resolve(
-        stale.map((pattern) =>
-            finding(
-                input,
-                { file: 'gspot.toml', line: 1 },
-                'stale-exclusion',
-                `tools.basedpyright.exclude names ${pattern}, which matches no tracked file.`,
-            ),
+    return stale.map((pattern) =>
+        finding(
+            input,
+            { file: 'gspot.toml', line: 1 },
+            'stale-exclusion',
+            `tools.basedpyright.exclude names ${pattern}, which matches no tracked file.`,
         ),
     );
 }

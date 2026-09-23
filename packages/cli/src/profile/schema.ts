@@ -12,3 +12,26 @@ export const profileSchema = policySchema
         profile: z.string().min(1),
         selection: z.enum(['exact', 'detect']),
     });
+
+const PATH_KEYS = new Set([
+    'paths',
+    'patterns',
+    'path',
+    'file',
+    'files',
+    'excludeFiles',
+    'basePath',
+    'ignores',
+    'ignore_patterns',
+    'glob',
+    'harness_directory',
+]);
+
+/** Identify repository selectors and local executable registrations that cannot travel in a profile. */
+export function isRepositoryPath(key: string, value: unknown): boolean {
+    return (
+        (key === 'adopted' && typeof value === 'object' && value !== null && 'sections' in value) ||
+        PATH_KEYS.has(key) ||
+        (key === 'module' && typeof value === 'string' && /^(?:\.|\/|\\|[A-Za-z]:)/u.test(value))
+    );
+}

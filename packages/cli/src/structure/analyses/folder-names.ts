@@ -11,7 +11,7 @@ import { BANNED_FOLDER_NAMES, IGNORED_FOLDERS } from '#cli/structure/structure-d
  */
 export const folderNames: Analysis = (context) => {
     const allowed = pathMatcher(
-        context.input.session.policyFiles.policy.structure.folder_name_allowed.flatMap((entry) => entry.paths),
+        context.input.policyFiles.policy.structure.folder_name_allowed.flatMap((entry) => entry.paths),
     );
     const seen = new Set<string>();
     const findings = context.files.flatMap((file) => {
@@ -38,5 +38,5 @@ export const folderNames: Analysis = (context) => {
             ];
         });
     });
-    return Promise.resolve(findings);
+    return findings;
 };

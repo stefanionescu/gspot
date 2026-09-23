@@ -8,11 +8,12 @@ import { toolPin } from '#cli/platform/tool-probe.ts';
 import { resolveEngine, runEngineCheck } from '#cli/run/engines.ts';
 import { checkTypescript } from '#cli/checks/typescript/tsc.ts';
 import { runToolCheck } from '#cli/run/tool-runner.ts';
+import { configurationName } from '#cli/run/scope-paths.ts';
 // The check graph for a run: stage, scope, file sets, requirements, skips.
 import type { RepositoryCheck } from '#cli/policy/types.ts';
 import type { TrackedFile } from '#cli/repository/types.ts';
 import type { CheckSpec, Manifest, Stage, ToolPin } from '#cli/presets/types.ts';
-import { claimedByClaims, claimedFiles, isInScope, pathMatcher } from '#cli/presets/claims.ts';
+import { claimedByClaims, isInScope, pathMatcher } from '#cli/presets/claims.ts';
 
 import type {
     CheckRunner,
@@ -53,7 +54,8 @@ function toolFor(spec: CheckSpec, manifest: Manifest | undefined, session: Sessi
     return toolPin(session.manifests.values(), name);
 }
 
-function fromRepoCheck(entry: RepositoryCheck): CheckSpec {
+/** Normalize a repository command into the check definition used by planning and explanations. */
+export function repositoryCheckSpec(entry: RepositoryCheck): CheckSpec {
     const { paths, ...definition } = entry;
     return {
         ...definition,
@@ -74,20 +76,43 @@ function fromRepoCheck(entry: RepositoryCheck): CheckSpec {
     };
 }
 
+// A policy check that reads a scoped configuration must run against that scope's file partition.
+function isRepositoryPolicy(manifest: Manifest, spec: CheckSpec): boolean {
+    if (manifest.preset.kind !== 'policy' || manifest.claims.from_languages || spec.runs === 'per-scope') return false;
+    const command = [...(spec.command ?? []), ...Object.values(spec.env ?? {})];
+    return !manifest.configs.some(
+        (config) =>
+            config.per_scope &&
+            !config.fragment &&
+            command.some((part) => part.includes(`{config:${configurationName(config.target)}}`)),
+    );
+}
+
 function manifestEntries(manifest: Manifest, seenRepoChecks: Set<string>): PlanEntry[] {
-    if (!(manifest.preset.kind === 'policy' && !manifest.claims.from_languages))
-        return manifest.checks.map((spec) => ({ spec, manifest }));
-    const fresh = manifest.checks.filter((spec) => !seenRepoChecks.has(spec.name));
-    for (const spec of fresh) seenRepoChecks.add(spec.name);
+    const fresh = manifest.checks.filter(
+        (spec) => !isRepositoryPolicy(manifest, spec) || !seenRepoChecks.has(spec.name),
+    );
+    for (const spec of fresh) if (isRepositoryPolicy(manifest, spec)) seenRepoChecks.add(spec.name);
     return fresh.map((spec) => ({ spec, manifest }));
 }
 
 function entriesFor(session: Session, scope: ScopeSelection, seenRepoChecks: Set<string>): PlanEntry[] {
     const isRoot = scope.scope.path === '';
-    const entries = scope.selected
-        .filter((manifest) => isRoot || !(manifest.preset.kind === 'policy' && !manifest.claims.from_languages))
-        .flatMap((manifest) => manifestEntries(manifest, seenRepoChecks));
-    const own = isRoot ? session.policyFiles.policy.checks.map((entry) => ({ spec: fromRepoCheck(entry) })) : [];
+    const entries = scope.selected.flatMap((manifest) =>
+        manifestEntries(manifest, seenRepoChecks).filter(
+            (entry) => isRoot || !isRepositoryPolicy(manifest, entry.spec),
+        ),
+    );
+    if (isRoot)
+        for (const selected of session.scopes)
+            for (const manifest of selected.selected)
+                for (const spec of manifest.checks)
+                    if (
+                        manifest.preset.check_references?.includes(spec.name) &&
+                        !entries.some((entry) => entry.spec.name === spec.name)
+                    )
+                        entries.push({ spec, manifest });
+    const own = isRoot ? session.policyFiles.policy.checks.map((entry) => ({ spec: repositoryCheckSpec(entry) })) : [];
     return [...entries, ...own];
 }
 
@@ -104,22 +129,30 @@ function isWanted(spec: CheckSpec, options: PlanOptions): boolean {
 
 function projectFiles(context: PlanContext, scopeForFiles: string): TrackedFile[] {
     const prefix = scopeForFiles === '' ? '' : `${scopeForFiles}/`;
-    return context.session.repository.files.filter((file) => file.path.startsWith(prefix) && file.nature !== 'binary');
+    return context.session.repository.files.filter((file) => file.path.startsWith(prefix));
 }
 
 function claimedFor(context: PlanContext, entry: PlanEntry, scopeForFiles: string): TrackedFile[] {
     const { session, scope } = context;
     const { spec, manifest } = entry;
     if (spec.runs !== 'per-file-list') {
-        // A check that walks the scope still needs a reason to run: with claims of its own, at least one file they name.
-        const hasNothingClaimed =
-            spec.claims !== undefined &&
-            claimedByClaims(spec.claims, scope.selected, session.repository.files, scopeForFiles).length === 0;
-        return hasNothingClaimed ? [] : projectFiles(context, scopeForFiles);
+        const claims = spec.claims;
+        const claimed =
+            claims === undefined
+                ? undefined
+                : claimedByClaims(claims, scope.selected, session.repository.files, scopeForFiles);
+        const owned =
+            spec.runs === 'per-scope' ? claimed?.filter((file) => isOutsideChildren(file, context.children)) : claimed;
+        const hasNothingClaimed = owned?.length === 0;
+        if (hasNothingClaimed) return [];
+        const files = projectFiles(context, scopeForFiles);
+        return spec.runs === 'per-scope'
+            ? files.filter((file) => isOutsideChildren(file, context.children))
+            : files.filter((file) => file.nature !== 'binary');
     }
     if (!manifest) return session.repository.files.filter((file) => pathMatcher(spec.claims?.paths ?? [])(file.path));
     if (spec.claims) return claimedByClaims(spec.claims, scope.selected, session.repository.files, scopeForFiles);
-    return claimedFiles(manifest, scope.selected, session.repository.files, scopeForFiles);
+    return claimedByClaims(manifest.claims, scope.selected, session.repository.files, scopeForFiles);
 }
 
 function withoutExcluded(files: TrackedFile[], spec: CheckSpec, scope: ScopeSelection): TrackedFile[] {
@@ -138,7 +171,8 @@ function isPolicyTouched(narrow: Set<string>): boolean {
 // The policy changed, so the check runs over everything it claims, with the check's own claims kept.
 function reclaimed(context: PlanContext, entry: PlanEntry): TrackedFile[] {
     const { scope, children } = context;
-    return claimedFor(context, entry, scope.scope.path).filter((file) => isOutsideChildren(file, children));
+    const files = claimedFor(context, entry, scope.scope.path);
+    return entry.manifest === undefined ? files : files.filter((file) => isOutsideChildren(file, children));
 }
 
 function narrowed(context: PlanContext, entry: PlanEntry, files: TrackedFile[]): TrackedFile[] {
@@ -160,11 +194,9 @@ function filesFor(
     const { spec, manifest } = entry;
     const scopePath = isWholeCheck ? '' : scope.scope.path;
     const triggerPaths = missingTriggers(context, spec, scopePath);
-    const isWhole =
-        spec.runs !== 'per-file-list' ||
-        (manifest !== undefined && manifest.preset.kind === 'policy' && !manifest.claims.from_languages);
+    const isWhole = spec.runs !== 'per-file-list' || (manifest !== undefined && isRepositoryPolicy(manifest, spec));
     let files = triggerPaths.length === 0 ? claimedFor(context, entry, scopePath) : projectFiles(context, scopePath);
-    if (!isWhole) files = files.filter((file) => isOutsideChildren(file, children));
+    if (!isWhole && manifest !== undefined) files = files.filter((file) => isOutsideChildren(file, children));
     const selected = withoutExcluded(files, spec, scope);
     return { files: triggerPaths.length === 0 ? narrowed(context, entry, selected) : selected, triggerPaths };
 }
@@ -301,28 +333,12 @@ function planScope(context: PlanContext, seenRepoChecks: Set<string>, wholeSeen:
     return planned;
 }
 
-/** Whether a planned check has source input, a deleted trigger, or a commit message to inspect. */
-export function isActive(check: PlannedCheck): boolean {
-    return (
-        check.files.length > 0 ||
-        check.triggerPaths.length > 0 ||
-        check.spec.stage === 'message' ||
-        (HISTORY_ANALYSES.has(check.spec.analysis ?? '') && (check.commits?.length ?? 0) > 0)
-    );
-}
-
-/**
- * Plans every check for the run.
- * @param session the session
- * @param options stage, paths, only, skips, and the staged or ref-relative file sets
- * @returns the planned checks in scope order
- */
-export async function planRun(session: Session, options: PlanOptions): Promise<PlannedCheck[]> {
+function planScopes(session: Session, options: PlanOptions): PlannedCheck[][] {
     const seenRepoChecks = new Set<string>();
     const wholeSeen = new Set<string>();
     const platform = PLATFORM_NAMES[process.platform] ?? process.platform;
     const narrow = narrowSet(options);
-    const planned = session.scopes.map((scope) => {
+    return session.scopes.map((scope) => {
         const context: PlanContext = {
             session,
             scope,
@@ -333,6 +349,47 @@ export async function planRun(session: Session, options: PlanOptions): Promise<P
         };
         return planScope(context, seenRepoChecks, wholeSeen);
     });
+}
+
+/** Whether a planned check has source input, a deleted trigger, or a commit message to inspect. */
+export function isActive(check: PlannedCheck): boolean {
+    return (
+        check.files.length > 0 ||
+        check.triggerPaths.length > 0 ||
+        check.spec.stage === 'message' ||
+        (HISTORY_ANALYSES.has(check.spec.analysis ?? '') && (check.commits?.length ?? 0) > 0)
+    );
+}
+
+/** Checks enabled by persistent policy, before evaluating executable tool configurations. */
+export function configuredChecks(session: Session): PlannedCheck[] {
+    const only = [
+        ...session.scopes.flatMap((scope) =>
+            scope.selected.flatMap((manifest) => manifest.checks.map((check) => check.name)),
+        ),
+        ...session.policyFiles.policy.checks.map((check) => check.name),
+    ];
+    return planScopes(session, { stage: 'all', only, skips: [] })
+        .flatMap(yielded)
+        .filter((check) => isActive(check) && check.skip === undefined);
+}
+
+/** Source claims of a planned check, separate from inputs supplied to project-wide analysis. */
+export function claimedInputs(session: Session, check: PlannedCheck): TrackedFile[] {
+    const claims = check.spec.claims ?? check.manifest?.claims;
+    const children = check.spec.runs === 'per-scope' ? childScopes(session, check.scope) : [];
+    const files = check.files.filter((file) => isOutsideChildren(file, children));
+    return claims === undefined ? [] : claimedByClaims(claims, check.scope.selected, files, check.scope.scope.path);
+}
+
+/**
+ * Plans every check for the run.
+ * @param session the session
+ * @param options stage, paths, only, skips, and the staged or ref-relative file sets
+ * @returns the planned checks in scope order
+ */
+export async function planRun(session: Session, options: PlanOptions): Promise<PlannedCheck[]> {
+    const planned = planScopes(session, options);
     const resolved = await Promise.all(
         planned.map(async (checks) =>
             yielded(await Promise.all(checks.map((check) => prettierInputs(session, check)))),

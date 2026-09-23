@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { rmSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/harness/planted.ts';
+import { run } from '#tests/support/cli/planted.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
 
@@ -53,7 +53,7 @@ test('absent Python import contracts are explicit skips and malformed project fi
     ]);
     writeFileSync(join(sandbox.path, 'pyproject.toml'), '[broken');
     const malformed = await run(sandbox.path, command);
-    expect(malformed.code, malformed.stdout + malformed.stderr).toBe(1);
+    expect(malformed.code, malformed.stdout + malformed.stderr).toBe(2);
     expect(reportSchema.parse(JSON.parse(malformed.stdout)).checks).toMatchObject([
         { check: 'python/import-linter', status: 'error' },
     ]);

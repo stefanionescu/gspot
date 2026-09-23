@@ -134,9 +134,11 @@ export const noDuplicateBarrelExports = createRule<[], 'duplicate'>({
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'If `a.ts` and `b.ts` both export `two`, an `index.ts` containing `export * from "./a";` and `export * from "./b";` reports `duplicate`. Keep the first export and replace the second with `export { three } from "./b";` when `three` is the distinct public value needed from that module.',
             level: 'recommended',
             summary: 'Finds a name an index file exports twice, including through two export-all lines.',
-            why: 'Two exports of one name shadow each other, and which one wins depends on order nobody reads.',
+            why: 'Two exports of one name leave the public contract without a single clear owner.',
             fix: 'Export the name once, or alias one of the two so both are reachable.',
         },
         schema: [],

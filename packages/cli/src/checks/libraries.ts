@@ -1,19 +1,17 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // Checks of two libraries that read files: what client code imports from the server, and Drizzle tables with their relations and migrations.
 import { basename, dirname, join } from 'node:path';
 import { globbySync } from 'globby';
-import { readFileSync, rmSync } from 'node:fs';
+import { rmSync } from 'node:fs';
 import { scratchCopy } from '#cli/run/fixers.ts';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import { run } from '#cli/platform/spawn.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
-import { locateTool } from '#cli/platform/tool-probe.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
 
 // The source of an import statement that is no type import, read from a line that starts with import and holds its from.
 const IMPORT_SOURCE = /from ['"](?<source>[^'"]+)['"]/u;
 const TABLE = /export const (?<name>\w+) = \w*[tT]able\(/gu;
-const KIT_TIMEOUT_MS = 300_000;
 
 function finding(input: EngineInput, file: string, line: number, rule: string, text: string): Finding {
     return { check: input.spec.name, file, line, rule, message: text, fixable: false };
@@ -22,7 +20,7 @@ function finding(input: EngineInput, file: string, line: number, rule: string, t
 function sources(input: EngineInput): { path: string; text: string }[] {
     return input.files
         .filter((file) => file.nature === 'source' && /\.tsx?$/u.test(file.path))
-        .map((file) => ({ path: file.path, text: readFileSync(join(input.root, file.path), 'utf8') }));
+        .map((file) => ({ path: file.path, text: readSource(input.root, file.path).toString('utf8') }));
 }
 
 function valueImports(text: string): { source: string; line: number }[] {
@@ -44,11 +42,11 @@ function generatedContents(cwd: string): Map<string, Buffer> {
         dot: true,
         followSymbolicLinks: false,
     });
-    return new Map(paths.map((path) => [path, readFileSync(join(cwd, path))]));
+    return new Map(paths.map((path) => [path, readSource(cwd, path)]));
 }
 
 function hasDrizzleFile(input: EngineInput): boolean {
-    return input.session.repository.files.some(
+    return input.files.some(
         (file) => dirname(file.path) === (input.scope || '.') && basename(file.path).startsWith('drizzle.config.'),
     );
 }
@@ -58,7 +56,7 @@ function hasDrizzleFile(input: EngineInput): boolean {
  * @param input the engine input
  * @returns the findings
  */
-export function trpcBoundaries(input: EngineInput): Promise<Finding[]> {
+export function trpcBoundaries(input: EngineInput): Finding[] {
     const isServer = pathMatcher((input.view.tool('trpc')['server_paths'] as string[] | undefined) ?? ['**/server/**']);
     const found = sources(input)
         .filter((file) => !isServer(file.path))
@@ -75,7 +73,7 @@ export function trpcBoundaries(input: EngineInput): Promise<Finding[]> {
                     ),
                 ),
         );
-    return Promise.resolve(found);
+    return found;
 }
 
 /**
@@ -83,7 +81,7 @@ export function trpcBoundaries(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function drizzleRelations(input: EngineInput): Promise<Finding[]> {
+export function drizzleRelations(input: EngineInput): Finding[] {
     const files = sources(input);
     const everything = files.map((file) => file.text).join('\n');
     const found = files.flatMap((file) =>
@@ -109,7 +107,7 @@ export function drizzleRelations(input: EngineInput): Promise<Finding[]> {
             )
             .toArray(),
     );
-    return Promise.resolve(found);
+    return found;
 }
 
 /**
@@ -119,17 +117,15 @@ export function drizzleRelations(input: EngineInput): Promise<Finding[]> {
  */
 export async function drizzleMigrations(input: EngineInput): Promise<Finding[]> {
     if (!hasDrizzleFile(input)) return [];
-    const cwd = join(input.root, input.scope);
-    const binary = locateTool(cwd, 'drizzle-kit') ?? locateTool(input.root, 'drizzle-kit');
-    if (binary === undefined) throw new MissingToolError('The drizzle-kit command is not installed.');
     const scratch = scratchCopy(
-        input.session,
-        input.session.repository.files.map((file) => file.path),
+        input.root,
+        input.files.map((file) => file.path),
+        input.scopeEntries.map((scope) => scope.path),
     );
     const isolated = join(scratch, input.scope);
     try {
         const before = generatedContents(isolated);
-        const result = await run([binary, 'generate'], { cwd: isolated, timeoutMs: KIT_TIMEOUT_MS });
+        const result = await runCheckCommand(input, ['drizzle-kit', 'generate'], { cwd: isolated });
         if (result.code !== 0)
             throw new Error(
                 `The drizzle-kit generate command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`,

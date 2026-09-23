@@ -5,7 +5,8 @@ import { dirname, join } from 'node:path';
 import { toPosix } from '#cli/platform/paths.ts';
 import { existsSync, readFileSync } from 'node:fs';
 import { GRAMMAR_SOURCES } from '#cli/naming/grammars-definitions.ts';
-import type { EmbeddedIndex } from '#cli/platform/types.ts';
+
+type EmbeddedIndex = Record<string, string>;
 
 const ROOT_SEARCH_DEPTH = 6;
 
@@ -50,7 +51,7 @@ export function isEmbedded(): boolean {
 }
 
 /**
- * Reads one asset by its repository-relative path (`presets/bash/manifest.toml`).
+ * Reads one asset by its repository-relative path (`presets/language/bash/manifest.toml`).
  * @param path the asset path
  * @returns the text
  */

@@ -5,9 +5,9 @@ import { localeFiles } from '#cli/checks/i18n/locales.ts';
 import { cssModuleUsage } from '#cli/checks/css.ts';
 import { fences } from '#cli/checks/docs/fences.ts';
 import { ansibleLint } from '#cli/checks/ansible.ts';
-import { licensesNpm } from '#cli/checks/licenses.ts';
+import { licensesPackages } from '#cli/checks/licenses.ts';
+import { jestCoverage } from '#cli/checks/jest.ts';
 import { codeql } from '#cli/checks/security/codeql.ts';
-import type { IntegrityCheck } from '#cli/checks/types.ts';
 import { htmlCopy, htmlScripts } from '#cli/checks/html.ts';
 import { adminKey } from '#cli/checks/supabase/admin-key.ts';
 import { envFiles } from '#cli/checks/security/env/files.ts';
@@ -75,7 +75,7 @@ import {
     sizeLimits,
 } from '#cli/checks/static-site/output-checks.ts';
 
-const checks: Record<string, IntegrityCheck> = {
+const checks: Record<string, Engine> = {
     'generated-drift': generatedDrift,
     'tsconfig-options': tsconfigOptions,
     'docs-headings': docsHeadings,
@@ -93,7 +93,7 @@ const checks: Record<string, IntegrityCheck> = {
     'env-files': envFiles,
     'manifest-policy': manifestPolicy,
     'lockfile-fresh': lockfileFresh,
-    'licenses-npm': licensesNpm,
+    'licenses-packages': licensesPackages,
     'trpc-boundaries': trpcBoundaries,
     'drizzle-relations': drizzleRelations,
     'drizzle-migrations': drizzleMigrations,
@@ -174,6 +174,7 @@ const checks: Record<string, IntegrityCheck> = {
     'install-policy': installPolicy,
     'lockfile-hosts': lockfileHosts,
     codeql,
+    'jest-coverage': jestCoverage,
     'gitleaks-baseline': gitleaksBaseline,
 };
 

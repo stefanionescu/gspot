@@ -221,9 +221,9 @@ export async function pushedRevisions(
             remoteRef === undefined ||
             localObject === undefined ||
             remoteObject === undefined ||
-            !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(localObject ?? '') ||
-            !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(remoteObject ?? '') ||
-            localObject?.length !== remoteObject?.length
+            !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(localObject) ||
+            !/^(?:[a-f0-9]{40}|[a-f0-9]{64})$/u.test(remoteObject) ||
+            localObject.length !== remoteObject.length
         )
             throw new SelectionError(['Invalid Git pre-push input. Supply every local and remote ref/object pair.']);
         if (/^0+$/u.test(localObject)) {
@@ -243,7 +243,17 @@ export async function pushedRevisions(
                 excluded = [previous];
                 changed = await paths(
                     root,
-                    ['diff', '--no-ext-diff', '--name-only', '--no-renames', '-z', previous, object, '--'],
+                    [
+                        'diff',
+                        '--relative',
+                        '--no-ext-diff',
+                        '--name-only',
+                        '--no-renames',
+                        '-z',
+                        previous,
+                        object,
+                        '--',
+                    ],
                     cancelSignal,
                 );
             }
@@ -253,6 +263,7 @@ export async function pushedRevisions(
                 root,
                 [
                     'log',
+                    '--relative',
                     '--format=',
                     '--name-only',
                     '--no-renames',

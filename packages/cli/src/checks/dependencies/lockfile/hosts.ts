@@ -1,6 +1,5 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // Every URL a lockfile resolves from: HTTPS, and a host on the allowed list.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { LOCKFILES, LOCKFILE_URL } from '#cli/checks/integrity-definitions.ts';
@@ -11,7 +10,7 @@ function problem(url: URL, hosts: Set<string>): string | undefined {
 }
 
 function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Finding[] {
-    const lines = readFileSync(join(input.root, path), 'utf8').split('\n');
+    const lines = readSource(input.root, path).toString('utf8').split('\n');
     return lines.flatMap((text, index) =>
         text
             .matchAll(LOCKFILE_URL)
@@ -38,13 +37,13 @@ function fileFindings(input: EngineInput, path: string, hosts: Set<string>): Fin
  * @param input the engine input
  * @returns the findings
  */
-export function lockfileHosts(input: EngineInput): Promise<Finding[]> {
+export function lockfileHosts(input: EngineInput): Finding[] {
     const hosts = new Set(input.view.tool('dependencies')['registry_hosts'] as string[] | undefined);
-    const paths = input.session.repository.files
+    const paths = input.files
         .map((file) => file.path)
         .filter((path) => {
             const name = path.slice(path.lastIndexOf('/') + 1);
             return LOCKFILES[name] !== undefined && name !== 'bun.lockb';
         });
-    return Promise.resolve(paths.flatMap((path) => fileFindings(input, path, hosts)));
+    return paths.flatMap((path) => fileFindings(input, path, hosts));
 }

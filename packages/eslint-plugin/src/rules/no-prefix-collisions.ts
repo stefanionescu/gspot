@@ -33,6 +33,8 @@ export const noPrefixCollisions = createRule<NoPrefixCollisionsOptions, 'collisi
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'Sibling files `asset-card.ts`, `asset-list.ts`, and `asset-row.ts` report a shared `asset` prefix at the default threshold. Move them into `asset/` as `card.ts`, `list.ts`, and `row.ts`, and update every import.',
             summary:
                 'Finds sibling files or folders that share a name prefix, like asset-card, asset-list and asset-row in one folder.',
             why: 'Files that share a prefix are one concept split by suffix; they belong in a folder named after the prefix.',

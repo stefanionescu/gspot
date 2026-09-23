@@ -2,7 +2,7 @@ import { join } from 'node:path';
 import { readFileSync, writeFileSync } from 'node:fs';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { run, toolsPath } from '#tests/harness/planted.ts';
+import { run, toolsPath } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
 
 test('a leftover local file cannot hide ShellCheck while an explicit skip applies only to that run', async () => {

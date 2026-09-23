@@ -45,6 +45,8 @@ Rules:
 - No directory is named `common`, `core`, `helper`, `helpers`, `util`, `utils`, `support`,
   `misc`, `shared`, or after a language or runtime (`bash`, `javascript`, `python`, `node`,
   `js`). Name it for what it owns.
+- `tests/support/` is the declared exception for test setup and lifecycle support. Group its
+  contents by responsibility instead of collecting unrelated helpers in one module.
 - A leaf directory holds more than one code file. One file in a folder is a file, not a folder.
 - Sibling files do not share a leading name part: `asset-card.ts`, `asset-list.ts`, and
   `asset-row.ts` in one folder are an `asset/` directory with `card.ts`, `list.ts`, `row.ts`.

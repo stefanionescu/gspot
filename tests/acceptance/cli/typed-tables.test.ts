@@ -2,7 +2,7 @@
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/harness/planted.ts';
+import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/support/cli/planted.ts';
 
 const INIT = [
     'init',

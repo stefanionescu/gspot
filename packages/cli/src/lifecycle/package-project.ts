@@ -1,3 +1,5 @@
+import type { ToolPin } from '#cli/presets/types.ts';
+import { observeToolVersion, toolVersionState } from '#cli/platform/tool-probe.ts';
 import { InstallationError } from '#cli/lifecycle/install-error.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 import { yarnSettings } from '#cli/platform/yarn-settings.ts';
@@ -32,6 +34,43 @@ const packageSchema = z.strictObject({
     ),
 });
 const LOCKS = { npm: 'package-lock.json', bun: 'bun.lock', pnpm: 'pnpm-lock.yaml', yarn: 'yarn.lock' } as const;
+
+async function prepareNativeWrappers(
+    work: string,
+    dependencies: Record<string, string>,
+    selected: Iterable<ToolPin>,
+): Promise<void> {
+    const tools = new Map([...selected].map((tool) => [tool.name, tool]));
+    const files = openConfinedRoot(work, 'native');
+    try {
+        for (const tool of tools.values()) {
+            const npm = tool.installers['npm'];
+            if (
+                tool.kind === 'library' ||
+                npm?.version === undefined ||
+                tool.version === undefined ||
+                npm.version === tool.version ||
+                dependencies[npm.name] !== npm.version
+            )
+                continue;
+            const executable = files.source(
+                `node_modules/.bin/${tool.name}${process.platform === 'win32' ? '.cmd' : ''}`,
+            );
+            const result = await runToolCommand(undefined, [executable, ...(tool.version_command ?? ['--version'])], {
+                cwd: work,
+                ...(tool.env === undefined ? {} : { env: tool.env }),
+            });
+            const observed = observeToolVersion(tool, result, npm.version);
+            if (!('version' in observed)) throw new InstallationError(observed.note);
+            if (toolVersionState(observed.version, tool.version, tool.floor ?? tool.version) === 'outdated')
+                throw new InstallationError(
+                    `${tool.name} reported ${observed.version}, below ${tool.floor ?? tool.version}. No installed files were published.`,
+                );
+        }
+    } finally {
+        files.close();
+    }
+}
 
 function lockMatches(name: keyof typeof LOCKS, content: string, dependencies: Record<string, string>): boolean {
     if (/^(?:<{7}|={7}|>{7})/mu.test(content)) return false;
@@ -297,7 +336,7 @@ export function packageInstallSteps(root: string): string[][] {
 }
 
 /** Install locked packages outside the repository, then publish each owned entry through native confinement. */
-export async function installPackageProject(root: string): Promise<string> {
+export async function installPackageProject(root: string, tools: Iterable<ToolPin>): Promise<string> {
     return withLifecycleOwner(root, async (owner) => {
         const project = owner.read(PROJECT);
         if (project === undefined) return '';
@@ -316,6 +355,7 @@ export async function installPackageProject(root: string): Promise<string> {
             writeProject(work, project.bytes.toString('utf8'), yarn?.bytes.toString('utf8'));
             writeFileSync(join(work, lock), recorded.bytes);
             await packageCommand(root, work, manager, true);
+            await prepareNativeWrappers(work, manifest.devDependencies, tools);
             if (
                 !readFileSync(join(work, 'package.json')).equals(project.bytes) ||
                 !readFileSync(join(work, lock)).equals(recorded.bytes)

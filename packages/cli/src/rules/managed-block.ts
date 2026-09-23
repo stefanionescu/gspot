@@ -1,5 +1,4 @@
-import { join } from 'node:path';
-import { existsSync } from 'node:fs';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 // The index block for the agent instruction files.
 import type { Session } from '#cli/run/types.ts';
 import type { RuleFile } from '#cli/rules/types.ts';
@@ -20,7 +19,6 @@ const AREA_BY_LAYER: Record<string, string> = {
     repository: 'Repository',
 };
 
-const MIN_COLUMN = 3;
 const TITLED_LAYERS = new Set(['language', 'framework', 'library', 'tool', 'platform', 'database', 'runtime']);
 
 const CHECKS_INSTALLED =
@@ -34,36 +32,29 @@ function areaFor(file: RuleFile): string {
     return file.title === '' ? `${base}: ${file.preset}` : file.title;
 }
 
-function tableRows(files: RuleFile[]): [string, string][] {
+function guideGroups(files: RuleFile[]): [string, string[]][] {
     const rows = new Map<string, string[]>();
     for (const file of files) {
         const list = rows.get(areaFor(file)) ?? [];
         list.push(`\`${file.target}\``);
         rows.set(areaFor(file), list);
     }
-    return rows
-        .entries()
-        .map(([area, list]): [string, string] => [area, list.join(', ')])
-        .toArray();
-}
-
-function markdownTable(head: [string, string], rows: [string, string][]): string[] {
-    const all = [head, ...rows];
-    const widths = [0, 1].map((column) => Math.max(MIN_COLUMN, ...all.map((row) => row[column]?.length ?? 0)));
-    const line = (row: [string, string]): string =>
-        `| ${row[0].padEnd(widths[0] ?? 0)} | ${row[1].padEnd(widths[1] ?? 0)} |`;
-    const separator = `| ${'-'.repeat(widths[0] ?? 0)} | ${'-'.repeat(widths[1] ?? 0)} |`;
-    return [line(head), separator, ...rows.map((row) => line(row))];
+    return [...rows];
 }
 
 function indexLines(session: Session, files: RuleFile[]): string[] {
     const { directory, project } = session.policyFiles.policy.rules;
-    const projectRow: [string, string][] =
-        project === undefined || project === '' ? [] : [['Project rules', `\`${project}/\``]];
+    const projectRow: [string, string[]][] =
+        project === undefined || project === '' ? [] : [['Project rules', [`\`${project}/\``]]];
     return [
         `Read \`${directory}/general/agent/WORKING.md\` and \`${directory}/general/prose/WRITING.md\` first. Then read the guides for the files you change. A more specific layer wins over a general one.`,
         '',
-        ...markdownTable(['Area', 'Guide'], [...tableRows(files), ...projectRow]),
+        ...[...guideGroups(files), ...projectRow].flatMap(([area, guides]) => [
+            `${area}:`,
+            '',
+            ...guides.map((guide) => `- ${guide}`),
+            '',
+        ]),
         '',
     ];
 }
@@ -71,7 +62,7 @@ function indexLines(session: Session, files: RuleFile[]): string[] {
 /**
  * The managed block text for a session.
  * @param session the session
- * @returns the block: a heading, the guide table when rules are installed, and the standing instructions
+ * @returns the block: a heading, the guide index when rules are installed, and the standing instructions
  */
 export function managedBlock(session: Session): string {
     const files = selectRuleFiles(session);
@@ -88,9 +79,10 @@ export function managedBlock(session: Session): string {
  * @returns deduplicated repository-relative destinations
  */
 export function agentFiles(root: string, configured: string[] = []): string[] {
-    const detected = ['CLAUDE.md', 'GEMINI.md', '.github/copilot-instructions.md'].filter((path) =>
-        existsSync(join(root, path)),
+    const files = openConfinedRoot(root);
+    const detected = ['CLAUDE.md', 'GEMINI.md', '.github/copilot-instructions.md'].filter(
+        (path) => files.read(path) !== undefined,
     );
-    if (existsSync(join(root, '.cursor'))) detected.push('.cursor/rules/gspot.mdc');
+    if (files.stat('.cursor')?.isDirectory() === true) detected.push('.cursor/rules/gspot.mdc');
     return [...new Set(['AGENTS.md', ...detected, ...configured])];
 }

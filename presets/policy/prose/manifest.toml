@@ -1,0 +1,105 @@
+untracked = [
+    ".gspot/vale/styles/Google/",
+    ".gspot/vale/styles/Microsoft/",
+    ".gspot/vale/styles/write-good/",
+    ".gspot/vale/styles/proselint/",
+    ".gspot/vale/styles/alex/",
+    ".gspot/vale/styles/RedHat/",
+    ".gspot/vale/styles/Readability/",
+    ".gspot/vale/styles/Harper/",
+    ".gspot/vale/styles/.vale-config/",
+    ".gspot/vale/styles/config/dictionaries/",
+]
+
+[preset]
+name = "prose"
+kind = "policy"
+title = "Prose"
+requires = ["markdown"]
+description = "Vale over every comment and every documentation file, with the gspot style, and the upstream packages."
+
+[claims]
+extensions = [".md", ".mdx", ".ts", ".tsx", ".mts", ".cts", ".js", ".mjs", ".cjs", ".jsx", ".swift", ".sh", ".bash", ".zsh", ".py", ".sql", ".pgsql", ".psql"]
+tags = ["shebang:shell"]
+
+[[tools]]
+name = "vale"
+version = "3.21.0"
+mise = "vale"
+brew = "vale"
+winget = "errata-ai.Vale"
+scoop = "vale"
+github = {name = "errata-ai/vale", version = "v3.21.0"}
+
+[[tools.takeover]]
+file = ".vale.ini"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = "_vale.ini"
+carries = "rules-table"
+
+[[tools.takeover]]
+file = "vale.ini"
+carries = "rules-table"
+
+[[configs]]
+template = "vale.ini.tmpl"
+target = ".gspot/vale.ini"
+rules_path = ["*.rules", "*.BasedOnStyles"]
+
+[[checks]]
+name = "prose/vale"
+example = "The sentence `Release on 03/04/2026.` reports an ambiguous date at the recommended level. Write `Release on March 4, 2026.` when March 4 is the intended date, then rerun. Project names belong in the vocabulary only when they are legitimate names."
+level = "recommended"
+stage = "commit"
+engine = "prose"
+analysis = "vale"
+coverage = ["prose"]
+summary = "Checks ambiguous dates with bundled Vale styles at recommended; all adds the complete style and upstream packages."
+why = "Prose that hedges, markets or wanders is read by everyone who reads the code, and nothing else checks it."
+help = "Rewrite the sentence the alert names, add a real name to prose.vocabulary, or use gspot ignore prose/vale --rule <rule>."
+
+[[checks]]
+name = "prose/source-bans"
+example = "A prose-linter disable directive in source reports a bypass finding. Remove the directive and correct the text, or record the narrowly scoped policy exception with its reason."
+level = "all"
+stage = "commit"
+engine = "prose"
+analysis = "source-bans"
+coverage = ["prose"]
+summary = "Finds Vale directives inside Markdown and block comments in SQL, which take text away from the prose check."
+why = "A directive in the text turns a rule off for everyone silently; a block comment is invisible to Vale."
+help = "Delete the directive and change the text, or disable the rule with a reason; write SQL comments with two dashes."
+
+[[checks]]
+name = "prose/messages"
+example = "A log message that interpolates a runtime value into its text reports a message finding. Keep the message constant and put the value into a separate structured field."
+level = "all"
+stage = "commit"
+reported_by = "typescript/eslint"
+coverage = ["prose"]
+summary = "Checks the strings Vale cannot see: error messages start with a capital letter, client messages name no identifier, log messages are stable."
+why = "A message is prose a person reads under stress; an interpolated identifier in it leaks internals and breaks searching the logs."
+help = "Capitalize the message, move the value into its own field, and keep the log line constant."
+
+[[checks]]
+name = "prose/doc-tags"
+example = "A JSDoc tag `@param {string} name the name` repeats a type owned by the signature and reports a finding. Keep the parameter name and description, removing the brace-delimited type."
+level = "all"
+stage = "commit"
+reported_by = "typescript/eslint"
+coverage = ["prose"]
+summary = "Checks that doc comments carry no types, which the language already states."
+why = "A type in a doc tag drifts from the signature and says nothing the reader cannot see."
+help = "Delete the type from the tag and keep the description."
+
+[[settings]]
+name = "prose.vocabulary"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Names Vale accepts as written: products, tools, people."
+
+[rule_files]
+general = ["general/prose/WRITING.md", "general/code/COMMENTS.md"]

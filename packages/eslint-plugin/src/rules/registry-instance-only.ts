@@ -19,6 +19,8 @@ export const registryInstanceOnly = createRule<RegistryInstanceOnlyOptions, 'reg
     meta: {
         type: 'problem',
         docs: {
+            example:
+                'Given a `Client` constructor, `export const client = new Client();` in `src/turn/client.ts` reports `registry`. Move that declaration and its required import to `src/turn/registry.ts`, then update consumers.',
             summary: 'Finds an exported instance created with new outside a registry file.',
             why: 'An instance exported from anywhere is a hidden singleton; a registry file makes every shared instance visible in one place.',
             fix: "Create the instance in the module's registry file and import it from there.",

@@ -1,18 +1,29 @@
 // One-line stubs at conventional paths, so editors and bare tool invocations find the gspot configuration.
 import { toPosix } from '#cli/platform/paths.ts';
 import type { StubSpec } from '#cli/presets/types.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { headerFor } from '#cli/emit/templates.ts';
 import type { GeneratedFile } from '#cli/emit/types.ts';
-import { join, relative, dirname } from 'node:path';
-import { applyEdits, modify, parse as parseJsonc } from 'jsonc-parser';
+import { relative, dirname } from 'node:path';
+import { applyEdits, modify, parse as parseJsonc, type ParseError } from 'jsonc-parser';
 
-const TARGET_PLACEHOLDER = '{target}';
+const TARGET_PLACEHOLDER = /\{target(?:_json)?\}/gu;
 const JSON_INDENT = 4;
+
+function parseStub(text: string, stubPath: string): Record<string, unknown> {
+    const errors: ParseError[] = [];
+    const parsed: unknown = parseJsonc(text, errors, { allowTrailingComma: true });
+    if (errors.length > 0 || parsed === null || typeof parsed !== 'object' || Array.isArray(parsed))
+        throw new Error(`Shared configuration must be a valid JSON object: ${stubPath}`);
+    return parsed as Record<string, unknown>;
+}
 
 function fillTarget(value: unknown, stubPath: string, targetPath: string): unknown {
     if (typeof value !== 'string') return value;
-    return value.replaceAll(TARGET_PLACEHOLDER, () => relativeTarget(stubPath, targetPath));
+    const target = relativeTarget(stubPath, targetPath);
+    return value.replaceAll(TARGET_PLACEHOLDER, (placeholder) =>
+        placeholder === '{target_json}' ? JSON.stringify(target) : target,
+    );
 }
 
 /**
@@ -61,8 +72,8 @@ export function mergeStub(
     stubPath: string,
     targetPath: string,
 ): { path: string; content: string; keys: string[] } {
-    const full = join(root, stubPath);
-    let text = existsSync(full) ? readFileSync(full, 'utf8') : '{}\n';
+    let text = openConfinedRoot(root).read(stubPath)?.bytes.toString('utf8') ?? '{}\n';
+    parseStub(text, stubPath);
     const entries = Object.entries(stub.merge ?? {});
     for (const [key, value] of entries) {
         const edits = modify(text, [key], fillTarget(value, stubPath, targetPath), {
@@ -82,10 +93,9 @@ export function mergeStub(
  * @returns whether nothing needs writing
  */
 export function isMergeStubHeld(root: string, stub: StubSpec, stubPath: string, targetPath: string): boolean {
-    const full = join(root, stubPath);
-    if (!existsSync(full)) return false;
-    const parsed = parseJsonc(readFileSync(full, 'utf8')) as Record<string, unknown> | undefined;
-    if (!parsed) return false;
+    const current = openConfinedRoot(root).read(stubPath);
+    if (current === undefined) return false;
+    const parsed = parseStub(current.bytes.toString('utf8'), stubPath);
     const entries = Object.entries(stub.merge ?? {});
     return entries.every(
         ([key, value]) => JSON.stringify(parsed[key]) === JSON.stringify(fillTarget(value, stubPath, targetPath)),

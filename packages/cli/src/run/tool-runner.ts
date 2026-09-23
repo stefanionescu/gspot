@@ -1,27 +1,36 @@
 import type { MergedView } from '#cli/policy/types.ts';
+import { TOOL_DEADLINE } from '#cli/run/execution-definitions.ts';
 import { MissingToolError } from '#cli/platform/missing-tool.ts';
 // Runs external tools with explicit file lists and configuration, and turns their output into findings.
-import { join } from 'node:path';
+import { isAbsolute, join, posix } from 'node:path';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { run } from '#cli/platform/spawn.ts';
 import { executionFailure, checkedFindings, toolOutputDetail } from '#cli/run/broken-tool.ts';
 import type { SpawnResult, SpawnOptions } from '#cli/platform/types.ts';
 import { fileBatches } from '#cli/run/file-batches.ts';
+import { createFileWorkspace } from '#cli/run/file-workspace.ts';
 import { ToolOutputError } from '#cli/run/parse-output.ts';
 import { probeTool, toolPin } from '#cli/platform/tool-probe.ts';
 import type { ToolPin, CheckSpec } from '#cli/presets/types.ts';
 import type { CheckResult, Finding } from '#cli/output/finding.ts';
 import type {
     EngineInput,
-    ToolRunState,
     PreparedCommand,
+    ToolInvocation,
     Substitutions,
     Session,
     PlannedCheck,
 } from '#cli/run/types.ts';
+/** What one tool run accumulates across its spawns. */
+type ToolRunState = { root: string; cwd: string; findings: Finding[]; isFailed: boolean };
+
 const TOOL_ENV = { NO_COLOR: '1', FORCE_COLOR: '0' };
 const FILES_PLACEHOLDER = '{files}';
-const DEFAULT_TOOL_SECONDS = 600;
 const MILLISECONDS = 1000;
+/** Resolve the shared deadline for checks, adapters, corrections, and installation commands. */
+export function toolDeadlineSeconds(view: Pick<MergedView, 'limit'> | undefined): number {
+    return view?.limit('tool_seconds') ?? TOOL_DEADLINE.default;
+}
 function firstLine(result: SpawnResult, placeholder: string): string {
     const text = result.stderr.trim() === '' ? result.stdout.trim() : result.stderr.trim();
     return (
@@ -40,11 +49,11 @@ function missingNote(
     },
     state: string,
 ): string {
-    const hint = probe.hint ?? 'install it';
+    const hint = probe.hint ?? 'Install the configured tool.';
     const version = tool.version === undefined ? '' : ` ${tool.version}`;
     return state === 'outdated'
-        ? `${tool.name} ${probe.found ?? '?'} is below ${probe.floor ?? '?'}. Run: ${hint}`
-        : `${tool.name}${version} is not installed. Run: ${hint}`;
+        ? `${tool.name} ${probe.found ?? '?'} is below ${probe.floor ?? '?'}. ${hint}`
+        : `${tool.name}${version} is not installed. ${hint}`;
 }
 function workingDirectory(session: Session, planned: PlannedCheck): string {
     const { spec, scope } = planned;
@@ -58,7 +67,7 @@ function relativizer(session: Session, planned: PlannedCheck, cwd: string): (pat
 }
 function prefixScope(findings: Finding[], scopePath: string): void {
     for (const finding of findings)
-        if (finding.file !== '' && !finding.file.startsWith(`${scopePath}/`))
+        if (finding.file !== '' && !isAbsolute(finding.file) && !finding.file.startsWith(`${scopePath}/`))
             finding.file = `${scopePath}/${finding.file}`;
 }
 function countMatches(spec: CheckSpec, result: SpawnResult): number {
@@ -89,7 +98,7 @@ function markFailure(
 }
 function collect(
     planned: PlannedCheck,
-    command: string[],
+    invocation: ToolInvocation,
     result: SpawnResult,
     state: ToolRunState,
     parsed: Finding[],
@@ -97,8 +106,10 @@ function collect(
     const { spec, scope } = planned;
     const tool = planned.tool;
     if (tool === undefined) throw new Error('Cannot collect tool output without a selected tool.');
-    if (parsed.length === 0 && result.code !== 0 && (spec.command?.includes('{file}') ?? false))
-        parsed.push(unexplainedFailure(spec, tool, result, command.at(-1) ?? ''));
+    if (parsed.length === 0 && result.code !== 0 && invocation.file !== undefined)
+        parsed.push(unexplainedFailure(spec, tool, result, invocation.file));
+    if (invocation.file !== undefined && spec.output?.format === 'regex' && (spec.output.file_is ?? 'path') === 'path')
+        for (const finding of parsed) if (finding.file === '') finding.file = invocation.file;
     if (scope.scope.path !== '' && state.cwd !== state.root) prefixScope(parsed, scope.scope.path);
     state.findings.push(...parsed);
     markFailure(spec, tool, result, parsed, state);
@@ -109,7 +120,7 @@ function batchedCommands(
     command: string[],
     sub: Substitutions,
     toolPath: string | undefined,
-): string[][] {
+): ToolInvocation[] {
     const fixed = substitute(session, planned, command, { ...sub, files: [] });
     if (toolPath !== undefined) fixed[0] = toolPath;
     return fileBatches(
@@ -148,9 +159,9 @@ async function runCommands(
     const { cwd, argv } = prepared;
     const state: ToolRunState = { root: prepared.root, cwd, findings: [], isFailed: false };
     const started = performance.now();
-    for (const command of prepared.commands) {
-        const seconds = planned.scope.view.limit('tool_seconds') ?? DEFAULT_TOOL_SECONDS;
-        const result = await runToolCommand(planned.scope.view, command, prepared, session.cancelSignal);
+    for (const invocation of prepared.commands) {
+        const seconds = toolDeadlineSeconds(planned.scope.view);
+        const result = await runToolCommand(planned.scope.view, invocation.argv, prepared, session.cancelSignal);
         const failure = executionFailure(result, tool.name, seconds);
         if (failure !== undefined) return { ...base, ...failure, duration: performance.now() - started, command: argv };
         let parsed: Finding[];
@@ -166,7 +177,7 @@ async function runCommands(
                 command: argv,
             };
         }
-        collect(planned, command, result, state, parsed);
+        collect(planned, invocation, result, state, parsed);
     }
     return finished(base, spec, state, argv, started);
 }
@@ -189,7 +200,7 @@ export function prepareCommand(
     const relative = relativizer(session, planned, cwd);
     const files = planned.files.map((file) => relative(file.path));
     const sub: Substitutions = {
-        files,
+        files: files.map((path) => `${planned.spec.file_prefix ?? ''}${path}`),
         scope: scope.scope.path,
         root: session.root,
         indent: scope.view.format.indent_width,
@@ -231,13 +242,40 @@ export async function runToolCheck(
     };
     if (tool === undefined || command === undefined)
         return { ...base, status: 'error', note: 'this check has no command to run' };
+    if (spec.nested_config !== undefined) {
+        const files = openConfinedRoot(session.root);
+        try {
+            for (const path of commandConfigurations(session, planned, command))
+                if (files.read(path) === undefined)
+                    return {
+                        ...base,
+                        status: 'error',
+                        note: `Required configuration ${path} is missing. Run gspot apply before checking.`,
+                    };
+        } finally {
+            files.close();
+        }
+    }
     const { env, cwd } = prepareCommand(session, planned, command);
     const probe = probeTool({ ...session, cwd }, { ...tool, env });
     if (probe.state === 'error') return { ...base, status: 'error', note: probe.note ?? 'The version probe failed.' };
     if (probe.state === 'missing' || probe.state === 'outdated')
         return { ...base, status: 'missing', note: missingNote(tool, probe, probe.state) };
-    const prepared = prepareCommand(session, planned, command, probe.path);
-    return runCommands(session, planned, tool, prepared, base);
+    using workspace =
+        spec.isolated_files === true
+            ? createFileWorkspace(session.root, [
+                  ...planned.files.map(({ path }) => path),
+                  ...commandConfigurations(session, planned, command),
+              ])
+            : undefined;
+    const execution = workspace === undefined ? session : { ...session, root: workspace.root };
+    const prepared = prepareCommand(execution, planned, command, probe.path);
+    const result = await runCommands(execution, planned, tool, prepared, base);
+    if (workspace !== undefined)
+        result.command = prepareCommand(session, planned, command, probe.path).argv.filter(
+            (part) => typeof part === 'string',
+        );
+    return result;
 }
 /**
  * Runs a tool command with the shared output environment and configured deadline.
@@ -250,9 +288,7 @@ export async function runToolCheck(
 export async function runToolCommand(
     view: Pick<MergedView, 'limit'> | undefined,
     command: string[],
-    prepared: Pick<SpawnOptions, 'cwd' | 'env' | 'stdin'> & {
-        captureFd3?: boolean;
-    },
+    prepared: Pick<SpawnOptions, 'cwd' | 'env' | 'stdin'>,
     cancelSignal?: AbortSignal,
 ): Promise<SpawnResult> {
     if (cancelSignal?.aborted === true)
@@ -264,7 +300,7 @@ export async function runToolCommand(
             duration: 0,
             isCanceled: true,
         };
-    const seconds = view?.limit('tool_seconds') ?? DEFAULT_TOOL_SECONDS;
+    const seconds = toolDeadlineSeconds(view);
     return run(command, {
         ...prepared,
         env: { ...TOOL_ENV, ...prepared.env },
@@ -284,7 +320,7 @@ export async function runCheckCommand(
     command: string[],
     options: Pick<PreparedCommand, 'cwd'> & Partial<Pick<PreparedCommand, 'env'>> & Pick<SpawnOptions, 'stdin'>,
 ): Promise<SpawnResult> {
-    if (input.session.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
+    if (input.cancelSignal?.aborted === true) throw new Error('The command was canceled.');
     const name = command[0];
     if (name === undefined) throw new Error('An empty command cannot run.');
     const { path, env } = adapterTool(input, name, options);
@@ -292,9 +328,9 @@ export async function runCheckCommand(
         input.view,
         [path, ...command.slice(1)],
         { ...options, env },
-        input.session.cancelSignal,
+        input.cancelSignal,
     );
-    const failure = executionFailure(result, name, input.view.limit('tool_seconds') ?? DEFAULT_TOOL_SECONDS);
+    const failure = executionFailure(result, name, toolDeadlineSeconds(input.view));
     if (failure?.status === 'missing') throw new MissingToolError(failure.note);
     if (failure !== undefined) throw new Error(failure.note);
     return result;
@@ -307,9 +343,9 @@ function adapterTool(
     path: string;
     env: Record<string, string>;
 } {
-    const tool = toolPin(input.session.manifests.values(), name);
+    const tool = toolPin(input.manifests.values(), name);
     const env = { ...tool.env, ...input.spec.env, ...options.env };
-    const probe = probeTool({ ...input.session, cwd: options.cwd }, { ...tool, env });
+    const probe = probeTool({ ...input, cwd: options.cwd }, { ...tool, env });
     if (probe.state === 'error') throw new Error(probe.note ?? `${name} version probe failed.`);
     if (probe.state === 'missing' || probe.state === 'outdated' || probe.path === undefined) {
         throw new MissingToolError(missingNote(tool, probe, probe.state));
@@ -381,11 +417,59 @@ function configurationPath(session: Session, planned: PlannedCheck, name: string
     if (!target) throw new Error(`Check ${planned.check} names {config:${name}} and no preset renders it.`);
     return targetInScope(planned.scope.scope.path, target);
 }
-function stubPath(session: Session, planned: PlannedCheck, name: string, scope: string): string {
-    const target = allConfigs(session, planned).find((config) => config.stub?.path === name);
-    const path = target?.stub?.path ?? name;
-    return scope === '' ? path : `${scope}/${path}`;
+function stubPath(name: string, scope: string): string {
+    return scope === '' ? name : `${scope}/${name}`;
 }
+/** Configuration paths named by a check command or its environment. */
+export function commandConfigurations(
+    session: Session,
+    planned: PlannedCheck,
+    command = planned.spec.command ?? [],
+): string[] {
+    const parts = [...command, ...Object.values(planned.spec.env ?? {})];
+    const scope = planned.scope.scope.path;
+    const implicit: string[] = [];
+    const nested = planned.spec.nested_config;
+    if (nested !== undefined) {
+        const files = openConfinedRoot(session.root);
+        try {
+            const required = [
+                scope === '' ? nested : `${scope}/${nested}`,
+                ...allConfigs(session, planned)
+                    .filter((config) => !config.fragment && config.stub?.path === nested)
+                    .map((config) => targetInScope(scope, config)),
+            ];
+            implicit.push(...required);
+            for (const file of planned.files) {
+                for (
+                    let directory = posix.dirname(file.path);
+                    directory !== '.' && directory !== scope;
+                    directory = posix.dirname(directory)
+                ) {
+                    const path = `${directory}/${nested}`;
+                    if (!implicit.includes(path) && files.read(path) !== undefined) implicit.push(path);
+                }
+            }
+        } finally {
+            files.close();
+        }
+    }
+    return [
+        ...new Set([
+            ...implicit,
+            ...parts.flatMap((part) => [
+                ...Array.from(part.matchAll(CONFIG_PLACEHOLDER), (match) =>
+                    configurationPath(session, planned, match.groups!['name']!),
+                ),
+                ...Array.from(part.matchAll(STUB_PLACEHOLDER), (match) => stubPath(match.groups!['name']!, scope)),
+                ...(EXISTING_PLACEHOLDER.exec(part)?.groups?.['path'] === undefined
+                    ? []
+                    : [EXISTING_PLACEHOLDER.exec(part)!.groups!['path']!]),
+            ]),
+        ]),
+    ].toSorted((left, right) => left.localeCompare(right));
+}
+
 function expandPart(session: Session, planned: PlannedCheck, part: string, sub: Substitutions): CommandPart[] {
     const policyPart = listArguments(planned, part) ?? existingFileArguments(session.root, part);
     return policyPart ?? plainPart(session, planned, part, sub);
@@ -410,7 +494,7 @@ export function substituteValue(session: Session, planned: PlannedCheck, part: s
         .replaceAll(CONFIG_PLACEHOLDER, (_match, name: string) =>
             toPlatform(join(session.root, configurationPath(session, planned, name))),
         )
-        .replaceAll(STUB_PLACEHOLDER, (_match, name: string) => toPlatform(stubPath(session, planned, name, sub.scope)))
+        .replaceAll(STUB_PLACEHOLDER, (_match, name: string) => toPlatform(stubPath(name, sub.scope)))
         .replaceAll('{scope}', () => (sub.scope === '' ? '.' : sub.scope))
         .replaceAll('{root}', () => sub.root)
         .replaceAll('{indent}', () => String(sub.indent))
@@ -438,7 +522,10 @@ export function substitute(
  * @param files the paths relative to the command directory
  * @returns one command per file, or one command when no file marker exists
  */
-export function perFileCommands(parts: CommandPart[], files: string[]): string[][] {
-    const inputs = parts.some((part) => typeof part !== 'string') ? files : [''];
-    return inputs.map((file) => parts.map((part) => (typeof part === 'string' ? part : file)));
+export function perFileCommands(parts: CommandPart[], files: string[]): ToolInvocation[] {
+    const hasFile = parts.some((part) => typeof part !== 'string');
+    return (hasFile ? files : ['']).map((file) => ({
+        argv: parts.map((part) => (typeof part === 'string' ? part : file)),
+        ...(hasFile ? { file } : {}),
+    }));
 }

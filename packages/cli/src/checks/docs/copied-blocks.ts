@@ -1,24 +1,38 @@
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 import { tmpdir } from 'node:os';
-import { run } from '#cli/platform/spawn.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
+import { z } from 'zod';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { toPosix } from '#cli/platform/paths.ts';
-import { locateTool } from '#cli/platform/tool-probe.ts';
-import { MissingToolError } from '#cli/platform/missing-tool.ts';
-import type { ClonePlace, CloneReport } from '#cli/checks/types.ts';
 // Copied blocks through jscpd: every clone is a finding that names both places, once the duplicated share passes the ceiling.
 import { isAbsolute, join, relative, toNamespacedPath } from 'node:path';
-import { existsSync, mkdtempSync, readFileSync, rmSync, writeFileSync } from 'node:fs';
+import { existsSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 
 const TOOL = 'jscpd';
-const SCAN_TIMEOUT_MS = 600_000;
 const DEFAULT_CEILING = 4;
 
-function relativePlace(root: string, place: ClonePlace): string {
+const clonePlaceSchema = z.object({
+    name: z.string().min(1),
+    start: z.number().int().positive(),
+    end: z.number().int().positive(),
+});
+const cloneReportSchema = z.object({
+    statistics: z.object({ total: z.object({ percentage: z.number().min(0).max(100) }) }),
+    duplicates: z.array(
+        z.object({ lines: z.number().int().positive(), firstFile: clonePlaceSchema, secondFile: clonePlaceSchema }),
+    ),
+});
+
+function relativePlace(root: string, place: z.infer<typeof clonePlaceSchema>): string {
     return toPosix(
         isAbsolute(place.name) ? relative(toNamespacedPath(root), toNamespacedPath(place.name)) : place.name,
     );
 }
+
+/** The validated native duplication report consumed by finding generation. */
+export type CloneReport = z.infer<typeof cloneReportSchema>;
 
 /**
  * The findings of a jscpd report: none while the duplicated share is at or under the ceiling, then one for each clone in a claimed file.
@@ -34,9 +48,9 @@ export function cloneFindings(
     report: CloneReport,
     shape: { check: string; root: string; ceiling: number; claimed: Set<string> },
 ): Finding[] {
-    const share = report.statistics?.total?.percentage ?? 0;
+    const share = report.statistics.total.percentage;
     if (share <= shape.ceiling) return [];
-    return (report.duplicates ?? []).flatMap((clone): Finding[] => {
+    return report.duplicates.flatMap((clone): Finding[] => {
         const file = relativePlace(shape.root, clone.firstFile);
         if (!shape.claimed.has(file)) return [];
         const other = `${relativePlace(shape.root, clone.secondFile)}:${String(clone.secondFile.start)}`;
@@ -59,30 +73,39 @@ export function cloneFindings(
  * @returns the findings
  */
 export async function copiedBlocks(input: EngineInput): Promise<Finding[]> {
-    const binary = locateTool(input.root, TOOL);
-    if (binary === undefined) throw new MissingToolError('The jscpd command is not installed.');
     const work = mkdtempSync(join(tmpdir(), 'gspot-jscpd-'));
     try {
         const claimed = input.files.filter((file) => file.nature === 'source').map((file) => file.path);
-        const shipped = JSON.parse(readFileSync(join(input.root, '.gspot/jscpd.json'), 'utf8')) as Record<
-            string,
-            unknown
-        >;
+        const files = openConfinedRoot(input.root);
+        let content: Buffer;
+        try {
+            const config = files.read('.gspot/jscpd.json');
+            if (config === undefined) throw new Error('Missing .gspot/jscpd.json. Run: gspot apply');
+            content = config.bytes;
+        } finally {
+            files.close();
+        }
+        const shipped = JSON.parse(content.toString('utf8')) as Record<string, unknown>;
         // The file list goes into a configuration of its own: a long list overflows a command line, and jscpd reads paths from its configuration.
         const config = join(work, 'jscpd.json');
         writeFileSync(config, JSON.stringify({ ...shipped, path: claimed.map((path) => join(input.root, path)) }));
-        const argv = [binary, '--config', config, '--reporters', 'json', '--output', work, '--silent'];
-        const result = await run(argv, { cwd: input.root, timeoutMs: SCAN_TIMEOUT_MS });
+        const argv = [TOOL, '--config', config, '--reporters', 'json', '--output', work, '--silent'];
+        const result = await runCheckCommand(input, argv, { cwd: input.root });
+        if (result.code !== 0)
+            throw new Error(`The jscpd command failed: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
         const path = join(work, 'jscpd-report.json');
         if (!existsSync(path))
             throw new Error(`The jscpd command wrote no report: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
         const named = input.view.settings['limits.duplication.threshold_percent'];
-        return cloneFindings(JSON.parse(readFileSync(path, 'utf8')) as CloneReport, {
-            check: input.spec.name,
-            root: input.root,
-            ceiling: typeof named === 'number' ? named : DEFAULT_CEILING,
-            claimed: new Set(claimed),
-        });
+        return cloneFindings(
+            cloneReportSchema.parse(JSON.parse(readSource(work, 'jscpd-report.json').toString('utf8'))),
+            {
+                check: input.spec.name,
+                root: input.root,
+                ceiling: typeof named === 'number' ? named : DEFAULT_CEILING,
+                claimed: new Set(claimed),
+            },
+        );
     } finally {
         rmSync(work, { recursive: true, force: true });
     }

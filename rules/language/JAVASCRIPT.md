@@ -16,7 +16,7 @@ If enforcement differs from this document, fix the enforcement or update the rul
 
 ## Runtime standard
 
-Server-side scripts run on the runtime and version the project declares. Browser scripts must work as plain scripts loaded from static HTML. Cloudflare middleware must stay compatible with the Workers runtime.
+Server-side scripts run on the runtime and version the project declares. Browser code targets the browsers and build pipeline the project declares. Unbundled scripts loaded from static HTML must run without build-time transforms. Cloudflare middleware must stay compatible with the Workers runtime.
 
 Rules:
 

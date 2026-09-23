@@ -1,9 +1,10 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // The generated database types, compared with what the CLI writes from the local database.
 import { join, posix } from 'node:path';
 import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync } from 'node:fs';
 import { supabaseFinding } from '#cli/checks/supabase/project.ts';
 
 /**
@@ -23,7 +24,7 @@ export async function typesFresh(input: EngineInput): Promise<Finding[]> {
     });
     if (result.code !== 0)
         throw new Error(`The supabase CLI wrote no types: ${result.stderr.trim().split('\n').at(-1) ?? ''}`);
-    const committed = readFileSync(join(input.root, path), 'utf8');
+    const committed = readSource(input.root, path).toString('utf8');
     if (committed.trim() === result.stdout.trim()) return [];
     return [
         supabaseFinding(

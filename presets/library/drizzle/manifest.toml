@@ -1,0 +1,63 @@
+[preset]
+name = "drizzle"
+kind = "library"
+title = "Drizzle"
+requires = ["javascript"]
+description = "Drizzle: no update or delete without a where, raw SQL only where the policy allows it, relations for every reference, and migrations that match the schema."
+
+[detect]
+dependencies = ["drizzle-orm"]
+
+[[tools]]
+name = "eslint-plugin-drizzle"
+kind = "library"
+version = "0.2.3"
+npm = "eslint-plugin-drizzle"
+
+[[tools]]
+name = "drizzle-kit"
+floor = "0.20.0"
+npm = "drizzle-kit"
+
+[[configs]]
+template = "eslint.fragment.js.tmpl"
+target = ".gspot/eslint.config.mjs"
+fragment = true
+
+[[checks]]
+name = "drizzle/relations-complete"
+example = "An exported `orders` table whose column uses `.references(() => users.id)` reports `relations` when the scope has no `relations(orders, ...)` declaration. Add that declaration with the table's actual relationships and rerun. The check recognizes the supported source forms; it does not execute the schema."
+level = "recommended"
+stage = "commit"
+engine = "integrity"
+analysis = "drizzle-relations"
+claims = {extensions = [".ts"]}
+coverage = ["structure"]
+summary = "Checks that every table with a reference has a relations entry."
+why = "The query builder joins through relations, so a reference without one works in SQL and is missing in code."
+help = "Add a relations call for the table."
+
+[[checks]]
+name = "drizzle/migrations-fresh"
+example = "Changing a Drizzle schema without generating its migration reports drift. Run `drizzle-kit generate` with the project configuration, inspect the new migration, and retain it before rerunning."
+level = "recommended"
+stage = "push"
+runs = "per-scope"
+engine = "integrity"
+analysis = "drizzle-migrations"
+tool = "drizzle-kit"
+claims = {extensions = [".ts", ".sql"]}
+coverage = ["consistency"]
+summary = "Asks drizzle-kit to write migrations, and fails when it writes one."
+why = "A schema change with no migration works on the machine that pushed the schema and nowhere else."
+help = "Run drizzle-kit generate and commit the migration."
+
+[[settings]]
+name = "tools.drizzle.raw_sql_allowed"
+kind = "list"
+direction = "loosening"
+default = []
+summary = "Paths that may hold raw SQL templates, each with a reason."
+
+[rule_files]
+library = ["library/drizzle/DRIZZLE.md"]

@@ -1,18 +1,46 @@
 ---
+import { Code } from '@astrojs/starlight/components';
 import example from './bash-syntax.json';
 ---
-<figure class="terminal" aria-label="Bash syntax finding and correction">
-    <p class="terminal-label">Command · select the Bash syntax check</p>
-    <pre tabindex="0" aria-label="Check command"><code>gspot check --only bash/syntax --no-cache</code></pre>
-    <p class="terminal-label">Output · failed check</p>
-    <pre tabindex="0" aria-label="Failure output"><code>{example.failed}</code></pre>
-    <p class="terminal-label">Correction · replace the contents of greet.sh</p>
-    <pre tabindex="0" aria-label="Corrected Bash source"><code>{example.corrected}</code></pre>
-    <p class="terminal-label">Run the same command again · output</p>
-    <pre tabindex="0" aria-label="Successful rerun"><code>{example.passed}</code></pre>
-</figure>
-<p class="muted">Captured with gspot {example.version}, macOS arm64, Bash on PATH, and caching disabled.
-    This selects one check. The unchecked-file notice remains visible; it is not a whole-repository pass.
-    <a href="/guides/quick-start/">Reproduce the example.</a></p>
+<p><strong>Prerequisites:</strong> configure the Bash preset and put Bash on <code>PATH</code>.</p>
+<div class="comparison">
+    <section aria-labelledby="defect">
+        <h3 id="defect">Defect</h3>
+        <p>The <code>if</code> statement has no condition. The check reports <code>bash/syntax</code>.</p>
+        <Code frame="code" code={example.broken.trimEnd()} lang="bash" title="greet.sh" />
+    </section>
+    <section aria-labelledby="correction">
+        <h3 id="correction">Manual correction</h3>
+        <p>Replace the file contents with a valid command.</p>
+        <Code frame="code" code={example.corrected.trimEnd()} lang="bash" title="greet.sh" />
+    </section>
+</div>
+<p>From the configured repository root, run this command before and after the correction:</p>
+<Code frame="code" code="gspot check --only bash/syntax --no-cache" lang="sh" />
+<p>The corrected file produces no findings. Follow the <a href="/guides/quick-start/">first-check guide</a>{' '}for the complete setup.</p>
+<details>
+    <summary>Captured command output</summary>
+    <p>Captured with gspot {example.version}, {example.platform}, Bash on PATH, and caching {example.cache}.
+        Only Bash syntax was checked.</p>
+    <p>Output before the manual correction:</p>
+    <Code frame="code" code={example.failed.trimEnd()} lang="text" />
+    <p>Output after the manual correction and the same check command:</p>
+    <Code frame="code" code={example.passed.trimEnd()} lang="text" />
+</details>
 
-<style>figure { margin: 0; }</style>
+<style>
+    .comparison {
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 24px;
+        margin-block: 24px;
+        border-radius: 8px;
+        box-shadow: 0 0 64px -24px rgb(59 130 246 / 25%);
+    }
+    .comparison > section { min-width: 0; margin: 0; }
+    h3 { font-size: 1.125rem; }
+    details { margin-top: 24px; }
+    @media (max-width: 40rem) {
+        .comparison { grid-template-columns: minmax(0, 1fr); }
+    }
+</style>

@@ -8,6 +8,7 @@ import { detectPresets } from '#cli/presets/detect.ts';
 import { everyManifest } from '#cli/presets/select.ts';
 import { readManifests } from '#cli/repository/manifests.ts';
 import { settingRows } from '#cli/policy/settings-list.ts';
+import { coverageLines, coverageReport } from '#cli/doctor/coverage.ts';
 import type { Session, CommandResult } from '#cli/run/types.ts';
 
 const KEY_GAP = 2;
@@ -72,7 +73,9 @@ function presetsResult(session: Session): CommandResult {
     for (const preset of detected) lines.push(`  ${preset.name}  ${preset.evidence}\n    ${preset.command}`);
     lines.push('', 'available');
     for (const preset of available) lines.push(`  ${preset.name}  ${preset.description}`);
-    return { text: `${lines.join('\n')}\n`, json: { installed, detected, available }, exitCode: 0 };
+    const coverage = coverageReport(session);
+    lines.push('', ...coverageLines(coverage));
+    return { text: `${lines.join('\n')}\n`, json: { installed, detected, available, coverage }, exitCode: 0 };
 }
 
 /** List presets and effective settings without executing checks or mutating the project. */
@@ -80,6 +83,10 @@ export function registerList(program: Command): void {
     program
         .command('list')
         .description('List presets and check states, or effective settings and their sources')
+        .addHelpText(
+            'after',
+            '\nEffects:\nReads the policy and repository to list selected, detected, and available presets. With settings, prints effective values and their sources. It does not execute checks or mutate project files.\n\nExit codes:\n0: the requested information was printed. 2: invalid input or inability to complete the request.\n\nExample:\ngspot list settings',
+        )
         .addArgument(new Argument('[kind]', 'The information to list').choices(['settings']))
         .action(async (kind: string | undefined, _flags: Record<string, unknown>, command: Command) => {
             const global = command.optsWithGlobals();

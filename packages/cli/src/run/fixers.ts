@@ -15,27 +15,38 @@ import {
     unlinkSync,
     symlinkSync,
     rmSync,
+    writeFileSync,
 } from 'node:fs';
 import type { ToolPin } from '#cli/presets/types.ts';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { toPlatform } from '#cli/platform/paths.ts';
-import { byFixOrder } from '#cli/run/concurrency.ts';
+import type { FixOrder } from '#cli/presets/types.ts';
+
+const FIX_ORDER: FixOrder[] = ['codemod', 'imports', 'manifest', 'format'];
+import { createFileWorkspace } from '#cli/run/file-workspace.ts';
+import { executionFailure, hasToolError } from '#cli/run/broken-tool.ts';
 import { probeTool, toolPin } from '#cli/platform/tool-probe.ts';
-import { prepareCommand, runToolCommand } from '#cli/run/tool-runner.ts';
+import { commandConfigurations, prepareCommand, runToolCommand, toolDeadlineSeconds } from '#cli/run/tool-runner.ts';
 import type { FixReport, FixResult, Session, PlannedCheck, PreparedCommand } from '#cli/run/types.ts';
 
 const DIFF_CONTEXT = 3;
 
 function contentsOf(root: string, paths: string[]): Map<string, Buffer | undefined> {
     const contents = new Map<string, Buffer | undefined>();
-    for (const path of paths) {
-        try {
-            contents.set(path, readFileSync(join(root, path)));
-        } catch (error) {
-            if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
-            contents.set(path, undefined);
+    const files = openConfinedRoot(root, 'native');
+    try {
+        for (const path of paths) {
+            try {
+                contents.set(path, readFileSync(files.source(path)));
+            } catch (error) {
+                if (!(error instanceof Error && 'code' in error && error.code === 'ENOENT')) throw error;
+                contents.set(path, undefined);
+            }
         }
+        return contents;
+    } finally {
+        files.close();
     }
-    return contents;
 }
 
 function changedPaths(before: Map<string, Buffer | undefined>, after: Map<string, Buffer | undefined>): string[] {
@@ -65,14 +76,22 @@ async function runCorrection(
     const paths = [...new Set([...plannedCheck.files.map((file) => file.path), ...plannedCheck.triggerPaths])];
     const before = contentsOf(prepared.root, paths);
     for (const command of prepared.commands) {
-        const result = await runToolCommand(plannedCheck.scope.view, command, prepared, session.cancelSignal);
-        if (result.code !== 0 || result.missing || result.isTimedOut === true) {
+        const result = await runToolCommand(plannedCheck.scope.view, command.argv, prepared, session.cancelSignal);
+        const failure = executionFailure(result, check, toolDeadlineSeconds(plannedCheck.scope.view));
+        const hasRemainingFindings = plannedCheck.spec.fix_findings_exit_codes?.includes(result.code) === true;
+        if (
+            (result.code !== 0 && !hasRemainingFindings) ||
+            failure !== undefined ||
+            hasToolError(plannedCheck.spec, result)
+        ) {
             const detail = [result.stderr.trim(), result.stdout.trim()].filter((text) => text !== '').join('\n');
             return {
                 check,
                 status: 'failed',
                 changed: changedPaths(before, contentsOf(prepared.root, paths)),
-                note: [`${check} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': '),
+                note:
+                    failure?.note ??
+                    [`${check} exited ${String(result.code)}`, detail].filter((text) => text !== '').join(': '),
             };
         }
     }
@@ -92,6 +111,43 @@ function diffOf(path: string, was: Buffer | undefined, now: Buffer | undefined):
             context: DIFF_CONTEXT,
         },
     );
+}
+
+async function isolatedCorrection(
+    session: Session,
+    planned: PlannedCheck,
+    root: string,
+    command: string[],
+    toolPath: string,
+): Promise<FixResult> {
+    using workspace = createFileWorkspace(root, [
+        ...planned.files.map(({ path }) => path),
+        ...commandConfigurations(session, planned, command),
+    ]);
+    const prepared = prepareCommand({ ...session, root: workspace.root }, planned, command, toolPath);
+    const result = await runCorrection(session, planned, prepared);
+    const current = contentsOf(root, result.changed);
+    const corrected = contentsOf(workspace.root, result.changed);
+    const files = openConfinedRoot(root, 'native');
+    try {
+        const destinations = new Map<string, string>();
+        for (const [path, original] of workspace.originals) {
+            if (!result.changed.includes(path)) continue;
+            if (!current.get(path)?.equals(original))
+                throw new Error(
+                    `${path} changed while its correction was running; the isolated correction was not applied.`,
+                );
+            destinations.set(path, files.source(path));
+        }
+        for (const [path, destination] of destinations) {
+            const bytes = corrected.get(path);
+            if (bytes === undefined) unlinkSync(destination);
+            else writeFileSync(destination, bytes);
+        }
+    } finally {
+        files.close();
+    }
+    return result;
 }
 
 /**
@@ -125,8 +181,10 @@ export async function runFixer(
             check,
             status: 'failed',
             changed: [],
-            note: probe.note ?? `${tool.name} is unavailable. Run: ${probe.hint ?? 'install the configured tool'}`,
+            note: probe.note ?? `${tool.name} is unavailable. ${probe.hint ?? 'Install the configured tool.'}`,
         };
+    if (spec.isolated_files === true)
+        return isolatedCorrection(session, plannedCheck, workingDirectory, spec.fix_command, probe.path);
     const prepared = prepareCommand({ ...session, root: workingDirectory }, plannedCheck, spec.fix_command, probe.path);
     return runCorrection(session, plannedCheck, prepared);
 }
@@ -139,15 +197,21 @@ export async function runFixer(
  * @returns the correction results, changed paths, and dry-run diffs
  */
 export async function applyFixers(session: Session, planned: PlannedCheck[], isDryRun: boolean): Promise<FixReport> {
-    const checks = byFixOrder(
-        planned
-            .filter((check) => check.spec.fix_command !== undefined)
-            .map((check) => ({ ...check, order: check.spec.fix_order })),
-    );
+    const checks = planned
+        .filter((check) => check.spec.fix_command !== undefined)
+        .toSorted(
+            (a, b) => FIX_ORDER.indexOf(a.spec.fix_order ?? 'format') - FIX_ORDER.indexOf(b.spec.fix_order ?? 'format'),
+        );
     const paths = [
         ...new Set(checks.flatMap((check) => [...check.files.map((file) => file.path), ...check.triggerPaths])),
     ].toSorted((a, b) => a.localeCompare(b));
-    const scratch = isDryRun ? scratchCopy(session, paths) : undefined;
+    const scratch = isDryRun
+        ? scratchCopy(
+              session.root,
+              [...paths, ...session.repository.files.map((file) => file.path)],
+              session.repository.scopes.map((scope) => scope.path),
+          )
+        : undefined;
     const root = scratch ?? session.root;
     try {
         const before = contentsOf(root, paths);
@@ -167,36 +231,36 @@ const SCRATCH_DIRECTORIES = ['node_modules', '.venv'];
 
 /**
  * Copies selected source and configuration files for commands run outside the working tree.
- * @param session the repository session
+ * @param root the repository root
  * @param paths the source paths relative to the repository root
+ * @param scopePaths the scopes whose installed dependencies the command needs
  * @returns the temporary directory, which the caller must remove
  */
-export function scratchCopy(session: Session, paths: string[]): string {
+export function scratchCopy(root: string, paths: string[], scopePaths: string[]): string {
     const scratch = realpathSync(mkdtempSync(join(tmpdir(), 'gspot-fix-')));
+    const files = openConfinedRoot(root, 'native');
     try {
-        const owned = session.repository.files.map((file) => file.path);
         const dependencies = [
-            ...new Set(
-                session.scopes.flatMap(({ scope }) => SCRATCH_DIRECTORIES.map((name) => join(scope.path, name))),
-            ),
+            ...new Set(scopePaths.flatMap((scope) => SCRATCH_DIRECTORIES.map((name) => join(scope, name)))),
         ];
         const copied = new Set(
-            [...paths, ...owned, ...SCRATCH_EXTRAS].filter(
+            [...paths, ...SCRATCH_EXTRAS].filter(
                 (path) => !dependencies.some((dir) => path === dir || path.startsWith(`${dir}/`)),
             ),
         );
         for (const path of copied) {
-            const source = join(session.root, path);
+            const source = join(root, path);
             if (!existsSync(source)) continue;
+            const resolved = files.source(path);
             mkdirSync(dirname(join(scratch, path)), { recursive: true });
-            cpSync(source, join(scratch, path), { dereference: true });
+            cpSync(resolved, join(scratch, path), { dereference: true });
         }
-        const copies = new Map<string, string>([[realpathSync(session.root), scratch]]);
+        const copies = new Map<string, string>([[realpathSync(root), scratch]]);
         const pending: { source: string; target: string }[] = [];
         const fileLinks: { source: string; target: string }[] = [];
         for (const dir of dependencies) {
-            if (!existsSync(join(session.root, dir))) continue;
-            const source = realpathSync(join(session.root, dir));
+            if (!existsSync(join(root, dir))) continue;
+            const source = realpathSync(join(root, dir));
             const target = join(scratch, dir);
             copies.set(source, target);
             cpSync(source, target, { recursive: true, verbatimSymlinks: true, mode: constants.COPYFILE_FICLONE });
@@ -247,5 +311,7 @@ export function scratchCopy(session: Session, paths: string[]): string {
     } catch (error) {
         rmSync(scratch, { recursive: true, force: true });
         throw error;
+    } finally {
+        files.close();
     }
 }

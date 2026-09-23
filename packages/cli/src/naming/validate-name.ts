@@ -29,7 +29,8 @@ function caseProblem(name: string, limits: CategoryLimits, isFileName: boolean):
     if (limits.caseNames.length === 0) return undefined;
     const digitless = name.replaceAll(/\d+/gu, '');
     const isMatched = limits.caseNames.some((caseName) => {
-        const subject = isFileName && caseName !== 'snake-migration' ? digitless.replace(/\.[^.]*$/u, '') : digitless;
+        if (caseName === 'snake-migration') return hasCase(name, caseName);
+        const subject = isFileName ? digitless.replace(/\.[^.]*$/u, '') : digitless;
         return subject.split('.').every((segment) => hasCase(segment, caseName));
     });
     return isMatched ? undefined : { rule: 'case', message: `case is ${limits.caseNames.join(' or ')}` };

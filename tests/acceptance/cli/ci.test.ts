@@ -3,7 +3,7 @@ import { readFileSync, writeFileSync, chmodSync } from 'node:fs';
 import { createHash } from 'node:crypto';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { git, gspot, run } from '#tests/harness/planted.ts';
+import { git, gspot, run } from '#tests/support/cli/planted.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 
 test.each(['gitlab', 'github'] as const)(
@@ -75,43 +75,48 @@ process.exit(child.exitCode);
                 );
             },
         });
-        const curl = Bun.which('curl');
-        expect(curl).not.toBeNull();
-        writeFileSync(
-            join(executables.path, 'curl'),
-            `#!/usr/bin/env bun
-const args = process.argv.slice(2).map(value => value.startsWith('https://github.com/stefanionescu/gspot/releases/download/') ? ${JSON.stringify(`http://127.0.0.1:${server.port}`)} + new URL(value).pathname : value);
-process.exit(Bun.spawnSync([${JSON.stringify(curl)}, ...args], {stdin:'inherit',stdout:'inherit',stderr:'inherit'}).exitCode);
-`,
-        );
-        chmodSync(join(executables.path, 'curl'), 0o755);
-        const workflowPath = provider === 'gitlab' ? '.gitlab/ci/gspot.yml' : '.github/workflows/gspot.yml';
-        const generated = Bun.YAML.parse(readFileSync(join(repository.path, workflowPath), 'utf8')) as {
-            gspot: { script: string[]; artifacts: { paths: string[]; when: string; reports: { codequality: string } } };
-            jobs: Record<
-                string,
-                { steps: { run?: string; uses?: string; if?: string; with?: Record<string, string> }[] }
-            >;
-        };
-        let script =
-            provider === 'gitlab'
-                ? generated.gspot.script
-                : generated.jobs['check-ubuntu']!.steps.flatMap((step) => (step.run === undefined ? [] : [step.run]));
-        const execute = (comparison: string) =>
-            runProcess(['/bin/bash', '-e', '-c', script.join('\n')], {
-                cwd: repository.path,
-                env: {
-                    PATH: `${executables.path}${delimiter}${process.env['PATH']}`,
-                    CI_COMMIT_BEFORE_SHA: comparison,
-                    CI_MERGE_REQUEST_DIFF_BASE_SHA: '',
-                    GSPOT_CI_BASE: comparison,
-                    RUNNER_TEMP: executables.path,
-                    GITHUB_PATH: join(executables.path, 'github-path'),
-                    NO_COLOR: '1',
-                },
-                timeoutMs: 30000,
-            });
         try {
+            const curl = Bun.which('curl');
+            expect(curl).not.toBeNull();
+            writeFileSync(
+                join(executables.path, 'curl'),
+                `#!/usr/bin/env bun
+    const args = process.argv.slice(2).map(value => value.startsWith('https://github.com/stefanionescu/gspot/releases/download/') ? ${JSON.stringify(`http://127.0.0.1:${server.port}`)} + new URL(value).pathname : value);
+    process.exit(Bun.spawnSync([${JSON.stringify(curl)}, ...args], {stdin:'inherit',stdout:'inherit',stderr:'inherit'}).exitCode);
+    `,
+            );
+            chmodSync(join(executables.path, 'curl'), 0o755);
+            const workflowPath = provider === 'gitlab' ? '.gitlab/ci/gspot.yml' : '.github/workflows/gspot.yml';
+            const generated = Bun.YAML.parse(readFileSync(join(repository.path, workflowPath), 'utf8')) as {
+                gspot: {
+                    script: string[];
+                    artifacts: { paths: string[]; when: string; reports: { codequality: string } };
+                };
+                jobs: Record<
+                    string,
+                    { steps: { run?: string; uses?: string; if?: string; with?: Record<string, string> }[] }
+                >;
+            };
+            let script =
+                provider === 'gitlab'
+                    ? generated.gspot.script
+                    : generated.jobs['check-ubuntu']!.steps.flatMap((step) =>
+                          step.run === undefined ? [] : [step.run],
+                      );
+            const execute = (comparison: string) =>
+                runProcess(['/bin/bash', '-e', '-c', script.join('\n')], {
+                    cwd: repository.path,
+                    env: {
+                        PATH: `${executables.path}${delimiter}${process.env['PATH']}`,
+                        CI_COMMIT_BEFORE_SHA: comparison,
+                        CI_MERGE_REQUEST_DIFF_BASE_SHA: '',
+                        GSPOT_CI_BASE: comparison,
+                        RUNNER_TEMP: executables.path,
+                        GITHUB_PATH: join(executables.path, 'github-path'),
+                        NO_COLOR: '1',
+                    },
+                    timeoutMs: 30000,
+                });
             const invalid = await execute(base);
             expect(invalid.code, invalid.stdout + invalid.stderr).toBe(1);
             const reportPath = join(repository.path, '.gspot/report.json');

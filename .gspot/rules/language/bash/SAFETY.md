@@ -270,9 +270,9 @@ curl --fail --show-error --silent --location \
   --connect-timeout 10 \
   --max-time 60 \
   --output "${installer}" \
-  "${installer_url}"
+  "${installer_url}" || return 1
 
-printf '%s  %s\n' "${expected_sha256}" "${installer}" | shasum -a 256 -c -
+printf '%s  %s\n' "${expected_sha256}" "${installer}" | shasum -a 256 -c - || return 1
 bash "${installer}" --version "${tool_version}"
 ```
 
@@ -447,7 +447,7 @@ find . -type f -name '*.sql' -exec sh -c 'lint_sql "$1"' sh {} \;
 Safe xargs:
 
 ```bash
-find . -type f -name '*.sql' -print0 | xargs -0 shellcheck --
+find . -type f -name '*.sh' -print0 | xargs -0 shellcheck --
 ```
 
 If a value must become a command argument, keep it as an argument. Do not turn it

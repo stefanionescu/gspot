@@ -13,7 +13,8 @@ as Vue and Svelte components. Selecting a framework must not drop language rules
 Presets own shipped tools, versions, templates, default rule policy, styles, and vocabulary.
 CLI code owns operational loading, validation, parsing, and execution. Recommended and all
 use one metadata owner across planning, generated templates, plugin exports, and documentation.
-Moving a preference to all preserves its enforcement; a duplicate implementation is removed
+Optional preferences retain their specified level. Trivial-function and trivial-file rules
+remain enabled at every level. Remove a duplicate implementation
 only after the replacement proves the intended policy through generated configuration.
 
 Validate external-tool and built-in check definitions as distinct forms. Descriptive coverage
@@ -23,7 +24,7 @@ in ordinary code, not a manifest workflow language. The execution contract lives
 
 ## What a preset is
 
-A preset bundles its manifest and assets under its kind and name. Resolve templates and rule
+A preset bundles its manifest and assets under its name. Resolve templates and rule
 assets from the manifest's actual directory. Agent rule guides remain separate and are selected
 by the manifest; no source/test directory inventory is implied.
 
@@ -36,10 +37,16 @@ runs, settings it exposes, and rule files it installs. It contributes nothing it
 manifest validation, grouped discovery, and selection, not a public synonym for a check.
 The kind does not require unrelated implementation or test directories to mirror this taxonomy.
 
-Seven kinds. Each preset lives at `presets/<kind>/<name>/`, using its manifest's `kind`.
+Each preset lives at `presets/<kind>/<name>/` and declares its kind in its manifest.
+The kind groups both selection and source ownership. Move each manifest with its templates and assets.
 Preset names are bare names; the kind is not part of the public name. Discovery reads each
 manifest's actual directory and resolves its assets there. No category registry, old-path
 aliases, or forwarding files duplicate that ownership.
+
+The public `configs` preset lives at `presets/policy/configs/` and is titled Configuration
+Files. It covers JSON, YAML, TOML, workflows, environment files, XML, and related formats.
+Its templates configure the tools that inspect those files; the preset is not a generic
+owner for every preset's configuration assets.
 
 | Kind      | Selected by                                    | Claims files by                           | Examples                                                                                                                          |
 | --------- | ---------------------------------------------- | ----------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------- |
@@ -100,6 +107,7 @@ target   = ".gspot/tsconfig.check.json"
 
 [[checks]]
 name      = "typescript/tsc"
+example = "Assigning a string to a number-typed variable reports a type error. Supply the intended number and rerun."
 level   = "recommended"
 stage   = "push"
 runs    = "per-scope"                  # per-file-list | per-scope | once
@@ -109,6 +117,7 @@ help     = "Read the first error tsc prints and fix that file. Later errors are 
 
 [[checks]]
 name          = "typescript/eslint"
+example = "An unused local declaration reports the configured unused-variable rule. Remove it and rerun."
 level       = "recommended"
 stage       = "commit"
 runs        = "per-file-list"
@@ -183,6 +192,9 @@ tool, and no check name outside `src/checks/`, and a unit test holds that.
 - Every tool the checks or the generated configuration need is in `[[tools]]` with a version
   and the name under each ecosystem gspot knows (`npm`, `pypi`, `mise`, `brew`, `cargo`,
   `github`). `doctor` verifies presence and version.
+- CodeQL tool `query_packs` maps native extractor names to exact query-pack versions
+  paired with the CLI release. The adapter resolves language names through native metadata
+  and uses these pins for query downloads.
 - Every `[[configs]]` entry has a reader among the checks, or fails to load.
 - Every check is in a stage. [10-hooks-ci-runners.md](10-hooks-ci-runners.md) says what puts a
   check at `commit`, `push`, or `manual`.
@@ -355,22 +367,26 @@ These clauses specify required behavior. [Remaining work](22-remaining.md) owns 
 
 ### Acceptance K-301
 
-Banned terms run only at all; generate and service are allowed. Recommended means a demonstrated defect rather than a preferred naming or abstraction style.
+Banned terms run only at all; generate and service are allowed. Recommended includes defect checks and the mandatory trivial-function and trivial-file policy.
+Other naming, placement, and abstraction preferences belong to all.
 
-Use the naming policy with the corrected structural contract in [07-slop-drift.md](07-slop-drift.md). Trivial functions run at recommended and all; required APIs need narrow, reasoned suppressions.
+Use the naming policy with the corrected structural contract in [07-slop-drift.md](07-slop-drift.md). Trivial functions and trivial files run by default at recommended and all, including nested
+scopes and standalone plugins; required APIs need narrow, reasoned suppressions.
 
-Fresh generated apps and established multi-package projects; valid service/generate names; public API wrappers and framework adapters. For every recommended finding, record why it is a defect and review false positives. Snapshot messages only after that review.
+Fresh generated apps and established multi-package projects; valid service/generate names; public API wrappers and framework adapters. For every recommended finding, verify the defect or mandatory structural policy it reports.
+Review parser and scope false positives without weakening the statement threshold or adding
+blanket callback, framework, or entrypoint exemptions. Snapshot messages only after that review.
 
 ### Acceptance K-198
 
 `level = "recommended"` or `level = "all"` at the top of `gspot.toml`. A check carries
 `level` in its manifest, and a check above the level of the repository is not planned. A template
-renders by level: `recommended` writes the recommended set of each tool and the rules that find a
-defect, and `all` writes the rest.
+renders by level: `recommended` writes the recommended set of each tool, defect checks,
+and mandatory trivial-function and trivial-file enforcement; `all` adds the remaining policy.
 
-`checkSchema` gains `level`, required, so no check is unsorted. `levels.ts` holds
-`isPlanned(check, policy)`. `templates.ts` gives every template `isAll`, and a rule list in a
-template is two lists.
+Every check declares its level. Planning, template emission, standalone plugin configurations,
+and references consume the same level policy. Verify the resulting selection at both levels;
+no dedicated level module or duplicate rule registry is required.
 
 For ESLint the first list is `recommended` of typescript-eslint, and the
 second adds `strictTypeChecked`, sonarjs, unicorn, and jsdoc. For ruff the first list is `E`,
@@ -378,12 +394,13 @@ second adds `strictTypeChecked`, sonarjs, unicorn, and jsdoc. For ruff the first
 is the default rules and the opt-in rules that find a defect. basedpyright runs at `standard`,
 ShellCheck with its default set, and hadolint fails at `warning`.
 
-The snapshots hold both levels for each preset (T-36). A unit test fails a manifest
-check with no `level`.
+Generated-configuration cases exercise both levels through their consumers (T-36). Manifest
+validation rejects a check without its required level or nonempty example.
 
 ### Acceptance K-101
 
-Preserve every public plugin rule and option. Derive `configs.recommended` and `configs.all` from rule metadata. Recommended rules detect demonstrated defects; placement, forwarding, and abstraction preferences require all or explicit opt-in. Verify standalone and generated configurations with invalid and corrected inputs.
+Preserve every public plugin rule and option. Derive `configs.recommended` and `configs.all` from rule metadata. Both configurations enable trivial-function and trivial-file enforcement by default.
+Other placement and abstraction preferences require all or explicit opt-in. Verify standalone and generated configurations with invalid and corrected inputs.
 
 ### Acceptance K-135
 
@@ -433,8 +450,8 @@ agent. `all` adds the packages. The off list and the vocabulary are data of the 
 packages and the off list, which the manifest holds as a setting with its reasons. `apply`
 downloads a Vale package only at `all`, so a `recommended` install needs no network.
 
-The prose snapshot at both levels. A planted install at `recommended` runs with the
-network off.
+Exercise the emitted prose configuration at both levels. A planted install at `recommended`
+runs with the network off; native package downloads stay in explicit suites.
 
 ### Acceptance K-201
 
@@ -525,7 +542,9 @@ A manifest says which old files its tools own, and what is carried from them.
 A tool in a manifest takes `[[tools.takeover]]` rows. A row has `file` (a name or a
 glob), or `table` and `key` for a shared manifest, `shared`, and `carries`. `carries` names a
 reader from a closed list: `ignore-paths`, `rules-table`, `words`, `advisories`, `licenses`,
-and `eslint-config`. `CarriedLists` becomes a map from a tool name to its carried entries, and
+and `eslint-config`. Disabled-rule importers also declare `check`, naming the executable
+check that receives carried rule exceptions. The check must run the declared tool.
+`CarriedLists` becomes a map from a tool name to its carried entries, and
 the plan prints it by walking the map.
 
 `takeover.test.ts` runs unchanged. A unit test holds that every takeover row names a

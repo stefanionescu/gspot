@@ -4,7 +4,15 @@ import { scopeAncestors } from '#cli/repository/scopes.ts';
 import type { Session } from '#cli/run/types.ts';
 import { nearMatches } from '#cli/policy/near.ts';
 import * as messages from '#cli/policy/messages.ts';
-import type { Manifest, SelectionWalk } from '#cli/presets/types.ts';
+import type { Manifest } from '#cli/presets/types.ts';
+
+type SelectionWalk = {
+    manifests: Map<string, Manifest>;
+    problems: string[];
+    order: Manifest[];
+    seen: Set<string>;
+    visiting: string[];
+};
 
 function visit(walk: SelectionWalk, presetName: string): void {
     if (walk.seen.has(presetName)) return;

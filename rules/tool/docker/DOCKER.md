@@ -131,7 +131,7 @@ Good Node/Bun skeleton:
 ```dockerfile
 # syntax=docker/dockerfile:<VERSION>
 
-FROM node:<MAJOR>-bookworm-slim AS build
+FROM node:<MAJOR>-bookworm-slim AS dependencies
 WORKDIR /app/api
 
 RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
@@ -142,29 +142,23 @@ COPY scripts/install-bun.sh /tmp/install-bun.sh
 RUN /tmp/install-bun.sh "<BUN_VERSION>" && rm -f /tmp/install-bun.sh
 ENV PATH="/root/.bun/bin:$PATH"
 
-COPY package.json ./package.json
-RUN bun install
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile
 
+FROM dependencies AS build
 COPY tsconfig.build.json ./tsconfig.build.json
 COPY src ./src
 RUN bunx tsc -p tsconfig.build.json && bunx tsc-alias -p tsconfig.build.json
 
+FROM dependencies AS production-dependencies
+RUN rm -rf node_modules && bun install --frozen-lockfile --production
+
 FROM node:<MAJOR>-bookworm-slim AS runtime
 WORKDIR /app/api
-
 ENV NODE_ENV=production
 
-RUN apt-get update && DEBIAN_FRONTEND=noninteractive apt-get install -y --no-install-recommends \
-    ca-certificates curl unzip \
-    && rm -rf /var/lib/apt/lists/*
-
-COPY scripts/install-bun.sh /tmp/install-bun.sh
-RUN /tmp/install-bun.sh "<BUN_VERSION>" && rm -f /tmp/install-bun.sh
-ENV PATH="/root/.bun/bin:$PATH"
-
 COPY package.json ./package.json
-RUN bun install --production
-
+COPY --from=production-dependencies /app/api/node_modules ./node_modules
 COPY --from=build /app/api/dist ./dist
 
 RUN groupadd -r appuser && useradd -r -g appuser appuser && chown -R appuser:appuser /app
@@ -192,7 +186,8 @@ General rules:
 
 - Install dependencies from lockfiles when available.
 - For npm services: prefer `npm ci --omit=dev` or the approved npm production equivalent.
-- For Bun services: use `bun install` in build stage and `bun install --production` in runtime stage.
+- For Bun services: copy `bun.lock` with the manifest and use `bun install --frozen-lockfile`.
+  Add `--production` when installing runtime dependencies.
 - Use one package manager per service. Do not mix them in one image.
 - Do not install global npm dependencies. If a service truly needs global npm tools, put global prefix under the non-root user home and document why.
 - Do not rely on package-manager binaries in runtime unless the runtime actually invokes them.
@@ -204,7 +199,7 @@ API-specific rules:
 
 - Pin the Bun version in Dockerfiles and package metadata, and keep those values
   in sync.
-- Install Bun the same way in build/runtime unless a dedicated base image is introduced.
+- Install Bun in build stages. Include it in a runtime image only when the service executes Bun.
 - Do not replace Bun with npm examples from external docs.
 - `NODE_ENV=production` belongs in runtime images and compose runtime env.
 - Do not increase npm/Bun log verbosity in Dockerfiles unless debugging a requested build problem.
@@ -222,8 +217,8 @@ Rules:
 Good ordering example:
 
 ```dockerfile
-COPY package.json ./package.json
-RUN bun install --production
+COPY package.json bun.lock ./
+RUN bun install --frozen-lockfile --production
 
 COPY --from=build /app/api/dist ./dist
 ```
@@ -267,6 +262,9 @@ Deny-by-default example:
 !.dockerignore
 !Dockerfile
 !package.json
+!bun.lock
+!scripts/
+!scripts/install-bun.sh
 !tsconfig.build.json
 !src/
 !src/**
@@ -571,12 +569,12 @@ Before you run the checks of the repository, read the change against these quest
 - Does the change touch the correct image stack?
 - Is shared behavior truly shared?
 - Are build inputs explicit and validated before network or Docker work?
-- Are dependency changes made in `pyproject.toml` and regenerated exports rather
-- Are CUDA, PyTorch, TensorRT-LLM, vLLM, and FlashInfer compatibility constraints
-- Are Hugging Face tokens and other secrets kept out of layers, logs, labels,
-- Are model IDs, revisions required by Docker builds, engine labels, and
+- Are dependency changes made in the owning manifest and lockfile?
+- Are native libraries compatible with the runtime OS and architecture?
+- Are secrets kept out of layers, logs, labels, and generated files?
+- Are downloaded artifacts pinned and verified?
 - Do runtime scripts follow Bash rules and use `exec` for final server handoff?
 - Do Python helpers follow Python rules and avoid `sys.path` patching?
-- Does each stack-local `.dockerignore` include necessary files and exclude
+- Does each stack-local `.dockerignore` include necessary build inputs and exclude secrets?
 - Are Hadolint and security findings fixed directly instead of broadly ignored?
-- Are Docker docs updated for changed build args, env vars, ports, paths, and
+- Do Docker docs describe the current build arguments, environment variables, ports, and paths?

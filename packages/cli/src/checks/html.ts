@@ -1,12 +1,12 @@
+import { readSource } from '#cli/repository/tracked.ts';
 // HTML files read through the embedded grammar: no inline script or handler, and templates that hold placeholders in place of copy.
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
 import type { Node } from 'web-tree-sitter';
 import type { EngineInput } from '#cli/run/types.ts';
 import type { Finding } from '#cli/output/finding.ts';
-import type { MarkupProblem } from '#cli/checks/static-site/types.ts';
 import { parserFor } from '#cli/naming/parsers.ts';
 import { pathMatcher } from '#cli/presets/claims.ts';
+
+type MarkupProblem = { node: Node; rule: string; text: string };
 
 const INERT_SCRIPT_TYPES = new Set(['application/ld+json', 'application/json', 'importmap', 'speculationrules']);
 const COPY_ATTRIBUTES = new Set(['alt', 'aria-label', 'aria-description', 'placeholder', 'title']);
@@ -43,7 +43,7 @@ function scriptProblems(root: Node): MarkupProblem[] {
                   {
                       node: element,
                       rule: 'inline-script',
-                      text: 'An inline script runs only under a policy that also runs an injected one.',
+                      text: 'Move executable inline script to a script file.',
                   },
               ];
     });
@@ -120,19 +120,22 @@ async function findings(
     const parser = await parserFor('html');
     const found: Finding[] = [];
     for (const path of paths) {
-        const tree = parser.parse(readFileSync(join(input.root, path), 'utf8'));
-        if (tree === null) continue;
-        for (const problem of read(tree.rootNode))
-            found.push({
-                check: input.spec.name,
-                file: path,
-                line: problem.node.startPosition.row + 1,
-                column: problem.node.startPosition.column + 1,
-                rule: problem.rule,
-                message: problem.text,
-                fixable: false,
-            });
-        tree.delete();
+        const tree = parser.parse(readSource(input.root, path).toString('utf8'));
+        if (tree === null) throw new Error('The source parser returned no tree.');
+        try {
+            for (const problem of read(tree.rootNode))
+                found.push({
+                    check: input.spec.name,
+                    file: path,
+                    line: problem.node.startPosition.row + 1,
+                    column: problem.node.startPosition.column + 1,
+                    rule: problem.rule,
+                    message: problem.text,
+                    fixable: false,
+                });
+        } finally {
+            tree.delete();
+        }
     }
     return found;
 }
@@ -152,10 +155,10 @@ export function htmlScripts(input: EngineInput): Promise<Finding[]> {
  * @param input the engine input
  * @returns the findings
  */
-export function htmlCopy(input: EngineInput): Promise<Finding[]> {
+export function htmlCopy(input: EngineInput): Finding[] | Promise<Finding[]> {
     const tool = input.view.tool('html');
     const templates = (tool['template_files'] as string[] | undefined) ?? [];
-    if (templates.length === 0) return Promise.resolve([]);
+    if (templates.length === 0) return [];
     const excluded = ((tool['copy_excluded'] as { paths: string[] }[] | undefined) ?? []).flatMap(
         (entry) => entry.paths,
     );

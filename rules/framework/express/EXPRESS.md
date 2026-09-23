@@ -64,10 +64,15 @@ Middleware rules:
 - Middleware cannot make feature decisions.
 - Middleware cannot call the database for product behavior except through auth or ownership helpers designed for that boundary.
 - Business permission checks belong in a module or ownership middleware, depending on whether the rule is transport-level or domain-level.
-- Every async route or middleware must use `asyncRoute()` or explicitly catch
-  and pass errors to `next(error)`.
-- Do not rely on framework promise auto-forwarding unless the API standard is
-  deliberately migrated to that behavior.
+- In Express 4, forward rejected promises through the project's async handler or
+  explicitly catch and pass errors to `next(error)`.
+- In Express 5, return the route or middleware promise so Express forwards rejections.
+  Do not add a wrapper that only duplicates this behavior. Callback-based asynchronous
+  work still passes errors to `next(error)`.
+
+The example above uses an Express 4 async handler. See
+[Express error handling](https://expressjs.com/en/guide/error-handling/)
+for version-specific behavior.
 
 HTTP edge rules:
 

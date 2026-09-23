@@ -1,19 +1,29 @@
+import { commandArguments } from '#cli/policy/settings.ts';
+import { readSource } from '#cli/repository/tracked.ts';
 // The build of a static site: run once for each scope in a session, because every output check reads the same folder.
-import { join } from 'node:path';
+import { join, relative } from 'node:path';
+import { mutationTarget, openConfinedRoot } from '#cli/lifecycle/confined.ts';
 import { createHash } from 'node:crypto';
-import { run } from '#cli/platform/spawn.ts';
-import type { SiteBuild } from '#cli/checks/static-site/types.ts';
+import { runCheckCommand } from '#cli/run/tool-runner.ts';
 import type { Finding } from '#cli/output/finding.ts';
 import { scratchCopy } from '#cli/run/fixers.ts';
-import type { EngineInput, Session } from '#cli/run/types.ts';
+import type { EngineInput } from '#cli/run/types.ts';
 import { SkippedCheckError } from '#cli/platform/skipped-check.ts';
-import { existsSync, readdirSync, readFileSync, rmSync, statSync } from 'node:fs';
+import { existsSync, rmSync, statSync } from 'node:fs';
 
-const BUILD_TIMEOUT_MS = 1_800_000;
+/** The output of one isolated static-site build. */
+export type SiteBuild = {
+    cwd: string;
+    command: string;
+    output: string;
+    isBuilt: boolean;
+    said: string;
+};
+
 const DEFAULT_OUTPUT = 'dist';
 const DEFAULT_BUILD = 'npm run build';
 const SHOWN_DIFFERENCES = 10;
-const builds = new WeakMap<Session, Map<string, Promise<SiteBuild>>>();
+const builds = new WeakMap<object, Map<string, Promise<SiteBuild>>>();
 
 function text(input: EngineInput, key: string, otherwise: string): string {
     const found = input.view.tool('site')[key];
@@ -21,22 +31,34 @@ function text(input: EngineInput, key: string, otherwise: string): string {
 }
 
 async function built(input: EngineInput): Promise<SiteBuild> {
-    const cwd = join(input.root, input.scope);
+    const outputPath = text(input, 'output', DEFAULT_OUTPUT);
+    mutationTarget(outputPath);
+    if (input.resources === undefined) throw new Error('Site builds require run-owned temporary resources.');
+    const scratch = scratchCopy(
+        input.root,
+        input.files.map((file) => file.path),
+        input.scopeEntries.map((scope) => scope.path),
+    );
+    input.resources.defer(() => rmSync(scratch, { recursive: true, force: true }));
+    const cwd = join(scratch, input.scope);
     const command = text(input, 'build', DEFAULT_BUILD);
-    const result = await run(command.split(' '), { cwd, timeoutMs: BUILD_TIMEOUT_MS });
-    const output = join(cwd, text(input, 'output', DEFAULT_OUTPUT));
+    const result = await runCheckCommand(input, commandArguments(command), { cwd });
+    const output = join(cwd, outputPath);
+    const files = openConfinedRoot(scratch);
+    let isBuilt: boolean;
+    try {
+        isBuilt =
+            result.code === 0 && files.stat(relative(scratch, output).replaceAll('\\', '/'))?.isDirectory() === true;
+    } finally {
+        files.close();
+    }
     const said = [result.stderr, result.stdout].join('\n').trim().split('\n').slice(-SHOWN_DIFFERENCES).join(' | ');
-    return { cwd, command, output, isBuilt: result.code === 0 && existsSync(output), said };
+    return { cwd, command, output, isBuilt, said };
 }
 
 function digests(folder: string): Map<string, string> {
     return new Map(
-        filesUnder(folder).map((path) => [
-            path,
-            createHash('sha256')
-                .update(readFileSync(join(folder, path)))
-                .digest('hex'),
-        ]),
+        filesUnder(folder).map((path) => [path, createHash('sha256').update(readSource(folder, path)).digest('hex')]),
     );
 }
 
@@ -47,10 +69,22 @@ function digests(folder: string): Map<string, string> {
  */
 export function filesUnder(folder: string): string[] {
     if (!existsSync(folder)) return [];
-    return readdirSync(folder, { recursive: true })
-        .map(String)
-        .filter((entry) => statSync(join(folder, entry)).isFile())
-        .toSorted((left, right) => left.localeCompare(right));
+    const files = openConfinedRoot(folder, 'native');
+    const found: string[] = [];
+    const directories = [''];
+    try {
+        for (let directory = directories.pop(); directory !== undefined; directory = directories.pop()) {
+            for (const entry of files.list(directory === '' ? undefined : directory)) {
+                const path = directory === '' ? entry : `${directory}/${entry}`;
+                const stat = statSync(files.source(path));
+                if (stat.isDirectory()) directories.push(path);
+                else if (stat.isFile()) found.push(path);
+            }
+        }
+        return found.toSorted((left, right) => left.localeCompare(right));
+    } finally {
+        files.close();
+    }
 }
 
 /**
@@ -60,8 +94,8 @@ export function filesUnder(folder: string): string[] {
  */
 export function siteBuild(input: EngineInput): Promise<SiteBuild> {
     const key = join(input.root, input.scope);
-    const scopeBuilds = builds.get(input.session) ?? new Map<string, Promise<SiteBuild>>();
-    builds.set(input.session, scopeBuilds);
+    const scopeBuilds = builds.get(input.runKey) ?? new Map<string, Promise<SiteBuild>>();
+    builds.set(input.runKey, scopeBuilds);
     const running = scopeBuilds.get(key) ?? built(input);
     scopeBuilds.set(key, running);
     return running;
@@ -106,25 +140,19 @@ export async function siteBuilds(input: EngineInput): Promise<Finding[]> {
 export async function buildReproducible(input: EngineInput): Promise<Finding[]> {
     const first = await requireSiteBuild(input);
     const before = digests(first.output);
-    const paths = input.session.repository.files.map((file) => file.path);
-    const scratch = scratchCopy(input.session, paths);
-    try {
-        const second = await built({ ...input, root: scratch });
-        if (!second.isBuilt) throw new Error(`The second site build failed: ${second.command}: ${second.said}`);
-        const after = digests(second.output);
-        const differences = [...new Set([...before.keys(), ...after.keys()])].filter(
-            (path) => before.get(path) !== after.get(path),
-        );
-        return differences.slice(0, SHOWN_DIFFERENCES).map((path) => ({
-            check: input.spec.name,
-            file: path,
-            line: 1,
-            rule: 'not-reproducible',
-            message:
-                'Two builds of the same tree wrote this file differently. Look for a timestamp, a random value, or an unordered list.',
-            fixable: false,
-        }));
-    } finally {
-        rmSync(scratch, { recursive: true, force: true });
-    }
+    const second = await built(input);
+    if (!second.isBuilt) throw new Error(`The second site build failed: ${second.command}: ${second.said}`);
+    const after = digests(second.output);
+    const differences = [...new Set([...before.keys(), ...after.keys()])].filter(
+        (path) => before.get(path) !== after.get(path),
+    );
+    return differences.slice(0, SHOWN_DIFFERENCES).map((path) => ({
+        check: input.spec.name,
+        file: path,
+        line: 1,
+        rule: 'not-reproducible',
+        message:
+            'Two builds of the same tree wrote this file differently. Look for a timestamp, a random value, or an unordered list.',
+        fixable: false,
+    }));
 }

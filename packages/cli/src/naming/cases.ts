@@ -1,4 +1,4 @@
-// Does a name have the case its category asks for? Digits are left out on purpose: the digit ban reports them.
+// Ordinary cases receive digitless names; migration filenames retain their timestamp and extension.
 import { MIGRATION_TIMESTAMP_DIGITS } from '#cli/naming/cases-definitions.ts';
 
 const LOWER_WORD = /^[a-z]+$/u;
@@ -30,7 +30,7 @@ const CHECKS: Record<string, (name: string) => boolean> = {
 
 /**
  * True when the name has the case.
- * @param name the name, digits removed
+ * @param name the full migration filename, or an ordinary name with digits removed
  * @param caseName one of camel, pascal, pascal-plus, kebab, snake, upper-snake, snake-migration
  * @returns whether it matches; an unknown case name never matches
  */

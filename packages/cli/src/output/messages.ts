@@ -2,7 +2,6 @@
 import pc from 'picocolors';
 import { createConsola } from 'consola';
 import type { ConsolaInstance } from 'consola';
-import type { OutputOptions, Painter } from '#cli/output/types.ts';
 import { isCi, isColorRefused } from '#cli/platform/environment.ts';
 
 const LEVELS: Record<OutputOptions['verbosity'], number> = { quiet: 1, normal: 3, verbose: 4 };
@@ -12,9 +11,7 @@ const state: { options: OutputOptions; instance: ConsolaInstance | undefined } =
     instance: undefined,
 };
 
-function same(text: string): string {
-    return text;
-}
+export const colors = pc.createColors(false);
 
 function consola(): ConsolaInstance {
     state.instance ??= createConsola({
@@ -40,26 +37,11 @@ export function isColorAllowed(isNoColor: boolean): boolean {
  */
 export function configureOutput(next: OutputOptions): void {
     state.options = next;
+    Object.assign(colors, pc.createColors(next.color));
     state.instance = createConsola({
         level: LEVELS[next.verbosity],
         formatOptions: { colors: next.color, date: false, compact: true },
     });
-}
-
-/**
- * The color functions, or identity when color is off.
- * @returns the painter
- */
-export function paint(): Painter {
-    const isOn = state.options.color;
-    return {
-        red: isOn ? pc.red : same,
-        green: isOn ? pc.green : same,
-        yellow: isOn ? pc.yellow : same,
-        dim: isOn ? pc.dim : same,
-        bold: isOn ? pc.bold : same,
-        cyan: isOn ? pc.cyan : same,
-    };
 }
 
 /**
@@ -105,3 +87,5 @@ export function reportStorageFailure(path: string, error: unknown): void {
 export function print(text: string): void {
     process.stdout.write(text.endsWith('\n') ? text : `${text}\n`);
 }
+
+export type OutputOptions = { verbosity: 'quiet' | 'normal' | 'verbose'; json: boolean; color: boolean };
