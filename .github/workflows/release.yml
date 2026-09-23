@@ -56,7 +56,7 @@ jobs:
             - run: mise run --skip-tools repo:setup
             - name: Validate the release version
               shell: bash
-              run: test "v$(bun -e 'console.log(require("./packages/cli/package.json").version)')" = "$TAG"
+              run: mise run --skip-tools release:verify-version
               env:
                   TAG: ${{ github.ref_name }}
             - run: mise run --skip-tools build -- --target "$TARGET"
@@ -93,17 +93,7 @@ jobs:
                   path: dist/downloads
             - name: Assemble matching artifacts
               shell: bash
-              run: |
-                  for directory in dist/downloads/gspot-*; do
-                      for file in LICENSE.md NOTICE.md; do
-                          if [[ -f dist/$file ]]; then
-                              cmp "dist/$file" "$directory/$file"
-                          else
-                              cp "$directory/$file" "dist/$file"
-                          fi
-                      done
-                      cp "$directory"/gspot-* dist/
-                  done
+              run: mise run --skip-tools release:assemble
             - run: mise run --skip-tools repo:setup
             - run: mise run --skip-tools build:plugin
             - run: mise run --skip-tools test:release

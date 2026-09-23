@@ -1,13 +1,13 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { run as runProcess } from '#cli/platform/spawn.ts';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { resolvePythonProject, installPythonProject } from '#cli/lifecycle/python-project.ts';
+import { installPythonProject, resolvePythonProject } from '#cli/lifecycle/python-project.ts';
+import { openSession } from '#cli/run/session.ts';
 
 const SWIFT =
     [

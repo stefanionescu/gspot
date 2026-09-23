@@ -1,12 +1,15 @@
-import { pathToFileURL } from 'node:url';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { pushReportSchema } from '#cli/run/report-schema.ts';
+import { pathToFileURL } from 'node:url';
 // The commits preset: the commit-msg hook refuses a message outside the convention and passes one inside it.
-import { join, delimiter } from 'node:path';
-import { readFileSync, chmodSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
+import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { git } from '#tests/support/cli/git.ts';
+import { script } from '#tests/support/cli/planted.ts';
+import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 import { describe, expect, test } from 'bun:test';
-import { installPrivateTools, git, gspot, toolsPath, PLANTED_TIMEOUT_MS, run, script } from '#tests/support/cli/planted.ts';
+import { chmodSync, readFileSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const INIT = ['init', '--yes', '--presets', 'commits', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 

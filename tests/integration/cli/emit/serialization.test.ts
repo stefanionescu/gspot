@@ -1,17 +1,17 @@
+import { isMergeStubHeld, mergeStub } from '#cli/emit/stubs.ts';
+import { emitAll } from '#cli/emit/targets.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { initCommand } from '#cli/lifecycle/init/command.ts';
+import { parserFor } from '#cli/naming/parsers.ts';
+import { openSession } from '#cli/run/session.ts';
+import { expect, test } from 'bun:test';
+import { parse as parseJsonc } from 'jsonc-parser';
+import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
-import { expect, test } from 'bun:test';
-import { readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { parse as parseYaml } from 'yaml';
 import { parse, stringify } from 'smol-toml';
 import { createFileTree, testdir } from 'testdirs';
-import { emitAll } from '#cli/emit/targets.ts';
-import { isMergeStubHeld, mergeStub } from '#cli/emit/stubs.ts';
-import { hasConfiguration } from '#cli/lifecycle/ownership.ts';
-import { openSession } from '#cli/run/session.ts';
-import { parse as parseJsonc } from 'jsonc-parser';
-import { parserFor } from '#cli/naming/parsers.ts';
-import { initCommand } from '#cli/lifecycle/init/command.ts';
+import { parse as parseYaml } from 'yaml';
 
 test('typos output preserves quoted keys and paths without creating settings', async () => {
     const words = ['quoted"word', 'dotted.word', String.raw`back\slash`, 'café', "apostrophe'word"];

@@ -3,6 +3,12 @@
 This document decides the one file a person edits, the files gspot writes, and how settings
 merge.
 
+Configuration-document editing owns parsing and field edits for shared JSON, YAML, and TOML.
+The lifecycle owner retains locking, observations, journals, publication, and recovery. Static
+configuration reading captures the bytes and permissions that authorize adoption; tool-specific
+carryover converts those observed settings without acquiring a separate mutation owner. Formatter
+and ESLint adoption own their conversion rules; takeover coordinates observations and retirement.
+
 ## Ownership boundaries
 
 One lifecycle owner records originals, installed content, modes, later edits, and interrupted

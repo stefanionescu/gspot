@@ -4,8 +4,9 @@ The [active CI bypass](22-remaining.md#active-ci-bypass) governs all implementat
 Skip CI on every commit and push until the user explicitly re-enables it.
 
 This folder specifies the product contract. It does not certify the current implementation.
-The immediate priority is the [cleanup phase](22-remaining.md#cleanup-before-feature-work).
-Repair existing behavior and remove unnecessary work before resuming feature expansion.
+Start with [development readiness and next work](22-remaining.md#development-readiness-and-next-work)
+to distinguish the completed layout cleanup from remaining defects and verification. Follow the
+[cleanup constraints](22-remaining.md#cleanup-before-feature-work) while repairing existing behavior.
 Repository lint cleanup is a later phase; keep its findings visible.
 
 ## What gspot is

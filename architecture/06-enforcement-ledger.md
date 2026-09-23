@@ -609,7 +609,7 @@ Three checks with three claims. `zsh` and `bats` are host tools, so an absent on
 reports `missing` with its install hint. ShellCheck and shfmt keep skipping `.zsh`, which the
 manifest already says.
 
-`bash.test.ts` plants a valid bats file and a broken one, and holds one finding.
+`tests/acceptance/presets/bash/syntax.test.ts` exercises valid and broken syntax in each dialect.
 
 ### Acceptance K-258
 

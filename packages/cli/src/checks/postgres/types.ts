@@ -28,8 +28,5 @@ export type SchemaFacts = {
     indexed: Map<string, Set<string>>;
 };
 
-/** Reads one statement kind into the facts. */
-export type FactReader = (facts: SchemaFacts, migration: Migration, statement: SqlStatementView) => void;
-
 /** One layout problem of a documented migration. */
 export type DocProblem = { line: number; rule: string; text: string };

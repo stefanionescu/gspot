@@ -1,8 +1,8 @@
-import { sourceRevision } from './src/content/revision';
 import starlight from '@astrojs/starlight';
 import { defineConfig } from 'astro/config';
-import starlightLlmsTxt from 'starlight-llms-txt';
 import { copyFileSync, mkdirSync } from 'node:fs';
+import starlightLlmsTxt from 'starlight-llms-txt';
+import { sourceRevision } from './src/content/revision';
 
 export default defineConfig({
     site: 'https://gspot.dev',
@@ -32,7 +32,15 @@ export default defineConfig({
         },
         starlight({
             title: 'gspot',
-            components: { SiteTitle: './src/components/SiteTitle.astro' },
+            head: [
+                { tag: 'meta', attrs: { property: 'og:image', content: 'https://gspot.dev/brand/social.png' } },
+                { tag: 'meta', attrs: { property: 'og:image:width', content: '1200' } },
+                { tag: 'meta', attrs: { property: 'og:image:height', content: '630' } },
+                { tag: 'meta', attrs: { property: 'og:image:alt', content: 'gspot Sweet spot mark and wordmark' } },
+                { tag: 'meta', attrs: { name: 'twitter:card', content: 'summary_large_image' } },
+                { tag: 'meta', attrs: { name: 'twitter:image', content: 'https://gspot.dev/brand/social.png' } },
+            ],
+            components: { Hero: './src/components/Hero.astro', SiteTitle: './src/components/SiteTitle.astro', Search: './src/components/Search.astro' },
             expressiveCode: { defaultProps: { frame: 'code' } },
             routeMiddleware: './src/route-metadata.ts',
             editLink: { baseUrl: `https://github.com/stefanionescu/gspot/edit/${sourceRevision}/docs/` },
@@ -47,6 +55,7 @@ export default defineConfig({
                         { label: 'Overview', slug: 'guides/overview' },
                         { label: 'Install', slug: 'guides/install' },
                         { label: 'Run your first check', slug: 'guides/quick-start' },
+                        { label: 'Check client environment access', slug: 'guides/client-environment' },
                         { label: 'Adopt in an existing repository', slug: 'guides/existing-repository' },
                     ],
                 },

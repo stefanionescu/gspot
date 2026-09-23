@@ -27,3 +27,19 @@ typos = "1.43.5"
 "npm:v8r" = "6.1.0"
 vale = "3.21.0"
 uv = "0.12.13"
+
+[tasks."gspot:check"]
+description = "Run selected checks"
+run = "gspot check"
+
+[tasks."gspot:fix"]
+description = "Apply corrections and check again"
+run = "gspot check --fix"
+
+[tasks."gspot:apply"]
+description = "Generate configuration from gspot.toml"
+run = "gspot apply"
+
+[tasks."gspot:doctor"]
+description = "Report tools, coverage, and configuration changes"
+run = "gspot doctor"

@@ -1,10 +1,11 @@
-import { pushReportSchema } from '#cli/run/report-schema.ts';
-import { join, dirname } from 'node:path';
-import { existsSync, readFileSync, writeFileSync, mkdirSync, readdirSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { git, run } from '#tests/support/cli/planted.ts';
 import type { RunReport } from '#cli/output/report-types.ts';
+import { pushReportSchema } from '#cli/run/report-schema.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { git } from '#tests/support/cli/git.ts';
+import { expect, test } from 'bun:test';
+import { existsSync, mkdirSync, readdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const CLI = join(import.meta.dir, '../../../packages/cli/src/main.ts');
 

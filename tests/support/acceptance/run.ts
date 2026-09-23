@@ -1,8 +1,8 @@
+import { run } from '#cli/platform/spawn.ts';
+import { startRegistry } from '#tests/support/registry/lifecycle.ts';
+import { realpathSync, writeFileSync } from 'node:fs';
 import { isAbsolute, join, relative, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { realpathSync, writeFileSync } from 'node:fs';
-import { startRegistry } from '#tests/support/registry/lifecycle.ts';
-import { run } from '#cli/platform/spawn.ts';
 
 const ROOT = fileURLToPath(new URL('../../..', import.meta.url));
 const TESTS = join(ROOT, 'tests');
@@ -72,7 +72,8 @@ async function main(): Promise<void> {
             process.exitCode ||= built.code;
             return;
         }
-        const registry = await startRegistry();
+        const registry = await startRegistry(0, SETUP_MS, controller.signal);
+        let executionError: unknown;
         try {
             if (controller.signal.aborted) return;
             const published = await run(['npm', 'publish', '--ignore-scripts', '--registry', registry.url], {
@@ -100,8 +101,20 @@ async function main(): Promise<void> {
                 ...output,
             });
             process.exitCode ||= tested.code;
+        } catch (error) {
+            executionError = error;
+            throw error;
         } finally {
-            await registry.stop();
+            try {
+                await registry.stop();
+            } catch (cleanupError) {
+                if (executionError !== undefined)
+                    throw new AggregateError(
+                        [executionError, cleanupError],
+                        'Acceptance execution and cleanup failed.',
+                    );
+                throw cleanupError;
+            }
         }
     } finally {
         process.removeListener('SIGINT', interrupt);

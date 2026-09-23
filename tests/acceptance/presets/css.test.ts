@@ -1,19 +1,14 @@
 import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 // Planted repository for the css preset: an unknown property, a class nobody reads, and a class the code reads that does not exist.
+import { reportSchema } from '#cli/run/report-schema.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import type { PlantedCase } from '#tests/support/cli/planted.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
-import type { PlantedCase } from '#tests/support/cli/planted.ts';
-import {
-    commitAll,
-    install,
-    installPrivateTools,
-    PLANTED_TIMEOUT_MS,
-    run,
-    runPlanted,
-    toolsPath,
-} from '#tests/support/cli/planted.ts';
-import { reportSchema } from '#cli/run/report-schema.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const INIT = [

@@ -1,6 +1,10 @@
-import { parse as parseToml } from 'smol-toml';
-import { openSession } from '#cli/run/session.ts';
+import { isLoosening } from '#cli/policy/loosening.ts';
 import * as messages from '#cli/policy/messages.ts';
+import type { SettingSpec } from '#cli/presets/types.ts';
+import { findRoot } from '#cli/repository/tracked.ts';
+import { quoteArgument } from '#cli/run/reproduce.ts';
+import { openSession } from '#cli/run/session.ts';
+import { parse as parseToml } from 'smol-toml';
 type SetOptions = {
     cwd: string;
     key: string;
@@ -11,17 +15,14 @@ type SetOptions = {
     remove: boolean;
     toDefault: boolean;
 };
-import type { SettingSpec } from '#cli/presets/types.ts';
-import { findRoot } from '#cli/repository/tracked.ts';
-import { isLoosening } from '#cli/policy/loosening.ts';
 // gspot set: one setting at a time, checked against the surface, with a reason when the change loosens.
-import { PolicyError } from '#cli/policy/read-policy.ts';
-import { assertPinMatches } from '#cli/run/version-pin.ts';
-import type { Mutation } from '#cli/policy/types.ts';
-import { specFor, settingValue } from '#cli/policy/settings.ts';
-import type { CommandResult, ScopeSelection, Session } from '#cli/run/types.ts';
 import { commitPolicy, refuseBadReason, requireReason } from '#cli/policy/commit-policy.ts';
+import { PolicyError } from '#cli/policy/read-policy.ts';
+import { settingValue, specFor } from '#cli/policy/settings.ts';
+import type { Mutation } from '#cli/policy/types.ts';
 import { appendList, deleteKey, removeFromList, scopeHolder, setKey } from '#cli/policy/write.ts';
+import type { CommandResult, ScopeSelection, Session } from '#cli/run/types.ts';
+import { assertPinMatches } from '#cli/run/version-pin.ts';
 
 const NEAR_LIMIT = 12;
 const RULE_KEY_DEPTH = 3;
@@ -159,7 +160,11 @@ function writeValue(
     const shipped = selection.surface.defaults.get(spec.name)?.value;
     const where = `gspot set ${o.key}`;
     if (session.policyFiles.policy.requireReasons && isReasonOwed(spec, o, value, shipped))
-        requireReason(o.reason, where, `${where} ${o.items.join(' ')} --reason "..."`);
+        requireReason(
+            o.reason,
+            where,
+            `gspot set ${quoteArgument(o.key)} ${o.items.map(quoteArgument).join(' ')}${o.scope === undefined ? '' : ` --scope ${quoteArgument(o.scope)}`}${o.replace ? ' --replace' : ''}${o.remove ? ' --remove' : ''} --reason "..."`,
+        );
     else if (session.policyFiles.policy.requireReasons) refuseBadReason(o.reason, where);
     const shown = o.scope === undefined ? o.key : `scope.${o.scope}.${o.key}`;
     return commitPolicy(root, setMutation(o, isList, value), false, describeSet(session, selection, o, shown, value));

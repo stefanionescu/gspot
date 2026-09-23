@@ -1,9 +1,9 @@
-import { stringify } from 'smol-toml';
-import { symlinkSync, readFileSync, mkdirSync } from 'node:fs';
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { parsePolicyText, PolicyError, readPolicy } from '#cli/policy/read-policy.ts';
 import { describe, expect, test } from 'bun:test';
-import { readPolicy, parsePolicyText, PolicyError } from '#cli/policy/read-policy.ts';
+import { mkdirSync, readFileSync, symlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { stringify } from 'smol-toml';
+import { createFileTree, testdir } from 'testdirs';
 
 const minimal = 'version = 1\npresets = ["bash"]\n';
 
@@ -359,3 +359,22 @@ test('ESLint selector bases and local registrations reject links while future se
     expect(() => parsePolicyText(configured([{ basePath: 'future/source' }]), 'gspot.toml', root)).not.toThrow();
     expect(readFileSync(join(directory.path, 'outside/processing.mjs'), 'utf8')).toBe('export default {};\n');
 });
+
+test.each(["author's name", 'two words', '$(printf injected); *', 'line\nbreak'])(
+    'suggested naming recovery preserves the argument %j through a shell',
+    (name) => {
+        const found = problems(stringify({ version: 1, require_reasons: true, naming: { allowed: [{ name }] } }));
+        const message = found.find((problem) => problem.includes('gspot set naming.allowed'))!;
+        const command = message.slice(message.indexOf('gspot set naming.allowed')).replace(/`?\.?$/u, '');
+        const executed = Bun.spawnSync(['sh', '-c', 'gspot() { printf "%s\\0" "$@"; }; ' + command], {
+            stdout: 'pipe',
+            stderr: 'pipe',
+        });
+        expect(executed.exitCode, executed.stderr.toString()).toBe(0);
+        expect(executed.stdout.toString().split('\0').slice(0, 3)).toEqual([
+            'set',
+            'naming.allowed',
+            JSON.stringify({ name }),
+        ]);
+    },
+);

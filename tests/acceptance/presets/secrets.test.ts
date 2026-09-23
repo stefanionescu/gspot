@@ -1,22 +1,16 @@
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { pushReportSchema } from '#cli/run/report-schema.ts';
-import { gspot } from '#tests/support/cli/planted.ts';
+import { gspot } from '#tests/support/cli/command.ts';
 // Planted repository for the secrets preset: a staged key, a pushed key, a tracked environment file and a baseline with no reason.
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
-import { join, delimiter } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 import { describe, expect, test } from 'bun:test';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
-import {
-    commitAll,
-    install,
-    git,
-    PLANTED_TIMEOUT_MS,
-    run,
-    runPlanted,
-    script,
-    toolsPath,
-} from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { runPlanted, script } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
 
 const INIT = [
     'init',

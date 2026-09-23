@@ -1,8 +1,8 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { commitAll } from '#tests/support/cli/git.ts';
 import { acceptanceRun } from '#tests/support/cli/worktree.ts';
-import { commitAll } from '#tests/support/cli/planted.ts';
+import { expect, test } from 'bun:test';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test('a detected reference project reports its syntax defect, accepts its correction, and preserves authored input', async () => {
     await using repository = await testdir();

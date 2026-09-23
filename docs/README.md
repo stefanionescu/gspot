@@ -15,14 +15,14 @@ Build the site and validate its links before sharing a documentation change:
 
 ```shell
 mise run docs:build
-bun test ./tests/integration/docs/documentation-examples.test.ts ./tests/integration/docs/reference-pages.test.ts ./tests/integration/docs/site-links.test.ts
+mise run test:docs
 ```
 
 The example tests load complete policies through the production reader. With Bash on `PATH`,
 run the published defect and correction separately:
 
 ```shell
-bun test --timeout 60000 ./tests/native/docs/bash-example.test.ts
+mise run test:bash-example
 ```
 
 The reference tests cover source-derived commands,
@@ -84,3 +84,29 @@ require renaming its URL. Keep navigation labels aligned with page titles.
 For release builds, use the [site release procedure](src/content/docs/guides/build.md#released-documentation-and-rollback).
 The source version and revision identify the generated references. A local preview is not a
 published release.
+
+## Identity and layout assets
+
+The homepage hero, feature grids, setup columns, and closing action adapt the
+[Turborepo homepage source](https://github.com/vercel/turborepo/tree/1dead3cc9d421e61327a13cb44a590e8e218793f/apps/docs/app/%5Blang%5D/%28home%29)
+to Astro components. The [MIT notice](public/licenses/turborepo.txt) ships with the site.
+Starlight owns navigation, search, theme persistence, and code-copy behavior.
+
+The Sweet spot mark and dimensional hero were created with the built-in image generator.
+Their source PNGs are `public/brand/mark-generated.png` and `public/brand/hero.png`.
+The SVG variants and diagrams remain editable. Keep purpose, release status, and commands
+as selectable text beside artwork. `public/brand/` also holds README banners and local badges.
+
+Tool logos come from [Simple Icons](https://github.com/simple-icons/simple-icons) under
+[CC0](public/licenses/simple-icons.txt). The tool names identify integrations; they do not
+claim sponsorship. Retain the notices when distributing these assets.
+
+### Logo generation prompt
+
+The flat mark used this prompt with the built-in image generator:
+
+> Use case: logo-brand. Create the finished original logo symbol for "gspot", a developer tool for repository rules. This is a professional identity asset for a polished developer website at the quality of Vercel / Turborepo. Design direction: "Sweet spot". One iconic compact abstract symbol, exactly two asymmetric rounded cobalt blue forms that frame a small vivid tangerine circle in their negative space. The shapes should feel intentional, confident, subtly cheeky and beautifully optically balanced, with excellent recognition at favicon sizes. Think precise sculpted curves, not random blobs or a generic chain link. Colors cobalt #2457FF and tangerine #FF7A1A. Flat solid vector-like shapes with crisp smooth edges. Transparent background, centered symbol occupying about 75% of the square canvas. No wordmark, no text, no letters, specifically no letter G, no mascot, no explicit anatomy. No mockup, no gradient, no shadow, no border, no presentation grid. Deliver a single production-ready logo mark.
+
+The dimensional hero uses that generated mark as its visual reference, with cobalt enamel
+surfaces, a tangerine center, a slight perspective tilt, and a transparent background.
+The editable SVG mark is a vector interpretation of the generated silhouette.

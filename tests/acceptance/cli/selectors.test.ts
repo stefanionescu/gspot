@@ -1,10 +1,11 @@
-import { join } from 'node:path';
-import { writeFileSync, readFileSync, unlinkSync, chmodSync, statSync, existsSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { git, run } from '#tests/support/cli/planted.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { git } from '#tests/support/cli/git.ts';
+import { expect, test } from 'bun:test';
+import { chmodSync, existsSync, readFileSync, statSync, unlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test('an ignored folder includes descendants while a negated file remains enforced', async () => {
     await using directory = await testdir();

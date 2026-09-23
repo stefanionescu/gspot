@@ -1,8 +1,11 @@
 // Planted repositories for the pytest and fastapi presets: coverage under the floor, a test name the prefix allows, a sleep inside an async route.
-import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
 import type { PlantedCase } from '#tests/support/cli/planted.ts';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/support/cli/planted.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 
 const QUIET = ['--no-runner', '--no-ci', '--no-hooks', '--no-rules', '--no-install'];
 const PROJECT = (dependency: string): string =>

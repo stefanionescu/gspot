@@ -1,6 +1,6 @@
-import { expect, test } from 'bun:test';
+import { perFileCommands } from '#cli/run/command-expansion.ts';
 import type { CommandPart } from '#cli/run/types.ts';
-import { perFileCommands } from '#cli/run/tool-runner.ts';
+import { expect, test } from 'bun:test';
 
 test.each([0, 1, 2])('replaces a file marker at position %s without dropping neighboring arguments', (slot) => {
     const parts: CommandPart[] = ['before', 'after'];

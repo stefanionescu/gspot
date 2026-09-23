@@ -1,12 +1,15 @@
 // Planted repositories: what init refuses before it writes, and that every hook runs under the Bash macOS ships.
-import { delimiter, join } from 'node:path';
 import { hookBody } from '#cli/emit/hooks.ts';
-import { createFileTree, testdir } from 'testdirs';
-import { chmodSync, existsSync } from 'node:fs';
-import { describe, expect, test } from 'bun:test';
-import { treeContents } from '#tests/support/cli/contents.ts';
 import { parsePolicyText } from '#cli/policy/read-policy.ts';
-import { commitAll, git, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { script } from '#tests/support/cli/planted.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { chmodSync, existsSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const SYSTEM_BASH = '/bin/bash';
 const QUIET = ['--no-runner', '--no-ci', '--no-rules', '--no-install'];

@@ -1,11 +1,9 @@
-import { rejects } from 'node:assert/strict';
-import { tmpdir } from 'node:os';
-import { fileURLToPath } from 'node:url';
-import { join } from 'node:path';
 import { run } from '#cli/platform/spawn.ts';
-import { lstatSync, mkdirSync, writeFileSync, readFileSync, existsSync, readdirSync } from 'node:fs';
-import { test, expect, describe } from 'bun:test';
 import { startRegistry } from '#tests/support/registry/lifecycle.ts';
+import { describe, expect, test } from 'bun:test';
+import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
 import pluginPackage from '../../packages/eslint-plugin/package.json' with { type: 'json' };
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
@@ -84,27 +82,8 @@ describe('the installed ESLint plugin', () => {
                 timeoutMs: RELEASE_TIMEOUT_MS,
             });
             expect(built.code, built.stdout + built.stderr).toBe(0);
-            const before = new Set(readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-release-')));
-            let requests = 0;
-            const unrelated = Bun.serve({
-                hostname: '127.0.0.1',
-                port: 0,
-                fetch() {
-                    requests += 1;
-                    return new Response('{}');
-                },
-            });
-            try {
-                await rejects(startRegistry(unrelated.port), { message: /Registry startup failed/u });
-                expect(requests).toBe(0);
-                await rejects(startRegistry(0, 1), { message: /Registry startup failed/u });
-                expect(new Set(readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-release-')))).toEqual(
-                    before,
-                );
-            } finally {
-                await unrelated.stop(true);
-            }
             const registry = await startRegistry();
+            let executionError: unknown;
             try {
                 registry.assertRunning();
                 const published = await run(

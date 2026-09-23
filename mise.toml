@@ -19,38 +19,9 @@ deno = "2.6.6"
 hadolint = "2.14.0"
 trivy = "0.69.3"
 ruff = "0.16.8"
-"pipx:ansible-lint" = "26.8.0"
-"pipx:basedpyright" = "1.40.1"
-"pipx:deptry" = "0.25.1"
-"pipx:gixy-ng" = "0.2.53"
-"pipx:import-linter" = "2.15"
-"pipx:pydoclint" = "0.9.1"
 "pipx:pytest" = {version = "9.1.1", depends = ["uv"], uvx_args = "--with pytest-cov==7.1.0"}
 "pipx:sqlfluff" = "4.0.0"
-"pipx:validate-pyproject" = "0.26"
-"pipx:vulture" = "2.16"
 swiftlint = {version = "0.63.2", os = ["linux", "macos"]}
 swiftformat = {version = "0.61.1", no_app = true, rename_exe = "swiftformat"}
 periphery = {version = "3.6.0", os = ["macos"]}
 "github:sbdchd/squawk" = "2.64.0"
-
-# Source-checkout overrides of the generated installed-CLI tasks.
-[tasks."gspot:check"]
-alias = "check"
-description = "Run repository checks from gspot source."
-run = "bun packages/cli/src/main.ts check"
-
-[tasks."gspot:fix"]
-alias = "check:fix"
-description = "Apply corrections using gspot source."
-run = "bun packages/cli/src/main.ts check --fix"
-
-[tasks."gspot:apply"]
-alias = "apply"
-description = "Generate repository configuration using gspot source."
-run = "bun packages/cli/src/main.ts apply"
-
-[tasks."gspot:doctor"]
-alias = "doctor"
-description = "Diagnose the repository using gspot source."
-run = "bun packages/cli/src/main.ts doctor"

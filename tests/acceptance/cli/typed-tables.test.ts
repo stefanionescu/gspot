@@ -1,8 +1,10 @@
 // gspot set with a table for a value: the TOML form is read, text that reads as nothing is refused, and a quoted table in the policy is refused at load.
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/support/cli/planted.ts';
 
 const INIT = [
     'init',

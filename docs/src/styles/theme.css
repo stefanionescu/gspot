@@ -3,17 +3,19 @@
 
 :root {
     color-scheme: dark;
+    --brand-cobalt: #2457FF;
+    --brand-tangerine: #FF7A1A;
     --sl-color-white: #fafafa;
     --sl-color-gray-1: #e5e5e5;
     --sl-color-gray-2: #c4c4c4;
     --sl-color-gray-3: #a3a3a3;
     --sl-color-gray-4: #525252;
     --sl-color-gray-5: #303030;
-    --sl-color-gray-6: #171717;
-    --sl-color-black: #0a0a0a;
-    --sl-color-accent-low: #142238;
-    --sl-color-accent: #3975be;
-    --sl-color-accent-high: #a7caff;
+    --sl-color-gray-6: #141B30;
+    --sl-color-black: #0B1020;
+    --sl-color-accent-low: #192754;
+    --sl-color-accent: #88A5FF;
+    --sl-color-accent-high: #B6C8FF;
     --sl-color-bg-nav: var(--sl-color-black);
     --sl-color-bg-sidebar: var(--sl-color-black);
     --sl-font: 'Geist Variable', sans-serif;
@@ -27,7 +29,7 @@
 }
 :root[data-theme='light'] {
     color-scheme: light;
-    --sl-color-white: #171717;
+    --sl-color-white: #141B30;
     --sl-color-gray-1: #262626;
     --sl-color-gray-2: #404040;
     --sl-color-gray-3: #606060;
@@ -36,9 +38,9 @@
     --sl-color-gray-6: #f5f5f5;
     --sl-color-gray-7: #fafafa;
     --sl-color-black: #fafafa;
-    --sl-color-accent-low: #e8f0fc;
-    --sl-color-accent: #2863ad;
-    --sl-color-accent-high: #20538f;
+    --sl-color-accent-low: #EDF1FF;
+    --sl-color-accent: #2457FF;
+    --sl-color-accent-high: #1744CC;
 }
 :focus-visible {
     outline: 3px solid var(--sl-color-text-accent);
@@ -123,7 +125,7 @@ button,
     color: var(--sl-color-white);
 }
 html:not([data-has-sidebar]) .sl-container {
-    max-width: 1120px;
+    max-width: 1200px;
 }
 html:not([data-has-sidebar]) h1 {
     font-size: 3.5rem;
@@ -157,3 +159,13 @@ html:not([data-has-sidebar]) h1 {
         transition: none;
     }
 }
+
+.sidebar-pane a[aria-current="page"] { border-inline-start: 3px solid var(--brand-cobalt); }
+.sl-markdown-content table { display: block; overflow-x: auto; }
+.sl-markdown-content th { background: var(--sl-color-gray-6); }
+.expressive-code { min-width: 0; }
+
+html[data-has-hero] .content-panel { border: 0; }
+html[data-has-hero] main { padding-top: 0; }
+html[data-has-hero] .sl-markdown-content h2 { border: 0; padding-top: 0; }
+html[data-has-hero] h1 { margin-top: 0; }

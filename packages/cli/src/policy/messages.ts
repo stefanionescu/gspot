@@ -1,3 +1,4 @@
+import { quoteArgument } from '#cli/run/reproduce.ts';
 // Every load and write message, in plain English. One function per message.
 
 const LIST_LIMIT = 8;
@@ -137,7 +138,7 @@ export function settingNotExposed(key: string, known: string[]): string {
  * @returns the message
  */
 export function ruleOffRefused(check: string, rule: string): string {
-    return `A rule is turned off with an ignore, not with \`off\`. Run: gspot ignore ${check} --rule ${rule} --reason "..."`;
+    return `A rule is turned off with an ignore, not with \`off\`. Run: gspot ignore ${quoteArgument(check)} --rule ${quoteArgument(rule)} --reason "..."`;
 }
 
 /**
@@ -262,7 +263,8 @@ export function limitUnknown(key: string, known: string[]): string {
  * @returns the message
  */
 export function settingInScope(key: string, scope: string): string {
-    const place = scope === '' ? 'the root; leave --scope out' : `the scope \`${scope}\`; add --scope ${scope}`;
+    const place =
+        scope === '' ? 'the root; leave --scope out' : `the scope \`${scope}\`; add --scope ${quoteArgument(scope)}`;
     return `A preset exposes \`${key}\` in ${place}.`;
 }
 

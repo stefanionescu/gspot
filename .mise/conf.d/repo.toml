@@ -1,3 +1,27 @@
+[env]
+_.path = ["{{config_root}}/.mise/gspot"]
+
+# Source-checkout overrides of the generated installed-CLI tasks.
+[tasks."gspot:check"]
+alias = "check"
+description = "Run repository checks from gspot source."
+run = "gspot check"
+
+[tasks."gspot:fix"]
+alias = "check:fix"
+description = "Apply corrections using gspot source."
+run = "gspot check --fix"
+
+[tasks."gspot:apply"]
+alias = "apply"
+description = "Generate repository configuration using gspot source."
+run = "gspot apply"
+
+[tasks."gspot:doctor"]
+alias = "doctor"
+description = "Diagnose the repository using gspot source."
+run = "gspot doctor"
+
 [tasks."repo:setup"]
 description = "Install frozen workspace dependencies and synchronize Astro types."
 run = "bun install --frozen-lockfile"
@@ -5,7 +29,7 @@ depends_post = ["docs:sync"]
 
 [tasks."repo:install-checks"]
 description = "Install the locked repository check environment."
-run = "bun packages/cli/src/main.ts install"
+run = "gspot install"
 
 [tasks.build]
 description = "Build the host CLI, or targets supplied as arguments, with licenses and notices."
@@ -63,7 +87,8 @@ run = "bun --bun astro sync"
 [tasks."docs:build"]
 description = "Build the documentation site and validate its links and fragments."
 dir = "{{config_root}}/docs"
-run = ["bun --bun astro build", "bun scripts/links.ts"]
+run = "bun --bun astro build"
+depends_post = ["docs:check-links"]
 
 [tasks."docs:dev"]
 alias = "dev"
@@ -91,3 +116,66 @@ run = "bun packages/cli/schemas.ts"
 description = "Build the pinned Swift grammar using Docker, or compare it with --check."
 tools = {tree-sitter = "0.25.10"}
 run = "bun packages/cli/grammars/swift.build.ts"
+
+[tasks."ci:affected"]
+description = "Check committed changes against GSPOT_CI_BASE, or all inputs for a first push."
+shell = "bash -euo pipefail -c"
+run = '''
+base="${GSPOT_CI_BASE:-}"
+case "${base}" in
+    '' | 0000000000000000000000000000000000000000 | 0000000000000000000000000000000000000000000000000000000000000000)
+        gspot check ;;
+    *)
+        if [[ ! ${base} =~ ^[0-9a-fA-F]{40}([0-9a-fA-F]{24})?$ ]]; then
+            echo 'Invalid CI comparison object.' >&2
+            exit 2
+        fi
+        git cat-file -e "${base}^{commit}" || exit 2
+        target="$(git rev-parse --verify HEAD)" || exit 2
+        printf 'refs/heads/ci %s refs/heads/ci %s\n' "${target}" "${base}" |
+            gspot check --push -- origin ''
+        ;;
+esac
+'''
+
+[tasks."release:verify-version"]
+description = "Require TAG to match the CLI package version before building release artifacts."
+shell = "bash -euo pipefail -c"
+run = '''test "v$(bun -e 'console.log(require("./packages/cli/package.json").version)')" = "$TAG"'''
+
+[tasks."release:assemble"]
+description = "Assemble downloaded binaries after checking that their licenses and notices agree."
+shell = "bash -euo pipefail -c"
+run = '''
+for directory in dist/downloads/gspot-*; do
+    for file in LICENSE.md NOTICE.md; do
+        if [[ -f dist/$file ]]; then
+            cmp "dist/$file" "$directory/$file"
+        else
+            cp "$directory/$file" "dist/$file"
+        fi
+    done
+    cp "$directory"/gspot-* dist/
+done
+'''
+
+[tasks."site:record-source"]
+description = "Record the selected source revision and CLI version in the built site artifact."
+run = '''
+bun -e 'await Bun.write("docs/dist/source.json", JSON.stringify({revision:process.env.GSPOT_DOCS_REVISION,version:require("./packages/cli/package.json").version})+"\n")'
+'''
+
+[tasks."test:docs"]
+description = "Run documentation example, reference, link, and release-source tests."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./integration/docs"
+
+[tasks."test:bash-example"]
+description = "Exercise the published Bash example and captured transcript with native tools."
+dir = "{{config_root}}/tests"
+run = "bun test --timeout 60000 ./native/docs/bash-example.test.ts"
+
+[tasks."docs:check-links"]
+description = "Validate local links and fragment targets in the built documentation site."
+dir = "{{config_root}}/docs"
+run = "bun scripts/links.ts"

@@ -1,10 +1,12 @@
-import { expect, test } from 'bun:test';
-import { dirname, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#cli/output/report-types.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
-import { symlinkSync, writeFileSync, readdirSync } from 'node:fs';
-import { commitAll, PLANTED_TIMEOUT_MS, run, installPrivateTools } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import { expect, test } from 'bun:test';
+import { readdirSync, symlinkSync, writeFileSync } from 'node:fs';
+import { dirname, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const VITEST = dirname(Bun.resolveSync('vitest/package.json', import.meta.dir));

@@ -1,9 +1,9 @@
+import type { RunReport } from '#cli/output/report-types.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
 import { renameSync } from 'node:fs';
 import { join } from 'node:path';
-import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/planted.ts';
-import type { RunReport } from '#cli/output/report-types.ts';
 
 test('SQL migration names retain their timestamp while enforcing snake case', async () => {
     await using sandbox = await testdir();

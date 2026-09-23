@@ -1,9 +1,9 @@
 import { symlinkSync } from 'node:fs';
 // Planted repositories for the vue and svelte presets: markup set from a string and a list with no key, in each framework.
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#cli/output/report-types.ts';
 import { describe, expect, test } from 'bun:test';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 /** One framework of component files in the planted components test: its check, its presets, its files and its planted cases. */
 type ComponentShape = {
     check: string;
@@ -13,16 +13,11 @@ type ComponentShape = {
     cases: [string, string][];
 };
 
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 import vueManifest from 'vue/package.json' with { type: 'json' };
-import {
-    installPrivateTools,
-    commitAll,
-    install,
-    PLANTED_TIMEOUT_MS,
-    run,
-    runPlanted,
-    toolsPath,
-} from '#tests/support/cli/planted.ts';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const init = (presets: string[]): string[] => [

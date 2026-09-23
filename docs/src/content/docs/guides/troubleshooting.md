@@ -32,6 +32,17 @@ selected mise integration or [manual provisioning](/guides/without-mise/). Docto
 missing prerequisites separately from successful execution. Skipping a tool does not prove
 its check passes.
 
+## EditorConfig Checker download returns HTTP 403
+
+Read the download error before changing configuration. A response that says `API rate limit
+exceeded` means GitHub refused the release lookup or asset download. The npm wrapper downloads
+the native version pinned by the formatting preset, even when npm package installation succeeds.
+
+Wait for the GitHub API limit to reset, then rerun `gspot install` from the same repository.
+An existing `GITHUB_TOKEN` environment variable is passed to the wrapper for authenticated
+GitHub requests. Keep it out of policy files and diagnostic reports. Do not change the tool
+version or substitute another executable to bypass a failed download.
+
 ## Configuration and locks disagree
 
 `install` consumes matching locks without regenerating tracked files. Run `gspot apply` when

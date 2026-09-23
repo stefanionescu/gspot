@@ -154,12 +154,12 @@ test('explicitly removes inherited environment values', async () => {
     }
 });
 
-test('a failed stream read terminates the owned child', async () => {
+test.each(['text', 'binary'] as const)('a failed %s stream read terminates the owned child', async (capture) => {
     await using sandbox = await testdir();
     const children = spyOn(childProcess, 'spawn');
     let child: childProcess.ChildProcess | undefined;
     try {
-        const running = run([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
+        const running = (capture === 'binary' ? runBinary : run)([process.execPath, '-e', 'setInterval(() => {}, 1000)'], {
             cwd: sandbox.path,
             timeoutMs: 3000,
         });
@@ -290,4 +290,52 @@ test('live output arrives before completion while capture retains output and fai
     expect(result.stdout).toBe(stdout.join(''));
     expect(result.stderr).toBe(stderr.join(''));
     expect(result.stderr).toContain('diagnostic');
+});
+
+test.each(['text', 'binary'] as const)(
+    '%s capture reaps descendants holding output after an ordinary parent exit',
+    async (capture) => {
+        await using sandbox = await testdir();
+        const marker = join(sandbox.path, 'orphan-survived');
+        const descendant = `console.log('ready'); await Bun.sleep(700); await Bun.write(${JSON.stringify(marker)}, 'survived');`;
+        const parent = `Bun.spawn([process.execPath, '-e', ${JSON.stringify(descendant)}], {stdout:'inherit', stderr:'inherit'}); await Bun.sleep(150); process.exit(7);`;
+        const result = await (capture === 'binary' ? runBinary : run)([process.execPath, '-e', parent], {
+            cwd: sandbox.path,
+            timeoutMs: 3000,
+        });
+        expect(result.code).toBe(7);
+        expect(Buffer.from(result.stdout).toString('utf8')).toContain('ready');
+        expect(result.isTimedOut).toBe(false);
+        expect(result.isCanceled).toBe(false);
+        expect(result.duration).toBeLessThan(2000);
+        await Bun.sleep(800);
+        expect(existsSync(marker)).toBe(false);
+    },
+);
+
+test.skipIf(process.platform === 'win32')('preserves execution and process-group permission errors', async () => {
+    await using sandbox = await testdir();
+    const original = process.kill;
+    const denied = Object.assign(new Error('Group permission denied.'), { code: 'EPERM' });
+    const signaling = spyOn(process, 'kill').mockImplementation((pid, signal) => {
+        if (pid < 0) throw denied;
+        return original(pid, signal);
+    });
+    try {
+        for (const execute of [run, runBinary]) {
+            let observed: unknown;
+            try {
+                await execute([process.execPath, '-e', "console.error('tool failed'); process.exitCode = 7"], {
+                    cwd: sandbox.path,
+                });
+            } catch (error) {
+                observed = error;
+            }
+            expect(observed).toBeInstanceOf(AggregateError);
+            expect((observed as AggregateError).errors[0].message).toContain('exit code 7');
+            expect((observed as AggregateError).errors[1]).toBe(denied);
+        }
+    } finally {
+        signaling.mockRestore();
+    }
 });

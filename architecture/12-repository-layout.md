@@ -11,6 +11,14 @@ Two published artifacts: the binary (GitHub Releases, one asset per platform) an
 `@gspot/eslint-plugin` (npm). Presets, rules, and prose ship inside the binary. On npm the binary ships the way Biome and ast-grep ship theirs. One package per platform (`@gspot/cli-darwin-arm64`, `@gspot/cli-linux-x64` and the rest) holds the executable, gated by the `os` and `cpu` fields. A thin `gspot` package lists them as `optionalDependencies`, and its `bin` launcher runs the one that installed. Nothing downloads at install time and no
 install script runs, so `npx`, `--ignore-scripts`, proxies, and offline mirrors all work.
 
+Central test suites classify tests by their actual dependencies. Shared CLI support separates
+command execution, Git setup, tool installation, defect fixtures, and file preservation. Release
+publication prepares disposable package directories. Binary independence is exercised from an
+isolated build whose checkout and dependencies are removed before the consumer runs.
+
+Revision selection keeps dependency copying and relocation separate from Git-object framing
+and reading. Both use the existing confinement boundary; neither changes the selected checkout.
+
 ## Ownership
 
 gspot is unreleased and has no users. Change names and configuration directly. Do not maintain
@@ -64,11 +72,11 @@ The plugin exports `configs.recommended`, `configs.all`, and its existing rules 
 [ESLint's conventional plugin shape](https://eslint.org/docs/latest/extend/plugins).
 Local constants and types stay with consumers unless a shared contract justifies extraction.
 
-Keep authored repository tasks in `.mise/conf.d/repo.toml` and generated integration in
+Keep all authored repository tasks, including source-checkout overrides and CI orchestration, in `.mise/conf.d/repo.toml` and generated integration in
 `.mise/conf.d/gspot-tools.toml`, using the
 [native mise configuration location](https://mise.jdx.dev/configuration.html).
-Root `mise.toml` overrides the generated gspot tasks to run repository source;
-it is not a duplicate tool pin. Keep each identical tool pin in one owner. Duplicate-pin
+The authored configuration adds `.mise/gspot/` to PATH so hooks and tasks run repository
+source. Root `mise.toml` owns development runtimes and checkout settings. Keep each identical tool pin in one owner. Duplicate-pin
 detection parses only `[tools]` with smol-toml, so task and environment keys cannot become pins.
 
 Repository choices remain in TOML. The generated root schema provides
@@ -86,6 +94,16 @@ prerequisites and installed workspace dependencies. Native tools, downloads, sou
 and installed release consumers require separate explicit tasks. The release task runs directly
 after its artifact prerequisites are built; no environment opt-in hides its tests. Do not add Vitest, Jest, or a custom coordinator for this
 repository. Framework presets can still use their own test tools.
+
+Root configuration has explicit owners. `gspot.toml`, `mise.toml`, `package.json`,
+`bunfig.toml`, `tsconfig.json`, and the authored portions of `.gitignore` and `.gitattributes`
+are repository inputs. Bun owns `bun.lock`. Policy generation owns the native-discovery
+files `.commitlintrc.json`, `.gitleaks.toml`, `.markdownlint-cli2.jsonc`, `.semgrepignore`,
+`.shellcheckrc`, `.taplo.toml`, `.yamllint.yml`, `osv-scanner.toml`, and `typos.toml`.
+Retained EditorConfig, Prettier, and ESLint entry points continue serving editors; ownership
+records, rather than generated-looking headers, govern replacement. Agent instructions and
+Git attributes retain their authored content outside managed blocks. The policy schema owns
+`gspot.schema.json`; the site build publishes its copy. Native filenames remain stable.
 
 The root `LICENSE.md` is the authored project license. Builds copy it into distribution output,
 including `packages/eslint-plugin/dist/LICENSE.md`. CLI notices describe actual bundled inputs,

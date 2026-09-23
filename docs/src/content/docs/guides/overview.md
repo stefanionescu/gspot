@@ -39,3 +39,11 @@ Use [scopes](/guides/scopes/) for different parts of a repository and [profiles]
 for policy shared across repositories. Configure [hooks and CI](/guides/hooks-and-ci/) to run
 checks at the intended stages. If setup or removal conflicts with edited files, follow the
 [recovery procedure](/guides/uninstall/) before deleting anything.
+
+## From policy to findings
+
+![Policy, apply, and check workflow](/brand/workflow.svg)
+
+Choose presets and settings in policy. Run `gspot apply` to generate configuration for those
+tools. Run `gspot check` to execute the selected checks and report findings. Correct the code
+or change policy with a reason, then apply policy changes before checking again.

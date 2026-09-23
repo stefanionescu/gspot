@@ -1,10 +1,10 @@
-import type { TakeoverPlan } from '#cli/lifecycle/types.ts';
-import { join } from 'node:path';
-import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/planted.ts';
 import { currentBlock } from '#cli/emit/managed-blocks.ts';
+import type { TakeoverPlan } from '#cli/lifecycle/types.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
+import { chmodSync, existsSync, readFileSync, statSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test('agent instructions reach detected and configured consumers and uninstall restores authored content', async () => {
     await using sandbox = await testdir();

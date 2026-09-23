@@ -1,23 +1,16 @@
 // The configs preset: TOML that does not parse, YAML with a duplicated key, and an environment key read after init that no template names.
+import type { RunReport } from '#cli/output/report-types.ts';
+import { environmentVariables } from '#cli/platform/environment.ts';
+import type { FindingCase } from '#tests/support/cli/planted.ts';
+import { describe, expect, test } from 'bun:test';
 import { chmodSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import type { RunReport } from '#cli/output/report-types.ts';
-import { describe, expect, test } from 'bun:test';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
 
-import {
-    commitAll,
-    git,
-    install,
-    installPrivateTools,
-    toolsPath,
-    PLANTED_TIMEOUT_MS,
-    run,
-    runPlanted,
-    script,
-} from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { runPlanted, script } from '#tests/support/cli/planted.ts';
+import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
 
 const INIT = ['init', '--yes', '--presets', 'configs', '--no-runner', '--no-ci', '--no-rules', '--no-install'];
 

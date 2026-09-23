@@ -1,8 +1,8 @@
-import { join } from 'node:path';
-import { readFileSync, writeFileSync } from 'node:fs';
+import { run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/planted.ts';
 
 test('generated and vendored settings classify directories and removal returns files to source checks', async () => {
     await using directory = await testdir();

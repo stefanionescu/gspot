@@ -13,9 +13,202 @@ Current verification and remaining failures are consolidated under
 [Guides and site acceptance](#guides-and-site-acceptance), and
 [Packaging and installed-product acceptance](#packaging-and-installed-product-acceptance).
 Those dispositions supersede earlier aggregate totals and audit/capture limitations.
-Complete per-example execution, download-blocked journeys, the unexplained SQLFluff cleanup
-failure, assistive-technology review, and unavailable native-platform evidence remain open.
-Updating architecture does not close those product requirements.
+Complete per-example execution, download-blocked journeys, assistive-technology review, and
+unavailable native-platform evidence remain open. The Sweet spot continuation below records
+the SQLFluff lifecycle repair and the current rendered verification.
+Updating architecture does not close those product requirements. The cleanup continuation below
+records the latest local results and supersedes earlier aggregate totals for this work.
+
+## Development readiness and next work
+
+The repository has a usable development layout: authored mise tasks have one home, source
+hooks resolve the checkout launcher, and tests are grouped by execution dependencies. Keep
+this layout while implementing the next behavior. No further repository-wide rename or test
+hierarchy migration is justified by the current review. Review names and redundant tests with
+their owning behavior; this is not a claim that every remaining implementation is minimal.
+
+The next non-lint work is ordered below. These entries route work to existing dispositions;
+they do not close acceptance IDs or create a second backlog.
+
+| Next work | Owner and completion evidence |
+| --- | --- |
+| Retain process-supervision regressions | [Process execution](#process-execution-and-failure-reporting): the Darwin reaping repair passes SQLFluff and the native suite. Keep permission errors visible and verify native behavior on the remaining platforms. |
+| Complete acquisition-blocked consumer journeys | [Tool installation](#tool-installation) and [packaging](#packaging-and-installed-product-acceptance): resolve or document the EditorConfig Checker HTTP 403, then rerun the affected native, source acceptance, and release cases sequentially. Preserve the earlier failures until replacement evidence exists. |
+| Finish documentation acceptance | [Reference examples](#reference-content-loaders) and [site acceptance](#guides-and-site-acceptance): execute the remaining defect/correction examples, inspect the final README cards, and verify screen-reader operation. Actual browser zoom and reduced motion have local evidence. |
+| Resume product implementation in dependency order | Use the [implementation order](#implementation-order-after-cleanup) and the owning group's unresolved requirements. Keep native-platform evidence, publication, external adoption, and paused CI separate from local implementation. |
+
+The follow-up review checked task ownership, moved-path references, central test placement,
+and the earlier confirmed deletion targets. It found stale imperative cleanup instructions in
+this record; those are reconciled below. It did not repeat the full behavioral suites or native
+platform matrix. Earlier K-149 evidence, K-222 verification, and all recorded blockers remain.
+Verification for this documentation update resolved all 396 local links and heading anchors
+across the 16 architecture files; the diff whitespace check passed. Repository lint remains
+outside this pass.
+
+## Cleanup continuation: source hooks, removals, and isolated verification
+
+The checkout uses executable `.mise/gspot/gspot` through mise PATH. Tasks and installed hooks resolve
+that source launcher while consumer repositories retain pinned release executables. The
+commented Lefthook scaffold and unused authored private-tool dependencies and pins are removed;
+Lefthook product support and native compatibility coverage remain. The generated schema,
+spelling configuration, editor entry points, strict coverage, structural enforcement, and
+`level = "all"` remain in place. Managed outputs were regenerated through apply.
+
+Authored tasks and launcher PATH live in `.mise/conf.d/repo.toml`. CI affected-input
+selection, release version validation and artifact assembly, and site provenance are mise
+tasks. Documentation suites and built-site link checks have focused tasks. Workspace
+package manifests contain no scripts. Build, packaging, registry, and link-check implementations
+remain with their source owners. The checkout-local launcher lives in `.mise/gspot/`.
+Task cleanup verification passed: four launcher/CI cases, 17 documentation cases, the
+installed-and-cloned hook case, all three TypeScript projects, configuration regeneration,
+and the 317-page site build with link and fragment validation. Disposable fixtures verified
+release assembly, version rejection, provenance output, and mismatched-notice rejection.
+No repository lint was run. Existing task names and paused workflow gates remain unchanged.
+
+PostgreSQL facts discard dropped tables, policies, indexes, and constraints and disabled row
+security. Equivalent surviving indexes and policies retain their facts. Suggested policy
+commands use the shared POSIX argument quoting, including apostrophes and newline-containing
+values. Python blocking-call analysis releases its parse tree on failure.
+
+Central suites retain their dependency classifications. Documentation subjects, Bash subjects,
+Python acceptance, native hooks, and plugin configuration now have capability names within
+their owning directories. Adoption and ownership cases are split by responsibility without
+removing their assertions. CLI support separates process execution, Git, tool installation,
+defect expectations, and file preservation. Configuration-document editing, tool-specific
+adoption, command expansion, and dependency materialization have separate owners; transaction
+locking, confinement, and recovery remain with the lifecycle owner.
+
+Registry startup accepts cancellation; termination and output draining have deadlines. Setup
+and shutdown remove owned storage and preserve execution and cleanup errors. Release tests
+prepare publication inputs in disposable directories. Host independence builds with isolated
+dependencies, removes that build checkout, and then exercises its executable. No release test
+renames the source checkout's binaries or parser assets.
+
+The earlier geometric-g identity is superseded by the Sweet spot continuation below. Light, dark,
+monochrome, favicon, editable social-card source, and 1200 × 630 sharing assets are present.
+The website header, README, and sharing metadata use them. Workflow and recovery diagrams have
+adjacent prose equivalents. Contributor instructions explain source hooks, configuration
+ownership, central Bun configuration, and sequential source/release verification.
+
+A clean dependency installation exposed three native site-output consumers. HTML Validate,
+Linkinator, and PurgeCSS remain explicit development dependencies; their behavioral cases now
+live in the native suite. The retained integration fixture also had duplicate imports that
+could fail before testing selected-input isolation. It now demonstrates missing-input failure
+and successful execution after selecting that input. Four unused workspace tool dependencies
+remain removed, and lockfile comparison introduces no new resolved versions.
+
+The earlier site review covered the homepage, build/overview/recovery guides, every reference category,
+and 404 at 360, 768, and 1440 pixels in both themes. No reviewed page overflows the viewport.
+The home link has an accessible name, Geist loads locally, keyboard focus and skip navigation
+work, search returns results and closes with Escape, and code copying announces success.
+Desktop and mobile Lighthouse snapshots report accessibility 100 with no failed audits after
+matching the search button's name to its visible label. The accessibility tree exposes named
+landmarks and controls. CSS 200% reflow passes on the build guide; actual browser zoom and
+screen-reader operation remain unverified. Reduced-motion CSS is reviewed, but an operating
+system media-preference session remains outstanding. These results do not replace assistive
+technology review or complete execution of every reference example.
+
+Earlier local verification, superseded where the Sweet spot continuation records a newer run:
+
+| Verification | Result | Remaining limits |
+| --- | --- | --- |
+| Routine unit/plugin/integration with coverage | 1,288 pass, zero failures, 5,145 assertions, 143 files; 67.85% functions, 75.62% lines | Measurement does not replace product file-coverage enforcement |
+| Native suite | 323 pass, two failures, 3,015 assertions, 30 files | One EditorConfig Checker HTTP 403 and one SQLFluff process-group cleanup `EPERM` |
+| Moved native site-output cases | Three pass | Linkinator, HTML Validate, and PurgeCSS run their actual pinned executables |
+| Source acceptance | 269 pass, 44 failures, 2,733 assertions, 81 files | All 44 failures stop at rate-limited EditorConfig Checker downloads |
+| Source-backed installed hooks | One selected journey passes with 23 assertions | Covers staged defects, correction, and a fresh clone; two unrelated cases are filtered out |
+| Release | Eight pass, one failure, 281 assertions, four files | Installed-consumer tool setup stops at the same download limit; isolated host independence and installed plugin pass |
+| Types, schema, and configuration | Workspace/docs/tests types and schema freshness pass; apply preview has no drift | No repository lint run |
+| Packages and documentation | All seven CLI targets build; plugin modules/declarations work in an installed consumer; 317 site pages build with valid links and fragments | Cross-compilation does not establish native platform execution |
+
+The final routine run follows a clean dependency installation and the corrected native test
+classification. Source acceptance and release ran sequentially. The source runner streamed
+output, returned failure, and removed its registry storage. Focused registry tests cover bind
+failure, startup timeout, cancellation, and shutdown; launcher cases cover arguments, stdin,
+working directory, status, SIGINT, and SIGTERM. README/guide examples and reference validation
+run within the retained routine suite. The paired Bash demonstration and captured transcript
+pass in native verification.
+
+The earlier SQLFluff `EPERM` was reproduced in the write-failure case. The Sweet spot
+continuation records its diagnosed Darwin lifecycle cause and repaired verification.
+Download-blocked journeys, full per-example execution, assistive-technology review, and
+unavailable Windows/Linux gates remain open. Earlier K-149
+evidence and K-222's outstanding verification remain unchanged. No repository lint, commit,
+public publication, deployment, DNS change, external-repository edit, subagent, or CI execution
+occurred. Owned site servers and browser review tabs are stopped.
+
+## Sweet spot continuation
+
+The September 23 continuation implements the generated Sweet spot identity, the Astro homepage,
+shared documentation styling, README presentation, and the client-environment walkthrough.
+The built-in image generator produced the flat mark and dimensional hero. Editable SVG marks,
+wordmarks, light/dark banners, favicon, and 1200 × 630 social artwork accompany the raster
+sources. Policy, tools, agents, scope, findings, and preservation graphics explain implemented
+behavior. Six supported-tool logos use the retained Simple Icons CC0 notice.
+
+The live Turborepo page and its 28 linked JavaScript/CSS resources were downloaded for review.
+The read-only local source at revision `1dead3cc9d421e61327a13cb44a590e8e218793f` supplied
+layout patterns for the split hero, feature sections, setup columns, and closing action.
+The adapted Astro components retain the MIT notice and source attribution. No external
+repository was edited. The Nx first-use progression informed the guide sequence.
+
+The native SQLFluff write-failure case reproduced `EPERM` when the supervisor signaled the
+process group from Bun's child-exit callback. Inspection of Darwin's `killpg1` behavior and the
+process trace identified the group-leader reaping window: an extant group containing only
+ineligible zombie members can return `EPERM`. A 10 ms deferral before exit cleanup passes the
+reproduction and native suite. This is observed macOS evidence, not a timing guarantee across
+platforms. Descendant termination remains enabled, permission failures remain visible, output
+draining is bounded at five seconds, and disposal retains execution and cleanup errors.
+Text and binary regressions cover ordinary exits, timeout, cancellation, stream failure,
+descendants retaining output handles, and injected permission failures.
+
+EditorConfig Checker's pinned wrapper and release request are valid. The wrapper forwards
+`GITHUB_TOKEN` when present. A fresh acquisition passed earlier, but subsequent source and
+release runs received GitHub's explicit API rate-limit response for the pinned v3.4.0 release.
+No installer version, integrity contract, authentication setting, or executable source was
+changed. Troubleshooting describes the rate limit and retry after its reset.
+
+| Verification | Current result |
+| --- | --- |
+| Routine coverage | 1,295 pass, zero failures, 5,173 assertions across 143 files; 67.75% functions and 75.55% lines |
+| Focused process supervision | 29 pass, zero failures, 137 assertions |
+| Native compatibility on this macOS host | 328 pass, zero failures, 3,048 assertions across 31 files |
+| Focused native acquisition | Six pass, zero failures, 333 assertions |
+| Source acceptance | 264 pass, 49 failures, 2,629 assertions across 81 files; all failures stop at the pinned EditorConfig Checker rate limit |
+| Release, run after source acceptance | Eight pass, one failure, 281 assertions across four files; installed-consumer acquisition stops at the same rate limit |
+| Types and schema | Workspace, documentation, and test type checks pass; schema freshness passes |
+| Packages | All seven CLI targets build; plugin build passes; both prepared npm payloads contain consumer READMEs with absolute links and no relative image assets |
+| Documentation | 17 tests pass with 970 assertions; 318 pages build with valid local links and fragments |
+
+The JavaScript guide commands were executed with the built plugin and ESLint. Its captured
+private-environment finding and clean correction are asserted in the owning rule and plugin
+configuration suites. Homepage and README excerpts use this fixture. The paired Bash transcript
+passes native verification. Reference metadata and loading tests pass; they do not establish
+complete execution of every shipped reference example.
+
+Native Chrome inspection covered the homepage, installation, client-environment, build, and
+recovery guides, every reference category, and the branded 404 at 360, 768, and 1440 pixels in
+both themes. Reviewed pages had no viewport overflow, missing images, or unloaded fonts.
+Long code and table panels scroll. Search, mobile navigation, and copy announcements worked.
+Actual Chrome 200% zoom and an emulated reduced-motion media preference were exercised.
+The homepage remained useful with iframe script execution disabled. Small marks at 16, 24,
+and 32 pixels remained distinguishable. Tested foreground/background combinations meet
+normal-text contrast, including cobalt on white and tangerine with ink.
+
+Local GitHub-compatible README previews were inspected in both themes. This is not evidence
+from the live GitHub or npm renderer. The final change from a single tool strip to six wrapping
+cards remains visually unverified: ScreenCaptureKit returned error -3812 during the final
+capture and reconnection attempts. The earlier successful captures remain valid for their
+reviewed revisions. Actual screen-reader navigation remains unverified.
+
+Remaining acceptance includes the final README card capture, all shipped reference-example
+execution, assistive-technology review, download-blocked consumer journeys, and unavailable
+Windows/Linux native gates. Public source links for new files require those files to land;
+no package or site publication occurred. K-149 evidence and K-222's outstanding verification
+remain unchanged. No repository lint, subagent, commit, deployment, DNS change, external-repository
+edit, credential addition, or CI activation occurred. The owned preview server is stopped,
+and the final build removes temporary visual-review pages. The owned Chrome review tab could
+not be closed through verified UI control after the capture service failed.
 
 ## Active CI bypass
 
@@ -80,12 +273,10 @@ verification. Use this order for further work within the groups:
    Inline pure forwarding, delete dead code, and remove impossible-state defaults. Retain real
    input validation, lifecycle recovery, cancellation, and resource cleanup. Reuse an existing
    owner; do not replace deletions with abstractions, files, registries, or compatibility layers.
-2. **Repair false success and execution defects.** Under process execution and parsing, repair
-   static-site link, HTML, and unused-CSS adapters that accept missing reports after nonzero exits.
-   Audit equivalent report readers. Validate required output and documented exit semantics without
-   converting absence or parse failure into clean results. Under isolated generators and builds,
-   replace space-splitting of configured commands with argument-preserving interpretation. Verify
-   fatal, malformed, defect, and corrected cases; retain aggregate exits `0`, `1`, and `2`.
+2. **Repair remaining execution defects.** Preserve the SQLFluff lifecycle repair recorded in
+   the readiness section. Preserve the repaired report validation and argument interpretation.
+   Any further adapter change must verify fatal, malformed, defect, and corrected cases while
+   retaining aggregate exits `0`, `1`, and `2`.
 3. **Prune tests by behavior.** Under behavioral acceptance quality, inspect the owning suites
    alongside each cleanup. Delete obsolete-internal tests, source-token assertions, inventory
    totals, redundant snapshots, and repeated cases that prove no distinct behavior. Preserve or
@@ -133,39 +324,19 @@ recorded under process execution and failure reporting.
 
 ### Confirmed implementation deletions
 
-These were the starting code deletions. Current dispositions and verification are recorded
-under their owning groups below. Paths are relative to `packages/cli/src/`:
+The starting deletion targets have been applied in their source owners. `isClaimed` tests
+extension membership directly; the Xcode orphan check has no `projectFindings` forwarding
+boundary; edit-distance rows no longer use the four impossible-state zero defaults. Static-site
+adapters validate required reports, configured build commands preserve arguments, and the
+managed guide index emits compact lists without column-padding machinery.
 
-- In `presets/claims.ts`, delete `isExtensionClaimed`. Put its `claims.extensions.includes(...)`
-  expression directly in its sole caller, `isClaimed`. Add no replacement helper or module.
-- In `checks/xcode/project.ts`, collapse `projectFindings` and `orphanSources` into one check
-  implementation. Keep the registered `orphanSources` entry and its actual project analysis;
-  delete the private forwarding boundary and duplicate documentation. Add no adapter layer.
-- In `policy/near.ts`, delete the four `?? 0` fallbacks in `distance`. Its initialized rows and
-  loop bounds establish those positions. Preserve the edit-distance calculation without adding
-  runtime guards, fallback helpers, or speculative error branches.
-- In `checks/static-site/output-checks.ts`, delete fabricated empty report objects/arrays and
-  missing-required-field fallbacks. Validate actual tool output and exits in the owning adapter.
-  A fatal or missing report must produce inability, never an empty successful result.
-- In `checks/static-site/build.ts` and `checks/express/openapi.ts`, remove command parsing by
-  `split(' ')`. Preserve arguments through the configuration owner and existing process runner;
-  do not add a shell framework, alternate command field, or compatibility parser.
-- In `rules/managed-block.ts`, remove the column-width/padding machinery and its unnecessary
-  constants when emitting the compact index. Regenerate agent blocks through apply. Delete
-  repeated corpus instructions and unrelated mandatory reading from their source owners.
-
-Remove imports, types, comments, and tests made dead by these deletions in the same batch.
-Deleting a wrapper means fewer implementation layers, not moving it to another file or keeping
-its old name as an alias. Add code only where preserving real behavior or reporting a real
-boundary failure requires it. Explain that necessity in the owning disposition.
-
-This was the confirmed starting set. The completed source and test reading is recorded under
-[Behavioral acceptance quality](#behavioral-acceptance-quality). Remaining defects and
-unverified requirements stay with their owning groups before feature work resumes.
-Record further proven deletions in their existing group and execute them during this phase.
-The expanded audit classifies the specific tests recorded in the owning groups. Do not remove
-other behavioral coverage merely because the user requested less code. Delete confirmed filler cases and their
-unused fixtures or helpers as soon as their redundancy or obsolete subject is established.
+Their behavioral evidence belongs to [process execution](#process-execution-and-failure-reporting),
+[isolated builds](#isolated-generators-and-builds),
+[agent instructions](#rule-guides-and-agent-instructions), and
+[behavioral acceptance](#behavioral-acceptance-quality). Do not reopen these deletions merely
+because the initial audit listed them. Further deletion requires caller tracing and proof that
+no retained behavior loses its only coverage. The unresolved requirements in those groups remain
+open independently of these completed edits.
 
 ### Instruction and documentation findings
 
@@ -259,7 +430,7 @@ Complete command journeys, native-platform execution, and frozen-candidate accep
 
 Former unnamed cleanup entries: 9, 11.
 
-Source and retained evidence: [packages/cli/src/lifecycle/ownership.ts](../packages/cli/src/lifecycle/ownership.ts), [tests/integration/cli/lifecycle/ownership.test.ts](../tests/integration/cli/lifecycle/ownership.test.ts).
+Source and retained evidence: [packages/cli/src/lifecycle/ownership.ts](../packages/cli/src/lifecycle/ownership.ts), [tests/integration/cli/lifecycle/ownership/](../tests/integration/cli/lifecycle/ownership/).
 
 Acceptance: [K-118](03-configuration.md#acceptance-k-118), [K-299](03-configuration.md#acceptance-k-299), [K-257](03-configuration.md#acceptance-k-257).
 
@@ -2301,8 +2472,8 @@ Latest local verification on September 23, 2026:
 
 The Markdown takeover fixture now commits dependency setup before initialization. Its focused
 rerun stops at the download limit, so the corrected native journey remains unverified. An earlier
-native run also failed with SQLFluff process-group cleanup `EPERM`; focused and full reruns do
-not reproduce it, but its cause remains unproven. Keep that failure open without suppression.
+native run also failed with SQLFluff process-group cleanup `EPERM`. The Sweet spot continuation
+supersedes that observation with a reproduction, lifecycle diagnosis, and native pass.
 The earlier shared-WASM overlap and Next.js fixture deadline failures have corrected isolated
 reruns; the suites now run sequentially and retain their behavioral assertions.
 
@@ -2401,7 +2572,7 @@ Locally implemented IDs: K-205, K-303.
 
 Retired IDs: S-13, S-18.
 
-Source and retained evidence: [docs/src/content/reference.ts](../docs/src/content/reference.ts), [tests/integration/docs/reference-pages.test.ts](../tests/integration/docs/reference-pages.test.ts).
+Source and retained evidence: [docs/src/content/reference.ts](../docs/src/content/reference.ts), [tests/integration/docs/reference.test.ts](../tests/integration/docs/reference.test.ts).
 
 Acceptance: [K-205](21-documentation.md#acceptance-k-205), [K-303](21-documentation.md#acceptance-k-303), [K-304](21-documentation.md#acceptance-k-304), [S-4](21-documentation.md#acceptance-s-4), [S-15](21-documentation.md#acceptance-s-15).
 
@@ -2409,17 +2580,21 @@ Acceptance: [K-205](21-documentation.md#acceptance-k-205), [K-303](21-documentat
 
 Open for assistive-technology review, complete example execution, and release-matched public
 acceptance. The local visual matrix, keyboard interactions, reduced motion, and native browser
-zoom checks are complete. Earlier ScreenCaptureKit failures no longer block rendered review.
+zoom checks have local evidence. ScreenCaptureKit failed again during the final README card
+inspection; the Sweet spot continuation records that remaining visual check.
 
-The homepage uses the exact description "CLI to lint and enforce rules for LLM generated
-codebases", followed by Get started, Command reference, and source-checkout prerequisites.
-Astro/Starlight owns the shared header, search, mobile navigation, theme persistence, code copy
-controls, and native 404. Self-hosted pinned Geist Sans and Geist Mono retain their licenses.
-Neutral light/dark surfaces, blue links, thin dividers, a 68-character reading column, and a
-1,120-pixel landing limit follow the documentation design owner. The Bash defect and manual
-correction sit together, with captured output in a native disclosure and a restrained static
-glow. Decorative terminal controls, the custom 404, and duplicate theme/copy implementations
-are removed. Existing public URLs remain; `/guides/overview/` introduces the workflow.
+The Sweet spot identity uses two asymmetric cobalt forms around a tangerine dot. The image
+generator supplied the flat mark and dimensional hero; editable SVG interpretations, outlined
+wordmarks, README banners, and sharing assets accompany them. The exact product purpose stays
+selectable beside setup and reference actions. The homepage adapts Turborepo's split hero,
+feature grids, setup columns, and closing action to Astro, with its MIT notice retained.
+
+Astro/Starlight retains navigation, search, theme persistence, and copy controls. The branded
+404 uses Starlight's content route and links to the homepage and installation guide. Self-hosted
+Geist and its licenses remain. The landing width is 1,200 pixels, with a 68-character manual
+reading column. The executed JavaScript client-environment example leads the demonstration;
+the paired Bash example remains the lightweight first-check path. Actual tool logos carry
+the Simple Icons CC0 notice. Existing public routes remain.
 
 The README and guides state source setup, prerequisites, working directories, commands, writes,
 expected results, and relevant recovery. Testing, security, dependency licenses, installation,
@@ -2427,7 +2602,7 @@ CI, adoption, and customization procedures have owning guides. Advanced variants
 owners. Rule-guide corrections cover all source categories, including Bash failure propagation,
 remote quoting, framework version limits, and complete Docker and Supabase examples.
 
-Headless Chrome review covers the homepage, all 18 authored guides, every reference category,
+The earlier headless Chrome review covered the homepage, all 18 authored guides, every reference category,
 and native 404 at 360, 768, and 1,440 pixels in both themes. Measurements and visual inspection
 show no page-level horizontal overflow. Code and table panels scroll independently. A forced
 Astro content rebuild removed stale decorative code headers before the final captures.
@@ -2440,7 +2615,7 @@ quickstart, and command reference reflow in both themes at 720 CSS pixels, devic
 and visual viewport scale 1; document widths remain 712 pixels. This supersedes the earlier
 emulated-only zoom evidence. The owned Chrome and preview processes were stopped after review.
 
-The final site build produces 317 pages and passes local links and fragments. This establishes
+The current site build produces 318 pages and passes local links and fragments. This establishes
 build and navigation integrity, not complete content, screen-reader, or platform acceptance.
 Publication, deployment, DNS, and external-repository changes remain deferred. K-149 and K-222
 retain their separate evidence and outstanding requirements.

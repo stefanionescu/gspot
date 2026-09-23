@@ -1,9 +1,9 @@
-import { join } from 'node:path';
-import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { ESLint } from 'eslint';
+import { chmodSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 
 const POLICY = 'version = 1\npresets = ["javascript"]\n[rules]\ninstall = false\n';
 const SOURCE = 'alert(left == right);\n';

@@ -1,0 +1,497 @@
+import { join } from 'node:path';
+
+import { fileURLToPath } from 'node:url';
+
+import {
+    chmodSync,
+    lchmodSync,
+    lstatSync,
+    readFileSync,
+    readlinkSync,
+    statSync,
+    symlinkSync,
+    unlinkSync,
+    writeFileSync,
+} from 'node:fs';
+
+import { describe, expect, test } from 'bun:test';
+
+import { createFileTree, testdir } from 'testdirs';
+
+import { applyBlock } from '#cli/emit/managed-blocks.ts';
+
+import { openLifecycleOwner, ownershipSchema, readOwnership } from '#cli/lifecycle/ownership.ts';
+
+import { publishInstalledFiles } from '#cli/lifecycle/installed-files.ts';
+
+import { parse as parseToml } from 'smol-toml';
+
+import { parse as parseYaml } from 'yaml';
+
+const implementation = fileURLToPath(
+    new URL('../../../../../packages/cli/src/lifecycle/ownership.ts', import.meta.url),
+);
+
+const boundary = fileURLToPath(new URL('../../../../../packages/cli/src/lifecycle/confined.ts', import.meta.url));
+
+test.each([false, true])(
+    'TOML task ownership restores originals while retaining unrelated edits (%s)',
+    async (edited) => {
+        await using directory = await testdir();
+        const original =
+            '# Authored tasks\n[tasks]\nlint = "authored lint"\n[tasks.format]\n# Keep this description\ndescription = "Format the app"\nrun = ["authored format", "authored verify"]\n';
+        await createFileTree(directory.path, { 'mise.toml': original });
+        const owner = openLifecycleOwner(directory.path);
+        try {
+            const changes = [
+                { path: ['tasks', 'lint'], value: 'gspot check' },
+                { path: ['tasks', 'format', 'run'], value: 'gspot check --fix' },
+            ];
+            expect(owner.applyProposal(owner.proposeConfiguration('mise.toml', 'toml', changes, true))).toBe('changed');
+            const installed = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
+            expect(installed).toContain('# Authored tasks');
+            expect(installed).toContain('# Keep this description');
+            expect(parseToml(installed)).toMatchObject({
+                tasks: { lint: 'gspot check', format: { description: 'Format the app', run: 'gspot check --fix' } },
+            });
+            expect(owner.applyProposal(owner.proposeConfiguration('mise.toml', 'toml', changes))).toBe('unchanged');
+            if (edited)
+                writeFileSync(join(directory.path, 'mise.toml'), installed + '\n[env]\nAPP_MODE = "authored"\n');
+            expect(owner.restore('mise.toml')).toBe('changed');
+            const restored = readFileSync(join(directory.path, 'mise.toml'), 'utf8');
+            expect(parseToml(restored)['tasks']).toEqual(parseToml(original)['tasks']);
+            if (edited) expect(parseToml(restored)['env']).toEqual({ APP_MODE: 'authored' });
+            else expect(restored).toBe(original);
+        } finally {
+            owner.close();
+        }
+    },
+);
+
+test('Windows permission projection supports repeated journal writes, idempotent replacement, and restoration', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'config.txt': 'authored bytes' });
+    const program = `
+Object.defineProperty(process, 'platform', {value: 'win32'});
+const {openLifecycleOwner} = await import(${JSON.stringify(implementation)});
+let owner = openLifecycleOwner(process.cwd());
+try {
+    const first = owner.replace('config.txt', {bytes: Buffer.from('installed bytes'), mode: 0o755}, 'config', true);
+    const repeated = owner.replace('config.txt', {bytes: Buffer.from('installed bytes'), mode: 0o755}, 'config');
+    owner.close();
+    owner = openLifecycleOwner(process.cwd());
+    const restored = owner.restore('config.txt');
+    console.log(JSON.stringify({first, repeated, restored, text: owner.read('config.txt').bytes.toString()}));
+} finally {owner.close();}
+`;
+    const child = Bun.spawnSync([process.execPath, '-e', program], {
+        cwd: directory.path,
+        stdout: 'pipe',
+        stderr: 'pipe',
+    });
+    expect(child.exitCode, child.stderr.toString()).toBe(0);
+    expect(JSON.parse(child.stdout.toString())).toEqual({
+        first: 'changed',
+        repeated: 'unchanged',
+        restored: 'changed',
+        text: 'authored bytes',
+    });
+    expect(readFileSync(join(directory.path, 'config.txt'), 'utf8')).toBe('authored bytes');
+});
+
+test('Python installation preserves runtime bytecode caches without publishing or pruning them', async () => {
+    await using directory = await testdir();
+    await using staged = await testdir();
+    const cache = '.gspot/.venv/lib/__pycache__';
+    await createFileTree(directory.path, { [`${cache}/unowned.pyc`]: 'runtime bytes' });
+    await createFileTree(staged.path, {
+        'lib/package.py': 'value = 2\n',
+        'lib/package.pyc': 'packaged legacy bytecode',
+        'lib/__pycache__/unowned.pyc': 'temporary generated bytecode',
+        'lib/__pycache__/new.pyc': 'temporary new bytecode',
+    });
+    const owner = openLifecycleOwner(directory.path);
+    try {
+        owner.replace(
+            `${cache}/recorded.pyc`,
+            { bytes: Buffer.from('previous generated cache'), mode: 0o644 },
+            'dependency',
+        );
+        writeFileSync(join(directory.path, `${cache}/recorded.pyc`), 'runtime changed cache');
+        publishInstalledFiles(owner, staged.path, 'python');
+        expect(owner.read('.gspot/.venv/lib/package.py')?.bytes.toString()).toBe('value = 2\n');
+        expect(owner.read('.gspot/.venv/lib/package.pyc')?.bytes.toString()).toBe('packaged legacy bytecode');
+        expect(owner.read(`${cache}/unowned.pyc`)?.bytes.toString()).toBe('runtime bytes');
+        expect(owner.read(`${cache}/recorded.pyc`)?.bytes.toString()).toBe('runtime changed cache');
+        expect(owner.read(`${cache}/new.pyc`)).toBeUndefined();
+        publishInstalledFiles(owner, staged.path, 'python');
+        expect(readOwnership(directory.path).installations).toBeUndefined();
+    } finally {
+        owner.close();
+    }
+});
+
+test('managed block updates and removal preserve authored bytes and subsequent surrounding edits', async () => {
+    await using directory = await testdir();
+    const original = '# Authored\r\n\r\nKeep these trailing lines.\r\n\r\n';
+    await createFileTree(directory.path, { 'AGENTS.md': original });
+    let owner = openLifecycleOwner(directory.path);
+    try {
+        expect(owner.replaceBlock('AGENTS.md', 'first instructions', 'markdown')).toBe('changed');
+        const installed = owner.read('AGENTS.md')!.bytes.toString('utf8');
+        expect(installed.startsWith(original)).toBe(true);
+        const prefix = 'Additional instructions.\n';
+        const suffix = '\nLater authored instructions.\n';
+        writeFileSync(join(directory.path, 'AGENTS.md'), prefix + installed + suffix);
+        expect(owner.replaceBlock('AGENTS.md', 'updated instructions', 'markdown')).toBe('changed');
+        expect(owner.read('AGENTS.md')!.bytes.toString('utf8')).toBe(
+            prefix + applyBlock(original, 'updated instructions', 'markdown') + suffix,
+        );
+        owner.close();
+        owner = openLifecycleOwner(directory.path);
+        expect(owner.restore('AGENTS.md')).toBe('changed');
+        expect(owner.read('AGENTS.md')!.bytes.toString('utf8')).toBe(prefix + original + suffix);
+    } finally {
+        owner.close();
+    }
+});
+
+test('removing a block restores an originally empty file instead of deleting it', async () => {
+    await using directory = await testdir();
+    await createFileTree(directory.path, { 'AGENTS.md': '' });
+    const owner = openLifecycleOwner(directory.path);
+    try {
+        expect(owner.replaceBlock('AGENTS.md', 'instructions', 'markdown')).toBe('changed');
+        expect(owner.restore('AGENTS.md')).toBe('changed');
+        expect(owner.read('AGENTS.md')?.bytes).toEqual(Buffer.alloc(0));
+    } finally {
+        owner.close();
+    }
+});
+
+test('shared JSON updates preserve comments and later authored settings through uninstall', async () => {
+    await using directory = await testdir();
+    const original =
+        '{\n  // Keep this comment.\n  "extends": "./authored.json",\n  "compilerOptions": { "strict": false }\n}\n';
+    await createFileTree(directory.path, { 'tsconfig.json': original });
+    let owner = openLifecycleOwner(directory.path);
+    try {
+        expect(
+            owner.applyProposal(
+                owner.proposeConfiguration(
+                    'tsconfig.json',
+                    'json',
+                    [{ path: ['extends'], value: './.gspot/first.json' }],
+                    true,
+                ),
+            ),
+        ).toBe('changed');
+        const installed = owner.read('tsconfig.json')!.bytes.toString('utf8');
+        const edited = installed.replace('"strict": false', '"strict": true');
+        writeFileSync(join(directory.path, 'tsconfig.json'), edited);
+        expect(
+            owner.applyProposal(
+                owner.proposeConfiguration('tsconfig.json', 'json', [
+                    { path: ['extends'], value: './.gspot/second.json' },
+                ]),
+            ),
+        ).toBe('changed');
+        expect(owner.read('tsconfig.json')!.bytes.toString('utf8')).toBe(
+            edited.replace('./.gspot/first.json', './.gspot/second.json'),
+        );
+        owner.close();
+        owner = openLifecycleOwner(directory.path);
+        expect(owner.restore('tsconfig.json')).toBe('changed');
+        expect(owner.read('tsconfig.json')!.bytes.toString('utf8')).toBe(
+            original.replace('"strict": false', '"strict": true'),
+        );
+    } finally {
+        owner.close();
+    }
+});
+
+test('leaving JSON keys restores their original values and preserves authored changes', async () => {
+    await using directory = await testdir();
+    const original = '{"scripts":{"prepare":"build-app","check":"gspot check"},"optional":null,"private":true}\n';
+    await createFileTree(directory.path, { 'package.json': original });
+    const owner = openLifecycleOwner(directory.path);
+    try {
+        owner.applyProposal(
+            owner.proposeConfiguration(
+                'package.json',
+                'json',
+                [
+                    { path: ['scripts', 'prepare'], value: 'gspot apply' },
+                    { path: ['scripts', 'check'], value: 'gspot check' },
+                    { path: ['optional'], value: true },
+                ],
+                true,
+            ),
+        );
+        const edited = owner.read('package.json')!.bytes.toString('utf8').replace('"private":true', '"private":false');
+        writeFileSync(join(directory.path, 'package.json'), edited);
+        expect(
+            owner.applyProposal(
+                owner.proposeConfiguration('package.json', 'json', [
+                    { path: ['scripts', 'check'], value: 'gspot check' },
+                ]),
+            ),
+        ).toBe('changed');
+        expect(owner.read('package.json')!.bytes.toString('utf8')).toBe(
+            original.replace('"private":true', '"private":false'),
+        );
+        expect(owner.restore('package.json')).toBe('changed');
+        expect(owner.read('package.json')!.bytes.toString('utf8')).toBe(
+            original.replace('"private":true', '"private":false'),
+        );
+    } finally {
+        owner.close();
+    }
+});
+
+test('Lefthook YAML ownership preserves authored commands and comments through updates and removal', async () => {
+    await using directory = await testdir();
+    const original = '# Keep this hook.\npre-commit:\n  commands:\n    authored:\n      run: echo original\n';
+    await createFileTree(directory.path, { 'lefthook.yml': original });
+    const owner = openLifecycleOwner(directory.path);
+    try {
+        expect(
+            owner.applyProposal(
+                owner.proposeConfiguration(
+                    'lefthook.yml',
+                    'yaml',
+                    [{ path: ['pre-commit', 'commands', 'gspot'], value: { run: 'gspot check --staged' } }],
+                    true,
+                ),
+            ),
+        ).toBe('changed');
+        const edited = owner
+            .read('lefthook.yml')!
+            .bytes.toString('utf8')
+            .replace('echo original', 'echo authored-later');
+        writeFileSync(join(directory.path, 'lefthook.yml'), edited);
+        expect(
+            owner.applyProposal(
+                owner.proposeConfiguration('lefthook.yml', 'yaml', [
+                    { path: ['pre-commit', 'commands', 'gspot'], value: { run: 'gspot check --staged --no-cache' } },
+                ]),
+            ),
+        ).toBe('changed');
+        expect(owner.read('lefthook.yml')!.bytes.toString('utf8')).toContain('echo authored-later');
+        expect(owner.restore('lefthook.yml')).toBe('changed');
+        expect(owner.read('lefthook.yml')!.bytes.toString('utf8')).toBe(
+            original.replace('echo original', 'echo authored-later'),
+        );
+    } finally {
+        owner.close();
+    }
+});
+
+test('adopting identical authored configuration retains original recovery bytes and permissions', async () => {
+    await using directory = await testdir();
+    const content = '{\n    "scripts": {"check": "gspot check"},\n    "authored": true\n}\n';
+    await createFileTree(directory.path, { 'package.json': content });
+    chmodSync(join(directory.path, 'package.json'), 0o640);
+    const owner = openLifecycleOwner(directory.path);
+    try {
+        owner.applyProposals([
+            owner.proposeConfiguration(
+                'package.json',
+                'json',
+                [{ path: ['scripts', 'check'], value: 'gspot check' }],
+                true,
+            ),
+        ]);
+        const state = ownershipSchema.parse(
+            JSON.parse(readFileSync(join(directory.path, '.gspot/ownership.json'), 'utf8')),
+        );
+        const original = state.files[0]!.original;
+        expect(original).toBeDefined();
+        expect(readFileSync(join(directory.path, original!.backup), 'utf8')).toBe(content);
+        expect(owner.restore('package.json')).toBe('changed');
+        expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(content);
+        expect(statSync(join(directory.path, 'package.json')).mode & 0o777).toBe(0o640);
+    } finally {
+        owner.close();
+    }
+});
+
+test('identical unrecorded blocks and configuration fields survive adoption, later edits, and restoration', async () => {
+    await using directory = await testdir();
+    const instructions = applyBlock('Authored instructions.\n', 'existing instructions', 'markdown');
+    const configuration = '{"scripts":{"check":"gspot check"},"authored":true}\n';
+    await createFileTree(directory.path, { 'AGENTS.md': instructions, 'package.json': configuration });
+    const owner = openLifecycleOwner(directory.path);
+    try {
+        owner.applyProposals([
+            owner.proposeBlock('AGENTS.md', 'existing instructions', 'markdown'),
+            owner.proposeConfiguration('package.json', 'json', [{ path: ['scripts', 'check'], value: 'gspot check' }]),
+        ]);
+        writeFileSync(join(directory.path, 'AGENTS.md'), instructions + 'Later authored instructions.\n');
+        writeFileSync(join(directory.path, 'package.json'), configuration.replace('true', 'false'));
+        owner.applyProposals(['AGENTS.md', 'package.json'].map((path) => owner.proposeRestoration(path)));
+        expect(readFileSync(join(directory.path, 'AGENTS.md'), 'utf8')).toBe(
+            instructions + 'Later authored instructions.\n',
+        );
+        expect(readFileSync(join(directory.path, 'package.json'), 'utf8')).toBe(configuration.replace('true', 'false'));
+        expect(owner.paths()).toEqual([]);
+    } finally {
+        owner.close();
+    }
+});
+
+test.each([
+    ['json', '{"authored":true,"kept":{}}\n', (text: string): unknown => JSON.parse(text)],
+    ['yaml', 'authored: true\nkept: {}\n', (text: string): unknown => parseYaml(text)],
+    ['toml', 'authored = true\n[kept]\n', (text: string): unknown => parseToml(text)],
+] as const)(
+    'shared %s configuration removes created empty parents and preserves authored empty parents',
+    async (format, source, parse) => {
+        await using directory = await testdir();
+        const path = `config.${format}`;
+        await createFileTree(directory.path, { [path]: source });
+        const owner = openLifecycleOwner(directory.path);
+        const fields = [
+            { path: ['created', 'nested', 'first'], value: 1 },
+            { path: ['created', 'nested', 'second'], value: 2 },
+            { path: ['kept', 'owned'], value: true },
+        ];
+        try {
+            owner.applyProposal(owner.proposeConfiguration(path, format, fields, true));
+            owner.applyProposal(owner.proposeConfiguration(path, format, [fields[1]!]));
+            expect(parse(owner.read(path)!.bytes.toString('utf8'))).toEqual({
+                authored: true,
+                kept: {},
+                created: { nested: { second: 2 } },
+            });
+            owner.applyProposal(owner.proposeConfiguration(path, format, []));
+            expect(parse(owner.read(path)!.bytes.toString('utf8'))).toEqual({ authored: true, kept: {} });
+            owner.applyProposal(owner.proposeConfiguration(path, format, fields, true));
+            writeFileSync(
+                join(directory.path, path),
+                owner.read(path)!.bytes.toString('utf8').replace('true', 'false'),
+            );
+            expect(owner.restore(path)).toBe('changed');
+            expect(parse(owner.read(path)!.bytes.toString('utf8'))).toEqual({ authored: false, kept: {} });
+        } finally {
+            owner.close();
+        }
+    },
+);
+describe.skipIf(process.platform === 'win32')('lifecycle ownership', () => {
+    test.each(['link', 'pruning'] as const)(
+        'installation preserves every destination when %s conflicts, then installs corrected inputs',
+        async (conflict) => {
+            await using directory = await testdir();
+            await using staged = await testdir();
+            await createFileTree(staged.path, { 'package/bin/tool': 'new executable', '.bin/.keep': '' });
+            symlinkSync('../package/bin/tool', join(staged.path, '.bin/tool'));
+            const owner = openLifecycleOwner(directory.path);
+            const target = '.gspot/node_modules/package/bin/tool';
+            const obstructed = conflict === 'link' ? '.gspot/node_modules/.bin/tool' : '.gspot/node_modules/obsolete';
+            try {
+                owner.replace(target, { bytes: Buffer.from('installed executable'), mode: 0o644 }, 'dependency');
+                owner.replace(obstructed, { bytes: Buffer.from('installed file'), mode: 0o644 }, 'dependency');
+                writeFileSync(join(directory.path, obstructed), 'authored edit');
+                expect(() => publishInstalledFiles(owner, staged.path, 'npm')).toThrow('Preserved edited or unowned');
+                expect(owner.read(target)?.bytes.toString()).toBe('installed executable');
+                expect(owner.read(obstructed)?.bytes.toString()).toBe('authored edit');
+                writeFileSync(join(directory.path, obstructed), 'installed file');
+                publishInstalledFiles(owner, staged.path, 'npm');
+                expect(owner.read(target)?.bytes.toString()).toBe('new executable');
+                expect(readFileSync(join(directory.path, '.gspot/node_modules/.bin/tool'), 'utf8')).toBe(
+                    'new executable',
+                );
+                publishInstalledFiles(owner, staged.path, 'npm');
+                if (conflict === 'pruning') expect(owner.read(obstructed)).toBeUndefined();
+            } finally {
+                owner.close();
+            }
+        },
+    );
+
+    test('two replacements restore the first original bytes and mode and preserve unowned files', async () => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, { '.gspot/authored.txt': 'keep\n' });
+        const original = Buffer.from([0, 255, 1, 10]);
+        writeFileSync(join(directory.path, 'config.txt'), original, { mode: 0o640 });
+        let owner = openLifecycleOwner(directory.path);
+        try {
+            expect(owner.replace('config.txt', { bytes: Buffer.from('first'), mode: 0o444 }, 'config', true)).toBe(
+                'changed',
+            );
+            expect(owner.replace('config.txt', { bytes: Buffer.from('second'), mode: 0o444 }, 'config')).toBe(
+                'changed',
+            );
+            owner.close();
+            owner = openLifecycleOwner(directory.path);
+            expect(owner.restore('config.txt')).toBe('changed');
+            expect(owner.read('config.txt')).toEqual({ bytes: original, mode: 0o640 });
+            expect(readFileSync(join(directory.path, '.gspot/authored.txt'), 'utf8')).toBe('keep\n');
+            expect(owner.paths()).toEqual([]);
+            expect(statSync(join(directory.path, '.gspot/ownership.json')).mode & 0o777).toBe(0o600);
+            expect(statSync(join(directory.path, '.gspot/recovery')).mode & 0o777).toBe(0o700);
+        } finally {
+            owner.close();
+        }
+    });
+
+    test('installed executable links run, restore authored links and modes, and preserve later edits', async () => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, {
+            '.gspot/node_modules/tool/bin.sh': '#!/bin/sh\nprintf installed',
+            '.gspot/node_modules/tool/original.sh': '#!/bin/sh\nprintf original',
+            '.gspot/node_modules/.bin/.keep': '',
+        });
+        const path = '.gspot/node_modules/.bin/tool';
+        const absolute = join(directory.path, path);
+        chmodSync(join(directory.path, '.gspot/node_modules/tool/bin.sh'), 0o755);
+        chmodSync(join(directory.path, '.gspot/node_modules/tool/original.sh'), 0o755);
+        symlinkSync('../tool/original.sh', absolute);
+        if (process.platform === 'darwin') lchmodSync(absolute, 0o700);
+        const originalMode = lstatSync(absolute).mode & 0o7777;
+        const next = { bytes: Buffer.from('../tool/bin.sh'), mode: 0o777, isLink: true as const };
+        let owner = openLifecycleOwner(directory.path);
+        try {
+            expect(owner.replace(path, next, 'config')).toBe('preserved');
+            expect(owner.replace(path, next, 'config', true)).toBe('changed');
+            expect(owner.replace(path, next, 'config')).toBe('unchanged');
+            const executed = Bun.spawnSync([absolute], { stdout: 'pipe', stderr: 'pipe' });
+            expect(executed.exitCode, executed.stderr.toString()).toBe(0);
+            expect(executed.stdout.toString()).toBe('installed');
+            expect(() => owner.read(path)).toThrow();
+            owner.close();
+            owner = openLifecycleOwner(directory.path);
+            expect(owner.restore(path)).toBe('changed');
+            expect(readlinkSync(absolute)).toBe('../tool/original.sh');
+            expect(lstatSync(absolute).mode & 0o7777).toBe(originalMode);
+            expect(statSync(join(directory.path, '.gspot/node_modules/tool/original.sh')).mode & 0o777).toBe(0o755);
+            expect(owner.replace(path, next, 'config', true)).toBe('changed');
+            unlinkSync(absolute);
+            symlinkSync('../tool/original.sh', absolute);
+            expect(owner.replace(path, next, 'config')).toBe('preserved');
+            expect(owner.restore(path)).toBe('preserved');
+            expect(readlinkSync(absolute)).toBe('../tool/original.sh');
+        } finally {
+            owner.close();
+        }
+    });
+
+    test('a regular file containing a link target is preserved after replacing an installed link', async () => {
+        await using directory = await testdir();
+        await createFileTree(directory.path, { target: 'authored target' });
+        const owner = openLifecycleOwner(directory.path);
+        const next = { bytes: Buffer.from('target'), mode: 0o777, isLink: true as const };
+        try {
+            expect(owner.replace('tool', next, 'config')).toBe('changed');
+            unlinkSync(join(directory.path, 'tool'));
+            writeFileSync(join(directory.path, 'tool'), 'target', { mode: 0o777 });
+            expect(owner.replace('tool', next, 'config')).toBe('preserved');
+            expect(owner.restore('tool')).toBe('preserved');
+            expect(lstatSync(join(directory.path, 'tool')).isFile()).toBe(true);
+            expect(readFileSync(join(directory.path, 'target'), 'utf8')).toBe('authored target');
+        } finally {
+            owner.close();
+        }
+    });
+});

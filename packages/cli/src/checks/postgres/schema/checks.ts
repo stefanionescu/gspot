@@ -1,13 +1,13 @@
 import type { EngineInput } from '#cli/run/types.ts';
 // The checks that read the schema the migrations build: row security, grants, definer functions and foreign key indexes.
-import type { Finding } from '#cli/output/finding.ts';
-import type { Declared } from '#cli/checks/postgres/types.ts';
-import { nodesOf } from '#cli/readers/sql/tree.ts';
-import { DEFAULT_SCHEMA } from '#cli/checks/postgres/postgres-definitions.ts';
-import { positionAt } from '#cli/readers/sql/statements.ts';
-import type { SqlNode, SqlStatementView } from '#cli/readers/sql/types.ts';
 import { migrationsOf } from '#cli/checks/postgres/migrations.ts';
+import { DEFAULT_SCHEMA } from '#cli/checks/postgres/postgres-definitions.ts';
 import { schemaFacts } from '#cli/checks/postgres/schema/facts.ts';
+import type { Declared } from '#cli/checks/postgres/types.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import { positionAt } from '#cli/readers/sql/statements.ts';
+import { nodesOf } from '#cli/readers/sql/tree.ts';
+import type { SqlNode, SqlStatementView } from '#cli/readers/sql/types.ts';
 
 function finding(input: EngineInput, at: Declared, rule: string, text: string): Finding {
     return {
@@ -76,11 +76,9 @@ export async function rlsPresent(input: EngineInput): Promise<Finding[]> {
         .filter(([table]) => schemas.has(table.slice(0, table.indexOf('.'))))
         .flatMap(([table, at]): Finding[] => {
             if (!facts.secured.has(table))
-                return [finding(input, at, 'row-security', `${table} never enables row level security.`)];
+                return [finding(input, at, 'row-security', `${table} does not have row level security enabled.`)];
             if (facts.policed.has(table)) return [];
-            return [
-                finding(input, at, 'policy', `${table} enables row level security and no migration gives it a policy.`),
-            ];
+            return [finding(input, at, 'policy', `${table} enables row level security and has no policy.`)];
         })
         .toArray();
 }

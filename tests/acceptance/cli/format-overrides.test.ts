@@ -1,11 +1,12 @@
-import { join } from 'node:path';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import prettier from 'prettier';
 import type { RunReport } from '#cli/output/report-types.ts';
 import { exportedProfile } from '#cli/profile/export.ts';
-import { installPrivateTools, run, toolsPath } from '#tests/support/cli/planted.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { expect, test } from 'bun:test';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import prettier from 'prettier';
+import { createFileTree, testdir } from 'testdirs';
 
 const POLICY = `version = 1
 level = "all"

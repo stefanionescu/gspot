@@ -1,8 +1,8 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test(
     'levels preserve defect checks and require an explicit opt-in for naming preferences',

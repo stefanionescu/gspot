@@ -1,16 +1,13 @@
-import { evaluateConfiguration } from './configuration.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
-import { basename, dirname } from 'node:path';
-import { parseBuffer } from 'editorconfig';
-import { policySchema } from '#cli/policy/schema.ts';
-import { eslintResponse } from './eslint-evaluation.ts';
+import { dirname } from 'node:path';
 // Observe configuration carryover before retiring supported inputs through the lifecycle owner.
+import { observeConfiguration, parseCarrySource } from '#cli/lifecycle/carry-source.ts';
+import { carryFrom } from '#cli/lifecycle/carry.ts';
+import { collectFormatting } from '#cli/lifecycle/carry-formatting.ts';
+import { collectEslint } from '#cli/lifecycle/carry-eslint.ts';
 import { withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import type { FileSnapshot, TakeoverRemovalResult } from '#cli/lifecycle/types.ts';
+import type { CarriedConfiguration, FileSnapshot, TakeoverPlan, TakeoverRemovalResult } from '#cli/lifecycle/types.ts';
 import type { ExistingTooling } from '#cli/repository/types.ts';
-import { carryFormat } from '#cli/lifecycle/format-evaluation.ts';
-import { carriedTool, carryFrom, observeConfiguration, parseCarrySource } from '#cli/lifecycle/carry.ts';
-import type { CarriedConfiguration, TakeoverPlan } from '#cli/lifecycle/types.ts';
 
 function sortedUnique(items: string[]): string[] {
     return [...new Set(items)].toSorted((a, b) => a.localeCompare(b));
@@ -27,135 +24,6 @@ export function isOwned(tool: string, selected: Set<string>): boolean {
     return [...selected].some((id) =>
         manifests.get(id)?.tools.some((entry) => entry.name === tool && entry.takeover !== undefined),
     );
-}
-
-async function collectFormatting(
-    root: string,
-    configs: ExistingTooling['configs'],
-    lists: CarriedConfiguration,
-): Promise<void> {
-    const [first] = configs;
-    if (first === undefined) return;
-    try {
-        const unsupported = configs.find(({ carries, path }) => carries === 'ignore-paths' && path.includes('/'));
-        if (unsupported !== undefined)
-            throw new Error(
-                `Formatting conversion does not support ${unsupported.path}. Its configuration remains intact.`,
-            );
-        const format = configs.filter(({ tool, carries }) => tool === 'prettier' && carries !== 'ignore-paths');
-        const editorconfigs = configs.filter(({ tool }) => tool === 'ec');
-        const editorconfig = editorconfigs.find(({ path }) => !path.includes('/'));
-        const document = (path: string) => {
-            const sections = parseBuffer(lists.observed.get(path)!.bytes);
-            return {
-                preamble: sections.find(([glob]) => glob === null)?.[1] ?? {},
-                sections: sections
-                    .filter(([glob]) => glob !== null)
-                    .map(([glob, properties]) => ({ glob, properties })),
-            };
-        };
-        const adopted =
-            editorconfigs.length === 0
-                ? undefined
-                : policySchema.shape.tools
-                      .unwrap()
-                      .shape.editorconfig.unwrap()
-                      .shape.adopted.unwrap()
-                      .parse({
-                          ...(editorconfig === undefined
-                              ? { preamble: {}, sections: [] }
-                              : document(editorconfig.path)),
-                          directories: editorconfigs
-                              .filter(({ path }) => path.includes('/'))
-                              .map(({ path }) => ({
-                                  basePath: dirname(path).replaceAll('\\', '/'),
-                                  ...document(path),
-                              })),
-                      });
-        const folders = new Set(format.map(({ path }) => dirname(path)));
-        if (folders.size !== format.length)
-            throw new Error('Multiple Prettier configurations in one directory require explicit conversion.');
-        const sources = format.map((input) => ({
-            from: input.path,
-            ...(/\.[cm]?[jt]s$/u.test(input.path) || /^package\./u.test(basename(input.path))
-                ? {}
-                : { source: parseCarrySource(lists.observed.get(input.path)!, input.tool, input.path) }),
-        }));
-        lists.formatter = await carryFormat(
-            root,
-            sources,
-            configs.find(({ carries }) => carries === 'ignore-paths')?.path,
-            adopted !== undefined,
-        );
-        if (adopted !== undefined) {
-            lists.formatter.nativeDefaults = true;
-            lists.formatter.editorconfig = adopted;
-        }
-        for (const { path } of configs) {
-            if (/^package\./u.test(basename(path)))
-                lists.retained.push({
-                    path,
-                    note: 'Package metadata retained; formatter options and selectors are represented in gspot configuration',
-                });
-            else
-                lists.removed.push({
-                    path,
-                    note: 'Formatting options and ordered selectors are represented in gspot configuration',
-                });
-        }
-    } catch (error) {
-        lists.unread.push({ path: first.path, note: `not read and not deleted: ${(error as Error).message}` });
-    }
-}
-
-async function collectEslint(
-    root: string,
-    configs: ExistingTooling['configs'],
-    paths: string[],
-    lists: CarriedConfiguration,
-): Promise<void> {
-    const [first] = configs;
-    if (first === undefined) return;
-    try {
-        if (configs.every(({ path }) => basename(path) === '.eslintignore'))
-            throw new Error('ESLint ignore adoption requires the configuration that uses it.');
-        const nestedIgnore = configs.find(({ path }) => basename(path) === '.eslintignore' && path.includes('/'));
-        if (nestedIgnore !== undefined)
-            throw new Error(
-                `ESLint does not load ${nestedIgnore.path} from the repository root. Convert it before adoption.`,
-            );
-        const flat = configs.some(({ path }) => /(?:^|\/)eslint\.config\./u.test(path));
-        if (flat && (configs.length !== 1 || first.path.includes('/')))
-            throw new Error(
-                `ESLint conversion requires one root configuration. Convert ${configs.map(({ path }) => path).join(', ')} before adoption.`,
-            );
-        const carried = eslintResponse.parse(
-            await evaluateConfiguration({
-                tool: 'eslint',
-                operation: 'rules',
-                root,
-                paths,
-                from: first.path,
-                flat,
-                configs: configs.map(({ path }) => path),
-            }),
-        );
-        carriedTool(lists, 'eslint').settings['adopted'] = carried.adopted;
-        for (const { path } of configs) {
-            if (basename(path) === 'package.json')
-                lists.retained.push({
-                    path,
-                    note: 'Package metadata retained; ESLint configuration is represented in gspot configuration',
-                });
-            else
-                lists.removed.push({
-                    path,
-                    note: 'ESLint selectors, options, and module registrations are represented in gspot configuration',
-                });
-        }
-    } catch (error) {
-        lists.unread.push({ path: first.path, note: `not read and not deleted: ${(error as Error).message}` });
-    }
 }
 
 /**
@@ -253,7 +121,10 @@ export function noLongerRuns(
 ): TakeoverPlan['noLongerRuns'] {
     const list: TakeoverPlan['noLongerRuns'] = [];
     for (const folder of tooling.lintFolders)
-        list.push({ path: `${folder}/`, note: 'a folder of lint scripts; check remaining references before deleting it' });
+        list.push({
+            path: `${folder}/`,
+            note: 'a folder of lint scripts; check remaining references before deleting it',
+        });
     for (const manifest of tooling.lintOnlyManifests)
         list.push({ path: manifest, note: 'a manifest whose dependencies are all tools gspot now pins' });
     const [first] = duplicatePins;

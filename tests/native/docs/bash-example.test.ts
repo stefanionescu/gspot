@@ -1,11 +1,11 @@
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
-import { fileURLToPath } from 'node:url';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/planted.ts';
 import { run as runCommand } from '#cli/platform/spawn.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createFileTree, testdir } from 'testdirs';
 import example from '../../../docs/src/components/bash-syntax.json';
 
 test('the published syntax example produces the captured finding and accepts its correction', async () => {

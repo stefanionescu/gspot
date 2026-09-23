@@ -1,8 +1,9 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { run as runProcess } from '#cli/platform/spawn.ts';
-import { install, run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { install } from '#tests/support/cli/tools.ts';
+import { expect, test } from 'bun:test';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test(
     'native SVG byte savings use the selected level and exact file inputs',

@@ -38,8 +38,7 @@ it globally.
 
 ## Rules and options
 
-The [plugin reference](https://gspot.dev/reference/plugin/no-trivial-functions/) describes each rule
-and its options. Individual rules remain available through `gspot.rules`, including alternative
+The [client-environment walkthrough](https://github.com/stefanionescu/gspot/blob/main/docs/src/content/docs/guides/client-environment.md) demonstrates a private configuration finding and its correction. Individual rules remain available through `gspot.rules`, including alternative
 re-export policies that require explicit selection.
 
 Licensed under Apache-2.0.

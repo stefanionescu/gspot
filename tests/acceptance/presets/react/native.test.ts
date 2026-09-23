@@ -1,9 +1,12 @@
 import { symlinkSync } from 'node:fs';
 // Planted repository for the react-native preset: an environment variable taken apart, an inline style, a list with no key, and a token in AsyncStorage.
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
 import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/support/cli/planted.ts';
 
 const MODULES = join(import.meta.dir, '../../../../node_modules');
 const INIT = [

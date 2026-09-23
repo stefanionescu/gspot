@@ -1,9 +1,9 @@
 import { readSource } from '#cli/repository/tracked.ts';
 // Blocking calls inside an async function: they stop the event loop for every other task.
-import type { Node } from 'web-tree-sitter';
-import type { EngineInput } from '#cli/run/types.ts';
-import type { Finding } from '#cli/output/finding.ts';
 import { parserFor } from '#cli/naming/parsers.ts';
+import type { Finding } from '#cli/output/finding.ts';
+import type { EngineInput } from '#cli/run/types.ts';
+import type { Node } from 'web-tree-sitter';
 
 const BLOCKING_NAMES = new Set([
     'time.sleep',
@@ -60,16 +60,19 @@ export async function pythonBlockingCalls(input: EngineInput): Promise<Finding[]
         if (file.nature !== 'source' || !file.path.endsWith('.py')) continue;
         const tree = parser.parse(readSource(input.root, file.path).toString('utf8'));
         if (tree === null) throw new Error('The source parser returned no tree.');
-        for (const call of blockingCalls(tree.rootNode))
-            findings.push({
-                check: input.spec.name,
-                file: file.path,
-                line: call.line,
-                rule: 'blocking-call',
-                message: `${call.callee} blocks the event loop inside an async function.`,
-                fixable: false,
-            });
-        tree.delete();
+        try {
+            for (const call of blockingCalls(tree.rootNode))
+                findings.push({
+                    check: input.spec.name,
+                    file: file.path,
+                    line: call.line,
+                    rule: 'blocking-call',
+                    message: `${call.callee} blocks the event loop inside an async function.`,
+                    fixable: false,
+                });
+        } finally {
+            tree.delete();
+        }
     }
     return findings;
 }

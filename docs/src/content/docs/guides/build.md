@@ -20,6 +20,30 @@ The CLI build selects the host target. Binaries, `LICENSE.md`, and `NOTICE.md` g
 Plugin dependencies remain separate npm packages with their own licenses.
 The plugin build runs independently of the CLI build.
 
+## Contributor hooks and configuration
+
+Activate mise in your shell before invoking Git hooks, or run Git through `mise exec -- git`.
+This checkout places its executable source launcher on mise PATH. Hooks and repository tasks
+run the same source without a build or published binary. Confirm the resolution without
+running checks:
+
+```shell
+mise exec -- which gspot
+mise exec -- gspot --version
+```
+
+The first command prints this checkout's `.mise/gspot/gspot`. The second prints the source version.
+If resolution fails, complete source setup and activate mise again. Keep hooks enabled.
+The release-provider override in `mise.toml` applies only to this checkout. Consumer
+repositories retain their generated pinned executable.
+
+`mise.toml` owns development runtimes and repository settings. Authored tasks and the source-launcher PATH belong to
+`.mise/conf.d/repo.toml`; gspot owns the generated tool pins. Edit policy in `gspot.toml`
+and run `mise run apply` to regenerate managed configuration. Native tools discover
+`typos.toml` by filename; the spelling preset owns its content. The editor schema is generated
+from the policy schema and copied into the published documentation during the site build.
+Do not edit managed outputs to resolve drift. Change their source and regenerate them.
+
 ## Run tests
 
 Run the suites relevant to your change from the repository root:
@@ -52,11 +76,11 @@ mise run test:acceptance -- ./acceptance/presets/vite.test.ts
 Use `mise run test:coverage` to run the unit and integration suites with coverage measurement.
 There is no fixed coverage-percentage gate. Jest supplies lint rules for `bun:test`; its native
 coverage command does not run Bun tests. Direct `bun test` discovers the broader test tree,
-including suites that require the acceptance runner or release opt-in.
+including suites that require the acceptance runner or built release artifacts.
 
 Run [installed-package verification](#validate-packages-locally) separately from source tests.
-The release fixture temporarily removes a shared parser asset to verify binary independence;
-overlapping it with source tests causes unrelated failures.
+The publisher prepares packages in disposable directories. Run source acceptance and release
+verification sequentially so each suite owns its registry and tool installation workload.
 
 Regenerate the editor schema with `mise run generate:schema`. Check freshness with
 `mise run generate:schema -- --check`. The docs build copies the schema into the site.
@@ -118,6 +142,21 @@ The publisher checks every required binary and license file before preparing pac
 runs `npm pack --dry-run` for every package before publishing any package. Public publication
 is a separate release operation. Do not use the publisher without `--dry-run` or an explicitly
 selected local registry during local validation.
+
+### Activate the npm badge after publication
+
+Keep the root README badge labeled **unreleased** until the intended `gspot` package version
+is available in the public npm registry. During the authorized release procedure, verify it:
+
+```shell
+npm view gspot@0.1.0 name version repository --registry=https://registry.npmjs.org
+```
+
+Require the intended name, version, and repository. Only then replace the static npm image
+with `https://img.shields.io/npm/v/gspot.svg` and its destination with
+`https://www.npmjs.com/package/gspot`. Update the installation guide for that verified release
+at the same time. Do not add download counts, a coverage percentage, or a CI status badge.
+This verification command does not publish a package or activate CI.
 
 ## Repository acceptance
 

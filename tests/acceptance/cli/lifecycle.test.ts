@@ -1,13 +1,14 @@
-import { ownershipSchema } from '#cli/lifecycle/ownership.ts';
-import { emitAll } from '#cli/emit/targets.ts';
 import { applyBlock } from '#cli/emit/managed-blocks.ts';
-import { openSession } from '#cli/run/session.ts';
+import { emitAll } from '#cli/emit/targets.ts';
+import { ownershipSchema } from '#cli/lifecycle/ownership.ts';
 import { run as spawn } from '#cli/platform/spawn.ts';
-import { join } from 'node:path';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { openSession } from '#cli/run/session.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
 import { expect, test } from 'bun:test';
+import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, unlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { commitAll, run } from '#tests/support/cli/planted.ts';
 
 const INIT = [
     'init',

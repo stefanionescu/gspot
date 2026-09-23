@@ -1,8 +1,8 @@
-import { join } from 'node:path';
-import { readFileSync } from 'node:fs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 
 test('ignore and loosened settings accept omitted reasons by default and enforce the repository preference', async () => {
     for (const required of [false, true]) {

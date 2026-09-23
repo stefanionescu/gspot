@@ -1,8 +1,9 @@
-import { join } from 'node:path';
-import { readFileSync, rmSync } from 'node:fs';
+import { run } from '#tests/support/cli/command.ts';
+import { git } from '#tests/support/cli/git.ts';
 import { expect, test } from 'bun:test';
+import { readFileSync, rmSync } from 'node:fs';
+import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { git, run } from '#tests/support/cli/planted.ts';
 
 test('generated attributes preserve LF through autocrlf checkout and restore authored attributes', async () => {
     await using sandbox = await testdir();

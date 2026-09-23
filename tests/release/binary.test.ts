@@ -1,16 +1,20 @@
 // Runs the compiled binary of this platform in a planted repository: the embedded presets, rules and grammars, not the source tree.
 
+import { run as runProcess } from '#cli/platform/spawn.ts';
+import { copyFileSync, cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
+import { dirname, join } from 'node:path';
 import { releaseTargets } from '../../packages/cli/src/emit/targets-definitions.ts';
-import { join } from 'node:path';
-import { existsSync } from 'node:fs';
 // The explicit release suite requires a built binary under dist/.
+import { environmentVariables } from '#cli/platform/environment.ts';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { PLANTED_TIMEOUT_MS } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { script } from '#tests/support/cli/planted.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
 import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { environmentVariables } from '#cli/platform/environment.ts';
-import { commitAll, PLANTED_TIMEOUT_MS, script, toolsPath } from '#tests/support/cli/planted.ts';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const requireCli = createRequire(join(root, 'packages/cli/package.json'));
@@ -62,3 +66,63 @@ describe('the compiled binary', () => {
         PLANTED_TIMEOUT_MS,
     );
 });
+
+test('host binary reads embedded assets after its isolated build checkout is removed', async () => {
+    await using sandbox = await testdir();
+    const checkout = join(sandbox.path, 'checkout');
+    for (const path of [
+        'packages/cli',
+        'packages/npm',
+        'presets',
+        'rules',
+        'package.json',
+        'bun.lock',
+        'bunfig.toml',
+        'tsconfig.json',
+        'gspot.schema.json',
+        'LICENSE.md',
+        'docs/package.json',
+        'packages/eslint-plugin/package.json',
+    ]) {
+        const destination = join(checkout, path);
+        mkdirSync(dirname(destination), { recursive: true });
+        cpSync(join(root, path), destination, {
+            recursive: true,
+            filter: (source) =>
+                !source.split(/[\\/]/u).some((part) => ['node_modules', 'build', 'dist'].includes(part)),
+        });
+    }
+    const options = { cwd: checkout, timeoutMs: 180_000 };
+    const installed = await runProcess([process.execPath, 'install', '--frozen-lockfile', '--ignore-scripts'], options);
+    expect(installed.code, installed.stdout + installed.stderr).toBe(0);
+    const built = await runProcess([process.execPath, 'packages/cli/build.ts'], options);
+    expect(built.code, built.stdout + built.stderr).toBe(0);
+    const executable = join(sandbox.path, 'gspot');
+    copyFileSync(join(checkout, 'dist', host!.binary), executable);
+    rmSync(checkout, { recursive: true });
+    const consumer = join(sandbox.path, 'consumer');
+    mkdirSync(consumer);
+    writeFileSync(join(consumer, '.editorconfig'), 'root = true\n[*]\nindent_size = 2\n');
+    const initialized = await runProcess(
+        [
+            executable,
+            'init',
+            '--yes',
+            '--presets',
+            'formatting',
+            '--no-runner',
+            '--no-ci',
+            '--no-hooks',
+            '--no-install',
+            '--json',
+        ],
+        {
+            cwd: consumer,
+            timeoutMs: 60_000,
+            env: { NODE_PATH: undefined, NODE_OPTIONS: undefined },
+        },
+    );
+    expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
+    expect(existsSync(join(consumer, 'gspot.toml'))).toBe(true);
+    expect(existsSync(checkout)).toBe(false);
+}, 360_000);

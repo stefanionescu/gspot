@@ -1,21 +1,16 @@
 import { randomUUID } from 'node:crypto';
 // Planted repository for the nextjs and i18n presets: a segment that serves two things, a build check turned off, versions apart, and message files with holes.
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
-import { chmodSync, symlinkSync, writeFileSync } from 'node:fs';
 import type { TakeoverPlan } from '#cli/lifecycle/types.ts';
 import type { RunReport } from '#cli/output/report-types.ts';
-import { describe, expect, test } from 'bun:test';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
 import type { PlantedCase } from '#tests/support/cli/planted.ts';
-import {
-    installPrivateTools,
-    commitAll,
-    install,
-    PLANTED_TIMEOUT_MS,
-    run,
-    runPlanted,
-    toolsPath,
-} from '#tests/support/cli/planted.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { chmodSync, symlinkSync, writeFileSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const OWNER_WRITES = 0o644;
 const MODULES = join(import.meta.dir, '../../../node_modules');

@@ -1,9 +1,9 @@
-import { join } from 'node:path';
-import { renameSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/planted.ts';
 import type { RunReport } from '#cli/output/report-types.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
+import { renameSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test('the selected naming preset rejects banned terms in declarations and paths', async () => {
     await using sandbox = await testdir();

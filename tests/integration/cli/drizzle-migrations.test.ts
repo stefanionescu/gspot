@@ -1,14 +1,15 @@
-import { engineInput } from '#cli/run/engines.ts';
-import { join } from 'node:path';
-import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { commitAll, run as runCli } from '#tests/support/cli/planted.ts';
-import { reportSchema } from '#cli/run/report-schema.ts';
-import { openSession } from '#cli/run/session.ts';
-import { planRun } from '#cli/run/plan.ts';
 import { drizzleMigrations } from '#cli/checks/libraries.ts';
 import * as processes from '#cli/platform/spawn.ts';
+import { engineInput } from '#cli/run/engines.ts';
+import { planRun } from '#cli/run/plan.ts';
+import { reportSchema } from '#cli/run/report-schema.ts';
+import { openSession } from '#cli/run/session.ts';
+import { run as runCli } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const GENERATOR = `import { mkdirSync, readFileSync, writeFileSync } from 'node:fs';
 const schema = readFileSync('schema.txt', 'utf8');

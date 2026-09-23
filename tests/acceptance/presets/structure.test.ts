@@ -1,11 +1,14 @@
 // Planted repository for the structure preset: each repository-shape check fires on its planted defect.
-import { join } from 'node:path';
-import { mkdirSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#cli/output/report-types.ts';
-import { describe, expect, test } from 'bun:test';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
 import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { commitAll, git, PLANTED_TIMEOUT_MS, run, runPlanted, script, toolsPath } from '#tests/support/cli/planted.ts';
+import { runPlanted, script } from '#tests/support/cli/planted.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { mkdirSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const INIT = ['init', '--yes', '--presets', 'bash', '--runner', 'npm', '--no-ci', '--no-rules', '--no-install'];
 const CLEAN = script.replace('main() {', () => '# main: runs the script.\nmain() {');

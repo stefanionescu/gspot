@@ -1,7 +1,7 @@
 # The README, the Manual, and the Site
 
 The existing Astro/Starlight project owns the landing page at gspot.dev, the manual, and shared
-plain text branding. The root and published package READMEs provide first-use routes. This contract
+vector branding. The root and published package READMEs provide first-use routes. This contract
 preserves the full design brief below; [remaining work](22-remaining.md) alone records acceptance.
 
 Verify command and output examples against the documented release. Keep reproducible examples
@@ -43,9 +43,10 @@ rendered experience against the acceptance criteria below.
 
 A reader needs purpose, release status, a visible result, and a next step in the opening screen.
 Use native GitHub Markdown, not a centered HTML marketing layout. Include the information needed for setup and routine use without a word-count target.
-Use a plain lowercase `gspot` title. Do not add decorative illustrations or a separate logo system.
+Use a compact geometric lowercase g with a blue spot beside the lowercase Geist wordmark.
+Keep light, dark, and monochrome SVG variants, an SVG favicon, and an editable 1200 × 630 social card.
 Keep the title, purpose, and release status as selectable text. The first useful example
-follows the introduction without a decorative image header.
+follows the introduction. The compact logo does not replace the text title.
 
 Use this ordered content brief when rewriting the root README:
 
@@ -168,7 +169,7 @@ Render the landing page through `StarlightPage` in the existing Astro project. S
 navigation, search, theme persistence, code controls, and the 404 route. Remove the separate
 site layout and duplicate scripts.
 
-Put "CLI to lint and enforce rules for LLM generated codebases" first. Follow it with
+State "CLI to lint and enforce rules for LLM generated codebases" in the hero introduction. Follow it with
 **Get started** and **Command reference**, linking to the existing installation and check
 reference routes. Identify source-checkout setup explicitly. Do not present `--help` as an
 installation command.
@@ -176,9 +177,10 @@ installation command.
 Use one shared header with documentation navigation, search, GitHub, and theme controls.
 Use neutral navigation selections and fine section dividers.
 
-Below the introduction, show the Bash defect and manual correction side by side on wide
+Below the introduction, show the JavaScript client-environment defect and manual correction side by side on wide
 screens and stacked on phones. Keep the captured
-transcript in a native disclosure, with prerequisites, commands, output, and manual edits
+transcript in a native disclosure. Retain the paired Bash walkthrough as the lightweight first check.
+Show prerequisites, commands, output, and manual edits
 clearly distinguished. Link to the owning guide for the complete procedure. Remove slogans,
 repeated explanations, decorative sign-offs, and oversized terminal framing.
 
@@ -192,7 +194,9 @@ nor correctness. Passing the gate does not prove that code has no defects.
 Use quiet reading surfaces, precise type, and actual command output. The product name is plain
 text. Keep the landing page focused on setup, configuration, and findings.
 
-Use neutral light and dark surfaces, readable gray text, and understated blue links. Verify
+Use the Sweet spot identity: two asymmetric rounded cobalt shapes framing a tangerine dot.
+Use cobalt `#2457FF`, tangerine `#FF7A1A`, ink `#0B1020`, and white. Keep documentation
+reading surfaces quiet and use substantial color in the hero and graphics. Verify
 actual contrast for prose, syntax highlighting, selection, hover, and focus states.
 
 - Follow system light/dark preference on first visit. An explicit saved choice wins. Apply
@@ -202,12 +206,13 @@ actual contrast for prose, syntax highlighting, selection, hover, and focus stat
   Homepage headings use 56 pixels on desktop and 36 pixels on phones. Documentation titles
   use 40 and 32 pixels respectively; section headings use 24 pixels with 32-pixel line height.
   Use Geist's variable weight 450 for headings.
-- Use lowercase `gspot` text in headers and a plain letter favicon. No illustrated character,
-  generated artwork, concept board, or branding pipeline belongs in the project.
-- Limit the landing content to roughly 1,120 pixels. Use an 8-pixel spacing scale, thin panel
+- Use the abstract Sweet spot mark in the header, README, favicon, and sharing metadata.
+  Do not use a letter G, mascot, or explicit anatomy.
+  Logo links have accessible names. Keep the icon legible at 16 pixels and retain monochrome use.
+  Provide static workflow and recovery diagrams with their information in adjacent prose.
+- Limit the landing content to roughly 1,200 pixels. Use an 8-pixel spacing scale, thin panel
   borders, modest 8-pixel corners, and generous section spacing. Avoid nested card grids,
-  huge empty heroes, glass effects, scanlines, and glowing body text. A restrained static blue
-  glow can surround the defect-and-correction demonstration.
+  huge empty heroes, glass effects, scanlines, and glowing body text. Use cobalt and tangerine in the artwork and section markers.
 - Keep the introduction before the defect, correction, and optional transcript at every width. Use 20-pixel side padding on phones. Code can scroll within its panel;
   the page itself must not overflow horizontally. Do not shrink text to fit output.
 - Omit decorative terminal controls and shell prompts from copyable commands. Label commands and output
@@ -398,7 +403,7 @@ Verify product promises with observable CLI and installed-package behavior. Desc
 
 ### Acceptance G-10
 
-Preserve the README, guide navigation, landing page, plain text identity and visual acceptance in this owner. Demonstrations retain real reproduction inputs, output, version, and correction. Explain all five `explain` subjects and editor coexistence. Reuse ordinary command tests and inspect both themes, responsive layout, keyboard, screen-reader access, script-free content, and loading budgets. A successful build alone does not establish usability.
+Preserve the README, guide navigation, landing page, vector identity and visual acceptance in this owner. Demonstrations retain real reproduction inputs, output, version, and correction. Explain all five `explain` subjects and editor coexistence. Reuse ordinary command tests and inspect both themes, responsive layout, keyboard, screen-reader access, script-free content, and loading budgets. A successful build alone does not establish usability.
 
 ### Acceptance S-19
 

@@ -2,13 +2,16 @@
 
 import { join } from 'node:path';
 // Copy the installed Vale packages so the fixture has private offline styles.
+import type { RunReport } from '#cli/output/report-types.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/support/cli/planted.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { cpSync, mkdirSync, readdirSync, rmSync, symlinkSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
-import type { RunReport } from '#cli/output/report-types.ts';
-import { describe, expect, test } from 'bun:test';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { cpSync, mkdirSync, readdirSync, symlinkSync, rmSync } from 'node:fs';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/support/cli/planted.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const STYLES = join(root, '.gspot', 'vale', 'styles');

@@ -1,15 +1,16 @@
+import { quoteArgument } from '#cli/run/reproduce.ts';
 // The checks on a normalized policy that the schema cannot state: reasons present, selectors precise, scopes real.
 import { mutationPath, openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import * as messages from '#cli/policy/messages.ts';
 import { isReasonAccepted } from '#cli/policy/loosening.ts';
+import * as messages from '#cli/policy/messages.ts';
 import type {
+    EditorconfigAdoption,
+    EslintAdoption,
+    PathSegment,
     Policy,
+    PolicyProblem,
     Reasoned,
     ToolTable,
-    EslintAdoption,
-    EditorconfigAdoption,
-    PolicyProblem,
-    PathSegment,
 } from '#cli/policy/types.ts';
 
 function needReason(where: string, reason: string | undefined, command: string): string | undefined {
@@ -34,7 +35,7 @@ function ignoreProblems(policy: Policy): PolicyProblem[] {
             ...located(
                 ['ignore', index, 'reason'],
                 policy.requireReasons
-                    ? needReason(where, entry.reason, `gspot ignore ${entry.check} --reason "..."`)
+                    ? needReason(where, entry.reason, `gspot ignore ${quoteArgument(entry.check)} --reason "..."`)
                     : undefined,
             ),
         );
@@ -51,7 +52,11 @@ function declarationProblems(policy: Policy): PolicyProblem[] {
                 const where = `[[${entry.nature}]] ${entry.paths.join(', ')}`;
                 return located(
                     [nature, index, 'reason'],
-                    needReason(where, entry.reason, `gspot set ${entry.nature} "${entry.paths[0]}" --reason "..."`),
+                    needReason(
+                        where,
+                        entry.reason,
+                        `gspot set ${entry.nature} ${quoteArgument(entry.paths[0]!)} --reason "..."`,
+                    ),
                 );
             }),
     );
@@ -79,7 +84,7 @@ function namingProblems(policy: Policy): PolicyProblem[] {
             explanation(
                 `naming.allowed ${entry.name}`,
                 entry.reason,
-                `gspot set naming.allowed '${JSON.stringify({ name: entry.name })}' --reason "..."`,
+                `gspot set naming.allowed ${quoteArgument(JSON.stringify({ name: entry.name }))} --reason "..."`,
             ),
         ),
     );
@@ -90,7 +95,7 @@ function namingProblems(policy: Policy): PolicyProblem[] {
                 explanation(
                     `naming.remove_groups ${entry.group}`,
                     entry.reason,
-                    `gspot set naming.remove_groups '${JSON.stringify({ group: entry.group })}' --reason "..."`,
+                    `gspot set naming.remove_groups ${quoteArgument(JSON.stringify({ group: entry.group }))} --reason "..."`,
                 ),
             ),
         );

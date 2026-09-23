@@ -1,17 +1,18 @@
-import { pythonLockDrift } from '#cli/lifecycle/python-project.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
 import { packageLockDrift } from '#cli/lifecycle/package-project.ts';
+import { pythonLockDrift } from '#cli/lifecycle/python-project.ts';
 import { isValePackageFile } from '#cli/repository/natures.ts';
-import { hasConfiguration, readOwnership } from '#cli/lifecycle/ownership.ts';
 // apply --dry-run: render in memory, read recorded generated files, compare bytes, print the diff.
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import { createTwoFilesPatch } from 'diff';
-import type { Session } from '#cli/run/types.ts';
-import type { Policy } from '#cli/policy/types.ts';
-import { isMergeStubHeld } from '#cli/emit/stubs.ts';
-import type { DriftEntry, GeneratedProposal } from '#cli/emit/types.ts';
-import { emitAll } from '#cli/emit/targets.ts';
 import { currentBlock } from '#cli/emit/managed-blocks.ts';
 import { ruleDiff } from '#cli/emit/rule-diff.ts';
+import { isMergeStubHeld } from '#cli/emit/stubs.ts';
+import { emitAll } from '#cli/emit/targets.ts';
+import type { DriftEntry, GeneratedProposal } from '#cli/emit/types.ts';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import type { Policy } from '#cli/policy/types.ts';
+import type { Session } from '#cli/run/types.ts';
+import { createTwoFilesPatch } from 'diff';
 
 const NEVER_STRAY = new Set([
     'gspot.toml',

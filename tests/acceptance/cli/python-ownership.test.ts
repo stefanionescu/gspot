@@ -1,10 +1,10 @@
-import { join } from 'node:path';
-import { rmSync, writeFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/planted.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
+import { rmSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test('Python dependency ownership applies only to locked scopes and accepts removal of the duplicate list', async () => {
     await using sandbox = await testdir();

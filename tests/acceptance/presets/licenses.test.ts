@@ -1,12 +1,13 @@
 // Planted repository for the licenses preset: a package under a license outside the list, and an exception that went stale.
+import { run as runProcess } from '#cli/platform/spawn.ts';
+import { reportSchema } from '#cli/run/report-schema.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { install, installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { readFileSync, rmSync } from 'node:fs';
 import { delimiter, join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
-import { run as runProcess } from '#cli/platform/spawn.ts';
-import { installPrivateTools } from '#tests/support/cli/planted.ts';
-import { reportSchema } from '#cli/run/report-schema.ts';
-import { readFileSync, rmSync } from 'node:fs';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/support/cli/planted.ts';
 
 const NPM_BIN = join(import.meta.dir, '../../../node_modules/.bin');
 const INIT = [

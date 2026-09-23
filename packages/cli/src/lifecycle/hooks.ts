@@ -1,17 +1,18 @@
+import { HOOK_FILES } from '#cli/checks/integrity-definitions.ts';
 import { NATIVE_HOOK_MARKERS } from '#cli/emit/hooks-definitions.ts';
+import { hookBody, hookCommand, huskyLines, huskyReady, lefthookConfiguration } from '#cli/emit/hooks.ts';
+import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
 import { preCommitReady } from '#cli/emit/pre-commit.ts';
-import { simpleGitHooksReady, simpleGitHookFallback } from '#cli/emit/simple-git-hooks.ts';
+import { simpleGitHookFallback, simpleGitHooksReady } from '#cli/emit/simple-git-hooks.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { readOwnership, withLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import type { FileProposal, FileSnapshot, HookLocation, LifecycleOwner, PreparedHook } from '#cli/lifecycle/types.ts';
+import { binaryPath } from '#cli/platform/assets.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import type { Session } from '#cli/run/types.ts';
 import { basename, dirname, isAbsolute, relative, resolve } from 'node:path';
 import { isDeepStrictEqual } from 'node:util';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { binaryPath } from '#cli/platform/assets.ts';
-import { hookBody, hookCommand, lefthookConfiguration, huskyReady, huskyLines } from '#cli/emit/hooks.ts';
-import { gitignoreBlock } from '#cli/emit/managed-blocks.ts';
-import { HOOK_FILES } from '#cli/checks/integrity-definitions.ts';
-import { withLifecycleOwner, readOwnership, hasConfiguration } from '#cli/lifecycle/ownership.ts';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import type { Session } from '#cli/run/types.ts';
-import type { HookLocation, FileProposal, LifecycleOwner, PreparedHook, FileSnapshot } from '#cli/lifecycle/types.ts';
 
 function rejectDifferingNativeHook(
     path: string,

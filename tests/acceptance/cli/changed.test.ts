@@ -1,10 +1,10 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { pathToFileURL } from 'node:url';
-import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/planted.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
+import { join } from 'node:path';
+import { pathToFileURL } from 'node:url';
+import { createFileTree, testdir } from 'testdirs';
 
 function git(root: string, ...argv: string[]): string {
     const result = runBlocking(['git', ...argv], { cwd: root });

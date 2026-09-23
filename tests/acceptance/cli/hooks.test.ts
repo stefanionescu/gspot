@@ -1,25 +1,21 @@
 // The hook gspot installs runs the staged checks on commit.
-import { join, delimiter } from 'node:path';
-import { readFileSync, writeFileSync, chmodSync } from 'node:fs';
 import { run as runProcess } from '#cli/platform/spawn.ts';
-import { reportSchema, pushReportSchema } from '#cli/run/report-schema.ts';
-import { createFileTree, testdir } from 'testdirs';
+import { pushReportSchema, reportSchema } from '#cli/run/report-schema.ts';
+import { gspot, PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { git } from '#tests/support/cli/git.ts';
+import { script } from '#tests/support/cli/planted.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
 import { describe, expect, test } from 'bun:test';
-import { git, gspot, toolsPath, PLANTED_TIMEOUT_MS, run, script } from '#tests/support/cli/planted.ts';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 describe('the gspot hook', () => {
     test(
         'installed and freshly cloned repositories enforce staged defects through real commits',
         async () => {
             await using sandbox = await testdir();
-            await using launcher = await testdir();
-            await createFileTree(launcher.path, {
-                gspot: `#!/usr/bin/env bun
-const child = Bun.spawnSync([process.execPath, ${JSON.stringify(gspot)}, ...process.argv.slice(2)], { stdin: 'inherit', stdout: 'inherit', stderr: 'inherit' });
-process.exit(child.exitCode);
-`,
-            });
-            chmodSync(join(launcher.path, 'gspot'), 0o755);
+            await using cloneRoot = await testdir();
             await createFileTree(sandbox.path, { 'scripts/a.sh': script });
             git(sandbox.path, ['init', '-q']);
             git(sandbox.path, ['add', '-A']);
@@ -41,7 +37,7 @@ process.exit(child.exitCode);
             await Bun.write(join(sandbox.path, 'scripts', 'b.sh'), '#!/usr/bin/env bash\necho $1\n');
             git(sandbox.path, ['add', '-A']);
             const environment = {
-                PATH: `${launcher.path}${delimiter}${toolsPath([])}`,
+                PATH: `${join(import.meta.dir, '../../../.mise/gspot')}${delimiter}${toolsPath([])}`,
                 NO_COLOR: '1',
             };
             const commit = git(sandbox.path, ['commit', '-qm', 'bad'], environment);
@@ -53,7 +49,7 @@ process.exit(child.exitCode);
             expect(git(sandbox.path, ['add', '-A']).code).toBe(0);
             const corrected = git(sandbox.path, ['commit', '-qm', 'Correct shell input'], environment);
             expect(corrected.code, corrected.stdout + corrected.stderr).toBe(0);
-            const clone = join(launcher.path, 'clone');
+            const clone = join(cloneRoot.path, 'clone');
             const cloned = git(sandbox.path, ['clone', '--quiet', '--no-local', sandbox.path, clone]);
             expect(cloned.code, cloned.stdout + cloned.stderr).toBe(0);
             const uninstalled = await run(clone, ['check', '--only', 'bash/shellcheck', '--no-cache']);

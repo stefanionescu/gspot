@@ -2,6 +2,11 @@
 
 This document decides where checks run: git hooks, the CI job, and the tasks of the runner.
 
+This repository resolves `gspot` through a checkout-local executable on mise PATH. The launcher
+executes current source and preserves the caller directory, arguments, input streams, signals,
+and status. Repository tasks use that same executable. The release-provider override belongs
+to this checkout; generated consumer integrations retain their pinned executable behavior.
+
 ## What runs when
 
 `gspot check` is the truth, and the hooks are the fast path.

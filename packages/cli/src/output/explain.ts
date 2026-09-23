@@ -1,17 +1,17 @@
 // Explain a check, tool rule, preset, setting, or file path.
-import type { Session } from '#cli/run/types.ts';
 import { explainPath } from '#cli/output/file.ts';
-import { nearMatches } from '#cli/policy/near.ts';
-import * as messages from '#cli/policy/messages.ts';
 import { runBlocking } from '#cli/platform/spawn.ts';
-import { quoteArgument } from '#cli/run/reproduce.ts';
-import { repositoryCheckSpec } from '#cli/run/plan.ts';
-import type { ResolvedSetting } from '#cli/policy/types.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
-import { allChecks, toRow } from '#cli/presets/listing.ts';
+import * as messages from '#cli/policy/messages.ts';
+import { nearMatches } from '#cli/policy/near.ts';
 import { settingValue, specFor } from '#cli/policy/settings.ts';
+import type { ResolvedSetting } from '#cli/policy/types.ts';
+import { allChecks, toRow } from '#cli/presets/listing.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
 import type { ListingRow, SettingSpec } from '#cli/presets/types.ts';
+import { repositoryCheckSpec } from '#cli/run/plan.ts';
+import { quoteArgument } from '#cli/run/reproduce.ts';
+import type { Session } from '#cli/run/types.ts';
 
 const TOOL_TIMEOUT_MS = 10_000;
 const SWIFTLINT_LINES = 6;
@@ -77,9 +77,10 @@ function checkExplanation(session: Session | undefined, checkName: string): Expl
         `What to do: ${check.help}`,
         ...(check.waits_for === undefined ? [] : [`Required setting: ${check.waits_for}`]),
         '',
-        `Turn it off for some paths: gspot ignore ${checkName} --paths "<glob>" --reason "..."`,
+        `Turn it off for some paths: gspot ignore ${quoteArgument(checkName)} --paths "<glob>" --reason "..."`,
     ];
-    if (check.command) lines.push(`Turn one of its rules off: gspot ignore ${checkName} --rule <rule> --reason "..."`);
+    if (check.command)
+        lines.push(`Turn one of its rules off: gspot ignore ${quoteArgument(checkName)} --rule <rule> --reason "..."`);
     if (check.fix_findings_exit_codes !== undefined)
         lines.push(`Correction exit codes that mean findings remain: ${check.fix_findings_exit_codes.join(', ')}`);
     if (check.tool_errors !== undefined) lines.push(`Fatal tool diagnostic pattern: ${check.tool_errors}`);
@@ -145,9 +146,9 @@ function toolRuleExplanation(session: Session | undefined, tool: string, rule: s
         '',
         summary === undefined ? `The tool's documentation has the page for ${rule}.` : `The tool says: ${summary}`,
         '',
-        `Turn it off everywhere: gspot ignore ${check.name} --rule ${rule} --reason "..."`,
-        `Turn it off for some paths: gspot ignore ${check.name} --rule ${rule} --paths "<glob>" --reason "..."`,
-        `Change its options: gspot set tools.${tool}.rules.${rule} <options> --reason "..."`,
+        `Turn it off everywhere: gspot ignore ${quoteArgument(check.name)} --rule ${quoteArgument(rule)} --reason "..."`,
+        `Turn it off for some paths: gspot ignore ${quoteArgument(check.name)} --rule ${quoteArgument(rule)} --paths "<glob>" --reason "..."`,
+        `Change its options: gspot set ${quoteArgument(`tools.${tool}.rules.${rule}`)} <options> --reason "..."`,
     ];
     return {
         kind: 'tool-rule',
@@ -201,7 +202,7 @@ function presetExplanation(presetName: string): Explanation | { error: string } 
 
 function changeLine(spec: SettingSpec, key: string, scope: string): string {
     const isReasoned = spec.direction === 'ceiling' || spec.direction === 'floor' || spec.direction === 'loosening';
-    return `Change it: gspot set ${key} <value>${scope}${isReasoned ? ' --reason "..."' : ''}`;
+    return `Change it: gspot set ${quoteArgument(key)} <value>${scope}${isReasoned ? ' --reason "..."' : ''}`;
 }
 
 function settingLines(
@@ -224,7 +225,7 @@ function settingLines(
                 `Current value: ${JSON.stringify(current?.value)} (from ${current?.source ?? 'unset'})`,
                 ...(current?.reason === undefined ? [] : [`Reason on record: ${current.reason}`]),
                 changeLine(spec, key, target),
-                `Back to the default: gspot set ${key} --default${target}`,
+                `Back to the default: gspot set ${quoteArgument(key)} --default${target}`,
             ];
         }),
     ];

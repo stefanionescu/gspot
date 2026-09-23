@@ -1,9 +1,9 @@
-import { join } from 'node:path';
-import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
+import { chmodSync, readFileSync, statSync, symlinkSync } from 'node:fs';
+import { join } from 'node:path';
 import prettier from 'prettier';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
+import { createFileTree, testdir } from 'testdirs';
 
 const SOURCE = 'const greeting="hello";if(greeting){console.log(greeting);}';
 const EDITORCONFIG =

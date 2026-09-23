@@ -1,9 +1,11 @@
 // Planted repository: uninstall removes what init wrote, the package.json entries and the lefthook commands included.
-import { join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { script } from '#tests/support/cli/planted.ts';
 import { describe, expect, test } from 'bun:test';
 import { existsSync, readFileSync } from 'node:fs';
-import { commitAll, PLANTED_TIMEOUT_MS, run, script } from '#tests/support/cli/planted.ts';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 describe('uninstall', () => {
     test(

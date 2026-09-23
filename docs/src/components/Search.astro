@@ -1,0 +1,10 @@
+---
+import Search from '@astrojs/starlight/components/Search.astro';
+---
+<Search />
+<script>
+    // Keep the visible platform shortcut in the button name for speech control.
+    for (const button of document.querySelectorAll('site-search button[data-open-modal]')) {
+        button.setAttribute('aria-label', button.textContent!);
+    }
+</script>

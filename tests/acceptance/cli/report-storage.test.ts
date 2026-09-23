@@ -1,20 +1,20 @@
-import { join } from 'node:path';
+import type { RunReport } from '#cli/output/report-types.ts';
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import {
     chmodSync,
-    statSync,
-    writeFileSync,
-    readFileSync,
-    symlinkSync,
+    existsSync,
     mkdirSync,
     readdirSync,
+    readFileSync,
+    statSync,
+    symlinkSync,
     unlinkSync,
-    existsSync,
+    writeFileSync,
 } from 'node:fs';
+import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/planted.ts';
-import type { RunReport } from '#cli/output/report-types.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
 
 test.each([{ flags: ['--stage', 'message'] }, { flags: ['--dry-run'] }])(
     'staged $flags preserves the previous reports',

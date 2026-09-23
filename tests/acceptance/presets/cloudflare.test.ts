@@ -1,8 +1,11 @@
 // Planted repository for the cloudflare preset: a configuration with no date, a header under no path, and a redirect with a status Cloudflare does not know.
-import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
 import type { PlantedCase } from '#tests/support/cli/planted.ts';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/support/cli/planted.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 
 const INIT = [
     'init',

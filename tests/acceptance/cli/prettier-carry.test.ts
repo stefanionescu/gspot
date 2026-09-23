@@ -1,10 +1,11 @@
-import { join } from 'node:path';
-import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import prettier from 'prettier';
-import { installPrivateTools, run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 import type { RunReport } from '#cli/output/report-types.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installPrivateTools } from '#tests/support/cli/tools.ts';
+import { expect, test } from 'bun:test';
+import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import prettier from 'prettier';
+import { createFileTree, testdir } from 'testdirs';
 
 const SOURCE = 'const greeting="hello";if(greeting){console.log(greeting);}';
 const FILES = [

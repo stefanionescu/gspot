@@ -1,9 +1,9 @@
-import { join } from 'node:path';
-import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { run } from '#tests/support/cli/planted.ts';
 import type { CoverageReport } from '#cli/doctor/types.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
+import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test('doctor and list name unsupported endings and retain different coverage within one ending', async () => {
     await using directory = await testdir();

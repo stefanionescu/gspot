@@ -1,25 +1,26 @@
 import type { IgnoreEntry } from '#cli/policy/types.ts';
 import { readFileSync, realpathSync, statSync } from 'node:fs';
 // The orchestrator: plan, run, filter through ignores, report, decide the exit code.
-import { claimedInputs, isActive, planRun } from '#cli/run/plan.ts';
+import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
 import { coverageReport } from '#cli/doctor/coverage.ts';
-import { readRepository } from '#cli/repository/tree.ts';
-import { applyFixers } from '#cli/run/fixers.ts';
+import type { CheckResult, Finding } from '#cli/output/finding.ts';
 import type { RunReport } from '#cli/output/report-types.ts';
 import { writeReport } from '#cli/output/report.ts';
-import { reproduceLine } from '#cli/run/reproduce.ts';
-import { suppressionComments } from '#cli/checks/repository/suppressions.ts';
-import type { TrackedFile } from '#cli/repository/types.ts';
-import pLimit from 'p-limit';
-import { cpus } from 'node:os';
 import { jobsWanted } from '#cli/platform/environment.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
-import type { CheckResult, Finding } from '#cli/output/finding.ts';
+import { readRepository } from '#cli/repository/tree.ts';
+import type { TrackedFile } from '#cli/repository/types.ts';
+import { cacheInputs, cacheKey, fileHash, pruneCache, readCached, textHash, writeCached } from '#cli/run/cache.ts';
+import { commandConfigurations } from '#cli/run/command-expansion.ts';
+import { applyFixers } from '#cli/run/fixers.ts';
 import { applyIgnores, applyInlineIgnores } from '#cli/run/ignores.ts';
-import { commandConfigurations, prepareCommand } from '#cli/run/tool-runner.ts';
-import { textHash, cacheKey, fileHash, cacheInputs, readCached, writeCached, pruneCache } from '#cli/run/cache.ts';
+import { claimedInputs, isActive, planRun } from '#cli/run/plan.ts';
+import { reproduceLine } from '#cli/run/reproduce.ts';
+import { prepareCommand } from '#cli/run/tool-runner.ts';
+import { cpus } from 'node:os';
+import pLimit from 'p-limit';
 
-import type { FixReport, IgnoreUse, RunOptions, RunOutcome, Session, PlannedCheck } from '#cli/run/types.ts';
+import type { FixReport, IgnoreUse, PlannedCheck, RunOptions, RunOutcome, Session } from '#cli/run/types.ts';
 
 /** File observations shared by cached checks within one execution pass. */
 type RunHashes = {

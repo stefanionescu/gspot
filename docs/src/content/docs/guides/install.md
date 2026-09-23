@@ -5,24 +5,28 @@ sidebar:
     order: 1
 ---
 
-Use Git and mise 2026.8.8 or later to run gspot from a source checkout:
+**gspot is unreleased.** The supported starting point is a source checkout.
+
+Use Git, a Bash-compatible shell, and mise 2026.8.8 or later to run gspot from a source checkout:
 
 ```bash
 git clone https://github.com/stefanionescu/gspot.git
 cd gspot
 mise install bun node
 mise run repo:setup
-bun packages/cli/src/main.ts --help
+mise exec -- bun packages/cli/src/main.ts --help
 ```
 
 While still in the checkout, define a command for your current shell:
 
 ```bash
 gspot_source="$PWD/packages/cli/src/main.ts"
-gspot() { bun "$gspot_source" "$@"; }
+gspot_runtime_path="$(dirname "$(mise which bun)"):$(dirname "$(mise which node)")"
+gspot() { PATH="$gspot_runtime_path:$PATH" bun "$gspot_source" "$@"; }
 ```
 
-Change to the repository you want to check. The function keeps using the source entry point.
+Change to the repository you want to check. The function retains the checkout's Bun and Node
+runtimes and source entry point without changing your working directory.
 For a new setup, follow [your first check](/guides/quick-start/) or
 [adopt an existing repository](/guides/existing-repository/).
 

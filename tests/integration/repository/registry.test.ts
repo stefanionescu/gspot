@@ -1,0 +1,42 @@
+import { startRegistry } from '#tests/support/registry/lifecycle.ts';
+import { expect, test } from 'bun:test';
+import { existsSync, readdirSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+
+test('registry setup releases storage after bind failure, timeout, and interruption', async () => {
+    const before = new Set(readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-release-')));
+    let requests = 0;
+    const unrelated = Bun.serve({
+        hostname: '127.0.0.1',
+        port: 0,
+        fetch() {
+            requests += 1;
+            return new Response('{}');
+        },
+    });
+    try {
+        await expect(startRegistry(unrelated.port)).rejects.toThrow('Registry startup failed');
+        expect(requests).toBe(0);
+        await expect(startRegistry(0, 1)).rejects.toThrow('Registry startup failed');
+        const controller = new AbortController();
+        const starting = startRegistry(0, 30_000, controller.signal);
+        controller.abort(new Error('Interrupted setup'));
+        await expect(starting).rejects.toThrow('Interrupted setup');
+        expect(new Set(readdirSync(tmpdir()).filter((name) => name.startsWith('gspot-release-')))).toEqual(before);
+    } finally {
+        await unrelated.stop(true);
+    }
+});
+
+test('registry shutdown removes storage after cancellation and refuses further publication', async () => {
+    const controller = new AbortController();
+    const registry = await startRegistry(0, 30_000, controller.signal);
+    try {
+        expect((await fetch(`${registry.url}/-/ping`)).status).toBe(200);
+        controller.abort();
+    } finally {
+        await registry.stop();
+    }
+    expect(existsSync(registry.work)).toBe(false);
+    expect(() => registry.assertRunning()).toThrow('Registry is no longer running');
+});

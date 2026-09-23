@@ -491,8 +491,8 @@ A planted repository with an edited file under `.gspot/` holds the finding.
 Every spawn of a tool with a file list goes through `fileBatches`, and a fixer that
 fails is a line of the fix report.
 
-`run/tool-runner.ts` returns a list of commands for a file list, and the fixer, the
-checks, and ast-grep all take their commands from it. Rename the executing function to `runFixer`; return a `FixResult` instead of mutating a caller-owned failure list. Its `plannedCheck` and `workingDirectory` parameters follow [public vocabulary](README.md#glossary). A successful invocation without byte changes is unchanged, not changed.
+Command expansion preserves argument boundaries and file slots before execution. The tool runner
+prepares bounded batches, and fixers, checks, and ast-grep share that execution boundary. Rename the executing function to `runFixer`; return a `FixResult` instead of mutating a caller-owned failure list. Its `plannedCheck` and `workingDirectory` parameters follow [public vocabulary](README.md#glossary). A successful invocation without byte changes is unchanged, not changed.
 
 A unit test with 20,000 long paths holds more than one command, and a planted fixer
 that exits 3 holds its line in the report.

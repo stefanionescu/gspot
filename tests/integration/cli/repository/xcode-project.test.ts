@@ -1,7 +1,7 @@
+import { readProject } from '#cli/checks/xcode/project-reader.ts';
+import { run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { readProject } from '#cli/checks/xcode/project-reader.ts';
-import { run } from '#tests/support/cli/planted.ts';
 
 const PROJECT = `// !$*UTF8*$!
 {

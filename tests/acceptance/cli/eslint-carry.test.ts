@@ -1,9 +1,9 @@
-import { join, relative } from 'node:path';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { ESLint, loadESLint } from 'eslint';
+import { chmodSync, existsSync, readFileSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join, relative } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 
 const SOURCE = 'export const isEmpty = (value) => value == null;\n';
 const FILES = ['source.js', 'tests/[draft].js', 'tests/café note.js', 'server/source.js', 'components/source.js'];

@@ -47,3 +47,12 @@ Do not infer ownership from a generated header or filename.
 Review retained hook-manager and pipeline configuration after removal. External repository
 settings, installed global executables, and tools provisioned by another package manager are
 outside file restoration. Uninstall is not a request to disable remote checks or delete accounts.
+
+## How preservation works
+
+![Configuration preservation and recovery](/brand/recovery.svg)
+
+Before writing configuration, gspot observes existing bytes and permissions. Apply records
+the changes it owns. If a managed output has been edited, the conflict preserves those edits.
+Uninstall restores recorded originals where ownership still matches. Resolve reported conflicts
+before retrying; do not delete edited configuration to silence a conflict.

@@ -1,16 +1,27 @@
 // Installs built packages from an isolated registry and checks a fresh consumer.
-import { createRequire } from 'node:module';
-import { releaseTargets } from '../../packages/cli/src/emit/targets-definitions.ts';
-import { join, dirname, delimiter, resolve, relative, isAbsolute } from 'node:path';
-import { fileURLToPath } from 'node:url';
-import { describe, expect, test } from 'bun:test';
-import prettier from 'prettier';
-import { existsSync, lstatSync, mkdirSync, readFileSync, writeFileSync, renameSync, realpathSync } from 'node:fs';
-import { run } from '#cli/platform/spawn.ts';
-import { reportSchema } from '#cli/run/report-schema.ts';
-import { presetManifests } from '#cli/presets/read-manifests.ts';
-import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
 import { environmentVariables } from '#cli/platform/environment.ts';
+import { run } from '#cli/platform/spawn.ts';
+import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { reportSchema } from '#cli/run/report-schema.ts';
+import { publishTo, startRegistry } from '#tests/support/registry/lifecycle.ts';
+import { describe, expect, test } from 'bun:test';
+import {
+    copyFileSync,
+    cpSync,
+    existsSync,
+    lstatSync,
+    mkdirSync,
+    readFileSync,
+    realpathSync,
+    rmSync,
+    symlinkSync,
+    writeFileSync,
+} from 'node:fs';
+import { createRequire } from 'node:module';
+import { delimiter, dirname, isAbsolute, join, relative, resolve } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import prettier from 'prettier';
+import { releaseTargets } from '../../packages/cli/src/emit/targets-definitions.ts';
 
 const root = fileURLToPath(new URL('../..', import.meta.url));
 const requireCli = createRequire(join(root, 'packages/cli/package.json'));
@@ -41,6 +52,7 @@ describe('the installed consumer', () => {
         'installs matching packages, initializes, rejects a defect, and accepts its correction',
         async () => {
             const registry = await startRegistry();
+            let executionError: unknown;
             try {
                 const built = await run([join(root, 'dist', BINARY), '--version'], {
                     cwd: registry.work,
@@ -50,18 +62,33 @@ describe('the installed consumer', () => {
                 expect(built.code, built.stdout + built.stderr).toBe(0);
                 const version = built.stdout.trim();
                 expect(version).toMatch(/^\d+\.\d+\.\d+(?:[-+][0-9A-Za-z.-]+)?$/u);
-                const missing = join(root, 'dist', 'gspot-linux-arm64-musl');
-                const retained = join(registry.work, 'retained-binary');
-                renameSync(missing, retained);
-                try {
-                    const refused = publishTo(registry, version);
-                    expect(refused.code).not.toBe(0);
-                    const absent = await fetch(`${registry.url}/gspot`);
-                    expect(absent.status).toBe(404);
-                    await absent.arrayBuffer();
-                } finally {
-                    renameSync(retained, missing);
+                const checkout = join(registry.work, 'publish');
+                for (const path of [
+                    'dist',
+                    'packages/npm',
+                    'packages/cli/package.json',
+                    'packages/cli/publish.ts',
+                    'packages/cli/src/emit/targets-definitions.ts',
+                    'tsconfig.json',
+                ]) {
+                    const target = join(checkout, path);
+                    mkdirSync(dirname(target), { recursive: true });
+                    cpSync(join(root, path), target, { recursive: true });
                 }
+                symlinkSync(join(root, 'node_modules'), join(checkout, 'node_modules'), 'dir');
+                symlinkSync(
+                    join(root, 'packages/cli/node_modules'),
+                    join(checkout, 'packages/cli/node_modules'),
+                    'dir',
+                );
+                const missing = join(checkout, 'dist', 'gspot-linux-arm64-musl');
+                rmSync(missing);
+                const refused = publishTo(registry, version, checkout);
+                expect(refused.code).not.toBe(0);
+                const absent = await fetch(`${registry.url}/gspot`);
+                expect(absent.status).toBe(404);
+                await absent.arrayBuffer();
+                copyFileSync(join(root, 'dist', 'gspot-linux-arm64-musl'), missing);
                 const dependency = await run(
                     [
                         'npm',
@@ -76,7 +103,7 @@ describe('the installed consumer', () => {
                     { cwd: registry.work, env: environment, timeoutMs: RELEASE_TIMEOUT_MS },
                 );
                 expect(dependency.code, dependency.stdout + dependency.stderr).toBe(0);
-                const published = publishTo(registry, version);
+                const published = publishTo(registry, version, checkout);
                 expect(published.code, published.stdout + published.stderr).toBe(0);
                 const toolNpmrc = join(registry.work, 'tools.npmrc');
                 writeFileSync(
@@ -200,35 +227,26 @@ describe('the installed consumer', () => {
                     }
                 }
                 const setupOptions = { ...options, env: { ...environment, NO_COLOR: '1', CI: '1' } };
-                const parserRequire = createRequire(requireCli.resolve('editorconfig'));
-                const parserWasm = join(dirname(parserRequire.resolve('@one-ini/wasm')), 'one_ini_bg.wasm');
-                const retainedWasm = join(registry.work, 'checkout-parser.wasm');
-                renameSync(parserWasm, retainedWasm);
-                let initialized;
-                try {
-                    initialized = await run(
-                        [
-                            ...command,
-                            'init',
-                            '--json',
-                            '--yes',
-                            '--presets',
-                            'bash',
-                            'naming',
-                            'prose',
-                            'python',
-                            'swift',
-                            'formatting',
-                            '--no-runner',
-                            '--no-ci',
-                            '--no-hooks',
-                            '--no-install',
-                        ],
-                        setupOptions,
-                    );
-                } finally {
-                    renameSync(retainedWasm, parserWasm);
-                }
+                const initialized = await run(
+                    [
+                        ...command,
+                        'init',
+                        '--json',
+                        '--yes',
+                        '--presets',
+                        'bash',
+                        'naming',
+                        'prose',
+                        'python',
+                        'swift',
+                        'formatting',
+                        '--no-runner',
+                        '--no-ci',
+                        '--no-hooks',
+                        '--no-install',
+                    ],
+                    setupOptions,
+                );
                 expect(initialized.code, initialized.stdout + initialized.stderr).toBe(0);
                 const installedTools = await run([...command, 'install', '--json'], {
                     ...setupOptions,
@@ -842,8 +860,20 @@ describe('the installed consumer', () => {
                 expect(readFileSync(join(consumer, '.editorconfig'), 'utf8')).toBe(editorconfig);
                 expect(lstatSync(join(consumer, '.editorconfig')).mode & 0o777).toBe(0o640);
                 expect(readFileSync(join(consumer, 'prettier.config.mjs'), 'utf8')).toBe(formatter);
+            } catch (error) {
+                executionError = error;
+                throw error;
             } finally {
-                await registry.stop();
+                try {
+                    await registry.stop();
+                } catch (cleanupError) {
+                    if (executionError !== undefined)
+                        throw new AggregateError(
+                            [executionError, cleanupError],
+                            'Release execution and cleanup failed.',
+                        );
+                    throw cleanupError;
+                }
             }
         },
         RELEASE_TIMEOUT_MS,

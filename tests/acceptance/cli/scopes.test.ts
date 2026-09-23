@@ -1,11 +1,13 @@
 // Planted repository: TypeScript selected in a scope only, with one ESLint configuration for the repository.
-import { delimiter, join } from 'node:path';
-import { createFileTree, testdir } from 'testdirs';
+import { parsePolicyText } from '#cli/policy/read-policy.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { describe, expect, test } from 'bun:test';
 import { symlinkSync, writeFileSync } from 'node:fs';
-import { treeContents } from '#tests/support/cli/contents.ts';
-import { parsePolicyText } from '#cli/policy/read-policy.ts';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/support/cli/planted.ts';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 const SOURCE =

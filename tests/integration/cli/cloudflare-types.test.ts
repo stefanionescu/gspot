@@ -1,13 +1,13 @@
-import { engineInput } from '#cli/run/engines.ts';
-import { rejects } from 'node:assert/strict';
-import { join } from 'node:path';
-import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { commitAll } from '#tests/support/cli/planted.ts';
-import { openSession } from '#cli/run/session.ts';
-import * as tools from '#cli/platform/tool-probe.ts';
 import { envTypesFresh, headersSyntax } from '#cli/checks/cloudflare.ts';
+import * as tools from '#cli/platform/tool-probe.ts';
+import { engineInput } from '#cli/run/engines.ts';
+import { openSession } from '#cli/run/session.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { rejects } from 'node:assert/strict';
+import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const GENERATOR = `import { readFileSync, writeFileSync } from 'node:fs';
 const content = readFileSync('bindings.txt', 'utf8');

@@ -1,11 +1,11 @@
 // Every written key checked against the surface: unknown keys, loosenings without a reason, extra keys with a slot.
-import { nearMatches } from '#cli/policy/near.ts';
-import * as messages from '#cli/policy/messages.ts';
 import { shippedPolicy } from '#cli/naming/policy.ts';
-import { quoteArgument } from '#cli/run/reproduce.ts';
 import { isLoosening, isReasonAccepted } from '#cli/policy/loosening.ts';
-import type { WrittenValue, Policy, ExposedSettings, PolicyProblem, PathSegment } from '#cli/policy/types.ts';
+import * as messages from '#cli/policy/messages.ts';
+import { nearMatches } from '#cli/policy/near.ts';
 import { asRecord, policyTables, policyValue, specFor, writtenKeys } from '#cli/policy/settings.ts';
+import type { ExposedSettings, PathSegment, Policy, PolicyProblem, WrittenValue } from '#cli/policy/types.ts';
+import { quoteArgument } from '#cli/run/reproduce.ts';
 
 const LIMITS_PREFIX = 'limits.';
 
@@ -65,7 +65,12 @@ function looseningProblem(
     const shown = shipped === undefined ? 'default' : `default ${JSON.stringify(shipped)}`;
     const scopeFlag = scope === undefined ? '' : ` --scope ${quoteArgument(scope)}`;
     const value = JSON.stringify(written.value);
-    return messages.loosenNeedsReason(key, value, shown, `gspot set ${key} ${value}${scopeFlag} --reason "..."`);
+    return messages.loosenNeedsReason(
+        key,
+        value,
+        shown,
+        `gspot set ${quoteArgument(key)} ${quoteArgument(value)}${scopeFlag} --reason "..."`,
+    );
 }
 
 function keyProblems(
@@ -87,7 +92,7 @@ function keyProblems(
                 if (record !== undefined && record['reason'] === undefined)
                     problems.push({
                         path: [...key.split('.'), index],
-                        message: messages.missingReason(key, `gspot set ${key} <entry> --reason "..."`),
+                        message: messages.missingReason(key, `gspot set ${quoteArgument(key)} <entry> --reason "..."`),
                     });
             }
         }

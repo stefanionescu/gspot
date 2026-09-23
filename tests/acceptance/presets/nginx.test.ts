@@ -1,10 +1,13 @@
 // Planted repository for the nginx preset: a proxy target the request chooses.
-import { createFileTree, testdir } from 'testdirs';
+import { reportSchema } from '#cli/run/report-schema.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import type { PlantedCase } from '#tests/support/cli/planted.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
 import { describe, expect, test } from 'bun:test';
 import { join } from 'node:path';
-import { reportSchema } from '#cli/run/report-schema.ts';
-import type { PlantedCase } from '#tests/support/cli/planted.ts';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/support/cli/planted.ts';
+import { createFileTree, testdir } from 'testdirs';
 
 const INIT = [
     'init',

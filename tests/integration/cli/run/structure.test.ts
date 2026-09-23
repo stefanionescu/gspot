@@ -1,15 +1,15 @@
-import { commitAll } from '#tests/support/cli/planted.ts';
-import { join } from 'node:path';
-import { renameSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
-import { expect, spyOn, test } from 'bun:test';
-import { executeRun } from '#cli/run/execute.ts';
-import { openSession } from '#cli/run/session.ts';
 import * as processes from '#cli/platform/spawn.ts';
-import { astGrepMatches } from '#cli/structure/ast-grep.ts';
 import * as probes from '#cli/platform/tool-probe.ts';
 import { engineInput } from '#cli/run/engines.ts';
+import { executeRun } from '#cli/run/execute.ts';
 import { planRun } from '#cli/run/plan.ts';
+import { openSession } from '#cli/run/session.ts';
+import { astGrepMatches } from '#cli/structure/ast-grep.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { renameSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test('ast-grep batches all file arguments and retains matches from every batch', async () => {
     await using sandbox = await testdir();
@@ -100,7 +100,9 @@ test.each(['fatal exit', 'deadline', 'cancellation', 'malformed JSON', 'invalid 
                 astGrepMatches(input, 'presets/language/bash/rules/bash-branches.yml', ['source.sh']),
             ).rejects.toThrow();
             processRun.mockResolvedValue({ code: 0, missing: false, duration: 1, stdout: '[]', stderr: '' });
-            expect(await astGrepMatches(input, 'presets/language/bash/rules/bash-branches.yml', ['source.sh'])).toEqual([]);
+            expect(await astGrepMatches(input, 'presets/language/bash/rules/bash-branches.yml', ['source.sh'])).toEqual(
+                [],
+            );
         } finally {
             processRun.mockRestore();
             probe.mockRestore();
@@ -234,24 +236,33 @@ test.each([
     expect(corrected.report.exitCode).toBe(0);
 });
 
-test.skipIf(process.platform === 'win32')('prefix groups remain distinct when directory and prefix contain newlines', async () => {
-    await using sandbox = await testdir();
-    const paths = ['a\nb/c-one.ts', 'a\nb/c-two.ts', 'a/b\nc-one.ts', 'a/b\nc-two.ts'];
-    await createFileTree(sandbox.path, {
-        'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["typescript"]\n',
-        ...Object.fromEntries(paths.map((path) => [path, 'export const value = 1;\n'])),
-    });
-    commitAll(sandbox.path);
-    const options = {
-        stage: 'all' as const, skips: [], fix: false, isDryRun: false, noCache: true,
-        only: ['structure/prefix-collisions'],
-    };
-    const initial = await executeRun(await openSession(sandbox.path), options);
-    expect(initial.report.checks[0]!.findings.map((finding) => finding.file).sort()).toEqual([paths[0]!, paths[2]!].sort());
-    renameSync(join(sandbox.path, paths[1]!), join(sandbox.path, 'a\nb/other.ts'));
-    renameSync(join(sandbox.path, paths[3]!), join(sandbox.path, 'a/other.ts'));
-    commitAll(sandbox.path);
-    const corrected = await executeRun(await openSession(sandbox.path), options);
-    expect(corrected.report.exitCode).toBe(0);
-    expect(corrected.report.checks[0]!.findings).toEqual([]);
-});
+test.skipIf(process.platform === 'win32')(
+    'prefix groups remain distinct when directory and prefix contain newlines',
+    async () => {
+        await using sandbox = await testdir();
+        const paths = ['a\nb/c-one.ts', 'a\nb/c-two.ts', 'a/b\nc-one.ts', 'a/b\nc-two.ts'];
+        await createFileTree(sandbox.path, {
+            'gspot.toml': 'version = 1\nlevel = "all"\npresets = ["typescript"]\n',
+            ...Object.fromEntries(paths.map((path) => [path, 'export const value = 1;\n'])),
+        });
+        commitAll(sandbox.path);
+        const options = {
+            stage: 'all' as const,
+            skips: [],
+            fix: false,
+            isDryRun: false,
+            noCache: true,
+            only: ['structure/prefix-collisions'],
+        };
+        const initial = await executeRun(await openSession(sandbox.path), options);
+        expect(initial.report.checks[0]!.findings.map((finding) => finding.file).sort()).toEqual(
+            [paths[0]!, paths[2]!].sort(),
+        );
+        renameSync(join(sandbox.path, paths[1]!), join(sandbox.path, 'a\nb/other.ts'));
+        renameSync(join(sandbox.path, paths[3]!), join(sandbox.path, 'a/other.ts'));
+        commitAll(sandbox.path);
+        const corrected = await executeRun(await openSession(sandbox.path), options);
+        expect(corrected.report.exitCode).toBe(0);
+        expect(corrected.report.checks[0]!.findings).toEqual([]);
+    },
+);

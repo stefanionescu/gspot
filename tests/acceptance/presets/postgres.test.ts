@@ -1,8 +1,11 @@
 // Planted repository for the postgres preset: a locking migration, a repeated version, an edited migration, and a schema with holes.
-import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
 import type { PlantedCase } from '#tests/support/cli/planted.ts';
-import { commitAll, install, PLANTED_TIMEOUT_MS, run, runPlanted, toolsPath } from '#tests/support/cli/planted.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { install, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { createFileTree, testdir } from 'testdirs';
 
 const INIT = [
     'init',
@@ -60,7 +63,7 @@ const CASES: PlantedCase[] = [
     {
         check: 'postgres/rls-present',
         files: { [later('create_notes')]: 'CREATE TABLE IF NOT EXISTS public.notes (id UUID PRIMARY KEY);\n' },
-        expected: 'public.notes never enables row level security',
+        expected: 'public.notes does not have row level security enabled',
     },
     {
         check: 'postgres/rls-present',
@@ -68,7 +71,7 @@ const CASES: PlantedCase[] = [
             [later('create_notes')]:
                 'CREATE TABLE IF NOT EXISTS public.notes (id UUID PRIMARY KEY);\nALTER TABLE public.notes ENABLE ROW LEVEL SECURITY;\n',
         },
-        expected: 'no migration gives it a policy',
+        expected: 'has no policy',
     },
     {
         check: 'postgres/explicit-grants',

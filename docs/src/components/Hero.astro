@@ -1,0 +1,58 @@
+---
+// Adapted from Turborepo's homepage grid. See /licenses/turborepo.txt.
+import DefaultHero from '@astrojs/starlight/components/Hero.astro';
+import { Code } from '@astrojs/starlight/components';
+---
+{Astro.url.pathname === '/' ? (
+    <section class="home-hero" aria-labelledby="_top">
+        <div class="hero-copy">
+            <p class="release"><span aria-hidden="true"></span>Source preview · Unreleased</p>
+            <h1 id="_top">Your codebase.<br /><span>Your rules.</span></h1>
+            <p class="purpose">CLI to lint and enforce rules for LLM generated codebases.</p>
+            <p class="description">Give your tools and coding agents the same repository policy.
+                Find defects, review corrections, and keep control of the configuration.</p>
+            <nav class="hero-actions" aria-label="Start using gspot">
+                <a class="primary" href="/guides/install/">Get started <span aria-hidden="true">↗</span></a>
+                <a href="/reference/commands/check/">Explore the reference</a>
+            </nav>
+            <div class="setup-command"><p>From your source checkout</p><Code code="mise run repo:setup" lang="sh" /></div>
+        </div>
+        <div class="hero-visual" aria-hidden="true">
+            <div class="orbit orbit-outer"></div><div class="orbit orbit-inner"></div>
+            <img src="/brand/hero.webp" alt="" width="600" height="600" fetchpriority="high" />
+            <span class="axis axis-top">POLICY</span><span class="axis axis-bottom">CHECK</span>
+            <span class="orbit-dot"></span>
+        </div>
+    </section>
+) : <DefaultHero />}
+<style>
+    .home-hero { display: grid; grid-template-columns: repeat(12, minmax(0, 1fr)); align-items: center; gap: 0; padding: 72px 0 88px; }
+    .hero-copy { grid-column: span 7; padding-right: 40px; position: relative; z-index: 1; }
+    .release { display: inline-flex; align-items: center; gap: 8px; color: var(--sl-color-gray-2); font-size: 0.75rem; margin: 0 0 24px; }
+    .release span { width: 7px; height: 7px; border-radius: 50%; background: var(--brand-tangerine); }
+    h1 { font-size: clamp(2.5rem, 5.5vw, 4.5rem); font-weight: 550; line-height: 1.06; letter-spacing: -0.055em; margin: 0; max-width: 12ch; }
+    h1 span { color: var(--sl-color-gray-3); }
+    .purpose { font-size: 1.25rem; color: var(--sl-color-white); line-height: 1.5; margin-block: 24px 12px; max-width: 36ch; }
+    .description { font-size: 1rem; max-width: 48ch; color: var(--sl-color-gray-2); }
+    .hero-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 12px 24px; margin-top: 28px; }
+    .hero-actions a { min-height: 44px; display: inline-flex; align-items: center; gap: 24px; font-size: 0.875rem; text-decoration: none; }
+    .hero-actions a:hover { text-decoration: underline; }
+    .primary { background: var(--sl-color-white); color: var(--sl-color-black); border-radius: 999px; padding: 10px 22px; font-weight: 600; }
+    .setup-command { max-width: 330px; margin-top: 28px; }
+    .setup-command p { margin: 0; font-size: 0.75rem; color: var(--sl-color-gray-3); }
+    .setup-command :global(.expressive-code) { margin-top: 8px; }
+    .hero-visual { grid-column: span 5; aspect-ratio: 1; display: grid; place-items: center; position: relative; background-image: radial-gradient(var(--sl-color-gray-5) 1px, transparent 1px); background-size: 20px 20px; }
+    .hero-visual img { width: 92%; position: relative; z-index: 1; height: auto; }
+    .orbit { position: absolute; border: 1px solid var(--sl-color-gray-5); border-radius: 50%; }
+    .orbit-outer { inset: 2%; }
+    .orbit-inner { inset: 14%; border-style: dashed; }
+    .axis { position: absolute; font: 0.625rem var(--sl-font-mono); letter-spacing: 0.15em; color: var(--sl-color-gray-3); background: var(--sl-color-black); padding: 4px 8px; }
+    .axis-top { top: 0; }.axis-bottom { bottom: 0; }
+    .orbit-dot { position: absolute; width: 9px; height: 9px; background: var(--brand-tangerine); border-radius: 50%; left: 10%; top: 22%; }
+    @media (max-width: 49.99rem) {
+        .home-hero { grid-template-columns: 1fr; gap: 32px; padding: 32px 0 48px; }
+        .hero-copy, .hero-visual { grid-column: 1; padding-right: 0; }
+        .hero-visual { width: min(100%, 340px); justify-self: center; }
+        h1 { font-size: 2.75rem; }.purpose { font-size: 1.125rem; }
+    }
+</style>

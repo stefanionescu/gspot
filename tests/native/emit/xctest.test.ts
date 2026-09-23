@@ -1,13 +1,13 @@
-import { join } from 'node:path';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import { emitAll } from '#cli/emit/targets.ts';
-import { openSession } from '#cli/run/session.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { commandConfigurations } from '#cli/run/tool-runner.ts';
-import { run } from '#tests/support/cli/planted.ts';
-import { unlinkSync } from 'node:fs';
 import { run as runProcess } from '#cli/platform/spawn.ts';
+import { commandConfigurations } from '#cli/run/command-expansion.ts';
+import { planRun } from '#cli/run/plan.ts';
+import { openSession } from '#cli/run/session.ts';
+import { run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
+import { unlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const DEFECT = 'public func parsed(_ value: String) -> Int {\n    Int(value)! + 42\n}\n';
 const CORRECT = '/// Parses a fixture value.\npublic func parsed(_ value: String) -> Int {\n    Int(value) ?? 0\n}\n';

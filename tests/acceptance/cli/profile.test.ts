@@ -1,10 +1,13 @@
 // Planted repositories: a profile saved in one repository installs the same policy in another, and a bad one stops init.
-import { join } from 'node:path';
-import { existsSync } from 'node:fs';
-import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
 import { treeContents } from '#tests/support/cli/contents.ts';
-import { commitAll, PLANTED_TIMEOUT_MS, run, script, toolsPath } from '#tests/support/cli/planted.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { script } from '#tests/support/cli/planted.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { existsSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const TOOLS = { PATH: toolsPath(['ast-grep', 'shellcheck', 'shfmt', 'typos']) };
 

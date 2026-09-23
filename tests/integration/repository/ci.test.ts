@@ -1,17 +1,23 @@
-import { fileURLToPath } from 'node:url';
-import { join } from 'node:path';
-import { readFileSync, writeFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { git } from '#tests/support/cli/planted.ts';
 import { run } from '#cli/platform/spawn.ts';
 import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { git } from '#tests/support/cli/git.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { parse, stringify } from 'smol-toml';
+import { expect, test } from 'bun:test';
+import { readFileSync, writeFileSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { createFileTree, testdir } from 'testdirs';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 const workflow = Bun.YAML.parse(readFileSync(join(root, '.github/workflows/ci.yml'), 'utf8')) as {
     jobs: { affected: { steps: { name?: string; run?: string }[] } };
 };
 const step = workflow.jobs.affected.steps.find((entry) => entry.name === 'Check affected inputs')!;
+const tasks = parse(readFileSync(join(root, '.mise/conf.d/repo.toml'), 'utf8'))['tasks'] as Record<
+    string,
+    Record<string, string>
+>;
 
 test('repository CI checks the committed change, preserves reports on invalid bases, and accepts a correction', async () => {
     await using sandbox = await testdir();
@@ -24,6 +30,7 @@ test('repository CI checks the committed change, preserves reports on invalid ba
     await createFileTree(sandbox.path, {
         'gspot.toml': `version = 1\npresets = []\n[[check]]\nname = "project/content"\nstage = "commit"\npaths = ["*.txt"]\ncommand = ${JSON.stringify(command)}\n[check.output]\nformat = "lines"\n`,
         '.gspot/version': `${GSPOT_VERSION}\n`,
+        'mise.toml': stringify({ tasks: { 'ci:affected': tasks['ci:affected']! } }),
         'changed.txt': 'valid\n',
         'legacy.txt': 'bad\n',
     });
@@ -50,7 +57,11 @@ test('repository CI checks the committed change, preserves reports on invalid ba
     const execute = (comparison: string) =>
         run(['bash', '-euo', 'pipefail', '-c', step.run!], {
             cwd: sandbox.path,
-            env: { GSPOT_CI_BASE: comparison, GITHUB_WORKSPACE: root },
+            env: {
+                GSPOT_CI_BASE: comparison,
+                MISE_TRUSTED_CONFIG_PATHS: sandbox.path,
+                PATH: `${join(root, '.mise/gspot')}${delimiter}${toolsPath([])}`,
+            },
             timeoutMs: 30_000,
         });
     const failed = await execute(base);

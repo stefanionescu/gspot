@@ -59,6 +59,7 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
     const state = { isTimedOut: false, isCanceled: false };
     let failure: Error | undefined;
     let stopped = false;
+    let drainTimer: ReturnType<typeof setTimeout> | undefined;
     const stopTree = () => {
         if (stopped || child.pid === undefined) return;
         stopped = true;
@@ -76,6 +77,10 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
                 failure = error instanceof Error ? error : new Error('Cannot terminate the tool process tree.');
         }
         child.kill('SIGKILL');
+        drainTimer = setTimeout(() => {
+            const error = new Error('Tool output did not close within 5 seconds after termination.');
+            for (const stream of child.stdio) stream?.destroy(error);
+        }, 5000);
     };
     const cancel = () => {
         if (stopped) return;
@@ -91,10 +96,18 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
                   state.isTimedOut = true;
                   stopTree();
               }, options.timeoutMs);
+    let exitCleanup: Promise<void> | undefined;
     const exited = () => {
         clearTimeout(timer);
-        if (process.platform !== 'win32') stopTree();
-        stopped = true;
+        // Bun emits exit before Darwin finishes reaping the group leader.
+        // Allow a 10 ms reaping window before signaling descendants holding output pipes.
+        exitCleanup = new Promise((resolve) => {
+            setTimeout(() => {
+                if (process.platform !== 'win32') stopTree();
+                stopped = true;
+                resolve();
+            }, 10);
+        });
     };
     child.once('exit', exited);
     for (const stream of child.stdio) stream?.once('error', stopTree);
@@ -102,13 +115,19 @@ function supervise(child: ChildProcess, options: AsyncSpawnOptions) {
     if (options.cancelSignal?.aborted === true) cancel();
     return {
         state,
-        dispose() {
+        async dispose(executionFailure: Error | undefined) {
+            await exitCleanup;
             clearTimeout(timer);
+            clearTimeout(drainTimer);
             removeExitHandler();
             options.cancelSignal?.removeEventListener('abort', cancel);
             child.removeListener('exit', exited);
             for (const stream of child.stdio) stream?.removeListener('error', stopTree);
-            if (failure !== undefined) throw failure;
+            if (failure !== undefined) {
+                if (executionFailure !== undefined)
+                    throw new AggregateError([executionFailure, failure], 'Tool execution and process cleanup failed.');
+                throw failure;
+            }
         },
     };
 }
@@ -128,11 +147,16 @@ export async function run(command: string[], options: AsyncSpawnOptions): Promis
     const supervision = supervise(child, options);
     if (options.onStdout !== undefined) child.stdout?.on('data', options.onStdout);
     if (options.onStderr !== undefined) child.stderr?.on('data', options.onStderr);
+    let executionFailure: Error | undefined;
     try {
         const result = await child;
+        if (result.failed) executionFailure = new Error(result.shortMessage);
         return { ...completed(result, started), ...supervision.state };
+    } catch (error) {
+        executionFailure = error instanceof Error ? error : new Error(String(error));
+        throw error;
     } finally {
-        supervision.dispose();
+        await supervision.dispose(executionFailure);
     }
 }
 
@@ -182,14 +206,19 @@ export async function runBinary(command: string[], options: AsyncSpawnOptions): 
         encoding: 'base64',
     });
     const supervision = supervise(child, options);
+    let executionFailure: Error | undefined;
     try {
         const result = await child;
+        if (result.failed) executionFailure = new Error(result.shortMessage);
         return {
             ...completed(result, started, Buffer.from(result.stderr, 'base64').toString('utf8')),
             ...supervision.state,
             stdout: Buffer.from(result.stdout, 'base64'),
         };
+    } catch (error) {
+        executionFailure = error instanceof Error ? error : new Error(String(error));
+        throw error;
     } finally {
-        supervision.dispose();
+        await supervision.dispose(executionFailure);
     }
 }

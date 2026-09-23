@@ -1,10 +1,11 @@
-import { z } from 'zod';
-import { parse as parseYaml } from 'yaml';
-import { isDeepStrictEqual } from 'node:util';
-import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
-import { hasConfiguration, readOwnership } from '#cli/lifecycle/ownership.ts';
-import { hookPrefix, hookCommand } from '#cli/emit/hooks.ts';
+import { hookCommand, hookPrefix } from '#cli/emit/hooks.ts';
 import type { ConfigurationOutput } from '#cli/emit/types.ts';
+import { hasConfiguration } from '#cli/lifecycle/configuration-document.ts';
+import { openConfinedRoot } from '#cli/lifecycle/confined.ts';
+import { readOwnership } from '#cli/lifecycle/ownership.ts';
+import { isDeepStrictEqual } from 'node:util';
+import { parse as parseYaml } from 'yaml';
+import { z } from 'zod';
 
 const PATH = '.pre-commit-config.yaml';
 const configurationSchema = z.object({

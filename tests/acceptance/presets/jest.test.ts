@@ -1,9 +1,10 @@
-import { delimiter, join } from 'node:path';
-import { readFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { installPrivateTools, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/support/cli/planted.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { expect, test } from 'bun:test';
+import { readFileSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const modules = join(import.meta.dir, '../../../node_modules');
 const source =

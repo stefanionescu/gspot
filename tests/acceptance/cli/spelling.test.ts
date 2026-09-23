@@ -1,9 +1,11 @@
-import { join } from 'node:path';
-import { chmodSync, readFileSync, renameSync, statSync, unlinkSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
 import type { RunReport } from '#cli/output/report-types.ts';
-import { commitAll, git, PLANTED_TIMEOUT_MS, run, toolsPath } from '#tests/support/cli/planted.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { expect, test } from 'bun:test';
+import { chmodSync, readFileSync, renameSync, statSync, unlinkSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test(
     'spelling corrections return findings when an ambiguous word needs a manual choice',

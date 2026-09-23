@@ -1,10 +1,15 @@
+import { quoteArgument } from '#cli/run/reproduce.ts';
 // gspot ignore: one [[ignore]] entry with its reason, or the removal of the entries that match.
-import type { TomlTable } from '#cli/policy/types.ts';
-import { nearMatches } from '#cli/policy/near.ts';
-import type { CommandResult } from '#cli/run/types.ts';
+import { commitPolicy, requireReason } from '#cli/policy/commit-policy.ts';
 import * as messages from '#cli/policy/messages.ts';
+import { nearMatches } from '#cli/policy/near.ts';
+import { PolicyError, readPolicy } from '#cli/policy/read-policy.ts';
+import type { TomlTable } from '#cli/policy/types.ts';
+import { appendEntry, removeEntries } from '#cli/policy/write.ts';
 import { allChecks } from '#cli/presets/listing.ts';
 import { findRoot } from '#cli/repository/tracked.ts';
+import type { CommandResult } from '#cli/run/types.ts';
+import { assertPinMatches } from '#cli/run/version-pin.ts';
 type IgnoreOptions = {
     cwd: string;
     check: string;
@@ -13,10 +18,6 @@ type IgnoreOptions = {
     reason?: string;
     remove: boolean;
 };
-import { readPolicy, PolicyError } from '#cli/policy/read-policy.ts';
-import { assertPinMatches } from '#cli/run/version-pin.ts';
-import { appendEntry, removeEntries } from '#cli/policy/write.ts';
-import { commitPolicy, requireReason } from '#cli/policy/commit-policy.ts';
 
 function knownCheck(checkName: string, repositoryChecks: string[]): void {
     if (allChecks().has(checkName) || repositoryChecks.includes(checkName)) {
@@ -27,14 +28,10 @@ function knownCheck(checkName: string, repositoryChecks: string[]): void {
     throw new PolicyError([messages.unknownCheck(checkName, nearMatches(checkName, known))]);
 }
 
-function quoted(paths: string[]): string {
-    return paths.map((path) => `"${path}"`).join(' ');
-}
-
 function ignoreCommandLine(o: IgnoreOptions): string {
-    const rule = o.rule === undefined ? '' : ` --rule ${o.rule}`;
-    const paths = o.paths === undefined ? '' : ` --paths ${quoted(o.paths)}`;
-    return `gspot ignore ${o.check}${rule}${paths} --reason "..."`;
+    const rule = o.rule === undefined ? '' : ` --rule ${quoteArgument(o.rule)}`;
+    const paths = o.paths === undefined ? '' : ` --paths ${o.paths.map(quoteArgument).join(' ')}`;
+    return `gspot ignore ${quoteArgument(o.check)}${rule}${paths} --reason "..."`;
 }
 
 function ignoreEntry(o: IgnoreOptions): { entry: TomlTable; lines: string[] } {

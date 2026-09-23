@@ -2,20 +2,16 @@
 
 import { join } from 'node:path';
 // The sandbox links this repository's node_modules, so ESLint, its plugins, tsc, knip and Prettier run offline.
+import type { RunReport } from '#cli/output/report-types.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import type { FindingCase } from '#tests/support/cli/planted.ts';
+import { runPlanted } from '#tests/support/cli/planted.ts';
+import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { chmodSync, mkdirSync, readdirSync, statSync, symlinkSync, writeFileSync } from 'node:fs';
 import { fileURLToPath } from 'node:url';
 import { createFileTree, testdir } from 'testdirs';
-import type { RunReport } from '#cli/output/report-types.ts';
-import { describe, expect, test } from 'bun:test';
-import type { FindingCase } from '#tests/support/cli/planted.ts';
-import { symlinkSync, writeFileSync, readdirSync, mkdirSync, chmodSync, statSync } from 'node:fs';
-import {
-    installPrivateTools,
-    commitAll,
-    PLANTED_TIMEOUT_MS,
-    run,
-    runPlanted,
-    toolsPath,
-} from '#tests/support/cli/planted.ts';
 
 const root = fileURLToPath(new URL('../../..', import.meta.url));
 

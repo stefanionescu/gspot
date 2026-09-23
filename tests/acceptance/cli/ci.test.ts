@@ -1,10 +1,11 @@
-import { join, delimiter } from 'node:path';
-import { readFileSync, writeFileSync, chmodSync } from 'node:fs';
-import { createHash } from 'node:crypto';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { git, gspot, run } from '#tests/support/cli/planted.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
+import { gspot, run } from '#tests/support/cli/command.ts';
+import { git } from '#tests/support/cli/git.ts';
+import { expect, test } from 'bun:test';
+import { createHash } from 'node:crypto';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { delimiter, join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 test.each(['gitlab', 'github'] as const)(
     'the generated %s job verifies its download, checks exact changed objects, retains reports, and accepts corrections',

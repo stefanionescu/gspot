@@ -1,11 +1,11 @@
-import { engineInput } from '#cli/run/engines.ts';
-import { join } from 'node:path';
-import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { commitAll } from '#tests/support/cli/planted.ts';
-import { openSession } from '#cli/run/session.ts';
 import { openapiFresh } from '#cli/checks/express/openapi.ts';
+import { engineInput } from '#cli/run/engines.ts';
+import { openSession } from '#cli/run/session.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { expect, test } from 'bun:test';
+import { chmodSync, existsSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const POLICY =
     'version = 1\npresets = ["express"]\n[tools.openapi]\ndocument = "openapi.json"\nproduced_by = "bun generate.ts \\\"\\\" \\\"two words\\\""\n';

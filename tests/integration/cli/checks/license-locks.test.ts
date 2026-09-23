@@ -1,11 +1,11 @@
+import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
+import { lockedPackages } from '#cli/repository/locked-packages.ts';
 import { engineInput } from '#cli/run/engines.ts';
+import { planRun } from '#cli/run/plan.ts';
+import { openSession } from '#cli/run/session.ts';
+import { run as runCli } from '#tests/support/cli/command.ts';
 import { expect, test } from 'bun:test';
 import { createFileTree, testdir } from 'testdirs';
-import { openSession } from '#cli/run/session.ts';
-import { allowlistsMatch } from '#cli/checks/repository/allowlists-match.ts';
-import { planRun } from '#cli/run/plan.ts';
-import { run as runCli } from '#tests/support/cli/planted.ts';
-import { lockedPackages } from '#cli/repository/locked-packages.ts';
 
 const LOCKS: [string, string][] = [
     [
@@ -34,7 +34,13 @@ test.each(LOCKS)('license exceptions must match a resolved version in %s', async
         const spec = scope.selected
             .flatMap((preset) => preset.checks)
             .find((check) => check.name === 'integrity/allowlists-match')!;
-        return await allowlistsMatch(engineInput(session, { scope: session.scopes.find((entry) => entry.scope.path === '')!, spec: spec, files: session.repository.files }));
+        return await allowlistsMatch(
+            engineInput(session, {
+                scope: session.scopes.find((entry) => entry.scope.path === '')!,
+                spec: spec,
+                files: session.repository.files,
+            }),
+        );
     };
     expect(await check()).toEqual([
         expect.objectContaining({ rule: 'unlocked-package', message: expect.stringContaining('example@2.0.0') }),
@@ -64,7 +70,13 @@ test('scoped license exceptions use ancestor workspace locks but not sibling or 
         const spec = scope.selected
             .flatMap((preset) => preset.checks)
             .find((check) => check.name === 'integrity/allowlists-match')!;
-        return await allowlistsMatch(engineInput(session, { scope: session.scopes.find((entry) => entry.scope.path === '')!, spec: spec, files: session.repository.files }));
+        return await allowlistsMatch(
+            engineInput(session, {
+                scope: session.scopes.find((entry) => entry.scope.path === '')!,
+                spec: spec,
+                files: session.repository.files,
+            }),
+        );
     };
     await expect(check()).rejects.toThrow('require a dependency lockfile');
     await Bun.write(`${root}/uv.lock`, lock);

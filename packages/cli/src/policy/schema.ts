@@ -1,10 +1,11 @@
+import { quoteArgument } from '#cli/run/reproduce.ts';
 // The zod schema of gspot.toml. Pure: no transforms, so the JSON schema is generated from it.
-import { z } from 'zod';
 import { jestCoverageSettings } from '#cli/checks/jest-settings.ts';
 import { hooksSchema } from '#cli/emit/hooks-definitions.ts';
 import { runnerSchema } from '#cli/emit/runner-definitions.ts';
-import { commandSchema, findingExitCodesSchema } from '#cli/run/command-schema.ts';
 import { outputSchema } from '#cli/presets/output-schema.ts';
+import { commandSchema, findingExitCodesSchema } from '#cli/run/command-schema.ts';
+import { z } from 'zod';
 
 const INDENT_MAX = 8;
 
@@ -137,7 +138,7 @@ const toolTable = z.object({ extra: extraTable.optional() }).catchall(z.unknown(
 const enabledSeverity = z.union([z.literal('warn'), z.literal('error'), z.literal(1), z.literal(2)]);
 const enabledRule = z.union([enabledSeverity, z.tuple([enabledSeverity]).rest(z.unknown())], {
     error: (issue) =>
-        `Use an enabled severity (error, warn, 2, or 1), optionally followed by rule options. To disable this rule, use gspot ignore <check> --rule ${String(issue.path?.at(-1) ?? '<rule>')}.`,
+        `Use an enabled severity (error, warn, 2, or 1), optionally followed by rule options. To disable this rule, use gspot ignore <check> --rule ${quoteArgument(String(issue.path?.at(-1) ?? '<rule>'))}.`,
 });
 const eslintRules = z.record(text, enabledRule);
 const stylelintValue = z.union([z.literal(true), text.min(1), z.number(), z.record(text, z.json())]);

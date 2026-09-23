@@ -1,7 +1,8 @@
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { install, installPrivateTools } from '#tests/support/cli/tools.ts';
+import { expect, test } from 'bun:test';
 import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { expect, test } from 'bun:test';
-import { install, installPrivateTools, run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 
 test(
     'Swift security initializes with the candidate plugin and retains immutable tool locks',

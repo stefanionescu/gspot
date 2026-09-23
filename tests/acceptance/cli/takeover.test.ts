@@ -1,26 +1,21 @@
+import { run as runProcess } from '#cli/platform/spawn.ts';
 import { readPolicy } from '#cli/policy/read-policy.ts';
 import { reportSchema } from '#cli/run/report-schema.ts';
-import { fileURLToPath } from 'node:url';
 import { startRegistry } from '#tests/support/registry/lifecycle.ts';
-import { run as runProcess } from '#cli/platform/spawn.ts';
+import { fileURLToPath } from 'node:url';
 // Takeover at init: owned configuration files are replaced, their exception lists carried into gspot.toml with a reason, and the lint folder listed for deletion.
+import { runBlocking } from '#cli/platform/spawn.ts';
+import { parseJsonc } from '#cli/repository/jsonc.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { treeContents } from '#tests/support/cli/contents.ts';
+import { commitAll, git } from '#tests/support/cli/git.ts';
+import { script } from '#tests/support/cli/planted.ts';
+import { installPrivateTools, toolsPath } from '#tests/support/cli/tools.ts';
+import { describe, expect, test } from 'bun:test';
+import { chmodSync, existsSync, readFileSync, statSync, symlinkSync } from 'node:fs';
 import { join } from 'node:path';
 import prettier from 'prettier';
 import { createFileTree, testdir } from 'testdirs';
-import { describe, expect, test } from 'bun:test';
-import { chmodSync, existsSync, readFileSync, statSync, symlinkSync } from 'node:fs';
-import { parseJsonc } from '#cli/repository/jsonc.ts';
-import { runBlocking } from '#cli/platform/spawn.ts';
-import { treeContents } from '#tests/support/cli/contents.ts';
-import {
-    commitAll,
-    git,
-    installPrivateTools,
-    PLANTED_TIMEOUT_MS,
-    run,
-    script,
-    toolsPath,
-} from '#tests/support/cli/planted.ts';
 
 const INIT = [
     'init',

@@ -1,13 +1,13 @@
+import { frameworkBuild, frameworkTypes } from '#cli/checks/framework-build.ts';
+import * as processes from '#cli/platform/spawn.ts';
 import { engineInput } from '#cli/run/engines.ts';
-import { join } from 'node:path';
-import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
-import { describe, expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { commitAll } from '#tests/support/cli/planted.ts';
 import { openSession } from '#cli/run/session.ts';
 import type { EngineInput } from '#cli/run/types.ts';
-import * as processes from '#cli/platform/spawn.ts';
-import { frameworkBuild, frameworkTypes } from '#cli/checks/framework-build.ts';
+import { commitAll } from '#tests/support/cli/git.ts';
+import { describe, expect, spyOn, test } from 'bun:test';
+import { chmodSync, existsSync, mkdirSync, readFileSync, statSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 for (const scope of ['', 'apps/web']) {
     describe(`framework output preservation in ${scope || 'root'}`, () => {

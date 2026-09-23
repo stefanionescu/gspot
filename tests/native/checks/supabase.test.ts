@@ -1,15 +1,15 @@
-import { engineInput } from '#cli/run/engines.ts';
-import { rejects } from 'node:assert/strict';
-import { join } from 'node:path';
-import { writeFileSync } from 'node:fs';
-import { expect, spyOn, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { toolsPath } from '#tests/support/cli/planted.ts';
-import { openSession } from '#cli/run/session.ts';
+import { projectValid, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
 import { denoLint } from '#cli/checks/supabase/deno.ts';
 import { functionFolders } from '#cli/checks/supabase/project.ts';
-import { projectValid, storagePolicies } from '#cli/checks/supabase/config-checks.ts';
+import { engineInput } from '#cli/run/engines.ts';
+import { openSession } from '#cli/run/session.ts';
 import type { EngineInput, Session } from '#cli/run/types.ts';
+import { toolsPath } from '#tests/support/cli/tools.ts';
+import { expect, spyOn, test } from 'bun:test';
+import { rejects } from 'node:assert/strict';
+import { writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 function input(session: Session, scope: string, name: string): EngineInput {
     const spec = session.manifests.get('supabase')!.checks.find((check) => check.name === name)!;

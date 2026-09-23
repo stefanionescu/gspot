@@ -1,14 +1,14 @@
-import { join } from 'node:path';
-import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { applyCommand } from '#cli/emit/apply-command.ts';
+import { emitAll } from '#cli/emit/targets.ts';
+import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
+import { openSession } from '#cli/run/session.ts';
+import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
+import { run } from '#tests/support/cli/command.ts';
 import { expect, spyOn, test } from 'bun:test';
 import * as fs from 'node:fs';
+import { chmodSync, readFileSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { createFileTree, testdir } from 'testdirs';
-import { openLifecycleOwner } from '#cli/lifecycle/ownership.ts';
-import { applyCommand } from '#cli/emit/apply-command.ts';
-import { GSPOT_VERSION } from '#cli/run/version-pin.ts';
-import { openSession } from '#cli/run/session.ts';
-import { emitAll } from '#cli/emit/targets.ts';
-import { run } from '#tests/support/cli/planted.ts';
 
 test('apply rejects injected SQLFluff dialect directives with exit 2 before changing configuration', async () => {
     await using sandbox = await testdir();

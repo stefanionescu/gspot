@@ -1,11 +1,11 @@
-import { join } from 'node:path';
-import { chmodSync, cpSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
-import { expect, test } from 'bun:test';
-import { createFileTree, testdir } from 'testdirs';
-import { run, PLANTED_TIMEOUT_MS } from '#tests/support/cli/planted.ts';
 import { run as runProcess } from '#cli/platform/spawn.ts';
 import { probeTool } from '#cli/platform/tool-probe.ts';
 import { presetManifests } from '#cli/presets/read-manifests.ts';
+import { PLANTED_TIMEOUT_MS, run } from '#tests/support/cli/command.ts';
+import { expect, test } from 'bun:test';
+import { chmodSync, cpSync, mkdirSync, readFileSync, symlinkSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { createFileTree, testdir } from 'testdirs';
 
 const MODULES = join(import.meta.dir, '../../../node_modules');
 
